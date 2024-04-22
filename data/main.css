@@ -1,0 +1,100 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+}
+body {
+    background: #313338; 
+    color: #FFFFFF;
+}
+main {
+    padding: 0.1em;
+}
+
+#collection {
+    min-height: 100px;
+    text-align: center;
+    margin-top: 3em;
+    padding: 2em 0;
+}
+#collection > div {
+    max-width: 1000px;
+    margin: auto;
+}
+#collection .nfts {
+    display: flex;    
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+#collection .nfts .element {
+    width: 16%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: #9c9c9c;
+    padding: 0 0.5em 2em 0.5em;
+}
+#collection .nfts .element img {
+    width: 100%;
+    max-width: 100%;
+    border: 1px solid #aaa;
+}
+#collection .nfts .element span {
+    font-size: 0.8em;
+    text-align: left;
+}
+#collection .nfts .element span.price {
+    padding-bottom: 0.2em;
+    line-height: 1.5;
+}
+#collection .nfts .element a.id {
+    font-weight: bold;
+    font-size: 1em;
+    color: #FFF;
+    padding: 0.3em 0;
+}
+#collection .nfts .element a.id:hover {
+    color: tomato;
+}
+#collection h2 {
+    padding-bottom: 0.7em;
+    font-size: 2.4em;
+}
+#collection .sync {
+    color: #ccc;
+    font-size: 0.8em;
+    text-align: right;
+    width: 100%;
+    padding: 0 1em;
+}
+#collection .more {
+    padding: 2em 0 0.5em 0;
+    clear: both;
+    display: inline-block;
+}
+#collection .more p {
+    padding: 0 2em;
+}
+#collection .more a {
+    font-weight: bold;
+    font-size: 0.9em;
+    color: tomato;
+}
+
+
+/* mobile */
+@media (max-width: 768px) {
+    #collection .nfts .element {
+        width: 27%;
+    }
+    #collection .nfts .element:nth-child(-n + 9 of .element) {
+        display: none;
+    }
+    #collection .sync {
+        text-align: center;
+    }
+}
