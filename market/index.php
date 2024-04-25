@@ -34,7 +34,7 @@ session_start();
                             $price = number_format((float)($price/1000), 1, '.', ''). "k";
                         return  $price;
                     }
-                    $nfts = json_decode(file_get_contents("../data/nfts/latest-transactions.js"));
+                    $nfts = json_decode(file_get_contents("../nfts/latest-transactions.js"));
                     $i=1;
                     foreach ($nfts->data->events->edges as $nft) {
                     ?>
