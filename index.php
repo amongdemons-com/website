@@ -17,7 +17,7 @@ session_start();
   </head>
   <body>
     <?php require_once("data/parts/nav.php"); ?>
-    <main>
+    <main class="container">
       <h1 style="text-align: center;">Hi</h1>
     </main>
   </body>

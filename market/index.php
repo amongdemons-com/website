@@ -19,9 +19,6 @@ session_start();
   <body>
     <?php require_once("../data/parts/nav.php"); ?>
     <main class="container">
-        <p>In this world, we have 11 types of demons, 6 models in each category and you can mint each unit 101 times.</p>
-        <p>If we do the math, there are:</p>  
-        <p>Unique / Total : 66 / 6666</p>
         <div id="collection">
             <div>
                 <p>Among Demons NFTs</p>

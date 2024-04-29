@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top">
   <div class="container">
-    <a class="navbar-brand" href="#">
+    <a class="navbar-brand" href="/">
       <img src="/data/img/AmongDemons_LogoSquare.png" width="30" height="30" alt="">
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -12,31 +12,28 @@
           <a class="nav-link active" aria-current="page" href="/">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/market">Market</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link disabled" aria-disabled="true">Map</a>
         </li>
         <li class="nav-item">
           <a class="nav-link disabled" aria-disabled="true">Book</a>
         </li>
-        <li class="vr"></li>
+        <li class="nav-item">
+          <a class="nav-link" href="/market">Market</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav d-flex">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown
+            Guest
           </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item disabled" href="#" aria-disabled="true">Settings</a></li>
+            <li><a class="dropdown-item" href="/nfts/demons/faq/">FAQ & Help</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
+            <li><a class="dropdown-item disabled" href="#" aria-disabled="true">Login</a></li>
           </ul>
         </li>
       </ul>
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-light btn-outline-dark" type="submit">Search</button>
-      </form>
     </div>
   </div>
 </nav>
