@@ -28,9 +28,40 @@ session_start();
           </h2>
           <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse">
             <div class="accordion-body">
-              <p>In this world, we have 11 types of demons, 6 models in each category and you can mint each unit 101 times.</p>
-              <p>If we do the math, there are:</p>  
-              <p>Unique / Total : 66 / 6666</p>
+              <p>In this world, we have 11 types of demons, 6 models in each category and you can mint each one as follws:</p>
+
+              <table class="table table-sm text-center">
+                <tbody>
+                  <tr>
+                    <td>151</td>
+                    <td>Common</td>
+                    <td>91</td>
+                    <td>Epic</td>
+                  </tr>
+                  <tr>
+                    <td>131</td>
+                    <td>Uncommon</td>
+                    <td>71</td>
+                    <td>Legendary</td>
+                  </tr>
+                  <tr>
+                    <td>111</td>
+                    <td>Rare</td>
+                    <td>51</td>
+                    <td>Mythic</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <p>If we do the math, there are:</p>
+              <table class="table table-sm text-center">
+                <tbody>
+                  <tr>
+                    <td>Unique / Total</td>
+                    <td>66 / 6666</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
