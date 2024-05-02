@@ -10,6 +10,25 @@ main {
     padding: 0.1em;
 }
 
+.ad-common {
+    color: #D1D5D8;
+}
+.ad-uncommon {
+    color: #41A85F;
+}
+.ad-rare {
+    color: #2C82C9;
+}
+.ad-epic {
+    color: #9365B8;
+}
+.ad-legendary {
+    color: #FAC51C;
+}
+.ad-mythic {
+    color: #E25041;
+}
+
 #collection {
     min-height: 100px;
     text-align: center;
