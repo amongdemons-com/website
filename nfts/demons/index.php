@@ -101,7 +101,7 @@ $offset = ($currentPage - 1) * $perPage;
         for ($i=$offset+1; $i<=$offset+6; $i++) { ?>
           <div class="col">
             <div class="card h-100">
-              <img src="<?php echo "/nfts/demons/images/".$i.".png";?>" class="card-img-top" alt="<?php echo ucfirst(getRarity($i))." ".$demonName; ?>" title="<?php echo ucfirst(getRarity($i))." ".$demonName; ?>">
+              <img src="<?php echo "/nfts/demons/models/".$i.".png";?>" class="card-img-top" alt="<?php echo ucfirst(getRarity($i))." ".$demonName; ?>" title="<?php echo ucfirst(getRarity($i))." ".$demonName; ?>">
               <div class="card-body text-center">
                 <h5 class="card-title m-0 ad-<?php echo getRarity($i); ?>"><?php echo ucfirst(getRarity($i)); ?></h5>
               </div>
