@@ -41,13 +41,13 @@ function getTypeName($i) {
     case 6:
       return "Goh Loomb";
     case 7:
-      return "???";
+      return "Baobaw";
     case 8:
       return "Ko Pak";
     case 9:
       return "Chu Perk";
     case 10:
-      return "???";
+      return "Ba Be'aga";
     case 11:
       return "Vee Scol";
     default:

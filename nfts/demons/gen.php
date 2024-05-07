@@ -88,13 +88,13 @@ function getName($i) {
     case 6:
       return $rarity." Goh Loomb";
     case 7:
-      return $rarity." ???";
+      return $rarity." Baobaw";
     case 8:
       return $rarity." Ko Pak";
     case 9:
       return $rarity." Chu Perk";
     case 10:
-      return $rarity." ????";
+      return $rarity." Ba Be'aga";
     case 11:
       return $rarity." Vee Scol";
     default:
@@ -106,7 +106,7 @@ function populate($nfts) {
   $newArray = [];
   for ($i = 0; $i < count($nfts); $i++) {
     // Append the current index to the new array the specified number of times
-    $newArray = array_merge($newArray, array_fill(0, $nfts[$i], getName($i+1)));
+    $newArray = array_merge($newArray, array_fill(0, $nfts[$i], ($i+1)));
   }
   return $newArray;
 }
@@ -126,15 +126,15 @@ $nfts = [
 ];
 
 $gen = populate($nfts);
-//shuffle($gen);
+shuffle($gen);
 
 echo "Total: ".count($gen)."<br/>";
 
-
+/*
 $uniqueCounts = array_count_values($gen);
-print_r($uniqueCounts);
+print_r($uniqueCounts);*/
 
-// print_r($gen);
+print_r($gen);
 
 echo genMetadata(51, 6666);
 /*
