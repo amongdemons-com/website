@@ -88,7 +88,6 @@ $offset = ($currentPage - 1) * $perPage;
     <meta name="author" content="Among Demons">
 
     <?php require_once("../../data/parts/includes.php"); ?>
-    <link rel="icon" href="/data/img/AmongDemons_LogoSquare.png" type="image/x-icon">
   </head>
   <body>
     <?php require_once("../../data/parts/nav.php"); ?>

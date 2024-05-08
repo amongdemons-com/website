@@ -12,7 +12,6 @@ session_start();
     <meta name="author" content="Among Demons">
 
     <?php require_once("../../../data/parts/includes.php"); ?>
-    <link rel="icon" href="/data/img/AmongDemons_LogoSquare.png" type="image/x-icon">
   </head>
   <body>
     <?php require_once("../../../data/parts/nav.php"); ?>
@@ -23,31 +22,31 @@ session_start();
             <div class="carousel-inner">
               <div class="carousel-item active">
                 <img src="/nfts/demons/models/41.png" class="d-block w-100" alt="Legendary Baobaw">
-                <div class="carousel-caption d-none d-md-block p-0 bg-dark">
+                <div class="carousel-caption d-block p-0 bg-dark">
                   <h5 class="my-1 py-2 text-dark-emphasis bg-dark-subtle"><span class="ad-legendary">Legendary</span> Baobaw</h5>
                 </div>
               </div>
               <div class="carousel-item">
                 <img src="/nfts/demons/models/8.png" class="d-block w-100" alt="Uncommon Gon G'ah">
-                <div class="carousel-caption d-none d-md-block p-0 bg-dark">
+                <div class="carousel-caption d-block p-0 bg-dark">
                   <h5 class="my-1 py-2 text-dark-emphasis bg-dark-subtle"><span class="ad-uncommon">Uncommon</span> Gon G'ah</h5>
                 </div>
               </div>
               <div class="carousel-item">
                 <img src="/nfts/demons/models/58.png" class="d-block w-100" alt="Epic Ba Be'aga">
-                <div class="carousel-caption d-none d-md-block p-0 bg-dark">
+                <div class="carousel-caption d-block p-0 bg-dark">
                   <h5 class="my-1 py-2 text-dark-emphasis bg-dark-subtle"><span class="ad-epic">Epic</span> Ba Be'aga</h5>
                 </div>
               </div>
               <div class="carousel-item">
                 <img src="/nfts/demons/models/13.png" class="d-block w-100" alt="Common Ma'Zga">
-                <div class="carousel-caption d-none d-md-block p-0 bg-dark">
+                <div class="carousel-caption d-block p-0 bg-dark">
                   <h5 class="my-1 py-2 text-dark-emphasis bg-dark-subtle"><span class="ad-common">Common</span> Ma'Zga</h5>
                 </div>
               </div>
               <div class="carousel-item">
                 <img src="/nfts/demons/models/53.png" class="d-block w-100" alt="Legendary Chu Perk">
-                <div class="carousel-caption d-none d-md-block p-0 bg-dark">
+                <div class="carousel-caption d-block p-0 bg-dark">
                   <h5 class="my-1 py-2 text-dark-emphasis bg-dark-subtle"><span class="ad-legendary">Legendary</span> Chu Perk</h5>
                 </div>
               </div>
