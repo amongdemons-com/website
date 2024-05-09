@@ -76,6 +76,14 @@ $demonName = getTypeName($currentPage);
 
 // Offset for image selection based on current page
 $offset = ($currentPage - 1) * $perPage;
+
+$startPage = ($currentPage <= 4) ? 1 : $currentPage - 2;
+$endPage = ($currentPage >= ($totalPages - 2)) ? $totalPages : $currentPage + 2;
+if ($currentPage==1)
+  $endPage++;
+if ($currentPage==11)
+  $startPage--;
+
 ?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
@@ -92,8 +100,26 @@ $offset = ($currentPage - 1) * $perPage;
   <body>
     <?php require_once("../../data/parts/nav.php"); ?>
     <main class="container">
-      <h1 class="text-center pt-3"><?php echo $demonName; ?></h1>
-      <h5 class="text-center">demon type <?php echo $currentPage; ?></h5>
+      <div class="d-flex justify-content-between align-items-center py-2">
+        <div class="fs-1 ps-2">
+          <?php
+          if ($currentPage > 1) {
+            echo '<a class="text-decoration-none" href="?type=' . ($currentPage - 1) . '">&laquo;</a>';
+          } else echo '&nbsp;&nbsp;';
+          ?>
+        </div>
+        <div>
+          <h1 class="text-center pt-3"><?php echo $demonName; ?></h1>
+          <h5 class="text-center">demon type <?php echo $currentPage; ?></h5>
+        </div>
+        <div class="fs-1 pe-2">
+          <?php
+          if ($currentPage < $totalPages) {
+            echo '<a class="text-decoration-none" href="?type=' . ($currentPage + 1) . '">&raquo;</a>';
+          } else echo '&nbsp;&nbsp;';
+          ?>
+        </div>
+      </div>
       <div class="row row-cols-1 row-cols-md-3 row-cols-lg-3 row-cols-xl-3 g-2 py-4">
         <?php
         // Loop through each image and display it
@@ -108,21 +134,31 @@ $offset = ($currentPage - 1) * $perPage;
           </div>
         <?php } ?>
       </div>
-      <nav>
+
+      <nav class="mt-2 mb-4">
         <ul class="pagination justify-content-center">
           <?php
-          // Pagination links
-          if ($totalPages > 1) {
-            if ($currentPage > 1) {
-              echo '<li class="page-item"><a class="page-link" href="?type=' . ($currentPage - 1) . '">Previous</a></li>';
-            }
-            for ($i = 1; $i <= $totalPages; $i++) {
-              $active = ($i == $currentPage) ? 'class="page-link active"' : 'class="page-link"';
-              echo '<li class="page-item"><a '.$active.' href="?type=' . $i . '">' . $i . '</a></li>';
-            }
-            if ($currentPage < $totalPages) {
-              echo '<li class="page-item"><a class="page-link" href="?type=' . ($currentPage + 1) . '">Next</a></li>';
-            }
+          if ($currentPage > 1) {
+            echo '<li class="page-item"><a class="page-link" href="?type=' . ($currentPage - 1) . '">&laquo;</a></li>';
+          }
+
+          if ($currentPage > 4) {
+            echo '<li class="page-item"><a class="page-link" href="?type=1">1</a></li>';
+            echo '<li class="m-2 text-secondary">&bull;</li>';
+          }
+          
+          for ($i = $startPage; $i <= $endPage; $i++) {
+            $active = ($i == $currentPage) ? 'class="page-link active"' : 'class="page-link"';
+            echo '<li class="page-item"><a '.$active.' href="?type=' . $i . '">' . $i . '</a></li>';
+          }
+          
+          if ($currentPage < ($totalPages - 1)) {
+            echo '<li class="m-2 text-secondary">&bull;</li>';
+            echo '<li class="page-item"><a class="page-link" href="?type=' . $totalPages . '">' . $totalPages . '</a></li>';
+          }
+          
+          if ($currentPage < $totalPages) {
+            echo '<li class="page-item"><a class="page-link" href="?type=' . ($currentPage + 1) . '">&raquo;</a></li>';
           }
           ?>
         </ul>

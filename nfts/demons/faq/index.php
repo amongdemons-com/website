@@ -71,9 +71,11 @@ session_start();
           <h1>Founders Collection</h1>
           <p class="fs-5 py-2">We converted the first <a class="text-center" href="/nfts/demons/" target="_blank">demon models</a> into NFTs. Owning a piece makes you a supporter of the Among Demons project.</p>
           
-          <a class="text-center" href="<?php echo $stargazeUrl; ?>" target="_blank">
-            <button type="button" class="btn btn-success">Buy on Stargaze</button>
-          </a>
+          <p class="text-center text-md-start">
+            <a href="<?php echo $stargazeUrl; ?>" target="_blank">
+              <button type="button" class="btn btn-success">Buy on Stargaze</button>
+            </a>
+          </p>
 
           <h2 class="text-center py-2 mt-4">FAQ</h2>
 
