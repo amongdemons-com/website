@@ -93,6 +93,7 @@ if ($currentPage==11)
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><?php echo $demonName; ?> - Among Demons NFTs</title>
     <meta name="description" content="Demon type <?php echo $currentPage; ?> | These models are part of the founders collection. The NFTs are minted and transacted on Stargaze from the Cosmos ecosystem.">
+    <meta property="og:image" content="https://amongdemons.com/nfts/demons/thumbnails/<?php echo $currentPage; ?>.png" />
     <meta name="author" content="Among Demons">
 
     <?php require_once("../../data/parts/includes.php"); ?>
