@@ -102,7 +102,7 @@ session_start();
               </h2>
               <div id="flush-collapseTwo" class="accordion-collapse collapse" data-bs-parent="#demonsFAQ">
                 <div class="accordion-body">
-                  <p>In this world, we have 11 types of demons, 6 models in each category and you can mint each one as follws:</p>
+                  <p>In this world, we have 11 types of demons, 6 models in each category and you can mint each one as follows:</p>
                   <div class="row mb-4">
                     <div class="col-md-6 col-sm-12 d-flex justify-content-center">
                       <span class="w-25 text-end pe-2">151</span>

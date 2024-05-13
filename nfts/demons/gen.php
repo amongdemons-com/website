@@ -134,16 +134,17 @@ echo "Total: ".count($gen)."<br/>";
 $uniqueCounts = array_count_values($gen);
 print_r($uniqueCounts);*/
 
-print_r($gen);
+// print_r($gen);
 
-echo genMetadata(51, 6666);
-/*
+
 try {
-  copyImage("models/66.png", "images/6666.png");
-  file_put_contents("metadata/6666.json", genMetadata(66, 6666));
-  echo "Image copied successfully!";
+  foreach ($gen as $id => $model) {
+    copyImage("models/".$model.".png", "images/".($id+1).".png");
+    file_put_contents("metadata/".($id+1).".json", genMetadata($model, ($id+1)));
+    echo ($id+1)." - ".$model."<br/>";
+  }
 } catch (Exception $e) {
   echo "Error copying image: " . $e->getMessage();
-}*/
+}
 
 ?>
