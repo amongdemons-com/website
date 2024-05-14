@@ -9,7 +9,8 @@
 
 <?php
 
-$stargazeUrl = "https://www.stargaze.zone/";
-$stargazeAddress = "stars1nzs2uchhc5zgqg65pduxjtsejmx6m4qpar3hsq";
+$stargazeUrl = "https://www.stargaze.zone/l/stars1mesfmezthl2r592gqs9zgamdkcr5q3rhf0vuzcaal2w8kza57yfqfn55tz";
+$stargazeUrlAll = "https://www.stargaze.zone/m/stars1mesfmezthl2r592gqs9zgamdkcr5q3rhf0vuzcaal2w8kza57yfqfn55tz/tokens";
+$stargazeAddress = "stars1mesfmezthl2r592gqs9zgamdkcr5q3rhf0vuzcaal2w8kza57yfqfn55tz";
 
 ?>

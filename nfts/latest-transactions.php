@@ -28,4 +28,13 @@ file_put_contents("latest-transactions.js", $result);
 if (curl_errno($ch)) {
     echo 'Error:' . curl_error($ch);
 } else echo 'nft-latest-transactions.js updated.';
+
+/*
+query Collection {
+  collection(collectionAddr: "stars1mesfmezthl2r592gqs9zgamdkcr5q3rhf0vuzcaal2w8kza57yfqfn55tz") {
+    tokensCount
+    ownersCount
+  }
+}
+*/
 ?>

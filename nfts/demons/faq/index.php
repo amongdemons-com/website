@@ -71,13 +71,21 @@ session_start();
           <h1>Founders Collection</h1>
           <p class="fs-5 py-2">We converted the first <a class="text-center" href="/nfts/demons/" target="_blank">demon models</a> into NFTs. Owning a piece makes you a supporter of the Among Demons project.</p>
           
-          <p class="text-center text-md-start">
+          <p class="text-center text-secondary mb-0">Game Dev Start</p>
+          <?php
+          $devGoal = 5/1000*100;
+          ?>
+          <div class="progress mb-4" role="progressbar" aria-label="Info example" aria-valuenow="<?php echo $devGoal;?>" aria-valuemin="0" aria-valuemax="100" style="height: 40px">
+            <div class="progress-bar bg-info overflow-visible text-light" style="width: <?php echo $devGoal;?>%">5 / 1000</div>
+          </div>
+          
+          <p class="text-center mb-5">
             <a href="<?php echo $stargazeUrl; ?>" target="_blank">
-              <button type="button" class="btn btn-success">Buy on Stargaze</button>
+              <button type="button" class="btn btn-success">Mint on Stargaze</button>
             </a>
           </p>
 
-          <h2 class="text-center py-2 mt-4">FAQ</h2>
+          <h2 class="text-center py-2">FAQ</h2>
 
           <div class="accordion accordion-flush" id="demonsFAQ">
             <div class="accordion-item">
@@ -148,7 +156,7 @@ session_start();
                 <div class="accordion-body">
                   <p class="mb-0">Each NFT is created for <span class="fw-bold text-danger-emphasis">666</span> <span class="text-warning-emphasis">STARS</span></p>
                   <p class="text-secondary fs-6">(because ... obvious reasons)</p>
-                  <p>Of course, there is a secondary <a href="<?php echo $stargazeUrl; ?>" target="_blank">market</a> where people trade them at whatever price they like.</p>
+                  <p>Of course, there is a secondary <a href="<?php echo $stargazeUrlAll; ?>" target="_blank">market</a> where people trade them at whatever price they like.</p>
                 </div>
               </div>
             </div>
