@@ -71,13 +71,36 @@ session_start();
           <h1>Founders Collection</h1>
           <p class="fs-5 py-2">We converted the first <a class="text-center" href="/nfts/demons/" target="_blank">demon models</a> into NFTs. Owning a piece makes you a supporter of the Among Demons project.</p>
           
-          <p class="text-center text-secondary mb-0">Game Dev Start</p>
-          <?php
-          $devGoal = 5/1000*100;
-          ?>
-          <div class="progress mb-4" role="progressbar" aria-label="Info example" aria-valuenow="<?php echo $devGoal;?>" aria-valuemin="0" aria-valuemax="100" style="height: 40px">
-            <div class="progress-bar bg-info overflow-visible text-light" style="width: <?php echo $devGoal;?>%">5 / 1000</div>
+          <!--<p class="text-center text-secondary mb-0">Game Dev Start</p>-->
+          <p class="text-center text-secondary mb-0">Giveaway</p>
+          
+          <div class="progress mb-4 position-relative" role="progressbar" aria-label="Info example" aria-valuenow="<?php echo $devGoal;?>" aria-valuemin="0" aria-valuemax="100" style="height: 40px">
+            <div id="progressBar" class="progress-bar bg-info overflow-visible text-light"></div>
+            <div id="progressBarLabel" class="position-absolute top-50 start-50 translate-middle"></div>
           </div>
+          <script>
+            // Function to fetch data from the PHP script
+            function fetchData() {
+              fetch('/nfts/demons/info/get-total-mints.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error:', data.error, data.details);
+                        document.getElementById('progressBarLabel').innerText = ' Error loading data ';
+                    } else {
+                        $('#progressBarLabel').html(data.minted + ` / 100`);
+                        $('#progressBar').css({"width":((5/100)*100)+"%"});
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    document.getElementById('progressBarLabel').innerText = ' Error loading data ';
+                });
+            }
+
+            // Fetch data when the page loads
+            window.onload = fetchData;
+          </script>
           
           <p class="text-center mb-5">
             <a href="<?php echo $stargazeUrl; ?>" target="_blank">
