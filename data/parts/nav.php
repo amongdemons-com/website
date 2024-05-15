@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top py-0">
   <div class="container">
     <a class="navbar-brand py-1 me-1" href="/">
-      <img src="/data/img/amongdemons_logo_1500x1500.png" width="45" height="45" alt="Among Demons Logo">
+      <img src="/data/img/amongdemons_logo_250x250.png" width="45" height="45" alt="Among Demons Logo">
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
