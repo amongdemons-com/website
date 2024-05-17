@@ -183,8 +183,21 @@ session_start();
                 </div>
               </div>
             </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseFour" aria-expanded="false" aria-controls="flush-collapseThree">
+                  Targets and rewards
+                </button>
+              </h2>
+              <div id="flush-collapseFour" class="accordion-collapse collapse" data-bs-parent="#demonsFAQ">
+                <div class="accordion-body">
+                  <p>The Founders Collection was created to fund the development of the Among Demons <a href="https://x.com/AmongDemonsGame/status/1788847266528149966" target="_blank">browser-based game</a>.</p>
+                  <p>When we hit <span class="fw-bold text-warning-emphasis">1000</span> / 6666 mints, we'll start working on it.</p>
+                  <p>As an incentive, we'll be <span class="fw-bold text-success-emphasis">giving away</span> <span class="fw-bold text-warning-emphasis">10 NFTs</span> for each <span class="fw-bold text-warning-emphasis">100</span> minted, until we reach <span class="fw-bold text-warning-emphasis">1000</span>. They will be randomly airdropped to holders.</p>
+                </div>
+              </div>
+            </div>
           </div>
-          
         </div>
       </div>
     </main>
