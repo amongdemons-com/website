@@ -29,6 +29,17 @@ main {
     color: #E25041;
 }
 
+.click-to-copy {
+  cursor: pointer;
+  font-size: 0.8em;
+  padding: 0.3em 0;
+}
+.click-to-copy-icon-success {
+  display: none;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
 #collection {
     min-height: 100px;
     text-align: center;

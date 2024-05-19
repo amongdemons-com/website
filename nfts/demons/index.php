@@ -165,5 +165,6 @@ if ($currentPage==11)
         </ul>
       </nav>
     </main>
+    <?php require_once("../../data/parts/footer.php"); ?>
   </body>
 </html>

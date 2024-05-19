@@ -201,5 +201,6 @@ session_start();
         </div>
       </div>
     </main>
+    <?php require_once("../../../data/parts/footer.php"); ?>
   </body>
 </html>
