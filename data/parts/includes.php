@@ -22,6 +22,8 @@
 
 $stargazeUrl = "https://www.stargaze.zone/l/stars1mesfmezthl2r592gqs9zgamdkcr5q3rhf0vuzcaal2w8kza57yfqfn55tz";
 $stargazeUrlAll = "https://www.stargaze.zone/m/stars1mesfmezthl2r592gqs9zgamdkcr5q3rhf0vuzcaal2w8kza57yfqfn55tz/tokens";
+$stargazeUrlAll = "https://www.stargaze.zone/m/stars1mesfmezthl2r592gqs9zgamdkcr5q3rhf0vuzcaal2w8kza57yfqfn55tz/tokens?sort=collection_addr_token_id_asc"; // temp
+
 $stargazeAddress = "stars1mesfmezthl2r592gqs9zgamdkcr5q3rhf0vuzcaal2w8kza57yfqfn55tz";
 
 ?>

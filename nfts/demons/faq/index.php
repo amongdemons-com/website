@@ -72,11 +72,11 @@ session_start();
           <p class="fs-5 py-2">We converted the first <a class="text-center" href="/nfts/demons/" target="_blank">demon models</a> into NFTs. Owning a piece makes you a supporter of the Among Demons project.</p>
           
           <!--<p class="text-center text-secondary mb-0">Game Dev Start</p>-->
-          <p class="text-center text-secondary mb-0">Giveaway</p>
+          <p class="text-center text-secondary mb-0">Game Dev Start</p>
           
           <div class="progress mb-4 position-relative" role="progressbar" aria-label="Info example" aria-valuenow="<?php echo $devGoal;?>" aria-valuemin="0" aria-valuemax="100" style="height: 40px">
-            <div id="progressBar" class="progress-bar bg-info overflow-visible text-light"></div>
-            <div id="progressBarLabel" class="position-absolute top-50 start-50 translate-middle"></div>
+            <div id="progressBar" class="progress-bar bg-info overflow-visible"></div>
+            <div id="progressBarLabel" class="position-absolute top-50 start-50 translate-middle text-dark"></div>
           </div>
           <script>
             // Function to fetch data from the PHP script
@@ -88,8 +88,8 @@ session_start();
                         console.error('Error:', data.error, data.details);
                         document.getElementById('progressBarLabel').innerText = ' Error loading data ';
                     } else {
-                        $('#progressBarLabel').html(data.minted + ` / 100`);
-                        $('#progressBar').css({"width":((5/100)*100)+"%"});
+                        $('#progressBarLabel').html(data.minted + ` / 3000`);
+                        $('#progressBar').css({"width":((data.minted/3000)*100)+"%"});
                     }
                 })
                 .catch(error => {
@@ -192,8 +192,8 @@ session_start();
               <div id="flush-collapseFour" class="accordion-collapse collapse" data-bs-parent="#demonsFAQ">
                 <div class="accordion-body">
                   <p>The Founders Collection was created to fund the development of the Among Demons <a href="https://x.com/AmongDemonsGame/status/1788847266528149966" target="_blank">browser-based game</a>.</p>
-                  <p>When we hit <span class="fw-bold text-warning-emphasis">1000</span> / 6666 mints, we'll start working on it.</p>
-                  <p>As an incentive, we'll be <span class="fw-bold text-success-emphasis">giving away</span> <span class="fw-bold text-warning-emphasis">10 NFTs</span> for each <span class="fw-bold text-warning-emphasis">100</span> minted, until we reach <span class="fw-bold text-warning-emphasis">1000</span>. They will be randomly airdropped to holders.</p>
+                  <p>When we hit <span class="fw-bold text-warning-emphasis">3000</span> / 6666 mints, we'll start working on it.</p>
+                  <p>As an incentive, we'll be <span class="fw-bold text-success-emphasis">giving away</span> <span class="fw-bold text-warning-emphasis">10 NFTs</span> for each <span class="fw-bold text-warning-emphasis">100</span> minted, until we reach <span class="fw-bold text-warning-emphasis">3000</span>. They will be randomly airdropped to holders.</p>
                 </div>
               </div>
             </div>
