@@ -10,6 +10,7 @@ session_start();
     <title>Founders Collection - Among Demons NFTs</title>
     <meta name="description" content="We converted the first demon models into NFTs. Owning a piece makes you a supporter of the Among Demons project.">
     <meta name="author" content="Among Demons">
+    <meta property="og:image" content="https://amongdemons.com/nfts/demons/faq/learnmore_founders_collection.png" />
 
     <?php require_once("../../../data/parts/includes.php"); ?>
   </head>
