@@ -178,8 +178,7 @@ session_start();
               </h2>
               <div id="flush-collapseThree" class="accordion-collapse collapse" data-bs-parent="#demonsFAQ">
                 <div class="accordion-body">
-                  <p class="mb-0">Each NFT is created for <span class="fw-bold text-danger-emphasis">666</span> <span class="text-warning-emphasis">STARS</span></p>
-                  <p class="text-secondary fs-6">(because ... obvious reasons)</p>
+                  <p>Each NFT is created for <span class="fw-bold text-danger-emphasis">66</span> <span class="text-warning-emphasis">STARS</span></p>
                   <p>Of course, there is a secondary <a href="<?php echo $stargazeUrlAll; ?>" target="_blank">market</a> where people trade them at whatever price they like.</p>
                 </div>
               </div>
@@ -194,7 +193,7 @@ session_start();
                 <div class="accordion-body">
                   <p>The Founders Collection was created to fund the development of the Among Demons <a href="https://x.com/AmongDemonsGame/status/1788847266528149966" target="_blank">browser-based game</a>.</p>
                   <p>When we hit 6666 mints, we'll start working on it.</p>
-                  <p>As an incentive, we'll be <span class="fw-bold text-success-emphasis">giving away</span> <span class="fw-bold text-warning-emphasis">100 NFTs</span> for each <span class="fw-bold text-warning-emphasis">1000</span> minted, until we reach <span class="fw-bold text-warning-emphasis">3000</span>. They will be randomly airdropped to holders.</p>
+                  <p>As an incentive, we'll be <span class="fw-bold text-success-emphasis">giving away</span> <span class="fw-bold text-warning-emphasis">100 NFTs</span> for each <span class="fw-bold text-warning-emphasis">1000</span> minted. They will be randomly airdropped to holders.</p>
                 </div>
               </div>
             </div>
