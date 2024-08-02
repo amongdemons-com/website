@@ -14,9 +14,6 @@
         <li class="nav-item">
           <a class="nav-link" href="/nfts/demons/">Demons</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" href="#" aria-disabled="true">Items (soon)</a>
-        </li>
         <li class="nav-item pt-1">
           <a class="nav-link py-0" href="<?php echo $stargazeUrl; ?>" target="_blank">
             <button type="button" class="btn btn-success btn-sm">Buy Now</button>
