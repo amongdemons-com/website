@@ -1,56 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AmongDemons.com</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      font-family: 'Arial', sans-serif;
-    }
-    .container {
-      text-align: center;
-    }
-    .mage-image {
-      width: 400px;
-      height: 400px;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <!-- SVG Image displaying amongdemons.com -->
-    <svg class="mage-image" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-      <!-- Background circle -->
-      <circle cx="200" cy="200" r="195" fill="#1a1a2e"/>
-      
-      <!-- "A" letter -->
-      <text x="70" y="220" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="#e94560">A</text>
-      
-      <!-- "m" letters (stylized) -->
-      <path d="M130 170 L110 200 L130 230 L110 260 L125 260 L145 230 L165 260 L180 260 L195 230 L215 260 L230 260 L245 230" fill="#e94560"/>
-      
-      <!-- "o" -->
-      <circle cx="220" cy="210" r="30" fill="#1a1a2e"/>
-      <text x="210" y="218" font-family="Arial, sans-serif" font-size="40" text-anchor="middle" fill="#ffffff">o</text>
-      
-      <!-- "n" -->
-      <path d="M260 175 L250 230 L270 230 L280 180 L300 180" stroke="#e94560" stroke-width="8" fill="none"/>
-      
-      <!-- "d" -->
-      <path d="M320 160 Q335 145 350 160 L345 195 Q325 175 310 195 Z M310 180 L315 230" fill="#e94560"/>
-      <path d="M340 160 L345 130 L348 140 L355 130" stroke="#e94560" stroke-width="6" fill="none"/>
-      
-      <!-- ".com" -->
-      <text x="340" y="250" font-family="Arial, sans-serif" font-size="30" fill="#00d4ff">.com</text>
-    </svg>
-  </div>
-</body>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" type="image/x-icon" href="/data/images/amongdemons.ico">
+    <title>Demon Type - Among Demons NFTs</title>
+    <meta name="description" content="These models are part of the founders collection. The NFTs are minted and transacted on Stargaze from the Cosmos ecosystem.">
+    <meta name="author" content="Among Demons">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/data/main.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+          <img src="/data/images/amongdemons_logo_250x250.png" alt="" class="d-inline-block align-middle me-2 logo-nav" style="width: 48px; height: 48px;">
+          Among Demons
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <!--<li class="nav-item">
+              <a class="nav-link" href="#">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Contact</a>
+            </li>-->
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+      <div class="d-flex justify-content-between align-items-center py-2">
+        <div class="fs-1 ps-2" id="prevBtn"></div>
+        <div>
+          <h1 class="text-center pt-3" id="demonName"></h1>
+          <h5 class="text-center" id="demonType"></h5>
+        </div>
+        <div class="fs-1 pe-2" id="nextBtn"></div>
+      </div>
+
+      <div class="row row-cols-1 row-cols-md-3 row-cols-lg-3 row-cols-xl-3 g-2 py-4" id="demonGrid">
+        <!-- Demons will be dynamically loaded here -->
+      </div>
+
+      <nav class="mt-2 mb-4">
+        <ul class="pagination justify-content-center" id="pagination"></ul>
+      </nav>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-3 my-4 border-top">
+      <div class="container text-center text-body-secondary">
+        <p>&copy; 2026 Among Demons. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script for initial page type will be injected by server here -->
+    <script src="/data/js/index.js"></script>
+  </body>
 </html>

@@ -1,0 +1,204 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 18px;
+}
+main {
+    padding: 0.1em;
+}
+
+.ad-common {
+    color: #D1D5D8;
+}
+.ad-uncommon {
+    color: #41A85F;
+}
+.ad-rare {
+    color: #2C82C9;
+}
+.ad-epic {
+    color: #9365B8;
+}
+.ad-legendary {
+    color: #FAC51C;
+}
+.ad-mythic {
+    color: #E25041;
+}
+
+.click-to-copy {
+  cursor: pointer;
+  font-size: 0.8em;
+  padding: 0.3em 0;
+}
+.click-to-copy-icon-success {
+    display: none;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+#collection {
+    min-height: 100px;
+    text-align: center;
+    margin-top: 3em;
+    padding: 2em 0;
+}
+#collection > div {
+    margin: auto;
+}
+#collection .nfts {
+    display: flex;    
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+#collection .nfts .element {
+    width: 16%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: #9c9c9c;
+    padding: 0 0.5em 2em 0.5em;
+}
+#collection .nfts .element img {
+    width: 100%;
+    max-width: 100%;
+    border: 1px solid #aaa;
+}
+#collection .nfts .element span {
+    font-size: 0.8em;
+    text-align: left;
+}
+#collection .nfts .element span.price {
+    padding-bottom: 0.2em;
+    line-height: 1.5;
+}
+#collection .nfts .element a.id {
+    font-weight: bold;
+    font-size: 1em;
+    color: #FFF;
+    padding: 0.3em 0;
+}
+#collection .nfts .element a.id:hover {
+    color: tomato;
+}
+#collection h2 {
+    padding-bottom: 0.7em;
+    font-size: 2.4em;
+}
+#collection .sync {
+    color: #ccc;
+    font-size: 0.8em;
+    text-align: right;
+    width: 100%;
+    padding: 0 1em;
+}
+#collection .more {
+    padding: 2em 0 0.5em 0;
+    clear: both;
+    display: inline-block;
+}
+#collection .more p {
+    padding: 0 2em;
+}
+#collection .more a {
+    font-weight: bold;
+    font-size: 0.9em;
+    color: tomato;
+}
+
+
+/* mobile */
+@media (max-width: 768px) {
+    #collection .nfts .element {
+        width: 27%;
+    }
+    #collection .nfts .element:nth-child(-n + 9 of .element) {
+        display: none;
+    }
+    #collection .sync {
+        text-align: center;
+    }
+}
+
+/* Pagination styling - horizontal layout without bullets */
+#pagination {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 1rem auto;
+    gap: 0;
+}
+
+#pagination ul {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0.25rem;
+    width: auto;
+}
+
+#pagination li {
+    display: inline-flex !important;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+#pagination .page-item {
+    display: inline-flex !important;
+    align-items: center;
+    margin: 0;
+}
+
+#pagination .page-link {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    margin: 0;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    min-width: 36px;
+}
+
+#pagination .page-link:hover {
+    text-decoration: none;
+}
+
+#pagination .page-item.active .page-link {
+    background-color: #2C82C9 !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+#pagination .page-item.disabled .page-link {
+    cursor: default;
+    opacity: 0.5;
+}
+
+/* Remove any bullet points or pseudo-elements */
+#pagination li::before,
+#pagination li::after,
+#pagination li > a:before,
+#pagination li > a::after,
+#pagination .m-2 {
+    display: none !important;
+}
+
+/* Navigation buttons styling */
+#prevBtn,
+#nextBtn {
+    min-width: 40px;
+    text-align: center;
+}
