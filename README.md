@@ -12,8 +12,9 @@ amongdemons.com/
 ├── package.json             # Node.js dependencies and scripts
 ├── package-lock.json        # Dependency lock file
 ├── server.js                # Express server backend
+├── views/                   # EJS view templates
+│   └── index.ejs           # Main gallery template
 └── public/                  # Public-facing static assets
-    ├── index.html           # Main HTML template
     ├── data/
     │   ├── main.css         # Custom stylesheet
     │   ├── images/          # Logo and brand assets
@@ -26,7 +27,7 @@ amongdemons.com/
 ## 🚀 Features
 
 - **Bootstrap 5** dark-themed responsive design
-- **Paginated demon gallery** with 6 images per page (66 total demo images)
+- **Paginated demon gallery** with 3 images per row (6 total per page for types 1-12)
 - **Rarity-based categorization**: Mythic, Common, Uncommon, Rare, Epic, Legendary
 - **Demon names** for each type (Boof Nitza, Gon G'ah, Ma'Zga, etc.)
 - Dynamic navigation with previous/next buttons and page numbers
@@ -36,9 +37,10 @@ amongdemons.com/
 ## 🛠️ Tech Stack
 
 | Technology | Purpose |
-|------------|---------|
+|------------|--------|
 | Express.js | HTTP server & API |
 | Bootstrap 5 | Responsive UI framework |
+| EJS (Embedded JavaScript) | View templating engine |
 | Vanilla JavaScript | Client-side logic |
 | CSS3 | Custom styling |
 
@@ -56,7 +58,7 @@ amongdemons.com/
 ### Response Logic
 
 - **Root route (`/`)**: Auto-redirects to `/demons/type/1` when accessed without query parameters
-- **Valid type parameter**: Serves the main `index.html` page
+- **Valid type parameter**: Serves the main `index.ejs` template
 - **Invalid type**: Returns 400 error for non-numeric values
 
 ---
@@ -85,29 +87,29 @@ public/data/images/
 
 1. **User visits the site** → Redirected to `/demons/type/1` (first page)
 
-2. **Server renders HTML** with Bootstrap theme and loads custom assets
+2. **Server renders EJS template** with Bootstrap theme and loads custom assets
 
-3. **Client-side script initializes**:
+3. **Template calculates pagination**:
    - Extracts page number from URL path segment
    - Calculates demon type names based on current page
-   - Renders 6 demons per page from the gallery
+   - Renders 3 demons per row (6 per page for first 12 types)
    - Generates pagination controls
 
 4. **Rarity Assignment Logic** (cyclic):
    | Index Modulo | Rarity |
    |--------------|--------|
-   | 0            | Mythic |
-   | 1            | Common |
-   | 2            | Uncommon |
-   | 3            | Rare |
-   | 4            | Epic |
-   | 5            | Legendary |
+   | 0            | Common |
+   | 1            | Uncommon |
+   | 2            | Rare |
+   | 3            | Epic |
+   | 4            | Legendary |
+   | 5            | Mythic |
 
 ---
 
 ## 📖 Demon Type Names
 
-The first ~12 demon types in the collection:
+The first 11 demon types in the collection:
 
 1. Boof Nitza
 2. Gon G'ah
@@ -120,7 +122,6 @@ The first ~12 demon types in the collection:
 9. Chu Perk
 10. Ba Be'aga
 11. Vee Scol
-12+ Unknown (demo data)
 
 ---
 
