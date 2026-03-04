@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
   <head>
+    <link rel="icon" href="/data/images/amongdemons.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <% const demonName = getDemonName(currentPage); %>
     <title><%= demonName %> - Among Demons NFTs</title>
     <meta name="description" content="These models are part of the founders collection. The NFTs are minted and transacted on Stargaze from the Cosmos ecosystem.">
 
+    <!-- Page Metadata Thumbnail -->
+    <meta property="og:image" conten="<%= CONFIG.thumbnailsDir %><%= currentPage %>.png">
+    
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/data/main.css" rel="stylesheet">
@@ -24,6 +28,14 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="demonsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Demons</a>
+              <ul class="dropdown-menu dropdown-menu-end" id="demonTypesDropdown">
+                <% for (let i = 1; i <= CONFIG.demonNames.length; i++) { %>
+                  <li><a class="dropdown-item" href="/demons/type/<%= i %>"><%= CONFIG.demonNames[i - 1] %></a></li>
+                <% } %>
+              </ul>
+            </li>
           </ul>
         </div>
       </div>
@@ -66,6 +78,23 @@
           </div>
         <% } %>
       </div>
+
+      <!-- Pagination -->
+      <nav aria-label="Page navigation" class="my-4">
+        <ul class="pagination justify-content-center flex-wrap gap-1 pagination-sm-responsive">
+          <% for (let p = 1; p <= totalPages && p <= 11; p++) { %>
+            <% if (p === currentPage) { %>
+              <li class="page-item active" aria-current="page">
+                <span class="page-link d-flex align-items-center justify-content-center">
+                  <%= p %>
+                </span>
+              </li>
+            <% } else { %>
+              <li class="page-item"><a class="page-link d-flex align-items-center justify-content-center" href="/demons/type/<%= p %>"><%= p %></a></li>
+            <% } %>
+          <% } %>
+        </ul>
+      </nav>
 
     </main>
 

@@ -4,6 +4,16 @@ A simple Express.js-based website showcasing the **Among Demons** NFT collection
 
 ---
 
+## 🚀 Features
+
+- **Bootstrap 5** dark-themed responsive design
+- **Paginated demon gallery** with 3 images per row (6 total per page for types 1-12)
+- **Rarity-based categorization**: Mythic, Common, Uncommon, Rare, Epic, Legendary
+- **Demon names** for each type (Boof Nitza, Gon G'ah, Ma'Zga, etc.)
+- Dynamic navigation with previous/next buttons and page numbers
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -21,28 +31,6 @@ amongdemons.com/
     │   └── js/
     │       └── index.js     # Client-side application logic
 ```
-
----
-
-## 🚀 Features
-
-- **Bootstrap 5** dark-themed responsive design
-- **Paginated demon gallery** with 3 images per row (6 total per page for types 1-12)
-- **Rarity-based categorization**: Mythic, Common, Uncommon, Rare, Epic, Legendary
-- **Demon names** for each type (Boof Nitza, Gon G'ah, Ma'Zga, etc.)
-- Dynamic navigation with previous/next buttons and page numbers
-
----
-
-## 🛠️ Tech Stack
-
-| Technology | Purpose |
-|------------|--------|
-| Express.js | HTTP server & API |
-| Bootstrap 5 | Responsive UI framework |
-| EJS (Embedded JavaScript) | View templating engine |
-| Vanilla JavaScript | Client-side logic |
-| CSS3 | Custom styling |
 
 ---
 
@@ -148,6 +136,18 @@ npm start
 ### Access the Site
 
 Open your browser to: http://localhost:3000
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|------------|--------|
+| Express.js | HTTP server & API |
+| Bootstrap 5 | Responsive UI framework |
+| EJS (Embedded JavaScript) | View templating engine |
+| Vanilla JavaScript | Client-side logic |
+| CSS3 | Custom styling |
 
 ---
 

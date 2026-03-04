@@ -202,3 +202,34 @@ main {
     min-width: 40px;
     text-align: center;
 }
+
+/* Dropdown menu for Demons - 2 column layout */
+#demonTypesDropdown ul {
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding-left: 0 !important;
+    margin-bottom: 5px;
+}
+
+#demonTypesDropdown li {
+    text-align: left;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+#demonTypesDropdown a.dropdown-item {
+    text-decoration: none;
+    color: #D1D5D8;
+    font-weight: normal;
+    display: block;
+}
+
+#demonTypesDropdown li:hover {
+    background-color: #2c82c9 !important;
+}
+
+#demonTypesDropdown a.dropdown-item:hover {
+    color: white;
+}
