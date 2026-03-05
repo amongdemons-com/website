@@ -36,7 +36,7 @@ const CONFIG = {
  * Mod 0 = mythic, others use the array position
  */
 function getRarity(index) {
-  const mod = (index - 1) % CONFIG.imagesPerPage; // Adjust for 1-based indexing
+  const mod = (index) % CONFIG.imagesPerPage; // Adjust for 1-based indexing
   if (mod === 0) return 'mythic';
   return CONFIG.rarityTypes[mod - 1];
 }
