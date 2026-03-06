@@ -1,0 +1,32 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      <img src="/data/images/amongdemons_logo_250x250.png" alt="" class="d-inline-block align-middle me-2 logo-nav" style="width: 48px; height: 48px;">
+      Among Demons
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="demonsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Demons</a>
+          <ul class="dropdown-menu dropdown-menu-end" id="demonTypesDropdown">
+            <% for (let i = 1; i <= CONFIG.demonNames.length; i++) { %>
+              <li><a class="dropdown-item" href="/demons/type/<%= i %>"><%= CONFIG.demonNames[i - 1] %></a></li>
+            <% } %>
+          </ul>
+        </li>
+      </ul>
+
+      <!-- User Info and Logout -->
+      <div class="d-flex align-items-center me-3 d-none">
+        <span class="me-2">username</span>
+        <span class="ms-2 text-secondary" title="Total souls collected in this session">12 souls</span>
+        <a href="/logout" class="btn btn-outline-danger btn-sm ms-3" title="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
