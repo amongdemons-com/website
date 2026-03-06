@@ -122,6 +122,46 @@ app.get('/', (req, res) => {
   }
 });
 
+// === Hunt Route: GET /hunt/
+app.get('/hunt', (req, res) => {
+  const pageNumber = parseInt(req.query.page) || 1;
+  
+  if (pageNumber < 1 || pageNumber > Math.ceil(CONFIG.totalImages / CONFIG.imagesPerPage)) {
+    return res.redirect(302, '/hunt');
+  }
+  
+  const startImage = (pageNumber - 1) * CONFIG.imagesPerPage + 1;
+  const endImage = Math.min(startImage + CONFIG.imagesPerPage - 1, CONFIG.totalImages);
+  
+  const demons = [];
+  for (let i = startImage; i <= endImage; i++) {
+    const rarity = getRarity(i);
+    const title = `${capitalize(rarity)} ${getDemonName(pageNumber)}`;
+    demons.push({
+      id: i,
+      imageSrc: CONFIG.imagesDir + i + '.png',
+      alt: rarity,
+      title: title,
+      rarityClass: rarity,
+      displayName: capitalize(rarity)
+    });
+  }
+  
+  const totalPages = Math.ceil(CONFIG.totalImages / CONFIG.imagesPerPage);
+  
+  res.render('hunt', {
+    currentPage: pageNumber,
+    totalPages: totalPages,
+    startImage: startImage,
+    endImage: endImage,
+    demons: demons,
+    CONFIG: CONFIG,
+    getRarity: getRarity,
+    getDemonName: getDemonName,
+    capitalize: capitalize
+  });
+});
+
 // ============================================================================
 // START SERVER
 // ============================================================================
