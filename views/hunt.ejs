@@ -4,12 +4,11 @@
     <link rel="icon" href="/data/images/amongdemons.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <% const demonName = getDemonName(currentPage); %>
     <title>Hunt Among Demons</title>
     <meta name="description" content="Hunt for these models as part of the founders collection. The NFTs are minted and transacted on Stargaze from the Cosmos ecosystem.">
 
     <!-- Page Metadata Thumbnail -->
-    <meta property="og:image" content="<%= CONFIG.thumbnailsDir %><%= currentPage %>.png">
+    <meta property="og:image" content="/data/images/demons/thumbnails/<%= currentPage %>.png">
     
     <!-- Bootstrap Icons SVG - Required for Bootstrap Icon classes -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -33,12 +32,12 @@
         <% } %>
         
         <div style="text-align: center;">
-          <h1 class="display-4">Hunt <%= demonName %></h1>
+          <h1 class="display-4">Hunt <%= currentPage %></h1>
           <p class="mb-0 text-muted m-0">Demon Type <%= currentPage %></p>
           <p class="small text-muted">Track and capture the demons in your hunt</p>
         </div>
         
-        <% if (currentPage < totalPages) { %>
+        <% if (currentPage < 11) { %>
           <a class="text-decoration-none pe-2" href="/demons/type/<%= currentPage + 1 %>" style="font-size: 2rem; line-height: 1;" aria-label="Next page">&raquo;</a>
         <% } else { %>
           <div style="font-size: 2rem; line-height: 1;" class="pe-2">&nbsp;&nbsp;&nbsp;</div>
@@ -47,13 +46,12 @@
 
       <!-- Demons Grid -->
       <div class="row row-cols-3 g-3">
-        <% for (let i = startImage; i <= endImage; i++) { %>
+        <% for (let i = 1; i <= 6; i++) { %>
           <div class="col">
             <div class="card h-100">
-              <% const rarity = getRarity(i); %>
-              <img src="<%= CONFIG.imagesDir %><%= i %>.png" class="card-img-top" alt="<%= rarity %> - Hunt <%= demonName %>">
+              <img src="data/images/demons/<%= i %>.png" class="card-img-top" alt="- Hunt Demon <%= i %>">
               <div class="card-body text-center">
-                <h5 class="card-title m-0 ad-<%= rarity %>"><%= capitalize(rarity) %> - Hunt</h5>
+                <h5 class="card-title m-0 ad-common">Hunt Demon <%= i %></h5>
                 <p class="small text-muted mb-2">Demon Type <%= currentPage %></p>
               </div>
             </div>
@@ -64,7 +62,7 @@
       <!-- Pagination -->
       <nav aria-label="Page navigation" class="my-4">
         <ul class="pagination justify-content-center flex-wrap gap-1 pagination-sm-responsive">
-          <% for (let p = 1; p <= totalPages && p <= 11; p++) { %>
+          <% for (let p = 1; p <= 11 && p <= 11; p++) { %>
             <% if (p === currentPage) { %>
               <li class="page-item active" aria-current="page">
                 <span class="page-link d-flex align-items-center justify-content-center">

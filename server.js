@@ -10,57 +10,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================================================
-// SERVER-SIDE CONSTANTS (moved from client-side CONFIG)
-// ============================================================================
-
-const CONFIG = {
-  imagesPerPage: 6,
-  totalImages: 66,
-  // Using relative path from public/ root to access demo images
-  imagesDir: '/data/images/demons/',
-  thumbnailsDir: '/data/images/demons/thumbnails/',
-  rarityTypes: ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'],
-  demonNames: [
-    "Boof Nitza", "Gon G'ah", "Ma'Zga", "Tor Tza", "Vi'Zel", 
-    "Goh Loomb", "Baobaw", "Ko Pak", "Chu Perk", "Ba Be'aga", 
-    "Vee Scol"
-  ]
-};
-
-// ============================================================================
-// HELPER FUNCTIONS (moved from client-side JavaScript)
-// ============================================================================
-
-/**
- * Calculate rarity based on image index
- * Mod 0 = mythic, others use the array position
- */
-function getRarity(index) {
-  const mod = (index) % CONFIG.imagesPerPage; // Adjust for 1-based indexing
-  if (mod === 0) return 'mythic';
-  return CONFIG.rarityTypes[mod - 1];
-}
-
-/**
- * Get demon name for a given page number
- * Returns "Unknown" for indices beyond demon names array
- */
-function getDemonName(pageNumber) {
-  const index = pageNumber - 1; // Convert to 0-based indexing
-  if (index >= CONFIG.demonNames.length) {
-    return 'Unknown';
-  }
-  return CONFIG.demonNames[index];
-}
-
-/**
- * Capitalize first letter of a string
- */
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-// ============================================================================
 // MAIN ROUTE: GET /demons/type/:page
 // Handles all pagination logic, rarity calculations, and demon name mapping
 // ============================================================================
@@ -69,43 +18,12 @@ app.get('/demons/type/:page', (req, res) => {
   const pageNumber = parseInt(req.params.page, 10);
 
   // Validate page number
-  if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > Math.ceil(CONFIG.totalImages / CONFIG.imagesPerPage)) {
-    return res.status(400).send('Invalid page number. Must be between 1 and ' + Math.ceil(CONFIG.totalImages / CONFIG.imagesPerPage));
+  if (isNaN(pageNumber) || pageNumber < 1) {
+    return res.status(400).send('Invalid page number.');
   }
 
-  // Calculate pagination boundaries
-  const startImage = (pageNumber - 1) * CONFIG.imagesPerPage + 1;
-  const endImage = Math.min(startImage + CONFIG.imagesPerPage - 1, CONFIG.totalImages);
-
-  // Generate demon grid data for EJS template
-  const demons = [];
-  for (let i = startImage; i <= endImage; i++) {
-    const rarity = getRarity(i);
-    const title = `${capitalize(rarity)} ${getDemonName(pageNumber)}`;
-    demons.push({
-      id: i,
-      imageSrc: CONFIG.imagesDir + i + '.png',
-      alt: rarity,
-      title: title,
-      rarityClass: rarity,
-      displayName: capitalize(rarity)
-    });
-  }
-
-  // Calculate total pages for pagination
-  const totalPages = Math.ceil(CONFIG.totalImages / CONFIG.imagesPerPage);
-
-  // Render EJS template with all computed data
   res.render('index', {
-    currentPage: pageNumber,
-    totalPages: totalPages,
-    startImage: startImage,
-    endImage: endImage,
-    demons: demons,
-    CONFIG: CONFIG,
-    getRarity: getRarity,
-    getDemonName: getDemonName,
-    capitalize: capitalize
+    currentPage: pageNumber
   });
 });
 
@@ -124,41 +42,9 @@ app.get('/', (req, res) => {
 
 // === Hunt Route: GET /hunt/
 app.get('/hunt', (req, res) => {
-  const pageNumber = parseInt(req.query.page) || 1;
-  
-  if (pageNumber < 1 || pageNumber > Math.ceil(CONFIG.totalImages / CONFIG.imagesPerPage)) {
-    return res.redirect(302, '/hunt');
-  }
-  
-  const startImage = (pageNumber - 1) * CONFIG.imagesPerPage + 1;
-  const endImage = Math.min(startImage + CONFIG.imagesPerPage - 1, CONFIG.totalImages);
-  
-  const demons = [];
-  for (let i = startImage; i <= endImage; i++) {
-    const rarity = getRarity(i);
-    const title = `${capitalize(rarity)} ${getDemonName(pageNumber)}`;
-    demons.push({
-      id: i,
-      imageSrc: CONFIG.imagesDir + i + '.png',
-      alt: rarity,
-      title: title,
-      rarityClass: rarity,
-      displayName: capitalize(rarity)
-    });
-  }
-  
-  const totalPages = Math.ceil(CONFIG.totalImages / CONFIG.imagesPerPage);
-  
+  const pageNumber = 1;
   res.render('hunt', {
-    currentPage: pageNumber,
-    totalPages: totalPages,
-    startImage: startImage,
-    endImage: endImage,
-    demons: demons,
-    CONFIG: CONFIG,
-    getRarity: getRarity,
-    getDemonName: getDemonName,
-    capitalize: capitalize
+    currentPage: pageNumber
   });
 });
 
