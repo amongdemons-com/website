@@ -25,14 +25,22 @@
       
       <!-- Header Section: Navigation + Title + Subtitle -->
       <div class="d-flex justify-content-between align-items-center py-3 mb-4">
-        <a class="text-decoration-none ps-2" href="/demons/type/<%= currentPage - 1 %>" style="font-size: 2rem; line-height: 1;" aria-label="Previous">&laquo;</a>
+        <% if (currentPage > 1) { %>
+          <a class="text-decoration-none ps-2" href="/demons/type/<%= currentPage - 1 %>" style="font-size: 2rem; line-height: 1;" aria-label="Previous">&laquo;</a>
+        <% } else { %>
+          &nbsp;&nbsp;&nbsp;&nbsp;
+        <% } %>
         
         <div style="text-align: center;">
           <h1 class="display-4" id="demon-title"></h1>
           <p class="mb-0 text-muted m-0">Demon Type <span id="type-number"><%= currentPage %></span></p>
         </div>
         
-        <a class="text-decoration-none pe-2" href="/demons/type/<%= currentPage + 1 %>" style="font-size: 2rem; line-height: 1;" aria-label="Next">&raquo;</a>
+        <% if (currentPage < 11) { %>
+          <a class="text-decoration-none pe-2" href="/demons/type/<%= currentPage + 1 %>" style="font-size: 2rem; line-height: 1;" aria-label="Next">&raquo;</a>
+        <% } else { %>
+          &nbsp;&nbsp;&nbsp;&nbsp;
+        <% } %>
       </div>
 
       <!-- Demons Grid -->
