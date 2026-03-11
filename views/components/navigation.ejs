@@ -11,11 +11,7 @@
       <ul class="navbar-nav me-auto">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="demonsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Demons</a>
-          <ul class="dropdown-menu dropdown-menu-end" id="demonTypesDropdown">
-            <% for (let i = 1; i <= CONFIG.demonNames.length; i++) { %>
-              <li><a class="dropdown-item" href="/demons/type/<%= i %>"><%= CONFIG.demonNames[i - 1] %></a></li>
-            <% } %>
-          </ul>
+          <ul class="dropdown-menu dropdown-menu-end" id="demonTypesDropdown"></ul>
         </li>
       </ul>
 
@@ -30,3 +26,6 @@
     </div>
   </div>
 </nav>
+
+<!-- Client-side navigation dropdown loader -->
+<script src="/data/js/navigation.js"></script>
