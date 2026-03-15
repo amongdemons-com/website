@@ -22,60 +22,20 @@
 
     <!-- Main Content -->
     <main class="container my-4">
-      
-      <!-- Header Section: Navigation + Title + Subtitle -->
-      <div class="d-flex justify-content-between align-items-center py-3 mb-4">
-        <% if (currentPage > 1) { %>
-          <a class="text-decoration-none ps-2" href="/demons/type/<%= currentPage - 1 %>" style="font-size: 2rem; line-height: 1;" aria-label="Previous page">&laquo;</a>
-        <% } else { %>
-          <div style="font-size: 2rem; line-height: 1;" class="ps-2">&nbsp;&nbsp;&nbsp;</div>
-        <% } %>
-        
-        <div style="text-align: center;">
-          <h1 class="display-4">Hunt <%= currentPage %></h1>
-          <p class="mb-0 text-muted m-0">Demon Type <%= currentPage %></p>
-          <p class="small text-muted">Track and capture the demons in your hunt</p>
-        </div>
-        
-        <% if (currentPage < 11) { %>
-          <a class="text-decoration-none pe-2" href="/demons/type/<%= currentPage + 1 %>" style="font-size: 2rem; line-height: 1;" aria-label="Next page">&raquo;</a>
-        <% } else { %>
-          <div style="font-size: 2rem; line-height: 1;" class="pe-2">&nbsp;&nbsp;&nbsp;</div>
-        <% } %>
-      </div>
 
       <!-- Demons Grid -->
       <div class="row row-cols-3 g-3">
         <% for (let i = 1; i <= 6; i++) { %>
           <div class="col">
             <div class="card h-100">
-              <img src="data/images/demons/<%= i %>.png" class="card-img-top" alt="- Hunt Demon <%= i %>">
+              <img src="/data/images/demons/<%= i %>.png" class="card-img-top" alt="- Hunt Demon <%= i %>">
               <div class="card-body text-center">
                 <h5 class="card-title m-0 ad-common">Hunt Demon <%= i %></h5>
-                <p class="small text-muted mb-2">Demon Type <%= currentPage %></p>
               </div>
             </div>
           </div>
         <% } %>
       </div>
-
-      <!-- Pagination -->
-      <nav aria-label="Page navigation" class="my-4">
-        <ul class="pagination justify-content-center flex-wrap gap-1 pagination-sm-responsive">
-          <% for (let p = 1; p <= 11 && p <= 11; p++) { %>
-            <% if (p === currentPage) { %>
-              <li class="page-item active" aria-current="page">
-                <span class="page-link d-flex align-items-center justify-content-center">
-                  <%= p %>
-                </span>
-              </li>
-            <% } else { %>
-              <li class="page-item"><a class="page-link d-flex align-items-center justify-content-center" href="/demons/type/<%= p %>"><%= p %></a></li>
-            <% } %>
-          <% } %>
-        </ul>
-      </nav>
-
     </main>
 
     <!-- Footer -->
