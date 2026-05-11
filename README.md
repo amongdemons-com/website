@@ -88,7 +88,7 @@ The API initializes the required MySQL tables on startup using `CREATE TABLE IF 
 
 ## API Auth
 
-`POST /auth/login` creates a player if the username does not exist, or validates the password if it does. It returns a bearer token.
+`POST /api/auth/login` creates a player if the username does not exist, or validates the password if it does. It returns a bearer token.
 
 Send authenticated requests with:
 
@@ -100,23 +100,23 @@ Authorization: Bearer <token>
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `POST` | `/auth/register` | Create a player account |
-| `POST` | `/auth/login` | Log in, or create a prototype account if missing |
-| `GET` | `/auth/me` | Get the current authenticated player |
-| `GET` | `/account/progression` | Get level, XP, Souls, and unlocks |
-| `GET` | `/demons` | List owned demons |
-| `GET` | `/demons/:id` | Get one owned demon |
-| `POST` | `/demons/save` | Save a demon reward from a run to the permanent collection |
-| `POST` | `/runs/start` | Start a new run with a seed, starter demon, and enemies |
-| `GET` | `/runs/:id` | Get current run state |
-| `POST` | `/runs/:id/battle` | Simulate the next server-side battle |
-| `POST` | `/runs/:id/reward` | Mark a reward selected |
-| `POST` | `/runs/:id/recruit` | Recruit a reward demon into the temporary run team |
-| `POST` | `/runs/:id/end` | End a run and grant XP and Souls |
-| `GET` | `/game/demon-types` | Read demon type data from `public/data/demon-types.json` |
-| `GET` | `/game/demons` | Read demon asset mappings from `public/data/demons.json` |
-| `GET` | `/leaderboard` | List top players |
-| `POST` | `/admin/demon-balance` | Placeholder; intentionally does not mutate JSON data |
+| `POST` | `/api/auth/register` | Create a player account |
+| `POST` | `/api/auth/login` | Log in, or create a prototype account if missing |
+| `GET` | `/api/auth/me` | Get the current authenticated player |
+| `GET` | `/api/account/progression` | Get level, XP, Souls, and unlocks |
+| `GET` | `/api/demons` | List owned demons |
+| `GET` | `/api/demons/:id` | Get one owned demon |
+| `POST` | `/api/demons/save` | Save a demon reward from a run to the permanent collection |
+| `POST` | `/api/runs/start` | Start a new run with a seed, starter demon, and enemies |
+| `GET` | `/api/runs/:id` | Get current run state |
+| `POST` | `/api/runs/:id/battle` | Simulate the next server-side battle |
+| `POST` | `/api/runs/:id/reward` | Mark a reward selected |
+| `POST` | `/api/runs/:id/recruit` | Recruit a reward demon into the temporary run team |
+| `POST` | `/api/runs/:id/end` | End a run and grant XP and Souls |
+| `GET` | `/api/game/demon-types` | Read demon type data from `public/data/demon-types.json` |
+| `GET` | `/api/game/demons` | Read demon asset mappings from `public/data/demons.json` |
+| `GET` | `/api/leaderboard` | List top players |
+| `POST` | `/api/admin/demon-balance` | Placeholder; intentionally does not mutate JSON data |
 
 ## Database Tables
 

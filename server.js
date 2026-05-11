@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
-app.use(apiRoutes);
+app.use('/api', apiRoutes);
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found.' });
 });
