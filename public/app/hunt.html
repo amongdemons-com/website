@@ -42,30 +42,28 @@
     </nav>
 
     <main class="container-fluid my-4 px-3 px-lg-4">
-      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 py-3 mb-4">
-        <div>
-          <h1 class="display-5 mb-1">Hunt</h1>
-          <p class="mb-0 text-muted" id="welcomeText">Loading hunter...</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-primary" id="startRunBtn" type="button">
-            <i class="bi bi-play-fill"></i>
-            Start Hunt
-          </button>
-          <button class="btn btn-outline-light" id="refreshBtn" type="button" title="Refresh">
-            <i class="bi bi-arrow-clockwise"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="alert d-none" id="appMessage" role="alert"></div>
-
       <section class="row g-3 mb-4">
-        <div class="col-12">
+        <div class="col-12 col-xl-6">
           <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <span>Current Hunt</span>
-              <span class="badge text-bg-secondary" id="runStatus">No hunt</span>
+            <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+              <span id="huntTitle">Hunt</span>
+              <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-primary btn-sm" id="startRunBtn" type="button">
+                  <i class="bi bi-play-fill"></i>
+                  Start Hunt
+                </button>
+                <button class="btn btn-danger btn-sm" id="battleBtn" type="button">
+                  <i class="bi bi-lightning-charge"></i>
+                  Battle
+                </button>
+                <button class="btn btn-outline-warning btn-sm" id="endRunBtn" type="button">
+                  <i class="bi bi-flag"></i>
+                  End Hunt
+                </button>
+                <button class="btn btn-outline-light btn-sm" id="refreshBtn" type="button" title="Refresh">
+                  <i class="bi bi-arrow-clockwise"></i>
+                </button>
+              </div>
             </div>
             <div class="card-body">
               <div id="runEmpty" class="empty-state">
@@ -73,22 +71,6 @@
                 <p class="mb-0 text-muted">Start a hunt to face a team of demons.</p>
               </div>
               <div id="runPanel" class="d-none">
-                <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-                  <div>
-                    <h2 class="h5 mb-1">Floor <span id="floorStat">1</span></h2>
-                    <p class="mb-0 text-muted">Team HP <span id="hpStat">0</span></p>
-                  </div>
-                  <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-danger" id="battleBtn" type="button">
-                      <i class="bi bi-lightning-charge"></i>
-                      Battle
-                    </button>
-                    <button class="btn btn-outline-warning" id="endRunBtn" type="button">
-                      <i class="bi bi-flag"></i>
-                      End Hunt
-                    </button>
-                  </div>
-                </div>
                 <div class="row g-3 battle-board">
                   <div class="col-12 col-lg-6">
                     <h3 class="h6 text-muted">Your Team</h3>
@@ -100,6 +82,15 @@
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+          <div class="card h-100">
+            <div class="card-header">Fight Log</div>
+            <div class="card-body">
+              <div id="fightLog" class="fight-log text-muted">Battle actions will appear here.</div>
             </div>
           </div>
         </div>

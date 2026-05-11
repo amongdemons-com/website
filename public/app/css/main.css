@@ -300,6 +300,52 @@ main {
     line-height: 1.2;
 }
 
+.combat-stat-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+    color: #f2f7ff;
+    font-size: 0.86rem;
+    font-weight: bold;
+}
+
+.combat-stat-strip span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+.combat-stat-strip i {
+    color: #7d858d;
+    font-size: 0.9rem;
+}
+
+.combat-hp-bar {
+    height: 0.75rem;
+    margin-top: 0.45rem;
+    border-radius: 4px;
+    background: #303840;
+    overflow: hidden;
+}
+
+.combat-hp-fill {
+    height: 100%;
+    background: #1f9657;
+    transition: width 220ms ease;
+}
+
+.hunt-demon-card.is-hit {
+    animation: demon-hit-shake 260ms ease;
+    box-shadow: 0 0 0 2px rgba(226,80,65,0.55), 0 0 18px rgba(226,80,65,0.32);
+}
+
+.hunt-demon-card.is-defeated {
+    opacity: 0.58;
+    filter: grayscale(0.75);
+}
+
 .reward-image {
     width: 76px;
     height: 76px;
@@ -321,6 +367,109 @@ main {
         border-right: 0;
         border-bottom: 1px solid rgba(255,255,255,0.14);
         padding-bottom: 1rem;
+    }
+}
+
+.fight-log {
+    max-height: 620px;
+    overflow: auto;
+    font-size: 0.82rem;
+}
+
+.fight-log-row {
+    display: grid;
+    grid-template-columns: 2.5rem 4.25rem minmax(0, 1fr) 4.75rem 4rem;
+    gap: 0.45rem;
+    align-items: center;
+    padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-left: 3px solid transparent;
+}
+
+.fight-log-row.active {
+    background: rgba(226,80,65,0.16);
+    color: #fff;
+}
+
+.fight-log-row.is-player-action {
+    background: rgba(65,168,95,0.08);
+    border-left-color: #41A85F;
+}
+
+.fight-log-row.is-enemy-action {
+    background: rgba(226,80,65,0.08);
+    border-left-color: #E25041;
+}
+
+.fight-log-row.is-player-action.active {
+    background: rgba(65,168,95,0.18);
+}
+
+.fight-log-row.is-enemy-action.active {
+    background: rgba(226,80,65,0.18);
+}
+
+.fight-log-side {
+    display: inline-flex;
+    justify-content: center;
+    border-radius: 4px;
+    padding: 0.1rem 0.35rem;
+    font-size: 0.72rem;
+    font-weight: bold;
+}
+
+.is-player-action .fight-log-side {
+    background: rgba(65,168,95,0.2);
+    color: #80d697;
+}
+
+.is-enemy-action .fight-log-side {
+    background: rgba(226,80,65,0.2);
+    color: #f19187;
+}
+
+.fight-log-action {
+    color: #fff;
+}
+
+.fight-log-notice {
+    padding: 0.45rem 0.5rem;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-weight: bold;
+}
+
+.fight-log-row span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@keyframes demon-hit-shake {
+    0% {
+        transform: translateX(0);
+    }
+    18% {
+        transform: translateX(-5px);
+    }
+    36% {
+        transform: translateX(5px);
+    }
+    54% {
+        transform: translateX(-3px);
+    }
+    72% {
+        transform: translateX(3px);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hunt-demon-card.is-hit {
+        animation: none;
     }
 }
 

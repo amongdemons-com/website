@@ -6,7 +6,8 @@
   const session = window.AmongDemons.getSession();
   const state = {
     player: session.player || null,
-    run: null
+    run: null,
+    combatLog: []
   };
   const elements = {};
 
@@ -26,16 +27,13 @@
   function cacheElements() {
     [
       'navPlayerName',
-      'welcomeText',
-      'appMessage',
-      'runStatus',
+      'huntTitle',
       'runEmpty',
       'runPanel',
-      'floorStat',
-      'hpStat',
       'teamGrid',
       'enemyGrid',
-      'rewardList'
+      'rewardList',
+      'fightLog'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -84,6 +82,7 @@
     await withBusy(elements.startRunBtn, async () => {
       try {
         const payload = await api('/api/runs/start', { method: 'POST' });
+        state.combatLog = [];
         localStorage.setItem(RUN_KEY, payload.runId);
         await loadRun(payload.runId);
         setMessage('Hunt started.', 'success');
@@ -112,7 +111,10 @@
     await withBusy(elements.battleBtn, async () => {
       try {
         const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/battle`, { method: 'POST' });
-        await loadRun(state.run.runId);
+        state.combatLog = result.combatLog || [];
+        renderFightLog();
+        await playCombatLog(result);
+        finalizeBattle(result);
         setMessage(result.winner === 'player' ? 'Battle won.' : 'Your team was defeated.', result.winner === 'player' ? 'success' : 'warning');
       } catch (error) {
         showError(error);
@@ -166,6 +168,7 @@
       try {
         const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/end`, { method: 'POST' });
         localStorage.removeItem(RUN_KEY);
+        state.combatLog = [];
         state.run = null;
         renderRun();
         setMessage(`Hunt ended. You earned ${result.xp} XP and ${result.souls} souls.`, 'success');
@@ -179,30 +182,151 @@
     const player = state.player || {};
 
     elements.navPlayerName.textContent = player.username || '';
-    elements.welcomeText.textContent = player.username ? `Welcome, ${player.username}.` : 'Welcome.';
   }
 
   function renderRun() {
     const run = state.run;
-    const hasRun = Boolean(run && run.status === 'active');
+    const hasRun = Boolean(run);
+    const hasActiveRun = Boolean(run && run.status === 'active');
 
     elements.runEmpty.classList.toggle('d-none', hasRun);
     elements.runPanel.classList.toggle('d-none', !hasRun);
-    elements.runStatus.textContent = run ? capitalize(run.status) : 'No hunt';
-    elements.runStatus.className = `badge ${hasRun ? 'text-bg-success' : 'text-bg-secondary'}`;
-    elements.startRunBtn.disabled = hasRun;
+    elements.huntTitle.textContent = run ? `Hunt: Floor ${run.currentFloor}` : 'Hunt';
+    elements.startRunBtn.disabled = hasActiveRun;
+    elements.battleBtn.disabled = !hasActiveRun;
+    elements.endRunBtn.disabled = !run;
 
     if (!run) {
       elements.rewardList.innerHTML = renderEmptyText('No rewards yet.');
       return;
     }
 
-    elements.floorStat.textContent = run.currentFloor;
-    elements.hpStat.textContent = run.hp;
     elements.teamGrid.innerHTML = renderDemonCards(run.team || []);
     elements.enemyGrid.innerHTML = renderDemonCards((run.team || []).length ? run.enemies || [] : []);
     elements.rewardList.innerHTML = renderRewards(run.rewards || []);
     bindRewardButtons();
+    renderFightLog();
+  }
+
+  async function playCombatLog(result) {
+    if (!state.run) return;
+
+    const allDemonsById = new Map([...(state.run.team || []), ...(state.run.enemies || [])].map((demon) => [demon.instanceId, demon]));
+
+    for (let index = 0; index < state.combatLog.length; index += 1) {
+      const entry = state.combatLog[index];
+      const target = allDemonsById.get(entry.target);
+
+      if (target) {
+        target.hp = entry.targetHp;
+      }
+
+      updateTeamHp();
+      setActiveLogRow(index);
+      updateTargetCard(entry.target, entry.targetHp);
+      await sleep(260);
+    }
+
+    setActiveLogRow(-1);
+  }
+
+  function finalizeBattle(result) {
+    if (!state.run) return;
+
+    updateTeamHp();
+
+    if (result.winner === 'enemy') {
+      state.run.status = 'defeated';
+      localStorage.removeItem(RUN_KEY);
+      return;
+    }
+
+    if (result.rewards && result.rewards.rewardId) {
+      state.run.rewards = [...(state.run.rewards || []), result.rewards];
+    }
+
+    renderRun();
+  }
+
+  function updateTeamHp() {
+    if (!state.run) return;
+
+    state.run.hp = (state.run.team || []).reduce((sum, demon) => sum + Math.max(0, Number(demon.hp) || 0), 0);
+  }
+
+  function setActiveLogRow(index) {
+    document.querySelectorAll('.fight-log-row').forEach((row) => {
+      row.classList.toggle('active', Number(row.dataset.logIndex) === index);
+    });
+  }
+
+  function updateTargetCard(instanceId, hp) {
+    const card = Array.from(document.querySelectorAll('.hunt-demon-card'))
+      .find((item) => item.dataset.instanceId === instanceId);
+
+    if (!card) return;
+
+    const hpElement = card.querySelector('.js-demon-hp');
+    if (hpElement) {
+      hpElement.textContent = hp;
+    }
+
+    const hpFillElement = card.querySelector('.js-demon-hp-fill');
+    if (hpFillElement) {
+      const maxHp = Number(hpFillElement.dataset.maxHp) || Number(hp) || 1;
+      const hpPercent = Math.max(0, Math.min(100, Math.round((Number(hp) / maxHp) * 100)));
+      hpFillElement.style.width = `${hpPercent}%`;
+    }
+
+    card.classList.remove('is-hit');
+    void card.offsetWidth;
+    card.classList.add('is-hit');
+    card.classList.toggle('is-defeated', Number(hp) <= 0);
+  }
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function renderFightLog() {
+    if (!state.combatLog.length) {
+      elements.fightLog.textContent = 'Battle actions will appear here.';
+      elements.fightLog.classList.add('text-muted');
+      return;
+    }
+
+    elements.fightLog.classList.remove('text-muted');
+    elements.fightLog.innerHTML = state.combatLog.map((entry, index) => `
+      <div class="fight-log-row ${getLogRowClass(entry)}" data-log-index="${index}">
+        <span class="text-secondary">T${entry.tick}</span>
+        <span class="fight-log-side">${getLogSideLabel(entry)}</span>
+        <span class="fight-log-action">${renderFightLogDemonName(entry.attacker)} hit ${renderFightLogDemonName(entry.target)}</span>
+        <span class="text-danger">${entry.dmg} dmg</span>
+        <span class="text-secondary">${entry.targetHp} HP</span>
+      </div>
+    `).join('');
+  }
+
+  function getLogRowClass(entry) {
+    return getDemonSide(entry.attacker) === 'player' ? 'is-player-action' : 'is-enemy-action';
+  }
+
+  function getLogSideLabel(entry) {
+    return getDemonSide(entry.attacker) === 'player' ? 'You' : 'Enemy';
+  }
+
+  function getDemonSide(instanceId) {
+    if ((state.run?.team || []).some((demon) => demon.instanceId === instanceId)) return 'player';
+    if ((state.run?.enemies || []).some((demon) => demon.instanceId === instanceId)) return 'enemy';
+    return 'unknown';
+  }
+
+  function renderFightLogDemonName(instanceId) {
+    const demon = [...(state.run?.team || []), ...(state.run?.enemies || [])]
+      .find((item) => item.instanceId === instanceId);
+
+    if (!demon) return escapeHtml(instanceId);
+    return `<span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(demon.species || 'Demon')}</span>`;
   }
 
   function renderRewards(rewards) {
@@ -243,15 +367,32 @@
 
     return demons.map((demon) => `
       <div class="col">
-        <div class="card h-100 demon-mini-card hunt-demon-card">
+        <div class="card h-100 demon-mini-card hunt-demon-card ${Number(demon.hp) <= 0 ? 'is-defeated' : ''}" data-instance-id="${escapeHtml(demon.instanceId)}">
           <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" class="card-img-top" alt="">
           <div class="card-body">
             <h3 class="h6 card-title mb-1"><span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(capitalize(demon.rarity))}</span> <span class="text-white">${escapeHtml(demon.species || 'Demon')}</span></h3>
-            <p class="mb-0 text-muted">HP ${demon.hp} &middot; ATK ${demon.atk} &middot; SPD ${demon.speed}</p>
+            ${renderCombatStats(demon)}
           </div>
         </div>
       </div>
     `).join('');
+  }
+
+  function renderCombatStats(demon) {
+    const currentHp = Math.max(0, Number(demon.hp) || 0);
+    const maxHp = Math.max(currentHp, Number(demon.maxHp) || currentHp || 1);
+    const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
+
+    return `
+      <div class="combat-stat-strip" aria-label="Combat stats">
+        <span><i class="bi bi-crosshair"></i>${demon.atk}</span>
+        <span><i class="bi bi-shield-fill"></i>${demon.speed}</span>
+        <span><span class="js-demon-hp">${currentHp}</span> / ${maxHp}<i class="bi bi-droplet-fill"></i></span>
+      </div>
+      <div class="combat-hp-bar" aria-label="HP ${currentHp} of ${maxHp}">
+        <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${hpPercent}%"></div>
+      </div>
+    `;
   }
 
   function renderEmptyText(text) {
@@ -273,8 +414,22 @@
   }
 
   function setMessage(text, type) {
-    elements.appMessage.textContent = text;
-    elements.appMessage.className = text ? `alert alert-${type}` : 'alert d-none';
+    if (!text) return;
+
+    const className = type === 'danger'
+      ? 'fight-log-notice text-danger'
+      : type === 'warning'
+        ? 'fight-log-notice text-warning'
+        : 'fight-log-notice text-success';
+    const notice = `<div class="${className}">${escapeHtml(text)}</div>`;
+
+    if (!state.combatLog.length) {
+      elements.fightLog.classList.remove('text-muted');
+      elements.fightLog.innerHTML = notice;
+      return;
+    }
+
+    elements.fightLog.insertAdjacentHTML('afterbegin', notice);
   }
 
   async function withBusy(button, task) {
@@ -282,7 +437,20 @@
     try {
       await task();
     } finally {
-      button.disabled = false;
+      syncActionButtons(button);
+    }
+  }
+
+  function syncActionButtons(fallbackButton) {
+    const hasActiveRun = Boolean(state.run && state.run.status === 'active');
+    const hasRun = Boolean(state.run);
+
+    if (elements.startRunBtn) elements.startRunBtn.disabled = hasActiveRun;
+    if (elements.battleBtn) elements.battleBtn.disabled = !hasActiveRun;
+    if (elements.endRunBtn) elements.endRunBtn.disabled = !hasRun;
+    if (elements.refreshBtn) elements.refreshBtn.disabled = false;
+    if (fallbackButton && ![elements.startRunBtn, elements.battleBtn, elements.endRunBtn, elements.refreshBtn].includes(fallbackButton)) {
+      fallbackButton.disabled = false;
     }
   }
 
