@@ -17,6 +17,9 @@ function ensureSchema(req, res, next) {
     });
 }
 
+router.use(require('./game/demon-types'));
+router.use(require('./game/demons'));
+
 router.use(ensureSchema);
 
 router.use(require('./auth/register'));
@@ -32,8 +35,6 @@ router.use(require('./runs/battle'));
 router.use(require('./runs/reward'));
 router.use(require('./runs/recruit'));
 router.use(require('./runs/end'));
-router.use(require('./game/demon-types'));
-router.use(require('./game/demons'));
 router.use(require('./leaderboard'));
 router.use(require('./admin/demon-balance'));
 

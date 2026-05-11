@@ -5,10 +5,7 @@ const apiRoutes = require('./public/api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// EJS template engine setup
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+const appDir = path.join(__dirname, 'public', 'app');
 app.use(express.json());
 app.use('/api', apiRoutes);
 app.use('/api', (req, res) => {
@@ -18,7 +15,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================================================
 // MAIN ROUTE: GET /demons/type/:page
-// Handles all pagination logic, rarity calculations, and demon name mapping
+// Serves the static collection shell. Client-side JS reads the page number.
 // ============================================================================
 
 app.get('/demons/type/:page', (req, res) => {
@@ -29,9 +26,7 @@ app.get('/demons/type/:page', (req, res) => {
     return res.status(400).send('Invalid page number.');
   }
 
-  res.render('index', {
-    currentPage: pageNumber
-  });
+  res.sendFile(path.join(appDir, 'index.html'));
 });
 
 // Redirect to first page when accessing /demons/type/ without a number
@@ -45,14 +40,13 @@ app.get('/', (req, res) => {
   if (!req.query.type) {
     return res.redirect(302, '/demons/type/1');
   }
+
+  return res.redirect(302, `/demons/type/${req.query.type}`);
 });
 
 // === Hunt Route: GET /hunt/
-app.get('/hunt', (req, res) => {
-  const pageNumber = 1;
-  res.render('hunt', {
-    currentPage: pageNumber
-  });
+app.get(['/hunt', '/hunt/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'hunt.html'));
 });
 
 // ============================================================================

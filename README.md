@@ -5,13 +5,13 @@ A Node.js and Express website for browsing the Among Demons collection, now with
 ## Features
 
 - 11 demon types and 6 rarity tiers.
-- 66 demon assets served from `public/data`.
-- EJS collection pages and hunt preview pages.
+- 66 demon assets served from `public/app/images`.
+- Static HTML collection and hunt preview pages under `public/app`.
 - MySQL-backed player accounts, sessions, run state, and owned demons.
 - Server-side deterministic RNG, demon stat rolls, battle simulation, reward generation, XP, and Souls.
-- Static game data API endpoints that read directly from `public/data/demons.json` and `public/data/demon-types.json`.
+- Static game data API endpoints that read from `public/api/data/demons.json` and `public/api/data/demon-types.json`.
 
-Important: do not edit or rewrite the JSON files in `public/data` from API code. They are source game data and are read directly at runtime.
+Important: do not edit or rewrite the JSON files in `public/api/data` from API code. They are source game data and are read directly at runtime.
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ Important: do not edit or rewrite the JSON files in `public/data` from API code.
 | --- | --- |
 | Runtime | Node.js |
 | Web framework | Express.js |
-| Templates | EJS |
+| Pages | Static HTML |
 | Database | MySQL via `mysql2` |
 | Styling | Bootstrap 5, custom CSS |
 
@@ -34,15 +34,13 @@ amongdemons.com/
 │   │   ├── auth/
 │   │   ├── demons/
 │   │   ├── game/
+│   │   ├── data/
 │   │   ├── lib/
 │   │   └── runs/
-│   ├── app/
-│   └── data/
-│       ├── demons.json
-│       ├── demon-types.json
+│   └── app/
+│       ├── css/
 │       ├── images/
 │       └── js/
-├── views/
 ├── api.md
 ├── idea.md
 ├── server.js
@@ -113,8 +111,8 @@ Authorization: Bearer <token>
 | `POST` | `/api/runs/:id/reward` | Mark a reward selected |
 | `POST` | `/api/runs/:id/recruit` | Recruit a reward demon into the temporary run team |
 | `POST` | `/api/runs/:id/end` | End a run and grant XP and Souls |
-| `GET` | `/api/game/demon-types` | Read demon type data from `public/data/demon-types.json` |
-| `GET` | `/api/game/demons` | Read demon asset mappings from `public/data/demons.json` |
+| `GET` | `/api/game/demon-types` | Read demon type data from `public/api/data/demon-types.json` |
+| `GET` | `/api/game/demons` | Read demon asset mappings from `public/api/data/demons.json` |
 | `GET` | `/api/leaderboard` | List top players |
 | `POST` | `/api/admin/demon-balance` | Placeholder; intentionally does not mutate JSON data |
 
