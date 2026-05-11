@@ -286,6 +286,20 @@ main {
     font-size: 0.88rem;
 }
 
+.hunt-demon-card img {
+    aspect-ratio: 4 / 3;
+}
+
+.hunt-demon-card .card-body {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.78rem;
+}
+
+.hunt-demon-card .card-title {
+    font-size: 0.92rem;
+    line-height: 1.2;
+}
+
 .reward-image {
     width: 76px;
     height: 76px;
@@ -296,6 +310,18 @@ main {
 
 .reward-item {
     background: rgba(0,0,0,0.14);
+}
+
+.battle-board > .col-12:first-child {
+    border-right: 1px solid rgba(255,255,255,0.14);
+}
+
+@media (max-width: 991.98px) {
+    .battle-board > .col-12:first-child {
+        border-right: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.14);
+        padding-bottom: 1rem;
+    }
 }
 
 .rank-table th,

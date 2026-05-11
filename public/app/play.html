@@ -28,6 +28,7 @@
               <ul class="dropdown-menu dropdown-menu-end" id="demonTypesDropdown"></ul>
             </li>
             <li class="nav-item"><a class="nav-link active" href="/play">Play</a></li>
+            <li class="nav-item"><a class="nav-link" href="/hunt">Hunt</a></li>
             <li class="nav-item"><a class="nav-link" href="/rankings">Rankings</a></li>
           </ul>
           <div class="d-flex align-items-center gap-2">
@@ -43,14 +44,14 @@
     <main class="container my-4">
       <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 py-3 mb-4">
         <div>
-          <h1 class="display-5 mb-1">Hunt</h1>
+          <h1 class="display-5 mb-1">Play</h1>
           <p class="mb-0 text-muted" id="welcomeText">Loading hunter...</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-          <button class="btn btn-primary" id="startRunBtn" type="button">
+          <a class="btn btn-primary" href="/hunt">
             <i class="bi bi-play-fill"></i>
-            Start Hunt
-          </button>
+            Hunt
+          </a>
           <button class="btn btn-outline-light" id="refreshBtn" type="button" title="Refresh">
             <i class="bi bi-arrow-clockwise"></i>
           </button>
@@ -84,54 +85,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="row g-3 mb-4">
-        <div class="col-12 col-xl-8">
-          <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <span>Current Hunt</span>
-              <span class="badge text-bg-secondary" id="runStatus">No hunt</span>
-            </div>
-            <div class="card-body">
-              <div id="runEmpty" class="empty-state">
-                <img src="/app/images/demons/thumbnails/1.png" alt="">
-                <p class="mb-0 text-muted">Start a hunt to face a team of demons.</p>
-              </div>
-              <div id="runPanel" class="d-none">
-                <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
-                  <div>
-                    <h2 class="h5 mb-1">Floor <span id="floorStat">1</span></h2>
-                    <p class="mb-0 text-muted">Team HP <span id="hpStat">0</span></p>
-                  </div>
-                  <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-danger" id="battleBtn" type="button">
-                      <i class="bi bi-lightning-charge"></i>
-                      Battle
-                    </button>
-                    <button class="btn btn-outline-warning" id="endRunBtn" type="button">
-                      <i class="bi bi-flag"></i>
-                      End Hunt
-                    </button>
-                  </div>
-                </div>
-                <h3 class="h6 text-muted">Your Team</h3>
-                <div class="row row-cols-1 row-cols-md-3 g-3 mb-3" id="teamGrid"></div>
-                <h3 class="h6 text-muted">Enemies</h3>
-                <div class="row row-cols-1 row-cols-md-3 g-3" id="enemyGrid"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-xl-4">
-          <div class="card h-100">
-            <div class="card-header">Rewards</div>
-            <div class="card-body">
-              <div id="rewardList" class="vstack gap-3"></div>
             </div>
           </div>
         </div>
