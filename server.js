@@ -49,6 +49,18 @@ app.get(['/hunt', '/hunt/'], (req, res) => {
   res.sendFile(path.join(appDir, 'hunt.html'));
 });
 
+app.get(['/register', '/register/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'register.html'));
+});
+
+app.get(['/login', '/login/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'login.html'));
+});
+
+app.get(['/play', '/play/', '/account', '/account/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'play.html'));
+});
+
 // ============================================================================
 // START SERVER
 // ============================================================================

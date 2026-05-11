@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Among Demons</title>
+    <meta name="description" content="Test the Among Demons prototype API endpoints.">
+
+    <meta property="og:image" content="/app/images/demons/thumbnails/1.png">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/app/css/main.css" rel="stylesheet">
+    <style>
+      .api-card pre,
+      #api-log {
+        min-height: 160px;
+        max-height: 360px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .api-card textarea {
+        min-height: 112px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        font-size: 0.82rem;
+      }
+
+      .api-method {
+        min-width: 4.25rem;
+      }
+
+      .stored-value {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        font-size: 0.84rem;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="" class="d-inline-block align-middle me-2 logo-nav" style="width: 48px; height: 48px;">
+          Among Demons
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="demonsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Demons</a>
+              <ul class="dropdown-menu dropdown-menu-end" id="demonTypesDropdown"></ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container my-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 py-3 mb-4">
+        <div>
+          <h1 class="display-5 mb-1">API Test</h1>
+          <p class="mb-0 text-muted">Exercise every route registered from <span class="stored-value">public/api/</span>.</p>
+        </div>
+        <div class="d-flex gap-2 align-items-start">
+          <button class="btn btn-outline-light" id="seedDemoUserBtn" type="button" title="Fill test credentials">
+            <i class="bi bi-person-plus"></i>
+          </button>
+          <button class="btn btn-outline-danger" id="clearStateBtn" type="button" title="Clear stored API state">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <section class="row g-3 mb-4">
+        <div class="col-12 col-lg-7">
+          <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <span>Stored Values</span>
+              <span class="badge text-bg-secondary">auto-filled from responses</span>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="form-label" for="apiToken">Bearer Token</label>
+                  <input class="form-control stored-value" id="apiToken" autocomplete="off" placeholder="Login or register to populate this token">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label" for="runId">Run ID</label>
+                  <input class="form-control stored-value" id="runId" autocomplete="off">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label" for="rewardId">Reward ID</label>
+                  <input class="form-control stored-value" id="rewardId" autocomplete="off">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label" for="demonId">Demon ID</label>
+                  <input class="form-control stored-value" id="demonId" autocomplete="off">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-5">
+          <div class="card h-100">
+            <div class="card-header">Request Log</div>
+            <div class="card-body">
+              <pre class="bg-black border rounded p-3 mb-0" id="api-log">Ready.</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h4 mb-3">Public Data</h2>
+        <div class="row row-cols-1 row-cols-lg-2 g-3" id="publicEndpoints"></div>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h4 mb-3">Auth</h2>
+        <div class="row row-cols-1 row-cols-lg-2 g-3" id="authEndpoints"></div>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h4 mb-3">Account And Demons</h2>
+        <div class="row row-cols-1 row-cols-lg-2 g-3" id="accountEndpoints"></div>
+      </section>
+
+      <section class="mb-4">
+        <h2 class="h4 mb-3">Runs</h2>
+        <div class="row row-cols-1 row-cols-lg-2 g-3" id="runEndpoints"></div>
+      </section>
+
+      <section>
+        <h2 class="h4 mb-3">Admin</h2>
+        <div class="row row-cols-1 row-cols-lg-2 g-3" id="adminEndpoints"></div>
+      </section>
+    </main>
+
+    <footer class="py-3 my-4 border-top">
+      <div class="container text-center text-body-secondary">
+        <p>&copy; 2026 Among Demons. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/app/js/navigation.js"></script>
+    <script src="/app/js/api-test.js"></script>
+  </body>
+</html>

@@ -18,6 +18,7 @@ router.get('/runs/:id', requireAuth, async (req, res) => {
     currentFloor: run.state.currentFloor,
     hp: run.state.hp,
     team: run.state.team,
+    enemies: run.state.enemies,
     rewards: run.rewards,
     mapProgress: run.state.mapProgress
   });

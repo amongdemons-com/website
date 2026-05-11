@@ -12,6 +12,20 @@ async function addColumnIfMissing(tableName, columnName, definition) {
   }
 }
 
+async function normalizeUtf8Column(tableName, columnName, definition) {
+  const columns = await getColumns(tableName);
+  if (!columns.has(columnName)) return;
+
+  await db.query(`ALTER TABLE \`${tableName}\` MODIFY COLUMN \`${columnName}\` ${definition}`);
+}
+
+async function addIndexIfMissing(tableName, indexName, definition) {
+  const [rows] = await db.query(`SHOW INDEX FROM \`${tableName}\` WHERE Key_name = ?`, [indexName]);
+  if (!rows.length) {
+    await db.query(`ALTER TABLE \`${tableName}\` ADD ${definition}`);
+  }
+}
+
 async function initializeSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS players (
@@ -31,6 +45,7 @@ async function initializeSchema() {
 
   await addColumnIfMissing('players', 'password_salt', '`password_salt` VARCHAR(64) NOT NULL DEFAULT ""');
   await addColumnIfMissing('players', 'unlocks', '`unlocks` LONGTEXT NULL');
+  await normalizeUtf8Column('players', 'id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_sessions (
@@ -41,6 +56,8 @@ async function initializeSchema() {
       INDEX idx_player_sessions_player_id (player_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+  await addColumnIfMissing('player_sessions', 'expires_at', '`expires_at` TIMESTAMP NULL');
+  await normalizeUtf8Column('player_sessions', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_demons (
@@ -58,6 +75,7 @@ async function initializeSchema() {
       INDEX idx_player_demons_player_id (player_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+  await normalizeUtf8Column('player_demons', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS runs (
@@ -74,6 +92,16 @@ async function initializeSchema() {
       INDEX idx_runs_player_id (player_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+  await addColumnIfMissing('runs', 'player_id', '`player_id` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
+  await db.query('UPDATE `runs` SET `player_id` = `playerId` WHERE `player_id` IS NULL AND `playerId` IS NOT NULL');
+  await addColumnIfMissing('runs', 'status', '`status` VARCHAR(24) NOT NULL DEFAULT "active"');
+  await addColumnIfMissing('runs', 'state', '`state` LONGTEXT NULL');
+  await addColumnIfMissing('runs', 'created_at', '`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await addColumnIfMissing('runs', 'updated_at', '`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+  await addColumnIfMissing('runs', 'ended_at', '`ended_at` TIMESTAMP NULL');
+  await normalizeUtf8Column('runs', 'playerId', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
+  await normalizeUtf8Column('runs', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addIndexIfMissing('runs', 'idx_runs_player_id', 'INDEX idx_runs_player_id (player_id)');
 }
 
 module.exports = { initializeSchema };

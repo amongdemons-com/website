@@ -233,3 +233,67 @@ main {
 #demonTypesDropdown a.dropdown-item:hover {
     color: white;
 }
+
+.auth-shell {
+    min-height: calc(100vh - 190px);
+}
+
+.auth-mark {
+    max-height: 420px;
+    object-fit: contain;
+}
+
+.stat-box {
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 6px;
+    padding: 0.9rem 0.5rem;
+    background: rgba(0,0,0,0.18);
+}
+
+.stat-box span {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: bold;
+    line-height: 1.1;
+}
+
+.stat-box small {
+    color: #9c9c9c;
+}
+
+.empty-state {
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1rem;
+}
+
+.empty-state img {
+    width: 140px;
+    max-width: 60%;
+    opacity: 0.75;
+}
+
+.demon-mini-card img {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+
+.demon-mini-card .card-body {
+    font-size: 0.88rem;
+}
+
+.reward-image {
+    width: 76px;
+    height: 76px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.18);
+}
+
+.reward-item {
+    background: rgba(0,0,0,0.14);
+}
