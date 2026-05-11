@@ -61,6 +61,18 @@ app.get(['/play', '/play/', '/account', '/account/'], (req, res) => {
   res.sendFile(path.join(appDir, 'play.html'));
 });
 
+app.get(['/rank', '/rank/'], (req, res) => {
+  res.redirect(302, '/rankings');
+});
+
+app.get(['/rankings', '/rankings/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'rankings.html'));
+});
+
+app.get(['/rankings/souls', '/rankings/souls/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'rankings.html'));
+});
+
 // ============================================================================
 // START SERVER
 // ============================================================================

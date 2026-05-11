@@ -297,3 +297,45 @@ main {
 .reward-item {
     background: rgba(0,0,0,0.14);
 }
+
+.rank-table th,
+.rank-table td {
+    text-align: center;
+}
+
+.rank-table th:first-child,
+.rank-table td:first-child {
+    width: 4rem;
+}
+
+.rank-table th:nth-child(2),
+.rank-table td:nth-child(2) {
+    text-align: left;
+}
+
+.rank-table thead th {
+    background: rgba(44,130,201,0.28);
+    border-bottom-color: rgba(255,255,255,0.28);
+    color: #fff;
+}
+
+.rank-sort-link {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.rank-sort-link:hover,
+.rank-sort-link.active {
+    color: tomato;
+}
+
+.current-player-rank td {
+    background: rgba(250,197,28,0.16) !important;
+    color: #fff;
+}
+
+.current-player-rank td:first-child {
+    color: #FAC51C !important;
+    font-weight: bold;
+}

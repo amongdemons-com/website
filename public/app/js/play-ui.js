@@ -8,8 +8,7 @@
     player: session.player || null,
     progression: null,
     run: null,
-    collection: [],
-    catalog: []
+    collection: []
   };
   const elements = {};
 
@@ -34,7 +33,6 @@
       'levelStat',
       'xpStat',
       'soulsStat',
-      'leaderboardBody',
       'runStatus',
       'runEmpty',
       'runPanel',
@@ -44,7 +42,6 @@
       'enemyGrid',
       'rewardList',
       'collectionGrid',
-      'catalogGrid',
       'adminCheckResult'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
@@ -74,23 +71,18 @@
   async function refreshAll() {
     await withBusy(elements.refreshBtn, async () => {
       try {
-        const [me, progression, demons, catalog, leaderboard] = await Promise.all([
+        const [me, progression, demons] = await Promise.all([
           api('/api/auth/me'),
           api('/api/account/progression'),
-          api('/api/demons'),
-          api('/api/game/demons'),
-          api('/api/leaderboard')
+          api('/api/demons')
         ]);
 
         state.player = me.player;
         state.progression = progression;
         state.collection = demons.demons || [];
-        state.catalog = catalog || [];
 
         renderPlayer();
         renderCollection();
-        renderCatalog();
-        renderLeaderboard(leaderboard.players || []);
 
         const savedRunId = localStorage.getItem(RUN_KEY);
         if (state.run && state.run.runId) {
@@ -289,32 +281,6 @@
     elements.collectionGrid.innerHTML = state.collection.length
       ? renderDemonCards(state.collection)
       : renderEmptyText('Saved demons will appear here.');
-  }
-
-  function renderCatalog() {
-    elements.catalogGrid.innerHTML = state.catalog.length
-      ? renderDemonCards(state.catalog.slice(0, 12).map((demon) => ({
-        imageUrl: demon.image_url,
-        species: `Type ${demon.type}`,
-        rarity: demon.rarity,
-        hp: '-',
-        atk: '-',
-        speed: '-'
-      })))
-      : renderEmptyText('Catalog unavailable.');
-  }
-
-  function renderLeaderboard(players) {
-    elements.leaderboardBody.innerHTML = players.length
-      ? players.map((player) => `
-        <tr>
-          <td>${escapeHtml(player.username)}</td>
-          <td>${player.level}</td>
-          <td>${player.xp}</td>
-          <td>${player.souls}</td>
-        </tr>
-      `).join('')
-      : '<tr><td colspan="4" class="text-muted">No hunters yet.</td></tr>';
   }
 
   function renderDemonCards(demons) {

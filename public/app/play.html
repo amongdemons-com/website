@@ -28,6 +28,7 @@
               <ul class="dropdown-menu dropdown-menu-end" id="demonTypesDropdown"></ul>
             </li>
             <li class="nav-item"><a class="nav-link active" href="/play">Play</a></li>
+            <li class="nav-item"><a class="nav-link" href="/rankings">Rankings</a></li>
           </ul>
           <div class="d-flex align-items-center gap-2">
             <span class="text-secondary" id="navPlayerName"></span>
@@ -59,7 +60,7 @@
       <div class="alert d-none" id="appMessage" role="alert"></div>
 
       <section class="row g-3 mb-4">
-        <div class="col-12 col-lg-4">
+        <div class="col-12">
           <div class="card h-100">
             <div class="card-header">Hunter</div>
             <div class="card-body">
@@ -83,27 +84,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-lg-8">
-          <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <span>Leaderboard</span>
-              <span class="badge text-bg-secondary">Top 50</span>
-            </div>
-            <div class="table-responsive">
-              <table class="table table-dark table-sm align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th>Hunter</th>
-                    <th>Level</th>
-                    <th>XP</th>
-                    <th>Souls</th>
-                  </tr>
-                </thead>
-                <tbody id="leaderboardBody"></tbody>
-              </table>
             </div>
           </div>
         </div>
@@ -180,14 +160,6 @@
         </div>
       </section>
 
-      <section class="mt-4">
-        <div class="card">
-          <div class="card-header">Demon Catalog</div>
-          <div class="card-body">
-            <div class="row row-cols-2 row-cols-md-4 row-cols-xl-6 g-3" id="catalogGrid"></div>
-          </div>
-        </div>
-      </section>
     </main>
 
     <footer class="py-3 my-4 border-top">
