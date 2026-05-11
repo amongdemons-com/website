@@ -1,153 +1,162 @@
-# Among Demons 🐉
+# Among Demons
 
-A modern NFT collection website showcasing the founders collection on **Stargaze** (Cosmos ecosystem). Browse and discover unique demon characters organized by type, rarity, and visual attributes.
+A Node.js and Express website for browsing the Among Demons collection, now with a prototype server-authoritative roguelike API for account progression, demon collection, runs, battles, rewards, and static game data.
 
----
+## Features
 
-## 🚀 Features
+- 11 demon types and 6 rarity tiers.
+- 66 demon assets served from `public/data`.
+- EJS collection pages and hunt preview pages.
+- MySQL-backed player accounts, sessions, run state, and owned demons.
+- Server-side deterministic RNG, demon stat rolls, battle simulation, reward generation, XP, and Souls.
+- Static game data API endpoints that read directly from `public/data/demons.json` and `public/data/demon-types.json`.
 
-- **11 Demon Types**: Explore unique character classes (Boof Nitza, Gon G'ah, Ma'Zga, Tor Tza, Vi'Zel, Goh Loomb, Baobaw, Ko Pak, Chu Perk, Ba Be'aga, Vee Scol)
-- **6 Rarity Tiers**: Each demon type features 6 rarity levels - Common, Uncommon, Rare, Epic, Legendary, Mythic
-- **66 Unique Demons**: Complete collection visualization with image assets and thumbnails
-- **Pagination Support**: Navigate through collections with responsive page controls
-- **Hunt Mode**: Special preview page showcasing huntable demons (1-6)
-- **Responsive Design**: Mobile-friendly Bootstrap 5 UI with dark theme
+Important: do not edit or rewrite the JSON files in `public/data` from API code. They are source game data and are read directly at runtime.
 
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Component | Technology |
-|-----------|------------|
-| **Runtime** | Node.js |
-| **Web Framework** | Express.js v4.18+ |
-| **Template Engine** | EJS v4 |
-| **Styling** | Bootstrap 5.3, Custom CSS |
-| **Icons** | Bootstrap Icons |
+| --- | --- |
+| Runtime | Node.js |
+| Web framework | Express.js |
+| Templates | EJS |
+| Database | MySQL via `mysql2` |
+| Styling | Bootstrap 5, custom CSS |
 
----
+## Project Structure
 
-## 📁 Project Structure
-
-```
+```txt
 amongdemons.com/
 ├── public/
-│   ├── data/
-│   │   ├── demons.json          # Main collection data (66 demons)
-│   │   ├── demon-types.json     # Demon type names mapping
-│   │   ├── main.css             # Custom styles & theme
-│   │   ├── images/             # Logos, icons, sprite assets
-│   │   └── js/                 # Client-side scripts
-│   └── data/images/demons/     # Character sprite sheets + thumbnails
+│   ├── api/
+│   │   ├── account/
+│   │   ├── admin/
+│   │   ├── auth/
+│   │   ├── demons/
+│   │   ├── game/
+│   │   ├── lib/
+│   │   └── runs/
+│   ├── app/
+│   └── data/
+│       ├── demons.json
+│       ├── demon-types.json
+│       ├── images/
+│       └── js/
 ├── views/
-│   ├── index.ejs              # Main demo collection view
-│   ├── hunt.ejs               # Hunt preview page
-│   ├── components/
-│   │   └── navigation.ejs    # Shared navigation component
-├── server.js                  # Express app entry point
-├── package.json               # Dependencies & scripts
-└── README.md
+├── api.md
+├── idea.md
+├── server.js
+└── package.json
 ```
 
----
+Each API endpoint lives in its own file under `public/api`. Shared database, auth, RNG, combat, and game-data helpers live under `public/api/lib`.
 
-## 📦 Installation
+## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/amongdemons-com/website.git
-   cd amongdemons.com
-   ```
+1. Install dependencies:
 
-2. Install dependencies:
    ```bash
    npm install
    ```
 
-3. Start the development server:
+2. Create or update `.env` with MySQL connection details:
+
+   ```txt
+   DB_HOST=your_mysql_host
+   DB_PORT=3306
+   DB_NAME=your_database
+   DB_USER=your_user
+   DB_PASSWORD=your_password
+   PORT=3000
+   ```
+
+3. Start the app:
+
    ```bash
    npm run dev
    ```
 
-4. Open your browser to: `http://localhost:3000`
+The API initializes the required MySQL tables on startup using `CREATE TABLE IF NOT EXISTS` and additive column checks for the existing `players` table.
 
----
-
-## 🌐 Routes
+## Web Routes
 
 | Route | Description |
-|-------|-------------|
-| `/` | Redirects to first demo collection page |
-| `/demons/type/:page` | Paginated demon collection view (pages 1-11) |
-| `/hunt/` | Hunt preview page with demons 1-6 |
+| --- | --- |
+| `/` | Redirects to the first demon collection page |
+| `/demons/type/:page` | Paginated demon collection view, pages 1-11 |
+| `/hunt` | Hunt preview page |
 
----
+## API Auth
 
-## 🎨 Demon Types Reference
+`POST /auth/login` creates a player if the username does not exist, or validates the password if it does. It returns a bearer token.
 
-| ID | Name | Examples |
-|----|------|----------|
-| 1 | Boof Nitza | Common → Mythic (demons 1-6) |
-| 2 | Gon G'ah | Common → Mythic (demons 7-12) |
-| 3 | Ma'Zga | Common → Mythic (demons 13-18) |
-| 4 | Tor Tza | Common → Mythic (demons 19-24) |
-| 5 | Vi'Zel | Common → Mythic (demons 25-30) |
-| 6 | Goh Loomb | Common → Mythic (demons 31-36) |
-| 7 | Baobaw | Common → Mythic (demons 37-42) |
-| 8 | Ko Pak | Common → Mythic (demons 43-48) |
-| 9 | Chu Perk | Common → Mythic (demons 49-54) |
-| 10 | Ba Be'aga | Common → Mythic (demons 55-60) |
-| 11 | Vee Scol | Common → Mythic (demons 61-66) |
+Send authenticated requests with:
 
----
+```txt
+Authorization: Bearer <token>
+```
 
-## 🎨 Rarity Colors
+## API Endpoints
 
-The CSS defines color schemes for each rarity level:
+| Method | Route | Description |
+| --- | --- | --- |
+| `POST` | `/auth/register` | Create a player account |
+| `POST` | `/auth/login` | Log in, or create a prototype account if missing |
+| `GET` | `/auth/me` | Get the current authenticated player |
+| `GET` | `/account/progression` | Get level, XP, Souls, and unlocks |
+| `GET` | `/demons` | List owned demons |
+| `GET` | `/demons/:id` | Get one owned demon |
+| `POST` | `/demons/save` | Save a demon reward from a run to the permanent collection |
+| `POST` | `/runs/start` | Start a new run with a seed, starter demon, and enemies |
+| `GET` | `/runs/:id` | Get current run state |
+| `POST` | `/runs/:id/battle` | Simulate the next server-side battle |
+| `POST` | `/runs/:id/reward` | Mark a reward selected |
+| `POST` | `/runs/:id/recruit` | Recruit a reward demon into the temporary run team |
+| `POST` | `/runs/:id/end` | End a run and grant XP and Souls |
+| `GET` | `/game/demon-types` | Read demon type data from `public/data/demon-types.json` |
+| `GET` | `/game/demons` | Read demon asset mappings from `public/data/demons.json` |
+| `GET` | `/leaderboard` | List top players |
+| `POST` | `/admin/demon-balance` | Placeholder; intentionally does not mutate JSON data |
 
-- **Common**: Neutral gray (`#D1D5D8`)
-- **Uncommon**: Green (`#41A85F`)
-- **Rare**: Blue (`#2C82C9`)
-- **Epic**: Purple (`#9365B8`)
-- **Legendary**: Gold (`#FAC51C`)
-- **Mythic**: Red-Orange (`#E25041`)
+## Database Tables
 
----
+The API uses these tables:
 
-## 🌐 Deployment
+| Table | Purpose |
+| --- | --- |
+| `players` | Account progression and credentials |
+| `player_sessions` | Bearer token sessions |
+| `player_demons` | Permanent owned demon collection |
+| `runs` | Temporary run state, rewards, and battle progress |
 
-This is a simple Express.js application that can be deployed to any Node.js hosting platform:
+If a compatible `players` table already exists, the schema initializer adds only the missing API columns it needs.
 
-- Railway.app
-- Render.com
-- Heroku
-- DigitalOcean App Platform
-- AWS Elastic Beanstalk
+## Game Rules
 
-### Environment Variables
+The prototype follows the rules in `idea.md`:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | Processed from env or 3000 |
+- Teams can have up to 3 active demons.
+- Demon instances roll HP, ATK, and SPEED from type ranges and rarity multipliers.
+- Combat is automatic and tick based.
+- Attack meters increase by SPEED.
+- A demon attacks when its meter reaches 100.
+- Damage is `target.hp -= attacker.atk`.
+- Battles end when all demons on one side are defeated.
 
----
+Clients should only display server results. They should not calculate damage, XP, currency, battle outcomes, RNG, or rewards.
 
-## 📝 License
+## Development
 
-All rights reserved © 2026 Among Demons.
+Useful checks:
 
----
+```bash
+node --check server.js
+```
 
-## 🔗 Resources
+```powershell
+Get-ChildItem -Recurse -Filter *.js public\api | ForEach-Object { node --check $_.FullName }
+```
 
-- **GitHub Repository**: https://github.com/amongdemons-com/website
-- **NFT Platform**: Stargaze (Cosmos Ecosystem)
+## License
 
----
-
-## 💡 Development Tips
-
-- Use `npm run dev` for hot-reloading with nodemon
-- Static assets are served from the `/public` directory
-- EJS templates must have `.ejs` extension in the `views` folder
-- Image paths should be absolute (e.g., `/data/images/demons/1.png`)
+All rights reserved. Copyright 2026 Among Demons.
