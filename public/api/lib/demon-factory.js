@@ -61,6 +61,7 @@ async function createDemon(rng, options = {}) {
     hp: stats.hp,
     atk: stats.atk,
     speed: stats.speed,
+    position: options.position === 'back' ? 'back' : 'front',
     attackMeter: 0
   };
 }
@@ -71,6 +72,7 @@ async function createTeam(rng, size, options = {}) {
   for (let index = 0; index < size; index += 1) {
     team.push(await createDemon(rng, {
       ...options,
+      position: options.positions?.[index] || (index === 0 ? 'front' : 'back'),
       instanceId: `${options.prefix || 'demon'}-${index + 1}`
     }));
   }

@@ -1,3 +1,7 @@
+function normalizePosition(position) {
+  return position === 'back' ? 'back' : 'front';
+}
+
 function createRunDemonFromCollection(row, instanceId) {
   return {
     instanceId,
@@ -11,6 +15,7 @@ function createRunDemonFromCollection(row, instanceId) {
     hp: Number(row.hp) || 1,
     atk: Number(row.atk) || 1,
     speed: Number(row.speed) || 1,
+    position: 'front',
     attackMeter: 0
   };
 }
@@ -23,11 +28,13 @@ function resetRunDemon(demon, instanceId) {
     instanceId,
     maxHp,
     hp: maxHp,
+    position: normalizePosition(demon.position),
     attackMeter: 0
   };
 }
 
 module.exports = {
   createRunDemonFromCollection,
+  normalizePosition,
   resetRunDemon
 };

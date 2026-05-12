@@ -300,7 +300,8 @@
     }
 
     elements.teamGrid.innerHTML = renderDemonCards(run.team || []);
-    elements.enemyGrid.innerHTML = renderDemonCards((run.team || []).length ? run.enemies || [] : []);
+    elements.enemyGrid.innerHTML = renderDemonCards((run.team || []).length ? run.enemies || [] : [], { side: 'enemy' });
+    bindFormationButtons();
     renderFightLog();
     renderFightLogActions();
     syncActionButtons();
@@ -393,6 +394,7 @@
       appendFightLogRow(entry, index);
       updateTeamHp();
       setActiveLogRow(index);
+      animateAttackerCard(entry.attacker);
       updateTargetCard(entry.target, entry.targetHp);
       scrollFightLogToBottom();
       await sleep(260);
@@ -412,10 +414,15 @@
     });
   }
 
-  function updateTargetCard(instanceId, hp) {
-    const card = Array.from(document.querySelectorAll('.hunt-demon-card'))
-      .find((item) => item.dataset.instanceId === instanceId);
+  function animateAttackerCard(instanceId) {
+    const card = findDemonCard(instanceId);
+    if (!card) return;
 
+    playTemporaryCardClass(card, 'is-attacking', 280);
+  }
+
+  function updateTargetCard(instanceId, hp) {
+    const card = findDemonCard(instanceId);
     if (!card) return;
 
     const hpElement = card.querySelector('.js-demon-hp');
@@ -428,10 +435,28 @@
       hpFillElement.style.width = `${hpPercent}%`;
     }
 
-    card.classList.remove('is-hit');
-    void card.offsetWidth;
-    card.classList.add('is-hit');
+    playTemporaryCardClass(card, 'is-hit', 320);
     card.classList.toggle('is-defeated', Number(hp) <= 0);
+  }
+
+  function findDemonCard(instanceId) {
+    return Array.from(document.querySelectorAll('.hunt-demon-card'))
+      .find((item) => item.dataset.instanceId === instanceId);
+  }
+
+  function playTemporaryCardClass(card, className, duration) {
+    const timerKey = `${className}Timer`;
+    if (card[timerKey]) {
+      clearTimeout(card[timerKey]);
+    }
+
+    card.classList.remove(className);
+    void card.offsetWidth;
+    card.classList.add(className);
+    card[timerKey] = setTimeout(() => {
+      card.classList.remove(className);
+      card[timerKey] = null;
+    }, duration);
   }
 
   function sleep(ms) {
@@ -460,11 +485,20 @@
       <div class="fight-log-row ${getLogRowClass(entry)}" data-log-index="${index}">
         <span class="text-secondary">T${entry.tick}</span>
         <span class="fight-log-side">${getLogSideLabel(entry)}</span>
-        <span class="fight-log-action">${renderFightLogDemonName(entry.attacker)} hit ${renderFightLogDemonName(entry.target)}</span>
+        <span class="fight-log-action">${renderFightLogDemonName(entry.attacker)} ${getFightLogVerb(entry)} ${renderFightLogDemonName(entry.target)} ${renderLogPosition(entry.targetPosition)}</span>
         <span class="text-danger">${entry.dmg} dmg</span>
         <span class="text-secondary">${entry.targetHp} HP</span>
       </div>
     `;
+  }
+
+  function renderLogPosition(position) {
+    if (!position) return '';
+    return `<span class="fight-log-position">${position === 'front' ? 'Front' : 'Back'}</span>`;
+  }
+
+  function getFightLogVerb(entry) {
+    return entry.targeting === 'all' ? 'splashed' : 'hit';
   }
 
   function renderEndNotice() {
@@ -746,20 +780,113 @@
     });
   }
 
-  function renderDemonCards(demons) {
-    if (!demons.length) return renderEmptyText('No demons.');
+  async function setDemonPosition(instanceId, position) {
+    if (!state.run) return;
 
-    return demons.map((demon) => `
-      <div class="col">
-        <div class="card h-100 demon-mini-card hunt-demon-card ${Number(demon.hp) <= 0 ? 'is-defeated' : ''}" data-instance-id="${escapeHtml(demon.instanceId)}">
-          <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" class="card-img-top" alt="">
-          <div class="card-body">
-            <h3 class="h6 card-title mb-1"><span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(capitalize(demon.rarity))}</span> <span class="text-white">${escapeHtml(demon.species || 'Demon')}</span></h3>
-            ${renderCombatStats(demon)}
-          </div>
+    const team = state.run.team || [];
+    const target = team.find((demon) => demon.instanceId === instanceId);
+    if (!target || target.position === position) return;
+
+    target.position = position;
+    renderRun();
+
+    try {
+      const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/formation`, {
+        method: 'POST',
+        body: {
+          formation: team.map((demon, index) => ({
+            instanceId: demon.instanceId,
+            position: getDemonPosition(demon, index)
+          }))
+        }
+      });
+      state.run.team = result.team || team;
+      renderRun();
+    } catch (error) {
+      target.position = position === 'front' ? 'back' : 'front';
+      renderRun();
+      showError(error);
+    }
+  }
+
+  function bindFormationButtons() {
+    document.querySelectorAll('.js-position-choice').forEach((button) => {
+      button.addEventListener('click', () => {
+        setDemonPosition(button.dataset.instanceId, button.dataset.position);
+      });
+    });
+  }
+
+  function renderDemonCards(demons, options = {}) {
+    if (!demons.length) return renderEmptyText('No demons.');
+    const normalizedDemons = demons.map((demon, index) => ({
+      ...demon,
+      position: getDemonPosition(demon, index)
+    }));
+
+    return `
+      <div class="battle-formation">
+        ${getFormationOrder(options).map((position) => renderFormationLane(getPositionLabel(position), position, normalizedDemons, options)).join('')}
+      </div>
+    `;
+  }
+
+  function getFormationOrder(options) {
+    return options.side === 'enemy' ? ['front', 'back'] : ['back', 'front'];
+  }
+
+  function getPositionLabel(position) {
+    return position === 'front' ? 'Front Row' : 'Back Row';
+  }
+
+  function renderFormationLane(label, position, demons, options) {
+    const laneDemons = demons.filter((demon, index) => getDemonPosition(demon, index) === position);
+
+    return `
+      <div class="formation-lane formation-lane-${position}">
+        <div class="formation-lane-label">${label}</div>
+        <div class="formation-lane-cards">
+          ${laneDemons.length ? laneDemons.map((demon) => renderDemonCard(demon, options)).join('') : '<div class="formation-empty">Empty</div>'}
         </div>
       </div>
-    `).join('');
+    `;
+  }
+
+  function renderDemonCard(demon, options) {
+    const position = getDemonPosition(demon);
+
+    return `
+      <div class="hunt-demon-card ${Number(demon.hp) <= 0 ? 'is-defeated' : ''}" data-instance-id="${escapeHtml(demon.instanceId)}">
+        <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="">
+        <div class="hunt-demon-card-body">
+          <div class="hunt-demon-card-title">
+            <span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(capitalize(demon.rarity))}</span>
+            <span class="text-white">${escapeHtml(demon.species || 'Demon')}</span>
+          </div>
+          ${renderCombatStats(demon)}
+          ${options.side === 'enemy' ? renderPositionBadge(position) : renderPositionControls(demon, position)}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPositionBadge(position) {
+    return `<div class="position-badge">${position === 'front' ? 'Front' : 'Back'}</div>`;
+  }
+
+  function renderPositionControls(demon, position) {
+    const disabled = state.run?.awaitingRecruit || state.run?.awaitingFinalPick ? 'disabled' : '';
+
+    return `
+      <div class="position-toggle" aria-label="Row position">
+        <button class="js-position-choice ${position === 'front' ? 'active' : ''}" type="button" data-instance-id="${escapeHtml(demon.instanceId)}" data-position="front" ${disabled}>Front</button>
+        <button class="js-position-choice ${position === 'back' ? 'active' : ''}" type="button" data-instance-id="${escapeHtml(demon.instanceId)}" data-position="back" ${disabled}>Back</button>
+      </div>
+    `;
+  }
+
+  function getDemonPosition(demon, index = 0) {
+    return demon.position === 'back' || (!demon.position && index > 0) ? 'back' : 'front';
   }
 
   function renderCombatStats(demon) {
@@ -771,11 +898,11 @@
       <div class="combat-stat-strip" aria-label="Combat stats">
         <span><i class="bi bi-crosshair"></i>${demon.atk}</span>
         <span><i class="bi bi-shield-fill"></i>${demon.speed}</span>
-        <span><span class="js-demon-hp">${currentHp}</span> / ${maxHp}<i class="bi bi-droplet-fill"></i></span>
       </div>
       <div class="combat-hp-bar" aria-label="HP ${currentHp} of ${maxHp}">
         <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${hpPercent}%"></div>
       </div>
+      <div class="combat-hp-meta"><span class="js-demon-hp">${currentHp}</span> / ${maxHp}<i class="bi bi-droplet-fill"></i></div>
     `;
   }
 

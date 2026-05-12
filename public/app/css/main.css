@@ -286,27 +286,103 @@ main {
     font-size: 0.88rem;
 }
 
+.battle-formation {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.formation-lane {
+    display: grid;
+    grid-template-columns: 4.8rem minmax(0, 1fr);
+    gap: 0.65rem;
+    align-items: stretch;
+}
+
+.formation-lane-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 4.6rem;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    color: #9da7b1;
+    font-size: 0.72rem;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.formation-lane-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.formation-empty {
+    display: flex;
+    flex: 1 1 100%;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 4.6rem;
+    border: 1px dashed rgba(255,255,255,0.16);
+    border-radius: 6px;
+    color: #69737d;
+    font-size: 0.8rem;
+}
+
+.hunt-demon-card {
+    display: grid;
+    grid-template-columns: 36% minmax(0, 1fr);
+    flex: 0 0 calc((100% - 1.3rem) / 3);
+    gap: 0.28rem;
+    align-items: stretch;
+    min-height: 4.6rem;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.18);
+    overflow: hidden;
+}
+
 .hunt-demon-card img {
-    aspect-ratio: 4 / 3;
+    width: 100%;
+    height: 100%;
+    min-height: 4.6rem;
+    object-fit: cover;
 }
 
-.hunt-demon-card .card-body {
-    padding: 0.55rem 0.65rem;
-    font-size: 0.78rem;
+.hunt-demon-card-body {
+    min-width: 0;
+    padding: 0.42rem 0.35rem 0.42rem 0;
 }
 
-.hunt-demon-card .card-title {
-    font-size: 0.92rem;
-    line-height: 1.2;
+.hunt-demon-card-title {
+    display: flex;
+    gap: 0.25rem;
+    min-width: 0;
+    margin-bottom: 0.28rem;
+    font-size: 0.7rem;
+    font-weight: bold;
+    line-height: 1.15;
+}
+
+.hunt-demon-card-title span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .combat-stat-strip {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.45rem;
+    justify-content: flex-start;
+    gap: 0.35rem;
     color: #f2f7ff;
-    font-size: 0.86rem;
+    font-size: 0.68rem;
     font-weight: bold;
 }
 
@@ -319,12 +395,12 @@ main {
 
 .combat-stat-strip i {
     color: #7d858d;
-    font-size: 0.9rem;
+    font-size: 0.78rem;
 }
 
 .combat-hp-bar {
-    height: 0.75rem;
-    margin-top: 0.45rem;
+    height: 0.4rem;
+    margin-top: 0.28rem;
     border-radius: 4px;
     background: #303840;
     overflow: hidden;
@@ -336,8 +412,62 @@ main {
     transition: width 220ms ease;
 }
 
+.combat-hp-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.2rem;
+    margin-top: 0.22rem;
+    color: #f2f7ff;
+    font-size: 0.72rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.combat-hp-meta i {
+    color: #7d858d;
+    font-size: 0.76rem;
+}
+
+.position-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.18rem;
+    margin-top: 0.35rem;
+}
+
+.position-toggle button,
+.position-badge {
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    color: #c2cbd3;
+    font-size: 0.58rem;
+    font-weight: bold;
+    line-height: 1;
+    padding: 0.26rem 0.12rem;
+    text-align: center;
+}
+
+.position-toggle button.active,
+.position-badge {
+    border-color: rgba(44,130,201,0.7);
+    background: rgba(44,130,201,0.22);
+    color: #dcefff;
+}
+
+.position-toggle button:disabled {
+    opacity: 0.65;
+}
+
+.hunt-demon-card.is-attacking {
+    animation: demon-attack-hop 280ms ease;
+    border-color: rgba(250,197,28,0.72);
+    box-shadow: 0 0 0 2px rgba(250,197,28,0.16), 0 0 16px rgba(250,197,28,0.18);
+}
+
 .hunt-demon-card.is-hit {
-    animation: demon-hit-shake 260ms ease;
+    border-color: rgba(226,80,65,0.78);
     box-shadow: 0 0 0 2px rgba(226,80,65,0.55), 0 0 18px rgba(226,80,65,0.32);
 }
 
@@ -500,22 +630,6 @@ main {
     font-weight: bold;
 }
 
-.hunt-matchup .row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
-}
-
-.hunt-matchup .col {
-    flex: 0 0 min(220px, 82vw);
-}
-
-@media (min-width: 1200px) {
-    .hunt-matchup .col {
-        flex-basis: calc(33.333% - 0.75rem);
-    }
-}
-
 .vs-divider {
     display: flex;
     align-items: center;
@@ -545,6 +659,31 @@ main {
 
     .team-editor-card img {
         width: 68px;
+    }
+
+    .formation-lane {
+        grid-template-columns: 1fr;
+    }
+
+    .formation-lane-label {
+        min-height: 0;
+        padding: 0.35rem;
+    }
+
+    .formation-lane-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .formation-lane-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .hunt-demon-card {
+        flex-basis: 100%;
     }
 }
 
@@ -622,6 +761,13 @@ main {
     color: #fff;
 }
 
+.fight-log-position {
+    display: inline-flex;
+    margin-left: 0.25rem;
+    color: #9da7b1;
+    font-size: 0.72rem;
+}
+
 .fight-log-notice {
     padding: 0.45rem 0.5rem;
     margin-bottom: 0.4rem;
@@ -644,29 +790,26 @@ main {
     white-space: nowrap;
 }
 
-@keyframes demon-hit-shake {
+@keyframes demon-attack-hop {
     0% {
-        transform: translateX(0);
+        transform: translateY(0);
     }
-    18% {
-        transform: translateX(-5px);
+    24% {
+        transform: translateY(-5px);
     }
-    36% {
-        transform: translateX(5px);
-    }
-    54% {
-        transform: translateX(-3px);
+    48% {
+        transform: translateY(3px);
     }
     72% {
-        transform: translateX(3px);
+        transform: translateY(-2px);
     }
     100% {
-        transform: translateX(0);
+        transform: translateY(0);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hunt-demon-card.is-hit {
+    .hunt-demon-card.is-attacking {
         animation: none;
     }
 }

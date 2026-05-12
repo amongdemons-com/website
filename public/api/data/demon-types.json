@@ -20,8 +20,8 @@
 
   "2": {
     "name": "Gon G'ah",
-    "role": "fighter",
-    "targeting": "front",
+    "role": "ranged",
+    "targeting": "lowest_hp",
     "baseStats": {
       "hp": [90, 120],
       "atk": [10, 14],
@@ -58,11 +58,11 @@
 
   "4": {
     "name": "Tor Tza",
-    "role": "fighter",
-    "targeting": "front",
+    "role": "aoe",
+    "targeting": "all",
     "baseStats": {
       "hp": [110, 145],
-      "atk": [14, 18],
+      "atk": [6, 9],
       "speed": [4, 6]
     },
     "rarityMultiplier": {

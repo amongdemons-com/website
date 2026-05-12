@@ -4,22 +4,49 @@ function alive(team) {
   return team.filter((demon) => demon.hp > 0);
 }
 
+function normalizePosition(position) {
+  return position === 'back' ? 'back' : 'front';
+}
+
+function getTargeting(demon) {
+  if (Number(demon.typeId) === 4) return 'all';
+  if (Number(demon.typeId) === 2) return 'lowest_hp';
+  if (Number(demon.typeId) === 1) return 'front';
+  return demon.targeting || 'front';
+}
+
 function chooseTarget(rng, attacker, enemies) {
+  const targeting = getTargeting(attacker);
   const living = alive(enemies);
+  const frontRow = living.filter((demon) => normalizePosition(demon.position) === 'front');
+  const available = targeting === 'front' && frontRow.length ? frontRow : living;
 
-  if (attacker.targeting === 'lowest_hp') {
-    return living.sort((a, b) => a.hp - b.hp)[0];
+  if (targeting === 'lowest_hp') {
+    return [...available].sort((a, b) => a.hp - b.hp)[0];
   }
 
-  if (attacker.targeting === 'random') {
-    return pick(rng, living);
+  if (targeting === 'random') {
+    return pick(rng, available);
   }
 
-  return living[0];
+  return available[0];
+}
+
+function chooseTargets(rng, attacker, enemies) {
+  if (getTargeting(attacker) === 'all') {
+    return alive(enemies);
+  }
+
+  const target = chooseTarget(rng, attacker, enemies);
+  return target ? [target] : [];
 }
 
 function cloneTeam(team) {
-  return team.map((demon) => ({ ...demon, attackMeter: demon.attackMeter || 0 }));
+  return team.map((demon, index) => ({
+    ...demon,
+    position: normalizePosition(demon.position || (index === 0 ? 'front' : 'back')),
+    attackMeter: demon.attackMeter || 0
+  }));
 }
 
 function simulateFight(rng, playerTeam, enemyTeam) {
@@ -43,16 +70,24 @@ function simulateFight(rng, playerTeam, enemyTeam) {
       if (actor.attackMeter < 100) continue;
 
       actor.attackMeter = 0;
-      const target = chooseTarget(rng, actor, targets);
+      const chosenTargets = chooseTargets(rng, actor, targets);
       const damage = actor.atk;
-      target.hp = Math.max(0, target.hp - damage);
 
-      combatLog.push({
-        tick,
-        attacker: actor.instanceId,
-        target: target.instanceId,
-        dmg: damage,
-        targetHp: target.hp
+      chosenTargets.forEach((target, targetIndex) => {
+        target.hp = Math.max(0, target.hp - damage);
+
+        combatLog.push({
+          tick,
+          attacker: actor.instanceId,
+          attackerPosition: normalizePosition(actor.position),
+          target: target.instanceId,
+          targetPosition: normalizePosition(target.position),
+          targeting: getTargeting(actor),
+          hitIndex: targetIndex + 1,
+          hitCount: chosenTargets.length,
+          dmg: damage,
+          targetHp: target.hp
+        });
       });
     }
   }
