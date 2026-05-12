@@ -358,7 +358,7 @@
 
     elements.runEmpty.classList.toggle('d-none', hasRun);
     elements.runPanel.classList.toggle('d-none', !hasRun);
-    elements.huntTitle.textContent = run ? `Hunt: Floor ${run.currentFloor} / 10` : 'Hunt';
+    elements.huntTitle.innerHTML = run ? renderHuntTitle(run) : 'Hunt';
 
     if (!run) {
       elements.runEmpty.innerHTML = `
@@ -376,7 +376,7 @@
     const enemies = state.isRecruiting ? getRecruitPreviewEnemies() : run.enemies || [];
     elements.teamGrid.innerHTML = renderDemonCards(team, {
       side: 'player',
-      allowFormationDrag: !run.awaitingRecruit && !run.awaitingFinalPick
+      allowFormationDrag: run.status === 'active' && !run.awaitingRecruit && !run.awaitingFinalPick
     });
     elements.enemyGrid.innerHTML = renderDemonCards((run.team || []).length ? enemies : [], {
       side: 'enemy',
@@ -434,8 +434,8 @@
           <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="">
           <span class="hunt-choice-name"><span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(capitalize(demon.rarity))}</span> ${escapeHtml(demon.species || 'Demon')}</span>
           <span class="combat-stat-strip">
-            <span><i class="bi bi-crosshair"></i>${demon.atk}</span>
-            <span><i class="bi bi-shield-fill"></i>${demon.speed}</span>
+            <span>${renderAttackIcon()}${demon.atk}</span>
+            <span>${renderSpeedIcon()}${demon.speed}</span>
             <span>${demon.maxHp || demon.hp}<i class="bi bi-droplet-fill"></i></span>
           </span>
         </button>
@@ -481,8 +481,12 @@
       updateTeamHp();
       setActiveLogRow(index);
       animateAttackerCard(step.attacker);
-      step.entries.forEach((entry) => updateTargetCard(entry.target, entry.targetHp));
-      await sleep(260);
+      const attackerSide = getDemonSide(step.attacker);
+      step.entries.forEach((entry) => {
+        drawAttackZap(step.attacker, entry.target);
+        updateTargetCard(entry.target, entry.targetHp, attackerSide);
+      });
+      await sleep(320);
     }
 
     setActiveLogRow(-1);
@@ -491,6 +495,21 @@
   function updateTeamHp() {
     if (!state.run) return;
     state.run.hp = (state.run.team || []).reduce((sum, demon) => sum + Math.max(0, Number(demon.hp) || 0), 0);
+  }
+
+  function renderHuntTitle(run) {
+    const floor = Math.max(1, Math.min(10, Number(run.currentFloor) || 1));
+    const percent = Math.round((floor / 10) * 100);
+
+    return `
+      <span class="hunt-floor-title">
+        <span class="hunt-floor-label">Floor</span>
+        <strong>${floor} / 10</strong>
+      </span>
+      <span class="hunt-floor-track" aria-hidden="true">
+        <span style="width: ${percent}%"></span>
+      </span>
+    `;
   }
 
   function setActiveLogRow(index) {
@@ -503,10 +522,49 @@
     const card = findDemonCard(instanceId);
     if (!card) return;
 
-    playTemporaryCardClass(card, 'is-attacking', 280);
+    card.classList.toggle('is-player-attack', getDemonSide(instanceId) === 'player');
+    card.classList.toggle('is-enemy-attack', getDemonSide(instanceId) === 'enemy');
+    playTemporaryCardClass(card, 'is-attacking', 320);
   }
 
-  function updateTargetCard(instanceId, hp) {
+  function drawAttackZap(attackerId, targetId) {
+    const attacker = findDemonCard(attackerId);
+    const target = findDemonCard(targetId);
+    if (!attacker || !target) return;
+
+    const attackerRect = attacker.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const startX = attackerRect.left + attackerRect.width / 2;
+    const startY = attackerRect.top + attackerRect.height / 2;
+    const endX = targetRect.left + targetRect.width / 2;
+    const endY = targetRect.top + targetRect.height / 2;
+    const attackerDemon = getCombatDemon(attackerId);
+    const isBackLineAttack = attackerDemon && getDemonPosition(attackerDemon) === 'back';
+    const startT = isBackLineAttack ? 0.12 : 0.22;
+    const endT = isBackLineAttack ? 0.9 : 0.78;
+    const x1 = startX + (endX - startX) * startT;
+    const y1 = startY + (endY - startY) * startT;
+    const x2 = startX + (endX - startX) * endT;
+    const y2 = startY + (endY - startY) * endT;
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+    const normalX = -(y2 - y1) / Math.max(1, Math.hypot(x2 - x1, y2 - y1));
+    const normalY = (x2 - x1) / Math.max(1, Math.hypot(x2 - x1, y2 - y1));
+    const bend = isBackLineAttack ? 10 : 6;
+
+    const zap = document.createElement('div');
+    zap.className = `attack-zap ${getDemonSide(attackerId) === 'player' ? 'is-player-attack' : 'is-enemy-attack'} ${isBackLineAttack ? 'is-back-attack' : ''}`;
+    zap.innerHTML = `
+      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+        <path class="attack-zap-trail" d="M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${(midX + normalX * bend).toFixed(1)} ${(midY + normalY * bend).toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" />
+        <circle class="attack-zap-impact" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="${isBackLineAttack ? 5 : 4}" />
+      </svg>
+    `;
+    document.body.appendChild(zap);
+    setTimeout(() => zap.remove(), 320);
+  }
+
+  function updateTargetCard(instanceId, hp, attackerSide = 'unknown') {
     const card = findDemonCard(instanceId);
     if (!card) return;
 
@@ -520,6 +578,8 @@
       hpFillElement.style.width = `${hpPercent}%`;
     }
 
+    card.classList.toggle('is-player-attack', attackerSide === 'player');
+    card.classList.toggle('is-enemy-attack', attackerSide === 'enemy');
     playTemporaryCardClass(card, 'is-hit', 320);
     card.classList.toggle('is-defeated', Number(hp) <= 0);
   }
@@ -540,6 +600,12 @@
     card.classList.add(className);
     card[timerKey] = setTimeout(() => {
       card.classList.remove(className);
+      if (className === 'is-attacking') {
+        card.classList.remove('is-player-attack', 'is-enemy-attack');
+      }
+      if (className === 'is-hit') {
+        card.classList.remove('is-player-attack', 'is-enemy-attack');
+      }
       card[timerKey] = null;
     }, duration);
   }
@@ -559,8 +625,8 @@
           <h3>Choose your next demon</h3>
           <p>Drag a defeated demon into the front or back row, or drop it onto a teammate to swap.</p>
           <div class="hunt-phase-meta">
-            <span>${recruitCount} defeated ${recruitCount === 1 ? 'demon' : 'demons'}</span>
-            <span>Team limit: ${teamLimit}</span>
+            <span>${getRecruitPreviewTeam().length} / ${teamLimit} team</span>
+            <span>${recruitCount} recruitable ${recruitCount === 1 ? 'demon' : 'demons'}</span>
           </div>
         </div>
       `;
@@ -646,7 +712,7 @@
         <span class="text-secondary">T${primaryEntry.tick}</span>
         <span class="fight-log-side">${getLogSideLabel(primaryEntry)}</span>
         <span class="fight-log-action">${renderFightLogDemonName(primaryEntry.attacker)} ${getFightLogVerb(primaryEntry)} ${targetText}</span>
-        <span class="text-danger">${damageText}</span>
+        <span class="fight-log-damage">${damageText}</span>
         <span class="text-secondary">${hpText}</span>
       </div>
     `;
@@ -897,6 +963,11 @@
     if ((state.run?.enemies || []).some((demon) => demon.instanceId === instanceId)) return 'enemy';
     if (state.combatDemons.get(instanceId)?.side) return state.combatDemons.get(instanceId).side;
     return 'unknown';
+  }
+
+  function getCombatDemon(instanceId) {
+    return [...(state.run?.team || []), ...(state.run?.enemies || [])]
+      .find((item) => item.instanceId === instanceId) || state.combatDemons.get(instanceId) || null;
   }
 
   function renderFightLogDemonName(instanceId) {
@@ -1477,12 +1548,18 @@
 
     return `
       <div class="formation-lane formation-lane-${position}" data-formation-position="${position}">
-        <div class="formation-lane-label" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">
-          ${renderFormationLaneIcon(position)}
-        </div>
         <div class="formation-lane-cards" data-formation-drop="${position}">
-          ${laneDemons.length ? laneDemons.map((demon) => renderDemonCard(demon, options)).join('') : '<div class="formation-empty">Empty</div>'}
+          ${laneDemons.length ? laneDemons.map((demon) => renderDemonCard(demon, options)).join('') : renderEmptyFormationLane(position, label)}
         </div>
+      </div>
+    `;
+  }
+
+  function renderEmptyFormationLane(position, label) {
+    return `
+      <div class="formation-empty formation-empty-${position}">
+        ${renderFormationLaneIcon(position)}
+        <span>Empty ${escapeHtml(label)}</span>
       </div>
     `;
   }
@@ -1490,19 +1567,16 @@
   function renderFormationLaneIcon(position) {
     if (position === 'front') {
       return `
-        <svg class="formation-lane-icon" viewBox="0 0 48 48" role="img" aria-hidden="true" focusable="false">
-          <path d="M14 42l20-20" />
-          <path d="M10 38l8 8" />
-          <path d="M31 11l6-6 6 6-6 6z" />
-          <path d="M34 42L14 22" />
-          <path d="M38 38l-8 8" />
-          <path d="M17 11l-6-6-6 6 6 6z" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512" class="formation-lane-icon mb-1" role="img" aria-hidden="true" focusable="false">
+          <defs></defs>
+          <path class="fa-secondary" d="M19.1 .3C13.9-.7 8.5 .9 4.7 4.7S-.7 13.9 .3 19.1L14.4 89.6c1.9 9.3 6.4 17.8 13.1 24.5L329.4 416 416 329.4 114.2 27.5c-6.7-6.7-15.2-11.3-24.5-13.1L19.1 .3zM146.7 278.6L96 329.4 182.6 416l50.7-50.7-86.6-86.6zm218.5-45.3L484.5 114.2c6.7-6.7 11.3-15.2 13.1-24.5l14.1-70.5c1-5.2-.6-10.7-4.4-14.5s-9.2-5.4-14.5-4.4L422.4 14.4c-9.3 1.9-17.8 6.4-24.5 13.1L278.6 146.7l86.6 86.6z"></path>
+          <path class="fa-primary fa-secondary" d="M75.3 308.7c-6.2-6.2-16.4-6.2-22.6 0l-16 16c-4.7 4.7-6 11.8-3.3 17.8l27.5 62L4.7 460.7c-6.2 6.2-6.2 16.4 0 22.6l24 24c6.2 6.2 16.4 6.2 22.6 0l56.2-56.2 62 27.5c6 2.7 13.1 1.4 17.8-3.3l16-16c6.2-6.2 6.2-16.4 0-22.6l-128-128zm361.4 0l-128 128c-6.2 6.2-6.2 16.4 0 22.6l16 16c4.7 4.7 11.8 6 17.8 3.3l62-27.5 56.2 56.2c6.2 6.2 16.4 6.2 22.6 0l24-24c6.2-6.2 6.2-16.4 0-22.6l-56.2-56.2 27.5-62c2.7-6.1 1.4-13.1-3.3-17.8l-16-16c-6.2-6.2-16.4-6.2-22.6 0z"></path>
         </svg>
       `;
     }
 
     return `
-      <svg class="formation-lane-icon" viewBox="0 0 48 48" role="img" aria-hidden="true" focusable="false">
+      <svg class="formation-lane-icon formation-lane-icon-stroke" viewBox="0 0 48 48" role="img" aria-hidden="true" focusable="false">
         <path d="M15 6c12 6 12 30 0 36" />
         <path d="M15 6c-5 11-5 25 0 36" />
         <path d="M15 6v36" />
@@ -1537,14 +1611,9 @@
             <span class="text-white">${escapeHtml(demon.species || 'Demon')}</span>
           </div>
           ${renderCombatStats(demon)}
-          ${options.side === 'enemy' ? renderPositionBadge(position) : ''}
         </div>
       </div>
     `;
-  }
-
-  function renderPositionBadge(position) {
-    return `<div class="position-badge">${position === 'front' ? 'Front' : 'Back'}</div>`;
   }
 
   function getDemonPosition(demon, index = 0) {
@@ -1558,13 +1627,31 @@
 
     return `
       <div class="combat-stat-strip" aria-label="Combat stats">
-        <span><i class="bi bi-crosshair"></i>${demon.atk}</span>
-        <span><i class="bi bi-shield-fill"></i>${demon.speed}</span>
+        <span>${renderAttackIcon()}${demon.atk}</span>
+        <span>${renderSpeedIcon()}${demon.speed}</span>
       </div>
       <div class="combat-hp-bar" aria-label="HP ${currentHp} of ${maxHp}">
         <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${hpPercent}%"></div>
       </div>
       <div class="combat-hp-meta"><span class="js-demon-hp">${currentHp}</span> / ${maxHp}<i class="bi bi-droplet-fill"></i></div>
+    `;
+  }
+
+  function renderAttackIcon() {
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512" class="combat-stat-icon mb-1" aria-hidden="true" focusable="false">
+        <defs></defs>
+        <path class="fa-secondary" d="M19.1 .3C13.9-.7 8.5 .9 4.7 4.7S-.7 13.9 .3 19.1L14.4 89.6c1.9 9.3 6.4 17.8 13.1 24.5L329.4 416 416 329.4 114.2 27.5c-6.7-6.7-15.2-11.3-24.5-13.1L19.1 .3zM146.7 278.6L96 329.4 182.6 416l50.7-50.7-86.6-86.6zm218.5-45.3L484.5 114.2c6.7-6.7 11.3-15.2 13.1-24.5l14.1-70.5c1-5.2-.6-10.7-4.4-14.5s-9.2-5.4-14.5-4.4L422.4 14.4c-9.3 1.9-17.8 6.4-24.5 13.1L278.6 146.7l86.6 86.6z"></path>
+        <path class="fa-primary fa-secondary" d="M75.3 308.7c-6.2-6.2-16.4-6.2-22.6 0l-16 16c-4.7 4.7-6 11.8-3.3 17.8l27.5 62L4.7 460.7c-6.2 6.2-6.2 16.4 0 22.6l24 24c6.2 6.2 16.4 6.2 22.6 0l56.2-56.2 62 27.5c6 2.7 13.1 1.4 17.8-3.3l16-16c6.2-6.2 6.2-16.4 0-22.6l-128-128zm361.4 0l-128 128c-6.2 6.2-6.2 16.4 0 22.6l16 16c4.7 4.7 11.8 6 17.8 3.3l62-27.5 56.2 56.2c6.2 6.2 16.4 6.2 22.6 0l24-24c6.2-6.2 6.2-16.4 0-22.6l-56.2-56.2 27.5-62c2.7-6.1 1.4-13.1-3.3-17.8l-16-16c-6.2-6.2-16.4-6.2-22.6 0z"></path>
+      </svg>
+    `;
+  }
+
+  function renderSpeedIcon() {
+    return `
+      <svg class="combat-stat-icon combat-stat-icon-stroke" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />
+      </svg>
     `;
   }
 

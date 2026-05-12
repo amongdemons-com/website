@@ -10,6 +10,48 @@ main {
     padding: 0.1em;
 }
 
+.hunt-card-header {
+    min-height: 3.35rem;
+}
+
+.hunt-floor-title {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    color: #fff;
+}
+
+.hunt-floor-label {
+    color: #9da7b1;
+    font-size: 0.78rem;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hunt-floor-title strong {
+    color: #FF6E2F;
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.hunt-floor-track {
+    display: block;
+    width: min(220px, 100%);
+    height: 0.28rem;
+    margin-top: 0.45rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    overflow: hidden;
+}
+
+.hunt-floor-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #FF6E2F;
+}
+
 .ad-common {
     color: #D1D5D8;
 }
@@ -292,39 +334,25 @@ main {
 }
 
 .formation-lane {
-    display: grid;
-    grid-template-columns: 4.8rem minmax(0, 1fr);
-    gap: 0.65rem;
-    align-items: stretch;
-}
-
-.formation-lane-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 4.6rem;
-    border: 1px solid rgba(255,255,255,0.14);
+    min-width: 0;
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 6px;
-    background: rgba(255,255,255,0.04);
-    color: #dce6ee;
+    background: rgba(255,255,255,0.025);
+    padding: 0.45rem;
 }
 
 .formation-lane-icon {
-    width: 2rem;
-    height: 2rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: currentColor;
+}
+
+.formation-lane-icon-stroke {
+    fill: none;
     stroke: currentColor;
     stroke-width: 3;
     stroke-linecap: round;
     stroke-linejoin: round;
-    fill: none;
-}
-
-.formation-lane-front .formation-lane-label {
-    color: #f3c55c;
-}
-
-.formation-lane-back .formation-lane-label {
-    color: #7dc8ff;
 }
 
 .formation-lane-cards {
@@ -333,10 +361,11 @@ main {
     justify-content: center;
     gap: 0.65rem;
     min-width: 0;
+    min-height: 4.6rem;
 }
 
 .formation-lane-cards.is-drag-over {
-    outline: 2px dashed rgba(65,168,95,0.72);
+    outline: 2px dashed rgba(250,197,28,0.68);
     outline-offset: 3px;
     border-radius: 6px;
 }
@@ -346,12 +375,14 @@ main {
     flex: 1 1 100%;
     align-items: center;
     justify-content: center;
+    gap: 0.45rem;
     width: 100%;
     min-height: 4.6rem;
     border: 1px dashed rgba(255,255,255,0.16);
     border-radius: 6px;
     color: #69737d;
     font-size: 0.8rem;
+    font-weight: bold;
 }
 
 .hunt-demon-card {
@@ -401,12 +432,13 @@ main {
 }
 
 .hunt-demon-card.is-drag-over {
-    border-color: rgba(65,168,95,0.9);
-    box-shadow: 0 0 0 2px rgba(65,168,95,0.28), 0 0 18px rgba(65,168,95,0.18);
+    border-color: rgba(250,197,28,0.86);
+    box-shadow: 0 0 0 2px rgba(250,197,28,0.24), 0 0 18px rgba(250,197,28,0.2);
 }
 
 .hunt-demon-card.is-recruit-draggable {
-    border-color: rgba(250,197,28,0.36);
+    border-color: rgba(250,197,28,0.58);
+    box-shadow: 0 0 0 1px rgba(250,197,28,0.16), 0 0 18px rgba(250,197,28,0.16);
 }
 
 .hunt-demon-card.is-recruit-drop-target {
@@ -469,6 +501,22 @@ main {
     font-size: 0.78rem;
 }
 
+.combat-stat-icon {
+    width: 0.78rem;
+    height: 0.78rem;
+    color: #7d858d;
+    fill: currentColor;
+    flex: 0 0 auto;
+}
+
+.combat-stat-icon-stroke {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .combat-hp-bar {
     height: 0.4rem;
     margin-top: 0.28rem;
@@ -500,33 +548,87 @@ main {
     font-size: 0.76rem;
 }
 
-.position-badge {
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 4px;
-    background: rgba(255,255,255,0.05);
-    color: #c2cbd3;
-    font-size: 0.58rem;
-    font-weight: bold;
-    line-height: 1;
-    padding: 0.26rem 0.12rem;
-    text-align: center;
-}
-
-.position-badge {
-    border-color: rgba(44,130,201,0.7);
-    background: rgba(44,130,201,0.22);
-    color: #dcefff;
-}
-
 .hunt-demon-card.is-attacking {
-    animation: demon-attack-hop 280ms ease;
+    animation: demon-attack-hop 320ms ease;
     border-color: rgba(250,197,28,0.72);
     box-shadow: 0 0 0 2px rgba(250,197,28,0.16), 0 0 16px rgba(250,197,28,0.18);
+}
+
+.hunt-demon-card.is-attacking.is-player-attack {
+    border-color: rgba(65,168,95,0.82);
+    box-shadow: 0 0 0 2px rgba(65,168,95,0.24), 0 0 18px rgba(65,168,95,0.34);
+}
+
+.hunt-demon-card.is-attacking.is-enemy-attack {
+    border-color: rgba(226,80,65,0.82);
+    box-shadow: 0 0 0 2px rgba(226,80,65,0.24), 0 0 18px rgba(226,80,65,0.34);
 }
 
 .hunt-demon-card.is-hit {
     border-color: rgba(226,80,65,0.78);
     box-shadow: 0 0 0 2px rgba(226,80,65,0.55), 0 0 18px rgba(226,80,65,0.32);
+}
+
+.hunt-demon-card.is-hit.is-player-attack {
+    border-color: rgba(65,168,95,0.78);
+    box-shadow: 0 0 0 2px rgba(65,168,95,0.36), 0 0 18px rgba(65,168,95,0.26);
+}
+
+.hunt-demon-card.is-hit.is-enemy-attack {
+    border-color: rgba(226,80,65,0.78);
+    box-shadow: 0 0 0 2px rgba(226,80,65,0.36), 0 0 18px rgba(226,80,65,0.28);
+}
+
+.attack-zap {
+    position: fixed;
+    inset: 0;
+    z-index: 1080;
+    pointer-events: none;
+}
+
+.attack-zap svg {
+    width: 100%;
+    height: 100%;
+}
+
+.attack-zap-trail {
+    fill: none;
+    stroke: #FAC51C;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 6px rgba(250,197,28,0.85));
+    animation: attack-zap-fade 320ms ease-out forwards;
+}
+
+.attack-zap-impact {
+    fill: #FAC51C;
+    filter: drop-shadow(0 0 6px rgba(250,197,28,0.85));
+    animation: attack-zap-impact 320ms ease-out forwards;
+}
+
+.attack-zap.is-back-attack .attack-zap-trail {
+    stroke-width: 5;
+}
+
+.attack-zap.is-player-attack .attack-zap-trail {
+    stroke: #41A85F;
+    filter: drop-shadow(0 0 6px rgba(65,168,95,0.85));
+}
+
+.attack-zap.is-player-attack .attack-zap-impact {
+    fill: #41A85F;
+    filter: drop-shadow(0 0 6px rgba(65,168,95,0.85));
+}
+
+.attack-zap.is-enemy-attack .attack-zap-trail {
+    stroke: #E25041;
+    filter: drop-shadow(0 0 6px rgba(226,80,65,0.85));
+}
+
+.attack-zap.is-enemy-attack .attack-zap-impact {
+    fill: #E25041;
+    filter: drop-shadow(0 0 6px rgba(226,80,65,0.85));
 }
 
 .hunt-demon-card.is-defeated {
@@ -724,15 +826,6 @@ main {
         width: 68px;
     }
 
-    .formation-lane {
-        grid-template-columns: 1fr;
-    }
-
-    .formation-lane-label {
-        min-height: 0;
-        padding: 0.35rem;
-    }
-
     .formation-lane-cards {
         display: grid;
         grid-template-columns: 1fr;
@@ -815,8 +908,14 @@ main {
 }
 
 .recruit-phase-panel {
-    border-left: 3px solid #41A85F;
-    background: rgba(65,168,95,0.08);
+    border-left: 3px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.035);
+}
+
+.recruit-phase-panel .hunt-phase-meta span {
+    border-color: rgba(250,197,28,0.42);
+    background: rgba(250,197,28,0.11);
+    color: #f3c55c;
 }
 
 .strategy-phase-panel {
@@ -842,6 +941,14 @@ main {
 .fight-log-row.is-player-action {
     background: rgba(65,168,95,0.08);
     border-left-color: #41A85F;
+}
+
+.fight-log-row.is-player-action .fight-log-damage {
+    color: #80d697;
+}
+
+.fight-log-row.is-enemy-action .fight-log-damage {
+    color: #f19187;
 }
 
 .fight-log-row.is-enemy-action {
@@ -911,24 +1018,56 @@ main {
 
 @keyframes demon-attack-hop {
     0% {
-        transform: translateY(0);
+        transform: scale(1);
+        filter: brightness(1);
     }
-    24% {
-        transform: translateY(-5px);
-    }
-    48% {
-        transform: translateY(3px);
-    }
-    72% {
-        transform: translateY(-2px);
+    35% {
+        transform: scale(1.015);
+        filter: brightness(1.12);
     }
     100% {
-        transform: translateY(0);
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
+@keyframes attack-zap-fade {
+    0% {
+        opacity: 0;
+        stroke-width: 2;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        stroke-width: 7;
+    }
+}
+
+@keyframes attack-zap-impact {
+    0% {
+        opacity: 0;
+        transform: scale(0.65);
+        transform-origin: center;
+    }
+    25% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+        transform-origin: center;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .hunt-demon-card.is-attacking {
+        animation: none;
+    }
+
+    .attack-zap path,
+    .attack-zap circle {
         animation: none;
     }
 }
