@@ -20,6 +20,9 @@ router.get('/runs/:id', requireAuth, async (req, res) => {
     team: run.state.team,
     enemies: run.state.enemies,
     rewards: run.rewards,
+    awaitingRecruit: Boolean(run.state.awaitingRecruit),
+    awaitingFinalPick: Boolean(run.state.awaitingFinalPick),
+    earned: run.state.earned || { xp: 0, souls: 0 },
     mapProgress: run.state.mapProgress
   });
 });

@@ -40,7 +40,8 @@ router.use(require('./admin/demon-balance'));
 
 router.use((error, req, res, next) => {
   console.error(error);
-  res.status(500).json({ error: 'Unexpected API error.' });
+  const status = error.status && error.status >= 400 && error.status < 600 ? error.status : 500;
+  res.status(status).json({ error: status === 500 ? 'Unexpected API error.' : error.message });
 });
 
 module.exports = router;

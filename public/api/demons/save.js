@@ -23,6 +23,18 @@ router.post('/demons/save', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Demon reward not found.' });
   }
 
+  if (reward.type !== 'final') {
+    return res.status(409).json({ error: 'Only final hunt demons can be saved to your collection.' });
+  }
+
+  if (run.status !== 'completed') {
+    return res.status(409).json({ error: 'Complete floor 10 before saving a final demon.' });
+  }
+
+  if (run.rewards.some((item) => item.type === 'final' && item.saved)) {
+    return res.status(409).json({ error: 'Final hunt demon already saved.' });
+  }
+
   if (reward.saved) {
     return res.status(409).json({ error: 'Demon reward already saved.' });
   }
@@ -47,7 +59,9 @@ router.post('/demons/save', requireAuth, async (req, res) => {
   );
 
   reward.saved = true;
+  reward.claimed = true;
   reward.savedDemonId = result.insertId;
+  run.state.awaitingFinalPick = false;
   await saveRun(run);
 
   res.status(201).json({

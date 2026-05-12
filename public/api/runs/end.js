@@ -16,7 +16,7 @@ router.post('/runs/:id/end', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Run has already ended.' });
   }
 
-  const earned = run.rewards.reduce((total, reward) => ({
+  const earned = run.state.earned || run.rewards.reduce((total, reward) => ({
     xp: total.xp + (reward.xp || 0),
     souls: total.souls + (reward.souls || 0)
   }), { xp: 0, souls: 0 });

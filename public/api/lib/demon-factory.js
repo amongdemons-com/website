@@ -10,11 +10,14 @@ const rarityWeights = [
   ['mythic', 0.5]
 ];
 
-function pickRarity(rng) {
-  const total = rarityWeights.reduce((sum, [, weight]) => sum + weight, 0);
+function pickRarity(rng, allowedRarities) {
+  const weights = allowedRarities && allowedRarities.length
+    ? rarityWeights.filter(([rarity]) => allowedRarities.includes(rarity))
+    : rarityWeights;
+  const total = weights.reduce((sum, [, weight]) => sum + weight, 0);
   let roll = rng() * total;
 
-  for (const [rarity, weight] of rarityWeights) {
+  for (const [rarity, weight] of weights) {
     roll -= weight;
     if (roll <= 0) return rarity;
   }
@@ -34,9 +37,12 @@ function rollStats(rng, typeData, rarity) {
 
 async function createDemon(rng, options = {}) {
   const [assets, types] = await Promise.all([getDemonAssets(), getDemonTypes()]);
-  const typeId = options.typeId || Number(pick(rng, Object.keys(types)));
+  const typeIds = options.allowedTypeIds && options.allowedTypeIds.length
+    ? options.allowedTypeIds.map(Number).filter((typeId) => types[String(typeId)])
+    : Object.keys(types).map(Number);
+  const typeId = options.typeId || Number(pick(rng, typeIds));
   const typeData = types[String(typeId)];
-  const rarity = options.rarity || pickRarity(rng);
+  const rarity = options.rarity || pickRarity(rng, options.allowedRarities);
   const asset = assets.find((item) => item.type === typeId && item.rarity === rarity) ||
     assets.find((item) => item.type === typeId) ||
     assets[0];
