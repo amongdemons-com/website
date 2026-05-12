@@ -46,6 +46,7 @@
       'runPanel',
       'teamGrid',
       'enemyGrid',
+      'fightLogTitle',
       'fightLog',
       'fightLogActions',
       'starterModal',
@@ -71,7 +72,7 @@
     });
 
     elements.confirmStarterBtn.addEventListener('click', startRun);
-    elements.battleBtn.addEventListener('click', battle);
+    if (elements.battleBtn) elements.battleBtn.addEventListener('click', battle);
   }
 
   async function refreshAll() {
@@ -185,7 +186,7 @@
         getModal(elements.starterModal).hide();
         localStorage.setItem(RUN_KEY, payload.runId);
         await loadRun(payload.runId);
-        setMessage('Hunt started.', 'success');
+        await battle();
       } catch (error) {
         showError(error);
       }
@@ -219,6 +220,7 @@
 
     await withBusy(elements.battleBtn, async () => {
       try {
+        setFightLogTitle('Fight Log');
         const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/battle`, { method: 'POST' });
         state.combatDemons = createCombatDemonMap();
         state.combatLog = result.combatLog || [];
@@ -365,6 +367,7 @@
       `;
       renderFightLog();
       renderFightLogActions();
+      renderPhaseTitle();
       syncActionButtons();
       return;
     }
@@ -379,11 +382,11 @@
       side: 'enemy',
       allowRecruitDrag: state.isRecruiting
     });
-    bindFormationButtons();
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
     renderFightLog();
     renderFightLogActions();
+    renderPhaseTitle();
     syncActionButtons();
   }
 
@@ -479,7 +482,6 @@
       setActiveLogRow(index);
       animateAttackerCard(step.attacker);
       step.entries.forEach((entry) => updateTargetCard(entry.target, entry.targetHp));
-      scrollFightLogToBottom();
       await sleep(260);
     }
 
@@ -547,20 +549,88 @@
   }
 
   function renderFightLog() {
+    if (state.run?.awaitingRecruit && state.isRecruiting) {
+      const recruitCount = getCurrentRecruitRewards().length;
+      const teamLimit = getRecruitTeamLimit();
+      elements.fightLog.classList.remove('text-muted');
+      elements.fightLog.innerHTML = `
+        <div class="hunt-phase-panel recruit-phase-panel">
+          <div class="hunt-phase-eyebrow">Recruit</div>
+          <h3>Choose your next demon</h3>
+          <p>Drag a defeated demon into the front or back row, or drop it onto a teammate to swap.</p>
+          <div class="hunt-phase-meta">
+            <span>${recruitCount} defeated ${recruitCount === 1 ? 'demon' : 'demons'}</span>
+            <span>Team limit: ${teamLimit}</span>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
     if (!state.combatLog.length && !state.endNotice) {
-      elements.fightLog.textContent = 'Battle actions will appear here.';
+      elements.fightLog.innerHTML = getIdleFightLogContent();
       elements.fightLog.classList.add('text-muted');
       return;
     }
 
     elements.fightLog.classList.remove('text-muted');
-    elements.fightLog.innerHTML = groupCombatLog(state.combatLog).map((step, index) => `
+    const rows = groupCombatLog(state.combatLog).map((step, index) => `
       ${renderFightLogRow(step, index)}
-    `).join('') + renderEndNotice();
+    `).reverse().join('');
+    elements.fightLog.innerHTML = renderEndNotice() + rows;
+  }
+
+  function getIdleFightLogContent() {
+    if (state.run?.status === 'active') {
+      return `
+        <div class="hunt-phase-panel strategy-phase-panel">
+          <div class="hunt-phase-eyebrow">Strategy Phase</div>
+          <h3>Prepare for the next fight</h3>
+          <p>Set your formation now. Buffs and items will live here later.</p>
+        </div>
+      `;
+    }
+
+    return 'Battle actions will appear here.';
+  }
+
+  function renderPhaseTitle() {
+    if (!elements.fightLogTitle) return;
+
+    if (state.run?.awaitingRecruit && state.isRecruiting) {
+      elements.fightLogTitle.textContent = 'Recruit';
+      return;
+    }
+
+    if (state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick) {
+      elements.fightLogTitle.textContent = 'Strategy Phase';
+      return;
+    }
+
+    if (state.run?.awaitingRecruit && state.showPostWinActions) {
+      elements.fightLogTitle.textContent = 'Fight Won';
+      return;
+    }
+
+    if (state.run?.status === 'defeated') {
+      elements.fightLogTitle.textContent = 'Defeated';
+      return;
+    }
+
+    if (state.run?.status === 'completed' || state.run?.awaitingFinalPick) {
+      elements.fightLogTitle.textContent = 'Hunt Complete';
+      return;
+    }
+
+    elements.fightLogTitle.textContent = 'Fight Log';
+  }
+
+  function setFightLogTitle(title) {
+    if (elements.fightLogTitle) elements.fightLogTitle.textContent = title;
   }
 
   function appendFightLogRow(step, index) {
-    elements.fightLog.insertAdjacentHTML('beforeend', renderFightLogRow(step, index));
+    elements.fightLog.insertAdjacentHTML('afterbegin', renderFightLogRow(step, index));
   }
 
   function renderFightLogRow(step, index) {
@@ -664,20 +734,28 @@
     if (state.recruitDraftTeam && state.recruitDraftPool) return;
 
     state.recruitDraftTeam = (state.run.team || []).map((demon, index) => ({
-      ...demon,
+      ...getFullHpDemon(demon),
       instanceId: demon.instanceId,
       originalInstanceId: demon.instanceId,
       recruitSource: 'team',
       position: getDemonPosition(demon, index)
     }));
     state.recruitDraftPool = getCurrentRecruitRewards().map((reward, index) => ({
-      ...reward.demon,
+      ...getFullHpDemon(reward.demon),
       instanceId: `reward-${reward.rewardId}`,
       rewardId: reward.rewardId,
       recruitSource: 'reward',
-      hp: 0,
       position: getDemonPosition(reward.demon, index)
     }));
+  }
+
+  function getFullHpDemon(demon) {
+    const maxHp = Math.max(Number(demon.maxHp) || Number(demon.hp) || 1, 1);
+    return {
+      ...demon,
+      maxHp,
+      hp: maxHp
+    };
   }
 
   function getRecruitTeamLimit() {
@@ -708,46 +786,45 @@
   function renderFightLogActions() {
     const isDefeated = state.run?.status === 'defeated';
     const canStart = !state.run || isDefeated || state.run.status === 'ended';
+    const canBattle = Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
     const canReplay = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
     const canContinueAfterWin = Boolean(state.run?.awaitingRecruit && state.showPostWinActions);
     const canContinueHunt = Boolean(state.run?.awaitingRecruit && state.isRecruiting);
 
     elements.fightLogActions.innerHTML = `
+      ${canBattle ? `
+        <button class="btn btn-hunt-battle btn-sm" id="battleBtn" type="button">
+          <i class="bi bi-lightning-charge"></i>
+          Battle
+        </button>
+      ` : ''}
       ${canReplay ? `
-        <button class="btn btn-outline-info w-100 mt-3" id="fightLogReplayBtn" type="button">
+        <button class="btn btn-warning btn-sm btn-icon-only" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
           <i class="bi bi-arrow-counterclockwise"></i>
-          Replay Fight
         </button>
       ` : ''}
       ${canContinueAfterWin ? `
-        <button class="btn btn-success w-100 mt-2" id="fightLogContinueBtn" type="button">
+        <button class="btn btn-success btn-sm" id="fightLogContinueBtn" type="button">
           <i class="bi bi-arrow-right-circle"></i>
           Continue
         </button>
       ` : ''}
       ${canContinueHunt ? `
-        <div class="fight-log-hint mt-3">
-          Drag defeated enemies into a row or onto one of your demons. Keep editing until the team looks right.
-        </div>
-        <button class="btn btn-success w-100 mt-2" id="fightLogContinueHuntBtn" type="button">
+        <button class="btn btn-success btn-sm" id="fightLogContinueHuntBtn" type="button">
           <i class="bi bi-arrow-right-circle"></i>
           Continue Hunt
         </button>
       ` : ''}
-      ${isDefeated ? `
-        <button class="btn btn-primary w-100 mt-2" id="fightLogEndBtn" type="button">
-          <i class="bi bi-door-open"></i>
-          End Hunt
-        </button>
-      ` : ''}
       ${canStart ? `
-      <button class="btn btn-primary w-100 mt-3" id="fightLogStartBtn" type="button">
+      <button class="btn btn-primary btn-sm" id="fightLogStartBtn" type="button">
         <i class="bi bi-play-fill"></i>
         ${isDefeated ? 'Start New Hunt' : 'Start Hunt'}
       </button>
       ` : ''}
     `;
 
+    elements.battleBtn = document.getElementById('battleBtn');
+    if (elements.battleBtn) elements.battleBtn.addEventListener('click', battle);
     const startButton = document.getElementById('fightLogStartBtn');
     if (startButton) startButton.addEventListener('click', isDefeated ? startNewHuntAfterDefeat : openStarterModal);
     const replayButton = document.getElementById('fightLogReplayBtn');
@@ -756,8 +833,6 @@
     if (continueButton) continueButton.addEventListener('click', beginRecruiting);
     const continueHuntButton = document.getElementById('fightLogContinueHuntBtn');
     if (continueHuntButton) continueHuntButton.addEventListener('click', confirmRecruitReward);
-    const endButton = document.getElementById('fightLogEndBtn');
-    if (endButton) endButton.addEventListener('click', () => finishRun('Your team was defeated.'));
   }
 
   async function startNewHuntAfterDefeat() {
@@ -781,6 +856,7 @@
     state.run.enemies = cloneDemons(lastBattle.enemyTeamBefore || state.run.enemies || []);
     state.combatLog = lastBattle.combatLog || [];
     renderRun();
+    setFightLogTitle('Fight Log');
     elements.fightLog.innerHTML = '';
     elements.fightLog.classList.remove('text-muted');
     await playCombatLog();
@@ -805,7 +881,7 @@
   }
 
   function scrollFightLogToBottom() {
-    elements.fightLog.scrollTop = elements.fightLog.scrollHeight;
+    elements.fightLog.scrollTop = 0;
   }
 
   function getLogRowClass(entry) {
@@ -1079,14 +1155,6 @@
       renderRun();
       showError(error);
     }
-  }
-
-  function bindFormationButtons() {
-    document.querySelectorAll('.js-position-choice').forEach((button) => {
-      button.addEventListener('click', () => {
-        setDemonPosition(button.dataset.instanceId, button.dataset.position);
-      });
-    });
   }
 
   function bindFormationDragAndDrop() {
@@ -1390,7 +1458,7 @@
 
     return `
       <div class="battle-formation">
-        ${getFormationOrder(options).map((position) => renderFormationLane(getPositionLabel(position), position, normalizedDemons, options)).join('')}
+        ${getFormationOrder(options).map((position) => renderFormationLane(position, normalizedDemons, options)).join('')}
       </div>
     `;
   }
@@ -1400,19 +1468,48 @@
   }
 
   function getPositionLabel(position) {
-    return position === 'front' ? 'Front Row' : 'Back Row';
+    return position === 'front' ? 'Melee row' : 'Ranged row';
   }
 
-  function renderFormationLane(label, position, demons, options) {
+  function renderFormationLane(position, demons, options) {
     const laneDemons = demons.filter((demon, index) => getDemonPosition(demon, index) === position);
+    const label = getPositionLabel(position);
 
     return `
       <div class="formation-lane formation-lane-${position}" data-formation-position="${position}">
-        <div class="formation-lane-label">${label}</div>
+        <div class="formation-lane-label" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">
+          ${renderFormationLaneIcon(position)}
+        </div>
         <div class="formation-lane-cards" data-formation-drop="${position}">
           ${laneDemons.length ? laneDemons.map((demon) => renderDemonCard(demon, options)).join('') : '<div class="formation-empty">Empty</div>'}
         </div>
       </div>
+    `;
+  }
+
+  function renderFormationLaneIcon(position) {
+    if (position === 'front') {
+      return `
+        <svg class="formation-lane-icon" viewBox="0 0 48 48" role="img" aria-hidden="true" focusable="false">
+          <path d="M14 42l20-20" />
+          <path d="M10 38l8 8" />
+          <path d="M31 11l6-6 6 6-6 6z" />
+          <path d="M34 42L14 22" />
+          <path d="M38 38l-8 8" />
+          <path d="M17 11l-6-6-6 6 6 6z" />
+        </svg>
+      `;
+    }
+
+    return `
+      <svg class="formation-lane-icon" viewBox="0 0 48 48" role="img" aria-hidden="true" focusable="false">
+        <path d="M15 6c12 6 12 30 0 36" />
+        <path d="M15 6c-5 11-5 25 0 36" />
+        <path d="M15 6v36" />
+        <path d="M15 24h24" />
+        <path d="M33 18l6 6-6 6" />
+        <path d="M23 20l-4 4 4 4" />
+      </svg>
     `;
   }
 
@@ -1440,7 +1537,7 @@
             <span class="text-white">${escapeHtml(demon.species || 'Demon')}</span>
           </div>
           ${renderCombatStats(demon)}
-          ${options.side === 'enemy' ? renderPositionBadge(position) : renderPositionControls(demon, position)}
+          ${options.side === 'enemy' ? renderPositionBadge(position) : ''}
         </div>
       </div>
     `;
@@ -1448,17 +1545,6 @@
 
   function renderPositionBadge(position) {
     return `<div class="position-badge">${position === 'front' ? 'Front' : 'Back'}</div>`;
-  }
-
-  function renderPositionControls(demon, position) {
-    const disabled = state.run?.awaitingRecruit || state.run?.awaitingFinalPick ? 'disabled' : '';
-
-    return `
-      <div class="position-toggle" aria-label="Row position">
-        <button class="js-position-choice ${position === 'front' ? 'active' : ''}" type="button" data-instance-id="${escapeHtml(demon.instanceId)}" data-position="front" ${disabled}>Front</button>
-        <button class="js-position-choice ${position === 'back' ? 'active' : ''}" type="button" data-instance-id="${escapeHtml(demon.instanceId)}" data-position="back" ${disabled}>Back</button>
-      </div>
-    `;
   }
 
   function getDemonPosition(demon, index = 0) {

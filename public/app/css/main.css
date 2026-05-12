@@ -306,11 +306,25 @@ main {
     border: 1px solid rgba(255,255,255,0.14);
     border-radius: 6px;
     background: rgba(255,255,255,0.04);
-    color: #9da7b1;
-    font-size: 0.72rem;
-    font-weight: bold;
-    text-align: center;
-    text-transform: uppercase;
+    color: #dce6ee;
+}
+
+.formation-lane-icon {
+    width: 2rem;
+    height: 2rem;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.formation-lane-front .formation-lane-label {
+    color: #f3c55c;
+}
+
+.formation-lane-back .formation-lane-label {
+    color: #7dc8ff;
 }
 
 .formation-lane-cards {
@@ -351,6 +365,31 @@ main {
     border-radius: 6px;
     background: rgba(0,0,0,0.18);
     overflow: hidden;
+}
+
+.btn-hunt-battle {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #FF6E2F;
+    --bs-btn-border-color: #FF6E2F;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #e95e23;
+    --bs-btn-hover-border-color: #e95e23;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #d9541f;
+    --bs-btn-active-border-color: #d9541f;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #FF6E2F;
+    --bs-btn-disabled-border-color: #FF6E2F;
+}
+
+.btn-icon-only {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    min-width: 2rem;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .hunt-demon-card[draggable="true"] {
@@ -461,14 +500,6 @@ main {
     font-size: 0.76rem;
 }
 
-.position-toggle {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.18rem;
-    margin-top: 0.35rem;
-}
-
-.position-toggle button,
 .position-badge {
     border: 1px solid rgba(255,255,255,0.16);
     border-radius: 4px;
@@ -481,15 +512,10 @@ main {
     text-align: center;
 }
 
-.position-toggle button.active,
 .position-badge {
     border-color: rgba(44,130,201,0.7);
     background: rgba(44,130,201,0.22);
     color: #dcefff;
-}
-
-.position-toggle button:disabled {
-    opacity: 0.65;
 }
 
 .hunt-demon-card.is-attacking {
@@ -511,12 +537,6 @@ main {
 .hunt-demon-card.is-recruit-draggable.is-defeated {
     opacity: 0.86;
     filter: grayscale(0.25);
-}
-
-.fight-log-hint {
-    color: #9da7b1;
-    font-size: 0.84rem;
-    line-height: 1.35;
 }
 
 .reward-image {
@@ -746,6 +766,62 @@ main {
     max-height: 620px;
     overflow: auto;
     font-size: 0.82rem;
+}
+
+.hunt-phase-panel {
+    min-height: 240px;
+    padding: 1rem 0.75rem;
+    color: #dce6ee;
+}
+
+.hunt-phase-eyebrow {
+    color: #80d697;
+    font-size: 0.78rem;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.hunt-phase-panel h3 {
+    margin: 0.35rem 0 0.45rem;
+    color: #fff;
+    font-size: 1.45rem;
+    line-height: 1.15;
+}
+
+.hunt-phase-panel p {
+    max-width: 32rem;
+    margin: 0;
+    color: #b8c3cc;
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+.hunt-phase-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+}
+
+.hunt-phase-meta span {
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    color: #f2f7ff;
+    font-size: 0.82rem;
+    font-weight: bold;
+    padding: 0.32rem 0.5rem;
+}
+
+.recruit-phase-panel {
+    border-left: 3px solid #41A85F;
+    background: rgba(65,168,95,0.08);
+}
+
+.strategy-phase-panel {
+    border-left: 3px solid #2C82C9;
+    background: rgba(44,130,201,0.08);
 }
 
 .fight-log-row {
