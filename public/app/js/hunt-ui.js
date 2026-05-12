@@ -73,11 +73,12 @@
       state.player = me.player;
       renderPlayer();
 
-      const savedRunId = localStorage.getItem(RUN_KEY);
       if (state.run && state.run.runId) {
         await loadRun(state.run.runId);
-      } else if (savedRunId) {
-        await loadRun(savedRunId);
+      } else if (await loadCurrentRun()) {
+        showPendingChoiceModal();
+      } else if (await loadSavedRun()) {
+        showPendingChoiceModal();
       } else {
         await loadStartOptions();
         renderRun();
@@ -88,6 +89,41 @@
       }
     } catch (error) {
       handleAuthError(error);
+    }
+  }
+
+  async function loadSavedRun() {
+    const runId = localStorage.getItem(RUN_KEY);
+    if (!runId) return false;
+
+    try {
+      await loadRun(runId);
+      if (state.run?.status === 'ended') {
+        localStorage.removeItem(RUN_KEY);
+        state.run = null;
+        state.combatLog = [];
+        return false;
+      }
+      return true;
+    } catch (error) {
+      if (error.status !== 404) throw error;
+      localStorage.removeItem(RUN_KEY);
+      state.run = null;
+      state.combatLog = [];
+      return false;
+    }
+  }
+
+  async function loadCurrentRun() {
+    try {
+      state.run = await api('/api/runs/current');
+      state.combatLog = state.run.lastBattle?.combatLog || [];
+      localStorage.setItem(RUN_KEY, state.run.runId);
+      renderRun();
+      return true;
+    } catch (error) {
+      if (error.status === 404) return false;
+      throw error;
     }
   }
 
@@ -148,6 +184,7 @@
   async function loadRun(runId) {
     try {
       state.run = await api(`/api/runs/${encodeURIComponent(runId)}`);
+      state.combatLog = state.run.lastBattle?.combatLog || [];
       localStorage.setItem(RUN_KEY, state.run.runId);
       renderRun();
       showPendingChoiceModal();
@@ -168,12 +205,16 @@
         const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/battle`, { method: 'POST' });
         state.combatDemons = createCombatDemonMap();
         state.combatLog = result.combatLog || [];
+        if (result.lastBattle) state.run.lastBattle = result.lastBattle;
         elements.fightLog.innerHTML = '';
         elements.fightLog.classList.remove('text-muted');
         await playCombatLog(result);
         if (result.winner === 'enemy') {
           state.run.status = 'defeated';
-          await finishRun('Your team was defeated.');
+          state.run.lastBattle = result.lastBattle || state.run.lastBattle;
+          setMessage('Your team was defeated.', 'warning');
+          renderFightLogActions();
+          syncActionButtons();
         } else {
           await loadRun(state.run.runId);
           setMessage(getWinMessage(), 'success');
@@ -382,20 +423,23 @@
     if (!state.run) return;
 
     const allDemonsById = new Map([...(state.run.team || []), ...(state.run.enemies || [])].map((demon) => [demon.instanceId, demon]));
+    const steps = groupCombatLog(state.combatLog);
 
-    for (let index = 0; index < state.combatLog.length; index += 1) {
-      const entry = state.combatLog[index];
-      const target = allDemonsById.get(entry.target);
+    for (let index = 0; index < steps.length; index += 1) {
+      const step = steps[index];
 
-      if (target) {
-        target.hp = entry.targetHp;
-      }
+      step.entries.forEach((entry) => {
+        const target = allDemonsById.get(entry.target);
+        if (target) {
+          target.hp = entry.targetHp;
+        }
+      });
 
-      appendFightLogRow(entry, index);
+      appendFightLogRow(step, index);
       updateTeamHp();
       setActiveLogRow(index);
-      animateAttackerCard(entry.attacker);
-      updateTargetCard(entry.target, entry.targetHp);
+      animateAttackerCard(step.attacker);
+      step.entries.forEach((entry) => updateTargetCard(entry.target, entry.targetHp));
       scrollFightLogToBottom();
       await sleep(260);
     }
@@ -471,25 +515,58 @@
     }
 
     elements.fightLog.classList.remove('text-muted');
-    elements.fightLog.innerHTML = state.combatLog.map((entry, index) => `
-      ${renderFightLogRow(entry, index)}
+    elements.fightLog.innerHTML = groupCombatLog(state.combatLog).map((step, index) => `
+      ${renderFightLogRow(step, index)}
     `).join('') + renderEndNotice();
   }
 
-  function appendFightLogRow(entry, index) {
-    elements.fightLog.insertAdjacentHTML('beforeend', renderFightLogRow(entry, index));
+  function appendFightLogRow(step, index) {
+    elements.fightLog.insertAdjacentHTML('beforeend', renderFightLogRow(step, index));
   }
 
-  function renderFightLogRow(entry, index) {
+  function renderFightLogRow(step, index) {
+    const primaryEntry = step.entries[0];
+    const damageText = step.isAoe ? `${step.entries.length} x ${primaryEntry.dmg} dmg` : `${primaryEntry.dmg} dmg`;
+    const targetText = step.isAoe
+      ? `${step.entries.length} enemies`
+      : `${renderFightLogDemonName(primaryEntry.target)} ${renderLogPosition(primaryEntry.targetPosition)}`;
+    const hpText = step.isAoe ? 'AOE' : `${primaryEntry.targetHp} HP`;
+
     return `
-      <div class="fight-log-row ${getLogRowClass(entry)}" data-log-index="${index}">
-        <span class="text-secondary">T${entry.tick}</span>
-        <span class="fight-log-side">${getLogSideLabel(entry)}</span>
-        <span class="fight-log-action">${renderFightLogDemonName(entry.attacker)} ${getFightLogVerb(entry)} ${renderFightLogDemonName(entry.target)} ${renderLogPosition(entry.targetPosition)}</span>
-        <span class="text-danger">${entry.dmg} dmg</span>
-        <span class="text-secondary">${entry.targetHp} HP</span>
+      <div class="fight-log-row ${getLogRowClass(primaryEntry)}" data-log-index="${index}">
+        <span class="text-secondary">T${primaryEntry.tick}</span>
+        <span class="fight-log-side">${getLogSideLabel(primaryEntry)}</span>
+        <span class="fight-log-action">${renderFightLogDemonName(primaryEntry.attacker)} ${getFightLogVerb(primaryEntry)} ${targetText}</span>
+        <span class="text-danger">${damageText}</span>
+        <span class="text-secondary">${hpText}</span>
       </div>
     `;
+  }
+
+  function groupCombatLog(combatLog) {
+    const steps = [];
+
+    for (const entry of combatLog || []) {
+      const previous = steps[steps.length - 1];
+      const isSameAoe = entry.targeting === 'all' &&
+        previous?.isAoe &&
+        previous.tick === entry.tick &&
+        previous.attacker === entry.attacker;
+
+      if (isSameAoe) {
+        previous.entries.push(entry);
+        continue;
+      }
+
+      steps.push({
+        tick: entry.tick,
+        attacker: entry.attacker,
+        isAoe: entry.targeting === 'all',
+        entries: [entry]
+      });
+    }
+
+    return steps;
   }
 
   function renderLogPosition(position) {
@@ -512,17 +589,70 @@
   }
 
   function renderFightLogActions() {
-    const canStart = !state.run || ['defeated', 'ended'].includes(state.run.status);
+    const isDefeated = state.run?.status === 'defeated';
+    const canStart = !state.run || isDefeated || state.run.status === 'ended';
+    const canReplay = Boolean(state.run?.lastBattle?.combatLog?.length || state.combatLog.length);
 
-    elements.fightLogActions.innerHTML = canStart ? `
+    elements.fightLogActions.innerHTML = `
+      ${canReplay ? `
+        <button class="btn btn-outline-info w-100 mt-3" id="fightLogReplayBtn" type="button">
+          <i class="bi bi-arrow-counterclockwise"></i>
+          Replay Fight
+        </button>
+      ` : ''}
+      ${isDefeated ? `
+        <button class="btn btn-primary w-100 mt-2" id="fightLogEndBtn" type="button">
+          <i class="bi bi-door-open"></i>
+          End Hunt
+        </button>
+      ` : ''}
+      ${canStart ? `
       <button class="btn btn-primary w-100 mt-3" id="fightLogStartBtn" type="button">
         <i class="bi bi-play-fill"></i>
-        Start Hunt
+        ${isDefeated ? 'Start New Hunt' : 'Start Hunt'}
       </button>
-    ` : '';
+      ` : ''}
+    `;
 
     const startButton = document.getElementById('fightLogStartBtn');
-    if (startButton) startButton.addEventListener('click', openStarterModal);
+    if (startButton) startButton.addEventListener('click', isDefeated ? startNewHuntAfterDefeat : openStarterModal);
+    const replayButton = document.getElementById('fightLogReplayBtn');
+    if (replayButton) replayButton.addEventListener('click', replayFight);
+    const endButton = document.getElementById('fightLogEndBtn');
+    if (endButton) endButton.addEventListener('click', () => finishRun('Your team was defeated.'));
+  }
+
+  async function startNewHuntAfterDefeat() {
+    if (!state.run || state.run.status !== 'defeated') {
+      await openStarterModal();
+      return;
+    }
+
+    await finishRun('Your team was defeated.');
+    await openStarterModal();
+  }
+
+  async function replayFight() {
+    const lastBattle = state.run?.lastBattle;
+    if (!lastBattle?.combatLog?.length) {
+      if (state.combatLog.length) renderFightLog();
+      return;
+    }
+
+    state.run.team = cloneDemons(lastBattle.playerTeamBefore || state.run.team || []);
+    state.run.enemies = cloneDemons(lastBattle.enemyTeamBefore || state.run.enemies || []);
+    state.combatLog = lastBattle.combatLog || [];
+    renderRun();
+    elements.fightLog.innerHTML = '';
+    elements.fightLog.classList.remove('text-muted');
+    await playCombatLog();
+    state.run.team = cloneDemons(lastBattle.playerTeamAfter || state.run.team || []);
+    state.run.enemies = cloneDemons(lastBattle.enemyTeamAfter || state.run.enemies || []);
+    renderRun();
+  }
+
+  function cloneDemons(demons) {
+    return (demons || []).map((demon) => ({ ...demon }));
   }
 
   function createCombatDemonMap() {

@@ -10,8 +10,9 @@ function getAllowedHuntTypeIds(floor) {
 
 async function createHuntEnemies(rng, floor, size) {
   const allowedTypeIds = getAllowedHuntTypeIds(floor);
+  const teamSize = getHuntEnemyTeamSize(floor, size);
 
-  if (floor === 10 && size > 0) {
+  if (floor === 10 && teamSize > 0) {
     const enemies = [
       await createDemon(rng, {
         instanceId: `enemy-${floor}-1`,
@@ -20,7 +21,7 @@ async function createHuntEnemies(rng, floor, size) {
       })
     ];
 
-    for (let index = 1; index < size; index += 1) {
+    for (let index = 1; index < teamSize; index += 1) {
       enemies.push(await createDemon(rng, {
         instanceId: `enemy-${floor}-${index + 1}`,
         position: index === 1 ? 'back' : 'front',
@@ -31,14 +32,19 @@ async function createHuntEnemies(rng, floor, size) {
     return applyEnemyPreferredPositions(enemies);
   }
 
-  const enemies = await createTeam(rng, size, {
+  const enemies = await createTeam(rng, teamSize, {
     prefix: `enemy-${floor}`,
-    positions: getEnemyPositions(size),
+    positions: getEnemyPositions(teamSize),
     allowedTypeIds,
     allowedRarities: floor <= 3 ? ['common', 'uncommon', 'rare'] : undefined
   });
 
   return applyEnemyPreferredPositions(enemies);
+}
+
+function getHuntEnemyTeamSize(floor, fallbackSize) {
+  if (floor <= 1) return Math.max(1, Number(fallbackSize) || 1);
+  return 3;
 }
 
 function getEnemyPositions(size) {
@@ -63,5 +69,6 @@ function applyEnemyPreferredPositions(enemies) {
 module.exports = {
   STARTER_TYPE_IDS,
   createHuntEnemies,
-  getAllowedHuntTypeIds
+  getAllowedHuntTypeIds,
+  getHuntEnemyTeamSize
 };

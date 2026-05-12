@@ -23,10 +23,21 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   }
 
   const rng = createRng(run.seed + run.floor);
+  const playerTeamBefore = cloneForBattleReplay(run.state.team || []);
+  const enemyTeamBefore = cloneForBattleReplay(run.state.enemies || []);
   const result = simulateFight(rng, run.state.team, run.state.enemies);
   run.state.team = result.playerTeam;
   run.state.enemies = result.enemyTeam;
   run.state.hp = result.playerTeam.reduce((sum, demon) => sum + Math.max(0, demon.hp), 0);
+  run.state.lastBattle = {
+    floor: run.floor,
+    winner: result.winner,
+    combatLog: result.combatLog,
+    playerTeamBefore,
+    enemyTeamBefore,
+    playerTeamAfter: cloneForBattleReplay(result.playerTeam),
+    enemyTeamAfter: cloneForBattleReplay(result.enemyTeam)
+  };
 
   let rewards = {};
   if (result.winner === 'player') {
@@ -41,14 +52,12 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 
     if (isFinalFloor) {
       run.status = 'completed';
-      run.endedAt = new Date();
       run.state.awaitingFinalPick = true;
     } else {
       run.state.awaitingRecruit = true;
     }
   } else {
     run.status = 'defeated';
-    run.endedAt = new Date();
   }
 
   await saveRun(run);
@@ -56,9 +65,14 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   res.json({
     winner: result.winner,
     combatLog: result.combatLog,
+    lastBattle: run.state.lastBattle,
     rewards
   });
 });
+
+function cloneForBattleReplay(team) {
+  return (team || []).map((demon) => ({ ...demon }));
+}
 
 function createDefeatedDemonRewards(run) {
   const enemies = run.state.enemies || [];

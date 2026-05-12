@@ -5,6 +5,7 @@ const { requireAuth } = require('../lib/auth');
 const { createRng } = require('../lib/rng');
 const { createTeam } = require('../lib/demon-factory');
 const { STARTER_TYPE_IDS, createHuntEnemies } = require('../lib/hunt-enemies');
+const { closeOpenRunsForPlayer } = require('../lib/runs');
 const { createRunDemonFromCollection, resetRunDemon } = require('../lib/run-demons');
 
 const router = express.Router();
@@ -51,6 +52,8 @@ router.post('/runs/start', requireAuth, async (req, res) => {
     mapProgress: [{ floor: 1, type: 'battle', status: 'available' }]
   };
   const rewards = [];
+
+  await closeOpenRunsForPlayer(req.player.id);
 
   await db.query(
     `INSERT INTO runs (id, player_id, seed, status, floor, state, rewards)

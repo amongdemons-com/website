@@ -21,6 +21,47 @@ async function getRunForPlayer(runId, playerId) {
   return rows.length ? parseRun(rows[0]) : null;
 }
 
+async function getCurrentRunForPlayer(playerId) {
+  const [rows] = await db.query(
+    `SELECT * FROM runs
+     WHERE player_id = ?
+       AND status <> 'ended'
+     ORDER BY
+       CASE status
+         WHEN 'active' THEN 1
+         WHEN 'completed' THEN 2
+         WHEN 'defeated' THEN 3
+         ELSE 4
+       END,
+       updated_at DESC,
+       created_at DESC
+     LIMIT 1`,
+    [playerId]
+  );
+
+  return rows.length ? parseRun(rows[0]) : null;
+}
+
+async function closeOpenRunsForPlayer(playerId, exceptRunId = null) {
+  const params = [playerId];
+  let exceptClause = '';
+
+  if (exceptRunId) {
+    exceptClause = 'AND id <> ?';
+    params.push(exceptRunId);
+  }
+
+  await db.query(
+    `UPDATE runs
+     SET status = 'ended',
+         ended_at = COALESCE(ended_at, CURRENT_TIMESTAMP)
+     WHERE player_id = ?
+       AND status <> 'ended'
+       ${exceptClause}`,
+    params
+  );
+}
+
 async function saveRun(run) {
   await db.query(
     `UPDATE runs
@@ -39,6 +80,8 @@ async function saveRun(run) {
 }
 
 module.exports = {
+  closeOpenRunsForPlayer,
+  getCurrentRunForPlayer,
   getRunForPlayer,
   parseRun,
   saveRun
