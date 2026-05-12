@@ -11,6 +11,13 @@
     selectedStarter: null,
     selectedRecruitRewardId: null,
     selectedSwapInstanceId: null,
+    isRecruiting: false,
+    showPostWinActions: false,
+    draggedRewardId: null,
+    draggedRecruitPoolInstanceId: null,
+    draggedFormationInstanceId: null,
+    recruitDraftTeam: null,
+    recruitDraftPool: null,
     combatLog: [],
     combatDemons: new Map(),
     endNotice: null,
@@ -117,7 +124,9 @@
   async function loadCurrentRun() {
     try {
       state.run = await api('/api/runs/current');
-      state.combatLog = state.run.lastBattle?.combatLog || [];
+      state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
+      state.isRecruiting = Boolean(state.run.awaitingRecruit);
+      state.showPostWinActions = false;
       localStorage.setItem(RUN_KEY, state.run.runId);
       renderRun();
       return true;
@@ -169,6 +178,8 @@
         });
         state.combatLog = [];
         state.endNotice = null;
+        state.isRecruiting = false;
+        state.showPostWinActions = false;
         state.selectedStarter = null;
         state.startOptions = null;
         getModal(elements.starterModal).hide();
@@ -181,10 +192,16 @@
     });
   }
 
-  async function loadRun(runId) {
+  async function loadRun(runId, options = {}) {
     try {
       state.run = await api(`/api/runs/${encodeURIComponent(runId)}`);
-      state.combatLog = state.run.lastBattle?.combatLog || [];
+      state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
+      state.showPostWinActions = Boolean(options.showPostWinActions && state.run.awaitingRecruit);
+      state.isRecruiting = Boolean(state.run.awaitingRecruit && !state.showPostWinActions);
+      if (!state.isRecruiting) {
+        state.recruitDraftTeam = null;
+        state.recruitDraftPool = null;
+      }
       localStorage.setItem(RUN_KEY, state.run.runId);
       renderRun();
       showPendingChoiceModal();
@@ -216,7 +233,7 @@
           renderFightLogActions();
           syncActionButtons();
         } else {
-          await loadRun(state.run.runId);
+          await loadRun(state.run.runId, { showPostWinActions: true });
           setMessage(getWinMessage(), 'success');
         }
       } catch (error) {
@@ -241,16 +258,14 @@
   async function confirmRecruitReward() {
     if (!state.run) return;
 
-    const body = state.selectedRecruitRewardId
-      ? { rewardId: state.selectedRecruitRewardId }
+    const recruitChoice = getDraftRecruitChoice();
+    const body = recruitChoice
+      ? recruitChoice
       : { skipRecruit: true };
-    if ((state.run.team || []).length >= 3) {
-      if (state.selectedRecruitRewardId && !state.selectedSwapInstanceId) {
-        body.skipRecruit = true;
-        delete body.rewardId;
-      } else if (state.selectedSwapInstanceId) {
-        body.replaceInstanceId = state.selectedSwapInstanceId;
-      }
+    if (body.skipRecruit) {
+      delete body.rewardId;
+      delete body.replaceInstanceId;
+      delete body.position;
     }
 
     try {
@@ -260,6 +275,13 @@
       });
       state.selectedRecruitRewardId = null;
       state.selectedSwapInstanceId = null;
+      state.isRecruiting = false;
+      state.showPostWinActions = false;
+      state.draggedRewardId = null;
+      state.draggedRecruitPoolInstanceId = null;
+      state.draggedFormationInstanceId = null;
+      state.recruitDraftTeam = null;
+      state.recruitDraftPool = null;
       state.combatLog = [];
       state.combatDemons = new Map();
       state.endNotice = null;
@@ -302,6 +324,13 @@
       state.run = null;
       state.selectedRecruitRewardId = null;
       state.selectedSwapInstanceId = null;
+      state.isRecruiting = false;
+      state.showPostWinActions = false;
+      state.draggedRewardId = null;
+      state.draggedRecruitPoolInstanceId = null;
+      state.draggedFormationInstanceId = null;
+      state.recruitDraftTeam = null;
+      state.recruitDraftPool = null;
       state.endNotice = {
         text: `${message || 'Hunt ended.'} You earned ${result.xp} XP and ${result.souls} souls.`,
         type: message ? 'warning' : 'success'
@@ -340,9 +369,19 @@
       return;
     }
 
-    elements.teamGrid.innerHTML = renderDemonCards(run.team || []);
-    elements.enemyGrid.innerHTML = renderDemonCards((run.team || []).length ? run.enemies || [] : [], { side: 'enemy' });
+    const team = state.isRecruiting ? getRecruitPreviewTeam() : run.team || [];
+    const enemies = state.isRecruiting ? getRecruitPreviewEnemies() : run.enemies || [];
+    elements.teamGrid.innerHTML = renderDemonCards(team, {
+      side: 'player',
+      allowFormationDrag: !run.awaitingRecruit && !run.awaitingFinalPick
+    });
+    elements.enemyGrid.innerHTML = renderDemonCards((run.team || []).length ? enemies : [], {
+      side: 'enemy',
+      allowRecruitDrag: state.isRecruiting
+    });
     bindFormationButtons();
+    bindFormationDragAndDrop();
+    bindRecruitDragAndDrop();
     renderFightLog();
     renderFightLogActions();
     syncActionButtons();
@@ -588,16 +627,111 @@
     return `<div class="${className}">${escapeHtml(state.endNotice.text)}</div>`;
   }
 
+  function beginRecruiting() {
+    if (!state.run?.awaitingRecruit) return;
+
+    state.isRecruiting = true;
+    state.showPostWinActions = false;
+    state.selectedRecruitRewardId = null;
+    state.selectedSwapInstanceId = null;
+    state.draggedRewardId = null;
+    state.draggedRecruitPoolInstanceId = null;
+    ensureRecruitDraft();
+    renderRun();
+  }
+
+  function getCurrentRecruitRewards() {
+    if (!state.run) return [];
+    return (state.run.rewards || []).filter((reward) => (
+      reward.floor === state.run.currentFloor &&
+      reward.type === 'recruit' &&
+      !reward.recruited
+    ));
+  }
+
+  function getRecruitPreviewTeam() {
+    ensureRecruitDraft();
+    return cloneDemons(state.recruitDraftTeam || []);
+  }
+
+  function getRecruitPreviewEnemies() {
+    ensureRecruitDraft();
+    return cloneDemons(state.recruitDraftPool || []);
+  }
+
+  function ensureRecruitDraft() {
+    if (!state.run?.awaitingRecruit || !state.isRecruiting) return;
+    if (state.recruitDraftTeam && state.recruitDraftPool) return;
+
+    state.recruitDraftTeam = (state.run.team || []).map((demon, index) => ({
+      ...demon,
+      instanceId: demon.instanceId,
+      originalInstanceId: demon.instanceId,
+      recruitSource: 'team',
+      position: getDemonPosition(demon, index)
+    }));
+    state.recruitDraftPool = getCurrentRecruitRewards().map((reward, index) => ({
+      ...reward.demon,
+      instanceId: `reward-${reward.rewardId}`,
+      rewardId: reward.rewardId,
+      recruitSource: 'reward',
+      hp: 0,
+      position: getDemonPosition(reward.demon, index)
+    }));
+  }
+
+  function getRecruitTeamLimit() {
+    if (!state.run) return 3;
+    return Math.min(3, Math.max(1, Number(state.run.currentFloor) + 1));
+  }
+
+  function getDraftRecruitChoice() {
+    ensureRecruitDraft();
+    const draftTeam = state.recruitDraftTeam || [];
+    const recruit = draftTeam.find((demon) => demon.recruitSource === 'reward' && demon.rewardId);
+    if (!recruit) return null;
+
+    const draftOriginalIds = new Set(
+      draftTeam
+        .filter((demon) => demon.recruitSource === 'team')
+        .map((demon) => demon.originalInstanceId || demon.instanceId)
+    );
+    const replaced = (state.run?.team || []).find((demon) => !draftOriginalIds.has(demon.instanceId));
+    const body = {
+      rewardId: recruit.rewardId,
+      position: getDemonPosition(recruit)
+    };
+    if (replaced) body.replaceInstanceId = replaced.instanceId;
+    return body;
+  }
+
   function renderFightLogActions() {
     const isDefeated = state.run?.status === 'defeated';
     const canStart = !state.run || isDefeated || state.run.status === 'ended';
-    const canReplay = Boolean(state.run?.lastBattle?.combatLog?.length || state.combatLog.length);
+    const canReplay = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
+    const canContinueAfterWin = Boolean(state.run?.awaitingRecruit && state.showPostWinActions);
+    const canContinueHunt = Boolean(state.run?.awaitingRecruit && state.isRecruiting);
 
     elements.fightLogActions.innerHTML = `
       ${canReplay ? `
         <button class="btn btn-outline-info w-100 mt-3" id="fightLogReplayBtn" type="button">
           <i class="bi bi-arrow-counterclockwise"></i>
           Replay Fight
+        </button>
+      ` : ''}
+      ${canContinueAfterWin ? `
+        <button class="btn btn-success w-100 mt-2" id="fightLogContinueBtn" type="button">
+          <i class="bi bi-arrow-right-circle"></i>
+          Continue
+        </button>
+      ` : ''}
+      ${canContinueHunt ? `
+        <div class="fight-log-hint mt-3">
+          Drag defeated enemies into a row or onto one of your demons. Keep editing until the team looks right.
+        </div>
+        <button class="btn btn-success w-100 mt-2" id="fightLogContinueHuntBtn" type="button">
+          <i class="bi bi-arrow-right-circle"></i>
+          Continue Hunt
         </button>
       ` : ''}
       ${isDefeated ? `
@@ -618,6 +752,10 @@
     if (startButton) startButton.addEventListener('click', isDefeated ? startNewHuntAfterDefeat : openStarterModal);
     const replayButton = document.getElementById('fightLogReplayBtn');
     if (replayButton) replayButton.addEventListener('click', replayFight);
+    const continueButton = document.getElementById('fightLogContinueBtn');
+    if (continueButton) continueButton.addEventListener('click', beginRecruiting);
+    const continueHuntButton = document.getElementById('fightLogContinueHuntBtn');
+    if (continueHuntButton) continueHuntButton.addEventListener('click', confirmRecruitReward);
     const endButton = document.getElementById('fightLogEndBtn');
     if (endButton) endButton.addEventListener('click', () => finishRun('Your team was defeated.'));
   }
@@ -653,6 +791,10 @@
 
   function cloneDemons(demons) {
     return (demons || []).map((demon) => ({ ...demon }));
+  }
+
+  function isCurrentFloorBattle(run) {
+    return Boolean(run?.lastBattle?.floor === run?.currentFloor);
   }
 
   function createCombatDemonMap() {
@@ -727,7 +869,7 @@
   }
 
   function showPendingChoiceModal() {
-    if (!state.run || !(state.run.awaitingRecruit || state.run.awaitingFinalPick || state.run.status === 'completed')) return;
+    if (!state.run || !(state.run.awaitingFinalPick || state.run.status === 'completed')) return;
     if (state.run.status === 'completed' && hasSavedFinalReward()) return;
 
     renderTeamChoiceModal();
@@ -947,8 +1089,300 @@
     });
   }
 
+  function bindFormationDragAndDrop() {
+    if (!state.run || state.run.awaitingRecruit || state.run.awaitingFinalPick) return;
+
+    document.querySelectorAll('#teamGrid .hunt-demon-card[draggable="true"]').forEach((card) => {
+      if (card.dataset.rewardId) return;
+
+      card.addEventListener('dragstart', (event) => {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', JSON.stringify({
+          type: 'formation',
+          instanceId: card.dataset.instanceId
+        }));
+        state.draggedFormationInstanceId = card.dataset.instanceId;
+        card.classList.add('is-dragging');
+      });
+      card.addEventListener('dragend', () => {
+        state.draggedFormationInstanceId = null;
+        card.classList.remove('is-dragging');
+        document.querySelectorAll('.formation-lane-cards.is-drag-over').forEach((lane) => lane.classList.remove('is-drag-over'));
+      });
+    });
+
+    document.querySelectorAll('#teamGrid .formation-lane-cards').forEach((lane) => {
+      lane.addEventListener('dragover', (event) => {
+        const payload = readDragPayload(event);
+        if (payload?.type !== 'formation' && !state.draggedFormationInstanceId) return;
+
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        lane.classList.add('is-drag-over');
+      });
+      lane.addEventListener('dragleave', () => lane.classList.remove('is-drag-over'));
+      lane.addEventListener('drop', (event) => {
+        const payload = readDragPayload(event);
+        const instanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        lane.classList.remove('is-drag-over');
+        if (!instanceId) return;
+
+        event.preventDefault();
+        setDemonPosition(instanceId, lane.dataset.formationDrop);
+      });
+    });
+  }
+
+  function bindRecruitDragAndDrop() {
+    if (!state.run?.awaitingRecruit || !state.isRecruiting) return;
+    ensureRecruitDraft();
+
+    document.querySelectorAll('#enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+      card.addEventListener('dragstart', (event) => {
+        const poolDemon = findDraftDemon(state.recruitDraftPool, card.dataset.instanceId);
+        if (!poolDemon) return;
+
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', JSON.stringify({
+          type: 'recruit-pool',
+          instanceId: card.dataset.instanceId
+        }));
+        state.draggedRewardId = poolDemon.rewardId || null;
+        state.draggedRecruitPoolInstanceId = card.dataset.instanceId;
+        card.classList.add('is-dragging');
+      });
+      card.addEventListener('dragend', () => {
+        state.draggedRewardId = null;
+        state.draggedRecruitPoolInstanceId = null;
+        card.classList.remove('is-dragging');
+        document.querySelectorAll('.hunt-demon-card.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
+      });
+    });
+
+    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+      card.addEventListener('dragstart', (event) => {
+        const teamDemon = findDraftDemon(state.recruitDraftTeam, card.dataset.instanceId);
+        if (!teamDemon) return;
+
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', JSON.stringify({
+          type: 'recruit-team',
+          instanceId: card.dataset.instanceId
+        }));
+        state.draggedFormationInstanceId = card.dataset.instanceId;
+        card.classList.add('is-dragging');
+      });
+      card.addEventListener('dragend', () => {
+        state.draggedFormationInstanceId = null;
+        card.classList.remove('is-dragging');
+        document.querySelectorAll('.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
+      });
+      card.addEventListener('dragover', (event) => {
+        const payload = readDragPayload(event);
+        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
+        if ((payload?.type && payload.type !== 'recruit-pool') || !canSwapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId)) return;
+
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        card.classList.add('is-drag-over');
+      });
+      card.addEventListener('dragleave', () => card.classList.remove('is-drag-over'));
+      card.addEventListener('drop', (event) => {
+        const payload = readDragPayload(event);
+        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
+        card.classList.remove('is-drag-over');
+        if ((payload?.type && payload.type !== 'recruit-pool') || !canSwapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId)) return;
+
+        event.preventDefault();
+        swapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId);
+        renderRun();
+      });
+    });
+
+    document.querySelectorAll('#teamGrid .formation-lane-cards').forEach((lane) => {
+      lane.addEventListener('dragover', (event) => {
+        const payload = readDragPayload(event);
+        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
+        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        const isPoolDrop = (payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId);
+        const isTeamMove = (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && findDraftDemon(state.recruitDraftTeam, teamInstanceId);
+        if (!isPoolDrop && !isTeamMove) return;
+
+        if (isPoolDrop && !canAddPoolDemonToTeam(poolInstanceId)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        lane.classList.add('is-drag-over');
+      });
+      lane.addEventListener('dragleave', () => lane.classList.remove('is-drag-over'));
+      lane.addEventListener('drop', (event) => {
+        const payload = readDragPayload(event);
+        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
+        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        lane.classList.remove('is-drag-over');
+        if (!poolInstanceId && !teamInstanceId) return;
+
+        if (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) {
+          event.preventDefault();
+          moveDraftTeamDemon(teamInstanceId, lane.dataset.formationDrop);
+          renderRun();
+          return;
+        }
+
+        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId)) {
+          event.preventDefault();
+          addPoolDemonToTeam(poolInstanceId, lane.dataset.formationDrop);
+          renderRun();
+        }
+      });
+    });
+
+    document.querySelectorAll('#enemyGrid .formation-lane-cards').forEach((lane) => {
+      lane.addEventListener('dragover', (event) => {
+        const payload = readDragPayload(event);
+        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        if ((payload?.type && payload.type !== 'recruit-team') || !canReturnTeamDemonToPool(teamInstanceId)) return;
+
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        lane.classList.add('is-drag-over');
+      });
+      lane.addEventListener('dragleave', () => lane.classList.remove('is-drag-over'));
+      lane.addEventListener('drop', (event) => {
+        const payload = readDragPayload(event);
+        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        lane.classList.remove('is-drag-over');
+        if ((payload?.type && payload.type !== 'recruit-team') || !canReturnTeamDemonToPool(teamInstanceId)) return;
+
+        event.preventDefault();
+        returnTeamDemonToPool(teamInstanceId, lane.dataset.formationDrop);
+        renderRun();
+      });
+    });
+  }
+
+  function findDraftDemon(collection, instanceId) {
+    if (!instanceId) return null;
+    return (collection || []).find((demon) => demon.instanceId === instanceId) || null;
+  }
+
+  function teamHasDraftRecruit(exceptInstanceId = null) {
+    return (state.recruitDraftTeam || []).some((demon) => (
+      demon.recruitSource === 'reward' &&
+      demon.instanceId !== exceptInstanceId
+    ));
+  }
+
+  function canAddPoolDemonToTeam(poolInstanceId) {
+    const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
+    if (!poolDemon || poolDemon.recruitSource !== 'reward') return false;
+    return (state.recruitDraftTeam || []).length < getRecruitTeamLimit() && !teamHasDraftRecruit();
+  }
+
+  function canSwapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
+    const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
+    const teamDemon = findDraftDemon(state.recruitDraftTeam, teamInstanceId);
+    if (!poolDemon || !teamDemon) return false;
+    if (poolDemon.recruitSource !== 'reward') return true;
+    return !teamHasDraftRecruit(teamInstanceId) || teamDemon.recruitSource === 'reward';
+  }
+
+  function addPoolDemonToTeam(poolInstanceId, position) {
+    const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
+    if (!poolDemon) return;
+
+    state.recruitDraftTeam.push({
+      ...poolDemon,
+      position
+    });
+    syncRecruitDraftSelection();
+  }
+
+  function swapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
+    const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
+    const teamDemon = removeDraftDemon(state.recruitDraftTeam, teamInstanceId);
+    if (!poolDemon || !teamDemon) {
+      if (poolDemon) state.recruitDraftPool.push(poolDemon);
+      if (teamDemon) state.recruitDraftTeam.push(teamDemon);
+      return;
+    }
+
+    const targetPosition = getDemonPosition(teamDemon);
+    state.recruitDraftTeam.push({
+      ...poolDemon,
+      position: targetPosition
+    });
+    state.recruitDraftPool.push({
+      ...teamDemon,
+      position: getDemonPosition(poolDemon)
+    });
+    sortRecruitDraftTeam();
+    syncRecruitDraftSelection();
+  }
+
+  function moveDraftTeamDemon(instanceId, position) {
+    const demon = findDraftDemon(state.recruitDraftTeam, instanceId);
+    if (!demon) return;
+    demon.position = position;
+    syncRecruitDraftSelection();
+  }
+
+  function canReturnTeamDemonToPool(instanceId) {
+    const demon = findDraftDemon(state.recruitDraftTeam, instanceId);
+    return Boolean(demon?.recruitSource === 'reward' && (state.recruitDraftTeam || []).length > (state.run?.team || []).length);
+  }
+
+  function returnTeamDemonToPool(instanceId, position) {
+    const demon = removeDraftDemon(state.recruitDraftTeam, instanceId);
+    if (!demon) return;
+
+    state.recruitDraftPool.push({
+      ...demon,
+      position
+    });
+    syncRecruitDraftSelection();
+  }
+
+  function removeDraftDemon(collection, instanceId) {
+    const index = (collection || []).findIndex((demon) => demon.instanceId === instanceId);
+    if (index === -1) return null;
+    return collection.splice(index, 1)[0];
+  }
+
+  function sortRecruitDraftTeam() {
+    const originalOrder = new Map((state.run?.team || []).map((demon, index) => [demon.instanceId, index]));
+    state.recruitDraftTeam.sort((a, b) => {
+      const aOrder = originalOrder.has(a.originalInstanceId) ? originalOrder.get(a.originalInstanceId) : 99;
+      const bOrder = originalOrder.has(b.originalInstanceId) ? originalOrder.get(b.originalInstanceId) : 99;
+      return aOrder - bOrder;
+    });
+  }
+
+  function syncRecruitDraftSelection() {
+    const recruit = (state.recruitDraftTeam || []).find((demon) => demon.recruitSource === 'reward' && demon.rewardId);
+    state.selectedRecruitRewardId = recruit?.rewardId || null;
+
+    const draftOriginalIds = new Set(
+      (state.recruitDraftTeam || [])
+        .filter((demon) => demon.recruitSource === 'team')
+        .map((demon) => demon.originalInstanceId || demon.instanceId)
+    );
+    const replaced = (state.run?.team || []).find((demon) => !draftOriginalIds.has(demon.instanceId));
+    state.selectedSwapInstanceId = replaced?.instanceId || null;
+  }
+
+  function readDragPayload(event) {
+    const raw = event.dataTransfer?.getData('text/plain');
+    if (!raw) return null;
+
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      return null;
+    }
+  }
+
   function renderDemonCards(demons, options = {}) {
-    if (!demons.length) return renderEmptyText('No demons.');
+    if (!demons.length && !options.allowRecruitDrag) return renderEmptyText('No demons.');
     const normalizedDemons = demons.map((demon, index) => ({
       ...demon,
       position: getDemonPosition(demon, index)
@@ -973,9 +1407,9 @@
     const laneDemons = demons.filter((demon, index) => getDemonPosition(demon, index) === position);
 
     return `
-      <div class="formation-lane formation-lane-${position}">
+      <div class="formation-lane formation-lane-${position}" data-formation-position="${position}">
         <div class="formation-lane-label">${label}</div>
-        <div class="formation-lane-cards">
+        <div class="formation-lane-cards" data-formation-drop="${position}">
           ${laneDemons.length ? laneDemons.map((demon) => renderDemonCard(demon, options)).join('') : '<div class="formation-empty">Empty</div>'}
         </div>
       </div>
@@ -984,9 +1418,21 @@
 
   function renderDemonCard(demon, options) {
     const position = getDemonPosition(demon);
+    const isPlayer = options.side !== 'enemy';
+    const isRecruitPoolDemon = Boolean(options.allowRecruitDrag && demon.recruitSource);
+    const canDropRecruit = Boolean(state.isRecruiting && isPlayer);
+    const canDragFormation = Boolean((options.allowFormationDrag || state.isRecruiting) && isPlayer);
+    const draggable = isRecruitPoolDemon || canDragFormation;
+    const classes = [
+      'hunt-demon-card',
+      Number(demon.hp) <= 0 ? 'is-defeated' : '',
+      isRecruitPoolDemon ? 'is-recruit-draggable' : '',
+      canDropRecruit ? 'is-recruit-drop-target' : '',
+      state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId ? 'active' : ''
+    ].filter(Boolean).join(' ');
 
     return `
-      <div class="hunt-demon-card ${Number(demon.hp) <= 0 ? 'is-defeated' : ''}" data-instance-id="${escapeHtml(demon.instanceId)}">
+      <div class="${classes}" data-instance-id="${escapeHtml(demon.instanceId)}" ${demon.rewardId ? `data-reward-id="${escapeHtml(demon.rewardId)}"` : ''} ${demon.recruitSource ? `data-recruit-source="${escapeHtml(demon.recruitSource)}"` : ''} ${draggable ? 'draggable="true"' : ''}>
         <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="">
         <div class="hunt-demon-card-body">
           <div class="hunt-demon-card-title">

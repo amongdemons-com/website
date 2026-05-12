@@ -321,6 +321,12 @@ main {
     min-width: 0;
 }
 
+.formation-lane-cards.is-drag-over {
+    outline: 2px dashed rgba(65,168,95,0.72);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
 .formation-empty {
     display: flex;
     flex: 1 1 100%;
@@ -345,6 +351,32 @@ main {
     border-radius: 6px;
     background: rgba(0,0,0,0.18);
     overflow: hidden;
+}
+
+.hunt-demon-card[draggable="true"] {
+    cursor: grab;
+}
+
+.hunt-demon-card.is-dragging {
+    opacity: 0.45;
+}
+
+.hunt-demon-card.is-drag-over {
+    border-color: rgba(65,168,95,0.9);
+    box-shadow: 0 0 0 2px rgba(65,168,95,0.28), 0 0 18px rgba(65,168,95,0.18);
+}
+
+.hunt-demon-card.is-recruit-draggable {
+    border-color: rgba(250,197,28,0.36);
+}
+
+.hunt-demon-card.is-recruit-drop-target {
+    border-style: dashed;
+}
+
+.hunt-demon-card.active {
+    border-color: rgba(250,197,28,0.82);
+    box-shadow: 0 0 0 2px rgba(250,197,28,0.18);
 }
 
 .hunt-demon-card img {
@@ -474,6 +506,17 @@ main {
 .hunt-demon-card.is-defeated {
     opacity: 0.58;
     filter: grayscale(0.75);
+}
+
+.hunt-demon-card.is-recruit-draggable.is-defeated {
+    opacity: 0.86;
+    filter: grayscale(0.25);
+}
+
+.fight-log-hint {
+    color: #9da7b1;
+    font-size: 0.84rem;
+    line-height: 1.35;
 }
 
 .reward-image {

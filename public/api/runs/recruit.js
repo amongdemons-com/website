@@ -3,7 +3,7 @@ const { requireAuth } = require('../lib/auth');
 const { createRng } = require('../lib/rng');
 const { createHuntEnemies } = require('../lib/hunt-enemies');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
-const { resetRunDemon } = require('../lib/run-demons');
+const { normalizePosition, resetRunDemon } = require('../lib/run-demons');
 
 const router = express.Router();
 
@@ -11,6 +11,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   const run = await getRunForPlayer(req.params.id, req.player.id);
   const rewardId = req.body.rewardId ? Number(req.body.rewardId) : null;
   const replaceInstanceId = req.body.replaceInstanceId ? String(req.body.replaceInstanceId) : null;
+  const requestedPosition = req.body.position ? normalizePosition(req.body.position) : null;
   const skipRecruit = Boolean(req.body.skipRecruit);
 
   if (!run) {
@@ -56,8 +57,10 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     if (replaceIndex === -1) {
       return res.status(404).json({ error: 'Swap target not found.' });
     }
+    recruit.position = requestedPosition || normalizePosition(run.state.team[replaceIndex].position);
     run.state.team.splice(replaceIndex, 1, recruit);
   } else {
+    recruit.position = requestedPosition || normalizePosition(recruit.position || (run.state.team.length === 0 ? 'front' : 'back'));
     run.state.team.push(recruit);
   }
 

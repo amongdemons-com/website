@@ -44,6 +44,7 @@ async function createHuntEnemies(rng, floor, size) {
 
 function getHuntEnemyTeamSize(floor, fallbackSize) {
   if (floor <= 1) return Math.max(1, Number(fallbackSize) || 1);
+  if (floor === 2) return 2;
   return 3;
 }
 
