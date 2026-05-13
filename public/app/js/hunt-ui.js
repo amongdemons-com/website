@@ -542,24 +542,39 @@
 
     const collection = state.startOptions.collection || [];
     const draft = state.startOptions.draft || [];
+    const selectedTab = state.selectedStarter?.source === 'collection' ? 'collection' : 'draft';
 
     elements.starterModalBody.innerHTML = `
       <div class="starter-picker w-100">
-        <h3 class="h6 text-muted">Dungeon Starters</h3>
-        <div class="row row-cols-1 row-cols-sm-3 g-3 mb-4">
-          ${draft.map((demon, index) => renderChoiceCard(demon, {
-            type: 'draft',
-            value: index,
-            selected: state.selectedStarter?.source === 'draft' && state.selectedStarter?.draftIndex === index
-          })).join('')}
-        </div>
-        <h3 class="h6 text-muted">Collection</h3>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
-          ${collection.length ? collection.map((demon) => renderChoiceCard(demon, {
-            type: 'collection',
-            value: demon.id,
-            selected: state.selectedStarter?.source === 'collection' && state.selectedStarter?.demonId === demon.id
-          })).join('') : '<div class="col"><p class="text-muted mb-0">No saved demons yet.</p></div>'}
+        <ul class="nav nav-tabs starter-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link ${selectedTab === 'draft' ? 'active' : ''}" id="starterDraftTab" data-bs-toggle="tab" data-bs-target="#starterDraftPanel" type="button" role="tab" aria-controls="starterDraftPanel" aria-selected="${selectedTab === 'draft'}">New Demons</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link ${selectedTab === 'collection' ? 'active' : ''}" id="starterCollectionTab" data-bs-toggle="tab" data-bs-target="#starterCollectionPanel" type="button" role="tab" aria-controls="starterCollectionPanel" aria-selected="${selectedTab === 'collection'}">Collection</button>
+          </li>
+        </ul>
+        <div class="tab-content starter-tab-content">
+          <div class="tab-pane fade ${selectedTab === 'draft' ? 'show active' : ''}" id="starterDraftPanel" role="tabpanel" aria-labelledby="starterDraftTab" tabindex="0">
+            <div class="starter-card-grid">
+              ${draft.map((demon, index) => renderChoiceCard(demon, {
+                type: 'draft',
+                value: index,
+                selected: state.selectedStarter?.source === 'draft' && state.selectedStarter?.draftIndex === index
+              })).join('')}
+            </div>
+          </div>
+          <div class="tab-pane fade ${selectedTab === 'collection' ? 'show active' : ''}" id="starterCollectionPanel" role="tabpanel" aria-labelledby="starterCollectionTab" tabindex="0">
+            ${collection.length ? `
+              <div class="starter-card-grid">
+                ${collection.map((demon) => renderChoiceCard(demon, {
+                  type: 'collection',
+                  value: demon.id,
+                  selected: state.selectedStarter?.source === 'collection' && state.selectedStarter?.demonId === demon.id
+                })).join('')}
+              </div>
+            ` : '<p class="text-muted mb-0 py-3">No saved demons yet.</p>'}
+          </div>
         </div>
       </div>
     `;
@@ -568,18 +583,21 @@
   }
 
   function renderChoiceCard(demon, options) {
+    const rarityColor = getRarityColor(demon.rarity);
+
     return `
-      <div class="col">
-        <button class="hunt-choice-card ${options.selected ? 'active' : ''}" type="button" data-choice-type="${options.type}" data-choice-value="${options.value}">
-          <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="">
-          <span class="hunt-choice-name"><span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(capitalize(demon.rarity))}</span> ${escapeHtml(demon.species || 'Demon')}</span>
-          <span class="combat-stat-strip">
-            <span>${renderAttackIcon()}${demon.atk}</span>
-            <span>${renderSpeedIcon()}${demon.speed}</span>
-            <span>${demon.maxHp || demon.hp}<i class="bi bi-droplet-fill"></i></span>
-          </span>
-        </button>
-      </div>
+      <button class="hunt-demon-card hunt-choice-card ${options.selected ? 'active' : ''}" style="--rarity-color: ${rarityColor}" type="button" data-choice-type="${options.type}" data-choice-value="${options.value}">
+        <div class="hunt-demon-card-image" aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity">
+          <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="" draggable="false">
+          <span class="hunt-demon-rarity-gem" aria-hidden="true"></span>
+        </div>
+        <div class="hunt-demon-card-body">
+          <div class="hunt-demon-card-title">
+            <span class="text-white">${escapeHtml(demon.species || 'Demon')}</span>
+          </div>
+          ${renderCombatStats(demon)}
+        </div>
+      </button>
     `;
   }
 

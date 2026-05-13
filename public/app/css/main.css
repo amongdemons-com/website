@@ -369,7 +369,6 @@ main {
     justify-content: center;
     gap: 0.5rem;
     min-width: 0;
-    min-height: 7.25rem;
 }
 
 .formation-lane-cards.is-drag-over {
@@ -385,7 +384,7 @@ main {
     justify-content: center;
     gap: 0.45rem;
     width: 100%;
-    min-height: 7.25rem;
+    min-height: 4.6rem;
     border: 1px dashed rgba(255,255,255,0.16);
     border-radius: 6px;
     color: #69737d;
@@ -396,11 +395,11 @@ main {
 .hunt-demon-card {
     position: relative;
     display: block;
-    flex: 0 0 calc((100% - 2rem) / 5);
-    height: 7.25rem;
+    flex: 0 1 8rem;
+    aspect-ratio: 3 / 4;
     min-width: 0;
-    border: 1px solid color-mix(in srgb, var(--rarity-color, #D1D5D8) 48%, rgba(255,255,255,0.16));
-    border-top: 3px solid var(--rarity-color, #D1D5D8);
+    border: 2px solid color-mix(in srgb, var(--rarity-color, #D1D5D8) 62%, rgba(255,255,255,0.16));
+    border-top-width: 5px;
     border-radius: 6px;
     background: rgba(0,0,0,0.18);
     overflow: hidden;
@@ -450,7 +449,7 @@ main {
 }
 
 .hunt-demon-card.is-recruit-draggable {
-    border-color: color-mix(in srgb, var(--rarity-color, #D1D5D8) 48%, rgba(255,255,255,0.16));
+    border-color: color-mix(in srgb, var(--rarity-color, #D1D5D8) 62%, rgba(255,255,255,0.16));
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
 }
 
@@ -483,9 +482,9 @@ main {
     position: absolute;
     top: 0.38rem;
     left: 0.38rem;
-    width: 0.52rem;
-    height: 0.52rem;
-    border: 1px solid #fff;
+    width: 0.62rem;
+    height: 0.62rem;
+    border: 2px solid #fff;
     border-radius: 2px;
     background: var(--rarity-color, #D1D5D8);
     box-shadow: 0 0 10px color-mix(in srgb, var(--rarity-color, #D1D5D8) 70%, transparent);
@@ -707,6 +706,35 @@ main {
     text-align: left;
 }
 
+.starter-tabs {
+    border-bottom-color: rgba(255,255,255,0.12);
+}
+
+.starter-tabs .nav-link {
+    color: #9da7b1;
+    border-radius: 6px 6px 0 0;
+}
+
+.starter-tabs .nav-link.active {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.16) rgba(255,255,255,0.16) transparent;
+    color: #fff;
+}
+
+.starter-tab-content {
+    padding-top: 1rem;
+}
+
+.starter-card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.starter-card-grid .hunt-choice-card {
+    flex: 0 1 8rem;
+}
+
 .hunt-modal .modal-content {
     background: #14181c;
 }
@@ -727,7 +755,6 @@ main {
     }
 }
 
-.hunt-choice-card,
 .swap-choice {
     width: 100%;
     height: 100%;
@@ -740,34 +767,32 @@ main {
     transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.hunt-choice-card:hover,
-.hunt-choice-card.active,
 .swap-choice:hover,
 .swap-choice.active {
     border-color: rgba(65,168,95,0.8);
     box-shadow: 0 0 0 2px rgba(65,168,95,0.18);
 }
 
-.hunt-choice-card.active,
 .swap-choice.active {
     transform: translateY(-1px);
 }
 
-.hunt-choice-card img {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    border-radius: 4px;
-    margin-bottom: 0.65rem;
+.hunt-choice-card {
+    border-color: color-mix(in srgb, var(--rarity-color, #D1D5D8) 62%, rgba(255,255,255,0.16));
+    color: #fff;
+    padding: 0;
+    text-align: left;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.hunt-choice-name {
-    display: block;
-    min-height: 2.35rem;
-    margin-bottom: 0.4rem;
-    font-size: 0.92rem;
-    font-weight: bold;
-    line-height: 1.2;
+.hunt-choice-card:hover,
+.hunt-choice-card.active {
+    border-color: var(--rarity-color, #D1D5D8);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--rarity-color, #D1D5D8) 34%, transparent), 0 0 18px color-mix(in srgb, var(--rarity-color, #D1D5D8) 22%, transparent);
+}
+
+.hunt-choice-card.active {
+    transform: translateY(-1px);
 }
 
 .swap-choice {
