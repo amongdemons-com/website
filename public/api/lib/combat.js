@@ -9,9 +9,6 @@ function normalizePosition(position) {
 }
 
 function getTargeting(demon) {
-  if (Number(demon.typeId) === 4) return 'all';
-  if (Number(demon.typeId) === 2) return 'lowest_hp';
-  if (Number(demon.typeId) === 1) return 'front';
   return demon.targeting || 'front';
 }
 
