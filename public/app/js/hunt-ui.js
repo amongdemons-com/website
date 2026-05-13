@@ -47,6 +47,10 @@
       'runPanel',
       'teamGrid',
       'enemyGrid',
+      'teamSideTitle',
+      'enemySideTitle',
+      'battleMeta',
+      'battleOutcome',
       'fightLogTitle',
       'fightLog',
       'fightLogActions',
@@ -240,6 +244,7 @@
           state.run.status = 'defeated';
           state.run.lastBattle = result.lastBattle || state.run.lastBattle;
           setMessage('Your team was defeated.', 'warning');
+          renderFightLog();
           renderFightLogActions();
           syncActionButtons();
         } else {
@@ -499,8 +504,12 @@
     elements.runEmpty.classList.toggle('d-none', hasRun);
     elements.runPanel.classList.toggle('d-none', !hasRun);
     elements.huntTitle.innerHTML = run ? renderHuntTitle(run) : 'Dungeon';
+    renderBattleOutcome();
 
     if (!run) {
+      if (elements.teamSideTitle) elements.teamSideTitle.textContent = 'Your Team';
+      if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
+      document.querySelector('.battle-side-enemy')?.classList.remove('is-recruit-side');
       elements.runEmpty.innerHTML = `
         <img src="/app/images/demons/thumbnails/1.png" alt="">
         <p class="mb-0 text-muted">Choose your first demon to begin.</p>
@@ -522,6 +531,9 @@
       side: 'enemy',
       allowRecruitDrag: state.isRecruiting
     });
+    if (elements.teamSideTitle) elements.teamSideTitle.textContent = 'Your Team';
+    if (elements.enemySideTitle) elements.enemySideTitle.textContent = state.isRecruiting ? 'Recruit' : 'Enemies';
+    document.querySelector('.battle-side-enemy')?.classList.toggle('is-recruit-side', state.isRecruiting);
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
     renderFightLog();
@@ -773,117 +785,136 @@
   }
 
   function renderFightLog() {
-    if (state.run?.awaitingRecruit && state.isRecruiting) {
-      const recruitCount = getCurrentRecruitRewards().length;
-      const teamLimit = getRecruitTeamLimit();
-      const teamCount = getRecruitPreviewTeam().length;
-      const teamIsFull = teamCount >= teamLimit;
-      elements.fightLog.classList.remove('text-muted');
-      elements.fightLog.innerHTML = `
-        ${renderRewardsInfoCard()}
-        <div class="hunt-phase-panel recruit-phase-panel">
-          <div>
-            <div class="hunt-phase-eyebrow">Recruit</div>
-            <h3>Choose your next demon</h3>
-            <p>Drag defeated demons into your team or swap them with current members, then continue deeper.</p>
-            <div class="hunt-phase-meta">
-              <span class="hunt-tag-neutral">${recruitCount} recruitable ${recruitCount === 1 ? 'demon' : 'demons'}</span>
-              <span class="hunt-tag-team ${teamIsFull ? 'is-full' : 'is-short'}">${teamCount} / ${teamLimit} team</span>
-            </div>
-          </div>
-          <div class="hunt-phase-card-actions">
-            <button class="btn btn-success btn-sm" id="fightLogContinueHuntBtn" type="button">
-              ${renderButtonMeleeIcon()}
-              Continue
-            </button>
-          </div>
-        </div>
-      `;
-      return;
-    }
+    renderBattleMeta();
+    renderBattleOutcome();
 
-    if (!state.combatLog.length && !state.endNotice) {
-      elements.fightLog.innerHTML = getIdleFightLogContent();
+    const logRows = state.combatLog.length
+      ? groupCombatLog(state.combatLog).map((step, index) => `
+        ${renderFightLogRow(step, index)}
+      `).join('')
+      : '';
+    const logContent = logRows + renderEndNotice();
+
+    if (!logContent.trim()) {
+      elements.fightLog.innerHTML = 'Fight log will appear here after a battle.';
       elements.fightLog.classList.add('text-muted');
       return;
     }
 
     elements.fightLog.classList.remove('text-muted');
-    const rows = groupCombatLog(state.combatLog).map((step, index) => `
-      ${renderFightLogRow(step, index)}
-    `).join('');
-    elements.fightLog.innerHTML = rows + renderEndNotice();
+    elements.fightLog.innerHTML = logContent;
     scrollFightLogToBottom();
   }
 
-  function getIdleFightLogContent() {
-    if (state.run?.status === 'active') {
+  function renderBattleMeta() {
+    if (!elements.battleMeta) return;
+
+    if (state.run?.awaitingRecruit && state.isRecruiting) {
+      const teamLimit = getRecruitTeamLimit();
+      const teamCount = getRecruitPreviewTeam().length;
+      const teamIsFull = teamCount >= teamLimit;
+      elements.battleMeta.classList.remove('text-muted');
+      elements.battleMeta.innerHTML = `
+        ${renderRewardTags()}
+        <div class="dungeon-meta-group">
+          <span class="hunt-phase-eyebrow">Recruit</span>
+          <span class="hunt-tag-team ${teamIsFull ? 'is-full' : 'is-short'}">${teamCount} / ${teamLimit} team</span>
+        </div>
+      `;
+      return;
+    }
+
+    const meta = getBattleMetaContent();
+    if (!meta) {
+      elements.battleMeta.innerHTML = '';
+      elements.battleMeta.classList.add('text-muted');
+      return;
+    }
+
+    elements.battleMeta.classList.remove('text-muted');
+    elements.battleMeta.innerHTML = meta;
+  }
+
+  function renderBattleOutcome() {
+    if (!elements.battleOutcome) return;
+
+    let text = '';
+    let type = '';
+    if (state.run?.awaitingRecruit && state.showPostWinActions) {
+      text = 'Victory';
+      type = 'victory';
+    } else if (state.run?.status === 'defeated') {
+      text = 'Defeat';
+      type = 'defeat';
+    }
+
+    elements.battleOutcome.textContent = text;
+    elements.battleOutcome.classList.toggle('is-victory', type === 'victory');
+    elements.battleOutcome.classList.toggle('is-defeat', type === 'defeat');
+  }
+
+  function getBattleMetaContent() {
+    if (!state.run) return '';
+
+    if (state.run?.awaitingRecruit && state.showPostWinActions) {
       return `
-        <div class="hunt-phase-panel strategy-phase-panel">
-          <div class="hunt-phase-eyebrow">Strategy Phase</div>
-          <h3>Prepare for the next fight</h3>
-          <p>Set your formation now. Buffs and items will live here later.</p>
+        <div class="dungeon-meta-group">
+          <span class="hunt-phase-eyebrow">Victory</span>
+          <span class="hunt-tag-team is-full">Floor cleared</span>
         </div>
       `;
     }
 
-    return 'Battle actions will appear here.';
+    if (state.run?.status === 'active') {
+      return `
+        <div class="dungeon-meta-group">
+          <span class="hunt-phase-eyebrow">Strategy</span>
+          <span class="hunt-tag-neutral">Formation ready</span>
+          <span class="hunt-tag-neutral">Floor ${Math.max(1, Math.min(10, Number(state.run.currentFloor) || 1))}</span>
+        </div>
+      `;
+    }
+
+    if (state.run?.status === 'defeated') {
+      return `
+        <div class="dungeon-meta-group">
+          <span class="hunt-phase-eyebrow">Defeated</span>
+          <span class="hunt-tag-neutral">Start a new dungeon</span>
+        </div>
+      `;
+    }
+
+    if (state.run?.status === 'completed' || state.run?.awaitingFinalPick) {
+      return `
+        <div class="dungeon-meta-group">
+          <span class="hunt-phase-eyebrow">Complete</span>
+          <span class="hunt-tag-team is-full">Choose final demon</span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="dungeon-meta-group">
+        <span class="hunt-phase-eyebrow">Battle</span>
+        <span class="hunt-tag-neutral">Fight resolved</span>
+      </div>
+    `;
   }
 
-  function renderRewardsInfoCard() {
+  function renderRewardTags() {
     const earned = state.run?.earned || { xp: 0, souls: 0 };
     return `
-      <div class="hunt-phase-panel dungeon-reward-card">
-        <div>
-          <div class="hunt-phase-eyebrow">Rewards</div>
-          <div class="dungeon-reward-card-body">
-            <h3 class="dungeon-reward-title">Leave with a demon</h3>
-            <p>Permanently add one current demon to your collection and claim your XP and souls by leaving the dungeon now.</p>
-          </div>
-          <div class="hunt-phase-meta dungeon-reward-meta">
-            <span>+1 Demon Collection</span>
-            <span>${earned.xp || 0} XP</span>
-            <span>${earned.souls || 0} souls</span>
-          </div>
-        </div>
-        <div class="hunt-phase-card-actions">
-          <button class="btn btn-warning btn-sm" id="getRewardBtn" type="button">
-            <i class="bi bi-flag-fill"></i>
-            Get Reward
-          </button>
-        </div>
+      <div class="dungeon-meta-group dungeon-reward-meta">
+        <span class="hunt-phase-eyebrow">Rewards</span>
+        <span>+1 Demon</span>
+        <span>${earned.xp || 0} XP</span>
+        <span>${earned.souls || 0} souls</span>
       </div>
     `;
   }
 
   function renderPhaseTitle() {
     if (!elements.fightLogTitle) return;
-
-    if (state.run?.awaitingRecruit && state.isRecruiting) {
-      elements.fightLogTitle.textContent = 'Choose Path';
-      return;
-    }
-
-    if (state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick) {
-      elements.fightLogTitle.textContent = 'Strategy Phase';
-      return;
-    }
-
-    if (state.run?.awaitingRecruit && state.showPostWinActions) {
-      elements.fightLogTitle.textContent = 'Fight Won';
-      return;
-    }
-
-    if (state.run?.status === 'defeated') {
-      elements.fightLogTitle.textContent = 'Defeated';
-      return;
-    }
-
-    if (state.run?.status === 'completed' || state.run?.awaitingFinalPick) {
-      elements.fightLogTitle.textContent = 'Dungeon Complete';
-      return;
-    }
-
     elements.fightLogTitle.textContent = 'Fight Log';
   }
 
@@ -1045,6 +1076,7 @@
     const canBattle = Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
     const canReplay = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
     const canContinueAfterWin = Boolean(state.run?.awaitingRecruit && state.showPostWinActions);
+    const canChooseRecruit = Boolean(state.run?.awaitingRecruit && state.isRecruiting);
 
     elements.fightLogActions.innerHTML = `
       ${canBattle ? `
@@ -1061,6 +1093,16 @@
       ${canContinueAfterWin ? `
         <button class="btn btn-success btn-sm" id="fightLogContinueBtn" type="button">
           <i class="bi bi-arrow-right-circle"></i>
+          Continue
+        </button>
+      ` : ''}
+      ${canChooseRecruit ? `
+        <button class="btn btn-warning btn-sm" id="getRewardBtn" type="button">
+          <i class="bi bi-flag-fill"></i>
+          Get Reward
+        </button>
+        <button class="btn btn-success btn-sm" id="fightLogContinueHuntBtn" type="button">
+          ${renderButtonMeleeIcon()}
           Continue
         </button>
       ` : ''}
@@ -1727,7 +1769,7 @@
   }
 
   function getPositionLabel(position) {
-    return position === 'front' ? 'Melee row' : 'Ranged row';
+    return position === 'front' ? 'Melee' : 'Ranged';
   }
 
   function renderFormationLane(position, demons, options) {
@@ -1736,6 +1778,10 @@
 
     return `
       <div class="formation-lane formation-lane-${position}" data-formation-position="${position}">
+        <div class="formation-lane-label">
+          ${renderFormationLaneIcon(position)}
+          <span>${escapeHtml(label)}</span>
+        </div>
         <div class="formation-lane-cards" data-formation-drop="${position}">
           ${laneDemons.length ? laneDemons.map((demon) => renderDemonCard(demon, options)).join('') : renderEmptyFormationLane(position, label)}
         </div>
@@ -1746,8 +1792,7 @@
   function renderEmptyFormationLane(position, label) {
     return `
       <div class="formation-empty formation-empty-${position}">
-        ${renderFormationLaneIcon(position)}
-        <span>Empty ${escapeHtml(label)}</span>
+        <span>Empty</span>
       </div>
     `;
   }
