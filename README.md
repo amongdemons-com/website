@@ -6,7 +6,7 @@ A Node.js and Express website for browsing the Among Demons collection, now with
 
 - 11 demon types and 6 rarity tiers.
 - 66 demon assets served from `public/app/images`.
-- Static HTML collection and hunt preview pages under `public/app`.
+- Static HTML collection and dungeon preview pages under `public/app`.
 - MySQL-backed player accounts, sessions, run state, and owned demons.
 - Server-side deterministic RNG, demon stat rolls, battle simulation, reward generation, XP, and Souls.
 - Static game data API endpoints that read from `public/api/data/demons.json` and `public/api/data/demon-types.json`.
@@ -82,7 +82,7 @@ The API initializes the required MySQL tables on startup using `CREATE TABLE IF 
 | --- | --- |
 | `/` | Redirects to the first demon collection page |
 | `/demons/type/:page` | Paginated demon collection view, pages 1-11 |
-| `/hunt` | Hunt preview page |
+| `/dungeon` | Dungeon preview page |
 
 ## API Auth
 

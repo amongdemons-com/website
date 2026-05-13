@@ -35,6 +35,7 @@ router.use(require('./runs/formation'));
 router.use(require('./runs/battle'));
 router.use(require('./runs/reward'));
 router.use(require('./runs/recruit'));
+router.use(require('./runs/cashout'));
 router.use(require('./runs/end'));
 router.use(require('./leaderboard'));
 router.use(require('./admin/demon-balance'));

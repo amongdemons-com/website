@@ -11,6 +11,7 @@
     selectedStarter: null,
     selectedRecruitRewardId: null,
     selectedSwapInstanceId: null,
+    selectedCashoutDemonKey: null,
     isRecruiting: false,
     showPostWinActions: false,
     draggedRewardId: null,
@@ -55,7 +56,12 @@
       'teamChoiceModalTitle',
       'teamChoiceModalSubtitle',
       'teamChoiceModalBody',
-      'teamChoiceModalFooter'
+      'teamChoiceModalFooter',
+      'cashoutModal',
+      'cashoutModalBody',
+      'cashoutConfirmBtn',
+      'shortTeamModal',
+      'confirmShortTeamBtn'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -72,6 +78,8 @@
     });
 
     elements.confirmStarterBtn.addEventListener('click', startRun);
+    elements.cashoutConfirmBtn.addEventListener('click', cashOutDungeon);
+    elements.confirmShortTeamBtn.addEventListener('click', continueShortTeam);
     if (elements.battleBtn) elements.battleBtn.addEventListener('click', battle);
   }
 
@@ -164,12 +172,12 @@
         if (!state.startOptions) {
           await loadStartOptions();
           renderStarterModal();
-          setMessage('Choose one demon to begin the hunt.', 'warning');
+          setMessage('Choose one demon to begin the dungeon.', 'warning');
           return;
         }
 
         if (!state.selectedStarter) {
-          setMessage('Choose one demon to begin the hunt.', 'warning');
+          setMessage('Choose one demon to begin the dungeon.', 'warning');
           return;
         }
 
@@ -257,17 +265,40 @@
     renderTeamChoiceModal();
   }
 
+  function requestRecruitContinue() {
+    if (shouldConfirmShortTeamContinue()) {
+      getModal(elements.shortTeamModal).show();
+      return;
+    }
+
+    confirmRecruitReward();
+  }
+
+  function shouldConfirmShortTeamContinue() {
+    if (!state.run?.awaitingRecruit || !state.isRecruiting) return false;
+    if (!getCurrentRecruitRewards().length) return false;
+    return getRecruitPreviewTeam().length < getRecruitTeamLimit();
+  }
+
+  async function continueShortTeam() {
+    await withBusy(elements.confirmShortTeamBtn, async () => {
+      getModal(elements.shortTeamModal).hide();
+      await confirmRecruitReward();
+    });
+  }
+
   async function confirmRecruitReward() {
     if (!state.run) return;
 
-    const recruitChoice = getDraftRecruitChoice();
-    const body = recruitChoice
+    const recruitChoice = getDraftRecruitPayload();
+    const body = recruitChoice && recruitChoice.team.length
       ? recruitChoice
       : { skipRecruit: true };
     if (body.skipRecruit) {
       delete body.rewardId;
       delete body.replaceInstanceId;
       delete body.position;
+      delete body.team;
     }
 
     try {
@@ -289,7 +320,7 @@
       state.endNotice = null;
       getModal(elements.teamChoiceModal).hide();
       await loadRun(state.run.runId);
-      setMessage(body.skipRecruit ? 'Continuing to the next floor.' : 'Demon joined the hunt.', 'success');
+      setMessage(body.skipRecruit ? 'Continuing to the next floor.' : 'Team updated.', 'success');
     } catch (error) {
       showError(error);
     }
@@ -305,10 +336,119 @@
         }
       });
       getModal(elements.teamChoiceModal).hide();
-      await finishRun('Hunt complete. Final demon added to your collection.');
+      await finishRun('Dungeon complete. Final demon added to your collection.');
     } catch (error) {
       showError(error);
     }
+  }
+
+  function openCashoutModal() {
+    if (!state.run?.awaitingRecruit) return;
+
+    state.selectedCashoutDemonKey = null;
+    renderCashoutModal();
+    getModal(elements.cashoutModal).show();
+  }
+
+  function renderCashoutModal() {
+    const earned = state.run?.earned || { xp: 0, souls: 0 };
+    const candidates = getCashoutCandidates();
+
+    elements.cashoutModalBody.innerHTML = `
+      <div class="cashout-summary">
+        <p class="mb-2">Ending the dungeon now gives you <strong>${earned.xp || 0} XP</strong>, <strong>${earned.souls || 0} souls</strong>, and one selected demon.</p>
+        <p class="text-warning mb-0">This ends the dungeon immediately.</p>
+      </div>
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mt-1">
+        ${candidates.map(renderCashoutCandidate).join('')}
+      </div>
+    `;
+    elements.cashoutConfirmBtn.disabled = !state.selectedCashoutDemonKey;
+
+    document.querySelectorAll('.cashout-demon-card').forEach((button) => {
+      button.addEventListener('click', () => {
+        state.selectedCashoutDemonKey = button.dataset.cashoutKey;
+        renderCashoutModal();
+      });
+    });
+  }
+
+  function getCashoutCandidates() {
+    ensureRecruitDraft();
+    return [
+      ...(state.recruitDraftTeam || []).map((demon) => ({
+        key: demon.recruitSource === 'reward' ? `reward:${demon.rewardId}` : `team:${demon.originalInstanceId || demon.instanceId}`,
+        source: demon.recruitSource === 'reward' ? 'reward' : 'team',
+        instanceId: demon.originalInstanceId || demon.instanceId,
+        rewardId: demon.rewardId || null,
+        demon
+      })),
+      ...(state.recruitDraftPool || []).map((demon) => ({
+        key: demon.recruitSource === 'reward' ? `reward:${demon.rewardId}` : `team:${demon.originalInstanceId || demon.instanceId}`,
+        source: demon.recruitSource === 'reward' ? 'reward' : 'team',
+        instanceId: demon.originalInstanceId || demon.instanceId,
+        rewardId: demon.rewardId || null,
+        demon
+      }))
+    ].filter((candidate) => canCashoutCandidate(candidate));
+  }
+
+  function canCashoutCandidate(candidate) {
+    return candidate.source === 'reward' || !candidate.demon.collectionDemonId;
+  }
+
+  function renderCashoutCandidate(candidate) {
+    const demon = candidate.demon;
+    const active = state.selectedCashoutDemonKey === candidate.key;
+
+    return `
+      <div class="col">
+        <button class="cashout-demon-card ${active ? 'active' : ''}" type="button" data-cashout-key="${escapeHtml(candidate.key)}">
+          <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="">
+          <span class="cashout-demon-name"><span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(capitalize(demon.rarity))}</span> ${escapeHtml(demon.species || 'Demon')}</span>
+          ${renderCombatStats(demon)}
+        </button>
+      </div>
+    `;
+  }
+
+  async function cashOutDungeon() {
+    if (!state.run || !state.selectedCashoutDemonKey) return;
+
+    const candidate = getCashoutCandidates().find((item) => item.key === state.selectedCashoutDemonKey);
+    if (!candidate) {
+      setMessage('Choose a demon reward.', 'warning');
+      return;
+    }
+
+    await withBusy(elements.cashoutConfirmBtn, async () => {
+      try {
+        const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/cashout`, {
+          method: 'POST',
+          body: {
+            source: candidate.source,
+            instanceId: candidate.instanceId,
+            rewardId: candidate.rewardId
+          }
+        });
+        localStorage.removeItem(RUN_KEY);
+        state.run = null;
+        state.selectedCashoutDemonKey = null;
+        state.recruitDraftTeam = null;
+        state.recruitDraftPool = null;
+        state.combatLog = [];
+        state.combatDemons = new Map();
+        state.endNotice = {
+          text: `Dungeon ended. ${result.demon?.species || 'Demon'} joined your collection. You earned ${result.xp} XP and ${result.souls} souls.`,
+          type: 'success'
+        };
+        getModal(elements.cashoutModal).hide();
+        await loadStartOptions();
+        renderRun();
+      } catch (error) {
+        showError(error);
+      }
+    });
   }
 
   async function endRun() {
@@ -334,7 +474,7 @@
       state.recruitDraftTeam = null;
       state.recruitDraftPool = null;
       state.endNotice = {
-        text: `${message || 'Hunt ended.'} You earned ${result.xp} XP and ${result.souls} souls.`,
+        text: `${message || 'Dungeon ended.'} You earned ${result.xp} XP and ${result.souls} souls.`,
         type: message ? 'warning' : 'success'
       };
       getModal(elements.teamChoiceModal).hide();
@@ -358,7 +498,7 @@
 
     elements.runEmpty.classList.toggle('d-none', hasRun);
     elements.runPanel.classList.toggle('d-none', !hasRun);
-    elements.huntTitle.innerHTML = run ? renderHuntTitle(run) : 'Hunt';
+    elements.huntTitle.innerHTML = run ? renderHuntTitle(run) : 'Dungeon';
 
     if (!run) {
       elements.runEmpty.innerHTML = `
@@ -405,7 +545,7 @@
 
     elements.starterModalBody.innerHTML = `
       <div class="starter-picker w-100">
-        <h3 class="h6 text-muted">Hunt Starters</h3>
+        <h3 class="h6 text-muted">Dungeon Starters</h3>
         <div class="row row-cols-1 row-cols-sm-3 g-3 mb-4">
           ${draft.map((demon, index) => renderChoiceCard(demon, {
             type: 'draft',
@@ -618,15 +758,26 @@
     if (state.run?.awaitingRecruit && state.isRecruiting) {
       const recruitCount = getCurrentRecruitRewards().length;
       const teamLimit = getRecruitTeamLimit();
+      const teamCount = getRecruitPreviewTeam().length;
+      const teamIsFull = teamCount >= teamLimit;
       elements.fightLog.classList.remove('text-muted');
       elements.fightLog.innerHTML = `
+        ${renderRewardsInfoCard()}
         <div class="hunt-phase-panel recruit-phase-panel">
-          <div class="hunt-phase-eyebrow">Recruit</div>
-          <h3>Choose your next demon</h3>
-          <p>Drag a defeated demon into the front or back row, or drop it onto a teammate to swap.</p>
-          <div class="hunt-phase-meta">
-            <span>${getRecruitPreviewTeam().length} / ${teamLimit} team</span>
-            <span>${recruitCount} recruitable ${recruitCount === 1 ? 'demon' : 'demons'}</span>
+          <div>
+            <div class="hunt-phase-eyebrow">Recruit</div>
+            <h3>Choose your next demon</h3>
+            <p>Drag defeated demons into your team or swap them with current members, then continue deeper.</p>
+            <div class="hunt-phase-meta">
+              <span class="hunt-tag-neutral">${recruitCount} recruitable ${recruitCount === 1 ? 'demon' : 'demons'}</span>
+              <span class="hunt-tag-team ${teamIsFull ? 'is-full' : 'is-short'}">${teamCount} / ${teamLimit} team</span>
+            </div>
+          </div>
+          <div class="hunt-phase-card-actions">
+            <button class="btn btn-success btn-sm" id="fightLogContinueHuntBtn" type="button">
+              ${renderButtonMeleeIcon()}
+              Continue
+            </button>
           </div>
         </div>
       `;
@@ -642,8 +793,9 @@
     elements.fightLog.classList.remove('text-muted');
     const rows = groupCombatLog(state.combatLog).map((step, index) => `
       ${renderFightLogRow(step, index)}
-    `).reverse().join('');
-    elements.fightLog.innerHTML = renderEndNotice() + rows;
+    `).join('');
+    elements.fightLog.innerHTML = rows + renderEndNotice();
+    scrollFightLogToBottom();
   }
 
   function getIdleFightLogContent() {
@@ -660,11 +812,37 @@
     return 'Battle actions will appear here.';
   }
 
+  function renderRewardsInfoCard() {
+    const earned = state.run?.earned || { xp: 0, souls: 0 };
+    return `
+      <div class="hunt-phase-panel dungeon-reward-card">
+        <div>
+          <div class="hunt-phase-eyebrow">Rewards</div>
+          <div class="dungeon-reward-card-body">
+            <h3 class="dungeon-reward-title">Leave with a demon</h3>
+            <p>Permanently add one current demon to your collection and claim your XP and souls by leaving the dungeon now.</p>
+          </div>
+          <div class="hunt-phase-meta dungeon-reward-meta">
+            <span>+1 Demon Collection</span>
+            <span>${earned.xp || 0} XP</span>
+            <span>${earned.souls || 0} souls</span>
+          </div>
+        </div>
+        <div class="hunt-phase-card-actions">
+          <button class="btn btn-warning btn-sm" id="getRewardBtn" type="button">
+            <i class="bi bi-flag-fill"></i>
+            Get Reward
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
   function renderPhaseTitle() {
     if (!elements.fightLogTitle) return;
 
     if (state.run?.awaitingRecruit && state.isRecruiting) {
-      elements.fightLogTitle.textContent = 'Recruit';
+      elements.fightLogTitle.textContent = 'Choose Path';
       return;
     }
 
@@ -684,7 +862,7 @@
     }
 
     if (state.run?.status === 'completed' || state.run?.awaitingFinalPick) {
-      elements.fightLogTitle.textContent = 'Hunt Complete';
+      elements.fightLogTitle.textContent = 'Dungeon Complete';
       return;
     }
 
@@ -696,7 +874,8 @@
   }
 
   function appendFightLogRow(step, index) {
-    elements.fightLog.insertAdjacentHTML('afterbegin', renderFightLogRow(step, index));
+    elements.fightLog.insertAdjacentHTML('beforeend', renderFightLogRow(step, index));
+    scrollFightLogToBottom();
   }
 
   function renderFightLogRow(step, index) {
@@ -829,24 +1008,17 @@
     return Math.min(3, Math.max(1, Number(state.run.currentFloor) + 1));
   }
 
-  function getDraftRecruitChoice() {
+  function getDraftRecruitPayload() {
     ensureRecruitDraft();
     const draftTeam = state.recruitDraftTeam || [];
-    const recruit = draftTeam.find((demon) => demon.recruitSource === 'reward' && demon.rewardId);
-    if (!recruit) return null;
-
-    const draftOriginalIds = new Set(
-      draftTeam
-        .filter((demon) => demon.recruitSource === 'team')
-        .map((demon) => demon.originalInstanceId || demon.instanceId)
-    );
-    const replaced = (state.run?.team || []).find((demon) => !draftOriginalIds.has(demon.instanceId));
-    const body = {
-      rewardId: recruit.rewardId,
-      position: getDemonPosition(recruit)
+    return {
+      team: draftTeam.map((demon, index) => ({
+        source: demon.recruitSource === 'reward' ? 'reward' : 'team',
+        instanceId: demon.originalInstanceId || demon.instanceId,
+        rewardId: demon.rewardId || undefined,
+        position: getDemonPosition(demon, index)
+      }))
     };
-    if (replaced) body.replaceInstanceId = replaced.instanceId;
-    return body;
   }
 
   function renderFightLogActions() {
@@ -855,7 +1027,6 @@
     const canBattle = Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
     const canReplay = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
     const canContinueAfterWin = Boolean(state.run?.awaitingRecruit && state.showPostWinActions);
-    const canContinueHunt = Boolean(state.run?.awaitingRecruit && state.isRecruiting);
 
     elements.fightLogActions.innerHTML = `
       ${canBattle ? `
@@ -875,16 +1046,10 @@
           Continue
         </button>
       ` : ''}
-      ${canContinueHunt ? `
-        <button class="btn btn-success btn-sm" id="fightLogContinueHuntBtn" type="button">
-          <i class="bi bi-arrow-right-circle"></i>
-          Continue Hunt
-        </button>
-      ` : ''}
       ${canStart ? `
       <button class="btn btn-primary btn-sm" id="fightLogStartBtn" type="button">
         <i class="bi bi-play-fill"></i>
-        ${isDefeated ? 'Start New Hunt' : 'Start Hunt'}
+        ${isDefeated ? 'Start New Dungeon' : 'Start Dungeon'}
       </button>
       ` : ''}
     `;
@@ -897,8 +1062,14 @@
     if (replayButton) replayButton.addEventListener('click', replayFight);
     const continueButton = document.getElementById('fightLogContinueBtn');
     if (continueButton) continueButton.addEventListener('click', beginRecruiting);
+    bindPathButtons();
+  }
+
+  function bindPathButtons() {
+    const getRewardButton = document.getElementById('getRewardBtn');
+    if (getRewardButton) getRewardButton.addEventListener('click', openCashoutModal);
     const continueHuntButton = document.getElementById('fightLogContinueHuntBtn');
-    if (continueHuntButton) continueHuntButton.addEventListener('click', confirmRecruitReward);
+    if (continueHuntButton) continueHuntButton.addEventListener('click', requestRecruitContinue);
   }
 
   async function startNewHuntAfterDefeat() {
@@ -947,7 +1118,7 @@
   }
 
   function scrollFightLogToBottom() {
-    elements.fightLog.scrollTop = 0;
+    elements.fightLog.scrollTop = elements.fightLog.scrollHeight;
   }
 
   function getLogRowClass(entry) {
@@ -988,11 +1159,11 @@
     if (state.run.status === 'completed') {
       return `
         <div class="reward-phase">
-          <h3 class="h6 mb-2">Hunt complete</h3>
+          <h3 class="h6 mb-2">Dungeon complete</h3>
           <p class="text-muted">${hasSavedFinalReward() ? 'Final demon saved to your collection.' : 'Choose one of your team demons, or exit without collecting.'}</p>
           <button class="btn btn-outline-info btn-sm js-open-choice-modal" type="button" ${hasSavedFinalReward() ? 'disabled' : ''}>
             <i class="bi bi-stars"></i>
-            Finish Hunt
+            Finish Dungeon
           </button>
         </div>
       `;
@@ -1012,7 +1183,7 @@
     }
 
     const earned = state.run.earned || { xp: 0, souls: 0 };
-    return renderEmptyText(`Clear the floor to recruit a defeated demon. Hunt earnings: ${earned.xp || 0} XP, ${earned.souls || 0} souls.`);
+    return renderEmptyText(`Clear the floor to recruit a defeated demon. Dungeon earnings: ${earned.xp || 0} XP, ${earned.souls || 0} souls.`);
   }
 
   function showPendingChoiceModal() {
@@ -1036,7 +1207,7 @@
 
     if (state.run.status === 'completed') {
       const finalRewards = currentFloorRewards.filter((reward) => reward.type === 'final');
-      elements.teamChoiceModalTitle.textContent = 'Hunt complete';
+      elements.teamChoiceModalTitle.textContent = 'Dungeon complete';
       elements.teamChoiceModalSubtitle.textContent = 'Choose one demon from your team for your collection, or exit without collecting.';
       elements.teamChoiceModalBody.innerHTML = `
         <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
@@ -1050,7 +1221,7 @@
       `;
       bindRewardButtons();
       const modalExitHuntBtn = document.getElementById('modalExitHuntBtn');
-      if (modalExitHuntBtn) modalExitHuntBtn.addEventListener('click', () => finishRun('Hunt complete.'));
+      if (modalExitHuntBtn) modalExitHuntBtn.addEventListener('click', () => finishRun('Dungeon complete.'));
       return;
     }
 
@@ -1414,15 +1585,14 @@
   function canAddPoolDemonToTeam(poolInstanceId) {
     const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
     if (!poolDemon || poolDemon.recruitSource !== 'reward') return false;
-    return (state.recruitDraftTeam || []).length < getRecruitTeamLimit() && !teamHasDraftRecruit();
+    return (state.recruitDraftTeam || []).length < getRecruitTeamLimit();
   }
 
   function canSwapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
     const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
     const teamDemon = findDraftDemon(state.recruitDraftTeam, teamInstanceId);
     if (!poolDemon || !teamDemon) return false;
-    if (poolDemon.recruitSource !== 'reward') return true;
-    return !teamHasDraftRecruit(teamInstanceId) || teamDemon.recruitSource === 'reward';
+    return true;
   }
 
   function addPoolDemonToTeam(poolInstanceId, position) {
@@ -1587,6 +1757,10 @@
     `;
   }
 
+  function renderButtonMeleeIcon() {
+    return renderFormationLaneIcon('front').replace('formation-lane-icon mb-1', 'button-melee-icon');
+  }
+
   function renderDemonCard(demon, options) {
     const position = getDemonPosition(demon);
     const isPlayer = options.side !== 'enemy';
@@ -1601,13 +1775,16 @@
       canDropRecruit ? 'is-recruit-drop-target' : '',
       state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId ? 'active' : ''
     ].filter(Boolean).join(' ');
+    const rarityColor = getRarityColor(demon.rarity);
 
     return `
-      <div class="${classes}" data-instance-id="${escapeHtml(demon.instanceId)}" ${demon.rewardId ? `data-reward-id="${escapeHtml(demon.rewardId)}"` : ''} ${demon.recruitSource ? `data-recruit-source="${escapeHtml(demon.recruitSource)}"` : ''} ${draggable ? 'draggable="true"' : ''}>
-        <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="">
+      <div class="${classes}" style="--rarity-color: ${rarityColor}" data-instance-id="${escapeHtml(demon.instanceId)}" ${demon.rewardId ? `data-reward-id="${escapeHtml(demon.rewardId)}"` : ''} ${demon.recruitSource ? `data-recruit-source="${escapeHtml(demon.recruitSource)}"` : ''} ${draggable ? 'draggable="true"' : ''}>
+        <div class="hunt-demon-card-image" aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity">
+          <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="" draggable="false">
+          <span class="hunt-demon-rarity-gem" aria-hidden="true"></span>
+        </div>
         <div class="hunt-demon-card-body">
           <div class="hunt-demon-card-title">
-            <span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(capitalize(demon.rarity))}</span>
             <span class="text-white">${escapeHtml(demon.species || 'Demon')}</span>
           </div>
           ${renderCombatStats(demon)}
@@ -1637,9 +1814,21 @@
     `;
   }
 
+  function getRarityColor(rarity) {
+    const colors = {
+      common: '#D1D5D8',
+      uncommon: '#41A85F',
+      rare: '#2C82C9',
+      epic: '#9365B8',
+      legendary: '#FAC51C',
+      mythic: '#E25041'
+    };
+    return colors[rarity] || colors.common;
+  }
+
   function renderAttackIcon() {
     return `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512" class="combat-stat-icon mb-1" aria-hidden="true" focusable="false">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512" class="combat-stat-icon" aria-hidden="true" focusable="false">
         <defs></defs>
         <path class="fa-secondary" d="M19.1 .3C13.9-.7 8.5 .9 4.7 4.7S-.7 13.9 .3 19.1L14.4 89.6c1.9 9.3 6.4 17.8 13.1 24.5L329.4 416 416 329.4 114.2 27.5c-6.7-6.7-15.2-11.3-24.5-13.1L19.1 .3zM146.7 278.6L96 329.4 182.6 416l50.7-50.7-86.6-86.6zm218.5-45.3L484.5 114.2c6.7-6.7 11.3-15.2 13.1-24.5l14.1-70.5c1-5.2-.6-10.7-4.4-14.5s-9.2-5.4-14.5-4.4L422.4 14.4c-9.3 1.9-17.8 6.4-24.5 13.1L278.6 146.7l86.6 86.6z"></path>
         <path class="fa-primary fa-secondary" d="M75.3 308.7c-6.2-6.2-16.4-6.2-22.6 0l-16 16c-4.7 4.7-6 11.8-3.3 17.8l27.5 62L4.7 460.7c-6.2 6.2-6.2 16.4 0 22.6l24 24c6.2 6.2 16.4 6.2 22.6 0l56.2-56.2 62 27.5c6 2.7 13.1 1.4 17.8-3.3l16-16c6.2-6.2 6.2-16.4 0-22.6l-128-128zm361.4 0l-128 128c-6.2 6.2-6.2 16.4 0 22.6l16 16c4.7 4.7 11.8 6 17.8 3.3l62-27.5 56.2 56.2c6.2 6.2 16.4 6.2 22.6 0l24-24c6.2-6.2 6.2-16.4 0-22.6l-56.2-56.2 27.5-62c2.7-6.1 1.4-13.1-3.3-17.8l-16-16c-6.2-6.2-16.4-6.2-22.6 0z"></path>

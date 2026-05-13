@@ -17,7 +17,7 @@ router.post('/runs/:id/formation', requireAuth, async (req, res) => {
   }
 
   if (run.state.awaitingRecruit || run.state.awaitingFinalPick) {
-    return res.status(409).json({ error: 'Resolve the pending hunt choice before changing formation.' });
+    return res.status(409).json({ error: 'Resolve the pending dungeon choice before changing formation.' });
   }
 
   const formation = Array.isArray(req.body.formation) ? req.body.formation : [];

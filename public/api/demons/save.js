@@ -24,7 +24,7 @@ router.post('/demons/save', requireAuth, async (req, res) => {
   }
 
   if (reward.type !== 'final') {
-    return res.status(409).json({ error: 'Only final hunt demons can be saved to your collection.' });
+    return res.status(409).json({ error: 'Only final dungeon demons can be saved to your collection.' });
   }
 
   if (run.status !== 'completed') {
@@ -32,7 +32,7 @@ router.post('/demons/save', requireAuth, async (req, res) => {
   }
 
   if (run.rewards.some((item) => item.type === 'final' && item.saved)) {
-    return res.status(409).json({ error: 'Final hunt demon already saved.' });
+    return res.status(409).json({ error: 'Final dungeon demon already saved.' });
   }
 
   if (reward.saved) {

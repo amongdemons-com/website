@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   const run = await getRunForPlayer(req.params.id, req.player.id);
+  const stagedTeam = Array.isArray(req.body.team) ? req.body.team : null;
   const rewardId = req.body.rewardId ? Number(req.body.rewardId) : null;
   const replaceInstanceId = req.body.replaceInstanceId ? String(req.body.replaceInstanceId) : null;
   const requestedPosition = req.body.position ? normalizePosition(req.body.position) : null;
@@ -28,6 +29,30 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     return res.json({ team: run.state.team, skipped: true });
   }
 
+  if (stagedTeam) {
+    const team = buildStagedTeam(run, stagedTeam);
+    run.state.team = team;
+
+    const recruitedRewardIds = new Set(
+      stagedTeam
+        .filter((item) => item && item.source === 'reward')
+        .map((item) => Number(item.rewardId))
+    );
+    run.rewards.forEach((reward) => {
+      if (reward.type === 'recruit' && reward.floor === run.floor && recruitedRewardIds.has(Number(reward.rewardId))) {
+        reward.recruited = true;
+        reward.claimed = true;
+      }
+    });
+
+    if (run.status === 'active') {
+      await advanceFloor(run);
+    }
+
+    await saveRun(run);
+    return res.json({ team: run.state.team });
+  }
+
   const reward = rewardId
     ? run.rewards.find((item) => item.rewardId === rewardId)
     : [...run.rewards].reverse().find((item) => item.type === 'recruit' && !item.recruited);
@@ -37,7 +62,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   }
 
   if (reward.type !== 'recruit') {
-    return res.status(409).json({ error: 'Only defeated floor demons can join the hunt.' });
+    return res.status(409).json({ error: 'Only defeated floor demons can join the dungeon.' });
   }
 
   if (reward.recruited) {
@@ -79,6 +104,63 @@ async function advanceFloor(run) {
   run.state.enemies = await createHuntEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length);
   run.state.awaitingRecruit = false;
   run.state.mapProgress.push({ floor: run.floor, type: 'battle', status: 'available' });
+}
+
+function buildStagedTeam(run, stagedTeam) {
+  if (!stagedTeam.length || stagedTeam.length > 3) {
+    const error = new Error('Choose between 1 and 3 demons for your team.');
+    error.status = 400;
+    throw error;
+  }
+
+  return stagedTeam.map((item, index) => {
+    if (!item || !item.source) {
+      const error = new Error('Invalid staged team.');
+      error.status = 400;
+      throw error;
+    }
+
+    const position = normalizePosition(item.position || (index === 0 ? 'front' : 'back'));
+
+    if (item.source === 'team') {
+      const instanceId = String(item.instanceId || item.originalInstanceId || '');
+      const demon = (run.state.team || []).find((teamDemon) => teamDemon.instanceId === instanceId);
+      if (!demon) {
+        const error = new Error('Team demon not found.');
+        error.status = 404;
+        throw error;
+      }
+
+      return {
+        ...resetRunDemon(demon, demon.instanceId),
+        position
+      };
+    }
+
+    if (item.source === 'reward') {
+      const rewardId = Number(item.rewardId);
+      const reward = run.rewards.find((rewardItem) => (
+        Number(rewardItem.rewardId) === rewardId &&
+        rewardItem.type === 'recruit' &&
+        rewardItem.floor === run.floor &&
+        rewardItem.demon
+      ));
+      if (!reward) {
+        const error = new Error('Recruit reward not found.');
+        error.status = 404;
+        throw error;
+      }
+
+      return {
+        ...resetRunDemon(reward.demon, `player-${run.floor}-${reward.rewardId}`),
+        position
+      };
+    }
+
+    const error = new Error('Invalid staged team source.');
+    error.status = 400;
+    throw error;
+  });
 }
 
 module.exports = router;

@@ -44,8 +44,12 @@ app.get('/', (req, res) => {
   return res.redirect(302, `/demons/type/${req.query.type}`);
 });
 
-// === Hunt Route: GET /hunt/
 app.get(['/hunt', '/hunt/'], (req, res) => {
+  res.redirect(302, '/dungeon');
+});
+
+// === Dungeon Route: GET /dungeon/
+app.get(['/dungeon', '/dungeon/'], (req, res) => {
   res.sendFile(path.join(appDir, 'hunt.html'));
 });
 
