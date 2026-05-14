@@ -2392,6 +2392,39 @@ body.collection-page {
     line-height: 1;
 }
 
+.collection-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(10rem, 1fr));
+    gap: 0.5rem;
+    width: min(100%, 38rem);
+}
+
+.collection-controls .form-select {
+    border-color: rgba(161,212,201,0.18);
+    background-color: rgba(4,10,12,0.72);
+    color: var(--ad-text);
+}
+
+.collection-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 9.25rem));
+    justify-content: center;
+    gap: 1rem;
+}
+
+.collection-grid-item {
+    display: flex;
+    justify-content: center;
+}
+
+.collection-grid-full {
+    grid-column: 1 / -1;
+}
+
+.collection-pagination {
+    margin-top: 1rem;
+}
+
 .collection-demon-card {
     background: rgba(3,9,11,0.55);
 }
@@ -2405,6 +2438,12 @@ body.collection-page {
     border: 1px dashed rgba(161,212,201,0.2);
     border-radius: var(--ad-radius);
     background: rgba(4,10,12,0.32);
+}
+
+@media (max-width: 767.98px) {
+    .collection-controls {
+        grid-template-columns: 1fr;
+    }
 }
 
 body.summon-page {

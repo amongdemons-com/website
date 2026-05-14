@@ -3,9 +3,25 @@
 
   const api = window.AmongDemons.api;
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
+  const PAGE_SIZE = 36;
+  const RARITY_ORDER = {
+    common: 1,
+    uncommon: 2,
+    rare: 3,
+    epic: 4,
+    legendary: 5,
+    mythic: 6
+  };
   const state = {
     player: window.AmongDemons.getSession().player || null,
-    collection: []
+    collection: [],
+    types: {},
+    filters: {
+      type: 'all',
+      rarity: 'all',
+      sort: 'default'
+    },
+    page: 1
   };
   const elements = {};
 
@@ -28,7 +44,11 @@
       'collectionSummary',
       'collectionMessage',
       'collectionCount',
-      'collectionGrid'
+      'collectionGrid',
+      'collectionPagination',
+      'typeFilter',
+      'rarityFilter',
+      'sortOrder'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -44,6 +64,36 @@
     });
 
     elements.refreshBtn.addEventListener('click', refreshCollection);
+
+    elements.typeFilter.addEventListener('change', () => {
+      state.filters.type = elements.typeFilter.value;
+      state.page = 1;
+      renderCollection();
+    });
+
+    elements.rarityFilter.addEventListener('change', () => {
+      state.filters.rarity = elements.rarityFilter.value;
+      state.page = 1;
+      renderCollection();
+    });
+
+    elements.sortOrder.addEventListener('change', () => {
+      state.filters.sort = elements.sortOrder.value;
+      state.page = 1;
+      renderCollection();
+    });
+
+    elements.collectionPagination.addEventListener('click', (event) => {
+      const link = event.target.closest('[data-page]');
+      if (!link) return;
+
+      event.preventDefault();
+      const nextPage = Number(link.dataset.page);
+      if (!Number.isInteger(nextPage) || nextPage === state.page) return;
+
+      state.page = nextPage;
+      renderCollection();
+    });
   }
 
   async function refreshCollection() {
@@ -53,11 +103,14 @@
       try {
         const [me, demons] = await Promise.all([
           api('/api/auth/me'),
-          api('/api/demons')
+          api('/api/demons'),
+          loadDemonTypes()
         ]);
 
         state.player = me.player;
         state.collection = demons.demons || [];
+        populateFilters();
+        state.page = clampPage(state.page, getFilteredDemons().length);
         renderCollection();
       } catch (error) {
         handleAuthError(error);
@@ -66,30 +119,132 @@
   }
 
   function renderCollection() {
-    const count = state.collection.length;
+    const totalCount = state.collection.length;
+    const filteredDemons = getFilteredDemons();
+    const count = filteredDemons.length;
+    const totalPages = getTotalPages(count);
+    state.page = clampPage(state.page, count);
+    const pageDemons = filteredDemons.slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE);
     const playerName = state.player?.username || '';
 
     elements.navPlayerName.textContent = playerName;
-    elements.collectionCount.textContent = String(count);
-    elements.collectionSummary.textContent = count
-      ? `${count} demon${count === 1 ? '' : 's'} collected from dungeon runs.`
+    elements.collectionCount.textContent = String(totalCount);
+    elements.collectionSummary.textContent = totalCount
+      ? renderSummary(count, totalCount, totalPages)
       : 'Collected demons from dungeon runs will appear here.';
-    elements.collectionGrid.innerHTML = count
-      ? renderDemonCards(state.collection)
+    elements.collectionGrid.innerHTML = totalCount
+      ? count
+        ? renderDemonCards(pageDemons)
+        : renderNoMatchesState()
       : renderEmptyState();
+    elements.collectionPagination.innerHTML = renderPagination(totalPages);
+    elements.collectionPagination.classList.toggle('d-none', totalPages <= 1);
   }
 
   function renderDemonCards(demons) {
     return demons.map((demon) => `
-      <div class="col">
+      <div class="collection-grid-item">
         ${renderSharedDemonCard(demon, { className: 'collection-demon-card' })}
       </div>
     `).join('');
   }
 
+  async function loadDemonTypes() {
+    if (Object.keys(state.types).length) return state.types;
+    state.types = await api('/api/game/demon-types');
+    return state.types;
+  }
+
+  function populateFilters() {
+    elements.typeFilter.innerHTML = [
+      '<option value="all">All Types</option>',
+      ...getCollectionTypeIds().map((typeId) => {
+        const typeName = state.types[String(typeId)]?.name || `Type ${typeId}`;
+        return `<option value="${escapeHtml(typeId)}">${escapeHtml(typeName)}</option>`;
+      })
+    ].join('');
+    elements.typeFilter.value = getSelectValue(elements.typeFilter, state.filters.type);
+    state.filters.type = elements.typeFilter.value;
+
+    elements.rarityFilter.innerHTML = [
+      '<option value="all">All Rarities</option>',
+      ...getCollectionRarities().map((rarity) => (
+        `<option value="${escapeHtml(rarity)}">${escapeHtml(capitalize(rarity))}</option>`
+      ))
+    ].join('');
+    elements.rarityFilter.value = getSelectValue(elements.rarityFilter, state.filters.rarity);
+    state.filters.rarity = elements.rarityFilter.value;
+  }
+
+  function getFilteredDemons() {
+    return state.collection
+      .filter((demon) => state.filters.type === 'all' || String(demon.typeId) === state.filters.type)
+      .filter((demon) => state.filters.rarity === 'all' || demon.rarity === state.filters.rarity)
+      .sort(compareDemons);
+  }
+
+  function compareDemons(a, b) {
+    if (state.filters.sort === 'default') {
+      return compareNumber(b.typeId, a.typeId)
+        || compareNumber(getRarityRank(b.rarity), getRarityRank(a.rarity))
+        || compareNumber(b.hp, a.hp)
+        || compareNumber(b.atk, a.atk)
+        || compareNumber(b.speed, a.speed)
+        || compareNumber(b.id, a.id);
+    }
+
+    return compareNumber(b[state.filters.sort], a[state.filters.sort])
+      || compareNumber(b.typeId, a.typeId)
+      || compareNumber(getRarityRank(b.rarity), getRarityRank(a.rarity))
+      || compareNumber(b.hp, a.hp)
+      || compareNumber(b.id, a.id);
+  }
+
+  function renderPagination(totalPages) {
+    if (totalPages <= 1) return '';
+
+    return `
+      <ul class="pagination justify-content-center mb-0">
+        ${renderPageItem(state.page - 1, '&laquo;', state.page === 1, 'Previous')}
+        ${Array.from({ length: totalPages }, (_, index) => renderPageItem(index + 1, index + 1, false, `Page ${index + 1}`)).join('')}
+        ${renderPageItem(state.page + 1, '&raquo;', state.page === totalPages, 'Next')}
+      </ul>
+    `;
+  }
+
+  function renderPageItem(page, label, disabled, ariaLabel) {
+    const active = page === state.page && !disabled;
+    const className = [
+      'page-item',
+      active ? 'active' : '',
+      disabled ? 'disabled' : ''
+    ].filter(Boolean).join(' ');
+    const attributes = [
+      `class="page-link"`,
+      `href="#"`,
+      `aria-label="${escapeHtml(ariaLabel)}"`,
+      disabled ? 'tabindex="-1" aria-disabled="true"' : `data-page="${page}"`
+    ].filter(Boolean).join(' ');
+
+    return `
+      <li class="${className}" ${active ? 'aria-current="page"' : ''}>
+        <a ${attributes}>${label}</a>
+      </li>
+    `;
+  }
+
+  function renderSummary(count, totalCount, totalPages) {
+    const filteredText = count === totalCount
+      ? `${totalCount} demon${totalCount === 1 ? '' : 's'} collected from dungeon runs.`
+      : `${count} of ${totalCount} demon${totalCount === 1 ? '' : 's'} shown.`;
+    const pageText = totalPages > 1 ? ` Page ${state.page} of ${totalPages}.` : '';
+
+    return `${filteredText}${pageText}`;
+  }
+
   function renderEmptyState() {
     return `
-      <div class="col-12">
+      <div class="collection-grid-full">
         <div class="empty-state collection-empty-state">
           <img src="/app/images/amongdemons_logo_250x250.png" alt="">
           <div>
@@ -103,6 +258,52 @@
         </div>
       </div>
     `;
+  }
+
+  function renderNoMatchesState() {
+    return `
+      <div class="collection-grid-full">
+        <div class="empty-state collection-empty-state">
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="">
+          <div>
+            <h2 class="h5 mb-2">No demons match these filters</h2>
+            <p class="text-muted mb-0">Try another type or rarity.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function getCollectionTypeIds() {
+    return [...new Set(state.collection.map((demon) => Number(demon.typeId)).filter(Boolean))]
+      .sort((a, b) => b - a);
+  }
+
+  function getCollectionRarities() {
+    return [...new Set(state.collection.map((demon) => demon.rarity).filter(Boolean))]
+      .sort((a, b) => getRarityRank(b) - getRarityRank(a));
+  }
+
+  function getSelectValue(select, preferredValue) {
+    return [...select.options].some((option) => option.value === preferredValue)
+      ? preferredValue
+      : 'all';
+  }
+
+  function getRarityRank(rarity) {
+    return RARITY_ORDER[rarity] || 0;
+  }
+
+  function compareNumber(a, b) {
+    return (Number(a) || 0) - (Number(b) || 0);
+  }
+
+  function getTotalPages(count) {
+    return Math.max(1, Math.ceil(count / PAGE_SIZE));
+  }
+
+  function clampPage(page, count) {
+    return Math.min(Math.max(Number(page) || 1, 1), getTotalPages(count));
   }
 
   function handleAuthError(error) {
@@ -136,6 +337,11 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  function capitalize(value) {
+    if (!value) return '';
+    return String(value).charAt(0).toUpperCase() + String(value).slice(1);
   }
 
   function onReady(callback) {

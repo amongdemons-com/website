@@ -63,12 +63,32 @@
       <div class="alert d-none" id="collectionMessage" role="alert"></div>
 
       <section class="card collection-gallery-card">
-        <div class="card-header d-flex align-items-center justify-content-between gap-3">
-          <span>Collected Demons</span>
-          <span class="collection-count" id="collectionCount">0</span>
+        <div class="card-header d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3">
+          <div class="d-flex align-items-center justify-content-between gap-3 w-100 w-xl-auto">
+            <span>Collected Demons</span>
+            <span class="collection-count" id="collectionCount">0</span>
+          </div>
+          <div class="collection-controls">
+            <label class="visually-hidden" for="typeFilter">Demon Type</label>
+            <select class="form-select form-select-sm" id="typeFilter" aria-label="Demon Type">
+              <option value="all">All Types</option>
+            </select>
+            <label class="visually-hidden" for="rarityFilter">Rarity</label>
+            <select class="form-select form-select-sm" id="rarityFilter" aria-label="Rarity">
+              <option value="all">All Rarities</option>
+            </select>
+            <label class="visually-hidden" for="sortOrder">Order By</label>
+            <select class="form-select form-select-sm" id="sortOrder" aria-label="Order By">
+              <option value="default">Type, Rarity, HP</option>
+              <option value="atk">Damage</option>
+              <option value="speed">Speed</option>
+              <option value="hp">HP</option>
+            </select>
+          </div>
         </div>
         <div class="card-body">
-          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3 demon-card-grid" id="collectionGrid"></div>
+          <div class="collection-card-grid demon-card-grid" id="collectionGrid"></div>
+          <nav class="collection-pagination d-none" id="collectionPagination" aria-label="Collection pages"></nav>
         </div>
       </section>
     </main>
