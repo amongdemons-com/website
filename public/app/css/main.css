@@ -18,16 +18,16 @@ body.dungeon-page {
 }
 
 body.dungeon-page .navbar {
-    flex: 0 0 auto;
+    display: none;
 }
 
 .dungeon-main {
     flex: 1 1 auto;
     display: grid;
     min-height: 0;
+    border: 0;
     overflow: hidden;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 0 !important;
 }
 
 .hunt-card-header {
@@ -37,13 +37,82 @@ body.dungeon-page .navbar {
 .hunt-floor-title {
     display: inline-flex;
     align-items: baseline;
+    gap: 0;
+    min-width: max-content;
+    color: #9da7b1;
+    line-height: 1;
+}
+
+.hunt-floor-title,
+.hunt-floor-track {
+    vertical-align: middle;
+}
+
+#huntTitle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.dungeon-title-brand {
+    display: inline-flex;
+    align-items: center;
     gap: 0.45rem;
+    min-width: 0;
+}
+
+.dungeon-title-copy {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.22rem;
+    min-width: 0;
+}
+
+.dungeon-title-text {
     color: #fff;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.dungeon-header-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #fff;
+    line-height: 1;
+    text-decoration: none;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.dungeon-header-brand:hover {
+    color: #fff;
+    text-decoration: none;
+}
+
+.dungeon-header-brand i {
+    color: #9da7b1;
+    font-size: 1.25rem;
+    font-weight: 900;
+    -webkit-text-stroke: 1px currentColor;
+}
+
+.dungeon-header-brand img {
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 auto;
+    object-fit: contain;
 }
 
 .hunt-floor-label {
     color: #9da7b1;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: bold;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -61,15 +130,22 @@ body.dungeon-page .navbar {
     height: 0.28rem;
     margin-top: 0.45rem;
     border-radius: 999px;
-    background: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.07);
     overflow: hidden;
+}
+
+.dungeon-card-progress {
+    width: 100%;
+    height: 0.32rem;
+    margin: 0;
+    border-radius: 0;
 }
 
 .hunt-floor-track span {
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: #FF6E2F;
+    background: rgba(128,214,151,0.5);
 }
 
 .ad-common {
@@ -421,6 +497,11 @@ body.dungeon-page .navbar {
     flex: 1 1 auto;
     min-width: 0;
     min-height: 0;
+}
+
+.formation-lane-cards.is-compressed {
+    --dungeon-demon-card-width: 8rem;
+    --dungeon-demon-card-height: auto;
 }
 
 .formation-lane-cards.is-drag-over {
@@ -940,24 +1021,17 @@ body.dungeon-page .navbar {
 
 .dungeon-battle-card {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
     min-height: 0;
     overflow: hidden;
 }
 
 .dungeon-layout {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    gap: 0.85rem;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
     height: 100%;
     min-height: 0;
-}
-
-.dungeon-topbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(18rem, auto);
-    align-items: end;
-    gap: 1rem;
 }
 
 .dungeon-battle-meta {
@@ -1031,6 +1105,8 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-battle-header .fight-log-actions.dungeon-battle-actions {
+    display: flex;
+    align-items: center;
     gap: 0.4rem;
     margin: 0;
     padding: 0;
@@ -1077,7 +1153,17 @@ body.dungeon-page .navbar {
     background: rgba(65,168,95,0.05);
 }
 
+.battle-side-player .formation-lane-back {
+    border-color: rgba(65,168,95,0.22);
+    background: rgba(65,168,95,0.05);
+}
+
 .battle-side-enemy .formation-lane-front {
+    border-color: rgba(226,80,65,0.22);
+    background: rgba(226,80,65,0.05);
+}
+
+.battle-side-enemy .formation-lane-back {
     border-color: rgba(226,80,65,0.22);
     background: rgba(226,80,65,0.05);
 }
@@ -1099,6 +1185,11 @@ body.dungeon-page .navbar {
     width: 3.25rem;
     margin: 1.75rem 0 0;
     font-size: 1.55rem;
+}
+
+.dungeon-vs.is-recruiting {
+    color: #80d697;
+    font-size: 2.6rem;
 }
 
 .dungeon-vs::before,
@@ -1156,8 +1247,55 @@ body.dungeon-page .navbar {
 }
 
 .battle-side .hunt-demon-card {
+    aspect-ratio: 3 / 4;
     width: var(--dungeon-demon-card-width, 9.25rem);
-    flex: 0 0 var(--dungeon-demon-card-width, 9.25rem);
+    height: var(--dungeon-demon-card-height, 12.333rem);
+    flex: 0 0 auto;
+}
+
+.battle-side .formation-lane-cards.is-compressed .hunt-demon-card {
+    aspect-ratio: auto;
+}
+
+.battle-side .formation-lane-cards.is-compressed .hunt-demon-card-image {
+    position: relative;
+    inset: auto;
+}
+
+.battle-side .formation-lane-cards.is-compressed .hunt-demon-card-image img {
+    display: block;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+}
+
+.battle-side-count {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.4rem;
+    border: 1px solid rgba(65,168,95,0.36);
+    border-radius: 4px;
+    background: rgba(65,168,95,0.1);
+    color: #80d697;
+    font-size: 0.74rem;
+    line-height: 1;
+    padding: 0.18rem 0.35rem;
+    vertical-align: middle;
+}
+
+.dungeon-header-rewards {
+    margin-right: 0.15rem;
+}
+
+.dungeon-header-rewards span:not(.hunt-phase-eyebrow) {
+    padding: 0.28rem 0.45rem;
+}
+
+.dungeon-action-or {
+    color: #9da7b1;
+    font-size: 0.78rem;
+    font-weight: bold;
+    text-transform: uppercase;
 }
 
 @media (max-width: 991.98px) {
@@ -1175,7 +1313,7 @@ body.dungeon-page .navbar {
 
     .battle-side .hunt-demon-card {
         width: var(--dungeon-demon-card-width, 9.25rem);
-        flex-basis: var(--dungeon-demon-card-width, 9.25rem);
+        flex-basis: auto;
     }
 }
 
@@ -1183,10 +1321,6 @@ body.dungeon-page .navbar {
     .dungeon-battle-header {
         grid-template-columns: 1fr;
         align-items: stretch;
-    }
-
-    .dungeon-topbar {
-        grid-template-columns: 1fr;
     }
 
     .dungeon-battle-meta,
@@ -1220,9 +1354,14 @@ body.dungeon-page .navbar {
         display: flex;
     }
 
+    .formation-lane-cards.is-compressed {
+        --dungeon-demon-card-width: 6rem;
+        --dungeon-demon-card-height: auto;
+    }
+
     .battle-side .hunt-demon-card {
         width: 6.75rem;
-        flex-basis: 6.75rem;
+        flex-basis: auto;
     }
 
     .formation-empty {

@@ -8,12 +8,13 @@ function normalizePosition(position) {
   return position === 'back' ? 'back' : 'front';
 }
 
-function getTargeting(demon) {
-  return demon.targeting || 'front';
+function getTargeting(demon, demonTypes = {}) {
+  const typeTargeting = demonTypes[String(demon.typeId)]?.targeting;
+  return typeTargeting || demon.targeting || 'front';
 }
 
-function chooseTarget(rng, attacker, enemies) {
-  const targeting = getTargeting(attacker);
+function chooseTarget(rng, attacker, enemies, demonTypes) {
+  const targeting = getTargeting(attacker, demonTypes);
   const living = alive(enemies);
   const frontRow = living.filter((demon) => normalizePosition(demon.position) === 'front');
   const available = targeting === 'front' && frontRow.length ? frontRow : living;
@@ -29,12 +30,12 @@ function chooseTarget(rng, attacker, enemies) {
   return available[0];
 }
 
-function chooseTargets(rng, attacker, enemies) {
-  if (getTargeting(attacker) === 'all') {
+function chooseTargets(rng, attacker, enemies, demonTypes) {
+  if (getTargeting(attacker, demonTypes) === 'all') {
     return alive(enemies);
   }
 
-  const target = chooseTarget(rng, attacker, enemies);
+  const target = chooseTarget(rng, attacker, enemies, demonTypes);
   return target ? [target] : [];
 }
 
@@ -46,7 +47,8 @@ function cloneTeam(team) {
   }));
 }
 
-function simulateFight(rng, playerTeam, enemyTeam) {
+function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
+  const demonTypes = options.demonTypes || {};
   const players = cloneTeam(playerTeam);
   const enemies = cloneTeam(enemyTeam);
   const combatLog = [];
@@ -67,7 +69,7 @@ function simulateFight(rng, playerTeam, enemyTeam) {
       if (actor.attackMeter < 100) continue;
 
       actor.attackMeter = 0;
-      const chosenTargets = chooseTargets(rng, actor, targets);
+      const chosenTargets = chooseTargets(rng, actor, targets, demonTypes);
       const damage = actor.atk;
 
       chosenTargets.forEach((target, targetIndex) => {
@@ -79,7 +81,7 @@ function simulateFight(rng, playerTeam, enemyTeam) {
           attackerPosition: normalizePosition(actor.position),
           target: target.instanceId,
           targetPosition: normalizePosition(target.position),
-          targeting: getTargeting(actor),
+          targeting: getTargeting(actor, demonTypes),
           hitIndex: targetIndex + 1,
           hitCount: chosenTargets.length,
           dmg: damage,

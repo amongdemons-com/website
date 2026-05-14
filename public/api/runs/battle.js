@@ -1,6 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../lib/auth');
 const { simulateFight } = require('../lib/combat');
+const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { resetRunDemon } = require('../lib/run-demons');
@@ -23,9 +24,10 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   }
 
   const rng = createRng(run.seed + run.floor);
+  const demonTypes = await getDemonTypes();
   const playerTeamBefore = cloneForBattleReplay(run.state.team || []);
   const enemyTeamBefore = cloneForBattleReplay(run.state.enemies || []);
-  const result = simulateFight(rng, run.state.team, run.state.enemies);
+  const result = simulateFight(rng, run.state.team, run.state.enemies, { demonTypes });
   run.state.team = result.playerTeam;
   run.state.enemies = result.enemyTeam;
   run.state.hp = result.playerTeam.reduce((sum, demon) => sum + Math.max(0, demon.hp), 0);

@@ -25,6 +25,7 @@
     promptedStarter: false
   };
   const elements = {};
+  let laneResizeObserver = null;
 
   onReady(init);
 
@@ -43,13 +44,14 @@
     [
       'navPlayerName',
       'huntTitle',
+      'huntProgress',
       'runEmpty',
       'runPanel',
       'teamGrid',
       'enemyGrid',
       'teamSideTitle',
       'enemySideTitle',
-      'battleMeta',
+      'dungeonJoiner',
       'battleOutcome',
       'fightLogTitle',
       'fightLog',
@@ -84,6 +86,7 @@
     elements.confirmStarterBtn.addEventListener('click', startRun);
     elements.cashoutConfirmBtn.addEventListener('click', cashOutDungeon);
     elements.confirmShortTeamBtn.addEventListener('click', continueShortTeam);
+    window.addEventListener('resize', syncCompressedFormationLanes);
     if (elements.battleBtn) elements.battleBtn.addEventListener('click', battle);
   }
 
@@ -229,6 +232,7 @@
 
   async function battle() {
     if (!state.run) return;
+    showCombatPanel();
 
     await withBusy(elements.battleBtn, async () => {
       try {
@@ -486,7 +490,6 @@
       getModal(elements.starterModal).hide();
       await loadStartOptions();
       renderRun();
-      scrollFightLogToBottom();
     } catch (error) {
       showError(error);
     }
@@ -504,11 +507,15 @@
     elements.runEmpty.classList.toggle('d-none', hasRun);
     elements.runPanel.classList.toggle('d-none', !hasRun);
     elements.huntTitle.innerHTML = run ? renderHuntTitle(run) : 'Dungeon';
+    renderHuntProgress(run);
     renderBattleOutcome();
+    showCombatPanel();
 
     if (!run) {
+      if (laneResizeObserver) laneResizeObserver.disconnect();
       if (elements.teamSideTitle) elements.teamSideTitle.textContent = 'Your Team';
       if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
+      updateDungeonJoiner(false);
       document.querySelector('.battle-side-enemy')?.classList.remove('is-recruit-side');
       elements.runEmpty.innerHTML = `
         <img src="/app/images/demons/thumbnails/1.png" alt="">
@@ -531,11 +538,20 @@
       side: 'enemy',
       allowRecruitDrag: state.isRecruiting
     });
-    if (elements.teamSideTitle) elements.teamSideTitle.textContent = 'Your Team';
+    if (elements.teamSideTitle) {
+      if (state.isRecruiting) {
+        const teamLimit = getRecruitTeamLimit();
+        elements.teamSideTitle.innerHTML = `Your Team <span class="battle-side-count">${team.length} / ${teamLimit}</span>`;
+      } else {
+        elements.teamSideTitle.textContent = 'Your Team';
+      }
+    }
     if (elements.enemySideTitle) elements.enemySideTitle.textContent = state.isRecruiting ? 'Recruit' : 'Enemies';
+    updateDungeonJoiner(state.isRecruiting);
     document.querySelector('.battle-side-enemy')?.classList.toggle('is-recruit-side', state.isRecruiting);
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
+    watchFormationLaneSizing();
     renderFightLog();
     renderFightLogActions();
     renderPhaseTitle();
@@ -636,6 +652,7 @@
 
     const allDemonsById = new Map([...(state.run.team || []), ...(state.run.enemies || [])].map((demon) => [demon.instanceId, demon]));
     const steps = groupCombatLog(state.combatLog);
+    renderFightLog();
 
     for (let index = 0; index < steps.length; index += 1) {
       const step = steps[index];
@@ -647,7 +664,6 @@
         }
       });
 
-      appendFightLogRow(step, index);
       updateTeamHp();
       setActiveLogRow(index);
       animateAttackerCard(step.attacker);
@@ -669,17 +685,28 @@
 
   function renderHuntTitle(run) {
     const floor = Math.max(1, Math.min(10, Number(run.currentFloor) || 1));
-    const percent = Math.round((floor / 10) * 100);
 
     return `
-      <span class="hunt-floor-title">
-        <span class="hunt-floor-label">Floor</span>
-        <strong>${floor} / 10</strong>
-      </span>
-      <span class="hunt-floor-track" aria-hidden="true">
-        <span style="width: ${percent}%"></span>
-      </span>
+      <div class="dungeon-title-brand">
+        <a class="dungeon-header-brand" href="/play" aria-label="Back to Play">
+          <i class="bi bi-chevron-left" aria-hidden="true"></i>
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="">
+        </a>
+        <div class="dungeon-title-copy">
+          <span class="dungeon-title-text">Dungeon</span>
+          <span class="hunt-floor-title">
+            <span class="hunt-floor-label">Floor ${floor} / 10</span>
+          </span>
+        </div>
+      </div>
     `;
+  }
+
+  function renderHuntProgress(run) {
+    if (!elements.huntProgress) return;
+    const floor = run ? Math.max(1, Math.min(10, Number(run.currentFloor) || 1)) : 0;
+    const percent = Math.round((floor / 10) * 100);
+    elements.huntProgress.querySelector('span').style.width = `${percent}%`;
   }
 
   function setActiveLogRow(index) {
@@ -785,7 +812,6 @@
   }
 
   function renderFightLog() {
-    renderBattleMeta();
     renderBattleOutcome();
 
     const logRows = state.combatLog.length
@@ -803,36 +829,6 @@
 
     elements.fightLog.classList.remove('text-muted');
     elements.fightLog.innerHTML = logContent;
-    scrollFightLogToBottom();
-  }
-
-  function renderBattleMeta() {
-    if (!elements.battleMeta) return;
-
-    if (state.run?.awaitingRecruit && state.isRecruiting) {
-      const teamLimit = getRecruitTeamLimit();
-      const teamCount = getRecruitPreviewTeam().length;
-      const teamIsFull = teamCount >= teamLimit;
-      elements.battleMeta.classList.remove('text-muted');
-      elements.battleMeta.innerHTML = `
-        ${renderRewardTags()}
-        <div class="dungeon-meta-group">
-          <span class="hunt-phase-eyebrow">Recruit</span>
-          <span class="hunt-tag-team ${teamIsFull ? 'is-full' : 'is-short'}">${teamCount} / ${teamLimit} team</span>
-        </div>
-      `;
-      return;
-    }
-
-    const meta = getBattleMetaContent();
-    if (!meta) {
-      elements.battleMeta.innerHTML = '';
-      elements.battleMeta.classList.add('text-muted');
-      return;
-    }
-
-    elements.battleMeta.classList.remove('text-muted');
-    elements.battleMeta.innerHTML = meta;
   }
 
   function renderBattleOutcome() {
@@ -853,59 +849,74 @@
     elements.battleOutcome.classList.toggle('is-defeat', type === 'defeat');
   }
 
-  function getBattleMetaContent() {
-    if (!state.run) return '';
-
-    if (state.run?.awaitingRecruit && state.showPostWinActions) {
-      return `
-        <div class="dungeon-meta-group">
-          <span class="hunt-phase-eyebrow">Victory</span>
-          <span class="hunt-tag-team is-full">Floor cleared</span>
-        </div>
-      `;
-    }
-
-    if (state.run?.status === 'active') {
-      return `
-        <div class="dungeon-meta-group">
-          <span class="hunt-phase-eyebrow">Strategy</span>
-          <span class="hunt-tag-neutral">Formation ready</span>
-          <span class="hunt-tag-neutral">Floor ${Math.max(1, Math.min(10, Number(state.run.currentFloor) || 1))}</span>
-        </div>
-      `;
-    }
-
-    if (state.run?.status === 'defeated') {
-      return `
-        <div class="dungeon-meta-group">
-          <span class="hunt-phase-eyebrow">Defeated</span>
-          <span class="hunt-tag-neutral">Start a new dungeon</span>
-        </div>
-      `;
-    }
-
-    if (state.run?.status === 'completed' || state.run?.awaitingFinalPick) {
-      return `
-        <div class="dungeon-meta-group">
-          <span class="hunt-phase-eyebrow">Complete</span>
-          <span class="hunt-tag-team is-full">Choose final demon</span>
-        </div>
-      `;
-    }
-
-    return `
-      <div class="dungeon-meta-group">
-        <span class="hunt-phase-eyebrow">Battle</span>
-        <span class="hunt-tag-neutral">Fight resolved</span>
-      </div>
-    `;
+  function updateDungeonJoiner(isRecruiting) {
+    if (!elements.dungeonJoiner) return;
+    elements.dungeonJoiner.classList.toggle('is-recruiting', Boolean(isRecruiting));
+    const label = elements.dungeonJoiner.querySelector('span');
+    if (label) label.textContent = isRecruiting ? '+' : 'VS';
   }
 
-  function renderRewardTags() {
+  function showCombatPanel() {
+    setBattlePanel('combat');
+  }
+
+  function toggleFightLogPanel() {
+    const isLogActive = document.getElementById('battleLogPanel')?.classList.contains('show');
+    setBattlePanel(isLogActive ? 'combat' : 'log');
+  }
+
+  function setBattlePanel(panel) {
+    const showLog = panel === 'log';
+    document.getElementById('combatPanel')?.classList.toggle('show', !showLog);
+    document.getElementById('combatPanel')?.classList.toggle('active', !showLog);
+    document.getElementById('battleLogPanel')?.classList.toggle('show', showLog);
+    document.getElementById('battleLogPanel')?.classList.toggle('active', showLog);
+  }
+
+  function watchFormationLaneSizing() {
+    if (laneResizeObserver) laneResizeObserver.disconnect();
+    const lanes = Array.from(document.querySelectorAll('.battle-side .formation-lane-cards'));
+    if (!lanes.length) return;
+
+    laneResizeObserver = new ResizeObserver(() => syncCompressedFormationLanes());
+    lanes.forEach((lane) => laneResizeObserver.observe(lane));
+    document.querySelectorAll('.battle-side .hunt-demon-card-image img').forEach((image) => {
+      if (!image.complete) image.addEventListener('load', syncCompressedFormationLanes, { once: true });
+    });
+    syncCompressedFormationLanes();
+  }
+
+  function syncCompressedFormationLanes() {
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.battle-side .formation-lane-cards').forEach((lane) => {
+        const cards = Array.from(lane.querySelectorAll('.hunt-demon-card'));
+        lane.classList.remove('is-compressed');
+        lane.style.removeProperty('--dungeon-demon-card-width');
+        lane.style.removeProperty('--dungeon-demon-card-height');
+
+        if (cards.length < 3) return;
+
+        const laneRect = lane.getBoundingClientRect();
+        const lastCard = cards[cards.length - 1];
+        const overflows = lastCard.getBoundingClientRect().bottom > laneRect.bottom + 1 || lane.scrollHeight > lane.clientHeight + 1;
+        if (!overflows) return;
+
+        const gap = parseFloat(getComputedStyle(lane).rowGap || getComputedStyle(lane).gap) || 0;
+        const availableCardHeight = Math.max(72, (laneRect.height - gap * (cards.length - 1)) / cards.length);
+        const nextWidth = Math.max(72, Math.min(148, availableCardHeight * 0.75));
+        lane.style.setProperty('--dungeon-demon-card-width', `${nextWidth}px`);
+        lane.style.setProperty('--dungeon-demon-card-height', 'auto');
+        lane.classList.add('is-compressed');
+      });
+    });
+  }
+
+  function renderRewardTags(extraClass = '') {
     const earned = state.run?.earned || { xp: 0, souls: 0 };
+    const showLabel = !extraClass.includes('dungeon-header-rewards');
     return `
-      <div class="dungeon-meta-group dungeon-reward-meta">
-        <span class="hunt-phase-eyebrow">Rewards</span>
+      <div class="dungeon-meta-group dungeon-reward-meta ${extraClass}">
+        ${showLabel ? '<span class="hunt-phase-eyebrow">Rewards</span>' : ''}
         <span>+1 Demon</span>
         <span>${earned.xp || 0} XP</span>
         <span>${earned.souls || 0} souls</span>
@@ -920,11 +931,6 @@
 
   function setFightLogTitle(title) {
     if (elements.fightLogTitle) elements.fightLogTitle.textContent = title;
-  }
-
-  function appendFightLogRow(step, index) {
-    elements.fightLog.insertAdjacentHTML('beforeend', renderFightLogRow(step, index));
-    scrollFightLogToBottom();
   }
 
   function renderFightLogRow(step, index) {
@@ -1075,6 +1081,7 @@
     const canStart = !state.run || isDefeated || state.run.status === 'ended';
     const canBattle = Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
     const canReplay = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
+    const canViewLog = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
     const canContinueAfterWin = Boolean(state.run?.awaitingRecruit && state.showPostWinActions);
     const canChooseRecruit = Boolean(state.run?.awaitingRecruit && state.isRecruiting);
 
@@ -1090,6 +1097,11 @@
           <i class="bi bi-arrow-counterclockwise"></i>
         </button>
       ` : ''}
+      ${canViewLog ? `
+        <button class="btn btn-outline-light btn-sm btn-icon-only" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log">
+          <i class="bi bi-list-ul"></i>
+        </button>
+      ` : ''}
       ${canContinueAfterWin ? `
         <button class="btn btn-success btn-sm" id="fightLogContinueBtn" type="button">
           <i class="bi bi-arrow-right-circle"></i>
@@ -1097,10 +1109,12 @@
         </button>
       ` : ''}
       ${canChooseRecruit ? `
+        ${renderRewardTags('dungeon-header-rewards')}
         <button class="btn btn-warning btn-sm" id="getRewardBtn" type="button">
           <i class="bi bi-flag-fill"></i>
           Get Reward
         </button>
+        <span class="dungeon-action-or">or</span>
         <button class="btn btn-success btn-sm" id="fightLogContinueHuntBtn" type="button">
           ${renderButtonMeleeIcon()}
           Continue
@@ -1120,6 +1134,8 @@
     if (startButton) startButton.addEventListener('click', isDefeated ? startNewHuntAfterDefeat : openStarterModal);
     const replayButton = document.getElementById('fightLogReplayBtn');
     if (replayButton) replayButton.addEventListener('click', replayFight);
+    const logToggleButton = document.getElementById('fightLogToggleBtn');
+    if (logToggleButton) logToggleButton.addEventListener('click', toggleFightLogPanel);
     const continueButton = document.getElementById('fightLogContinueBtn');
     if (continueButton) continueButton.addEventListener('click', beginRecruiting);
     bindPathButtons();
@@ -1144,6 +1160,7 @@
 
   async function replayFight() {
     const lastBattle = state.run?.lastBattle;
+    showCombatPanel();
     if (!lastBattle?.combatLog?.length) {
       if (state.combatLog.length) renderFightLog();
       return;
@@ -1175,10 +1192,6 @@
       ...(state.run?.team || []).map((demon) => [demon.instanceId, { ...demon, side: 'player' }]),
       ...(state.run?.enemies || []).map((demon) => [demon.instanceId, { ...demon, side: 'enemy' }])
     ]);
-  }
-
-  function scrollFightLogToBottom() {
-    elements.fightLog.scrollTop = elements.fightLog.scrollHeight;
   }
 
   function getLogRowClass(entry) {

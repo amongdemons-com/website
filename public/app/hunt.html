@@ -43,23 +43,6 @@
 
     <main class="container-fluid dungeon-main px-3 px-lg-4">
       <section class="dungeon-layout">
-        <div class="dungeon-topbar">
-          <ul class="nav nav-tabs dungeon-tabs" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="combatTab" data-bs-toggle="tab" data-bs-target="#combatPanel" type="button" role="tab" aria-controls="combatPanel" aria-selected="true">
-                <i class="bi bi-crosshair"></i>
-                Combat
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="battleLogTab" data-bs-toggle="tab" data-bs-target="#battleLogPanel" type="button" role="tab" aria-controls="battleLogPanel" aria-selected="false">
-                <i class="bi bi-list-ul"></i>
-                <span id="fightLogTitle">Fight Log</span>
-              </button>
-            </li>
-          </ul>
-          <div id="battleMeta" class="dungeon-battle-meta text-muted"></div>
-        </div>
         <div class="card dungeon-battle-card">
           <div class="card-header hunt-card-header dungeon-battle-header">
             <div id="huntTitle">Dungeon</div>
@@ -71,9 +54,10 @@
               </button>
             </div>
           </div>
+          <div id="huntProgress" class="hunt-floor-track dungeon-card-progress" aria-hidden="true"><span></span></div>
           <div class="card-body dungeon-battle-body">
             <div class="tab-content dungeon-tab-content">
-              <div class="tab-pane fade show active" id="combatPanel" role="tabpanel" aria-labelledby="combatTab" tabindex="0">
+              <div class="tab-pane fade show active" id="combatPanel" role="tabpanel" aria-label="Combat" tabindex="0">
                 <div id="runEmpty" class="empty-state">
                   <img src="/app/images/demons/thumbnails/1.png" alt="">
                   <p class="mb-0 text-muted">Start a dungeon to face a team of demons.</p>
@@ -86,7 +70,7 @@
                       </div>
                       <div id="teamGrid"></div>
                     </section>
-                    <div class="vs-divider dungeon-vs"><span>VS</span></div>
+                    <div class="vs-divider dungeon-vs" id="dungeonJoiner"><span>VS</span></div>
                     <section class="battle-side battle-side-enemy" aria-label="Enemies">
                       <div class="battle-side-heading" id="enemySideTitle">
                         <span>Enemies</span>
@@ -96,7 +80,7 @@
                   </div>
                 </div>
               </div>
-              <div class="tab-pane fade" id="battleLogPanel" role="tabpanel" aria-labelledby="battleLogTab" tabindex="0">
+              <div class="tab-pane fade" id="battleLogPanel" role="tabpanel" aria-label="Fight Log" tabindex="0">
                 <div id="fightLog" class="fight-log text-muted">Battle actions will appear here.</div>
               </div>
             </div>
