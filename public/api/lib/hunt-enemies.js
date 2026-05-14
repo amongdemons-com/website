@@ -55,8 +55,8 @@ function getEnemyPositions(size) {
 }
 
 function getEnemyPreferredPosition(demon) {
-  if (Number(demon.typeId) === 1) return 'front';
-  if ([2, 4].includes(Number(demon.typeId))) return 'back';
+  if ([1, 5, 7, 8, 9].includes(Number(demon.typeId))) return 'front';
+  if ([2, 3, 4, 6, 10, 11].includes(Number(demon.typeId))) return 'back';
   return demon.position === 'back' ? 'back' : 'front';
 }
 
