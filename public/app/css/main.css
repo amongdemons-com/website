@@ -1115,10 +1115,14 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-battle-body {
+    position: relative;
     display: grid;
     min-height: 0;
     overflow: hidden;
     padding-top: 1rem;
+    background:
+        linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
+        url("/app/images/amongdemons_dungeon_background.png") center / cover no-repeat;
 }
 
 .dungeon-arena {
