@@ -9,6 +9,7 @@
   const MAX_VISIBLE_TYPES = 11;
   const currentType = getCurrentTypeFromPath();
   const elements = getPageElements();
+  const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
 
   if (!elements) return;
 
@@ -21,7 +22,7 @@
       const totalTypes = getTotalTypes(catalog.types, catalog.demons);
 
       elements.title.textContent = catalog.types[currentType]?.name || 'Unknown';
-      elements.grid.innerHTML = renderDemonCards(catalog.demonsByType[currentType] || []);
+      elements.grid.innerHTML = renderDemonCards(catalog.demonsByType[currentType] || [], catalog.types);
       elements.pagination.innerHTML = renderPagination(totalTypes);
       renderAdjacentTypeLinks(totalTypes);
     } catch (error) {
@@ -55,15 +56,13 @@
     return response.json();
   }
 
-  function renderDemonCards(demons) {
+  function renderDemonCards(demons, types) {
     return demons.map((demon) => `
       <div class="col">
-        <div class="card h-100">
-          <img src="${demon.image_url}" class="card-img-top" alt="${capitalize(demon.rarity)}" style="width: 100%; height: auto;">
-          <div class="card-body text-center">
-            <h5 class="card-title m-0 ad-${demon.rarity}">${capitalize(demon.rarity)}</h5>
-          </div>
-        </div>
+        ${renderSharedDemonCard({
+          ...demon,
+          species: types[String(demon.type)]?.name || `Type ${demon.type}`
+        })}
       </div>
     `).join('');
   }
@@ -133,11 +132,6 @@
     if (ogImageElement) {
       ogImageElement.setAttribute('content', `/app/images/demons/thumbnails/${currentType}.png`);
     }
-  }
-
-  function capitalize(str) {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
   function onReady(callback) {

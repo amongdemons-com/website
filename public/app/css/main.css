@@ -1797,3 +1797,732 @@ body.dungeon-page .navbar {
     color: #FAC51C !important;
     font-weight: bold;
 }
+
+/* Visual theme: misted dungeon, teal magic, restrained ember accents */
+:root {
+    --ad-bg: #071013;
+    --ad-bg-soft: #0d191d;
+    --ad-surface: rgba(13,25,29,0.86);
+    --ad-surface-soft: rgba(20,35,40,0.72);
+    --ad-surface-glass: rgba(10,18,22,0.58);
+    --ad-border: rgba(161,212,201,0.16);
+    --ad-border-strong: rgba(161,212,201,0.28);
+    --ad-text: #eef8f5;
+    --ad-muted: #9fb6b2;
+    --ad-faint: #6f8582;
+    --ad-teal: #6fd6bd;
+    --ad-teal-soft: rgba(111,214,189,0.16);
+    --ad-green: #80d697;
+    --ad-violet: #9c7ac8;
+    --ad-ember: #e78a55;
+    --ad-ember-soft: rgba(231,138,85,0.16);
+    --ad-gold: #e8c76a;
+    --ad-danger: #e4685e;
+    --ad-radius: 6px;
+}
+
+html,
+body {
+    background:
+        radial-gradient(circle at 16% 0%, rgba(111,214,189,0.1), transparent 28rem),
+        radial-gradient(circle at 86% 8%, rgba(156,122,200,0.08), transparent 24rem),
+        var(--ad-bg);
+    color: var(--ad-text);
+}
+
+a {
+    color: var(--ad-teal);
+}
+
+a:hover {
+    color: #a5ead9;
+}
+
+.text-muted,
+.text-secondary {
+    color: var(--ad-muted) !important;
+}
+
+.bg-dark,
+.navbar.bg-dark {
+    background: rgba(6,13,16,0.92) !important;
+}
+
+.navbar,
+.border-bottom {
+    border-color: var(--ad-border) !important;
+}
+
+.navbar-brand,
+.nav-link {
+    color: var(--ad-text);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: var(--ad-muted);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link.active {
+    color: var(--ad-teal);
+}
+
+.dropdown-menu,
+.modal-content,
+.card {
+    border-color: var(--ad-border);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.035), transparent 42%),
+        var(--ad-surface);
+    color: var(--ad-text);
+    box-shadow: 0 18px 48px rgba(0,0,0,0.26);
+}
+
+.card-header,
+.modal-header,
+.modal-footer {
+    border-color: var(--ad-border);
+    background: rgba(6,13,16,0.28);
+}
+
+.card-body {
+    color: var(--ad-text);
+}
+
+.form-control,
+.form-select {
+    border-color: var(--ad-border);
+    background-color: rgba(5,12,15,0.68);
+    color: var(--ad-text);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: rgba(111,214,189,0.58);
+    box-shadow: 0 0 0 0.2rem rgba(111,214,189,0.14);
+}
+
+.btn {
+    border-radius: var(--ad-radius);
+    font-weight: 700;
+}
+
+.btn-primary {
+    --bs-btn-color: #04100f;
+    --bs-btn-bg: var(--ad-teal);
+    --bs-btn-border-color: var(--ad-teal);
+    --bs-btn-hover-color: #03100e;
+    --bs-btn-hover-bg: #8be4d0;
+    --bs-btn-hover-border-color: #8be4d0;
+    --bs-btn-active-color: #03100e;
+    --bs-btn-active-bg: #5fc7af;
+    --bs-btn-active-border-color: #5fc7af;
+}
+
+.btn-success {
+    --bs-btn-color: #06110a;
+    --bs-btn-bg: var(--ad-green);
+    --bs-btn-border-color: var(--ad-green);
+    --bs-btn-hover-color: #06110a;
+    --bs-btn-hover-bg: #9ce5ae;
+    --bs-btn-hover-border-color: #9ce5ae;
+}
+
+.btn-warning {
+    --bs-btn-color: #170e03;
+    --bs-btn-bg: var(--ad-gold);
+    --bs-btn-border-color: var(--ad-gold);
+    --bs-btn-hover-color: #170e03;
+    --bs-btn-hover-bg: #f1d984;
+    --bs-btn-hover-border-color: #f1d984;
+}
+
+.btn-danger,
+.btn-outline-danger:hover {
+    --bs-btn-bg: var(--ad-danger);
+    --bs-btn-border-color: var(--ad-danger);
+}
+
+.btn-outline-light {
+    --bs-btn-color: var(--ad-text);
+    --bs-btn-border-color: var(--ad-border-strong);
+    --bs-btn-hover-color: #06110f;
+    --bs-btn-hover-bg: var(--ad-teal);
+    --bs-btn-hover-border-color: var(--ad-teal);
+}
+
+.btn-hunt-battle {
+    --bs-btn-color: #170a03;
+    --bs-btn-bg: var(--ad-ember);
+    --bs-btn-border-color: var(--ad-ember);
+    --bs-btn-hover-color: #170a03;
+    --bs-btn-hover-bg: #f0a16f;
+    --bs-btn-hover-border-color: #f0a16f;
+    --bs-btn-active-color: #170a03;
+    --bs-btn-active-bg: #d77745;
+    --bs-btn-active-border-color: #d77745;
+}
+
+#pagination .page-link,
+.page-link {
+    border-color: var(--ad-border);
+    background: rgba(8,18,21,0.72);
+    color: var(--ad-muted);
+}
+
+#pagination .page-link:hover,
+.page-link:hover {
+    background: var(--ad-teal-soft);
+    color: var(--ad-text);
+}
+
+#pagination .page-item.active .page-link,
+.page-item.active .page-link {
+    background-color: var(--ad-teal) !important;
+    border-color: var(--ad-teal) !important;
+    color: #04100f !important;
+}
+
+#demonTypesDropdown li:hover {
+    background-color: rgba(111,214,189,0.16) !important;
+}
+
+#demonTypesDropdown a.dropdown-item {
+    color: var(--ad-muted);
+}
+
+#demonTypesDropdown a.dropdown-item:hover {
+    color: var(--ad-text);
+}
+
+#collection .nfts .element {
+    color: var(--ad-muted);
+}
+
+#collection .nfts .element img {
+    border-color: var(--ad-border);
+}
+
+#collection .nfts .element a.id,
+.rank-sort-link {
+    color: var(--ad-text);
+}
+
+#collection .nfts .element a.id:hover,
+#collection .more a,
+.rank-sort-link:hover,
+.rank-sort-link.active {
+    color: var(--ad-ember);
+}
+
+.stat-box,
+.team-editor-card,
+.swap-choice,
+.cashout-demon-card,
+.reward-item,
+.hunt-phase-panel {
+    border-color: var(--ad-border);
+    background: var(--ad-surface-glass);
+}
+
+.hunt-card-header {
+    background:
+        linear-gradient(90deg, rgba(111,214,189,0.08), transparent 45%, rgba(156,122,200,0.08)),
+        rgba(6,13,16,0.44);
+}
+
+.dungeon-title-text,
+.hunt-floor-title strong {
+    color: var(--ad-text);
+}
+
+.dungeon-header-brand i,
+.hunt-floor-label,
+.dungeon-action-or {
+    color: var(--ad-muted);
+}
+
+.dungeon-card-progress {
+    background: rgba(161,212,201,0.07);
+}
+
+.hunt-floor-track span {
+    background: linear-gradient(90deg, rgba(111,214,189,0.58), rgba(156,122,200,0.36));
+}
+
+.dungeon-battle-card {
+    border-color: rgba(161,212,201,0.2);
+    background: #071013;
+}
+
+.dungeon-battle-body {
+    background:
+        linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
+        radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
+        url("/app/images/amongdemons_dungeon_background.png") center / cover no-repeat;
+}
+
+.formation-lane {
+    border-color: rgba(161,212,201,0.16);
+    background: rgba(7,18,20,0.42);
+}
+
+.battle-side-player .formation-lane-front,
+.battle-side-player .formation-lane-back {
+    border-color: rgba(111,214,189,0.26);
+    background: rgba(111,214,189,0.08);
+}
+
+.battle-side-enemy .formation-lane-front,
+.battle-side-enemy .formation-lane-back {
+    border-color: rgba(156,122,200,0.26);
+    background: rgba(156,122,200,0.08);
+}
+
+.battle-side-enemy.is-recruit-side .formation-lane {
+    border-color: rgba(128,214,151,0.3);
+    background: rgba(128,214,151,0.09);
+}
+
+.formation-lane-label,
+.battle-side-heading {
+    color: #cfe2dc;
+}
+
+.formation-empty {
+    border-color: rgba(161,212,201,0.18);
+    color: rgba(207,226,220,0.54);
+}
+
+.dungeon-vs {
+    color: var(--ad-gold);
+}
+
+.dungeon-vs.is-recruiting,
+.battle-side-enemy.is-recruit-side .battle-side-heading,
+.dungeon-battle-outcome.is-victory,
+.battle-side-count {
+    color: var(--ad-green);
+}
+
+.dungeon-battle-outcome.is-defeat {
+    color: #f09a90;
+}
+
+.hunt-demon-card {
+    background: rgba(3,9,11,0.42);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.05),
+        0 10px 26px rgba(0,0,0,0.24);
+}
+
+.hunt-demon-card-body {
+    background: linear-gradient(to top, rgba(3,8,10,0.95), rgba(3,8,10,0.62) 58%, transparent);
+}
+
+.demon-card-grid .col,
+.team-editor-list .col,
+#cashoutModalBody .col,
+.reward-item {
+    display: flex;
+    justify-content: center;
+}
+
+.reward-item {
+    flex-direction: column;
+    align-items: center;
+}
+
+.demon-card-grid .hunt-demon-card,
+.team-editor-list .hunt-demon-card,
+#cashoutModalBody .hunt-demon-card,
+.reward-item .hunt-demon-card {
+    width: min(100%, 9.25rem);
+    flex: 0 0 auto;
+}
+
+.hunt-demon-card.team-editor-card,
+.hunt-demon-card.cashout-demon-card,
+.hunt-demon-card.reward-demon-card {
+    display: block;
+    border-width: 2px;
+    border-top-width: 5px;
+    padding: 0;
+    text-align: left;
+}
+
+.hunt-demon-card .hunt-demon-card-image img {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: center 22%;
+}
+
+.combat-hp-bar {
+    background: rgba(207,226,220,0.18);
+}
+
+.combat-hp-fill {
+    background: linear-gradient(90deg, #62cfa9, #83db91);
+}
+
+.combat-stat-strip,
+.combat-hp-meta,
+.fight-log-action {
+    color: var(--ad-text);
+}
+
+.combat-stat-icon,
+.combat-stat-strip i,
+.combat-hp-meta i,
+.fight-log-position {
+    color: var(--ad-muted);
+}
+
+.hunt-demon-card.is-attacking,
+.hunt-demon-card.active,
+.hunt-choice-card:hover,
+.hunt-choice-card.active,
+.team-editor-card.active,
+.cashout-demon-card.active {
+    border-color: rgba(232,199,106,0.8);
+    box-shadow: 0 0 0 2px rgba(232,199,106,0.16), 0 0 20px rgba(232,199,106,0.16);
+}
+
+.attack-zap-trail {
+    stroke: var(--ad-gold);
+    filter: drop-shadow(0 0 6px rgba(232,199,106,0.78));
+}
+
+.attack-zap-impact {
+    fill: var(--ad-gold);
+    filter: drop-shadow(0 0 6px rgba(232,199,106,0.78));
+}
+
+.fight-log {
+    scrollbar-color: rgba(111,214,189,0.38) rgba(255,255,255,0.06);
+}
+
+.fight-log-row {
+    border-bottom-color: rgba(161,212,201,0.1);
+}
+
+.fight-log-row.is-player-action,
+.fight-log-row.is-player-action.active {
+    background: rgba(111,214,189,0.1);
+    border-left-color: var(--ad-teal);
+}
+
+.fight-log-row.is-enemy-action,
+.fight-log-row.is-enemy-action.active {
+    background: rgba(156,122,200,0.1);
+    border-left-color: var(--ad-violet);
+}
+
+.is-player-action .fight-log-side {
+    background: rgba(111,214,189,0.18);
+    color: #a5ead9;
+}
+
+.is-enemy-action .fight-log-side {
+    background: rgba(156,122,200,0.2);
+    color: #d5c1f0;
+}
+
+.fight-log-row.is-player-action .fight-log-damage {
+    color: #a5ead9;
+}
+
+.fight-log-row.is-enemy-action .fight-log-damage {
+    color: #d5c1f0;
+}
+
+.hunt-phase-eyebrow,
+.swap-note,
+.dungeon-reward-card .dungeon-reward-title,
+.current-player-rank td:first-child {
+    color: var(--ad-gold) !important;
+}
+
+.strategy-phase-panel {
+    border-left-color: var(--ad-teal);
+    background: rgba(111,214,189,0.08);
+}
+
+.recruit-phase-panel,
+.dungeon-reward-card {
+    border-left-color: rgba(232,199,106,0.45);
+    background: rgba(8,18,21,0.56);
+}
+
+.rank-table thead th {
+    background: rgba(111,214,189,0.16);
+    border-bottom-color: var(--ad-border-strong);
+}
+
+.current-player-rank td {
+    background: rgba(232,199,106,0.11) !important;
+}
+
+body.rankings-page {
+    min-height: 100%;
+    background:
+        linear-gradient(rgba(6,13,16,0.48), rgba(6,13,16,0.76)),
+        radial-gradient(circle at 50% 8%, rgba(232,199,106,0.12), transparent 24rem),
+        url("/app/images/amongdemons_rankings_background.png") center top / cover fixed no-repeat,
+        var(--ad-bg);
+}
+
+.rankings-page main {
+    min-height: calc(100vh - 170px);
+}
+
+.rankings-page h1 {
+    color: var(--ad-text);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.42);
+}
+
+.rankings-page .card {
+    border-color: rgba(232,199,106,0.18);
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.045), transparent 36%),
+        rgba(7,16,19,0.78);
+    backdrop-filter: blur(2px);
+}
+
+.rankings-page .table-dark {
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: rgba(255,255,255,0.025);
+    --bs-table-hover-bg: rgba(111,214,189,0.08);
+    --bs-table-border-color: rgba(161,212,201,0.12);
+    color: var(--ad-text);
+}
+
+body.play-page {
+    min-height: 100%;
+    background:
+        linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.76)),
+        radial-gradient(circle at 26% 16%, rgba(111,214,189,0.13), transparent 24rem),
+        radial-gradient(circle at 78% 20%, rgba(232,199,106,0.1), transparent 22rem),
+        url("/app/images/amongdemons_home_background.png") center top / cover fixed no-repeat,
+        var(--ad-bg);
+}
+
+.play-page main {
+    min-height: calc(100vh - 170px);
+}
+
+.play-page h1 {
+    color: var(--ad-text);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.46);
+}
+
+.play-page .card {
+    border-color: rgba(111,214,189,0.18);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.052), transparent 38%),
+        rgba(7,16,19,0.8);
+    backdrop-filter: blur(2px);
+}
+
+.play-page .card-header {
+    border-bottom-color: rgba(161,212,201,0.13);
+    background: rgba(4,10,12,0.36);
+}
+
+.play-page .stat-box {
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.04), transparent),
+        rgba(4,10,12,0.36);
+}
+
+body.collection-page {
+    min-height: 100%;
+    background:
+        linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.78)),
+        radial-gradient(circle at 18% 18%, rgba(111,214,189,0.14), transparent 24rem),
+        radial-gradient(circle at 86% 14%, rgba(232,199,106,0.11), transparent 22rem),
+        url("/app/images/amongdemons_collection_background.png") center top / cover fixed no-repeat,
+        var(--ad-bg);
+}
+
+.collection-page main {
+    min-height: calc(100vh - 170px);
+}
+
+.collection-page h1 {
+    color: var(--ad-text);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.46);
+}
+
+.collection-page .card {
+    border-color: rgba(111,214,189,0.18);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.05), transparent 38%),
+        rgba(7,16,19,0.78);
+    backdrop-filter: blur(2px);
+}
+
+.collection-gallery-card {
+    overflow: hidden;
+}
+
+.collection-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    min-height: 1.45rem;
+    padding: 0.12rem 0.55rem;
+    border: 1px solid rgba(111,214,189,0.28);
+    border-radius: 999px;
+    background: rgba(111,214,189,0.12);
+    color: var(--ad-green);
+    font-size: 0.8rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.collection-demon-card {
+    background: rgba(3,9,11,0.55);
+}
+
+.collection-demon-card img {
+    background: rgba(3,9,11,0.4);
+}
+
+.collection-empty-state {
+    min-height: 320px;
+    border: 1px dashed rgba(161,212,201,0.2);
+    border-radius: var(--ad-radius);
+    background: rgba(4,10,12,0.32);
+}
+
+body.summon-page {
+    min-height: 100%;
+    background:
+        linear-gradient(rgba(6,13,16,0.48), rgba(6,13,16,0.78)),
+        radial-gradient(circle at 50% 34%, rgba(111,214,189,0.18), transparent 22rem),
+        radial-gradient(circle at 82% 18%, rgba(232,199,106,0.1), transparent 22rem),
+        url("/app/images/amongdemons_summon_background.png") center top / cover fixed no-repeat,
+        var(--ad-bg);
+}
+
+.summon-page main {
+    min-height: calc(100vh - 170px);
+}
+
+.summon-page h1 {
+    color: var(--ad-text);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.46);
+}
+
+.summon-page .card {
+    border-color: rgba(111,214,189,0.2);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.055), transparent 38%),
+        rgba(7,16,19,0.78);
+    backdrop-filter: blur(2px);
+}
+
+.summon-balance-card {
+    overflow: hidden;
+}
+
+.summon-souls-value {
+    color: var(--ad-gold);
+    font-size: clamp(3rem, 8vw, 5.75rem);
+    font-weight: 800;
+    line-height: 0.95;
+    text-shadow: 0 0 22px rgba(232,199,106,0.22);
+}
+
+.summon-ritual-card .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-height: 420px;
+}
+
+.summon-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.45rem;
+    padding: 0.12rem 0.55rem;
+    border: 1px solid rgba(232,199,106,0.28);
+    border-radius: 999px;
+    background: rgba(232,199,106,0.1);
+    color: var(--ad-gold);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.summon-circle {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 260px;
+    border-radius: var(--ad-radius);
+    background:
+        radial-gradient(circle, rgba(111,214,189,0.22), rgba(111,214,189,0.08) 34%, transparent 60%),
+        rgba(4,10,12,0.26);
+    overflow: hidden;
+}
+
+.summon-circle::before,
+.summon-circle::after,
+.summon-circle span {
+    content: "";
+    position: absolute;
+    border: 1px solid rgba(111,214,189,0.34);
+    border-radius: 50%;
+    box-shadow: 0 0 28px rgba(111,214,189,0.12);
+}
+
+.summon-circle::before {
+    width: min(260px, 70%);
+    aspect-ratio: 1 / 1;
+}
+
+.summon-circle::after {
+    width: min(190px, 52%);
+    aspect-ratio: 1 / 1;
+    border-color: rgba(232,199,106,0.28);
+}
+
+.summon-circle span {
+    width: min(84px, 22%);
+    aspect-ratio: 1 / 1;
+    border: 0;
+    background: radial-gradient(circle, rgba(154,241,222,0.72), rgba(111,214,189,0.1) 58%, transparent 72%);
+    filter: blur(0.2px);
+}
+
+.summon-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 5rem;
+}
+
+.summon-option small {
+    color: var(--ad-gold);
+    font-weight: 700;
+}

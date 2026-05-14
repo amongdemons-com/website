@@ -4,14 +4,14 @@
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rankings - Among Demons</title>
-    <meta name="description" content="View the top Among Demons hunters.">
-    <meta property="og:image" content="/app/images/demons/thumbnails/1.png">
+    <title>Collection - Among Demons</title>
+    <meta name="description" content="View the demons collected during Among Demons dungeon runs.">
+    <meta property="og:image" content="/app/images/amongdemons_collection_background.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css" rel="stylesheet">
   </head>
-  <body class="rankings-page">
+  <body class="collection-page">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
       <div class="container-fluid">
         <a class="navbar-brand" href="/">
@@ -29,41 +29,46 @@
             </li>
             <li class="nav-item"><a class="nav-link" href="/play">Play</a></li>
             <li class="nav-item"><a class="nav-link" href="/dungeon">Dungeon</a></li>
-            <li class="nav-item"><a class="nav-link" href="/collection">Collection</a></li>
+            <li class="nav-item"><a class="nav-link active" href="/collection">Collection</a></li>
             <li class="nav-item"><a class="nav-link" href="/summon">Summon</a></li>
-            <li class="nav-item"><a class="nav-link active" href="/rankings">Rankings</a></li>
+            <li class="nav-item"><a class="nav-link" href="/rankings">Rankings</a></li>
           </ul>
           <div class="d-flex align-items-center gap-2">
-            <a class="btn btn-outline-light btn-sm" href="/login">Login</a>
-            <a class="btn btn-primary btn-sm" href="/register">Register</a>
+            <span class="text-secondary" id="navPlayerName"></span>
+            <button class="btn btn-outline-danger btn-sm" id="logoutBtn" type="button" title="Logout">
+              <i class="bi bi-box-arrow-right"></i>
+            </button>
           </div>
         </div>
       </div>
     </nav>
 
     <main class="container my-4">
-      <div class="py-3 mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 py-3 mb-4">
         <div>
-          <h1 class="display-5 mb-1">Rankings</h1>
-          <p class="mb-0 text-muted">Top 100 hunters.</p>
+          <h1 class="display-5 mb-1">Collection</h1>
+          <p class="mb-0 text-muted" id="collectionSummary">Loading collected demons...</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-primary" href="/dungeon">
+            <i class="bi bi-play-fill"></i>
+            Dungeon
+          </a>
+          <button class="btn btn-outline-light" id="refreshBtn" type="button" title="Refresh">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
         </div>
       </div>
 
-      <div class="alert d-none" id="rankMessage" role="alert"></div>
+      <div class="alert d-none" id="collectionMessage" role="alert"></div>
 
-      <section class="card">
-        <div class="table-responsive">
-          <table class="table table-dark table-hover align-middle mb-0 rank-table">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Hunter</th>
-                <th scope="col"><a href="/rankings" class="rank-sort-link" data-sort="level">Level</a></th>
-                <th scope="col"><a href="/rankings/souls" class="rank-sort-link" data-sort="souls">Souls</a></th>
-              </tr>
-            </thead>
-            <tbody id="rankBody"></tbody>
-          </table>
+      <section class="card collection-gallery-card">
+        <div class="card-header d-flex align-items-center justify-content-between gap-3">
+          <span>Collected Demons</span>
+          <span class="collection-count" id="collectionCount">0</span>
+        </div>
+        <div class="card-body">
+          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3 demon-card-grid" id="collectionGrid"></div>
         </div>
       </section>
     </main>
@@ -77,6 +82,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/app/js/session.js"></script>
-    <script src="/app/js/rankings-ui.js"></script>
+    <script src="/app/js/demon-cards.js"></script>
+    <script src="/app/js/collection-ui.js"></script>
   </body>
 </html>

@@ -2,6 +2,8 @@
   'use strict';
 
   const api = window.AmongDemons.api;
+  const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
+  const renderSharedCombatStats = window.AmongDemons.ui.renderCombatStats;
   const RUN_KEY = 'amongdemons-current-run';
   const session = window.AmongDemons.getSession();
   const state = {
@@ -412,11 +414,12 @@
 
     return `
       <div class="col">
-        <button class="cashout-demon-card ${active ? 'active' : ''}" type="button" data-cashout-key="${escapeHtml(candidate.key)}">
-          <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="">
-          <span class="cashout-demon-name"><span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(capitalize(demon.rarity))}</span> ${escapeHtml(demon.species || 'Demon')}</span>
-          ${renderCombatStats(demon)}
-        </button>
+        ${renderSharedDemonCard(demon, {
+          tag: 'button',
+          className: 'cashout-demon-card',
+          active,
+          attributes: { 'data-cashout-key': candidate.key }
+        })}
       </div>
     `;
   }
@@ -611,22 +614,15 @@
   }
 
   function renderChoiceCard(demon, options) {
-    const rarityColor = getRarityColor(demon.rarity);
-
-    return `
-      <button class="hunt-demon-card hunt-choice-card ${options.selected ? 'active' : ''}" style="--rarity-color: ${rarityColor}" type="button" data-choice-type="${options.type}" data-choice-value="${options.value}">
-        <div class="hunt-demon-card-image" aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity">
-          <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="" draggable="false">
-          <span class="hunt-demon-rarity-gem" aria-hidden="true"></span>
-        </div>
-        <div class="hunt-demon-card-body">
-          <div class="hunt-demon-card-title">
-            <span class="text-white">${escapeHtml(demon.species || 'Demon')}</span>
-          </div>
-          ${renderCombatStats(demon)}
-        </div>
-      </button>
-    `;
+    return renderSharedDemonCard(demon, {
+      tag: 'button',
+      className: 'hunt-choice-card',
+      active: options.selected,
+      attributes: {
+        'data-choice-type': options.type,
+        'data-choice-value': options.value
+      }
+    });
   }
 
   function bindStarterButtons() {
@@ -1376,14 +1372,16 @@
             const displayDemon = isSwapTarget && previewReward ? previewReward.demon : demon;
             return `
             <div class="col">
-              <button class="team-editor-card ${isSwapTarget ? 'active' : ''} ${needsSwap ? 'is-clickable swap-choice' : ''}" type="button" data-swap-id="${escapeHtml(demon.instanceId)}" ${needsSwap && state.selectedRecruitRewardId ? '' : 'disabled'}>
-                <img src="${escapeHtml(displayDemon.imageUrl || displayDemon.image_url)}" alt="">
-                <div class="team-editor-card-body">
-                  <h4 class="h6 mb-1"><span class="ad-${escapeHtml(displayDemon.rarity)}">${escapeHtml(capitalize(displayDemon.rarity))}</span> ${escapeHtml(displayDemon.species || 'Demon')}</h4>
-                  ${renderCombatStats(displayDemon)}
-                  ${isSwapTarget ? `<p class="swap-note mb-0 mt-2">Replacing ${escapeHtml(demon.species || 'Demon')}</p>` : ''}
-                </div>
-              </button>
+              ${renderSharedDemonCard(displayDemon, {
+                tag: 'button',
+                className: `team-editor-card ${needsSwap ? 'is-clickable swap-choice' : ''}`,
+                active: isSwapTarget,
+                attributes: {
+                  'data-swap-id': demon.instanceId,
+                  disabled: !(needsSwap && state.selectedRecruitRewardId)
+                },
+                footerHtml: isSwapTarget ? `<p class="swap-note mb-0 mt-2">Replacing ${escapeHtml(demon.species || 'Demon')}</p>` : ''
+              })}
             </div>
           `;
           }).join('')}
@@ -1415,14 +1413,7 @@
   }
 
   function renderRewardDemon(demon) {
-    return `
-      <div class="text-center">
-        <img src="${escapeHtml(demon.imageUrl)}" alt="" class="reward-image mb-2">
-        <h3 class="h6 mb-1">${escapeHtml(demon.species)}</h3>
-        <p class="mb-0"><span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(capitalize(demon.rarity))}</span></p>
-        ${renderCombatStats(demon)}
-      </div>
-    `;
+    return renderSharedDemonCard(demon, { className: 'reward-demon-card' });
   }
 
   function bindRewardButtons() {
@@ -1838,7 +1829,6 @@
   }
 
   function renderDemonCard(demon, options) {
-    const position = getDemonPosition(demon);
     const isPlayer = options.side !== 'enemy';
     const isRecruitPoolDemon = Boolean(options.allowRecruitDrag && demon.recruitSource);
     const canDropRecruit = Boolean(state.isRecruiting && isPlayer);
@@ -1846,27 +1836,21 @@
     const draggable = isRecruitPoolDemon || canDragFormation;
     const classes = [
       'hunt-demon-card',
-      Number(demon.hp) <= 0 ? 'is-defeated' : '',
       isRecruitPoolDemon ? 'is-recruit-draggable' : '',
       canDropRecruit ? 'is-recruit-drop-target' : '',
-      state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId ? 'active' : ''
     ].filter(Boolean).join(' ');
-    const rarityColor = getRarityColor(demon.rarity);
 
-    return `
-      <div class="${classes}" style="--rarity-color: ${rarityColor}" data-instance-id="${escapeHtml(demon.instanceId)}" ${demon.rewardId ? `data-reward-id="${escapeHtml(demon.rewardId)}"` : ''} ${demon.recruitSource ? `data-recruit-source="${escapeHtml(demon.recruitSource)}"` : ''} ${draggable ? 'draggable="true"' : ''}>
-        <div class="hunt-demon-card-image" aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity">
-          <img src="${escapeHtml(demon.imageUrl || demon.image_url)}" alt="" draggable="false">
-          <span class="hunt-demon-rarity-gem" aria-hidden="true"></span>
-        </div>
-        <div class="hunt-demon-card-body">
-          <div class="hunt-demon-card-title">
-            <span class="text-white">${escapeHtml(demon.species || 'Demon')}</span>
-          </div>
-          ${renderCombatStats(demon)}
-        </div>
-      </div>
-    `;
+    return renderSharedDemonCard(demon, {
+      className: classes.replace('hunt-demon-card', '').trim(),
+      defeated: Number(demon.hp) <= 0,
+      active: state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId,
+      attributes: {
+        'data-instance-id': demon.instanceId,
+        'data-reward-id': demon.rewardId || null,
+        'data-recruit-source': demon.recruitSource || null,
+        draggable
+      }
+    });
   }
 
   function getDemonPosition(demon, index = 0) {
@@ -1874,50 +1858,7 @@
   }
 
   function renderCombatStats(demon) {
-    const currentHp = Math.max(0, Number(demon.hp) || 0);
-    const maxHp = Math.max(currentHp, Number(demon.maxHp) || currentHp || 1);
-    const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
-
-    return `
-      <div class="combat-stat-strip" aria-label="Combat stats">
-        <span>${renderAttackIcon()}${demon.atk}</span>
-        <span>${renderSpeedIcon()}${demon.speed}</span>
-      </div>
-      <div class="combat-hp-bar" aria-label="HP ${currentHp} of ${maxHp}">
-        <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${hpPercent}%"></div>
-      </div>
-      <div class="combat-hp-meta"><span class="js-demon-hp">${currentHp}</span> / ${maxHp}<i class="bi bi-droplet-fill"></i></div>
-    `;
-  }
-
-  function getRarityColor(rarity) {
-    const colors = {
-      common: '#D1D5D8',
-      uncommon: '#41A85F',
-      rare: '#2C82C9',
-      epic: '#9365B8',
-      legendary: '#FAC51C',
-      mythic: '#E25041'
-    };
-    return colors[rarity] || colors.common;
-  }
-
-  function renderAttackIcon() {
-    return `
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512" class="combat-stat-icon" aria-hidden="true" focusable="false">
-        <defs></defs>
-        <path class="fa-secondary" d="M19.1 .3C13.9-.7 8.5 .9 4.7 4.7S-.7 13.9 .3 19.1L14.4 89.6c1.9 9.3 6.4 17.8 13.1 24.5L329.4 416 416 329.4 114.2 27.5c-6.7-6.7-15.2-11.3-24.5-13.1L19.1 .3zM146.7 278.6L96 329.4 182.6 416l50.7-50.7-86.6-86.6zm218.5-45.3L484.5 114.2c6.7-6.7 11.3-15.2 13.1-24.5l14.1-70.5c1-5.2-.6-10.7-4.4-14.5s-9.2-5.4-14.5-4.4L422.4 14.4c-9.3 1.9-17.8 6.4-24.5 13.1L278.6 146.7l86.6 86.6z"></path>
-        <path class="fa-primary fa-secondary" d="M75.3 308.7c-6.2-6.2-16.4-6.2-22.6 0l-16 16c-4.7 4.7-6 11.8-3.3 17.8l27.5 62L4.7 460.7c-6.2 6.2-6.2 16.4 0 22.6l24 24c6.2 6.2 16.4 6.2 22.6 0l56.2-56.2 62 27.5c6 2.7 13.1 1.4 17.8-3.3l16-16c6.2-6.2 6.2-16.4 0-22.6l-128-128zm361.4 0l-128 128c-6.2 6.2-6.2 16.4 0 22.6l16 16c4.7 4.7 11.8 6 17.8 3.3l62-27.5 56.2 56.2c6.2 6.2 16.4 6.2 22.6 0l24-24c6.2-6.2 6.2-16.4 0-22.6l-56.2-56.2 27.5-62c2.7-6.1 1.4-13.1-3.3-17.8l-16-16c-6.2-6.2-16.4-6.2-22.6 0z"></path>
-      </svg>
-    `;
-  }
-
-  function renderSpeedIcon() {
-    return `
-      <svg class="combat-stat-icon combat-stat-icon-stroke" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />
-      </svg>
-    `;
+    return renderSharedCombatStats(demon);
   }
 
   function renderEmptyText(text) {

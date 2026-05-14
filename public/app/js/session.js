@@ -68,6 +68,7 @@
   }
 
   window.AmongDemons = {
+    ...(window.AmongDemons || {}),
     api,
     clearSession,
     getSession,

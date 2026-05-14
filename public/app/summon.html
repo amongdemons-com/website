@@ -4,14 +4,14 @@
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Play - Among Demons</title>
-    <meta name="description" content="Play and test the Among Demons prototype.">
-    <meta property="og:image" content="/app/images/demons/thumbnails/1.png">
+    <title>Summon - Among Demons</title>
+    <meta name="description" content="Summon new demons with souls in Among Demons.">
+    <meta property="og:image" content="/app/images/amongdemons_summon_background.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css" rel="stylesheet">
   </head>
-  <body class="play-page">
+  <body class="summon-page">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
       <div class="container-fluid">
         <a class="navbar-brand" href="/">
@@ -27,10 +27,10 @@
               <a class="nav-link dropdown-toggle" href="#" id="demonsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Demons</a>
               <ul class="dropdown-menu dropdown-menu-end" id="demonTypesDropdown"></ul>
             </li>
-            <li class="nav-item"><a class="nav-link active" href="/play">Play</a></li>
+            <li class="nav-item"><a class="nav-link" href="/play">Play</a></li>
             <li class="nav-item"><a class="nav-link" href="/dungeon">Dungeon</a></li>
             <li class="nav-item"><a class="nav-link" href="/collection">Collection</a></li>
-            <li class="nav-item"><a class="nav-link" href="/summon">Summon</a></li>
+            <li class="nav-item"><a class="nav-link active" href="/summon">Summon</a></li>
             <li class="nav-item"><a class="nav-link" href="/rankings">Rankings</a></li>
           </ul>
           <div class="d-flex align-items-center gap-2">
@@ -46,13 +46,13 @@
     <main class="container my-4">
       <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 py-3 mb-4">
         <div>
-          <h1 class="display-5 mb-1">Play</h1>
-          <p class="mb-0 text-muted" id="welcomeText">Loading hunter...</p>
+          <h1 class="display-5 mb-1">Summon</h1>
+          <p class="mb-0 text-muted">Spend souls to call new demons from the ritual circle.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-          <a class="btn btn-primary" href="/dungeon">
-            <i class="bi bi-play-fill"></i>
-            Dungeon
+          <a class="btn btn-outline-light" href="/collection">
+            <i class="bi bi-grid-3x3-gap"></i>
+            Collection
           </a>
           <button class="btn btn-outline-light" id="refreshBtn" type="button" title="Refresh">
             <i class="bi bi-arrow-clockwise"></i>
@@ -60,64 +60,59 @@
         </div>
       </div>
 
-      <div class="alert d-none" id="appMessage" role="alert"></div>
+      <div class="alert d-none" id="summonMessage" role="alert"></div>
 
-      <section class="row g-3 mb-4">
-        <div class="col-12">
-          <div class="card h-100">
-            <div class="card-header">Hunter</div>
+      <section class="row g-3 align-items-stretch">
+        <div class="col-12 col-xl-4">
+          <div class="card h-100 summon-balance-card">
+            <div class="card-header">Soul Balance</div>
+            <div class="card-body d-flex flex-column justify-content-between gap-4">
+              <div>
+                <div class="summon-souls-value" id="soulsBalance">-</div>
+                <p class="text-muted mb-0" id="summonPlayerLabel">Loading hunter...</p>
+              </div>
+              <a class="btn btn-primary" href="/dungeon">
+                <i class="bi bi-play-fill"></i>
+                Earn Souls
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-8">
+          <div class="card h-100 summon-ritual-card">
+            <div class="card-header d-flex align-items-center justify-content-between gap-3">
+              <span>Ritual Circle</span>
+              <span class="summon-status">Coming Soon</span>
+            </div>
             <div class="card-body">
-              <div class="row text-center g-2">
-                <div class="col-4">
-                  <div class="stat-box">
-                    <span id="levelStat">-</span>
-                    <small>Level</small>
-                  </div>
+              <div class="summon-circle" aria-hidden="true">
+                <span></span>
+              </div>
+              <div class="row g-3">
+                <div class="col-12 col-md-4">
+                  <button class="btn btn-outline-light summon-option w-100" type="button" disabled>
+                    <span>Minor Summon</span>
+                    <small>25 souls</small>
+                  </button>
                 </div>
-                <div class="col-4">
-                  <div class="stat-box">
-                    <span id="xpStat">-</span>
-                    <small>XP</small>
-                  </div>
+                <div class="col-12 col-md-4">
+                  <button class="btn btn-outline-light summon-option w-100" type="button" disabled>
+                    <span>Greater Summon</span>
+                    <small>75 souls</small>
+                  </button>
                 </div>
-                <div class="col-4">
-                  <div class="stat-box">
-                    <span id="soulsStat">-</span>
-                    <small>Souls</small>
-                  </div>
+                <div class="col-12 col-md-4">
+                  <button class="btn btn-outline-light summon-option w-100" type="button" disabled>
+                    <span>Ancient Summon</span>
+                    <small>150 souls</small>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </section>
-
-      <section class="row g-3">
-        <div class="col-12 col-xl-8">
-          <div class="card">
-            <div class="card-header d-flex align-items-center justify-content-between gap-3">
-              <span>Collection</span>
-              <a class="btn btn-outline-light btn-sm" href="/collection">View All</a>
-            </div>
-            <div class="card-body">
-              <div class="row row-cols-1 row-cols-md-3 g-3 demon-card-grid" id="collectionGrid"></div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-xl-4">
-          <div class="card">
-            <div class="card-header">System</div>
-            <div class="card-body">
-              <button class="btn btn-outline-light w-100 mb-3" id="adminCheckBtn" type="button">
-                <i class="bi bi-sliders"></i>
-                Balance Check
-              </button>
-              <p class="text-muted mb-0" id="adminCheckResult">Not checked.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
     </main>
 
     <footer class="py-3 my-4 border-top">
@@ -129,7 +124,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/app/js/session.js"></script>
-    <script src="/app/js/demon-cards.js"></script>
-    <script src="/app/js/play-ui.js"></script>
+    <script src="/app/js/summon-ui.js"></script>
   </body>
 </html>

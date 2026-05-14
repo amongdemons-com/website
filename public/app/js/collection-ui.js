@@ -3,10 +3,8 @@
 
   const api = window.AmongDemons.api;
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
-  const session = window.AmongDemons.getSession();
   const state = {
-    player: session.player || null,
-    progression: null,
+    player: window.AmongDemons.getSession().player || null,
     collection: []
   };
   const elements = {};
@@ -21,26 +19,22 @@
 
     cacheElements();
     bindActions();
-    await refreshAll();
+    await refreshCollection();
   }
 
   function cacheElements() {
     [
       'navPlayerName',
-      'welcomeText',
-      'appMessage',
-      'levelStat',
-      'xpStat',
-      'soulsStat',
-      'collectionGrid',
-      'adminCheckResult'
+      'collectionSummary',
+      'collectionMessage',
+      'collectionCount',
+      'collectionGrid'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
 
     elements.refreshBtn = document.getElementById('refreshBtn');
     elements.logoutBtn = document.getElementById('logoutBtn');
-    elements.adminCheckBtn = document.getElementById('adminCheckBtn');
   }
 
   function bindActions() {
@@ -49,24 +43,21 @@
       window.location.href = '/login';
     });
 
-    elements.refreshBtn.addEventListener('click', refreshAll);
-    elements.adminCheckBtn.addEventListener('click', adminCheck);
+    elements.refreshBtn.addEventListener('click', refreshCollection);
   }
 
-  async function refreshAll() {
+  async function refreshCollection() {
     await withBusy(elements.refreshBtn, async () => {
+      setMessage('', 'danger');
+
       try {
-        const [me, progression, demons] = await Promise.all([
+        const [me, demons] = await Promise.all([
           api('/api/auth/me'),
-          api('/api/account/progression'),
           api('/api/demons')
         ]);
 
         state.player = me.player;
-        state.progression = progression;
         state.collection = demons.demons || [];
-
-        renderPlayer();
         renderCollection();
       } catch (error) {
         handleAuthError(error);
@@ -74,46 +65,44 @@
     });
   }
 
-  async function adminCheck() {
-    await withBusy(elements.adminCheckBtn, async () => {
-      try {
-        await api('/api/admin/demon-balance', { method: 'POST', body: {} });
-        elements.adminCheckResult.textContent = 'Balance editor is available.';
-      } catch (error) {
-        elements.adminCheckResult.textContent = error.message;
-      }
-    });
-  }
-
-  function renderPlayer() {
-    const player = state.player || {};
-    const progression = state.progression || {};
-
-    elements.navPlayerName.textContent = player.username || '';
-    elements.welcomeText.textContent = player.username ? `Welcome, ${player.username}.` : 'Welcome.';
-    elements.levelStat.textContent = progression.level ?? player.level ?? '-';
-    elements.xpStat.textContent = progression.xp ?? player.xp ?? '-';
-    elements.soulsStat.textContent = progression.souls ?? player.souls ?? '-';
-  }
-
   function renderCollection() {
-    elements.collectionGrid.innerHTML = state.collection.length
+    const count = state.collection.length;
+    const playerName = state.player?.username || '';
+
+    elements.navPlayerName.textContent = playerName;
+    elements.collectionCount.textContent = String(count);
+    elements.collectionSummary.textContent = count
+      ? `${count} demon${count === 1 ? '' : 's'} collected from dungeon runs.`
+      : 'Collected demons from dungeon runs will appear here.';
+    elements.collectionGrid.innerHTML = count
       ? renderDemonCards(state.collection)
-      : renderEmptyText('Saved demons will appear here.');
+      : renderEmptyState();
   }
 
   function renderDemonCards(demons) {
-    if (!demons.length) return renderEmptyText('No demons.');
-
     return demons.map((demon) => `
       <div class="col">
-        ${renderSharedDemonCard(demon)}
+        ${renderSharedDemonCard(demon, { className: 'collection-demon-card' })}
       </div>
     `).join('');
   }
 
-  function renderEmptyText(text) {
-    return `<p class="text-muted mb-0">${text}</p>`;
+  function renderEmptyState() {
+    return `
+      <div class="col-12">
+        <div class="empty-state collection-empty-state">
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="">
+          <div>
+            <h2 class="h5 mb-2">No demons collected yet</h2>
+            <p class="text-muted mb-0">Clear dungeon floors and choose demons to bring them here.</p>
+          </div>
+          <a class="btn btn-primary" href="/dungeon">
+            <i class="bi bi-play-fill"></i>
+            Start Dungeon
+          </a>
+        </div>
+      </div>
+    `;
   }
 
   function handleAuthError(error) {
@@ -123,16 +112,12 @@
       return;
     }
 
-    showError(error);
-  }
-
-  function showError(error) {
     setMessage(error.message || 'Something went wrong.', 'danger');
   }
 
   function setMessage(text, type) {
-    elements.appMessage.textContent = text;
-    elements.appMessage.className = text ? `alert alert-${type}` : 'alert d-none';
+    elements.collectionMessage.textContent = text;
+    elements.collectionMessage.className = text ? `alert alert-${type}` : 'alert d-none';
   }
 
   async function withBusy(button, task) {
