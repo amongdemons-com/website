@@ -24,6 +24,7 @@
     combatLog: [],
     combatDemons: new Map(),
     endNotice: null,
+    endSummary: null,
     promptedStarter: false
   };
   const elements = {};
@@ -196,6 +197,7 @@
         });
         state.combatLog = [];
         state.endNotice = null;
+        state.endSummary = null;
         state.isRecruiting = false;
         state.showPostWinActions = false;
         state.selectedStarter = null;
@@ -329,6 +331,7 @@
       state.combatLog = [];
       state.combatDemons = new Map();
       state.endNotice = null;
+      state.endSummary = null;
       getModal(elements.teamChoiceModal).hide();
       await loadRun(state.run.runId);
       setMessage(body.skipRecruit ? 'Continuing to the next floor.' : 'Team updated.', 'success');
@@ -339,7 +342,7 @@
 
   async function saveReward(rewardId) {
     try {
-      await api('/api/demons/save', {
+      const saved = await api('/api/demons/save', {
         method: 'POST',
         body: {
           runId: state.run.runId,
@@ -347,7 +350,10 @@
         }
       });
       getModal(elements.teamChoiceModal).hide();
-      await finishRun('Dungeon complete. Final demon added to your collection.');
+      await finishRun('Dungeon complete. Final demon added to your collection.', {
+        completed: true,
+        demon: saved.demon
+      });
     } catch (error) {
       showError(error);
     }
@@ -450,6 +456,13 @@
         state.recruitDraftPool = null;
         state.combatLog = [];
         state.combatDemons = new Map();
+        state.endSummary = {
+          title: 'Dungeon ended',
+          message: `${result.demon?.species || 'Demon'} joined your collection.`,
+          demon: result.demon || null,
+          xp: result.xp,
+          souls: result.souls
+        };
         state.endNotice = {
           text: `Dungeon ended. ${result.demon?.species || 'Demon'} joined your collection. You earned ${result.xp} XP and ${result.souls} souls.`,
           type: 'success'
@@ -469,7 +482,7 @@
     await finishRun();
   }
 
-  async function finishRun(message) {
+  async function finishRun(message, summary = {}) {
     if (!state.run) return;
 
     try {
@@ -485,9 +498,18 @@
       state.draggedFormationInstanceId = null;
       state.recruitDraftTeam = null;
       state.recruitDraftPool = null;
+      state.endSummary = {
+        title: summary.completed ? 'Dungeon complete' : 'Dungeon ended',
+        message: summary.completed
+          ? 'Congratulations. You cleared the dungeon.'
+          : (message || 'Dungeon ended.'),
+        demon: summary.demon || null,
+        xp: result.xp,
+        souls: result.souls
+      };
       state.endNotice = {
         text: `${message || 'Dungeon ended.'} You earned ${result.xp} XP and ${result.souls} souls.`,
-        type: message ? 'warning' : 'success'
+        type: summary.completed || !message ? 'success' : 'warning'
       };
       getModal(elements.teamChoiceModal).hide();
       getModal(elements.starterModal).hide();
@@ -509,7 +531,7 @@
 
     elements.runEmpty.classList.toggle('d-none', hasRun);
     elements.runPanel.classList.toggle('d-none', !hasRun);
-    elements.huntTitle.innerHTML = run ? renderHuntTitle(run) : 'Dungeon';
+    elements.huntTitle.innerHTML = run || state.endSummary ? renderHuntTitle(run) : 'Dungeon';
     renderHuntProgress(run);
     renderBattleOutcome();
     showCombatPanel();
@@ -520,10 +542,11 @@
       if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
       updateDungeonJoiner(false);
       document.querySelector('.battle-side-enemy')?.classList.remove('is-recruit-side');
-      elements.runEmpty.innerHTML = `
+      elements.runEmpty.innerHTML = state.endSummary ? renderDungeonEndScreen() : `
         <img src="/app/images/demons/thumbnails/1.png" alt="">
         <p class="mb-0 text-muted">Choose your first demon to begin.</p>
       `;
+      bindDungeonEndButtons();
       renderFightLog();
       renderFightLogActions();
       renderPhaseTitle();
@@ -657,15 +680,52 @@
         const target = allDemonsById.get(entry.target);
         if (target) {
           target.hp = entry.targetHp;
+          if (entry.effect === 'poison_apply') {
+            target.statusEffects = target.statusEffects || {};
+            target.statusEffects.poison = Array.from({ length: Math.max(1, Number(entry.poisonStacks) || 1) }, () => ({}));
+          }
+          if (entry.effect === 'poison' && Object.prototype.hasOwnProperty.call(entry, 'poisonStacks')) {
+            target.statusEffects = target.statusEffects || {};
+            target.statusEffects.poison = Array.from({ length: Math.max(0, Number(entry.poisonStacks) || 0) }, () => ({}));
+          }
         }
       });
 
       updateTeamHp();
       setActiveLogRow(index);
-      animateAttackerCard(step.attacker);
+      if (step.primaryEffect !== 'poison') animateAttackerCard(step.attacker);
       const attackerSide = getDemonSide(step.attacker);
       step.entries.forEach((entry) => {
-        drawAttackZap(step.attacker, entry.target);
+        if (entry.effect === 'poison') {
+          showFloatingDamage(entry.target, entry.dmg, 'poison');
+          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+          syncPoisonStatus(entry.target, entry.poisonStacks);
+          return;
+        }
+
+        if (entry.effect === 'heal') {
+          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing });
+          showFloatingDamage(entry.target, entry.healing, 'heal');
+          return;
+        }
+
+        if (entry.effect === 'poison_apply') {
+          drawAttackZap(step.attacker, entry.target, { poison: true });
+          syncPoisonStatus(entry.target, entry.poisonStacks || 1);
+          updateTargetCard(entry.target, entry.targetHp, attackerSide);
+          return;
+        }
+
+        if (entry.targeting === 'chaotic') {
+          drawChaoticLightning(entry.target);
+        } else if (isTypeTwoAttack(entry.attacker)) {
+          drawDarkSpike(step.attacker, entry.target);
+        } else {
+          drawAttackZap(step.attacker, entry.target);
+        }
+        if (Number(entry.dmg) > 0) {
+          showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage');
+        }
         updateTargetCard(entry.target, entry.targetHp, attackerSide);
       });
       await sleep(320);
@@ -680,7 +740,7 @@
   }
 
   function renderHuntTitle(run) {
-    const floor = Math.max(1, Math.min(10, Number(run.currentFloor) || 1));
+    const floor = run ? Math.max(1, Math.min(10, Number(run.currentFloor) || 1)) : 10;
 
     return `
       <div class="dungeon-title-brand">
@@ -690,12 +750,51 @@
         </a>
         <div class="dungeon-title-copy">
           <span class="dungeon-title-text">Dungeon</span>
-          <span class="hunt-floor-title">
+          ${run ? `<span class="hunt-floor-title">
             <span class="hunt-floor-label">Floor ${floor} / 10</span>
-          </span>
+          </span>` : ''}
         </div>
       </div>
     `;
+  }
+
+  function renderDungeonEndScreen() {
+    const summary = state.endSummary || {};
+    const demon = summary.demon;
+
+    return `
+      <div class="dungeon-end-screen">
+        <div class="dungeon-end-copy">
+          <span class="hunt-phase-eyebrow">Victory</span>
+          <h2>${escapeHtml(summary.title || 'Dungeon complete')}</h2>
+          <p>${escapeHtml(summary.message || 'Congratulations. You cleared the dungeon.')}</p>
+        </div>
+        <div class="dungeon-end-rewards" aria-label="Rewards obtained">
+          ${demon ? `<span><i class="bi bi-stars"></i>${escapeHtml(demon.species || 'Demon')}</span>` : ''}
+          <span>${Number(summary.xp) || 0} XP</span>
+          <span>${Number(summary.souls) || 0} souls</span>
+        </div>
+        <div class="dungeon-end-actions">
+          <a class="btn btn-outline-light" href="/play">Leave</a>
+          <button class="btn btn-primary" id="startNewDungeonBtn" type="button">
+            <i class="bi bi-play-fill"></i>
+            Start New Dungeon
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function bindDungeonEndButtons() {
+    const startNewDungeonBtn = document.getElementById('startNewDungeonBtn');
+    if (!startNewDungeonBtn) return;
+
+    startNewDungeonBtn.addEventListener('click', async () => {
+      state.endSummary = null;
+      state.endNotice = null;
+      await openStarterModal();
+      renderRun();
+    });
   }
 
   function renderHuntProgress(run) {
@@ -720,7 +819,7 @@
     playTemporaryCardClass(card, 'is-attacking', 320);
   }
 
-  function drawAttackZap(attackerId, targetId) {
+  function drawAttackZap(attackerId, targetId, options = {}) {
     const attacker = findDemonCard(attackerId);
     const target = findDemonCard(targetId);
     if (!attacker || !target) return;
@@ -746,7 +845,12 @@
     const bend = isBackLineAttack ? 10 : 6;
 
     const zap = document.createElement('div');
-    zap.className = `attack-zap ${getDemonSide(attackerId) === 'player' ? 'is-player-attack' : 'is-enemy-attack'} ${isBackLineAttack ? 'is-back-attack' : ''}`;
+    zap.className = [
+      'attack-zap',
+      getDemonSide(attackerId) === 'player' ? 'is-player-attack' : 'is-enemy-attack',
+      isBackLineAttack ? 'is-back-attack' : '',
+      options.poison ? 'is-poison-apply' : ''
+    ].filter(Boolean).join(' ');
     zap.innerHTML = `
       <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
         <path class="attack-zap-trail" d="M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${(midX + normalX * bend).toFixed(1)} ${(midY + normalY * bend).toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" />
@@ -757,7 +861,7 @@
     setTimeout(() => zap.remove(), 320);
   }
 
-  function updateTargetCard(instanceId, hp, attackerSide = 'unknown') {
+  function updateTargetCard(instanceId, hp, attackerSide = 'unknown', options = {}) {
     const card = findDemonCard(instanceId);
     if (!card) return;
 
@@ -771,10 +875,93 @@
       hpFillElement.style.width = `${hpPercent}%`;
     }
 
-    card.classList.toggle('is-player-attack', attackerSide === 'player');
-    card.classList.toggle('is-enemy-attack', attackerSide === 'enemy');
-    playTemporaryCardClass(card, 'is-hit', 320);
+    if (options.healing) {
+      playTemporaryCardClass(card, 'is-healed', 320);
+    } else if (options.hit !== false) {
+      card.classList.toggle('is-player-attack', attackerSide === 'player');
+      card.classList.toggle('is-enemy-attack', attackerSide === 'enemy');
+      playTemporaryCardClass(card, 'is-hit', 320);
+    }
     card.classList.toggle('is-defeated', Number(hp) <= 0);
+  }
+
+  function syncPoisonStatus(instanceId, stackCount) {
+    const card = findDemonCard(instanceId);
+    if (!card) return;
+
+    const existing = card.querySelector('.demon-status-poison');
+    if (Number(stackCount) <= 0) {
+      card.querySelector('.demon-status-strip')?.remove();
+      card.classList.remove('is-poisoned');
+      return;
+    }
+
+    card.classList.add('is-poisoned');
+    card.querySelector('.demon-status-strip')?.remove();
+    card.insertAdjacentHTML('beforeend', renderDemonStatus({
+      statusEffects: {
+        poison: Array.from({ length: Math.max(1, Number(stackCount) || 1) }, () => ({}))
+      }
+    }));
+  }
+
+  function showFloatingDamage(instanceId, amount, type) {
+    const card = findDemonCard(instanceId);
+    if (!card) return;
+
+    const floating = document.createElement('div');
+    floating.className = `floating-combat-number is-${type}`;
+    floating.innerHTML = type === 'heal'
+      ? `+${escapeHtml(amount)}`
+      : `-${escapeHtml(amount)}${type === 'poison' ? renderPoisonIcon() : ''}`;
+    card.appendChild(floating);
+    setTimeout(() => floating.remove(), 760);
+  }
+
+  function drawChaoticLightning(targetId) {
+    const target = findDemonCard(targetId);
+    if (!target) return;
+
+    const rect = target.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const top = rect.top + Math.max(10, rect.height * 0.08);
+    const zap = document.createElement('div');
+    zap.className = 'chaos-lightning';
+    zap.innerHTML = `
+      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+        <path d="M ${x.toFixed(1)} ${(top - 34).toFixed(1)} L ${(x - 10).toFixed(1)} ${(top - 4).toFixed(1)} L ${(x + 3).toFixed(1)} ${(top - 4).toFixed(1)} L ${(x - 5).toFixed(1)} ${(top + 28).toFixed(1)} L ${(x + 16).toFixed(1)} ${(top - 12).toFixed(1)} L ${(x + 3).toFixed(1)} ${(top - 12).toFixed(1)} Z" />
+      </svg>
+    `;
+    document.body.appendChild(zap);
+    setTimeout(() => zap.remove(), 360);
+  }
+
+  function drawDarkSpike(attackerId, targetId) {
+    const attacker = findDemonCard(attackerId);
+    const target = findDemonCard(targetId);
+    if (!attacker || !target) return;
+
+    const attackerRect = attacker.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const startX = attackerRect.left + attackerRect.width / 2;
+    const startY = attackerRect.top + attackerRect.height / 2;
+    const endX = targetRect.left + targetRect.width / 2;
+    const endY = targetRect.top + targetRect.height / 2;
+    const angle = Math.atan2(endY - startY, endX - startX);
+    const length = Math.max(24, Math.hypot(endX - startX, endY - startY));
+    const spike = document.createElement('div');
+
+    spike.className = 'dark-spike';
+    spike.style.left = `${startX}px`;
+    spike.style.top = `${startY}px`;
+    spike.style.width = `${length}px`;
+    spike.style.setProperty('--dark-spike-angle', `${angle}rad`);
+    document.body.appendChild(spike);
+    setTimeout(() => spike.remove(), 340);
+  }
+
+  function isTypeTwoAttack(instanceId) {
+    return Number(getCombatDemon(instanceId)?.typeId) === 2;
   }
 
   function findDemonCard(instanceId) {
@@ -931,17 +1118,20 @@
 
   function renderFightLogRow(step, index) {
     const primaryEntry = step.entries[0];
-    const damageText = step.isAoe ? `${step.entries.length} x ${primaryEntry.dmg} dmg` : `${primaryEntry.dmg} dmg`;
-    const targetText = step.isAoe
-      ? `${step.entries.length} enemies`
-      : `${renderFightLogDemonName(primaryEntry.target)} ${renderLogPosition(primaryEntry.targetPosition)}`;
-    const hpText = step.isAoe ? 'AOE' : `${primaryEntry.targetHp} HP`;
+    const damageText = getFightLogAmountText(step);
+    const hpText = primaryEntry.effect === 'poison_apply'
+      ? 'Poisoned'
+      : primaryEntry.effect === 'heal'
+        ? `${primaryEntry.targetHp} HP`
+        : step.isAoe
+          ? 'AOE'
+          : `${primaryEntry.targetHp} HP`;
 
     return `
       <div class="fight-log-row ${getLogRowClass(primaryEntry)}" data-log-index="${index}">
         <span class="text-secondary">T${primaryEntry.tick}</span>
         <span class="fight-log-side">${getLogSideLabel(primaryEntry)}</span>
-        <span class="fight-log-action">${renderFightLogDemonName(primaryEntry.attacker)} ${getFightLogVerb(primaryEntry)} ${targetText}</span>
+        <span class="fight-log-action">${getFightLogActionText(step)}</span>
         <span class="fight-log-damage">${damageText}</span>
         <span class="text-secondary">${hpText}</span>
       </div>
@@ -967,6 +1157,7 @@
         tick: entry.tick,
         attacker: entry.attacker,
         isAoe: entry.targeting === 'all',
+        primaryEffect: entry.effect || null,
         entries: [entry]
       });
     }
@@ -979,8 +1170,36 @@
     return `<span class="fight-log-position">${position === 'front' ? 'Front' : 'Back'}</span>`;
   }
 
+  function getFightLogActionText(step) {
+    const entry = step.entries[0];
+    const attacker = renderFightLogDemonName(entry.attacker);
+    const target = `${renderFightLogDemonName(entry.target)} ${renderLogPosition(entry.targetPosition)}`;
+
+    if (entry.effect === 'poison_apply') return `${attacker} applied poison to ${target}`;
+    if (entry.effect === 'poison') return `${target} took poison damage`;
+    if (entry.effect === 'heal') return `${attacker} healed ${target}`;
+    if (entry.effect === 'retaliate') return `${attacker} retaliated against ${target}`;
+    if (entry.targeting === 'chaotic') return `${attacker} chaotically struck ${target}`;
+    if (step.isAoe) return `${attacker} splashed ${step.entries.length} enemies`;
+    return `${attacker} ${getFightLogVerb(entry)} ${target}`;
+  }
+
   function getFightLogVerb(entry) {
+    if (entry.effect === 'poison_apply') return 'poisoned';
+    if (entry.effect === 'poison') return 'poisoned';
+    if (entry.effect === 'heal') return 'healed';
+    if (entry.effect === 'retaliate') return 'retaliated against';
+    if (entry.targeting === 'chaotic') return 'chaotically struck';
     return entry.targeting === 'all' ? 'splashed' : 'hit';
+  }
+
+  function getFightLogAmountText(step) {
+    const entry = step.entries[0];
+    if (entry.effect === 'poison_apply') return 'poison';
+    if (entry.effect === 'poison') return `${entry.dmg} poison`;
+    if (entry.effect === 'heal') return `+${entry.healing || 0} hp`;
+    if (step.isAoe) return `${step.entries.length} x ${entry.dmg} dmg`;
+    return `${entry.dmg} dmg`;
   }
 
   function renderEndNotice() {
@@ -1074,7 +1293,7 @@
 
   function renderFightLogActions() {
     const isDefeated = state.run?.status === 'defeated';
-    const canStart = !state.run || isDefeated || state.run.status === 'ended';
+    const canStart = !state.endSummary && (!state.run || isDefeated || state.run.status === 'ended');
     const canBattle = Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
     const canReplay = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
     const canViewLog = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
@@ -1277,7 +1496,7 @@
     if (state.run.status === 'completed') {
       const finalRewards = currentFloorRewards.filter((reward) => reward.type === 'final');
       elements.teamChoiceModalTitle.textContent = 'Dungeon complete';
-      elements.teamChoiceModalSubtitle.textContent = 'Choose one demon from your team for your collection, or exit without collecting.';
+      elements.teamChoiceModalSubtitle.textContent = 'Choose one available demon for your collection, or exit without collecting.';
       elements.teamChoiceModalBody.innerHTML = `
         <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
           ${finalRewards.map(renderFinalReward).join('')}
@@ -1290,7 +1509,7 @@
       `;
       bindRewardButtons();
       const modalExitHuntBtn = document.getElementById('modalExitHuntBtn');
-      if (modalExitHuntBtn) modalExitHuntBtn.addEventListener('click', () => finishRun('Dungeon complete.'));
+      if (modalExitHuntBtn) modalExitHuntBtn.addEventListener('click', () => finishRun('Dungeon complete.', { completed: true }));
       return;
     }
 
@@ -1401,7 +1620,7 @@
         <div class="reward-item border rounded p-3">
           ${renderRewardDemon(reward.demon)}
           <button class="btn btn-outline-info btn-sm w-100 mt-3 js-save" data-reward-id="${reward.rewardId}" ${reward.saved || hasSavedFinalReward() ? 'disabled' : ''}>
-            ${reward.saved ? 'Saved' : 'Collect From Team'}
+            ${reward.saved ? 'Saved' : 'Add to Collection'}
           </button>
         </div>
       </div>
@@ -1838,12 +2057,14 @@
       'hunt-demon-card',
       isRecruitPoolDemon ? 'is-recruit-draggable' : '',
       canDropRecruit ? 'is-recruit-drop-target' : '',
+      hasPoisonStatus(demon) ? 'is-poisoned' : '',
     ].filter(Boolean).join(' ');
 
     return renderSharedDemonCard(demon, {
       className: classes.replace('hunt-demon-card', '').trim(),
       defeated: Number(demon.hp) <= 0,
       active: state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId,
+      overlayHtml: renderDemonStatus(demon),
       attributes: {
         'data-instance-id': demon.instanceId,
         'data-reward-id': demon.rewardId || null,
@@ -1851,6 +2072,31 @@
         draggable
       }
     });
+  }
+
+  function renderDemonStatus(demon) {
+    const poisonStacks = getPoisonStackCount(demon);
+    if (!poisonStacks) return '';
+
+    return `
+      <div class="demon-status-strip" aria-label="Status effects">
+        ${Array.from({ length: poisonStacks }, () => (
+          `<span class="demon-status-badge demon-status-poison" aria-label="Poisoned" title="Poisoned">${renderPoisonIcon()}</span>`
+        )).join('')}
+      </div>
+    `;
+  }
+
+  function hasPoisonStatus(demon) {
+    return getPoisonStackCount(demon) > 0;
+  }
+
+  function getPoisonStackCount(demon) {
+    return (demon.statusEffects?.poison || []).length;
+  }
+
+  function renderPoisonIcon() {
+    return '<i class="bi bi-droplet-half" aria-hidden="true"></i>';
   }
 
   function getDemonPosition(demon, index = 0) {

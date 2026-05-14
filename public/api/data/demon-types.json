@@ -58,19 +58,20 @@
     "preferredPosition": "back",
     "spawnWeight": 13,
     "strengths": ["Can hit any enemy", "Pressures high health enemies", "Poison keeps dealing damage"],
-    "weaknesses": ["Very low direct damage", "Low health", "Needs time to reach full value"],
+    "weaknesses": ["Low health", "Poison ticks slowly", "Needs time to reach full value"],
     "ability": {
       "kind": "poison",
       "hits": 1,
       "maxStacksPerTarget": 2,
-      "durationTurns": 3,
-      "damagePerTurnScale": 1.0,
+      "durationTicks": 48,
+      "tickInterval": 8,
+      "damagePerTickScale": 1.0,
       "spreadMode": "highest_hp_then_cycle"
     },
     "baseStats": {
       "hp": [64, 84],
-      "atk": [4, 5],
-      "speed": [6, 8]
+      "atk": [6, 8],
+      "speed": [7, 9]
     },
     "rarityMultiplier": {
       "common": 1.0,

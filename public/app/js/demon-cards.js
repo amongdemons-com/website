@@ -29,6 +29,7 @@
           <img src="${escapeHtml(imageUrl)}" alt="" draggable="false">
           <span class="hunt-demon-rarity-gem" aria-hidden="true"></span>
         </div>
+        ${options.overlayHtml || ''}
         <div class="hunt-demon-card-body">
           <div class="hunt-demon-card-title">
             <span class="text-white">${escapeHtml(title)}</span>

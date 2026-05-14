@@ -56,6 +56,8 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
       run.status = 'completed';
       run.state.awaitingFinalPick = true;
     } else {
+      clearPoisonEffects(run.state.team);
+      clearPoisonEffects(run.state.enemies);
       run.state.awaitingRecruit = true;
     }
   } else {
@@ -76,6 +78,15 @@ function cloneForBattleReplay(team) {
   return (team || []).map((demon) => ({ ...demon }));
 }
 
+function clearPoisonEffects(team) {
+  (team || []).forEach((demon) => {
+    demon.statusEffects = {
+      ...(demon.statusEffects || {}),
+      poison: []
+    };
+  });
+}
+
 function createDefeatedDemonRewards(run) {
   const enemies = run.state.enemies || [];
 
@@ -91,13 +102,22 @@ function createDefeatedDemonRewards(run) {
 }
 
 function createFinalTeamRewards(run) {
-  const team = run.state.team || [];
+  const teamRewards = (run.state.team || []).map((demon) => ({
+    source: 'team',
+    demon
+  }));
+  const finalFightRewards = (run.state.enemies || [])
+    .map((demon) => ({
+      source: 'final_enemy',
+      demon
+    }));
 
-  return team.map((demon, index) => ({
+  return [...teamRewards, ...finalFightRewards].map((choice, index) => ({
     rewardId: run.rewards.length + index + 1,
     type: 'final',
     floor: run.floor,
-    demon: resetRunDemon(demon, `final-${run.floor}-${index + 1}`),
+    source: choice.source,
+    demon: resetRunDemon(choice.demon, `final-${run.floor}-${index + 1}`),
     souls: 0,
     xp: 0,
     claimed: false

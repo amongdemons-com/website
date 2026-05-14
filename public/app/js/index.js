@@ -20,8 +20,10 @@
     try {
       const catalog = await loadCatalog();
       const totalTypes = getTotalTypes(catalog.types, catalog.demons);
+      const typeInfo = catalog.types[String(currentType)];
 
-      elements.title.textContent = catalog.types[currentType]?.name || 'Unknown';
+      elements.title.textContent = typeInfo?.name || 'Unknown';
+      elements.typeInfo.innerHTML = renderTypeInfo(typeInfo);
       elements.grid.innerHTML = renderDemonCards(catalog.demonsByType[currentType] || [], catalog.types);
       elements.pagination.innerHTML = renderPagination(totalTypes);
       renderAdjacentTypeLinks(totalTypes);
@@ -64,6 +66,103 @@
           species: types[String(demon.type)]?.name || `Type ${demon.type}`
         })}
       </div>
+    `).join('');
+  }
+
+  function renderTypeInfo(typeInfo) {
+    if (!typeInfo) {
+      return '<p class="m-0 text-center text-body-secondary">No type data found.</p>';
+    }
+
+    return `
+      <div class="demon-type-info-heading">
+        ${renderInfoBadge('Role', typeInfo.role)}
+        ${renderInfoBadge('Targeting', typeInfo.targeting)}
+        ${renderInfoBadge('Position', typeInfo.preferredPosition)}
+        ${renderInfoBadge('Spawn Weight', typeInfo.spawnWeight)}
+      </div>
+      <div class="demon-type-info-grid">
+        <article>
+          <h2>Base Stats</h2>
+          <div class="type-stat-row">
+            ${renderStatPill('HP', typeInfo.baseStats?.hp)}
+            ${renderStatPill('ATK', typeInfo.baseStats?.atk)}
+            ${renderStatPill('SPD', typeInfo.baseStats?.speed)}
+          </div>
+        </article>
+        <article>
+          <h2>Ability</h2>
+          <dl class="type-detail-list">
+            ${renderObjectDetails(typeInfo.ability)}
+          </dl>
+        </article>
+        <article>
+          <h2>Strengths</h2>
+          ${renderTextList(typeInfo.strengths)}
+        </article>
+        <article>
+          <h2>Weaknesses</h2>
+          ${renderTextList(typeInfo.weaknesses)}
+        </article>
+        <article class="type-rarity-panel">
+          <h2>Rarity Scaling</h2>
+          <div class="type-rarity-grid">
+            ${renderRarityMultipliers(typeInfo.rarityMultiplier)}
+          </div>
+        </article>
+      </div>
+    `;
+  }
+
+  function renderInfoBadge(label, value) {
+    return `
+      <span class="type-info-badge">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(formatValue(value))}</strong>
+      </span>
+    `;
+  }
+
+  function renderStatPill(label, value) {
+    return `
+      <span class="type-stat-pill">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(formatValue(value))}</strong>
+      </span>
+    `;
+  }
+
+  function renderObjectDetails(details) {
+    if (!details || typeof details !== 'object') {
+      return '<div class="type-empty-text">No ability data.</div>';
+    }
+
+    return Object.entries(details).map(([key, value]) => `
+      <div>
+        <dt>${escapeHtml(formatLabel(key))}</dt>
+        <dd>${escapeHtml(formatValue(value))}</dd>
+      </div>
+    `).join('');
+  }
+
+  function renderTextList(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+      return '<p class="type-empty-text">None listed.</p>';
+    }
+
+    return `<ul class="type-text-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+  }
+
+  function renderRarityMultipliers(multipliers) {
+    if (!multipliers || typeof multipliers !== 'object') {
+      return '<span class="type-empty-text">No rarity data.</span>';
+    }
+
+    return Object.entries(multipliers).map(([rarity, multiplier]) => `
+      <span class="type-rarity-pill type-rarity-${escapeHtml(rarity)}">
+        <span>${escapeHtml(formatLabel(rarity))}</span>
+        <strong>x${escapeHtml(Number(multiplier).toFixed(2))}</strong>
+      </span>
     `).join('');
   }
 
@@ -115,6 +214,7 @@
     const pageElements = {
       currentType: document.getElementById('type-number'),
       title: document.getElementById('demon-title'),
+      typeInfo: document.getElementById('type-info-panel'),
       grid: document.getElementById('demons-grid'),
       pagination: document.getElementById('pagination'),
       previous: document.getElementById('previous-type-slot'),
@@ -141,5 +241,38 @@
     }
 
     callback();
+  }
+
+  function formatLabel(value) {
+    return String(value)
+      .replace(/[_-]+/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  }
+
+  function formatValue(value) {
+    if (Array.isArray(value)) {
+      return value.join(' - ');
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+
+    if (value === null || typeof value === 'undefined') {
+      return 'None';
+    }
+
+    return formatLabel(value);
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
   }
 })();

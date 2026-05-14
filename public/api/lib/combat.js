@@ -96,15 +96,25 @@ function applyPoisonTick(team, tick, combatLog) {
   alive(team).forEach((target) => {
     const poisonStacks = target.statusEffects?.poison || [];
     if (!poisonStacks.length) return;
+    const poisonEvents = [];
 
     poisonStacks.forEach((poison) => {
       if (target.hp <= 0) return;
 
-      const damage = Math.max(1, Number(poison.damage) || 1);
-      target.hp = Math.max(0, target.hp - damage);
-      poison.remainingTurns -= 1;
+      poison.remainingTicks = Number.isFinite(Number(poison.remainingTicks))
+        ? Number(poison.remainingTicks) - 1
+        : Number(poison.remainingTurns || 1) - 1;
+      poison.nextTickIn = Number.isFinite(Number(poison.nextTickIn))
+        ? Number(poison.nextTickIn) - 1
+        : 0;
 
-      combatLog.push({
+      if (poison.nextTickIn > 0) return;
+
+      const damage = Math.max(1, Number(poison.damage) || 1);
+      poison.nextTickIn = Math.max(1, Number(poison.tickInterval) || 1);
+      target.hp = Math.max(0, target.hp - damage);
+
+      poisonEvents.push({
         tick,
         attacker: poison.source,
         target: target.instanceId,
@@ -116,7 +126,13 @@ function applyPoisonTick(team, tick, combatLog) {
       });
     });
 
-    target.statusEffects.poison = poisonStacks.filter((poison) => poison.remainingTurns > 0);
+    target.statusEffects.poison = poisonStacks.filter((poison) => poison.remainingTicks > 0);
+    poisonEvents.forEach((event) => {
+      combatLog.push({
+        ...event,
+        poisonStacks: target.statusEffects.poison.length
+      });
+    });
   });
 }
 
@@ -185,10 +201,13 @@ function applyPoison({ tick, attacker, enemies, demonTypes, combatLog }) {
 
   const ability = getAbility(attacker, demonTypes);
   const maxStacks = Math.max(1, Number(ability.maxStacksPerTarget) || 1);
+  const tickInterval = Math.max(1, Number(ability.tickInterval) || 1);
   const poison = {
     source: attacker.instanceId,
-    damage: Math.max(1, Math.round((Number(attacker.atk) || 1) * (Number(ability.damagePerTurnScale) || 1))),
-    remainingTurns: Math.max(1, Number(ability.durationTurns) || 3)
+    damage: Math.max(1, Math.round((Number(attacker.atk) || 1) * (Number(ability.damagePerTickScale || ability.damagePerTurnScale) || 1))),
+    remainingTicks: Math.max(1, Number(ability.durationTicks || ability.durationTurns) || 1),
+    tickInterval,
+    nextTickIn: tickInterval
   };
 
   target.statusEffects = target.statusEffects || {};
@@ -212,6 +231,7 @@ function applyPoison({ tick, attacker, enemies, demonTypes, combatLog }) {
     targeting: 'highest_hp',
     effect: 'poison_apply',
     dmg: 0,
+    poisonStacks: target.statusEffects.poison.length,
     targetHp: target.hp
   });
 

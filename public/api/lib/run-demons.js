@@ -29,7 +29,10 @@ function resetRunDemon(demon, instanceId) {
     maxHp,
     hp: maxHp,
     position: normalizePosition(demon.position),
-    attackMeter: 0
+    attackMeter: 0,
+    statusEffects: {
+      poison: []
+    }
   };
 }
 

@@ -50,7 +50,7 @@ app.get(['/hunt', '/hunt/'], (req, res) => {
 
 // === Dungeon Route: GET /dungeon/
 app.get(['/dungeon', '/dungeon/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'hunt.html'));
+  res.sendFile(path.join(appDir, 'dungeon.html'));
 });
 
 app.get(['/register', '/register/'], (req, res) => {
