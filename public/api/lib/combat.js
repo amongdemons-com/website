@@ -21,6 +21,15 @@ function getAbility(demon, demonTypes = {}) {
   return getTypeData(demon, demonTypes).ability || { kind: 'basic_attack', hits: 1 };
 }
 
+function isMeleeDemon(demon) {
+  return [1, 5, 7, 9].includes(Number(demon.typeId));
+}
+
+function isBlockedBehindFrontline(demon, allies) {
+  if (!isMeleeDemon(demon) || normalizePosition(demon.position) !== 'back') return false;
+  return alive(allies).some((ally) => normalizePosition(ally.position) === 'front');
+}
+
 function chooseTarget(rng, attacker, enemies, demonTypes) {
   const targeting = getTargeting(attacker, demonTypes);
   const living = alive(enemies);
@@ -61,9 +70,16 @@ function chooseHealTarget(allies) {
 
 function chooseTargets(rng, attacker, enemies, demonTypes) {
   const targeting = getTargeting(attacker, demonTypes);
+  const ability = getAbility(attacker, demonTypes);
+  const living = alive(enemies);
+
+  if (ability.kind === 'cleave_attack') {
+    const frontRow = living.filter((demon) => normalizePosition(demon.position) === 'front');
+    return frontRow.length ? frontRow : living;
+  }
 
   if (targeting === 'all') {
-    return alive(enemies);
+    return living;
   }
 
   if (targeting === 'none') {
@@ -258,6 +274,7 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
       const allies = actorIsPlayer ? players : enemies;
       const targets = actorIsPlayer ? enemies : players;
       if (!alive(targets).length) break;
+      if (isBlockedBehindFrontline(actor, allies)) continue;
 
       actor.attackMeter += actor.speed;
       if (actor.attackMeter < 100) continue;
@@ -285,7 +302,7 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
       const chosenTargets = ability.kind === 'chaotic_attack'
         ? (chaoticTargets.length ? [pick(rng, chaoticTargets)] : [])
         : chooseTargets(rng, actor, targets, demonTypes);
-      const targeting = getTargeting(actor, demonTypes);
+      const targeting = ability.kind === 'cleave_attack' ? 'cleave' : getTargeting(actor, demonTypes);
 
       chosenTargets.forEach((target, targetIndex) => {
         const damage = ability.kind === 'chaotic_attack'

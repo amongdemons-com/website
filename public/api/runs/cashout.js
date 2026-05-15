@@ -16,6 +16,10 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Rewards can only be claimed between dungeon fights.' });
   }
 
+  if (req.body?.skipDemon) {
+    return endRunWithoutDemon(run, req.player.id, res);
+  }
+
   const demon = getCashoutDemon(run, req.body || {});
   const [result] = await db.query(
     `INSERT INTO player_demons
@@ -71,6 +75,36 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
     level: nextLevel
   });
 });
+
+async function endRunWithoutDemon(run, playerId, res) {
+  const earned = run.state.earned || { xp: 0, souls: 0 };
+  const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [playerId]);
+  const nextXp = playerRows[0].xp + (earned.xp || 0);
+  const nextLevel = Math.max(playerRows[0].level, Math.floor(nextXp / 100) + 1);
+
+  await db.query(
+    'UPDATE players SET xp = xp + ?, souls = souls + ?, level = ? WHERE id = ?',
+    [earned.xp || 0, earned.souls || 0, nextLevel, playerId]
+  );
+
+  run.status = 'ended';
+  run.endedAt = new Date();
+  run.state.awaitingRecruit = false;
+  run.state.cashout = {
+    savedDemonId: null,
+    skippedDemon: true,
+    xp: earned.xp || 0,
+    souls: earned.souls || 0
+  };
+  await saveRun(run);
+
+  return res.json({
+    demon: null,
+    xp: earned.xp || 0,
+    souls: earned.souls || 0,
+    level: nextLevel
+  });
+}
 
 function getCashoutDemon(run, body) {
   if (body.source === 'team') {

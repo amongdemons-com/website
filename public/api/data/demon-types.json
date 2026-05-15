@@ -70,7 +70,7 @@
     },
     "baseStats": {
       "hp": [64, 84],
-      "atk": [6, 8],
+      "atk": [4, 5],
       "speed": [7, 9]
     },
     "rarityMultiplier": {
@@ -166,11 +166,11 @@
     "targeting": "front",
     "preferredPosition": "front",
     "spawnWeight": 6,
-    "strengths": ["High melee damage", "Good burst into front liners", "Still durable enough to stand front"],
-    "weaknesses": ["Only hits the front line", "Middling health", "Lower speed"],
+    "strengths": ["High melee cleave damage", "Hits every available front liner", "Sweeps the back line after the front falls"],
+    "weaknesses": ["Must stand front or wait behind a living front liner", "Middling health", "Lower speed"],
     "ability": {
-      "kind": "heavy_attack",
-      "hits": 1
+      "kind": "cleave_attack",
+      "hits": "available_row"
     },
     "baseStats": {
       "hp": [112, 144],
@@ -282,7 +282,7 @@
     },
     "baseStats": {
       "hp": [100, 124],
-      "atk": [16, 20],
+      "atk": [22, 27],
       "speed": [6, 8]
     },
     "rarityMultiplier": {

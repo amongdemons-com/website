@@ -9,17 +9,17 @@
   const COMBAT_THEMES = {
     default: { color: '#FAC51C', shadow: 'rgba(250,197,28,0.85)' },
     poison: { color: '#167246', shadow: 'rgba(22,114,70,0.92)' },
-    heal: { color: '#8DE7FF', shadow: 'rgba(141,231,255,0.86)' },
-    1: { color: '#D1D5D8', shadow: 'rgba(209,213,216,0.82)' },
+    heal: { color: '#8DE7FF', shadow: 'rgba(141,231,255,0.86)', outline: '#0d2530' },
+    1: { color: '#D1D5D8', shadow: 'rgba(209,213,216,0.82)', outline: '#101820' },
     2: { color: '#171D24', shadow: 'rgba(0,0,0,0.88)' },
     3: { color: '#167246', shadow: 'rgba(22,114,70,0.92)' },
     4: { color: '#E25041', shadow: 'rgba(226,80,65,0.88)' },
-    5: { color: '#C8CED2', shadow: 'rgba(200,206,210,0.82)' },
+    5: { color: '#C8CED2', shadow: 'rgba(200,206,210,0.82)', outline: '#101820' },
     6: { color: '#C084FC', shadow: 'rgba(192,132,252,0.9)' },
     7: { color: '#FFB23F', shadow: 'rgba(255,178,63,0.9)' },
     8: { color: '#6E8F45', shadow: 'rgba(110,143,69,0.86)' },
-    9: { color: '#B8BDC2', shadow: 'rgba(184,189,194,0.84)' },
-    10: { color: '#8DE7FF', shadow: 'rgba(141,231,255,0.86)' },
+    9: { color: '#B8BDC2', shadow: 'rgba(184,189,194,0.84)', outline: '#101820' },
+    10: { color: '#8DE7FF', shadow: 'rgba(141,231,255,0.86)', outline: '#0d2530' },
     11: { color: '#52B7FF', shadow: 'rgba(82,183,255,0.9)' }
   };
   const state = {
@@ -389,9 +389,12 @@
 
     elements.cashoutModalBody.innerHTML = `
       <div class="cashout-summary">
-        <p class="mb-2">Ending the dungeon now gives you <strong>${earned.xp || 0} XP</strong>, <strong>${earned.souls || 0} souls</strong>, and one selected demon.</p>
+        <p class="mb-2">Ending the dungeon now gives you <strong>${earned.xp || 0} XP</strong> and <strong>${earned.souls || 0} souls</strong>. You can also choose one demon to add to your collection.</p>
         <p class="text-warning mb-0">This ends the dungeon immediately.</p>
       </div>
+      <button class="btn btn-outline-light w-100 mt-3" id="cashoutSkipDemonBtn" type="button">
+        Leave Without Recruiting
+      </button>
       <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mt-1">
         ${candidates.map(renderCashoutCandidate).join('')}
       </div>
@@ -404,6 +407,8 @@
         renderCashoutModal();
       });
     });
+
+    document.getElementById('cashoutSkipDemonBtn')?.addEventListener('click', cashOutWithoutDemon);
   }
 
   function getCashoutCandidates() {
@@ -481,6 +486,43 @@
         };
         state.endNotice = {
           text: `Dungeon ended. ${result.demon?.species || 'Demon'} joined your collection. You earned ${result.xp} XP and ${result.souls} souls.`,
+          type: 'success'
+        };
+        getModal(elements.cashoutModal).hide();
+        await loadStartOptions();
+        renderRun();
+      } catch (error) {
+        showError(error);
+      }
+    });
+  }
+
+  async function cashOutWithoutDemon() {
+    if (!state.run) return;
+
+    const skipButton = document.getElementById('cashoutSkipDemonBtn');
+    await withBusy(skipButton, async () => {
+      try {
+        const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/cashout`, {
+          method: 'POST',
+          body: { skipDemon: true }
+        });
+        localStorage.removeItem(RUN_KEY);
+        state.run = null;
+        state.selectedCashoutDemonKey = null;
+        state.recruitDraftTeam = null;
+        state.recruitDraftPool = null;
+        state.combatLog = [];
+        state.combatDemons = new Map();
+        state.endSummary = {
+          title: 'Dungeon ended',
+          message: 'You left without recruiting a demon.',
+          demon: null,
+          xp: result.xp,
+          souls: result.souls
+        };
+        state.endNotice = {
+          text: `Dungeon ended. You earned ${result.xp} XP and ${result.souls} souls.`,
           type: 'success'
         };
         getModal(elements.cashoutModal).hide();
@@ -1025,7 +1067,9 @@
         ${[-0.18, 0, 0.18].map((offset, index) => {
           const offsetX = x + Math.cos(angle + Math.PI / 2) * height * offset;
           const offsetY = y + Math.sin(angle + Math.PI / 2) * height * offset;
-          return `<path class="sword-swing-arc sword-scratch-${index + 1}" d="M ${offsetX.toFixed(1)} ${(offsetY - height * 0.34).toFixed(1)} Q ${(offsetX + width).toFixed(1)} ${offsetY.toFixed(1)} ${offsetX.toFixed(1)} ${(offsetY + height * 0.34).toFixed(1)}" transform="rotate(${(angle * 180 / Math.PI).toFixed(1)} ${offsetX.toFixed(1)} ${offsetY.toFixed(1)}) translate(${endOffset.toFixed(1)} 0)" />`;
+          const d = `M ${offsetX.toFixed(1)} ${(offsetY - height * 0.34).toFixed(1)} Q ${(offsetX + width).toFixed(1)} ${offsetY.toFixed(1)} ${offsetX.toFixed(1)} ${(offsetY + height * 0.34).toFixed(1)}`;
+          const transform = `rotate(${(angle * 180 / Math.PI).toFixed(1)} ${offsetX.toFixed(1)} ${offsetY.toFixed(1)}) translate(${endOffset.toFixed(1)} 0)`;
+          return `<path class="sword-swing-belly sword-scratch-${index + 1}" d="${d}" transform="${transform}" /><path class="sword-swing-arc sword-scratch-${index + 1}" d="${d}" transform="${transform}" />`;
         }).join('')}
       </svg>
     `;
@@ -1039,21 +1083,22 @@
     if (!attacker || !target) return;
 
     const { attackerRect, startX, startY, angle } = getAttackGeometry(attacker, target);
-    const originDistance = Math.max(46, attackerRect.width * 0.55);
+    const originDistance = Math.max(42, attackerRect.width * 0.5);
     const originX = startX + Math.cos(angle) * originDistance;
     const originY = startY + Math.sin(angle) * originDistance;
-    const thornLength = Math.max(32, attackerRect.width * 0.42);
+    const thornLength = Math.max(22, attackerRect.width * 0.28);
     const thorns = document.createElement('div');
-    const offsets = [-0.72, -0.42, -0.14, 0.12, 0.42, 0.72];
+    const offsets = [-0.48, -0.28, -0.1, 0.1, 0.28, 0.48];
     applyCombatTheme(thorns, getCombatTheme(attackerId));
     thorns.className = 'thorn-burst';
     thorns.innerHTML = `
       <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
         ${offsets.map((offset, index) => {
           const thornAngle = angle + offset;
-          const length = thornLength * (0.82 + (index % 2) * 0.22);
-          const baseX = originX + Math.cos(angle + Math.PI / 2) * (index - 2.5) * 7;
-          const baseY = originY + Math.sin(angle + Math.PI / 2) * (index - 2.5) * 7;
+          const length = thornLength * (0.74 + (index % 2) * 0.16);
+          const spread = attackerRect.height * 0.82;
+          const baseX = originX + Math.cos(angle + Math.PI / 2) * ((index / (offsets.length - 1)) - 0.5) * spread;
+          const baseY = originY + Math.sin(angle + Math.PI / 2) * ((index / (offsets.length - 1)) - 0.5) * spread;
           const tipX = baseX + Math.cos(thornAngle) * length;
           const tipY = baseY + Math.sin(thornAngle) * length;
           return `<path class="thorn-spike" d="M ${baseX.toFixed(1)} ${baseY.toFixed(1)} L ${tipX.toFixed(1)} ${tipY.toFixed(1)}" />`;
@@ -1158,6 +1203,7 @@
     if (!element || !theme) return;
     element.style.setProperty('--combat-color', theme.color);
     element.style.setProperty('--combat-shadow', theme.shadow);
+    element.style.setProperty('--combat-text-outline', theme.outline || '#fff');
   }
 
   function getAttackGeometry(attacker, target) {
@@ -1375,7 +1421,7 @@
 
     for (const entry of combatLog || []) {
       const previous = steps[steps.length - 1];
-      const isSameAoe = entry.targeting === 'all' &&
+      const isSameAoe = (entry.targeting === 'all' || entry.targeting === 'cleave') &&
         previous?.isAoe &&
         previous.tick === entry.tick &&
         previous.attacker === entry.attacker;
@@ -1392,7 +1438,7 @@
       steps.push({
         tick: entry.tick,
         attacker: entry.attacker,
-        isAoe: entry.targeting === 'all',
+        isAoe: entry.targeting === 'all' || entry.targeting === 'cleave',
         primaryEffect: entry.effect || null,
         entries: [entry]
       });
@@ -1416,6 +1462,7 @@
     if (entry.effect === 'heal') return `${attacker} healed ${target}`;
     if (entry.effect === 'retaliate') return `${attacker} retaliated against ${target}`;
     if (entry.targeting === 'chaotic') return `${attacker} chaotically struck ${target}`;
+    if (entry.targeting === 'cleave') return `${attacker} cleaved ${step.entries.length} demons`;
     if (step.isAoe) return `${attacker} splashed ${step.entries.length} enemies`;
     return `${attacker} ${getFightLogVerb(entry)} ${target}`;
   }
@@ -1426,6 +1473,7 @@
     if (entry.effect === 'heal') return 'healed';
     if (entry.effect === 'retaliate') return 'retaliated against';
     if (entry.targeting === 'chaotic') return 'chaotically struck';
+    if (entry.targeting === 'cleave') return 'cleaved';
     return entry.targeting === 'all' ? 'splashed' : 'hit';
   }
 
@@ -1436,6 +1484,7 @@
     if (entry.effect === 'poison') return `${entry.dmg} poison`;
     if (entry.effect === 'heal') return `+${entry.healing || 0} hp`;
     if (retaliationEntry) return `${entry.dmg} dmg, ${retaliationEntry.dmg} thorns`;
+    if (entry.targeting === 'cleave') return `${step.entries.length} x ${entry.dmg} cleave`;
     if (step.isAoe) return `${step.entries.length} x ${entry.dmg} dmg`;
     return `${entry.dmg} dmg`;
   }
