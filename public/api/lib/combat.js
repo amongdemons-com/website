@@ -49,9 +49,8 @@ function choosePoisonTarget(attacker, enemies, demonTypes) {
   const ability = getAbility(attacker, demonTypes);
   const maxStacks = Number(ability.maxStacksPerTarget) || 1;
   const stackable = living.filter((target) => getPoisonStacks(target, attacker.instanceId) < maxStacks);
-  const available = stackable.length ? stackable : living;
 
-  return [...available].sort((a, b) => b.hp - a.hp)[0] || null;
+  return [...stackable].sort((a, b) => b.hp - a.hp)[0] || null;
 }
 
 function chooseHealTarget(allies) {
@@ -280,8 +279,11 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
         continue;
       }
 
+      const chaoticTargets = alive(players)
+        .concat(alive(enemies))
+        .filter((target) => target.instanceId !== actor.instanceId);
       const chosenTargets = ability.kind === 'chaotic_attack'
-        ? [pick(rng, alive(players).concat(alive(enemies)))]
+        ? (chaoticTargets.length ? [pick(rng, chaoticTargets)] : [])
         : chooseTargets(rng, actor, targets, demonTypes);
       const targeting = getTargeting(actor, demonTypes);
 

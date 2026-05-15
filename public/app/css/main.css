@@ -742,38 +742,27 @@ body.dungeon-page .navbar {
 
 .hunt-demon-card.is-attacking {
     animation: demon-attack-hop 320ms ease;
-    border-color: rgba(250,197,28,0.72);
-    box-shadow: 0 0 0 2px rgba(250,197,28,0.16), 0 0 16px rgba(250,197,28,0.18);
+    border-color: var(--combat-color, rgba(250,197,28,0.72));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--combat-color, #FAC51C) 28%, transparent), 0 0 18px var(--combat-shadow, rgba(250,197,28,0.34));
 }
 
 .hunt-demon-card.is-attacking.is-player-attack {
-    border-color: rgba(65,168,95,0.82);
-    box-shadow: 0 0 0 2px rgba(65,168,95,0.24), 0 0 18px rgba(65,168,95,0.34);
+    border-color: var(--combat-color, rgba(65,168,95,0.82));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--combat-color, #41A85F) 28%, transparent), 0 0 18px var(--combat-shadow, rgba(65,168,95,0.34));
 }
 
 .hunt-demon-card.is-attacking.is-enemy-attack {
-    border-color: rgba(226,80,65,0.82);
-    box-shadow: 0 0 0 2px rgba(226,80,65,0.24), 0 0 18px rgba(226,80,65,0.34);
-}
-
-.hunt-demon-card.is-hit {
-    border-color: rgba(226,80,65,0.78);
-    box-shadow: 0 0 0 2px rgba(226,80,65,0.55), 0 0 18px rgba(226,80,65,0.32);
-}
-
-.hunt-demon-card.is-hit.is-player-attack {
-    border-color: rgba(65,168,95,0.78);
-    box-shadow: 0 0 0 2px rgba(65,168,95,0.36), 0 0 18px rgba(65,168,95,0.26);
-}
-
-.hunt-demon-card.is-hit.is-enemy-attack {
-    border-color: rgba(226,80,65,0.78);
-    box-shadow: 0 0 0 2px rgba(226,80,65,0.36), 0 0 18px rgba(226,80,65,0.28);
+    border-color: var(--combat-color, rgba(226,80,65,0.82));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--combat-color, #E25041) 28%, transparent), 0 0 18px var(--combat-shadow, rgba(226,80,65,0.34));
 }
 
 .hunt-demon-card.is-healed {
-    border-color: rgba(111,214,189,0.82);
-    box-shadow: 0 0 0 2px rgba(111,214,189,0.26), 0 0 18px rgba(111,214,189,0.32);
+    border-color: rgba(141,231,255,0.82);
+    box-shadow: 0 0 0 2px rgba(141,231,255,0.26), 0 0 18px rgba(141,231,255,0.32);
+}
+
+.hunt-demon-card.is-shaking {
+    animation: demon-target-shake 360ms ease;
 }
 
 .attack-zap {
@@ -790,17 +779,17 @@ body.dungeon-page .navbar {
 
 .attack-zap-trail {
     fill: none;
-    stroke: #FAC51C;
+    stroke: var(--combat-color, #FAC51C);
     stroke-width: 4;
     stroke-linecap: round;
     stroke-linejoin: round;
-    filter: drop-shadow(0 0 6px rgba(250,197,28,0.85));
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(250,197,28,0.85)));
     animation: attack-zap-fade 320ms ease-out forwards;
 }
 
 .attack-zap-impact {
-    fill: #FAC51C;
-    filter: drop-shadow(0 0 6px rgba(250,197,28,0.85));
+    fill: var(--combat-color, #FAC51C);
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(250,197,28,0.85)));
     animation: attack-zap-impact 320ms ease-out forwards;
 }
 
@@ -808,34 +797,100 @@ body.dungeon-page .navbar {
     stroke-width: 5;
 }
 
+.attack-zap.is-heavy .attack-zap-trail {
+    stroke-width: 7;
+    animation: attack-zap-heavy 520ms cubic-bezier(0.18, 0.84, 0.18, 1) forwards;
+}
+
+.attack-zap.is-heavy .attack-zap-impact {
+    animation-duration: 520ms;
+}
+
+.attack-zap.is-crushing .attack-zap-trail {
+    stroke-width: 14;
+    animation: attack-zap-crushing 960ms cubic-bezier(0.12, 0.64, 0.1, 1) forwards;
+}
+
+.attack-zap.is-crushing .attack-zap-impact {
+    animation: attack-zap-impact 960ms ease-out forwards;
+}
+
+.attack-zap.is-fiery .attack-zap-trail {
+    stroke: #ff6e2f;
+    stroke-width: 5;
+    filter: drop-shadow(0 0 7px rgba(255,110,47,0.9));
+}
+
+.attack-zap.is-poison-flame .poison-bubble {
+    animation-name: poison-bubble-flame;
+}
+
+.attack-zap.is-assassin .attack-zap-trail {
+    stroke-width: 3;
+    animation: attack-zap-assassin 240ms ease-out forwards;
+}
+
+.attack-zap.is-assassin .attack-zap-trail-secondary {
+    opacity: 0;
+    animation-delay: 34ms;
+}
+
+.attack-zap.is-assassin .attack-zap-impact {
+    animation-duration: 240ms;
+}
+
 .attack-zap.is-player-attack .attack-zap-trail {
-    stroke: #41A85F;
-    filter: drop-shadow(0 0 6px rgba(65,168,95,0.85));
+    stroke: var(--combat-color, #41A85F);
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(65,168,95,0.85)));
 }
 
 .attack-zap.is-player-attack .attack-zap-impact {
-    fill: #41A85F;
-    filter: drop-shadow(0 0 6px rgba(65,168,95,0.85));
+    fill: var(--combat-color, #41A85F);
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(65,168,95,0.85)));
 }
 
 .attack-zap.is-enemy-attack .attack-zap-trail {
-    stroke: #E25041;
-    filter: drop-shadow(0 0 6px rgba(226,80,65,0.85));
+    stroke: var(--combat-color, #E25041);
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(226,80,65,0.85)));
 }
 
 .attack-zap.is-enemy-attack .attack-zap-impact {
-    fill: #E25041;
-    filter: drop-shadow(0 0 6px rgba(226,80,65,0.85));
+    fill: var(--combat-color, #E25041);
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(226,80,65,0.85)));
 }
 
 .attack-zap.is-poison-apply .attack-zap-trail {
-    stroke: #167246;
-    filter: drop-shadow(0 0 7px rgba(22,114,70,0.92));
+    opacity: 0;
+    animation: none;
 }
 
 .attack-zap.is-poison-apply .attack-zap-impact {
-    fill: #167246;
-    filter: drop-shadow(0 0 7px rgba(22,114,70,0.92));
+    fill: var(--combat-color, #167246);
+    filter: drop-shadow(0 0 7px var(--combat-shadow, rgba(22,114,70,0.92)));
+}
+
+.poison-bubble {
+    fill: var(--combat-color, #167246);
+    stroke: color-mix(in srgb, var(--combat-color, #167246) 54%, #dfffce);
+    stroke-width: 1.2;
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(22,114,70,0.92)));
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: poison-bubble-trail 360ms ease-out forwards;
+}
+
+.fire-spark {
+    fill: #ffd166;
+    stroke: #ff6e2f;
+    stroke-width: 1.1;
+    filter:
+        drop-shadow(0 0 5px rgba(255,209,102,0.92))
+        drop-shadow(0 0 8px rgba(226,80,65,0.72));
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center bottom;
+    animation: fire-spark-flicker 360ms ease-out forwards;
 }
 
 .dark-spike {
@@ -854,9 +909,9 @@ body.dungeon-page .navbar {
     right: 0;
     width: 100%;
     height: 0.64rem;
-    background: linear-gradient(90deg, rgba(4,8,10,0), rgba(5,8,13,0.92) 42%, #0a0d13 76%, #020305);
+    background: linear-gradient(90deg, rgba(4,8,10,0), color-mix(in srgb, var(--combat-color, #171d24) 72%, #05080d) 42%, var(--combat-color, #171d24) 76%, #020305);
     clip-path: polygon(0 50%, 82% 0, 100% 50%, 82% 100%);
-    filter: drop-shadow(0 0 8px rgba(0,0,0,0.85));
+    filter: drop-shadow(0 0 8px var(--combat-shadow, rgba(0,0,0,0.85)));
 }
 
 .chaos-lightning {
@@ -872,22 +927,109 @@ body.dungeon-page .navbar {
 }
 
 .chaos-lightning path {
-    fill: #52b7ff;
-    filter: drop-shadow(0 0 10px rgba(82,183,255,0.9));
+    fill: none;
+    stroke: var(--combat-color, #52b7ff);
+    stroke-width: 7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 10px var(--combat-shadow, rgba(82,183,255,0.9)));
     animation: chaos-lightning-flash 360ms ease-out forwards;
+}
+
+.chaos-lightning .chaos-thunder-core {
+    stroke-width: 9;
+}
+
+.chaos-lightning .chaos-thunder-branch {
+    stroke-width: 4;
+    animation-delay: 36ms;
+}
+
+.chaos-lightning .chaos-thunder-border {
+    stroke: rgba(255,255,255,0.92);
+    stroke-width: 14;
+    filter: drop-shadow(0 0 5px rgba(255,255,255,0.72));
+}
+
+.chaos-lightning .chaos-thunder-border.chaos-thunder-branch {
+    stroke-width: 8;
+}
+
+.sword-swing,
+.thorn-burst,
+.heal-effect {
+    position: fixed;
+    inset: 0;
+    z-index: 1081;
+    pointer-events: none;
+}
+
+.sword-swing svg,
+.thorn-burst svg,
+.heal-effect svg {
+    width: 100%;
+    height: 100%;
+}
+
+.sword-swing-arc {
+    fill: none;
+    stroke: var(--combat-color, #FFB23F);
+    stroke-width: 5;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 8px var(--combat-shadow, rgba(255,178,63,0.9)));
+    animation: sword-crescent-travel 440ms ease-out forwards;
+}
+
+.sword-scratch-2 {
+    animation-delay: 24ms;
+}
+
+.sword-scratch-3 {
+    animation-delay: 48ms;
+}
+
+.thorn-spike {
+    fill: none;
+    stroke: var(--combat-color, #6E8F45);
+    stroke-width: 7;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 7px var(--combat-shadow, rgba(110,143,69,0.86)));
+    animation: thorn-burst-pulse 520ms ease-out forwards;
+}
+
+.heal-ring {
+    fill: none;
+    stroke: var(--combat-color, #8DE7FF);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 8px var(--combat-shadow, rgba(141,231,255,0.86)));
+}
+
+.heal-ring {
+    stroke-width: 4;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: heal-ring-rise 620ms ease-out forwards;
+}
+
+.heal-ring-secondary {
+    animation-delay: 80ms;
+}
+
+.heal-ring-tertiary {
+    animation-delay: 150ms;
 }
 
 .demon-status-strip {
     position: absolute;
-    bottom: -1.55rem;
-    left: 50%;
+    top: 0.32rem;
+    right: 0.32rem;
     z-index: 3;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.2rem;
-    min-height: 1.25rem;
-    transform: translateX(-50%);
+    min-height: 1.35rem;
     pointer-events: none;
 }
 
@@ -895,16 +1037,39 @@ body.dungeon-page .navbar {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #167246;
+    gap: 0.18rem;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.3rem;
+    color: #dfffce;
+    border: 1px solid rgba(132,236,124,0.72);
+    border-radius: 999px;
+    background: rgba(6,34,22,0.88);
     line-height: 1;
-    filter:
-        drop-shadow(0 0 1px rgba(255,255,255,0.9))
-        drop-shadow(0 1px 4px rgba(0,0,0,0.85));
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        0 2px 8px rgba(0,0,0,0.65),
+        0 0 10px rgba(22,114,70,0.45);
+}
+
+.demon-status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 0.96rem;
+    height: 0.96rem;
+    color: #fff;
 }
 
 .demon-status-badge i {
-    color: #167246;
-    font-size: 1.25rem;
+    color: inherit;
+    font-size: 0.92rem;
+}
+
+.demon-status-count {
+    color: #f8fff4;
+    font-size: 0.68rem;
+    font-weight: 900;
 }
 
 .hunt-demon-card.is-poisoned .combat-hp-fill {
@@ -918,15 +1083,15 @@ body.dungeon-page .navbar {
 
 .floating-combat-number {
     position: absolute;
-    top: 0.24rem;
-    right: -0.18rem;
-    left: auto;
+    top: 1.55rem;
+    right: auto;
+    left: 50%;
     bottom: auto;
-    z-index: 3;
+    z-index: 4;
     display: inline-flex;
     align-items: center;
     gap: 0.12rem;
-    color: #f19187;
+    color: var(--combat-color, #f19187);
     font-size: 1.22rem;
     font-weight: 900;
     line-height: 1;
@@ -947,15 +1112,15 @@ body.dungeon-page .navbar {
 }
 
 .floating-combat-number.is-poison {
-    color: #167246;
+    color: var(--combat-color, #167246);
 }
 
 .floating-combat-number.is-heal {
-    color: #80d697;
+    color: var(--combat-color, #80d697);
 }
 
 .floating-combat-number.is-dark {
-    color: #171d24;
+    color: var(--combat-color, #171d24);
 }
 
 .floating-combat-number i {
@@ -986,6 +1151,16 @@ body.dungeon-page .navbar {
     max-width: 34rem;
     color: var(--ad-muted);
     font-size: 1.05rem;
+}
+
+.dungeon-end-demon {
+    width: min(11rem, 42vw);
+    margin: 1rem auto 0;
+}
+
+.dungeon-end-demon-card {
+    width: 100%;
+    flex-basis: auto;
 }
 
 .dungeon-end-rewards {
@@ -1962,6 +2137,183 @@ body.dungeon-page .navbar {
     }
 }
 
+@keyframes attack-zap-heavy {
+    0% {
+        opacity: 0;
+        stroke-width: 5;
+        stroke-dasharray: 18 240;
+        stroke-dashoffset: 38;
+    }
+    34% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        stroke-width: 10;
+        stroke-dasharray: 160 40;
+        stroke-dashoffset: -180;
+    }
+}
+
+@keyframes attack-zap-crushing {
+    0% {
+        opacity: 0;
+        stroke-width: 12;
+        stroke-dasharray: 8 260;
+        stroke-dashoffset: 28;
+    }
+    42% {
+        opacity: 1;
+        stroke-width: 16;
+    }
+    100% {
+        opacity: 0;
+        stroke-width: 22;
+        stroke-dasharray: 260 24;
+        stroke-dashoffset: -280;
+    }
+}
+
+@keyframes attack-zap-assassin {
+    0% {
+        opacity: 0;
+        stroke-dasharray: 4 190;
+        stroke-dashoffset: 10;
+    }
+    18% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        stroke-dasharray: 118 28;
+        stroke-dashoffset: -150;
+    }
+}
+
+@keyframes fire-spark-flicker {
+    0% {
+        opacity: 0;
+        transform: translateY(0.18rem) scale(0.38) rotate(-8deg);
+    }
+    18% {
+        opacity: 1;
+    }
+    52% {
+        opacity: 0.92;
+        transform: translateY(-0.12rem) scale(1.15) rotate(8deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-0.62rem) scale(0.74) rotate(-4deg);
+    }
+}
+
+@keyframes poison-bubble-trail {
+    0% {
+        opacity: 0;
+        transform: translateY(0) scale(0.45);
+    }
+    22% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-0.42rem) scale(1.24);
+    }
+}
+
+@keyframes poison-bubble-flame {
+    0% {
+        opacity: 0;
+        transform: translateY(0.1rem) scale(0.42);
+    }
+    16% {
+        opacity: 1;
+    }
+    58% {
+        opacity: 0.86;
+        transform: translateY(-0.18rem) scale(1.06);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-0.72rem) scale(0.72);
+    }
+}
+
+@keyframes sword-crescent-travel {
+    0% {
+        opacity: 0;
+        stroke-width: 3;
+        stroke-dasharray: 18 180;
+        stroke-dashoffset: 88;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        stroke-width: 7;
+        stroke-dasharray: 132 24;
+        stroke-dashoffset: -62;
+    }
+}
+
+@keyframes demon-target-shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    18% {
+        transform: translateX(-0.34rem);
+    }
+    36% {
+        transform: translateX(0.34rem);
+    }
+    54% {
+        transform: translateX(-0.22rem);
+    }
+    72% {
+        transform: translateX(0.18rem);
+    }
+}
+
+@keyframes thorn-burst-pulse {
+    0% {
+        opacity: 0;
+        stroke-width: 3;
+        stroke-dasharray: 4 90;
+        stroke-dashoffset: 12;
+    }
+    24% {
+        opacity: 1;
+        stroke-width: 9;
+    }
+    100% {
+        opacity: 0;
+        stroke-width: 4;
+        stroke-dasharray: 64 14;
+        stroke-dashoffset: -58;
+    }
+}
+
+@keyframes heal-ring-rise {
+    0% {
+        opacity: 0;
+        transform: scale(0.24);
+        transform-origin: center;
+    }
+    20% {
+        opacity: 1;
+    }
+    72% {
+        opacity: 0.72;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(2.2);
+        transform-origin: center;
+    }
+}
+
 @keyframes dark-spike-thrust {
     0% {
         opacity: 0;
@@ -1979,34 +2331,40 @@ body.dungeon-page .navbar {
 @keyframes chaos-lightning-flash {
     0% {
         opacity: 0;
-        transform: scaleY(0.68);
-        transform-origin: center top;
+        stroke-width: 3;
     }
-    22% {
+    14% {
         opacity: 1;
+        stroke-width: 11;
+    }
+    36% {
+        opacity: 0.38;
+    }
+    52% {
+        opacity: 1;
+        stroke-width: 7;
     }
     100% {
         opacity: 0;
-        transform: scaleY(1.2);
-        transform-origin: center top;
+        stroke-width: 5;
     }
 }
 
 @keyframes floating-combat-number {
     0% {
         opacity: 1;
-        transform: translateY(0.35rem) scale(0.82);
+        transform: translate(-50%, 0.35rem) scale(0.82);
     }
     18% {
         opacity: 1;
-        transform: translateY(-0.1rem) scale(1.12);
+        transform: translate(-50%, -0.1rem) scale(1.12);
     }
     82% {
         opacity: 1;
     }
     100% {
         opacity: 0;
-        transform: translateY(-1.35rem) scale(1.02);
+        transform: translate(-50%, -1.35rem) scale(1.02);
     }
 }
 
@@ -2015,9 +2373,17 @@ body.dungeon-page .navbar {
         animation: none;
     }
 
+    .hunt-demon-card.is-shaking {
+        animation: none;
+    }
+
     .attack-zap path,
     .attack-zap circle,
+    .fire-spark,
     .dark-spike,
+    .sword-swing-arc,
+    .thorn-spike,
+    .heal-ring,
     .chaos-lightning path,
     .floating-combat-number {
         animation: none;
@@ -2701,7 +3067,6 @@ a:hover {
     color: var(--ad-muted);
 }
 
-.hunt-demon-card.is-attacking,
 .hunt-demon-card.active,
 .hunt-choice-card:hover,
 .hunt-choice-card.active,
@@ -2712,13 +3077,13 @@ a:hover {
 }
 
 .attack-zap-trail {
-    stroke: var(--ad-gold);
-    filter: drop-shadow(0 0 6px rgba(232,199,106,0.78));
+    stroke: var(--combat-color, var(--ad-gold));
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(232,199,106,0.78)));
 }
 
 .attack-zap-impact {
-    fill: var(--ad-gold);
-    filter: drop-shadow(0 0 6px rgba(232,199,106,0.78));
+    fill: var(--combat-color, var(--ad-gold));
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(232,199,106,0.78)));
 }
 
 .fight-log {

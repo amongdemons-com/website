@@ -273,7 +273,7 @@
     "preferredPosition": "back",
     "spawnWeight": 1,
     "strengths": ["Can hit any unit", "Slightly higher back line health", "High upside when chaos lands well"],
-    "weaknesses": ["Can hit allies or itself", "Random damage from 1 to attack", "Unreliable in close fights"],
+    "weaknesses": ["Can hit allies", "Random damage from 1 to attack", "Unreliable in close fights"],
     "ability": {
       "kind": "chaotic_attack",
       "hits": 1,

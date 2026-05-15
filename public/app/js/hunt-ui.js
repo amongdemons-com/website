@@ -6,6 +6,22 @@
   const renderSharedCombatStats = window.AmongDemons.ui.renderCombatStats;
   const RUN_KEY = 'amongdemons-current-run';
   const session = window.AmongDemons.getSession();
+  const COMBAT_THEMES = {
+    default: { color: '#FAC51C', shadow: 'rgba(250,197,28,0.85)' },
+    poison: { color: '#167246', shadow: 'rgba(22,114,70,0.92)' },
+    heal: { color: '#8DE7FF', shadow: 'rgba(141,231,255,0.86)' },
+    1: { color: '#D1D5D8', shadow: 'rgba(209,213,216,0.82)' },
+    2: { color: '#171D24', shadow: 'rgba(0,0,0,0.88)' },
+    3: { color: '#167246', shadow: 'rgba(22,114,70,0.92)' },
+    4: { color: '#E25041', shadow: 'rgba(226,80,65,0.88)' },
+    5: { color: '#C8CED2', shadow: 'rgba(200,206,210,0.82)' },
+    6: { color: '#C084FC', shadow: 'rgba(192,132,252,0.9)' },
+    7: { color: '#FFB23F', shadow: 'rgba(255,178,63,0.9)' },
+    8: { color: '#6E8F45', shadow: 'rgba(110,143,69,0.86)' },
+    9: { color: '#B8BDC2', shadow: 'rgba(184,189,194,0.84)' },
+    10: { color: '#8DE7FF', shadow: 'rgba(141,231,255,0.86)' },
+    11: { color: '#52B7FF', shadow: 'rgba(82,183,255,0.9)' }
+  };
   const state = {
     player: session.player || null,
     run: null,
@@ -693,42 +709,37 @@
 
       updateTeamHp();
       setActiveLogRow(index);
-      if (step.primaryEffect !== 'poison') animateAttackerCard(step.attacker);
+      if (step.primaryEffect !== 'poison') animateAttackerCard(step.attacker, step.primaryEffect);
       const attackerSide = getDemonSide(step.attacker);
       step.entries.forEach((entry) => {
         if (entry.effect === 'poison') {
-          showFloatingDamage(entry.target, entry.dmg, 'poison');
+          showFloatingDamage(entry.target, entry.dmg, 'poison', entry.attacker, entry.effect);
           updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
           syncPoisonStatus(entry.target, entry.poisonStacks);
           return;
         }
 
         if (entry.effect === 'heal') {
+          drawHealEffect(entry.attacker, entry.target);
           updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing });
-          showFloatingDamage(entry.target, entry.healing, 'heal');
+          showFloatingDamage(entry.target, entry.healing, 'heal', entry.attacker, entry.effect);
           return;
         }
 
         if (entry.effect === 'poison_apply') {
-          drawAttackZap(step.attacker, entry.target, { poison: true });
+          drawAttackZap(step.attacker, entry.target, { effect: entry.effect, poison: true, bubbles: 15, variant: 'poison-flame' });
           syncPoisonStatus(entry.target, entry.poisonStacks || 1);
           updateTargetCard(entry.target, entry.targetHp, attackerSide);
           return;
         }
 
-        if (entry.targeting === 'chaotic') {
-          drawChaoticLightning(entry.target);
-        } else if (isTypeTwoAttack(entry.attacker)) {
-          drawDarkSpike(step.attacker, entry.target);
-        } else {
-          drawAttackZap(step.attacker, entry.target);
-        }
+        drawCombatAnimation(entry);
         if (Number(entry.dmg) > 0) {
-          showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage');
+          showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
         }
         updateTargetCard(entry.target, entry.targetHp, attackerSide);
       });
-      await sleep(320);
+      await sleep(getCombatStepDelay(step));
     }
 
     setActiveLogRow(-1);
@@ -769,6 +780,14 @@
           <h2>${escapeHtml(summary.title || 'Dungeon complete')}</h2>
           <p>${escapeHtml(summary.message || 'Congratulations. You cleared the dungeon.')}</p>
         </div>
+        ${demon ? `
+          <div class="dungeon-end-demon" aria-label="Collected demon">
+            ${renderSharedDemonCard(demon, {
+              className: 'dungeon-end-demon-card',
+              attributes: { 'data-instance-id': demon.instanceId || `end-${demon.id || 'demon'}` }
+            })}
+          </div>
+        ` : ''}
         <div class="dungeon-end-rewards" aria-label="Rewards obtained">
           ${demon ? `<span><i class="bi bi-stars"></i>${escapeHtml(demon.species || 'Demon')}</span>` : ''}
           <span>${Number(summary.xp) || 0} XP</span>
@@ -810,13 +829,61 @@
     });
   }
 
-  function animateAttackerCard(instanceId) {
+  function animateAttackerCard(instanceId, effect) {
     const card = findDemonCard(instanceId);
     if (!card) return;
 
+    applyCombatTheme(card, getCombatTheme(instanceId, effect));
     card.classList.toggle('is-player-attack', getDemonSide(instanceId) === 'player');
     card.classList.toggle('is-enemy-attack', getDemonSide(instanceId) === 'enemy');
     playTemporaryCardClass(card, 'is-attacking', 320);
+  }
+
+  function drawCombatAnimation(entry) {
+    const typeId = Number(getCombatDemon(entry.attacker)?.typeId);
+
+    if (entry.targeting === 'chaotic') {
+      drawChaoticLightning(entry.attacker, entry.target);
+      return;
+    }
+
+    if (typeId === 2) {
+      drawDarkSpike(entry.attacker, entry.target);
+      return;
+    }
+
+    if (typeId === 4) {
+      drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'fiery', flames: 14 });
+      return;
+    }
+
+    if (typeId === 5) {
+      drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'heavy', duration: 520 });
+      return;
+    }
+
+    if (typeId === 6) {
+      drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'assassin', duration: 240 });
+      return;
+    }
+
+    if (typeId === 7) {
+      drawSwordSwing(entry.attacker, entry.target);
+      return;
+    }
+
+    if (typeId === 8) {
+      drawThornBurst(entry.attacker, entry.target);
+      return;
+    }
+
+    if (typeId === 9) {
+      drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'crushing', duration: 960 });
+      shakeTargetCard(entry.target);
+      return;
+    }
+
+    drawAttackZap(entry.attacker, entry.target, { effect: entry.effect });
   }
 
   function drawAttackZap(attackerId, targetId, options = {}) {
@@ -824,12 +891,7 @@
     const target = findDemonCard(targetId);
     if (!attacker || !target) return;
 
-    const attackerRect = attacker.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-    const startX = attackerRect.left + attackerRect.width / 2;
-    const startY = attackerRect.top + attackerRect.height / 2;
-    const endX = targetRect.left + targetRect.width / 2;
-    const endY = targetRect.top + targetRect.height / 2;
+    const { attackerRect, startX, startY, endX, endY } = getAttackGeometry(attacker, target);
     const attackerDemon = getCombatDemon(attackerId);
     const isBackLineAttack = attackerDemon && getDemonPosition(attackerDemon) === 'back';
     const startT = isBackLineAttack ? 0.12 : 0.22;
@@ -843,22 +905,53 @@
     const normalX = -(y2 - y1) / Math.max(1, Math.hypot(x2 - x1, y2 - y1));
     const normalY = (x2 - x1) / Math.max(1, Math.hypot(x2 - x1, y2 - y1));
     const bend = isBackLineAttack ? 10 : 6;
+    const controlX = midX + normalX * bend;
+    const controlY = midY + normalY * bend;
+    const bubbleCount = Number(options.bubbles) || 0;
+    const bubbleHtml = bubbleCount
+      ? Array.from({ length: bubbleCount }, (_, index) => {
+          const t = 0.08 + (index / Math.max(1, bubbleCount - 1)) * 0.84;
+          const x = ((1 - t) * (1 - t) * x1) + (2 * (1 - t) * t * controlX) + (t * t * x2);
+          const y = ((1 - t) * (1 - t) * y1) + (2 * (1 - t) * t * controlY) + (t * t * y2);
+          const drift = ((index % 2) ? -1 : 1) * (4 + (index % 4));
+          const radius = 2.2 + ((index % 4) * 0.8);
+          return `<circle class="poison-bubble" cx="${(x + normalX * drift).toFixed(1)}" cy="${(y + normalY * drift).toFixed(1)}" r="${radius.toFixed(1)}" style="animation-delay: ${(index * 18).toFixed(0)}ms" />`;
+        }).join('')
+      : '';
+    const flameCount = Number(options.flames) || 0;
+    const flameHtml = flameCount
+      ? Array.from({ length: flameCount }, (_, index) => {
+          const t = 0.08 + (index / Math.max(1, flameCount - 1)) * 0.84;
+          const x = ((1 - t) * (1 - t) * x1) + (2 * (1 - t) * t * controlX) + (t * t * x2);
+          const y = ((1 - t) * (1 - t) * y1) + (2 * (1 - t) * t * controlY) + (t * t * y2);
+          const drift = ((index % 2) ? -1 : 1) * (5 + (index % 3) * 2);
+          const size = 5 + (index % 4);
+          const cx = x + normalX * drift;
+          const cy = y + normalY * drift;
+          return `<path class="fire-spark" d="M ${cx.toFixed(1)} ${(cy - size).toFixed(1)} C ${(cx + size * 0.72).toFixed(1)} ${(cy - size * 0.2).toFixed(1)} ${(cx + size * 0.45).toFixed(1)} ${(cy + size * 0.72).toFixed(1)} ${cx.toFixed(1)} ${(cy + size).toFixed(1)} C ${(cx - size * 0.55).toFixed(1)} ${(cy + size * 0.42).toFixed(1)} ${(cx - size * 0.45).toFixed(1)} ${(cy - size * 0.32).toFixed(1)} ${cx.toFixed(1)} ${(cy - size).toFixed(1)} Z" style="animation-delay: ${(index * 16).toFixed(0)}ms" />`;
+        }).join('')
+      : '';
 
     const zap = document.createElement('div');
+    applyCombatTheme(zap, getCombatTheme(attackerId, options.effect));
     zap.className = [
       'attack-zap',
       getDemonSide(attackerId) === 'player' ? 'is-player-attack' : 'is-enemy-attack',
       isBackLineAttack ? 'is-back-attack' : '',
+      options.variant ? `is-${options.variant}` : '',
       options.poison ? 'is-poison-apply' : ''
     ].filter(Boolean).join(' ');
     zap.innerHTML = `
       <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
-        <path class="attack-zap-trail" d="M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${(midX + normalX * bend).toFixed(1)} ${(midY + normalY * bend).toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" />
+        <path class="attack-zap-trail" d="M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${controlX.toFixed(1)} ${controlY.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" />
+        ${options.variant === 'assassin' ? `<path class="attack-zap-trail attack-zap-trail-secondary" d="M ${(x1 + normalX * 7).toFixed(1)} ${(y1 + normalY * 7).toFixed(1)} Q ${(controlX + normalX * 7).toFixed(1)} ${(controlY + normalY * 7).toFixed(1)} ${(x2 + normalX * 7).toFixed(1)} ${(y2 + normalY * 7).toFixed(1)}" />` : ''}
+        ${bubbleHtml}
+        ${flameHtml}
         <circle class="attack-zap-impact" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="${isBackLineAttack ? 5 : 4}" />
       </svg>
     `;
     document.body.appendChild(zap);
-    setTimeout(() => zap.remove(), 320);
+    setTimeout(() => zap.remove(), options.duration || 320);
   }
 
   function updateTargetCard(instanceId, hp, attackerSide = 'unknown', options = {}) {
@@ -875,13 +968,6 @@
       hpFillElement.style.width = `${hpPercent}%`;
     }
 
-    if (options.healing) {
-      playTemporaryCardClass(card, 'is-healed', 320);
-    } else if (options.hit !== false) {
-      card.classList.toggle('is-player-attack', attackerSide === 'player');
-      card.classList.toggle('is-enemy-attack', attackerSide === 'enemy');
-      playTemporaryCardClass(card, 'is-hit', 320);
-    }
     card.classList.toggle('is-defeated', Number(hp) <= 0);
   }
 
@@ -905,12 +991,13 @@
     }));
   }
 
-  function showFloatingDamage(instanceId, amount, type) {
+  function showFloatingDamage(instanceId, amount, type, attackerId, effect) {
     const card = findDemonCard(instanceId);
     if (!card) return;
 
     const floating = document.createElement('div');
     floating.className = `floating-combat-number is-${type}`;
+    applyCombatTheme(floating, getCombatTheme(attackerId, effect || type));
     floating.innerHTML = type === 'heal'
       ? `+${escapeHtml(amount)}`
       : `-${escapeHtml(amount)}${type === 'poison' ? renderPoisonIcon() : ''}`;
@@ -918,18 +1005,116 @@
     setTimeout(() => floating.remove(), 760);
   }
 
-  function drawChaoticLightning(targetId) {
+  function drawSwordSwing(attackerId, targetId) {
+    const attacker = findDemonCard(attackerId);
+    const target = findDemonCard(targetId);
+    if (!attacker || !target) return;
+
+    const { attackerRect, startX, startY, endX, endY, angle } = getAttackGeometry(attacker, target);
+    const height = Math.max(70, attackerRect.height * 0.92);
+    const width = Math.max(18, attackerRect.width * 0.2);
+    const distance = attackerRect.width * 0.58;
+    const x = startX + Math.cos(angle) * distance;
+    const y = startY + Math.sin(angle) * distance;
+    const endOffset = Math.max(22, attackerRect.width * 0.26);
+    const swing = document.createElement('div');
+    applyCombatTheme(swing, getCombatTheme(attackerId));
+    swing.className = 'sword-swing';
+    swing.innerHTML = `
+      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+        ${[-0.18, 0, 0.18].map((offset, index) => {
+          const offsetX = x + Math.cos(angle + Math.PI / 2) * height * offset;
+          const offsetY = y + Math.sin(angle + Math.PI / 2) * height * offset;
+          return `<path class="sword-swing-arc sword-scratch-${index + 1}" d="M ${offsetX.toFixed(1)} ${(offsetY - height * 0.34).toFixed(1)} Q ${(offsetX + width).toFixed(1)} ${offsetY.toFixed(1)} ${offsetX.toFixed(1)} ${(offsetY + height * 0.34).toFixed(1)}" transform="rotate(${(angle * 180 / Math.PI).toFixed(1)} ${offsetX.toFixed(1)} ${offsetY.toFixed(1)}) translate(${endOffset.toFixed(1)} 0)" />`;
+        }).join('')}
+      </svg>
+    `;
+    document.body.appendChild(swing);
+    setTimeout(() => swing.remove(), 440);
+  }
+
+  function drawThornBurst(attackerId, targetId) {
+    const attacker = findDemonCard(attackerId);
+    const target = findDemonCard(targetId);
+    if (!attacker || !target) return;
+
+    const { attackerRect, startX, startY, angle } = getAttackGeometry(attacker, target);
+    const originDistance = Math.max(46, attackerRect.width * 0.55);
+    const originX = startX + Math.cos(angle) * originDistance;
+    const originY = startY + Math.sin(angle) * originDistance;
+    const thornLength = Math.max(32, attackerRect.width * 0.42);
+    const thorns = document.createElement('div');
+    const offsets = [-0.72, -0.42, -0.14, 0.12, 0.42, 0.72];
+    applyCombatTheme(thorns, getCombatTheme(attackerId));
+    thorns.className = 'thorn-burst';
+    thorns.innerHTML = `
+      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+        ${offsets.map((offset, index) => {
+          const thornAngle = angle + offset;
+          const length = thornLength * (0.82 + (index % 2) * 0.22);
+          const baseX = originX + Math.cos(angle + Math.PI / 2) * (index - 2.5) * 7;
+          const baseY = originY + Math.sin(angle + Math.PI / 2) * (index - 2.5) * 7;
+          const tipX = baseX + Math.cos(thornAngle) * length;
+          const tipY = baseY + Math.sin(thornAngle) * length;
+          return `<path class="thorn-spike" d="M ${baseX.toFixed(1)} ${baseY.toFixed(1)} L ${tipX.toFixed(1)} ${tipY.toFixed(1)}" />`;
+        }).join('')}
+      </svg>
+    `;
+    document.body.appendChild(thorns);
+    setTimeout(() => thorns.remove(), 520);
+  }
+
+  function shakeTargetCard(instanceId) {
+    const card = findDemonCard(instanceId);
+    if (!card) return;
+    playTemporaryCardClass(card, 'is-shaking', 360);
+  }
+
+  function drawHealEffect(attackerId, targetId) {
     const target = findDemonCard(targetId);
     if (!target) return;
 
     const rect = target.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
-    const top = rect.top + Math.max(10, rect.height * 0.08);
+    const y = rect.top + rect.height / 2;
+    const ring = Math.max(18, rect.width * 0.18);
+    const heal = document.createElement('div');
+    applyCombatTheme(heal, getCombatTheme(attackerId, 'heal'));
+    heal.className = 'heal-effect';
+    heal.innerHTML = `
+      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+        <circle class="heal-ring" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${ring.toFixed(1)}" />
+        <circle class="heal-ring heal-ring-secondary" cx="${(x - ring * 0.6).toFixed(1)}" cy="${(y + ring * 0.16).toFixed(1)}" r="${(ring * 0.72).toFixed(1)}" />
+        <circle class="heal-ring heal-ring-tertiary" cx="${(x + ring * 0.58).toFixed(1)}" cy="${(y - ring * 0.14).toFixed(1)}" r="${(ring * 0.58).toFixed(1)}" />
+      </svg>
+    `;
+    document.body.appendChild(heal);
+    setTimeout(() => heal.remove(), 620);
+  }
+
+  function drawChaoticLightning(attackerId, targetId) {
+    const target = findDemonCard(targetId);
+    if (!target) return;
+
+    const rect = target.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const top = Math.max(0, rect.top - Math.min(170, window.innerHeight * 0.24));
+    const strikeY = rect.top + rect.height * 0.56;
+    const branchY = rect.top + rect.height * 0.26;
     const zap = document.createElement('div');
-    zap.className = 'chaos-lightning';
+    applyCombatTheme(zap, getCombatTheme(attackerId));
+    zap.className = 'chaos-lightning is-thunderstrike';
+    const boltD = `M ${(x - 12).toFixed(1)} ${top.toFixed(1)} L ${(x + 10).toFixed(1)} ${(top + 42).toFixed(1)} L ${(x - 8).toFixed(1)} ${(top + 42).toFixed(1)} L ${(x + 7).toFixed(1)} ${(branchY + 10).toFixed(1)} L ${(x - 16).toFixed(1)} ${(branchY + 10).toFixed(1)} L ${(x + 4).toFixed(1)} ${strikeY.toFixed(1)}`;
+    const branchOneD = `M ${(x + 7).toFixed(1)} ${(branchY - 4).toFixed(1)} L ${(x + 34).toFixed(1)} ${(branchY + 10).toFixed(1)} L ${(x + 14).toFixed(1)} ${(branchY + 18).toFixed(1)}`;
+    const branchTwoD = `M ${(x - 4).toFixed(1)} ${(branchY + 22).toFixed(1)} L ${(x - 35).toFixed(1)} ${(branchY + 34).toFixed(1)} L ${(x - 13).toFixed(1)} ${(branchY + 43).toFixed(1)}`;
     zap.innerHTML = `
       <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
-        <path d="M ${x.toFixed(1)} ${(top - 34).toFixed(1)} L ${(x - 10).toFixed(1)} ${(top - 4).toFixed(1)} L ${(x + 3).toFixed(1)} ${(top - 4).toFixed(1)} L ${(x - 5).toFixed(1)} ${(top + 28).toFixed(1)} L ${(x + 16).toFixed(1)} ${(top - 12).toFixed(1)} L ${(x + 3).toFixed(1)} ${(top - 12).toFixed(1)} Z" />
+        <path class="chaos-thunder-border chaos-thunder-core" d="${boltD}" />
+        <path class="chaos-thunder-border chaos-thunder-branch" d="${branchOneD}" />
+        <path class="chaos-thunder-border chaos-thunder-branch" d="${branchTwoD}" />
+        <path class="chaos-thunder-core" d="${boltD}" />
+        <path class="chaos-thunder-branch" d="${branchOneD}" />
+        <path class="chaos-thunder-branch" d="${branchTwoD}" />
       </svg>
     `;
     document.body.appendChild(zap);
@@ -956,8 +1141,55 @@
     spike.style.top = `${startY}px`;
     spike.style.width = `${length}px`;
     spike.style.setProperty('--dark-spike-angle', `${angle}rad`);
+    applyCombatTheme(spike, getCombatTheme(attackerId));
     document.body.appendChild(spike);
     setTimeout(() => spike.remove(), 340);
+  }
+
+  function getCombatTheme(attackerId, effect) {
+    if (effect === 'poison' || effect === 'poison_apply') return COMBAT_THEMES.poison;
+    if (effect === 'heal') return COMBAT_THEMES.heal;
+
+    const typeId = Number(getCombatDemon(attackerId)?.typeId);
+    return COMBAT_THEMES[typeId] || COMBAT_THEMES.default;
+  }
+
+  function applyCombatTheme(element, theme) {
+    if (!element || !theme) return;
+    element.style.setProperty('--combat-color', theme.color);
+    element.style.setProperty('--combat-shadow', theme.shadow);
+  }
+
+  function getAttackGeometry(attacker, target) {
+    const attackerRect = attacker.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const startX = attackerRect.left + attackerRect.width / 2;
+    const startY = attackerRect.top + attackerRect.height / 2;
+    const endX = targetRect.left + targetRect.width / 2;
+    const endY = targetRect.top + targetRect.height / 2;
+
+    return {
+      attackerRect,
+      targetRect,
+      startX,
+      startY,
+      endX,
+      endY,
+      angle: Math.atan2(endY - startY, endX - startX)
+    };
+  }
+
+  function getCombatStepDelay(step) {
+    return Math.max(
+      320,
+      ...(step.entries || []).map((entry) => {
+        const typeId = Number(getCombatDemon(entry.attacker)?.typeId);
+        if (entry.effect === 'heal') return 500;
+        if (typeId === 5 || typeId === 8) return 520;
+        if (typeId === 9) return 960;
+        return 320;
+      })
+    );
   }
 
   function isTypeTwoAttack(instanceId) {
@@ -1147,8 +1379,12 @@
         previous?.isAoe &&
         previous.tick === entry.tick &&
         previous.attacker === entry.attacker;
+      const isSameRetaliation = entry.effect === 'retaliate' &&
+        previous &&
+        previous.tick === entry.tick &&
+        previous.entries.some((previousEntry) => previousEntry.attacker === entry.target && previousEntry.target === entry.attacker);
 
-      if (isSameAoe) {
+      if (isSameAoe || isSameRetaliation) {
         previous.entries.push(entry);
         continue;
       }
@@ -1195,9 +1431,11 @@
 
   function getFightLogAmountText(step) {
     const entry = step.entries[0];
+    const retaliationEntry = step.entries.find((item) => item.effect === 'retaliate');
     if (entry.effect === 'poison_apply') return 'poison';
     if (entry.effect === 'poison') return `${entry.dmg} poison`;
     if (entry.effect === 'heal') return `+${entry.healing || 0} hp`;
+    if (retaliationEntry) return `${entry.dmg} dmg, ${retaliationEntry.dmg} thorns`;
     if (step.isAoe) return `${step.entries.length} x ${entry.dmg} dmg`;
     return `${entry.dmg} dmg`;
   }
@@ -2080,9 +2318,10 @@
 
     return `
       <div class="demon-status-strip" aria-label="Status effects">
-        ${Array.from({ length: poisonStacks }, () => (
-          `<span class="demon-status-badge demon-status-poison" aria-label="Poisoned" title="Poisoned">${renderPoisonIcon()}</span>`
-        )).join('')}
+        <span class="demon-status-badge demon-status-poison" aria-label="Poisoned, ${poisonStacks} stack${poisonStacks === 1 ? '' : 's'}" title="Poisoned">
+          <span class="demon-status-icon">${renderPoisonIcon()}</span>
+          ${poisonStacks > 1 ? `<span class="demon-status-count">${escapeHtml(poisonStacks)}</span>` : ''}
+        </span>
       </div>
     `;
   }
@@ -2104,7 +2343,13 @@
   }
 
   function renderCombatStats(demon) {
-    return renderSharedCombatStats(demon);
+    return renderSharedCombatStats(demon, {
+      hideSpeed: isRetaliateDemon(demon)
+    });
+  }
+
+  function isRetaliateDemon(demon = {}) {
+    return Number(demon.typeId) === 8 || demon.role === 'counter_tank' || demon.targeting === 'none';
   }
 
   function renderEmptyText(text) {

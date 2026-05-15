@@ -34,17 +34,17 @@
           <div class="hunt-demon-card-title">
             <span class="text-white">${escapeHtml(title)}</span>
           </div>
-          ${options.showStats === false ? '' : renderCombatStats(demon)}
+          ${options.showStats === false ? '' : renderCombatStats(demon, options.statsOptions || {})}
           ${options.footerHtml || ''}
         </div>
       </${tag}>
     `;
   }
 
-  function renderCombatStats(demon = {}) {
+  function renderCombatStats(demon = {}, options = {}) {
     const hasHp = hasNumber(demon.hp) || hasNumber(demon.maxHp);
     const hasAtk = hasNumber(demon.atk);
-    const hasSpeed = hasNumber(demon.speed);
+    const hasSpeed = hasNumber(demon.speed) && !options.hideSpeed && !isRetaliateDemon(demon);
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || currentHp || 1);
     const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
@@ -114,6 +114,10 @@
 
   function hasNumber(value) {
     return value !== null && value !== undefined && value !== '' && !Number.isNaN(Number(value));
+  }
+
+  function isRetaliateDemon(demon = {}) {
+    return Number(demon.typeId) === 8 || demon.role === 'counter_tank' || demon.targeting === 'none';
   }
 
   function capitalize(value) {
