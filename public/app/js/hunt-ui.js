@@ -41,6 +41,7 @@
     draggedRewardId: null,
     draggedRecruitPoolInstanceId: null,
     draggedFormationInstanceId: null,
+    selectedRecruitPoolInstanceId: null,
     recruitDraftTeam: null,
     recruitDraftPool: null,
     combatLog: [],
@@ -73,6 +74,7 @@
       'navPlayerName',
       'huntTitle',
       'huntProgress',
+      'dungeonRewardStrip',
       'runLoading',
       'runEmpty',
       'runPanel',
@@ -355,6 +357,7 @@
       state.draggedRewardId = null;
       state.draggedRecruitPoolInstanceId = null;
       state.draggedFormationInstanceId = null;
+      state.selectedRecruitPoolInstanceId = null;
       state.recruitDraftTeam = null;
       state.recruitDraftPool = null;
       state.combatLog = [];
@@ -392,6 +395,8 @@
     if (!state.run?.awaitingRecruit) return;
 
     state.selectedCashoutDemonKey = null;
+    const subtitle = document.getElementById('cashoutModalSubtitle');
+    if (subtitle) subtitle.textContent = 'Pick one demon to keep, or leave without one.';
     renderCashoutModal();
     getModal(elements.cashoutModal).show();
   }
@@ -401,16 +406,22 @@
     const candidates = getCashoutCandidates();
 
     elements.cashoutModalBody.innerHTML = `
-      <div class="cashout-summary">
-        <p class="mb-2">Ending the dungeon now gives you <strong>${earned.xp || 0} XP</strong> and <strong>${earned.souls || 0} souls</strong>. You can also choose one demon to add to your collection.</p>
-        <p class="text-warning mb-0">This ends the dungeon immediately.</p>
+      <div class="cashout-summary cashout-summary-compact">
+        <div>
+          <span class="hunt-phase-eyebrow">Leave now</span>
+          <p class="mb-0">Pick one demon to keep, or leave with only the earned rewards.</p>
+        </div>
+        <div class="cashout-reward-chips" aria-label="Dungeon rewards">
+          <span>${earned.xp || 0} XP</span>
+          <span>${earned.souls || 0} souls</span>
+        </div>
       </div>
-      <button class="btn btn-outline-light w-100 mt-3" id="cashoutSkipDemonBtn" type="button">
-        Leave Without Recruiting
-      </button>
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mt-1">
+      <div class="cashout-candidate-grid">
         ${candidates.map(renderCashoutCandidate).join('')}
       </div>
+      <button class="btn btn-outline-light w-100 mt-3" id="cashoutSkipDemonBtn" type="button">
+        Leave Without Demon
+      </button>
     `;
     elements.cashoutConfirmBtn.disabled = !state.selectedCashoutDemonKey;
 
@@ -453,7 +464,7 @@
     const active = state.selectedCashoutDemonKey === candidate.key;
 
     return `
-      <div class="col">
+      <div class="cashout-candidate">
         ${renderSharedDemonCard(demon, {
           tag: 'button',
           className: 'cashout-demon-card',
@@ -488,6 +499,7 @@
         state.selectedCashoutDemonKey = null;
         state.recruitDraftTeam = null;
         state.recruitDraftPool = null;
+        state.selectedRecruitPoolInstanceId = null;
         state.combatLog = [];
         state.combatDemons = new Map();
         state.endSummary = {
@@ -525,6 +537,7 @@
         state.selectedCashoutDemonKey = null;
         state.recruitDraftTeam = null;
         state.recruitDraftPool = null;
+        state.selectedRecruitPoolInstanceId = null;
         state.combatLog = [];
         state.combatDemons = new Map();
         state.endSummary = {
@@ -567,6 +580,7 @@
       state.draggedRewardId = null;
       state.draggedRecruitPoolInstanceId = null;
       state.draggedFormationInstanceId = null;
+      state.selectedRecruitPoolInstanceId = null;
       state.recruitDraftTeam = null;
       state.recruitDraftPool = null;
       state.endSummary = {
@@ -610,6 +624,7 @@
     elements.runPanel.classList.toggle('d-none', state.isLoading || !hasRun);
     elements.huntTitle.innerHTML = renderHuntTitle(run);
     renderHuntProgress(run);
+    renderDungeonRewardStrip();
     renderBattleOutcome();
     showCombatPanel();
 
@@ -660,6 +675,7 @@
     document.querySelector('.battle-side-enemy')?.classList.toggle('is-recruit-side', state.isRecruiting);
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
+    bindPointerDragAndDrop();
     bindDemonDetailCards();
     watchFormationLaneSizing();
     renderFightLog();
@@ -1487,6 +1503,13 @@
     `;
   }
 
+  function renderDungeonRewardStrip() {
+    if (!elements.dungeonRewardStrip) return;
+
+    const shouldShow = Boolean(!state.isLoading && state.run?.awaitingRecruit && state.isRecruiting);
+    elements.dungeonRewardStrip.innerHTML = shouldShow ? renderRewardTags('dungeon-mobile-rewards') : '';
+  }
+
   function renderPhaseTitle() {
     if (!elements.fightLogTitle) return;
     elements.fightLogTitle.textContent = 'Fight Log';
@@ -1622,6 +1645,8 @@
     state.selectedSwapInstanceId = null;
     state.draggedRewardId = null;
     state.draggedRecruitPoolInstanceId = null;
+    state.draggedFormationInstanceId = null;
+    state.selectedRecruitPoolInstanceId = null;
     ensureRecruitDraft();
     renderRun();
   }
@@ -1661,6 +1686,7 @@
       instanceId: `reward-${reward.rewardId}`,
       rewardId: reward.rewardId,
       recruitSource: 'reward',
+      isTapSelected: state.selectedRecruitPoolInstanceId === `reward-${reward.rewardId}`,
       position: getDemonPosition(reward.demon, index)
     }));
   }
@@ -1737,7 +1763,7 @@
         </button>
       ` : ''}
       ${canChooseRecruit ? `
-        ${renderRewardTags('dungeon-header-rewards')}
+        ${shouldUseMobileRewardStrip() ? '' : renderRewardTags('dungeon-header-rewards')}
         <button class="btn btn-warning btn-sm" id="getRewardBtn" type="button">
           ${renderIcon('flag')}
           Get Reward
@@ -2333,10 +2359,334 @@
     });
   }
 
+  function bindPointerDragAndDrop() {
+    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+      card.addEventListener('pointerdown', startPointerDrag);
+      card.addEventListener('mousedown', startMouseDrag);
+      card.addEventListener('touchstart', startTouchDrag, { passive: false });
+    });
+  }
+
+  function startPointerDrag(event) {
+    if (event.button !== undefined && event.button !== 0) return;
+    if (event.pointerType === 'mouse') return;
+
+    const card = event.currentTarget;
+    const payload = getPointerDragPayload(card);
+    if (!payload) return;
+
+    const drag = {
+      card,
+      payload,
+      pointerId: event.pointerId,
+      listenerTarget: card,
+      moveEvent: 'pointermove',
+      upEvent: 'pointerup',
+      cancelEvent: 'pointercancel',
+      startX: event.clientX,
+      startY: event.clientY,
+      currentTarget: null,
+      ghost: null,
+      active: false
+    };
+
+    const onMove = (moveEvent) => movePointerDrag(moveEvent, drag);
+    const onUp = (upEvent) => finishPointerDrag(upEvent, drag, onMove, onUp, onCancel);
+    const onCancel = (cancelEvent) => cancelPointerDrag(cancelEvent, drag, onMove, onUp, onCancel);
+
+    card.setPointerCapture?.(event.pointerId);
+    card.addEventListener('pointermove', onMove);
+    card.addEventListener('pointerup', onUp);
+    card.addEventListener('pointercancel', onCancel);
+  }
+
+  function startMouseDrag(event) {
+    if (event.button !== 0) return;
+    if (!shouldUseCustomMouseDrag()) return;
+    if (event.currentTarget.classList.contains('is-pointer-dragging')) return;
+
+    const card = event.currentTarget;
+    const payload = getPointerDragPayload(card);
+    if (!payload) return;
+
+    const drag = createDragSession(card, payload, event.clientX, event.clientY, document, 'mousemove', 'mouseup', 'mouseup');
+    const onMove = (moveEvent) => movePointerDrag(moveEvent, drag);
+    const onUp = (upEvent) => finishPointerDrag(upEvent, drag, onMove, onUp, onCancel);
+    const onCancel = (cancelEvent) => cancelPointerDrag(cancelEvent, drag, onMove, onUp, onCancel);
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  function startTouchDrag(event) {
+    if (window.PointerEvent) return;
+    if (event.touches.length !== 1) return;
+
+    const card = event.currentTarget;
+    const payload = getPointerDragPayload(card);
+    if (!payload) return;
+
+    const touch = event.touches[0];
+    const drag = createDragSession(card, payload, touch.clientX, touch.clientY, document, 'touchmove', 'touchend', 'touchcancel');
+    const onMove = (moveEvent) => movePointerDrag(moveEvent, drag);
+    const onUp = (upEvent) => finishPointerDrag(upEvent, drag, onMove, onUp, onCancel);
+    const onCancel = (cancelEvent) => cancelPointerDrag(cancelEvent, drag, onMove, onUp, onCancel);
+
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onUp);
+    document.addEventListener('touchcancel', onCancel);
+  }
+
+  function createDragSession(card, payload, startX, startY, listenerTarget, moveEvent, upEvent, cancelEvent) {
+    return {
+      card,
+      payload,
+      pointerId: null,
+      listenerTarget,
+      moveEvent,
+      upEvent,
+      cancelEvent,
+      startX,
+      startY,
+      currentTarget: null,
+      ghost: null,
+      active: false
+    };
+  }
+
+  function movePointerDrag(event, drag) {
+    if (drag.pointerId !== null && event.pointerId !== drag.pointerId) return;
+
+    const point = getDragPoint(event);
+    if (!point) return;
+
+    const deltaX = point.clientX - drag.startX;
+    const deltaY = point.clientY - drag.startY;
+    if (!drag.active && Math.hypot(deltaX, deltaY) < 8) return;
+
+    if (!drag.active) activatePointerDrag(event, drag);
+
+    if (event.cancelable) event.preventDefault();
+    positionPointerDragGhost(drag.ghost, point.clientX, point.clientY);
+    const target = getPointerDropTarget(point.clientX, point.clientY, drag);
+    setPointerDropTarget(drag, target);
+  }
+
+  function activatePointerDrag(event, drag) {
+    drag.active = true;
+    drag.card.classList.add('is-dragging');
+    drag.card.classList.add('is-pointer-dragging');
+    drag.card.classList.add('suppress-detail-click');
+    if (drag.pointerId !== null) drag.card.setPointerCapture?.(drag.pointerId);
+
+    if (drag.payload.type === 'recruit-pool') {
+      const poolDemon = findDraftDemon(state.recruitDraftPool, drag.payload.instanceId);
+      state.draggedRewardId = poolDemon?.rewardId || null;
+      state.draggedRecruitPoolInstanceId = drag.payload.instanceId;
+    } else {
+      state.draggedFormationInstanceId = drag.payload.instanceId;
+    }
+
+    drag.ghost = drag.card.cloneNode(true);
+    drag.ghost.classList.add('pointer-drag-ghost');
+    drag.ghost.removeAttribute('id');
+    drag.ghost.removeAttribute('role');
+    drag.ghost.removeAttribute('tabindex');
+    drag.ghost.style.width = `${drag.card.getBoundingClientRect().width}px`;
+    document.body.appendChild(drag.ghost);
+    const point = getDragPoint(event);
+    if (point) positionPointerDragGhost(drag.ghost, point.clientX, point.clientY);
+  }
+
+  function finishPointerDrag(event, drag, onMove, onUp, onCancel) {
+    cleanupPointerDragListeners(drag, onMove, onUp, onCancel);
+    if (!drag.active) return;
+
+    if (event.cancelable) event.preventDefault();
+    event.stopPropagation();
+    const point = getDragPoint(event);
+    const target = point ? getPointerDropTarget(point.clientX, point.clientY, drag) : null;
+    applyPointerDrop(drag.payload, target);
+    cleanupPointerDrag(drag);
+  }
+
+  function cancelPointerDrag(event, drag, onMove, onUp, onCancel) {
+    cleanupPointerDragListeners(drag, onMove, onUp, onCancel);
+    if (drag.active) {
+      if (event.cancelable) event.preventDefault();
+      cleanupPointerDrag(drag);
+    }
+  }
+
+  function cleanupPointerDragListeners(drag, onMove, onUp, onCancel) {
+    drag.listenerTarget.removeEventListener(drag.moveEvent, onMove);
+    drag.listenerTarget.removeEventListener(drag.upEvent, onUp);
+    drag.listenerTarget.removeEventListener(drag.cancelEvent, onCancel);
+    if (drag.pointerId !== null) drag.card.releasePointerCapture?.(drag.pointerId);
+  }
+
+  function cleanupPointerDrag(drag) {
+    drag.card.classList.remove('is-dragging', 'is-pointer-dragging');
+    drag.ghost?.remove();
+    setPointerDropTarget(drag, null);
+    state.draggedRewardId = null;
+    state.draggedRecruitPoolInstanceId = null;
+    state.draggedFormationInstanceId = null;
+
+    window.setTimeout(() => {
+      drag.card.classList.remove('suppress-detail-click');
+    }, 120);
+  }
+
+  function getPointerDragPayload(card) {
+    const instanceId = card.dataset.instanceId;
+    if (!instanceId) return null;
+
+    if (state.run?.awaitingRecruit && state.isRecruiting) {
+      if (card.closest('#enemyGrid') && findDraftDemon(state.recruitDraftPool, instanceId)) {
+        return { type: 'recruit-pool', instanceId };
+      }
+      if (card.closest('#teamGrid') && findDraftDemon(state.recruitDraftTeam, instanceId)) {
+        return { type: 'recruit-team', instanceId };
+      }
+      return null;
+    }
+
+    if (state.run && !state.run.awaitingRecruit && !state.run.awaitingFinalPick && card.closest('#teamGrid')) {
+      return { type: 'formation', instanceId };
+    }
+
+    return null;
+  }
+
+  function getPointerDropTarget(x, y, drag) {
+    const ghostDisplay = drag.ghost?.style.display;
+    if (drag.ghost) drag.ghost.style.display = 'none';
+    const element = document.elementFromPoint(x, y);
+    if (drag.ghost) drag.ghost.style.display = ghostDisplay || '';
+    if (!element) return null;
+
+    const card = element.closest('.hunt-demon-card[data-instance-id]');
+    const lane = element.closest('.formation-lane-cards');
+    const label = element.closest('.formation-lane-label');
+
+    if (card && canPointerDropOnCard(drag.payload, card)) {
+      return { element: card, kind: 'card' };
+    }
+
+    const laneElement = lane || label?.closest('.formation-lane')?.querySelector('.formation-lane-cards');
+    if (laneElement && canPointerDropOnLane(drag.payload, laneElement)) {
+      return { element: laneElement, kind: 'lane' };
+    }
+
+    return null;
+  }
+
+  function canPointerDropOnCard(payload, card) {
+    if (!payload || !card.closest('#teamGrid')) return false;
+    if (payload.type !== 'recruit-pool') return false;
+    return canDropPoolDemonOnTeamCard(payload.instanceId, card.dataset.instanceId);
+  }
+
+  function canPointerDropOnLane(payload, lane) {
+    if (!payload) return false;
+
+    if (payload.type === 'formation') {
+      return Boolean(lane.closest('#teamGrid'));
+    }
+
+    if (payload.type === 'recruit-pool') {
+      return Boolean(lane.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId));
+    }
+
+    if (payload.type === 'recruit-team') {
+      return Boolean(
+        (lane.closest('#teamGrid') && findDraftDemon(state.recruitDraftTeam, payload.instanceId)) ||
+        (lane.closest('#enemyGrid') && canReturnTeamDemonToPool(payload.instanceId))
+      );
+    }
+
+    return false;
+  }
+
+  function setPointerDropTarget(drag, target) {
+    if (drag.currentTarget?.element === target?.element) return;
+
+    drag.currentTarget?.element.classList.remove('is-drag-over');
+    drag.currentTarget = target;
+    drag.currentTarget?.element.classList.add('is-drag-over');
+  }
+
+  function applyPointerDrop(payload, target) {
+    if (!target) return;
+
+    if (payload.type === 'formation') {
+      const position = target.element.dataset.formationDrop;
+      if (position) setDemonPosition(payload.instanceId, position);
+      return;
+    }
+
+    if (payload.type === 'recruit-pool') {
+      if (target.kind === 'card') {
+        if (canAddPoolDemonToTeam(payload.instanceId)) {
+          const teamDemon = findDraftDemon(state.recruitDraftTeam, target.element.dataset.instanceId);
+          addPoolDemonToTeam(payload.instanceId, getDemonPosition(teamDemon));
+        } else {
+          swapPoolDemonIntoTeam(payload.instanceId, target.element.dataset.instanceId);
+        }
+        renderRun();
+        return;
+      }
+
+      const position = target.element.dataset.formationDrop;
+      if (position && canAddPoolDemonToTeam(payload.instanceId)) {
+        addPoolDemonToTeam(payload.instanceId, position);
+        renderRun();
+      }
+      return;
+    }
+
+    if (payload.type === 'recruit-team') {
+      const position = target.element.dataset.formationDrop;
+      if (!position) return;
+
+      if (target.element.closest('#teamGrid')) {
+        moveDraftTeamDemon(payload.instanceId, position);
+        renderRun();
+        return;
+      }
+
+      if (target.element.closest('#enemyGrid') && canReturnTeamDemonToPool(payload.instanceId)) {
+        returnTeamDemonToPool(payload.instanceId, position);
+        renderRun();
+      }
+    }
+  }
+
+  function positionPointerDragGhost(ghost, x, y) {
+    if (!ghost) return;
+    ghost.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -50%)`;
+  }
+
+  function getDragPoint(event) {
+    if (event.changedTouches?.length) return event.changedTouches[0];
+    if (event.touches?.length) return event.touches[0];
+    if (Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) return event;
+    return null;
+  }
+
+  function shouldUseMobileRewardStrip() {
+    return window.matchMedia('(max-width: 575.98px)').matches;
+  }
+
+  function shouldUseCustomMouseDrag() {
+    return window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 575.98px)').matches;
+  }
+
   function bindDemonDetailCards() {
     document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
       card.addEventListener('click', (event) => {
-        if (event.defaultPrevented || card.classList.contains('is-dragging')) return;
+        if (event.defaultPrevented || card.classList.contains('is-dragging') || card.classList.contains('suppress-detail-click')) return;
 
         const demon = getDemonForDetailCard(card);
         if (!demon) return;
@@ -2485,6 +2835,7 @@
   }
 
   function syncRecruitDraftSelection() {
+    state.selectedRecruitPoolInstanceId = null;
     const recruit = (state.recruitDraftTeam || []).find((demon) => demon.recruitSource === 'reward' && demon.rewardId);
     state.selectedRecruitRewardId = recruit?.rewardId || null;
 
@@ -2579,7 +2930,7 @@
     return renderSharedDemonCard(demon, {
       className: classes.replace('hunt-demon-card', '').trim(),
       defeated: Number(demon.hp) <= 0,
-      active: state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId,
+      active: state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId || demon.isTapSelected,
       overlayHtml: renderDemonStatus(demon),
       attributes: {
         'data-instance-id': demon.instanceId,
