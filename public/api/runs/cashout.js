@@ -38,7 +38,7 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
     ]
   );
 
-  const earned = run.state.earned || { xp: 0, souls: 0 };
+  const earned = getEarnedForPayout(run, { savedDemon: true });
   const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [req.player.id]);
   const nextXp = playerRows[0].xp + (earned.xp || 0);
   const nextLevel = Math.max(playerRows[0].level, Math.floor(nextXp / 100) + 1);
@@ -77,7 +77,7 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
 });
 
 async function endRunWithoutDemon(run, playerId, res) {
-  const earned = run.state.earned || { xp: 0, souls: 0 };
+  const earned = getEarnedForPayout(run, { savedDemon: false });
   const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [playerId]);
   const nextXp = playerRows[0].xp + (earned.xp || 0);
   const nextLevel = Math.max(playerRows[0].level, Math.floor(nextXp / 100) + 1);
@@ -144,6 +144,18 @@ function getCashoutDemon(run, body) {
   const error = new Error('Choose a demon reward.');
   error.status = 400;
   throw error;
+}
+
+function getEarnedForPayout(run, options = {}) {
+  const earned = run.state.earned || { xp: 0, souls: 0 };
+  const souls = run.status === 'defeated'
+    ? 0
+    : Math.max(0, (Number(earned.souls) || 0) - (options.savedDemon ? 1 : 0));
+
+  return {
+    xp: Number(earned.xp) || 0,
+    souls
+  };
 }
 
 module.exports = router;

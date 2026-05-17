@@ -587,6 +587,15 @@ body.dungeon-page .navbar {
     cursor: grab;
 }
 
+.hunt-demon-card[role="button"]:not([draggable="true"]) {
+    cursor: pointer;
+}
+
+.hunt-demon-card[role="button"]:focus-visible {
+    outline: 2px solid rgba(232,199,106,0.82);
+    outline-offset: 3px;
+}
+
 .hunt-demon-card.is-dragging {
     opacity: 0.45;
 }
@@ -1276,9 +1285,208 @@ body.dungeon-page .navbar {
     padding: 1rem;
 }
 
+.demon-detail-modal .modal-dialog {
+    max-width: min(94vw, 760px);
+}
+
+.demon-detail-modal .modal-content {
+    border: 1px solid rgba(255,255,255,0.16);
+    border-top: 5px solid var(--rarity-color, #D1D5D8);
+    border-radius: 8px;
+    background: #15191d;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.66);
+    overflow: hidden;
+}
+
+.demon-detail-modal .modal-body {
+    overflow: auto;
+    padding: 0;
+}
+
+.demon-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.05fr) minmax(280px, 1fr);
+    min-height: 390px;
+}
+
+.demon-detail-art {
+    min-height: 390px;
+    background: rgba(0,0,0,0.28);
+}
+
+.demon-detail-art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 390px;
+    object-fit: cover;
+    object-position: center 22%;
+}
+
+.demon-detail-panel {
+    display: grid;
+    grid-template-rows: auto auto auto 1fr auto;
+    min-width: 0;
+    color: var(--ad-text, #f2f7ff);
+}
+
+.demon-detail-heading,
+.demon-detail-stats,
+.demon-detail-meta,
+.demon-detail-actions {
+    padding-right: 1.25rem;
+    padding-left: 1.25rem;
+}
+
+.demon-detail-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1.15rem;
+    padding-bottom: 0.9rem;
+}
+
+.demon-detail-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+.demon-detail-rarity {
+    margin: 0.25rem 0 0;
+    color: var(--rarity-color, #FAC51C);
+    font-weight: 700;
+}
+
+.demon-detail-close {
+    flex: 0 0 auto;
+}
+
+.demon-detail-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem 1.35rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.9rem;
+    border-top: 1px solid rgba(255,255,255,0.12);
+}
+
+.demon-detail-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 1rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.demon-detail-stat i,
+.demon-detail-stat .combat-stat-icon {
+    color: #8b949d;
+    font-size: 0.95rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+.demon-detail-hp {
+    height: 2.55rem;
+    margin: 0 1.25rem 1rem;
+    border-radius: 6px;
+    background: rgba(207,226,220,0.18);
+    overflow: hidden;
+}
+
+.demon-detail-hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1f9657, #62cfa9);
+}
+
+.demon-detail-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    align-content: start;
+    padding-bottom: 1rem;
+}
+
+.demon-detail-meta div {
+    min-width: 0;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    padding: 0.55rem 0.65rem;
+}
+
+.demon-detail-meta span {
+    display: block;
+    color: #8f9aa4;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.demon-detail-meta strong {
+    display: block;
+    min-width: 0;
+    margin-top: 0.12rem;
+    overflow: hidden;
+    color: #f2f7ff;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.demon-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.12);
+}
+
+.demon-detail-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 5.2rem;
+    justify-content: center;
+}
+
 @media (min-width: 992px) {
     .hunt-modal .modal-body {
         padding: 1.5rem 2rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .demon-detail-modal .modal-dialog {
+        max-width: calc(100vw - 1rem);
+        margin-right: 0.5rem;
+        margin-left: 0.5rem;
+    }
+
+    .demon-detail-layout {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+
+    .demon-detail-art,
+    .demon-detail-art img {
+        min-height: 0;
+        height: auto;
+        aspect-ratio: 4 / 3;
+    }
+
+    .demon-detail-panel {
+        display: block;
+    }
+
+    .demon-detail-meta {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -3301,8 +3509,7 @@ body.collection-page {
 
 .collection-card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 9.25rem));
-    justify-content: center;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 1rem;
 }
 
@@ -3320,7 +3527,12 @@ body.collection-page {
 }
 
 .collection-demon-card {
+    width: 100%;
     background: rgba(3,9,11,0.55);
+}
+
+.collection-card-grid .hunt-demon-card {
+    width: 100%;
 }
 
 .collection-demon-card img {
@@ -3337,6 +3549,23 @@ body.collection-page {
 @media (max-width: 767.98px) {
     .collection-controls {
         grid-template-columns: 1fr;
+    }
+
+    .collection-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .collection-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.7rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199.98px) {
+    .collection-card-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
 

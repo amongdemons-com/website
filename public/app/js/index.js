@@ -10,6 +10,8 @@
   const currentType = getCurrentTypeFromPath();
   const elements = getPageElements();
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
+  const formatTraitLabel = window.AmongDemons.ui.formatTraitLabel || window.AmongDemons.ui.formatRoleLabel;
+  const getPositionLabel = window.AmongDemons.ui.getDemonPositionLabel;
 
   if (!elements) return;
 
@@ -76,7 +78,7 @@
 
     return `
       <div class="demon-type-info-heading">
-        ${renderInfoBadge('Role', typeInfo.role)}
+        ${renderInfoBadge('Trait', typeInfo.role)}
         ${renderInfoBadge('Targeting', typeInfo.targeting)}
         ${renderInfoBadge('Position', typeInfo.preferredPosition)}
         ${renderInfoBadge('Spawn Weight', typeInfo.spawnWeight)}
@@ -115,10 +117,16 @@
   }
 
   function renderInfoBadge(label, value) {
+    const displayValue = label === 'Trait'
+      ? formatTraitLabel(value)
+      : label === 'Position'
+        ? getPositionLabel({ preferredPosition: value })
+        : formatValue(value);
+
     return `
       <span class="type-info-badge">
         <span>${escapeHtml(label)}</span>
-        <strong>${escapeHtml(formatValue(value))}</strong>
+        <strong>${escapeHtml(displayValue)}</strong>
       </span>
     `;
   }

@@ -49,7 +49,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     run.rewards.push(...floorRewards);
     run.state.earned = run.state.earned || { xp: 0, souls: 0 };
     run.state.earned.xp += 10 + run.floor * 5;
-    run.state.earned.souls += 5 + run.floor * 2;
+    run.state.earned.souls += countDefeatedDemons(result.enemyTeam);
     run.state.mapProgress[run.floor - 1].status = 'cleared';
 
     if (isFinalFloor) {
@@ -62,6 +62,10 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     }
   } else {
     run.status = 'defeated';
+    run.state.earned = {
+      ...(run.state.earned || { xp: 0, souls: 0 }),
+      souls: 0
+    };
   }
 
   await saveRun(run);
@@ -85,6 +89,10 @@ function clearPoisonEffects(team) {
       poison: []
     };
   });
+}
+
+function countDefeatedDemons(team) {
+  return (team || []).filter((demon) => Number(demon.hp) <= 0).length;
 }
 
 function createDefeatedDemonRewards(run) {

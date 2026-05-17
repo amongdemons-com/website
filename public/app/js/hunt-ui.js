@@ -4,6 +4,7 @@
   const api = window.AmongDemons.api;
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
   const renderSharedCombatStats = window.AmongDemons.ui.renderCombatStats;
+  const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
   const RUN_KEY = 'amongdemons-current-run';
   const session = window.AmongDemons.getSession();
   const COMBAT_THEMES = {
@@ -635,6 +636,7 @@
     document.querySelector('.battle-side-enemy')?.classList.toggle('is-recruit-side', state.isRecruiting);
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
+    bindDemonDetailCards();
     watchFormationLaneSizing();
     renderFightLog();
     renderFightLogActions();
@@ -2161,6 +2163,57 @@
     });
   }
 
+  function bindDemonDetailCards() {
+    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+      card.addEventListener('click', (event) => {
+        if (event.defaultPrevented || card.classList.contains('is-dragging')) return;
+
+        const demon = getDemonForDetailCard(card);
+        if (!demon) return;
+
+        openDemonDetailsModal(demon, {
+          actions: getDungeonDetailActions()
+        });
+      });
+
+      card.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+
+        event.preventDefault();
+        card.click();
+      });
+    });
+  }
+
+  function getDemonForDetailCard(card) {
+    const instanceId = card.dataset.instanceId;
+    if (!instanceId) return null;
+
+    return [
+      ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []),
+      ...(state.isRecruiting ? getRecruitPreviewEnemies() : state.run?.enemies || [])
+    ].find((demon) => demon.instanceId === instanceId) || null;
+  }
+
+  function getDungeonDetailActions() {
+    const actions = [];
+
+    if (isStrategyPhase()) {
+      actions.push({
+        label: 'Potions',
+        icon: 'bi-flask',
+        variant: 'success',
+        onClick: () => setMessage('Potions are not available yet.', 'warning')
+      });
+    }
+
+    return actions;
+  }
+
+  function isStrategyPhase() {
+    return Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick && !state.isRecruiting);
+  }
+
   function findDraftDemon(collection, instanceId) {
     if (!instanceId) return null;
     return (collection || []).find((demon) => demon.instanceId === instanceId) || null;
@@ -2377,6 +2430,8 @@
         'data-instance-id': demon.instanceId,
         'data-reward-id': demon.rewardId || null,
         'data-recruit-source': demon.recruitSource || null,
+        role: 'button',
+        tabindex: '0',
         draggable
       }
     });

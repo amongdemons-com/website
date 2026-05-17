@@ -3,7 +3,8 @@
 
   const api = window.AmongDemons.api;
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
-  const PAGE_SIZE = 36;
+  const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
+  const PAGE_SIZE = 24;
   const RARITY_ORDER = {
     common: 1,
     uncommon: 2,
@@ -94,6 +95,40 @@
       state.page = nextPage;
       renderCollection();
     });
+
+    elements.collectionGrid.addEventListener('click', (event) => {
+      const card = event.target.closest('.collection-demon-card[data-demon-id]');
+      if (!card) return;
+
+      const demon = state.collection.find((item) => String(item.id) === card.dataset.demonId);
+      if (!demon) return;
+
+      openDemonDetailsModal(withTypeName(demon), {
+        actions: [
+          {
+            label: 'Banish',
+            icon: 'bi-trash3-fill',
+            variant: 'outline-danger',
+            onClick: () => setMessage('Banishing is not available yet.', 'warning')
+          },
+          {
+            label: 'Train',
+            icon: 'bi-crosshair',
+            variant: 'success',
+            onClick: () => setMessage('Training is not available yet.', 'warning')
+          }
+        ]
+      });
+    });
+
+    elements.collectionGrid.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const card = event.target.closest('.collection-demon-card[data-demon-id]');
+      if (!card) return;
+
+      event.preventDefault();
+      card.click();
+    });
   }
 
   async function refreshCollection() {
@@ -131,7 +166,7 @@
     elements.collectionCount.textContent = String(totalCount);
     elements.collectionSummary.textContent = totalCount
       ? renderSummary(count, totalCount, totalPages)
-      : 'Collected demons from dungeon runs will appear here.';
+      : 'Collected and summoned demons will appear here.';
     elements.collectionGrid.innerHTML = totalCount
       ? count
         ? renderDemonCards(pageDemons)
@@ -144,9 +179,27 @@
   function renderDemonCards(demons) {
     return demons.map((demon) => `
       <div class="collection-grid-item">
-        ${renderSharedDemonCard(demon, { className: 'collection-demon-card' })}
+        ${renderSharedDemonCard(withTypeName(demon), {
+          className: 'collection-demon-card',
+          attributes: {
+            'data-demon-id': demon.id,
+            role: 'button',
+            tabindex: '0'
+          }
+        })}
       </div>
     `).join('');
+  }
+
+  function withTypeName(demon) {
+    const typeId = demon.typeId || demon.type;
+    const type = state.types[String(typeId)] || {};
+    return {
+      ...demon,
+      typeName: type.name || (typeId ? `Type ${typeId}` : ''),
+      preferredPosition: demon.preferredPosition || type.preferredPosition || '',
+      role: demon.role || type.role || ''
+    };
   }
 
   async function loadDemonTypes() {
@@ -235,7 +288,7 @@
 
   function renderSummary(count, totalCount, totalPages) {
     const filteredText = count === totalCount
-      ? `${totalCount} demon${totalCount === 1 ? '' : 's'} collected from dungeon runs.`
+      ? `${totalCount} demon${totalCount === 1 ? '' : 's'} in your collection.`
       : `${count} of ${totalCount} demon${totalCount === 1 ? '' : 's'} shown.`;
     const pageText = totalPages > 1 ? ` Page ${state.page} of ${totalPages}.` : '';
 
@@ -249,7 +302,7 @@
           <img src="/app/images/amongdemons_logo_250x250.png" alt="">
           <div>
             <h2 class="h5 mb-2">No demons collected yet</h2>
-            <p class="text-muted mb-0">Clear dungeon floors and choose demons to bring them here.</p>
+            <p class="text-muted mb-0">Earn, summon, and choose demons to bring them here.</p>
           </div>
           <a class="btn btn-primary" href="/dungeon">
             <i class="bi bi-play-fill"></i>
