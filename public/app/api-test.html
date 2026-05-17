@@ -7,10 +7,7 @@
     <title>API Test - Among Demons</title>
     <meta name="description" content="Test the Among Demons prototype API endpoints.">
 
-    <meta property="og:image" content="/app/images/demons/thumbnails/1.png">
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta property="og:image" content="/app/images/demons/thumbnails/1.png">    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css" rel="stylesheet">
     <style>
       .api-card pre,
@@ -68,10 +65,10 @@
         </div>
         <div class="d-flex gap-2 align-items-start">
           <button class="btn btn-outline-light" id="seedDemoUserBtn" type="button" title="Fill test credentials">
-            <i class="bi bi-person-plus"></i>
+            <i data-lucide="user-plus"></i>
           </button>
           <button class="btn btn-outline-danger" id="clearStateBtn" type="button" title="Clear stored API state">
-            <i class="bi bi-trash"></i>
+            <i data-lucide="trash-2"></i>
           </button>
         </div>
       </div>
@@ -148,7 +145,10 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/lucide/lucide.min.js"></script>
+    <script src="/app/js/icons.js"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/app/js/api-test.js"></script>
   </body>
 </html>
+

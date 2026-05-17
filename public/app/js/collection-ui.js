@@ -4,6 +4,7 @@
   const api = window.AmongDemons.api;
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
   const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
+  const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
   const PAGE_SIZE = 24;
   const RARITY_ORDER = {
     common: 1,
@@ -107,13 +108,13 @@
         actions: [
           {
             label: 'Banish',
-            icon: 'bi-trash3-fill',
+            icon: 'trash',
             variant: 'outline-danger',
             onClick: () => setMessage('Banishing is not available yet.', 'warning')
           },
           {
             label: 'Train',
-            icon: 'bi-crosshair',
+            icon: 'crosshair',
             variant: 'success',
             onClick: () => setMessage('Training is not available yet.', 'warning')
           }
@@ -305,7 +306,7 @@
             <p class="text-muted mb-0">Earn, summon, and choose demons to bring them here.</p>
           </div>
           <a class="btn btn-primary" href="/dungeon">
-            <i class="bi bi-play-fill"></i>
+            ${renderIcon('play')}
             Start Dungeon
           </a>
         </div>

@@ -5,6 +5,7 @@
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
   const renderSharedCombatStats = window.AmongDemons.ui.renderCombatStats;
   const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
+  const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
   const RUN_KEY = 'amongdemons-current-run';
   const session = window.AmongDemons.getSession();
   const COMBAT_THEMES = {
@@ -804,7 +805,7 @@
     return `
       <div class="dungeon-title-brand">
         <a class="dungeon-header-brand" href="/play" aria-label="Back to Play">
-          <i class="bi bi-chevron-left" aria-hidden="true"></i>
+          ${renderIcon('back')}
           <img src="/app/images/amongdemons_logo_250x250.png" alt="">
         </a>
         <div class="dungeon-title-copy">
@@ -837,14 +838,14 @@
           </div>
         ` : ''}
         <div class="dungeon-end-rewards" aria-label="Rewards obtained">
-          ${demon ? `<span><i class="bi bi-stars"></i>${escapeHtml(demon.species || 'Demon')}</span>` : ''}
+          ${demon ? `<span>${renderIcon('stars')}${escapeHtml(demon.species || 'Demon')}</span>` : ''}
           <span>${Number(summary.xp) || 0} XP</span>
           <span>${Number(summary.souls) || 0} souls</span>
         </div>
         <div class="dungeon-end-actions">
           <a class="btn btn-outline-light" href="/play">Leave</a>
           <button class="btn btn-primary" id="startNewDungeonBtn" type="button">
-            <i class="bi bi-play-fill"></i>
+            ${renderIcon('play')}
             Start New Dungeon
           </button>
         </div>
@@ -1048,7 +1049,7 @@
     applyCombatTheme(floating, getCombatTheme(attackerId, effect || type));
     floating.innerHTML = type === 'heal'
       ? `+${escapeHtml(amount)}`
-      : `-${escapeHtml(amount)}${type === 'poison' ? renderPoisonIcon() : ''}`;
+      : `-${escapeHtml(amount)}`;
     if (type === 'poison' && Number(options.burstCount) > 1) {
       const burstCount = Math.max(1, Number(options.burstCount) || 1);
       const scale = Math.min(2.2, 1 + (burstCount - 1) * 0.12);
@@ -1613,30 +1614,30 @@
     elements.fightLogActions.innerHTML = `
       ${canBattle ? `
         <button class="btn btn-hunt-battle btn-sm" id="battleBtn" type="button">
-          <i class="bi bi-lightning-charge"></i>
+          ${renderIcon('battle')}
           Battle
         </button>
       ` : ''}
       ${canReplay ? `
         <button class="btn btn-warning btn-sm btn-icon-only" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
-          <i class="bi bi-arrow-counterclockwise"></i>
+          ${renderIcon('replay')}
         </button>
       ` : ''}
       ${canViewLog ? `
         <button class="btn btn-outline-light btn-sm btn-icon-only" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log">
-          <i class="bi bi-list-ul"></i>
+          ${renderIcon('log')}
         </button>
       ` : ''}
       ${canContinueAfterWin ? `
         <button class="btn btn-success btn-sm" id="fightLogContinueBtn" type="button">
-          <i class="bi bi-arrow-right-circle"></i>
+          ${renderIcon('skip')}
           Continue
         </button>
       ` : ''}
       ${canChooseRecruit ? `
         ${renderRewardTags('dungeon-header-rewards')}
         <button class="btn btn-warning btn-sm" id="getRewardBtn" type="button">
-          <i class="bi bi-flag-fill"></i>
+          ${renderIcon('flag')}
           Get Reward
         </button>
         <span class="dungeon-action-or">or</span>
@@ -1647,7 +1648,7 @@
       ` : ''}
       ${canStart ? `
       <button class="btn btn-primary btn-sm" id="fightLogStartBtn" type="button">
-        <i class="bi bi-play-fill"></i>
+        ${renderIcon('play')}
         ${isDefeated ? 'Start New Dungeon' : 'Start Dungeon'}
       </button>
       ` : ''}
@@ -1760,7 +1761,7 @@
           <h3 class="h6 mb-2">Dungeon complete</h3>
           <p class="text-muted">${hasSavedFinalReward() ? 'Final demon saved to your collection.' : 'Choose one of your team demons, or exit without collecting.'}</p>
           <button class="btn btn-outline-info btn-sm js-open-choice-modal" type="button" ${hasSavedFinalReward() ? 'disabled' : ''}>
-            <i class="bi bi-stars"></i>
+            ${renderIcon('stars')}
             Finish Dungeon
           </button>
         </div>
@@ -1773,7 +1774,7 @@
           <h3 class="h6 mb-2">${recruitRewards.length} defeated demons available</h3>
           <p class="text-muted">Pick one in the team editor, preview your swap, then continue.</p>
           <button class="btn btn-outline-success btn-sm js-open-choice-modal" type="button">
-            <i class="bi bi-person-plus"></i>
+            ${renderIcon('recruit')}
             Edit Team
           </button>
         </div>
@@ -1845,7 +1846,7 @@
     `;
     elements.teamChoiceModalFooter.innerHTML = `
       <button type="button" class="btn btn-success" id="modalContinueBtn" ${canConfirmTeamChoice() ? '' : 'disabled'}>
-        <i class="bi bi-arrow-right-circle"></i>
+        ${renderIcon('skip')}
         ${getContinueButtonLabel()}
       </button>
     `;
@@ -2201,7 +2202,7 @@
     if (isStrategyPhase()) {
       actions.push({
         label: 'Potions',
-        icon: 'bi-flask',
+        icon: 'potion',
         variant: 'success',
         onClick: () => setMessage('Potions are not available yet.', 'warning')
       });
@@ -2382,30 +2383,11 @@
   }
 
   function renderFormationLaneIcon(position) {
-    if (position === 'front') {
-      return `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512" class="formation-lane-icon mb-1" role="img" aria-hidden="true" focusable="false">
-          <defs></defs>
-          <path class="fa-secondary" d="M19.1 .3C13.9-.7 8.5 .9 4.7 4.7S-.7 13.9 .3 19.1L14.4 89.6c1.9 9.3 6.4 17.8 13.1 24.5L329.4 416 416 329.4 114.2 27.5c-6.7-6.7-15.2-11.3-24.5-13.1L19.1 .3zM146.7 278.6L96 329.4 182.6 416l50.7-50.7-86.6-86.6zm218.5-45.3L484.5 114.2c6.7-6.7 11.3-15.2 13.1-24.5l14.1-70.5c1-5.2-.6-10.7-4.4-14.5s-9.2-5.4-14.5-4.4L422.4 14.4c-9.3 1.9-17.8 6.4-24.5 13.1L278.6 146.7l86.6 86.6z"></path>
-          <path class="fa-primary fa-secondary" d="M75.3 308.7c-6.2-6.2-16.4-6.2-22.6 0l-16 16c-4.7 4.7-6 11.8-3.3 17.8l27.5 62L4.7 460.7c-6.2 6.2-6.2 16.4 0 22.6l24 24c6.2 6.2 16.4 6.2 22.6 0l56.2-56.2 62 27.5c6 2.7 13.1 1.4 17.8-3.3l16-16c6.2-6.2 6.2-16.4 0-22.6l-128-128zm361.4 0l-128 128c-6.2 6.2-6.2 16.4 0 22.6l16 16c4.7 4.7 11.8 6 17.8 3.3l62-27.5 56.2 56.2c6.2 6.2 16.4 6.2 22.6 0l24-24c6.2-6.2 6.2-16.4 0-22.6l-56.2-56.2 27.5-62c2.7-6.1 1.4-13.1-3.3-17.8l-16-16c-6.2-6.2-16.4-6.2-22.6 0z"></path>
-        </svg>
-      `;
-    }
-
-    return `
-      <svg class="formation-lane-icon formation-lane-icon-stroke" viewBox="0 0 48 48" role="img" aria-hidden="true" focusable="false">
-        <path d="M15 6c12 6 12 30 0 36" />
-        <path d="M15 6c-5 11-5 25 0 36" />
-        <path d="M15 6v36" />
-        <path d="M15 24h24" />
-        <path d="M33 18l6 6-6 6" />
-        <path d="M23 20l-4 4 4 4" />
-      </svg>
-    `;
+    return renderIcon(position === 'front' ? 'melee' : 'ranged', { className: 'formation-lane-icon' });
   }
 
   function renderButtonMeleeIcon() {
-    return renderFormationLaneIcon('front').replace('formation-lane-icon mb-1', 'button-melee-icon');
+    return renderIcon('melee', { className: 'button-melee-icon' });
   }
 
   function renderDemonCard(demon, options) {
@@ -2460,7 +2442,7 @@
   }
 
   function renderPoisonIcon() {
-    return '<i class="bi bi-droplet-half" aria-hidden="true"></i>';
+    return renderIcon('poison');
   }
 
   function getDemonPosition(demon, index = 0) {
@@ -2561,3 +2543,4 @@
     callback();
   }
 })();
+

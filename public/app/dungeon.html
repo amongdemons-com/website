@@ -6,9 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dungeon - Among Demons</title>
     <meta name="description" content="Explore dungeons in the Among Demons prototype.">
-    <meta property="og:image" content="/app/images/demons/thumbnails/1.png">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta property="og:image" content="/app/images/demons/thumbnails/1.png">    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css" rel="stylesheet">
   </head>
   <body class="dungeon-page">
@@ -36,7 +34,7 @@
           <div class="d-flex align-items-center gap-2">
             <span class="text-secondary" id="navPlayerName"></span>
             <button class="btn btn-outline-danger btn-sm" id="logoutBtn" type="button" title="Logout">
-              <i class="bi bi-box-arrow-right"></i>
+              <i data-lucide="log-out"></i>
             </button>
           </div>
         </div>
@@ -51,7 +49,7 @@
             <div id="battleOutcome" class="dungeon-battle-outcome" aria-live="polite"></div>
             <div class="fight-log-actions dungeon-battle-actions" id="fightLogActions">
               <button class="btn btn-hunt-battle btn-sm" id="battleBtn" type="button">
-                <i class="bi bi-lightning-charge"></i>
+                <i data-lucide="zap"></i>
                 Battle
               </button>
             </div>
@@ -105,7 +103,7 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-primary" id="confirmStarterBtn" disabled>
-              <i class="bi bi-play-fill"></i>
+              <i data-lucide="play"></i>
               Start Dungeon
             </button>
           </div>
@@ -171,9 +169,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/lucide/lucide.min.js"></script>
+    <script src="/app/js/icons.js"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/demon-cards.js"></script>
     <script src="/app/js/hunt-ui.js?v=20260514-status-strip-damage-pop"></script>
   </body>
 </html>
+

@@ -2,6 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'amongdemons-api-test-state';
+  const renderIcon = window.AmongDemons?.ui?.renderIcon || (() => '');
   const state = loadState();
   const elements = {};
 
@@ -217,7 +218,7 @@
             ` : ''}
             <div class="d-flex justify-content-between align-items-center gap-2">
               <button class="btn btn-primary" type="submit">
-                <i class="bi bi-send"></i>
+                ${renderIcon('send')}
               </button>
               <small class="text-muted js-status">Not sent</small>
             </div>

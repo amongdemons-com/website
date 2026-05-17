@@ -107,11 +107,10 @@ body.dungeon-page .navbar {
     text-decoration: none;
 }
 
-.dungeon-header-brand i {
+.dungeon-header-brand .ad-icon {
     color: #9da7b1;
-    font-size: 1.25rem;
-    font-weight: 900;
-    -webkit-text-stroke: 1px currentColor;
+    width: 1.25rem;
+    height: 1.25rem;
 }
 
 .dungeon-header-brand img {
@@ -187,6 +186,31 @@ body.dungeon-page .navbar {
     display: none;
     font-size: 1.2em;
     font-weight: bold;
+}
+
+.ad-icon {
+    width: 1em;
+    height: 1em;
+    flex: 0 0 auto;
+    color: currentColor;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vertical-align: -0.125em;
+}
+
+.ad-icon-fill {
+    fill: currentColor;
+}
+
+.btn .ad-icon {
+    margin-right: 0.35rem;
+}
+
+.btn-icon-only .ad-icon,
+.btn[title] .ad-icon:only-child {
+    margin-right: 0;
 }
 
 #collection {
@@ -480,22 +504,12 @@ body.dungeon-page .navbar {
 .formation-lane-icon {
     width: 1.1rem;
     height: 1.1rem;
-    fill: currentColor;
 }
 
 .button-melee-icon {
     width: 0.9rem;
     height: 0.9rem;
-    fill: currentColor;
     flex: 0 0 auto;
-}
-
-.formation-lane-icon-stroke {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .formation-lane-cards {
@@ -696,26 +710,18 @@ body.dungeon-page .navbar {
     white-space: nowrap;
 }
 
-.combat-stat-strip i {
+.combat-stat-strip .ad-icon {
     color: #7d858d;
-    font-size: 0.78rem;
+    width: 0.78rem;
+    height: 0.78rem;
 }
 
 .combat-stat-icon {
     width: 0.72rem;
     height: 0.72rem;
     color: #7d858d;
-    fill: currentColor;
     flex: 0 0 auto;
     margin: 0;
-}
-
-.combat-stat-icon-stroke {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.25;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .combat-hp-bar {
@@ -744,9 +750,10 @@ body.dungeon-page .navbar {
     line-height: 1;
 }
 
-.combat-hp-meta i {
+.combat-hp-meta .ad-icon {
     color: #7d858d;
-    font-size: 0.76rem;
+    width: 0.76rem;
+    height: 0.76rem;
 }
 
 .hunt-demon-card.is-attacking {
@@ -1080,9 +1087,10 @@ body.dungeon-page .navbar {
     color: #fff;
 }
 
-.demon-status-badge i {
+.demon-status-badge .ad-icon {
     color: inherit;
-    font-size: 0.92rem;
+    width: 0.92rem;
+    height: 0.92rem;
 }
 
 .demon-status-count {
@@ -1096,7 +1104,7 @@ body.dungeon-page .navbar {
 }
 
 .hunt-demon-card.is-poisoned .combat-hp-meta,
-.hunt-demon-card.is-poisoned .combat-hp-meta i {
+.hunt-demon-card.is-poisoned .combat-hp-meta .ad-icon {
     color: #167246;
 }
 
@@ -1140,11 +1148,6 @@ body.dungeon-page .navbar {
 
 .floating-combat-number.is-dark {
     color: var(--combat-color, #171d24);
-}
-
-.floating-combat-number i {
-    font-size: 1.05rem;
-    -webkit-text-stroke: 0;
 }
 
 .dungeon-end-screen {
@@ -1383,10 +1386,9 @@ body.dungeon-page .navbar {
     white-space: nowrap;
 }
 
-.demon-detail-stat i,
+.demon-detail-stat .ad-icon,
 .demon-detail-stat .combat-stat-icon {
     color: #8b949d;
-    font-size: 0.95rem;
     width: 1rem;
     height: 1rem;
 }
@@ -2886,7 +2888,7 @@ a:hover {
     color: var(--ad-text);
 }
 
-.dungeon-header-brand i,
+.dungeon-header-brand .ad-icon,
 .hunt-floor-label,
 .dungeon-action-or {
     color: var(--ad-muted);
@@ -3279,8 +3281,8 @@ a:hover {
 }
 
 .combat-stat-icon,
-.combat-stat-strip i,
-.combat-hp-meta i,
+.combat-stat-strip .ad-icon,
+.combat-hp-meta .ad-icon,
 .fight-log-position {
     color: var(--ad-muted);
 }
@@ -3688,3 +3690,4 @@ body.summon-page {
     color: var(--ad-gold);
     font-weight: 700;
 }
+

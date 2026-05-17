@@ -12,6 +12,7 @@ app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found.' });
 });
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules', 'lucide', 'dist', 'umd')));
 
 // ============================================================================
 // MAIN ROUTE: GET /demons/type/:page
