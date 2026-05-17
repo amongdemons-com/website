@@ -122,6 +122,19 @@ function chooseTargets(rng, attacker, enemies, demonTypes) {
   return target ? [target] : [];
 }
 
+function chooseChaoticTargets(rng, actor, players, enemies, ability = {}) {
+  const actorIsPlayer = players.some((demon) => demon.instanceId === actor.instanceId);
+  const enemyTargets = actorIsPlayer ? enemies : players;
+  const targetPool = ability.targetPool || 'any_unit';
+  const living = targetPool === 'enemy' || targetPool === 'enemies' || targetPool === 'random_enemy'
+    ? alive(enemyTargets)
+    : alive(players)
+      .concat(alive(enemies))
+      .filter((target) => target.instanceId !== actor.instanceId);
+
+  return living.length ? [pick(rng, living)] : [];
+}
+
 function cloneTeam(team) {
   return team.map((demon, index) => ({
     ...demon,
@@ -326,11 +339,8 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
         continue;
       }
 
-      const chaoticTargets = alive(players)
-        .concat(alive(enemies))
-        .filter((target) => target.instanceId !== actor.instanceId);
       const chosenTargets = ability.kind === 'chaotic_attack'
-        ? (chaoticTargets.length ? [pick(rng, chaoticTargets)] : [])
+        ? chooseChaoticTargets(rng, actor, players, enemies, ability)
         : chooseTargets(rng, actor, targets, demonTypes);
       const targeting = ability.kind === 'cleave_attack' ? 'cleave' : getTargeting(actor, demonTypes);
 

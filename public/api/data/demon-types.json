@@ -271,17 +271,17 @@
     "targeting": "chaotic",
     "preferredPosition": "back",
     "spawnWeight": 1,
-    "strengths": ["Can hit any unit", "Slightly higher back line health", "High upside when chaos lands well"],
-    "weaknesses": ["Can hit allies", "Random damage from 1 to attack", "Unreliable in close fights"],
+    "strengths": ["Hits random enemies", "Slightly higher back line health", "High upside when chaos lands well"],
+    "weaknesses": ["Random damage from 1 to attack", "Unreliable in close fights"],
     "ability": {
       "kind": "chaotic_attack",
       "hits": 1,
-      "targetPool": "any_unit",
+      "targetPool": "enemy",
       "damageRoll": [1, "atk"]
     },
     "baseStats": {
       "hp": [100, 124],
-      "atk": [22, 27],
+      "atk": [30, 38],
       "speed": [6, 8]
     },
     "rarityMultiplier": {

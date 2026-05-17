@@ -185,6 +185,8 @@ All API routes are mounted under `/api`.
 - Floor 2 has 2 enemies.
 - Enemy teams grow from 1 to 6 demons across floors 1 through 6, then stay at 6 enemies.
 - Floors 1 through 3 use the starter type pool; later floors unlock more types based on floor.
+- From floor 4 onward, enemy generation applies floor pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`.
+- Legendary and mythic enemy rarities can only appear from floor 10 onward.
 - Floor 20 always includes type `11` as the first enemy.
 - After a win before floor 20, defeated enemies become recruit rewards.
 - Between fights, the player may stage a whole team, recruit one demon, swap demons, skip recruitment, or cash out.
@@ -212,7 +214,7 @@ Implemented ability kinds include:
 | `poison` | Applies stacking poison to high-HP targets |
 | `heal` | Heals the living ally with the most missing HP |
 | `retaliate` | Does not proactively attack; returns configured thorns damage when hit |
-| `chaotic_attack` | Hits a random living unit from either side for random damage |
+| `chaotic_attack` | Hits a random target from its configured pool for random damage |
 
 ## Static Data And Assets
 

@@ -1,8 +1,9 @@
-const { createDemon, createTeam } = require('./demon-factory');
+const { createDemon } = require('./demon-factory');
 const { MAX_DUNGEON_FLOOR, getDungeonTeamLimit } = require('./dungeon-rules');
 
 const STARTER_TYPE_IDS = [1, 2, 3];
 const MAX_HUNT_TYPE_ID = 11;
+const PRE_LEGENDARY_RARITIES = ['common', 'uncommon', 'rare', 'epic'];
 
 function getAllowedHuntTypeIds(floor) {
   if (floor <= 3) return STARTER_TYPE_IDS;
@@ -17,6 +18,7 @@ async function createHuntEnemies(rng, floor, size) {
   if (floor === MAX_DUNGEON_FLOOR && teamSize > 0) {
     const enemies = [
       await createDemon(rng, {
+        ...getEnemyGenerationOptions(floor, { elite: true }),
         instanceId: `enemy-${floor}-1`,
         position: 'front',
         typeId: 11
@@ -25,6 +27,7 @@ async function createHuntEnemies(rng, floor, size) {
 
     for (let index = 1; index < teamSize; index += 1) {
       enemies.push(await createDemon(rng, {
+        ...getEnemyGenerationOptions(floor, { elite: index === 1 }),
         instanceId: `enemy-${floor}-${index + 1}`,
         position: index === 1 ? 'back' : 'front',
         allowedTypeIds
@@ -34,14 +37,64 @@ async function createHuntEnemies(rng, floor, size) {
     return applyEnemyPreferredPositions(enemies);
   }
 
-  const enemies = await createTeam(rng, teamSize, {
-    prefix: `enemy-${floor}`,
-    positions: getEnemyPositions(teamSize),
-    allowedTypeIds,
-    allowedRarities: floor <= 3 ? ['common', 'uncommon', 'rare'] : undefined
-  });
+  const positions = getEnemyPositions(teamSize);
+  const eliteIndex = teamSize > 1 ? teamSize - 1 : 0;
+  const enemies = [];
+
+  for (let index = 0; index < teamSize; index += 1) {
+    enemies.push(await createDemon(rng, {
+      ...getEnemyGenerationOptions(floor, { elite: index === eliteIndex }),
+      instanceId: `enemy-${floor}-${index + 1}`,
+      position: positions[index],
+      allowedTypeIds
+    }));
+  }
 
   return applyEnemyPreferredPositions(enemies);
+}
+
+function getEnemyGenerationOptions(floor, options = {}) {
+  if (floor <= 3) {
+    return {
+      allowedRarities: ['common', 'uncommon', 'rare']
+    };
+  }
+
+  const pressure = getFloorSpawnPressure(floor);
+  const elitePressure = options.elite ? Math.min(1, pressure + 0.32) : pressure;
+
+  return {
+    allowedRarities: floor < 10 ? PRE_LEGENDARY_RARITIES : undefined,
+    typeWeightMultiplier: (typeId, baseWeight) => getFloorTypeWeightMultiplier(typeId, baseWeight, elitePressure),
+    rarityWeightMultiplier: (rarity, baseWeight) => getFloorRarityWeightMultiplier(rarity, baseWeight, elitePressure)
+  };
+}
+
+function getFloorSpawnPressure(floor) {
+  return clamp((Number(floor) - 3) / (MAX_DUNGEON_FLOOR - 3), 0, 1);
+}
+
+function getFloorTypeWeightMultiplier(typeId, baseWeight, pressure) {
+  const rank = clamp((Number(typeId) - 1) / (MAX_HUNT_TYPE_ID - 1), 0, 1);
+  const flattenBaseWeight = Math.pow(Math.max(1, Number(baseWeight) || 1), -pressure * 0.55);
+  return flattenBaseWeight * (1 + pressure * rank * 3.2);
+}
+
+function getFloorRarityWeightMultiplier(rarity, baseWeight, pressure) {
+  const multipliers = {
+    common: 1 - pressure * 0.42,
+    uncommon: 1 - pressure * 0.12,
+    rare: 1 + pressure * 0.95,
+    epic: 1 + pressure * 2.1,
+    legendary: 1 + pressure * 3.6,
+    mythic: 1 + pressure * 5.2
+  };
+
+  return Math.max(0.08, multipliers[rarity] || 1);
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, Number(value) || 0));
 }
 
 function getHuntEnemyTeamSize(floor, fallbackSize) {
@@ -72,5 +125,6 @@ module.exports = {
   STARTER_TYPE_IDS,
   createHuntEnemies,
   getAllowedHuntTypeIds,
+  getEnemyGenerationOptions,
   getHuntEnemyTeamSize
 };

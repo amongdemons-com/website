@@ -26,14 +26,18 @@ function pickWeighted(rng, items, getWeight) {
   return pool[0]?.[0];
 }
 
-function pickRarity(rng, allowedRarities) {
+function pickRarity(rng, allowedRarities, getWeight = (rarity, weight) => weight) {
   const weights = allowedRarities && allowedRarities.length
     ? rarityWeights.filter(([rarity]) => allowedRarities.includes(rarity))
     : rarityWeights;
-  const total = weights.reduce((sum, [, weight]) => sum + weight, 0);
+  const weighted = weights
+    .map(([rarity, weight]) => [rarity, Number(getWeight(rarity, weight)) || 0])
+    .filter(([, weight]) => weight > 0);
+  const pool = weighted.length ? weighted : weights;
+  const total = pool.reduce((sum, [, weight]) => sum + weight, 0);
   let roll = rng() * total;
 
-  for (const [rarity, weight] of weights) {
+  for (const [rarity, weight] of pool) {
     roll -= weight;
     if (roll <= 0) return rarity;
   }
@@ -56,9 +60,18 @@ async function createDemon(rng, options = {}) {
   const typeIds = options.allowedTypeIds && options.allowedTypeIds.length
     ? options.allowedTypeIds.map(Number).filter((typeId) => types[String(typeId)])
     : Object.keys(types).map(Number);
-  const typeId = options.typeId || Number(pickWeighted(rng, typeIds, (typeId) => types[String(typeId)]?.spawnWeight));
+  const typeId = options.typeId || Number(pickWeighted(rng, typeIds, (typeId) => {
+    const baseWeight = Number(types[String(typeId)]?.spawnWeight) || 1;
+    return typeof options.typeWeightMultiplier === 'function'
+      ? baseWeight * options.typeWeightMultiplier(typeId, baseWeight)
+      : baseWeight;
+  }));
   const typeData = types[String(typeId)];
-  const rarity = options.rarity || pickRarity(rng, options.allowedRarities);
+  const rarity = options.rarity || pickRarity(rng, options.allowedRarities, (rarity, baseWeight) => (
+    typeof options.rarityWeightMultiplier === 'function'
+      ? baseWeight * options.rarityWeightMultiplier(rarity, baseWeight)
+      : baseWeight
+  ));
   const asset = assets.find((item) => item.type === typeId && item.rarity === rarity) ||
     assets.find((item) => item.type === typeId) ||
     assets[0];
