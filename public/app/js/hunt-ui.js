@@ -7,6 +7,10 @@
   const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
   const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
   const RUN_KEY = 'amongdemons-current-run';
+  const BATTLE_SPEED_KEY = 'amongdemons-battle-speed';
+  const MAX_DUNGEON_FLOOR = 20;
+  const MAX_DUNGEON_TEAM_SIZE = 6;
+  const BATTLE_SPEED_OPTIONS = [0.5, 1, 2, 4];
   const session = window.AmongDemons.getSession();
   const COMBAT_THEMES = {
     default: { color: '#FAC51C', shadow: 'rgba(250,197,28,0.85)' },
@@ -41,6 +45,7 @@
     recruitDraftPool: null,
     combatLog: [],
     combatDemons: new Map(),
+    battleSpeed: getStoredBattleSpeed(),
     endNotice: null,
     endSummary: null,
     promptedStarter: false,
@@ -59,6 +64,7 @@
 
     cacheElements();
     bindActions();
+    applyBattleSpeed();
     await refreshAll();
   }
 
@@ -289,7 +295,7 @@
   }
 
   function getWinMessage() {
-    if (state.run?.status === 'completed') return 'Floor 10 cleared. Choose your final demon.';
+    if (state.run?.status === 'completed') return `Floor ${MAX_DUNGEON_FLOOR} cleared. Choose your final demon.`;
     return 'Battle won. Choose one defeated demon for the next fight.';
   }
 
@@ -805,7 +811,7 @@
         }
         updateTargetCard(entry.target, entry.targetHp, attackerSide);
       });
-      await sleep(getCombatStepDelay(step));
+      await sleep(scaleCombatDuration(getCombatStepDelay(step)));
     }
 
     setActiveLogRow(-1);
@@ -817,7 +823,7 @@
   }
 
   function renderHuntTitle(run) {
-    const floor = run ? Math.max(1, Math.min(10, Number(run.currentFloor) || 1)) : 10;
+    const floor = run ? Math.max(1, Math.min(MAX_DUNGEON_FLOOR, Number(run.currentFloor) || 1)) : MAX_DUNGEON_FLOOR;
 
     return `
       <div class="dungeon-title-brand">
@@ -828,7 +834,7 @@
         <div class="dungeon-title-copy">
           <span class="dungeon-title-text">Dungeon</span>
           ${run ? `<span class="hunt-floor-title">
-            <span class="hunt-floor-label">Floor ${floor} / 10</span>
+            <span class="hunt-floor-label">Floor ${floor} / ${MAX_DUNGEON_FLOOR}</span>
           </span>` : ''}
         </div>
       </div>
@@ -911,8 +917,8 @@
 
   function renderHuntProgress(run) {
     if (!elements.huntProgress) return;
-    const floor = run ? Math.max(1, Math.min(10, Number(run.currentFloor) || 1)) : 0;
-    const percent = Math.round((floor / 10) * 100);
+    const floor = run ? Math.max(1, Math.min(MAX_DUNGEON_FLOOR, Number(run.currentFloor) || 1)) : 0;
+    const percent = Math.round((floor / MAX_DUNGEON_FLOOR) * 100);
     elements.huntProgress.querySelector('span').style.width = `${percent}%`;
   }
 
@@ -1008,7 +1014,7 @@
           const y = ((1 - t) * (1 - t) * y1) + (2 * (1 - t) * t * controlY) + (t * t * y2);
           const drift = ((index % 2) ? -1 : 1) * (4 + (index % 4));
           const radius = 2.2 + ((index % 4) * 0.8);
-          return `<circle class="poison-bubble" cx="${(x + normalX * drift).toFixed(1)}" cy="${(y + normalY * drift).toFixed(1)}" r="${radius.toFixed(1)}" style="animation-delay: ${(index * 18).toFixed(0)}ms" />`;
+          return `<circle class="poison-bubble" cx="${(x + normalX * drift).toFixed(1)}" cy="${(y + normalY * drift).toFixed(1)}" r="${radius.toFixed(1)}" style="animation-delay: ${scaleCombatDuration(index * 18).toFixed(0)}ms" />`;
         }).join('')
       : '';
     const flameCount = Number(options.flames) || 0;
@@ -1021,7 +1027,7 @@
           const size = 5 + (index % 4);
           const cx = x + normalX * drift;
           const cy = y + normalY * drift;
-          return `<path class="fire-spark" d="M ${cx.toFixed(1)} ${(cy - size).toFixed(1)} C ${(cx + size * 0.72).toFixed(1)} ${(cy - size * 0.2).toFixed(1)} ${(cx + size * 0.45).toFixed(1)} ${(cy + size * 0.72).toFixed(1)} ${cx.toFixed(1)} ${(cy + size).toFixed(1)} C ${(cx - size * 0.55).toFixed(1)} ${(cy + size * 0.42).toFixed(1)} ${(cx - size * 0.45).toFixed(1)} ${(cy - size * 0.32).toFixed(1)} ${cx.toFixed(1)} ${(cy - size).toFixed(1)} Z" style="animation-delay: ${(index * 16).toFixed(0)}ms" />`;
+          return `<path class="fire-spark" d="M ${cx.toFixed(1)} ${(cy - size).toFixed(1)} C ${(cx + size * 0.72).toFixed(1)} ${(cy - size * 0.2).toFixed(1)} ${(cx + size * 0.45).toFixed(1)} ${(cy + size * 0.72).toFixed(1)} ${cx.toFixed(1)} ${(cy + size).toFixed(1)} C ${(cx - size * 0.55).toFixed(1)} ${(cy + size * 0.42).toFixed(1)} ${(cx - size * 0.45).toFixed(1)} ${(cy - size * 0.32).toFixed(1)} ${cx.toFixed(1)} ${(cy - size).toFixed(1)} Z" style="animation-delay: ${scaleCombatDuration(index * 16).toFixed(0)}ms" />`;
         }).join('')
       : '';
 
@@ -1044,7 +1050,7 @@
       </svg>
     `;
     document.body.appendChild(zap);
-    setTimeout(() => zap.remove(), options.duration || 320);
+    setTimeout(() => zap.remove(), scaleCombatDuration(options.duration || 320));
   }
 
   function updateTargetCard(instanceId, hp, attackerSide = 'unknown', options = {}) {
@@ -1100,7 +1106,7 @@
       floating.style.fontSize = `calc(1.22rem * ${scale.toFixed(2)})`;
     }
     card.appendChild(floating);
-    setTimeout(() => floating.remove(), 760);
+    setTimeout(() => floating.remove(), scaleCombatDuration(760));
   }
 
   function drawSwordSwing(attackerId, targetId) {
@@ -1130,7 +1136,7 @@
       </svg>
     `;
     document.body.appendChild(swing);
-    setTimeout(() => swing.remove(), 440);
+    setTimeout(() => swing.remove(), scaleCombatDuration(440));
   }
 
   function drawThornBurst(attackerId, targetId) {
@@ -1162,7 +1168,7 @@
       </svg>
     `;
     document.body.appendChild(thorns);
-    setTimeout(() => thorns.remove(), 520);
+    setTimeout(() => thorns.remove(), scaleCombatDuration(520));
   }
 
   function shakeTargetCard(instanceId) {
@@ -1190,7 +1196,7 @@
       </svg>
     `;
     document.body.appendChild(heal);
-    setTimeout(() => heal.remove(), 620);
+    setTimeout(() => heal.remove(), scaleCombatDuration(620));
   }
 
   function drawChaoticLightning(attackerId, targetId) {
@@ -1219,7 +1225,7 @@
       </svg>
     `;
     document.body.appendChild(zap);
-    setTimeout(() => zap.remove(), 360);
+    setTimeout(() => zap.remove(), scaleCombatDuration(360));
   }
 
   function drawDarkSpike(attackerId, targetId) {
@@ -1244,7 +1250,7 @@
     spike.style.setProperty('--dark-spike-angle', `${angle}rad`);
     applyCombatTheme(spike, getCombatTheme(attackerId));
     document.body.appendChild(spike);
-    setTimeout(() => spike.remove(), 340);
+    setTimeout(() => spike.remove(), scaleCombatDuration(340));
   }
 
   function getCombatTheme(attackerId, effect) {
@@ -1294,6 +1300,46 @@
     );
   }
 
+  function getStoredBattleSpeed() {
+    const stored = Number(localStorage.getItem(BATTLE_SPEED_KEY));
+    return BATTLE_SPEED_OPTIONS.includes(stored) ? stored : 1;
+  }
+
+  function setBattleSpeed(speed) {
+    if (!BATTLE_SPEED_OPTIONS.includes(speed)) return;
+    state.battleSpeed = speed;
+    localStorage.setItem(BATTLE_SPEED_KEY, String(speed));
+    applyBattleSpeed();
+    syncBattleSpeedButtons();
+  }
+
+  function applyBattleSpeed() {
+    document.documentElement.style.setProperty('--battle-animation-scale', String(getBattleTimeScale()));
+    [24, 34, 36, 48, 80, 150, 240, 320, 340, 360, 440, 520, 620, 760, 960].forEach((duration) => {
+      document.documentElement.style.setProperty(`--battle-duration-${duration}`, `${scaleCombatDuration(duration)}ms`);
+    });
+  }
+
+  function getBattleTimeScale() {
+    return 1 / (Number(state.battleSpeed) || 1);
+  }
+
+  function scaleCombatDuration(duration) {
+    return Math.max(0, Math.round((Number(duration) || 0) * getBattleTimeScale()));
+  }
+
+  function formatBattleSpeed(speed) {
+    return `${Number(speed)}x`;
+  }
+
+  function syncBattleSpeedButtons() {
+    document.querySelectorAll('[data-battle-speed]').forEach((button) => {
+      const active = Number(button.dataset.battleSpeed) === state.battleSpeed;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
   function isTypeTwoAttack(instanceId) {
     return Number(getCombatDemon(instanceId)?.typeId) === 2;
   }
@@ -1321,7 +1367,7 @@
         card.classList.remove('is-player-attack', 'is-enemy-attack');
       }
       card[timerKey] = null;
-    }, duration);
+    }, scaleCombatDuration(duration));
   }
 
   function sleep(ms) {
@@ -1629,8 +1675,8 @@
   }
 
   function getRecruitTeamLimit() {
-    if (!state.run) return 3;
-    return Math.min(3, Math.max(1, Number(state.run.currentFloor) + 1));
+    if (!state.run) return MAX_DUNGEON_TEAM_SIZE;
+    return Math.min(MAX_DUNGEON_TEAM_SIZE, Math.max(1, Number(state.run.currentFloor) + 1));
   }
 
   function getDraftRecruitPayload() {
@@ -1668,6 +1714,7 @@
 
     elements.fightLogActions.innerHTML = `
       ${canBattle ? `
+        ${renderBattleSpeedControl()}
         <button class="btn btn-hunt-battle btn-sm" id="battleBtn" type="button">
           ${renderIcon('battle')}
           Battle
@@ -1711,6 +1758,9 @@
 
     elements.battleBtn = document.getElementById('battleBtn');
     if (elements.battleBtn) elements.battleBtn.addEventListener('click', battle);
+    document.querySelectorAll('[data-battle-speed]').forEach((button) => {
+      button.addEventListener('click', () => setBattleSpeed(Number(button.dataset.battleSpeed)));
+    });
     const startButton = document.getElementById('fightLogStartBtn');
     if (startButton) startButton.addEventListener('click', isDefeated ? startNewHuntAfterDefeat : openStarterModal);
     const replayButton = document.getElementById('fightLogReplayBtn');
@@ -1720,6 +1770,24 @@
     const continueButton = document.getElementById('fightLogContinueBtn');
     if (continueButton) continueButton.addEventListener('click', beginRecruiting);
     bindPathButtons();
+  }
+
+  function renderBattleSpeedControl() {
+    return `
+      <div class="battle-speed-control" role="group" aria-label="Battle animation speed">
+        ${BATTLE_SPEED_OPTIONS.map((speed) => `
+          <button
+            class="battle-speed-option ${state.battleSpeed === speed ? 'active' : ''}"
+            type="button"
+            data-battle-speed="${speed}"
+            aria-pressed="${state.battleSpeed === speed ? 'true' : 'false'}"
+            title="${formatBattleSpeed(speed)} battle speed"
+          >
+            ${formatBattleSpeed(speed)}
+          </button>
+        `).join('')}
+      </div>
+    `;
   }
 
   function bindPathButtons() {
@@ -1880,7 +1948,8 @@
     }
 
     const recruitRewards = currentFloorRewards.filter((reward) => reward.type === 'recruit');
-    const needsSwap = (state.run.team || []).length >= 3;
+    const teamLimit = getRecruitTeamLimit();
+    const needsSwap = (state.run.team || []).length >= teamLimit;
     elements.teamChoiceModalTitle.textContent = 'Edit your team';
     elements.teamChoiceModalSubtitle.textContent = needsSwap
       ? 'Choose a defeated demon, tap one of your demons to preview the swap, then continue.'
@@ -1926,7 +1995,7 @@
 
   function getRecruitButtonLabel(reward) {
     if (reward.recruited) return 'Recruited';
-    if ((state.run.team || []).length >= 3) return state.selectedRecruitRewardId === reward.rewardId ? 'Selected' : 'Add to Team';
+    if ((state.run.team || []).length >= getRecruitTeamLimit()) return state.selectedRecruitRewardId === reward.rewardId ? 'Selected' : 'Add to Team';
     if (state.selectedRecruitRewardId === reward.rewardId) return 'Selected';
     return 'Add to Team';
   }
@@ -1937,20 +2006,21 @@
 
   function getContinueButtonLabel() {
     if (!state.selectedRecruitRewardId) return 'Continue Without Changes';
-    if ((state.run.team || []).length < 3) return 'Continue With Recruit';
+    if ((state.run.team || []).length < getRecruitTeamLimit()) return 'Continue With Recruit';
     return state.selectedSwapInstanceId ? 'Continue With Swap' : 'Continue Without Changes';
   }
 
   function renderTeamEditorCards() {
     const team = state.run.team || [];
-    const needsSwap = team.length >= 3;
+    const teamLimit = getRecruitTeamLimit();
+    const needsSwap = team.length >= teamLimit;
     const previewReward = getSelectedRecruitReward();
 
     return `
       <div class="team-editor-list">
         ${needsSwap ? `
           <p class="text-muted small">${state.selectedRecruitRewardId ? 'Tap a teammate to preview the swap.' : 'Select a defeated demon first.'}</p>
-        ` : '<p class="text-muted small">There is room for one more demon.</p>'}
+        ` : `<p class="text-muted small">There is room for ${teamLimit - team.length} more ${teamLimit - team.length === 1 ? 'demon' : 'demons'}.</p>`}
         <div class="row row-cols-1 g-3">
           ${team.map((demon) => {
             const isSwapTarget = state.selectedSwapInstanceId === demon.instanceId;
@@ -2134,12 +2204,12 @@
       card.addEventListener('dragend', () => {
         state.draggedFormationInstanceId = null;
         card.classList.remove('is-dragging');
-        document.querySelectorAll('.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
+        document.querySelectorAll('.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .formation-lane-label.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
       });
       card.addEventListener('dragover', (event) => {
         const payload = readDragPayload(event);
         const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
-        if ((payload?.type && payload.type !== 'recruit-pool') || !canSwapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId)) return;
+        if ((payload?.type && payload.type !== 'recruit-pool') || !canDropPoolDemonOnTeamCard(poolInstanceId, card.dataset.instanceId)) return;
 
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
@@ -2150,10 +2220,15 @@
         const payload = readDragPayload(event);
         const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
         card.classList.remove('is-drag-over');
-        if ((payload?.type && payload.type !== 'recruit-pool') || !canSwapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId)) return;
+        if ((payload?.type && payload.type !== 'recruit-pool') || !canDropPoolDemonOnTeamCard(poolInstanceId, card.dataset.instanceId)) return;
 
         event.preventDefault();
-        swapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId);
+        if (canAddPoolDemonToTeam(poolInstanceId)) {
+          const teamDemon = findDraftDemon(state.recruitDraftTeam, card.dataset.instanceId);
+          addPoolDemonToTeam(poolInstanceId, getDemonPosition(teamDemon));
+        } else {
+          swapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId);
+        }
         renderRun();
       });
     });
@@ -2190,6 +2265,45 @@
         if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId)) {
           event.preventDefault();
           addPoolDemonToTeam(poolInstanceId, lane.dataset.formationDrop);
+          renderRun();
+        }
+      });
+    });
+
+    document.querySelectorAll('#teamGrid .formation-lane-label').forEach((label) => {
+      label.addEventListener('dragover', (event) => {
+        const position = label.closest('.formation-lane')?.dataset.formationPosition;
+        const payload = readDragPayload(event);
+        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
+        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        const isPoolDrop = (payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId);
+        const isTeamMove = (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && findDraftDemon(state.recruitDraftTeam, teamInstanceId);
+        if (!position || (!isPoolDrop && !isTeamMove)) return;
+
+        if (isPoolDrop && !canAddPoolDemonToTeam(poolInstanceId)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        label.classList.add('is-drag-over');
+      });
+      label.addEventListener('dragleave', () => label.classList.remove('is-drag-over'));
+      label.addEventListener('drop', (event) => {
+        const position = label.closest('.formation-lane')?.dataset.formationPosition;
+        const payload = readDragPayload(event);
+        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
+        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        label.classList.remove('is-drag-over');
+        if (!position || (!poolInstanceId && !teamInstanceId)) return;
+
+        if (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) {
+          event.preventDefault();
+          moveDraftTeamDemon(teamInstanceId, position);
+          renderRun();
+          return;
+        }
+
+        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId)) {
+          event.preventDefault();
+          addPoolDemonToTeam(poolInstanceId, position);
           renderRun();
         }
       });
@@ -2288,11 +2402,15 @@
     return (state.recruitDraftTeam || []).length < getRecruitTeamLimit();
   }
 
+  function canDropPoolDemonOnTeamCard(poolInstanceId, teamInstanceId) {
+    return canAddPoolDemonToTeam(poolInstanceId) || canSwapPoolDemonIntoTeam(poolInstanceId, teamInstanceId);
+  }
+
   function canSwapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
     const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
     const teamDemon = findDraftDemon(state.recruitDraftTeam, teamInstanceId);
     if (!poolDemon || !teamDemon) return false;
-    return true;
+    return (state.recruitDraftTeam || []).length >= getRecruitTeamLimit();
   }
 
   function addPoolDemonToTeam(poolInstanceId, position) {

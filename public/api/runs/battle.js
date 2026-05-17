@@ -5,6 +5,7 @@ const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { resetRunDemon } = require('../lib/run-demons');
+const { MAX_DUNGEON_FLOOR } = require('../lib/dungeon-rules');
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 
   let rewards = {};
   if (result.winner === 'player') {
-    const isFinalFloor = run.floor >= 10;
+    const isFinalFloor = run.floor >= MAX_DUNGEON_FLOOR;
     const floorRewards = isFinalFloor ? createFinalTeamRewards(run) : createDefeatedDemonRewards(run);
     rewards = floorRewards;
     run.rewards.push(...floorRewards);

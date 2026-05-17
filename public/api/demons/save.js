@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
+const { MAX_DUNGEON_FLOOR } = require('../lib/dungeon-rules');
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ router.post('/demons/save', requireAuth, async (req, res) => {
   }
 
   if (run.status !== 'completed') {
-    return res.status(409).json({ error: 'Complete floor 10 before saving a final demon.' });
+    return res.status(409).json({ error: `Complete floor ${MAX_DUNGEON_FLOOR} before saving a final demon.` });
   }
 
   if (run.rewards.some((item) => item.type === 'final' && item.saved)) {

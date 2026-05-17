@@ -8,7 +8,7 @@ The current loop is:
 2. Start a Dungeon with either one tokenized draft starter or one demon from your permanent collection.
 3. Arrange the active team into front/back positions.
 4. Run automatic server-simulated battles.
-5. Recruit defeated demons into the temporary Dungeon team, skip recruitment, cash out between fights, or clear floor 10.
+5. Recruit defeated demons into the temporary Dungeon team, skip recruitment, cash out between fights, or clear floor 20.
 6. Earn XP and Souls, then save eligible demons into the permanent collection.
 
 Combat, RNG, reward generation, XP, Souls, run status, and collection writes are server-authoritative. The browser displays state and stages player choices, but it must not calculate gameplay outcomes.
@@ -148,7 +148,7 @@ All API routes are mounted under `/api`.
 | `GET` | `/account/progression` | Return level, XP, Souls, and unlocks |
 | `GET` | `/demons` | List owned permanent demons |
 | `GET` | `/demons/:id` | Return one owned permanent demon |
-| `POST` | `/demons/save` | Save one final-floor demon reward after completing floor 10 |
+| `POST` | `/demons/save` | Save one final-floor demon reward after completing floor 20 |
 
 ### Dungeon Runs
 
@@ -179,17 +179,17 @@ All API routes are mounted under `/api`.
 - Starting options are generated from starter type IDs `1`, `2`, and `3`, with `common`, `uncommon`, or `rare` rarity.
 - Draft starter choices are protected by an HMAC-signed token and expire after 15 minutes.
 - Starting a new run closes any open runs for that player.
-- The active Dungeon team can contain 1 to 3 demons.
+- The active Dungeon team can contain 1 to 6 demons.
 - The player can use a permanent collection demon as the first Dungeon demon.
 - Floor 1 enemy size follows the player's current team size.
 - Floor 2 has 2 enemies.
-- Floors 3 through 10 have 3 enemies.
+- Enemy teams grow from 1 to 6 demons across floors 1 through 6, then stay at 6 enemies.
 - Floors 1 through 3 use the starter type pool; later floors unlock more types based on floor.
-- Floor 10 always includes type `11` as the first enemy.
-- After a win before floor 10, defeated enemies become recruit rewards.
+- Floor 20 always includes type `11` as the first enemy.
+- After a win before floor 20, defeated enemies become recruit rewards.
 - Between fights, the player may stage a whole team, recruit one demon, swap demons, skip recruitment, or cash out.
 - Cashing out between fights saves one eligible new demon and grants accumulated XP/Souls.
-- Clearing floor 10 marks the run `completed` and offers final rewards from the surviving team plus final enemies.
+- Clearing floor 20 marks the run `completed` and offers final rewards from the surviving team plus final enemies.
 - Only one final-floor demon can be saved through `/api/demons/save`.
 
 ## Combat Rules

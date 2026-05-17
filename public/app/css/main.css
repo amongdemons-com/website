@@ -617,6 +617,12 @@ body.dungeon-page .navbar {
     border-radius: 6px;
 }
 
+.formation-lane-label.is-drag-over {
+    outline: 2px dashed rgba(250,197,28,0.68);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
 .formation-empty {
     display: flex;
     flex: 1 1 auto;
@@ -677,6 +683,39 @@ body.dungeon-page .navbar {
     min-width: 2rem;
     padding-left: 0;
     padding-right: 0;
+}
+
+.battle-speed-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.16rem;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.18);
+}
+
+.battle-speed-option {
+    min-width: 2.15rem;
+    border: 0;
+    border-radius: 4px;
+    padding: 0.2rem 0.38rem;
+    background: transparent;
+    color: #dce6ee;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.battle-speed-option:hover,
+.battle-speed-option:focus-visible {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+}
+
+.battle-speed-option.active {
+    background: var(--ad-gold, #FAC51C);
+    color: #170a03;
 }
 
 .hunt-demon-card[draggable="true"] {
@@ -846,7 +885,7 @@ body.dungeon-page .navbar {
 }
 
 .hunt-demon-card.is-attacking {
-    animation: demon-attack-hop 320ms ease;
+    animation: demon-attack-hop var(--battle-duration-320, 320ms) ease;
     border-color: var(--combat-color, rgba(250,197,28,0.72));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--combat-color, #FAC51C) 28%, transparent), 0 0 18px var(--combat-shadow, rgba(250,197,28,0.34));
 }
@@ -867,7 +906,7 @@ body.dungeon-page .navbar {
 }
 
 .hunt-demon-card.is-shaking {
-    animation: demon-target-shake 360ms ease;
+    animation: demon-target-shake var(--battle-duration-360, 360ms) ease;
 }
 
 .attack-zap {
@@ -889,13 +928,13 @@ body.dungeon-page .navbar {
     stroke-linecap: round;
     stroke-linejoin: round;
     filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(250,197,28,0.85)));
-    animation: attack-zap-fade 320ms ease-out forwards;
+    animation: attack-zap-fade var(--battle-duration-320, 320ms) ease-out forwards;
 }
 
 .attack-zap-impact {
     fill: var(--combat-color, #FAC51C);
     filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(250,197,28,0.85)));
-    animation: attack-zap-impact 320ms ease-out forwards;
+    animation: attack-zap-impact var(--battle-duration-320, 320ms) ease-out forwards;
 }
 
 .attack-zap.is-back-attack .attack-zap-trail {
@@ -904,20 +943,20 @@ body.dungeon-page .navbar {
 
 .attack-zap.is-heavy .attack-zap-trail {
     stroke-width: 7;
-    animation: attack-zap-heavy 520ms cubic-bezier(0.18, 0.84, 0.18, 1) forwards;
+    animation: attack-zap-heavy var(--battle-duration-520, 520ms) cubic-bezier(0.18, 0.84, 0.18, 1) forwards;
 }
 
 .attack-zap.is-heavy .attack-zap-impact {
-    animation-duration: 520ms;
+    animation-duration: var(--battle-duration-520, 520ms);
 }
 
 .attack-zap.is-crushing .attack-zap-trail {
     stroke-width: 14;
-    animation: attack-zap-crushing 960ms cubic-bezier(0.12, 0.64, 0.1, 1) forwards;
+    animation: attack-zap-crushing var(--battle-duration-960, 960ms) cubic-bezier(0.12, 0.64, 0.1, 1) forwards;
 }
 
 .attack-zap.is-crushing .attack-zap-impact {
-    animation: attack-zap-impact 960ms ease-out forwards;
+    animation: attack-zap-impact var(--battle-duration-960, 960ms) ease-out forwards;
 }
 
 .attack-zap.is-fiery .attack-zap-trail {
@@ -932,16 +971,16 @@ body.dungeon-page .navbar {
 
 .attack-zap.is-assassin .attack-zap-trail {
     stroke-width: 3;
-    animation: attack-zap-assassin 240ms ease-out forwards;
+    animation: attack-zap-assassin var(--battle-duration-240, 240ms) ease-out forwards;
 }
 
 .attack-zap.is-assassin .attack-zap-trail-secondary {
     opacity: 0;
-    animation-delay: 34ms;
+    animation-delay: var(--battle-duration-34, 34ms);
 }
 
 .attack-zap.is-assassin .attack-zap-impact {
-    animation-duration: 240ms;
+    animation-duration: var(--battle-duration-240, 240ms);
 }
 
 .attack-zap.is-player-attack .attack-zap-trail {
@@ -982,7 +1021,7 @@ body.dungeon-page .navbar {
     opacity: 0;
     transform-box: fill-box;
     transform-origin: center;
-    animation: poison-bubble-trail 360ms ease-out forwards;
+    animation: poison-bubble-trail var(--battle-duration-360, 360ms) ease-out forwards;
 }
 
 .fire-spark {
@@ -995,7 +1034,7 @@ body.dungeon-page .navbar {
     opacity: 0;
     transform-box: fill-box;
     transform-origin: center bottom;
-    animation: fire-spark-flicker 360ms ease-out forwards;
+    animation: fire-spark-flicker var(--battle-duration-360, 360ms) ease-out forwards;
 }
 
 .dark-spike {
@@ -1004,7 +1043,7 @@ body.dungeon-page .navbar {
     height: 0;
     pointer-events: none;
     transform-origin: left center;
-    animation: dark-spike-thrust 340ms ease-out forwards;
+    animation: dark-spike-thrust var(--battle-duration-340, 340ms) ease-out forwards;
 }
 
 .dark-spike::before {
@@ -1038,7 +1077,7 @@ body.dungeon-page .navbar {
     stroke-linecap: round;
     stroke-linejoin: round;
     filter: drop-shadow(0 0 10px var(--combat-shadow, rgba(82,183,255,0.9)));
-    animation: chaos-lightning-flash 360ms ease-out forwards;
+    animation: chaos-lightning-flash var(--battle-duration-360, 360ms) ease-out forwards;
 }
 
 .chaos-lightning .chaos-thunder-core {
@@ -1047,7 +1086,7 @@ body.dungeon-page .navbar {
 
 .chaos-lightning .chaos-thunder-branch {
     stroke-width: 4;
-    animation-delay: 36ms;
+    animation-delay: var(--battle-duration-36, 36ms);
 }
 
 .chaos-lightning .chaos-thunder-border {
@@ -1082,7 +1121,7 @@ body.dungeon-page .navbar {
     stroke: var(--combat-color, #FFB23F);
     stroke-linecap: round;
     filter: drop-shadow(0 0 8px var(--combat-shadow, rgba(255,178,63,0.9)));
-    animation: sword-crescent-travel 440ms ease-out forwards;
+    animation: sword-crescent-travel var(--battle-duration-440, 440ms) ease-out forwards;
 }
 
 .sword-swing-arc {
@@ -1096,11 +1135,11 @@ body.dungeon-page .navbar {
 }
 
 .sword-scratch-2 {
-    animation-delay: 24ms;
+    animation-delay: var(--battle-duration-24, 24ms);
 }
 
 .sword-scratch-3 {
-    animation-delay: 48ms;
+    animation-delay: var(--battle-duration-48, 48ms);
 }
 
 .thorn-spike {
@@ -1109,7 +1148,7 @@ body.dungeon-page .navbar {
     stroke-width: 7;
     stroke-linecap: round;
     filter: drop-shadow(0 0 7px var(--combat-shadow, rgba(110,143,69,0.86)));
-    animation: thorn-burst-pulse 520ms ease-out forwards;
+    animation: thorn-burst-pulse var(--battle-duration-520, 520ms) ease-out forwards;
 }
 
 .heal-ring {
@@ -1124,15 +1163,15 @@ body.dungeon-page .navbar {
     stroke-width: 4;
     transform-box: fill-box;
     transform-origin: center;
-    animation: heal-ring-rise 620ms ease-out forwards;
+    animation: heal-ring-rise var(--battle-duration-620, 620ms) ease-out forwards;
 }
 
 .heal-ring-secondary {
-    animation-delay: 80ms;
+    animation-delay: var(--battle-duration-80, 80ms);
 }
 
 .heal-ring-tertiary {
-    animation-delay: 150ms;
+    animation-delay: var(--battle-duration-150, 150ms);
 }
 
 .demon-status-strip {
@@ -1224,7 +1263,7 @@ body.dungeon-page .navbar {
         0.08rem 0.08rem 0 var(--combat-text-outline, #fff),
         0 3px 8px rgba(0,0,0,0.95);
     pointer-events: none;
-    animation: floating-combat-number 760ms ease-out forwards;
+    animation: floating-combat-number var(--battle-duration-760, 760ms) ease-out forwards;
 }
 
 .floating-combat-number.is-poison {
@@ -3949,4 +3988,5 @@ body.summon-page {
     color: var(--ad-gold);
     font-weight: 700;
 }
+
 

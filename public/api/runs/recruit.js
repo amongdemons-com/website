@@ -4,6 +4,7 @@ const { createRng } = require('../lib/rng');
 const { createHuntEnemies } = require('../lib/hunt-enemies');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { normalizePosition, resetRunDemon } = require('../lib/run-demons');
+const { getDungeonTeamLimit } = require('../lib/dungeon-rules');
 
 const router = express.Router();
 
@@ -69,7 +70,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Demon already recruited.' });
   }
 
-  if (run.state.team.length >= 3 && !replaceInstanceId) {
+  if (run.state.team.length >= getDungeonTeamLimit(run.floor + 1) && !replaceInstanceId) {
     return res.status(400).json({ error: 'Choose one of your demons to swap out.' });
   }
 
@@ -107,8 +108,9 @@ async function advanceFloor(run) {
 }
 
 function buildStagedTeam(run, stagedTeam) {
-  if (!stagedTeam.length || stagedTeam.length > 3) {
-    const error = new Error('Choose between 1 and 3 demons for your team.');
+  const teamLimit = getDungeonTeamLimit(run.floor + 1);
+  if (!stagedTeam.length || stagedTeam.length > teamLimit) {
+    const error = new Error(`Choose between 1 and ${teamLimit} demons for your team.`);
     error.status = 400;
     throw error;
   }

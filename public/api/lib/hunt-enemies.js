@@ -1,18 +1,20 @@
 const { createDemon, createTeam } = require('./demon-factory');
+const { MAX_DUNGEON_FLOOR, getDungeonTeamLimit } = require('./dungeon-rules');
 
 const STARTER_TYPE_IDS = [1, 2, 3];
+const MAX_HUNT_TYPE_ID = 11;
 
 function getAllowedHuntTypeIds(floor) {
   if (floor <= 3) return STARTER_TYPE_IDS;
 
-  return Array.from({ length: floor + 1 }, (item, index) => index + 1);
+  return Array.from({ length: Math.min(floor + 1, MAX_HUNT_TYPE_ID) }, (item, index) => index + 1);
 }
 
 async function createHuntEnemies(rng, floor, size) {
   const allowedTypeIds = getAllowedHuntTypeIds(floor);
   const teamSize = getHuntEnemyTeamSize(floor, size);
 
-  if (floor === 10 && teamSize > 0) {
+  if (floor === MAX_DUNGEON_FLOOR && teamSize > 0) {
     const enemies = [
       await createDemon(rng, {
         instanceId: `enemy-${floor}-1`,
@@ -43,15 +45,14 @@ async function createHuntEnemies(rng, floor, size) {
 }
 
 function getHuntEnemyTeamSize(floor, fallbackSize) {
-  if (floor <= 1) return Math.max(1, Number(fallbackSize) || 1);
-  if (floor === 2) return 2;
-  return 3;
+  if (floor <= 1) return getDungeonTeamLimit(fallbackSize);
+  return getDungeonTeamLimit(floor);
 }
 
 function getEnemyPositions(size) {
   if (size <= 1) return ['front'];
   if (size === 2) return ['front', 'back'];
-  return ['front', 'back', 'front'];
+  return Array.from({ length: size }, (item, index) => (index % 2 === 0 ? 'front' : 'back'));
 }
 
 function getEnemyPreferredPosition(demon) {
