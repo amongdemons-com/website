@@ -62,9 +62,9 @@
     "ability": {
       "kind": "poison",
       "hits": 1,
-      "maxStacksPerTarget": 2,
-      "durationTicks": 48,
-      "tickInterval": 8,
+      "maxStacksPerTarget": null,
+      "durationTicks": 160,
+      "tickInterval": 20,
       "damagePerTickScale": 1.0,
       "spreadMode": "highest_hp_then_cycle"
     },
@@ -196,8 +196,7 @@
     "weaknesses": ["Does not attack proactively", "Can be ignored by ranged targeters", "Weak when enemies avoid hitting it"],
     "ability": {
       "kind": "retaliate",
-      "retaliationScale": 0.55,
-      "usesOwnAttackAsCap": true
+      "damageSource": "atk"
     },
     "baseStats": {
       "hp": [175, 215],

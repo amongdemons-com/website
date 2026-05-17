@@ -21,6 +21,38 @@ function getAbility(demon, demonTypes = {}) {
   return getTypeData(demon, demonTypes).ability || { kind: 'basic_attack', hits: 1 };
 }
 
+function positiveNumber(value, fallback = 1) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+function getPoisonStackLimit(ability = {}) {
+  const maxStacks = Number(ability.maxStacksPerTarget);
+  return Number.isFinite(maxStacks) && maxStacks > 0 ? maxStacks : Infinity;
+}
+
+function getRetaliationDamage(target, ability = {}) {
+  const configuredDamage = Number(ability.damage);
+  if (Number.isFinite(configuredDamage) && configuredDamage > 0) {
+    return Math.max(1, Math.round(configuredDamage));
+  }
+
+  const damageSource = ability.damageSource || 'atk';
+  if (damageSource === 'atk') {
+    return Math.max(1, Number(target.atk) || 1);
+  }
+
+  return Math.max(1, Number(target.atk) || 1);
+}
+
+function getSyncedPoisonNextTick(poisonStacks, fallback) {
+  const activeTimers = poisonStacks
+    .map((poison) => Number(poison.nextTickIn))
+    .filter((nextTickIn) => Number.isFinite(nextTickIn) && nextTickIn > 0);
+
+  return activeTimers.length ? Math.min(...activeTimers) : fallback;
+}
+
 function isMeleeDemon(demon) {
   return [1, 5, 7, 9].includes(Number(demon.typeId));
 }
@@ -56,7 +88,7 @@ function chooseTarget(rng, attacker, enemies, demonTypes) {
 function choosePoisonTarget(attacker, enemies, demonTypes) {
   const living = alive(enemies);
   const ability = getAbility(attacker, demonTypes);
-  const maxStacks = Number(ability.maxStacksPerTarget) || 1;
+  const maxStacks = getPoisonStackLimit(ability);
   const stackable = living.filter((target) => getPoisonStacks(target, attacker.instanceId) < maxStacks);
 
   return [...stackable].sort((a, b) => b.hp - a.hp)[0] || null;
@@ -169,10 +201,7 @@ function applyDamage({ tick, attacker, target, damage, targeting, hitIndex, hitC
 
   const targetAbility = getAbility(target, demonTypes);
   if (target.hp > 0 && targetAbility.kind === 'retaliate' && attacker.hp > 0) {
-    const scaledDamage = Math.max(1, Math.round(damage * (Number(targetAbility.retaliationScale) || 0.5)));
-    const retaliationDamage = targetAbility.usesOwnAttackAsCap
-      ? Math.min(scaledDamage, Math.max(1, Number(target.atk) || 1))
-      : scaledDamage;
+    const retaliationDamage = getRetaliationDamage(target, targetAbility);
 
     attacker.hp = Math.max(0, attacker.hp - retaliationDamage);
     combatLog.push({
@@ -215,18 +244,19 @@ function applyPoison({ tick, attacker, enemies, demonTypes, combatLog }) {
   if (!target) return false;
 
   const ability = getAbility(attacker, demonTypes);
-  const maxStacks = Math.max(1, Number(ability.maxStacksPerTarget) || 1);
-  const tickInterval = Math.max(1, Number(ability.tickInterval) || 1);
-  const poison = {
-    source: attacker.instanceId,
-    damage: Math.max(1, Math.round((Number(attacker.atk) || 1) * (Number(ability.damagePerTickScale || ability.damagePerTurnScale) || 1))),
-    remainingTicks: Math.max(1, Number(ability.durationTicks || ability.durationTurns) || 1),
-    tickInterval,
-    nextTickIn: tickInterval
-  };
-
+  const maxStacks = getPoisonStackLimit(ability);
+  const tickInterval = Math.max(1, Math.round(positiveNumber(ability.tickInterval, 1)));
   target.statusEffects = target.statusEffects || {};
   target.statusEffects.poison = [...(target.statusEffects.poison || [])];
+
+  const poison = {
+    source: attacker.instanceId,
+    damage: Math.max(1, Math.round((Number(attacker.atk) || 1) * positiveNumber(ability.damagePerTickScale || ability.damagePerTurnScale, 1))),
+    remainingTicks: Math.max(1, Math.round(positiveNumber(ability.durationTicks || ability.durationTurns, 1))),
+    tickInterval,
+    nextTickIn: getSyncedPoisonNextTick(target.statusEffects.poison, tickInterval)
+  };
+
   const sourceStackIndexes = target.statusEffects.poison
     .map((stack, index) => stack.source === attacker.instanceId ? index : -1)
     .filter((index) => index >= 0);

@@ -753,9 +753,13 @@
       setActiveLogRow(index);
       if (step.primaryEffect !== 'poison') animateAttackerCard(step.attacker, step.primaryEffect);
       const attackerSide = getDemonSide(step.attacker);
-      step.entries.forEach((entry) => {
+      step.entries.forEach((entry, entryIndex) => {
         if (entry.effect === 'poison') {
-          showFloatingDamage(entry.target, entry.dmg, 'poison', entry.attacker, entry.effect);
+          if (entryIndex === 0) {
+            showFloatingDamage(entry.target, getPoisonBurstDamage(step), 'poison', entry.attacker, entry.effect, {
+              burstCount: step.entries.length
+            });
+          }
           updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
           syncPoisonStatus(entry.target, entry.poisonStacks);
           return;
@@ -1033,7 +1037,7 @@
     }));
   }
 
-  function showFloatingDamage(instanceId, amount, type, attackerId, effect) {
+  function showFloatingDamage(instanceId, amount, type, attackerId, effect, options = {}) {
     const card = findDemonCard(instanceId);
     if (!card) return;
 
@@ -1043,6 +1047,11 @@
     floating.innerHTML = type === 'heal'
       ? `+${escapeHtml(amount)}`
       : `-${escapeHtml(amount)}${type === 'poison' ? renderPoisonIcon() : ''}`;
+    if (type === 'poison' && Number(options.burstCount) > 1) {
+      const burstCount = Math.max(1, Number(options.burstCount) || 1);
+      const scale = Math.min(2.2, 1 + (burstCount - 1) * 0.12);
+      floating.style.fontSize = `calc(1.22rem * ${scale.toFixed(2)})`;
+    }
     card.appendChild(floating);
     setTimeout(() => floating.remove(), 760);
   }
@@ -1429,8 +1438,12 @@
         previous &&
         previous.tick === entry.tick &&
         previous.entries.some((previousEntry) => previousEntry.attacker === entry.target && previousEntry.target === entry.attacker);
+      const isSamePoisonBurst = entry.effect === 'poison' &&
+        previous?.primaryEffect === 'poison' &&
+        previous.tick === entry.tick &&
+        previous.entries.every((previousEntry) => previousEntry.target === entry.target);
 
-      if (isSameAoe || isSameRetaliation) {
+      if (isSameAoe || isSameRetaliation || isSamePoisonBurst) {
         previous.entries.push(entry);
         continue;
       }
@@ -1481,12 +1494,20 @@
     const entry = step.entries[0];
     const retaliationEntry = step.entries.find((item) => item.effect === 'retaliate');
     if (entry.effect === 'poison_apply') return 'poison';
-    if (entry.effect === 'poison') return `${entry.dmg} poison`;
+    if (entry.effect === 'poison') {
+      return `${getPoisonBurstDamage(step)} poison`;
+    }
     if (entry.effect === 'heal') return `+${entry.healing || 0} hp`;
     if (retaliationEntry) return `${entry.dmg} dmg, ${retaliationEntry.dmg} thorns`;
     if (entry.targeting === 'cleave') return `${step.entries.length} x ${entry.dmg} cleave`;
     if (step.isAoe) return `${step.entries.length} x ${entry.dmg} dmg`;
     return `${entry.dmg} dmg`;
+  }
+
+  function getPoisonBurstDamage(step) {
+    return (step.entries || [])
+      .filter((entry) => entry.effect === 'poison')
+      .reduce((total, entry) => total + (Number(entry.dmg) || 0), 0);
   }
 
   function renderEndNotice() {

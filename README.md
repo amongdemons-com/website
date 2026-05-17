@@ -202,16 +202,16 @@ Combat is automatic and simulated in `public/api/lib/combat.js`.
 - Front-row targeting prefers living front-row enemies and falls back to any living enemy.
 - Team state is cloned for battle, then persisted from the simulator result.
 - The API returns both a combat log and before/after snapshots for UI replay.
-- Poison effects tick over time and are cleared from teams between winning floors.
+- Poison effects tick slowly over time, can stack without a per-target cap, and are cleared from teams between winning floors.
 
 Implemented ability kinds include:
 
 | Ability | Behavior |
 | --- | --- |
 | `basic_attack`, `heavy_attack`, `slow_crushing_attack`, `ranged_execute`, `fast_execute`, `aoe_attack` | Damage using configured targeting rules |
-| `poison` | Applies stack-limited poison to high-HP targets |
+| `poison` | Applies stacking poison to high-HP targets |
 | `heal` | Heals the living ally with the most missing HP |
-| `retaliate` | Does not proactively attack; returns scaled damage when hit |
+| `retaliate` | Does not proactively attack; returns configured thorns damage when hit |
 | `chaotic_attack` | Hits a random living unit from either side for random damage |
 
 ## Static Data And Assets
