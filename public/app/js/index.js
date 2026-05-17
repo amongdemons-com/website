@@ -10,6 +10,7 @@
   const currentType = getCurrentTypeFromPath();
   const elements = getPageElements();
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
+  const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
   const formatTraitLabel = window.AmongDemons.ui.formatTraitLabel || window.AmongDemons.ui.formatRoleLabel;
   const getPositionLabel = window.AmongDemons.ui.getDemonPositionLabel;
 
@@ -87,9 +88,9 @@
         <article>
           <h2>Base Stats</h2>
           <div class="type-stat-row">
-            ${renderStatPill('HP', typeInfo.baseStats?.hp)}
-            ${renderStatPill('ATK', typeInfo.baseStats?.atk)}
-            ${renderStatPill('SPD', typeInfo.baseStats?.speed)}
+            ${renderStatPill('Health', typeInfo.baseStats?.hp, 'hp')}
+            ${renderStatPill('Attack', typeInfo.baseStats?.atk, 'attack')}
+            ${renderStatPill('Speed', typeInfo.baseStats?.speed, 'speed')}
           </div>
         </article>
         <article>
@@ -131,10 +132,10 @@
     `;
   }
 
-  function renderStatPill(label, value) {
+  function renderStatPill(label, value, icon) {
     return `
       <span class="type-stat-pill">
-        <span>${escapeHtml(label)}</span>
+        <span>${renderIcon(icon, { className: 'type-stat-icon' })}${escapeHtml(label)}</span>
         <strong>${escapeHtml(formatValue(value))}</strong>
       </span>
     `;

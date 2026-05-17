@@ -43,7 +43,8 @@
     combatDemons: new Map(),
     endNotice: null,
     endSummary: null,
-    promptedStarter: false
+    promptedStarter: false,
+    isLoading: true
   };
   const elements = {};
   let laneResizeObserver = null;
@@ -66,6 +67,7 @@
       'navPlayerName',
       'huntTitle',
       'huntProgress',
+      'runLoading',
       'runEmpty',
       'runPanel',
       'teamGrid',
@@ -112,6 +114,7 @@
   }
 
   async function refreshAll() {
+    setDungeonLoading(true);
     try {
       const me = await api('/api/auth/me');
       state.player = me.player;
@@ -131,7 +134,9 @@
           openStarterModal();
         }
       }
+      setDungeonLoading(false);
     } catch (error) {
+      setDungeonLoading(false);
       handleAuthError(error);
     }
   }
@@ -585,16 +590,31 @@
     elements.navPlayerName.textContent = player.username || '';
   }
 
+  function setDungeonLoading(isLoading) {
+    state.isLoading = Boolean(isLoading);
+    renderRun();
+  }
+
   function renderRun() {
     const run = state.run;
     const hasRun = Boolean(run);
 
-    elements.runEmpty.classList.toggle('d-none', hasRun);
-    elements.runPanel.classList.toggle('d-none', !hasRun);
-    elements.huntTitle.innerHTML = run || state.endSummary ? renderHuntTitle(run) : 'Dungeon';
+    if (elements.runLoading) elements.runLoading.classList.toggle('d-none', !state.isLoading);
+    elements.runEmpty.classList.toggle('d-none', state.isLoading || hasRun);
+    elements.runPanel.classList.toggle('d-none', state.isLoading || !hasRun);
+    elements.huntTitle.innerHTML = renderHuntTitle(run);
     renderHuntProgress(run);
     renderBattleOutcome();
     showCombatPanel();
+
+    if (state.isLoading) {
+      if (laneResizeObserver) laneResizeObserver.disconnect();
+      elements.fightLog.innerHTML = 'Loading latest dungeon state...';
+      elements.fightLog.classList.add('text-muted');
+      renderFightLogActions();
+      syncActionButtons();
+      return;
+    }
 
     if (!run) {
       if (laneResizeObserver) laneResizeObserver.disconnect();
@@ -602,11 +622,8 @@
       if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
       updateDungeonJoiner(false);
       document.querySelector('.battle-side-enemy')?.classList.remove('is-recruit-side');
-      elements.runEmpty.innerHTML = state.endSummary ? renderDungeonEndScreen() : `
-        <img src="/app/images/demons/thumbnails/1.png" alt="">
-        <p class="mb-0 text-muted">Choose your first demon to begin.</p>
-      `;
-      bindDungeonEndButtons();
+      elements.runEmpty.innerHTML = state.endSummary ? renderDungeonEndScreen() : renderDungeonEmptyScreen();
+      bindDungeonEmptyButtons();
       renderFightLog();
       renderFightLogActions();
       renderPhaseTitle();
@@ -853,7 +870,34 @@
     `;
   }
 
-  function bindDungeonEndButtons() {
+  function renderDungeonEmptyScreen() {
+    return `
+      <div class="dungeon-end-screen dungeon-empty-screen">
+        <div class="dungeon-end-copy">
+          <span class="hunt-phase-eyebrow">Ready</span>
+          <h2>No active dungeon</h2>
+          <p>Your last run has ended or was completed on another device. Start fresh when you are ready.</p>
+        </div>
+        <div class="dungeon-empty-preview" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="dungeon-end-actions">
+          <a class="btn btn-outline-light" href="/play">
+            ${renderIcon('back')}
+            Back
+          </a>
+          <button class="btn btn-primary" id="startNewDungeonBtn" type="button">
+            ${renderIcon('play')}
+            Start Dungeon
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function bindDungeonEmptyButtons() {
     const startNewDungeonBtn = document.getElementById('startNewDungeonBtn');
     if (!startNewDungeonBtn) return;
 
@@ -1603,6 +1647,17 @@
   }
 
   function renderFightLogActions() {
+    if (state.isLoading) {
+      elements.fightLogActions.innerHTML = `
+        <span class="dungeon-loading-status" aria-live="polite">
+          <span class="dungeon-loading-dot" aria-hidden="true"></span>
+          Loading
+        </span>
+      `;
+      elements.battleBtn = null;
+      return;
+    }
+
     const isDefeated = state.run?.status === 'defeated';
     const canStart = !state.endSummary && (!state.run || isDefeated || state.run.status === 'ended');
     const canBattle = Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);

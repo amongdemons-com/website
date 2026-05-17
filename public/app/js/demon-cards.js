@@ -23,6 +23,7 @@
     const tag = options.tag || 'div';
     const imageUrl = demon.imageUrl || demon.image_url || '';
     const title = options.title || demon.species || demon.name || capitalize(demon.rarity) || 'Demon';
+    const rarity = capitalize(demon.rarity || 'common');
     const classes = [
       'hunt-demon-card',
       options.className || '',
@@ -47,6 +48,7 @@
         ${options.overlayHtml || ''}
         <div class="hunt-demon-card-body">
           <div class="hunt-demon-card-title">
+            <span class="hunt-demon-card-rarity">${escapeHtml(rarity)}</span>
             <span class="text-white">${escapeHtml(title)}</span>
           </div>
           ${options.showStats === false ? '' : renderCombatStats(demon, options.statsOptions || {})}

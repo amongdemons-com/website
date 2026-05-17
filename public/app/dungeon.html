@@ -47,18 +47,29 @@
           <div class="card-header hunt-card-header dungeon-battle-header">
             <div id="huntTitle">Dungeon</div>
             <div id="battleOutcome" class="dungeon-battle-outcome" aria-live="polite"></div>
-            <div class="fight-log-actions dungeon-battle-actions" id="fightLogActions">
-              <button class="btn btn-hunt-battle btn-sm" id="battleBtn" type="button">
-                <i data-lucide="zap"></i>
-                Battle
-              </button>
-            </div>
+            <div class="fight-log-actions dungeon-battle-actions" id="fightLogActions"></div>
           </div>
           <div id="huntProgress" class="hunt-floor-track dungeon-card-progress" aria-hidden="true"><span></span></div>
           <div class="card-body dungeon-battle-body">
             <div class="tab-content dungeon-tab-content">
               <div class="tab-pane fade show active" id="combatPanel" role="tabpanel" aria-label="Combat" tabindex="0">
-                <div id="runEmpty" class="empty-state">
+                <div id="runLoading" class="empty-state dungeon-loading-state" aria-live="polite" aria-busy="true">
+                  <div class="dungeon-loading-mark" aria-hidden="true"></div>
+                  <div class="dungeon-loading-copy">
+                    <p class="mb-1">Loading dungeon...</p>
+                    <span>Checking your latest run state.</span>
+                  </div>
+                  <div class="dungeon-loading-arena" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <i></i>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+                <div id="runEmpty" class="empty-state d-none">
                   <img src="/app/images/demons/thumbnails/1.png" alt="">
                   <p class="mb-0 text-muted">Start a dungeon to face a team of demons.</p>
                 </div>
@@ -152,17 +163,32 @@
         <div class="modal-content">
           <div class="modal-header">
             <div>
-              <h2 class="modal-title h4" id="shortTeamModalTitle">Continue Short-Handed?</h2>
-              <p class="text-muted mb-0" id="shortTeamModalSubtitle">You can still recruit a defeated enemy demon before moving deeper.</p>
+              <h2 class="modal-title h4" id="shortTeamModalTitle">Recruit Before You Continue?</h2>
+              <p class="text-muted mb-0" id="shortTeamModalSubtitle">A defeated enemy can still join your team for the next floor.</p>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <p class="mb-0">Your team is not full. Are you sure you want to continue without recruiting another demon?</p>
+          <div class="modal-body short-team-help">
+            <p class="short-team-warning mb-3">Your team has an open slot. If you continue now, you will skip this recruit opportunity.</p>
+            <div class="short-team-steps" aria-label="How to recruit">
+              <div>
+                <span>1</span>
+                <p>Look at the defeated demons on the Recruit side.</p>
+              </div>
+              <div>
+                <span>2</span>
+                <p>Drag one into an empty Melee or Ranged slot on Your Team.</p>
+              </div>
+              <div>
+                <span>3</span>
+                <p>Then press Continue to enter the next floor with that demon.</p>
+              </div>
+            </div>
+            <p class="text-muted mb-0 mt-3">You can also tap a demon card to inspect it before deciding.</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-warning" id="confirmShortTeamBtn">Continue Anyway</button>
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal">Choose a Demon</button>
+            <button type="button" class="btn btn-outline-warning" id="confirmShortTeamBtn">Skip Recruit</button>
           </div>
         </div>
       </div>
