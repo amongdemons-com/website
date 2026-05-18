@@ -79,7 +79,7 @@
         <div class="combat-hp-bar" aria-label="HP ${currentHp} of ${maxHp}">
           <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${hpPercent}%"></div>
         </div>
-        <div class="combat-hp-meta"><span class="js-demon-hp">${currentHp}</span> / ${maxHp}${renderIcon('hp')}</div>
+        <div class="combat-hp-meta"><span class="combat-current-hp js-demon-hp">${currentHp}</span><span class="combat-hp-separator"> / </span><span class="combat-max-hp">${maxHp}</span>${renderIcon('hp')}</div>
       ` : ''}
     `;
   }
@@ -264,7 +264,7 @@
   }
 
   function getPositionLabel(demon = {}) {
-    const position = String(demon.position || demon.preferredPosition || '').toLowerCase();
+    const position = String(demon.preferredPosition || demon.position || '').toLowerCase();
     if (position === 'front' || position === 'melee') return 'Melee';
     if (position === 'back' || position === 'ranged') return 'Ranged';
     return position ? formatLabel(position) : '';

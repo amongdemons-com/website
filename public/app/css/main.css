@@ -1351,6 +1351,15 @@ body.dungeon-page .navbar {
     font-size: 1.05rem;
 }
 
+.dungeon-end-screen.is-defeat .hunt-phase-eyebrow {
+    color: #f19187;
+}
+
+.dungeon-end-screen.is-defeat .dungeon-end-copy h2 {
+    color: #ffd0cb;
+    text-shadow: 0 0 24px rgba(226,80,65,0.28);
+}
+
 .dungeon-empty-preview {
     display: flex;
     justify-content: center;
@@ -1416,6 +1425,89 @@ body.dungeon-page .navbar {
     justify-content: center;
     gap: 0.7rem;
 }
+
+.battle-result-burst {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    isolation: isolate;
+    animation: battle-result-fade 2200ms ease-out forwards;
+}
+
+.battle-result-burst::before {
+    content: "";
+    position: absolute;
+    width: min(34rem, 86vw);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, rgba(255,255,255,0.22), transparent 18%),
+        radial-gradient(circle, rgba(128,214,151,0.18), transparent 62%);
+    filter: blur(1px);
+    transform: scale(0.2);
+    animation: battle-result-shockwave 2200ms ease-out forwards;
+}
+
+.battle-result-burst-ring {
+    position: absolute;
+    width: min(18rem, 68vw);
+    aspect-ratio: 1;
+    border: 2px solid rgba(250,197,28,0.72);
+    border-radius: 50%;
+    box-shadow:
+        0 0 34px rgba(250,197,28,0.38),
+        inset 0 0 34px rgba(128,214,151,0.2);
+    animation: battle-result-ring 2200ms cubic-bezier(0.18, 0.84, 0.18, 1) forwards;
+}
+
+.battle-result-burst-text {
+    position: relative;
+    z-index: 2;
+    color: #fff7cf;
+    font-size: clamp(3.4rem, 12vw, 8.5rem);
+    font-weight: 950;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+    text-shadow:
+        0 0 10px rgba(255,255,255,0.86),
+        0 0 34px rgba(250,197,28,0.72),
+        0 8px 24px rgba(0,0,0,0.62);
+    transform: scale(0.74) rotate(-2deg);
+    animation: battle-result-text-pop 2200ms cubic-bezier(0.16, 0.88, 0.2, 1) forwards;
+}
+
+.battle-result-burst-sparks {
+    position: absolute;
+    width: min(22rem, 74vw);
+    aspect-ratio: 1;
+}
+
+.battle-result-burst-sparks span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0.42rem;
+    height: 2.4rem;
+    border-radius: 999px;
+    background: linear-gradient(#fff9d4, rgba(250,197,28,0));
+    transform-origin: center min(11rem, 37vw);
+    animation: battle-result-spark 2200ms ease-out forwards;
+}
+
+.battle-result-burst-sparks span:nth-child(1) { --spark-angle: 0deg; }
+.battle-result-burst-sparks span:nth-child(2) { --spark-angle: 36deg; }
+.battle-result-burst-sparks span:nth-child(3) { --spark-angle: 72deg; }
+.battle-result-burst-sparks span:nth-child(4) { --spark-angle: 108deg; }
+.battle-result-burst-sparks span:nth-child(5) { --spark-angle: 144deg; }
+.battle-result-burst-sparks span:nth-child(6) { --spark-angle: 180deg; }
+.battle-result-burst-sparks span:nth-child(7) { --spark-angle: 216deg; }
+.battle-result-burst-sparks span:nth-child(8) { --spark-angle: 252deg; }
+.battle-result-burst-sparks span:nth-child(9) { --spark-angle: 288deg; }
+.battle-result-burst-sparks span:nth-child(10) { --spark-angle: 324deg; }
 
 .hunt-demon-card.is-defeated {
     opacity: 0.58;
@@ -2414,7 +2506,10 @@ body.dungeon-page .navbar {
     .dungeon-reward-strip {
         display: block;
         border-bottom: 1px solid rgba(161,212,201,0.13);
-        background: rgba(4,10,12,0.74);
+        background:
+            linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
+            url("/app/images/amongdemons_dungeon_background.png") center / cover fixed no-repeat;
+        background-attachment: fixed;
     }
 
     .dungeon-battle-card:has(.dungeon-reward-strip:not(:empty)) {
@@ -2480,6 +2575,15 @@ body.dungeon-page .navbar {
     }
 
     .battle-side-heading {
+        font-size: 0.62rem;
+        min-height: 1.35rem;
+        line-height: 1;
+    }
+
+    .battle-side-count {
+        min-height: 0;
+        margin-left: 0.28rem;
+        padding: 0.12rem 0.28rem;
         font-size: 0.62rem;
     }
 
@@ -2635,6 +2739,21 @@ body.dungeon-page .navbar {
     .dungeon-battle-header .btn-sm {
         padding-right: 0.28rem;
         padding-left: 0.28rem;
+    }
+}
+
+@media (max-width: 575.98px), (max-height: 760px) and (min-width: 768px) {
+    .dungeon-page .battle-side .hunt-demon-card-title {
+        display: none;
+    }
+
+    .dungeon-page .battle-side .combat-current-hp,
+    .dungeon-page .battle-side .combat-hp-separator {
+        display: none;
+    }
+
+    .dungeon-page .battle-side .combat-hp-meta {
+        justify-content: flex-end;
     }
 }
 
@@ -3255,6 +3374,77 @@ body.dungeon-page .navbar {
     100% {
         opacity: 0;
         transform: translate(-50%, -2.35rem) scale(1.02);
+    }
+}
+
+@keyframes battle-result-fade {
+    0%, 82% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes battle-result-shockwave {
+    0% {
+        opacity: 0;
+        transform: scale(0.2);
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.15);
+    }
+}
+
+@keyframes battle-result-ring {
+    0% {
+        opacity: 0;
+        transform: scale(0.35) rotate(-18deg);
+    }
+    22% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.42) rotate(16deg);
+    }
+}
+
+@keyframes battle-result-text-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.62) rotate(-8deg);
+        filter: blur(0.2rem);
+    }
+    18% {
+        opacity: 1;
+        transform: scale(1.08) rotate(1deg);
+        filter: blur(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.18) rotate(0deg);
+        filter: blur(0);
+    }
+}
+
+@keyframes battle-result-spark {
+    0% {
+        opacity: 0;
+        margin-top: 0;
+        transform: translate(-50%, -50%) rotate(var(--spark-angle, 0deg)) scaleY(0.2);
+    }
+    18% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        margin-top: -4.6rem;
+        transform: translate(-50%, -50%) rotate(var(--spark-angle, 0deg)) scaleY(1.25);
     }
 }
 

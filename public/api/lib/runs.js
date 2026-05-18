@@ -1,4 +1,5 @@
 const db = require('./db');
+const { enrichRunPreferredPositions } = require('./run-demons');
 
 function parseRun(row) {
   return {
@@ -18,7 +19,7 @@ async function getRunForPlayer(runId, playerId) {
     [runId, playerId]
   );
 
-  return rows.length ? parseRun(rows[0]) : null;
+  return rows.length ? enrichRunPreferredPositions(parseRun(rows[0])) : null;
 }
 
 async function getCurrentRunForPlayer(playerId) {
@@ -39,7 +40,7 @@ async function getCurrentRunForPlayer(playerId) {
     [playerId]
   );
 
-  return rows.length ? parseRun(rows[0]) : null;
+  return rows.length ? enrichRunPreferredPositions(parseRun(rows[0])) : null;
 }
 
 async function closeOpenRunsForPlayer(playerId, exceptRunId = null) {

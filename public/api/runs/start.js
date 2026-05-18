@@ -6,7 +6,7 @@ const { createRng } = require('../lib/rng');
 const { createTeam } = require('../lib/demon-factory');
 const { STARTER_TYPE_IDS, createHuntEnemies } = require('../lib/hunt-enemies');
 const { closeOpenRunsForPlayer } = require('../lib/runs');
-const { createRunDemonFromCollection, resetRunDemon } = require('../lib/run-demons');
+const { createRunDemonFromCollection, enrichDemonPreferredPositions, resetRunDemon } = require('../lib/run-demons');
 
 const router = express.Router();
 const draftTokenSecret = crypto.randomBytes(32);
@@ -34,7 +34,7 @@ router.get('/runs/start-options', requireAuth, async (req, res) => {
       draftSeed,
       expiresAt: Date.now() + 15 * 60 * 1000
     }),
-    collection
+    collection: await enrichDemonPreferredPositions(collection)
   });
 });
 

@@ -85,6 +85,7 @@ async function createDemon(rng, options = {}) {
     species: typeData.name,
     role: typeData.role,
     targeting: typeData.targeting,
+    preferredPosition,
     rarity: asset.rarity,
     imageUrl: asset.image_url,
     maxHp: stats.hp,

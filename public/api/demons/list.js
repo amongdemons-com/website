@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
+const { enrichDemonPreferredPositions } = require('../lib/run-demons');
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.get('/demons', requireAuth, async (req, res) => {
     [req.player.id]
   );
 
-  res.json({ demons: rows });
+  res.json({ demons: await enrichDemonPreferredPositions(rows) });
 });
 
 module.exports = router;

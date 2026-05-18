@@ -73,6 +73,7 @@ router.post('/demons/save', requireAuth, async (req, res) => {
       species: demon.species,
       rarity: demon.rarity,
       imageUrl: demon.imageUrl,
+      preferredPosition: demon.preferredPosition,
       hp: demon.maxHp || demon.hp,
       atk: demon.atk,
       speed: demon.speed

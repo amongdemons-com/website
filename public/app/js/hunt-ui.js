@@ -49,6 +49,7 @@
     battleSpeed: getStoredBattleSpeed(),
     endNotice: null,
     endSummary: null,
+    endedReplayRun: null,
     promptedStarter: false,
     isLoading: true
   };
@@ -282,11 +283,9 @@
         if (result.winner === 'enemy') {
           state.run.status = 'defeated';
           state.run.lastBattle = result.lastBattle || state.run.lastBattle;
-          setMessage('Your team was defeated.', 'warning');
-          renderFightLog();
-          renderFightLogActions();
-          syncActionButtons();
+          await finishRun('Your team was defeated.', { defeated: true });
         } else {
+          await showBattleResultOverlay('victory');
           await loadRun(state.run.runId, { showPostWinActions: true });
           setMessage(getWinMessage(), 'success');
         }
@@ -364,6 +363,7 @@
       state.combatDemons = new Map();
       state.endNotice = null;
       state.endSummary = null;
+      state.endedReplayRun = null;
       getModal(elements.teamChoiceModal).hide();
       await loadRun(state.run.runId);
       setMessage(body.skipRecruit ? 'Continuing to the next floor.' : 'Team updated.', 'success');
@@ -509,6 +509,7 @@
           xp: result.xp,
           souls: result.souls
         };
+        state.endedReplayRun = null;
         state.endNotice = {
           text: `Dungeon ended. ${result.demon?.species || 'Demon'} joined your collection. You earned ${result.xp} XP and ${result.souls} souls.`,
           type: 'success'
@@ -547,6 +548,7 @@
           xp: result.xp,
           souls: result.souls
         };
+        state.endedReplayRun = null;
         state.endNotice = {
           text: `Dungeon ended. You earned ${result.xp} XP and ${result.souls} souls.`,
           type: 'success'
@@ -570,6 +572,7 @@
     if (!state.run) return;
 
     try {
+      const replayRun = summary.defeated ? createReplayRunSnapshot(state.run) : null;
       const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/end`, { method: 'POST' });
       localStorage.removeItem(RUN_KEY);
       state.run = null;
@@ -585,6 +588,7 @@
       state.recruitDraftPool = null;
       state.endSummary = {
         title: summary.completed ? 'Dungeon complete' : 'Dungeon ended',
+        outcome: summary.defeated ? 'defeat' : 'victory',
         message: summary.completed
           ? 'Congratulations. You cleared the dungeon.'
           : (message || 'Dungeon ended.'),
@@ -592,6 +596,7 @@
         xp: result.xp,
         souls: result.souls
       };
+      state.endedReplayRun = replayRun;
       state.endNotice = {
         text: `${message || 'Dungeon ended.'} You earned ${result.xp} XP and ${result.souls} souls.`,
         type: summary.completed || !message ? 'success' : 'warning'
@@ -860,11 +865,12 @@
   function renderDungeonEndScreen() {
     const summary = state.endSummary || {};
     const demon = summary.demon;
+    const isDefeat = summary.outcome === 'defeat';
 
     return `
-      <div class="dungeon-end-screen">
+      <div class="dungeon-end-screen ${isDefeat ? 'is-defeat' : 'is-victory'}">
         <div class="dungeon-end-copy">
-          <span class="hunt-phase-eyebrow">Victory</span>
+          <span class="hunt-phase-eyebrow">${isDefeat ? 'Defeat' : 'Victory'}</span>
           <h2>${escapeHtml(summary.title || 'Dungeon complete')}</h2>
           <p>${escapeHtml(summary.message || 'Congratulations. You cleared the dungeon.')}</p>
         </div>
@@ -883,6 +889,11 @@
         </div>
         <div class="dungeon-end-actions">
           <a class="btn btn-outline-light" href="/play">Leave</a>
+          ${state.endedReplayRun?.lastBattle?.combatLog?.length ? `
+            <button class="btn btn-warning btn-icon-only" id="replayEndedDungeonBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
+              ${renderIcon('replay')}
+            </button>
+          ` : ''}
           <button class="btn btn-primary" id="startNewDungeonBtn" type="button">
             ${renderIcon('play')}
             Start New Dungeon
@@ -921,14 +932,19 @@
 
   function bindDungeonEmptyButtons() {
     const startNewDungeonBtn = document.getElementById('startNewDungeonBtn');
-    if (!startNewDungeonBtn) return;
 
-    startNewDungeonBtn.addEventListener('click', async () => {
-      state.endSummary = null;
-      state.endNotice = null;
-      await openStarterModal();
-      renderRun();
-    });
+    if (startNewDungeonBtn) {
+      startNewDungeonBtn.addEventListener('click', async () => {
+        state.endSummary = null;
+        state.endNotice = null;
+        state.endedReplayRun = null;
+        await openStarterModal();
+        renderRun();
+      });
+    }
+
+    const replayEndedDungeonBtn = document.getElementById('replayEndedDungeonBtn');
+    if (replayEndedDungeonBtn) replayEndedDungeonBtn.addEventListener('click', replayFight);
   }
 
   function renderHuntProgress(run) {
@@ -1428,6 +1444,31 @@
     elements.battleOutcome.classList.toggle('is-defeat', type === 'defeat');
   }
 
+  function showBattleResultOverlay(type) {
+    const existing = document.querySelector('.battle-result-burst');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = `battle-result-burst is-${type}`;
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.innerHTML = `
+      <div class="battle-result-burst-ring" aria-hidden="true"></div>
+      <div class="battle-result-burst-text">${type === 'victory' ? 'Victory' : 'Defeat'}</div>
+      <div class="battle-result-burst-sparks" aria-hidden="true">
+        ${Array.from({ length: 10 }, () => '<span></span>').join('')}
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        overlay.remove();
+        resolve();
+      }, 2200);
+    });
+  }
+
   function updateDungeonJoiner(isRecruiting) {
     if (!elements.dungeonJoiner) return;
     elements.dungeonJoiner.classList.toggle('is-recruiting', Boolean(isRecruiting));
@@ -1834,10 +1875,23 @@
   }
 
   async function replayFight() {
-    const lastBattle = state.run?.lastBattle;
+    const replayingEndedRun = !state.run && Boolean(state.endedReplayRun);
+    const activeRun = state.run || state.endedReplayRun;
+    const lastBattle = activeRun?.lastBattle;
+
+    if (replayingEndedRun) {
+      state.run = createReplayRunSnapshot(state.endedReplayRun);
+      state.combatLog = lastBattle?.combatLog || [];
+      renderRun();
+    }
+
     showCombatPanel();
     if (!lastBattle?.combatLog?.length) {
       if (state.combatLog.length) renderFightLog();
+      if (replayingEndedRun) {
+        state.run = null;
+        renderRun();
+      }
       return;
     }
 
@@ -1852,10 +1906,36 @@
     state.run.team = cloneDemons(lastBattle.playerTeamAfter || state.run.team || []);
     state.run.enemies = cloneDemons(lastBattle.enemyTeamAfter || state.run.enemies || []);
     renderRun();
+
+    if (replayingEndedRun) {
+      state.run = null;
+      renderRun();
+    }
   }
 
   function cloneDemons(demons) {
     return (demons || []).map((demon) => ({ ...demon }));
+  }
+
+  function createReplayRunSnapshot(run) {
+    if (!run) return null;
+
+    return {
+      ...run,
+      team: cloneDemons(run.team || []),
+      enemies: cloneDemons(run.enemies || []),
+      rewards: [...(run.rewards || [])],
+      lastBattle: run.lastBattle ? {
+        ...run.lastBattle,
+        combatLog: [...(run.lastBattle.combatLog || [])],
+        playerTeamBefore: cloneDemons(run.lastBattle.playerTeamBefore || []),
+        enemyTeamBefore: cloneDemons(run.lastBattle.enemyTeamBefore || []),
+        playerTeamAfter: cloneDemons(run.lastBattle.playerTeamAfter || []),
+        enemyTeamAfter: cloneDemons(run.lastBattle.enemyTeamAfter || [])
+      } : null,
+      awaitingRecruit: false,
+      awaitingFinalPick: false
+    };
   }
 
   function isCurrentFloorBattle(run) {

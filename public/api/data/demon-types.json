@@ -95,7 +95,7 @@
       "hits": "all_enemies"
     },
     "baseStats": {
-      "hp": [58, 78],
+      "hp": [70, 90],
       "atk": [4, 5],
       "speed": [5, 6]
     },
