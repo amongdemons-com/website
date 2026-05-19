@@ -5,7 +5,7 @@ Among Demons is a Node.js/Express prototype for a server-authoritative demon col
 The current loop is:
 
 1. Register or log in.
-2. Start a Dungeon with either one tokenized draft starter or one demon from your permanent collection.
+2. Start a Dungeon with two demons chosen from six tokenized draft starters and/or your permanent collection.
 3. Arrange the active team into front/back positions.
 4. Run automatic server-simulated battles.
 5. Recruit defeated demons into the temporary Dungeon team, skip recruitment, cash out between fights, or clear floor 20.
@@ -154,8 +154,8 @@ All API routes are mounted under `/api`.
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `GET` | `/runs/start-options` | Return three draft starters, a short-lived signed draft token, and the player's collection |
-| `POST` | `/runs/start` | Start a new Dungeon run from a draft starter or collection demon |
+| `GET` | `/runs/start-options` | Return six draft starters, a short-lived signed draft token, and the player's collection |
+| `POST` | `/runs/start` | Start a new Dungeon run from two draft or collection demons |
 | `GET` | `/runs/current` | Return the player's current active/completed pending run |
 | `GET` | `/runs/:id` | Return one run state owned by the player |
 | `POST` | `/runs/:id/formation` | Update front/back positions before battle |
@@ -176,14 +176,14 @@ All API routes are mounted under `/api`.
 
 ## Dungeon Rules
 
-- Starting options are generated from starter type IDs `1`, `2`, and `3`, with `common`, `uncommon`, or `rare` rarity.
+- Starting options are generated as six choices from starter type IDs `1`, `2`, and `3`, with `common`, `uncommon`, or `rare` rarity.
 - Draft starter choices are protected by an HMAC-signed token and expire after 15 minutes.
 - Starting a new run closes any open runs for that player.
-- The active Dungeon team can contain 1 to 6 demons.
-- The player can use a permanent collection demon as the first Dungeon demon.
-- Floor 1 enemy size follows the player's current team size.
-- Floor 2 has 2 enemies.
-- Enemy teams grow from 1 to 6 demons across floors 1 through 6, then stay at 6 enemies.
+- New Dungeon runs start with exactly 2 demons.
+- The active Dungeon team can contain up to 6 demons.
+- The player can use permanent collection demons as starting Dungeon demons.
+- Floors 1 and 2 have enemy and team size 2.
+- Enemy teams are 2 demons on floors 1 and 2, grow from 3 to 6 demons across floors 3 through 6, then stay at 6 enemies.
 - Floors 1 through 3 use the starter type pool; later floors unlock more types based on floor.
 - From floor 4 onward, enemy generation applies floor pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`.
 - Legendary and mythic enemy rarities can only appear from floor 10 onward.

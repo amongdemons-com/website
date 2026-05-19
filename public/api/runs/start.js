@@ -10,10 +10,12 @@ const { createRunDemonFromCollection, enrichDemonPreferredPositions, resetRunDem
 
 const router = express.Router();
 const draftTokenSecret = crypto.randomBytes(32);
+const DRAFT_STARTER_COUNT = 6;
+const STARTING_TEAM_SIZE = 2;
 
 router.get('/runs/start-options', requireAuth, async (req, res) => {
   const draftSeed = crypto.randomInt(1, 4294967295);
-  const draft = await createTeam(createRng(draftSeed), 3, {
+  const draft = await createTeam(createRng(draftSeed), DRAFT_STARTER_COUNT, {
     prefix: 'draft',
     allowedTypeIds: STARTER_TYPE_IDS,
     allowedRarities: ['common', 'uncommon', 'rare']
@@ -41,8 +43,8 @@ router.get('/runs/start-options', requireAuth, async (req, res) => {
 router.post('/runs/start', requireAuth, async (req, res) => {
   const runId = crypto.randomUUID();
   const seed = crypto.randomInt(1, 4294967295);
-  const starter = await getStarterDemon(req);
-  const startingTeam = [resetRunDemon(starter, 'player-1')];
+  const starters = await getStarterDemons(req);
+  const startingTeam = starters.map((starter, index) => resetRunDemon(starter, `player-${index + 1}`));
   const enemies = await createHuntEnemies(createRng(seed + 1), 1, startingTeam.length);
   const state = {
     currentFloor: 1,
@@ -68,11 +70,52 @@ router.post('/runs/start', requireAuth, async (req, res) => {
   });
 });
 
-async function getStarterDemon(req) {
-  const source = String(req.body.source || 'draft');
+async function getStarterDemons(req) {
+  const choices = Array.isArray(req.body.starters)
+    ? req.body.starters
+    : [req.body];
+
+  if (choices.length !== STARTING_TEAM_SIZE) {
+    const error = new Error(`Choose exactly ${STARTING_TEAM_SIZE} demons to begin the dungeon.`);
+    error.status = 400;
+    throw error;
+  }
+
+  const choiceKeys = new Set();
+  choices.forEach((choice) => {
+    const source = String(choice?.source || 'draft');
+    const value = source === 'collection' ? Number(choice?.demonId) : Number(choice?.draftIndex);
+    const key = `${source}:${value}`;
+    if (choiceKeys.has(key)) {
+      const error = new Error('Choose two different demons to begin the dungeon.');
+      error.status = 400;
+      throw error;
+    }
+    choiceKeys.add(key);
+  });
+
+  const draftToken = choices.find((choice) => String(choice?.source || 'draft') !== 'collection')?.draftToken || req.body.draftToken;
+  const draftData = draftToken ? verifyDraftToken(String(draftToken), req.player.id) : null;
+  const draft = draftData ? await createTeam(createRng(draftData.draftSeed), DRAFT_STARTER_COUNT, {
+    prefix: 'draft',
+    allowedTypeIds: STARTER_TYPE_IDS,
+    allowedRarities: ['common', 'uncommon', 'rare']
+  }) : [];
+
+  const starters = [];
+  for (const choice of choices) {
+    starters.push(await getStarterDemon(req, choice, draft));
+  }
+
+  return starters;
+}
+
+async function getStarterDemon(req, choice, draft) {
+  choice = choice || {};
+  const source = String(choice.source || 'draft');
 
   if (source === 'collection') {
-    const demonId = Number(req.body.demonId);
+    const demonId = Number(choice.demonId);
     if (!demonId) {
       const error = new Error('demonId is required.');
       error.status = 400;
@@ -96,20 +139,13 @@ async function getStarterDemon(req) {
     return createRunDemonFromCollection(rows[0], 'player-1');
   }
 
-  const draftToken = String(req.body.draftToken || '');
-  const draftIndex = Number(req.body.draftIndex);
-  if (!draftToken || !Number.isInteger(draftIndex) || draftIndex < 0 || draftIndex > 2) {
+  const draftIndex = Number(choice.draftIndex);
+  if (!draft.length || !Number.isInteger(draftIndex) || draftIndex < 0 || draftIndex >= DRAFT_STARTER_COUNT) {
     const error = new Error('draftToken and draftIndex are required.');
     error.status = 400;
     throw error;
   }
 
-  const draftData = verifyDraftToken(draftToken, req.player.id);
-  const draft = await createTeam(createRng(draftData.draftSeed), 3, {
-    prefix: 'draft',
-    allowedTypeIds: STARTER_TYPE_IDS,
-    allowedRarities: ['common', 'uncommon', 'rare']
-  });
   return draft[draftIndex];
 }
 

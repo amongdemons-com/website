@@ -9,6 +9,7 @@
   const RUN_KEY = 'amongdemons-current-run';
   const BATTLE_SPEED_KEY = 'amongdemons-battle-speed';
   const MAX_DUNGEON_FLOOR = 20;
+  const STARTER_SELECTION_SIZE = 2;
   const MAX_DUNGEON_TEAM_SIZE = 6;
   const BATTLE_SPEED_OPTIONS = [0.5, 1, 2, 4];
   const session = window.AmongDemons.getSession();
@@ -32,7 +33,8 @@
     player: session.player || null,
     run: null,
     startOptions: null,
-    selectedStarter: null,
+    selectedStarters: [],
+    activeStarterTab: 'draft',
     selectedRecruitRewardId: null,
     selectedSwapInstanceId: null,
     selectedCashoutDemonKey: null,
@@ -42,6 +44,7 @@
     draggedRecruitPoolInstanceId: null,
     draggedFormationInstanceId: null,
     selectedRecruitPoolInstanceId: null,
+    recruitSwapEffectIds: [],
     recruitDraftTeam: null,
     recruitDraftPool: null,
     combatLog: [],
@@ -189,7 +192,8 @@
 
   async function loadStartOptions() {
     state.startOptions = await api('/api/runs/start-options');
-    state.selectedStarter = null;
+    state.selectedStarters = [];
+    state.activeStarterTab = 'draft';
   }
 
   async function openStarterModal() {
@@ -214,25 +218,25 @@
         if (!state.startOptions) {
           await loadStartOptions();
           renderStarterModal();
-          setMessage('Choose one demon to begin the dungeon.', 'warning');
+          setMessage(`Choose ${STARTER_SELECTION_SIZE} demons to begin the dungeon.`, 'warning');
           return;
         }
 
-        if (!state.selectedStarter) {
-          setMessage('Choose one demon to begin the dungeon.', 'warning');
+        if (!hasRequiredStarterSelection()) {
+          setMessage(`Choose ${STARTER_SELECTION_SIZE} demons to begin the dungeon.`, 'warning');
           return;
         }
 
         const payload = await api('/api/runs/start', {
           method: 'POST',
-          body: state.selectedStarter
+          body: { starters: state.selectedStarters }
         });
         state.combatLog = [];
         state.endNotice = null;
         state.endSummary = null;
         state.isRecruiting = false;
         state.showPostWinActions = false;
-        state.selectedStarter = null;
+        state.selectedStarters = [];
         state.startOptions = null;
         getModal(elements.starterModal).hide();
         localStorage.setItem(RUN_KEY, payload.runId);
@@ -669,19 +673,19 @@
     });
     if (elements.teamSideTitle) {
       if (state.isRecruiting) {
-        const teamLimit = getRecruitTeamLimit();
-        elements.teamSideTitle.innerHTML = `Your Team <span class="battle-side-count">${team.length} / ${teamLimit}</span>`;
+        elements.teamSideTitle.textContent = 'Your Team';
       } else {
         elements.teamSideTitle.textContent = 'Your Team';
       }
     }
     if (elements.enemySideTitle) elements.enemySideTitle.textContent = state.isRecruiting ? 'Recruit' : 'Enemies';
-    updateDungeonJoiner(state.isRecruiting);
+    updateDungeonJoiner(state.isRecruiting, team.length, getRecruitTeamLimit());
     document.querySelector('.battle-side-enemy')?.classList.toggle('is-recruit-side', state.isRecruiting);
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
     bindPointerDragAndDrop();
     bindDemonDetailCards();
+    playRecruitSwapEffect();
     watchFormationLaneSizing();
     renderFightLog();
     renderFightLogActions();
@@ -701,10 +705,12 @@
 
     const collection = state.startOptions.collection || [];
     const draft = state.startOptions.draft || [];
-    const selectedTab = state.selectedStarter?.source === 'collection' ? 'collection' : 'draft';
+    const selectedTab = state.activeStarterTab === 'collection' ? 'collection' : 'draft';
+    const selectedCount = state.selectedStarters.length;
 
     elements.starterModalBody.innerHTML = `
       <div class="starter-picker w-100">
+        <div class="fight-log-notice text-muted mb-3">Choose ${STARTER_SELECTION_SIZE} demons. ${selectedCount} / ${STARTER_SELECTION_SIZE} selected.</div>
         <ul class="nav nav-tabs starter-tabs" role="tablist">
           <li class="nav-item" role="presentation">
             <button class="nav-link ${selectedTab === 'draft' ? 'active' : ''}" id="starterDraftTab" data-bs-toggle="tab" data-bs-target="#starterDraftPanel" type="button" role="tab" aria-controls="starterDraftPanel" aria-selected="${selectedTab === 'draft'}">New Demons</button>
@@ -719,7 +725,7 @@
               ${draft.map((demon, index) => renderChoiceCard(demon, {
                 type: 'draft',
                 value: index,
-                selected: state.selectedStarter?.source === 'draft' && state.selectedStarter?.draftIndex === index
+                selected: hasSelectedStarter('draft', index)
               })).join('')}
             </div>
           </div>
@@ -729,7 +735,7 @@
                 ${collection.map((demon) => renderChoiceCard(demon, {
                   type: 'collection',
                   value: demon.id,
-                  selected: state.selectedStarter?.source === 'collection' && state.selectedStarter?.demonId === demon.id
+                  selected: hasSelectedStarter('collection', demon.id)
                 })).join('')}
               </div>
             ` : '<p class="text-muted mb-0 py-3">No saved demons yet.</p>'}
@@ -737,7 +743,8 @@
         </div>
       </div>
     `;
-    elements.confirmStarterBtn.disabled = !state.selectedStarter;
+    elements.confirmStarterBtn.disabled = !hasRequiredStarterSelection();
+    bindStarterTabs();
     bindStarterButtons();
   }
 
@@ -753,17 +760,65 @@
     });
   }
 
+  function bindStarterTabs() {
+    const draftTab = document.getElementById('starterDraftTab');
+    const collectionTab = document.getElementById('starterCollectionTab');
+
+    if (draftTab) {
+      draftTab.addEventListener('click', () => {
+        state.activeStarterTab = 'draft';
+      });
+    }
+
+    if (collectionTab) {
+      collectionTab.addEventListener('click', () => {
+        state.activeStarterTab = 'collection';
+      });
+    }
+  }
+
   function bindStarterButtons() {
     document.querySelectorAll('.hunt-choice-card').forEach((button) => {
       button.addEventListener('click', () => {
         const type = button.dataset.choiceType;
         const rawValue = Number(button.dataset.choiceValue);
-        state.selectedStarter = type === 'collection'
-          ? { source: 'collection', demonId: rawValue }
-          : { source: 'draft', draftToken: state.startOptions.draftToken, draftIndex: rawValue };
+        toggleStarterSelection(type, rawValue);
         renderStarterModal();
       });
     });
+  }
+
+  function hasRequiredStarterSelection() {
+    return state.selectedStarters.length === STARTER_SELECTION_SIZE;
+  }
+
+  function hasSelectedStarter(type, value) {
+    return state.selectedStarters.some((starter) => getStarterChoiceKey(starter) === `${type}:${value}`);
+  }
+
+  function toggleStarterSelection(type, value) {
+    const selected = type === 'collection'
+      ? { source: 'collection', demonId: value }
+      : { source: 'draft', draftToken: state.startOptions.draftToken, draftIndex: value };
+    const key = getStarterChoiceKey(selected);
+    const existingIndex = state.selectedStarters.findIndex((starter) => getStarterChoiceKey(starter) === key);
+
+    if (existingIndex >= 0) {
+      state.selectedStarters.splice(existingIndex, 1);
+      return;
+    }
+
+    if (state.selectedStarters.length >= STARTER_SELECTION_SIZE) {
+      state.selectedStarters.shift();
+    }
+
+    state.selectedStarters.push(selected);
+  }
+
+  function getStarterChoiceKey(starter) {
+    return starter.source === 'collection'
+      ? `collection:${starter.demonId}`
+      : `draft:${starter.draftIndex}`;
   }
 
   function renderRewardsPanel() {
@@ -1469,11 +1524,12 @@
     });
   }
 
-  function updateDungeonJoiner(isRecruiting) {
+  function updateDungeonJoiner(isRecruiting, teamCount = 0, teamLimit = 0) {
     if (!elements.dungeonJoiner) return;
     elements.dungeonJoiner.classList.toggle('is-recruiting', Boolean(isRecruiting));
-    const label = elements.dungeonJoiner.querySelector('span');
-    if (label) label.textContent = isRecruiting ? '+' : 'VS';
+    elements.dungeonJoiner.innerHTML = isRecruiting
+      ? `<span class="dungeon-vs-stack"><span class="dungeon-vs-symbol">+</span><span class="dungeon-vs-count">${teamCount} / ${teamLimit}</span></span>`
+      : '<span>VS</span>';
   }
 
   function showCombatPanel() {
@@ -2330,12 +2386,7 @@
         if ((payload?.type && payload.type !== 'recruit-pool') || !canDropPoolDemonOnTeamCard(poolInstanceId, card.dataset.instanceId)) return;
 
         event.preventDefault();
-        if (canAddPoolDemonToTeam(poolInstanceId)) {
-          const teamDemon = findDraftDemon(state.recruitDraftTeam, card.dataset.instanceId);
-          addPoolDemonToTeam(poolInstanceId, getDemonPosition(teamDemon));
-        } else {
-          swapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId);
-        }
+        swapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId);
         renderRun();
       });
     });
@@ -2371,7 +2422,7 @@
 
         if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId)) {
           event.preventDefault();
-          addPoolDemonToTeam(poolInstanceId, lane.dataset.formationDrop);
+          addPoolDemonToTeam(poolInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY));
           renderRun();
         }
       });
@@ -2410,7 +2461,8 @@
 
         if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId)) {
           event.preventDefault();
-          addPoolDemonToTeam(poolInstanceId, position);
+          const lane = label.closest('.formation-lane')?.querySelector('.formation-lane-cards');
+          addPoolDemonToTeam(poolInstanceId, position, getLaneDropDraftIndex(lane, event.clientY));
           renderRun();
         }
       });
@@ -2657,7 +2709,7 @@
 
     const laneElement = lane || label?.closest('.formation-lane')?.querySelector('.formation-lane-cards');
     if (laneElement && canPointerDropOnLane(drag.payload, laneElement)) {
-      return { element: laneElement, kind: 'lane' };
+      return { element: laneElement, kind: 'lane', insertIndex: getLaneDropDraftIndex(laneElement, y) };
     }
 
     return null;
@@ -2709,19 +2761,14 @@
 
     if (payload.type === 'recruit-pool') {
       if (target.kind === 'card') {
-        if (canAddPoolDemonToTeam(payload.instanceId)) {
-          const teamDemon = findDraftDemon(state.recruitDraftTeam, target.element.dataset.instanceId);
-          addPoolDemonToTeam(payload.instanceId, getDemonPosition(teamDemon));
-        } else {
-          swapPoolDemonIntoTeam(payload.instanceId, target.element.dataset.instanceId);
-        }
+        swapPoolDemonIntoTeam(payload.instanceId, target.element.dataset.instanceId);
         renderRun();
         return;
       }
 
       const position = target.element.dataset.formationDrop;
       if (position && canAddPoolDemonToTeam(payload.instanceId)) {
-        addPoolDemonToTeam(payload.instanceId, position);
+        addPoolDemonToTeam(payload.instanceId, position, target.insertIndex);
         renderRun();
       }
       return;
@@ -2834,25 +2881,29 @@
   }
 
   function canDropPoolDemonOnTeamCard(poolInstanceId, teamInstanceId) {
-    return canAddPoolDemonToTeam(poolInstanceId) || canSwapPoolDemonIntoTeam(poolInstanceId, teamInstanceId);
+    return canSwapPoolDemonIntoTeam(poolInstanceId, teamInstanceId);
   }
 
   function canSwapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
     const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
     const teamDemon = findDraftDemon(state.recruitDraftTeam, teamInstanceId);
-    if (!poolDemon || !teamDemon) return false;
-    return (state.recruitDraftTeam || []).length >= getRecruitTeamLimit();
+    return Boolean(poolDemon && teamDemon);
   }
 
-  function addPoolDemonToTeam(poolInstanceId, position) {
+  function addPoolDemonToTeam(poolInstanceId, position, insertIndex = null) {
     const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
     if (!poolDemon) return;
 
-    state.recruitDraftTeam.push({
+    const draftDemon = {
       ...poolDemon,
-      draftOrder: (state.recruitDraftTeam || []).length,
       position
-    });
+    };
+    if (Number.isInteger(insertIndex) && insertIndex >= 0) {
+      state.recruitDraftTeam.splice(insertIndex, 0, draftDemon);
+    } else {
+      state.recruitDraftTeam.push(draftDemon);
+    }
+    refreshRecruitDraftOrder();
     syncRecruitDraftSelection();
   }
 
@@ -2877,8 +2928,32 @@
       draftOrder: getDraftOrder(poolDemon),
       position: getDemonPosition(poolDemon)
     });
-    sortRecruitDraftTeam();
+    state.recruitSwapEffectIds = [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
+    refreshRecruitDraftOrder();
     syncRecruitDraftSelection();
+  }
+
+  function playRecruitSwapEffect() {
+    if (!state.recruitSwapEffectIds.length) return;
+
+    const effectIds = state.recruitSwapEffectIds;
+    state.recruitSwapEffectIds = [];
+    effectIds.forEach((instanceId) => {
+      const card = document.querySelector(`.hunt-demon-card[data-instance-id="${cssEscape(instanceId)}"]`);
+      if (!card) return;
+
+      card.classList.remove('is-swap-confirmed');
+      void card.offsetWidth;
+      card.classList.add('is-swap-confirmed');
+      window.setTimeout(() => {
+        card.classList.remove('is-swap-confirmed');
+      }, 720);
+    });
+  }
+
+  function cssEscape(value) {
+    if (window.CSS?.escape) return window.CSS.escape(String(value));
+    return String(value).replace(/["\\]/g, '\\$&');
   }
 
   function moveDraftTeamDemon(instanceId, position) {
@@ -2910,6 +2985,29 @@
     return collection.splice(index, 1)[0];
   }
 
+  function getDraftTeamIndex(instanceId) {
+    return (state.recruitDraftTeam || []).findIndex((demon) => demon.instanceId === instanceId);
+  }
+
+  function getLaneDropDraftIndex(lane, clientY = null) {
+    if (!lane) return null;
+    const cards = Array.from(lane.querySelectorAll('.hunt-demon-card[data-instance-id]'));
+    if (!cards.length) return (state.recruitDraftTeam || []).length;
+
+    if (Number.isFinite(clientY)) {
+      for (const card of cards) {
+        const rect = card.getBoundingClientRect();
+        if (clientY < rect.top + (rect.height / 2)) {
+          const cardIndex = getDraftTeamIndex(card.dataset.instanceId);
+          return cardIndex >= 0 ? cardIndex : null;
+        }
+      }
+    }
+
+    const lastCardIndex = getDraftTeamIndex(cards[cards.length - 1].dataset.instanceId);
+    return lastCardIndex >= 0 ? lastCardIndex + 1 : null;
+  }
+
   function sortRecruitDraftTeam() {
     const originalOrder = new Map((state.run?.team || []).map((demon, index) => [demon.instanceId, index]));
     state.recruitDraftTeam.sort((a, b) => {
@@ -2923,6 +3021,12 @@
     if (Number.isFinite(demon?.draftOrder)) return demon.draftOrder;
     if (originalOrder?.has(demon?.originalInstanceId)) return originalOrder.get(demon.originalInstanceId);
     return 99;
+  }
+
+  function refreshRecruitDraftOrder() {
+    (state.recruitDraftTeam || []).forEach((demon, index) => {
+      demon.draftOrder = index;
+    });
   }
 
   function syncRecruitDraftSelection() {
@@ -3129,7 +3233,7 @@
     const waitingForChoice = Boolean(state.run && (state.run.awaitingRecruit || state.run.awaitingFinalPick));
 
     if (elements.battleBtn) elements.battleBtn.disabled = !hasActiveRun || waitingForChoice;
-    if (elements.confirmStarterBtn) elements.confirmStarterBtn.disabled = !state.selectedStarter;
+    if (elements.confirmStarterBtn) elements.confirmStarterBtn.disabled = !hasRequiredStarterSelection();
     if (fallbackButton && ![elements.confirmStarterBtn, elements.battleBtn].includes(fallbackButton)) {
       fallbackButton.disabled = false;
     }

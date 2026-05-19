@@ -784,6 +784,10 @@ body.dungeon-page .navbar {
     box-shadow: 0 0 0 2px rgba(250,197,28,0.24), 0 0 18px rgba(250,197,28,0.2);
 }
 
+.hunt-demon-card.is-swap-confirmed {
+    animation: recruit-swap-confirm 720ms cubic-bezier(0.18, 0.84, 0.18, 1);
+}
+
 .hunt-demon-card.is-recruit-draggable {
     border-color: color-mix(in srgb, var(--rarity-color, #D1D5D8) 62%, rgba(255,255,255,0.16));
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
@@ -2204,8 +2208,41 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-vs.is-recruiting {
+    gap: 0.55rem;
+    width: 3.4rem;
     color: #80d697;
     font-size: 2.6rem;
+}
+
+.dungeon-vs-stack {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    padding: 0.28rem 0 0.28rem 3px;
+    background: linear-gradient(90deg, rgba(7,27,32,0), rgba(7,27,32,0.88) 22%, rgba(7,27,32,0.88) 78%, rgba(7,27,32,0));
+}
+
+.dungeon-vs-symbol {
+    display: block;
+    line-height: 0.78;
+}
+
+.dungeon-vs-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.6rem;
+    white-space: nowrap;
+    border: 1px solid rgba(65,168,95,0.36);
+    border-radius: 4px;
+    background: rgba(65,168,95,0.1);
+    color: #80d697;
+    font-size: 0.74rem;
+    font-weight: 800;
+    line-height: 1;
+    padding: 0.18rem 0.35rem;
 }
 
 .dungeon-vs::before,
@@ -2633,6 +2670,22 @@ body.dungeon-page .navbar {
         width: 1.25rem;
         margin-top: 1.1rem;
         font-size: 0.6rem;
+    }
+
+    .dungeon-vs.is-recruiting {
+        width: 2.6rem;
+        font-size: 1.4rem;
+    }
+
+    .dungeon-vs-stack {
+        gap: 0.2rem;
+        padding: 0.2rem 0 0.2rem 3px;
+    }
+
+    .dungeon-vs-count {
+        min-width: 2.35rem;
+        padding: 0.12rem 0.24rem;
+        font-size: 0.58rem;
     }
 
     .dungeon-vs::before,
@@ -3453,6 +3506,24 @@ body.dungeon-page .navbar {
     }
 }
 
+@keyframes recruit-swap-confirm {
+    0% {
+        transform: scale(0.96);
+        box-shadow: 0 0 0 0 rgba(250,197,28,0);
+    }
+    38% {
+        transform: scale(1.04);
+        border-color: rgba(250,197,28,0.95);
+        box-shadow:
+            0 0 0 3px rgba(250,197,28,0.32),
+            0 0 24px rgba(65,168,95,0.42);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(250,197,28,0);
+    }
+}
+
 @keyframes dungeon-loading-spin {
     to {
         transform: rotate(360deg);
@@ -3492,6 +3563,11 @@ body.dungeon-page .navbar {
 
     .hunt-demon-card.is-shaking {
         animation: none;
+    }
+
+    .hunt-demon-card.is-swap-confirmed {
+        animation: none;
+        box-shadow: 0 0 0 2px rgba(250,197,28,0.24), 0 0 18px rgba(65,168,95,0.2);
     }
 
     .attack-zap path,
@@ -4146,7 +4222,8 @@ a:hover {
 .dungeon-vs.is-recruiting,
 .battle-side-enemy.is-recruit-side .battle-side-heading,
 .dungeon-battle-outcome.is-victory,
-.battle-side-count {
+.battle-side-count,
+.dungeon-vs-count {
     color: var(--ad-green);
 }
 
