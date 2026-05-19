@@ -98,7 +98,6 @@ function clamp(value, min, max) {
 }
 
 function getHuntEnemyTeamSize(floor, fallbackSize) {
-  if (floor <= 1) return getDungeonTeamLimit(fallbackSize);
   return getDungeonTeamLimit(floor);
 }
 

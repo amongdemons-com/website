@@ -60,6 +60,9 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
       clearPoisonEffects(run.state.team);
       clearPoisonEffects(run.state.enemies);
       run.state.awaitingRecruit = true;
+      if (run.floor === 10 && !run.state.collectionReinforcementUsed) {
+        run.state.awaitingCollectionReinforcement = true;
+      }
     }
   } else {
     run.status = 'defeated';

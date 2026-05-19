@@ -182,11 +182,12 @@ All API routes are mounted under `/api`.
 - New Dungeon runs start with exactly 2 demons.
 - The active Dungeon team can contain up to 6 demons.
 - The player can use permanent collection demons as starting Dungeon demons.
-- Floors 1 and 2 have enemy and team size 2.
-- Enemy teams are 2 demons on floors 1 and 2, grow from 3 to 6 demons across floors 3 through 6, then stay at 6 enemies.
+- Floor 1 starts at 2 demons, then team and enemy size grow by 1 per floor until capping at 6 on floor 5.
+- Enemy teams are 2 demons on floor 1, 3 on floor 2, 4 on floor 3, 5 on floor 4, and 6 from floor 5 onward.
 - Floors 1 through 3 use the starter type pool; later floors unlock more types based on floor.
 - From floor 4 onward, enemy generation applies floor pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`.
 - Legendary and mythic enemy rarities can only appear from floor 10 onward.
+- After clearing floor 10, the player may call in one collection demon as a one-time reinforcement while editing the team for floor 11.
 - Floor 20 always includes type `11` as the first enemy.
 - After a win before floor 20, defeated enemies become recruit rewards.
 - Between fights, the player may stage a whole team, recruit one demon, swap demons, skip recruitment, or cash out.

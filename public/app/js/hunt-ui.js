@@ -47,6 +47,7 @@
     recruitSwapEffectIds: [],
     recruitDraftTeam: null,
     recruitDraftPool: null,
+    collectionReinforcements: null,
     combatLog: [],
     combatDemons: new Map(),
     battleSpeed: getStoredBattleSpeed(),
@@ -258,6 +259,9 @@
         state.recruitDraftTeam = null;
         state.recruitDraftPool = null;
       }
+      if (!state.run?.collectionReinforcementAvailable) {
+        state.collectionReinforcements = null;
+      }
       localStorage.setItem(RUN_KEY, state.run.runId);
       renderRun();
       showPendingChoiceModal();
@@ -443,15 +447,15 @@
     ensureRecruitDraft();
     return [
       ...(state.recruitDraftTeam || []).map((demon) => ({
-        key: demon.recruitSource === 'reward' ? `reward:${demon.rewardId}` : `team:${demon.originalInstanceId || demon.instanceId}`,
-        source: demon.recruitSource === 'reward' ? 'reward' : 'team',
+        key: getCashoutCandidateKey(demon),
+        source: getDraftPayloadSource(demon),
         instanceId: demon.originalInstanceId || demon.instanceId,
         rewardId: demon.rewardId || null,
         demon
       })),
       ...(state.recruitDraftPool || []).map((demon) => ({
-        key: demon.recruitSource === 'reward' ? `reward:${demon.rewardId}` : `team:${demon.originalInstanceId || demon.instanceId}`,
-        source: demon.recruitSource === 'reward' ? 'reward' : 'team',
+        key: getCashoutCandidateKey(demon),
+        source: getDraftPayloadSource(demon),
         instanceId: demon.originalInstanceId || demon.instanceId,
         rewardId: demon.rewardId || null,
         demon
@@ -461,6 +465,12 @@
 
   function canCashoutCandidate(candidate) {
     return candidate.source === 'reward' || !candidate.demon.collectionDemonId;
+  }
+
+  function getCashoutCandidateKey(demon) {
+    if (demon.recruitSource === 'reward') return `reward:${demon.rewardId}`;
+    if (demon.recruitSource === 'collection') return `collection:${demon.collectionDemonId}`;
+    return `team:${demon.originalInstanceId || demon.instanceId}`;
   }
 
   function renderCashoutCandidate(candidate) {
@@ -1733,8 +1743,15 @@
     return `<div class="${className}">${escapeHtml(state.endNotice.text)}</div>`;
   }
 
-  function beginRecruiting() {
+  async function beginRecruiting() {
     if (!state.run?.awaitingRecruit) return;
+
+    try {
+      await ensureCollectionReinforcementsLoaded();
+    } catch (error) {
+      showError(error);
+      return;
+    }
 
     state.isRecruiting = true;
     state.showPostWinActions = false;
@@ -1779,14 +1796,41 @@
       draftOrder: index,
       position: getDemonPosition(demon, index)
     }));
-    state.recruitDraftPool = getCurrentRecruitRewards().map((reward, index) => ({
-      ...getFullHpDemon(reward.demon),
-      instanceId: `reward-${reward.rewardId}`,
-      rewardId: reward.rewardId,
-      recruitSource: 'reward',
-      isTapSelected: state.selectedRecruitPoolInstanceId === `reward-${reward.rewardId}`,
-      position: getDemonPosition(reward.demon, index)
-    }));
+    state.recruitDraftPool = [
+      ...getCurrentRecruitRewards().map((reward, index) => ({
+        ...getFullHpDemon(reward.demon),
+        instanceId: `reward-${reward.rewardId}`,
+        rewardId: reward.rewardId,
+        recruitSource: 'reward',
+        isTapSelected: state.selectedRecruitPoolInstanceId === `reward-${reward.rewardId}`,
+        position: getDemonPosition(reward.demon, index)
+      })),
+      ...getAvailableCollectionReinforcements().map((demon, index) => ({
+        ...getFullHpDemon(demon),
+        instanceId: `collection-${demon.id}`,
+        collectionDemonId: demon.id,
+        recruitSource: 'collection',
+        isTapSelected: state.selectedRecruitPoolInstanceId === `collection-${demon.id}`,
+        position: getDemonPosition(demon, index)
+      }))
+    ];
+  }
+
+  async function ensureCollectionReinforcementsLoaded() {
+    if (!state.run?.collectionReinforcementAvailable || state.collectionReinforcements) return;
+
+    const payload = await api('/api/demons');
+    state.collectionReinforcements = payload.demons || [];
+  }
+
+  function getAvailableCollectionReinforcements() {
+    if (!state.run?.collectionReinforcementAvailable) return [];
+    const existingCollectionIds = new Set((state.run.team || [])
+      .map((demon) => Number(demon.collectionDemonId))
+      .filter(Boolean));
+
+    return (state.collectionReinforcements || [])
+      .filter((demon) => !existingCollectionIds.has(Number(demon.id)));
   }
 
   function getFullHpDemon(demon) {
@@ -1800,7 +1844,7 @@
 
   function getRecruitTeamLimit() {
     if (!state.run) return MAX_DUNGEON_TEAM_SIZE;
-    return Math.min(MAX_DUNGEON_TEAM_SIZE, Math.max(1, Number(state.run.currentFloor) + 1));
+    return Math.min(MAX_DUNGEON_TEAM_SIZE, Math.max(2, Number(state.run.currentFloor) + 2));
   }
 
   function getDraftRecruitPayload() {
@@ -1808,12 +1852,19 @@
     const draftTeam = state.recruitDraftTeam || [];
     return {
       team: draftTeam.map((demon, index) => ({
-        source: demon.recruitSource === 'reward' ? 'reward' : 'team',
+        source: getDraftPayloadSource(demon),
         instanceId: demon.originalInstanceId || demon.instanceId,
         rewardId: demon.rewardId || undefined,
+        demonId: demon.collectionDemonId || undefined,
         position: getDemonPosition(demon, index)
       }))
     };
+  }
+
+  function getDraftPayloadSource(demon) {
+    if (demon.recruitSource === 'reward') return 'reward';
+    if (demon.recruitSource === 'collection') return 'collection';
+    return 'team';
   }
 
   function renderFightLogActions() {
@@ -2057,8 +2108,8 @@
     if (state.run.awaitingRecruit) {
       return `
         <div class="reward-phase">
-          <h3 class="h6 mb-2">${recruitRewards.length} defeated demons available</h3>
-          <p class="text-muted">Pick one in the team editor, preview your swap, then continue.</p>
+          <h3 class="h6 mb-2">${recruitRewards.length} defeated demons available${state.run.collectionReinforcementAvailable ? ' + collection reinforcement' : ''}</h3>
+          <p class="text-muted">${state.run.collectionReinforcementAvailable ? 'Pick a defeated demon or call one collection demon into the run.' : 'Pick one in the team editor, preview your swap, then continue.'}</p>
           <button class="btn btn-outline-success btn-sm js-open-choice-modal" type="button">
             ${renderIcon('recruit')}
             Edit Team
@@ -2079,8 +2130,13 @@
     getModal(elements.teamChoiceModal, { backdrop: 'static', keyboard: false }).show();
   }
 
-  function openTeamChoiceModal() {
+  async function openTeamChoiceModal() {
     if (!state.run) return;
+    if (state.run.awaitingRecruit && state.run.status === 'active') {
+      await beginRecruiting();
+      return;
+    }
+
     renderTeamChoiceModal();
     getModal(elements.teamChoiceModal, { backdrop: 'static', keyboard: false }).show();
   }
@@ -2168,7 +2224,7 @@
   }
 
   function getContinueButtonLabel() {
-    if (!state.selectedRecruitRewardId) return 'Continue Without Changes';
+    if (!hasDraftPoolAddition()) return 'Continue Without Changes';
     if ((state.run.team || []).length < getRecruitTeamLimit()) return 'Continue With Recruit';
     return state.selectedSwapInstanceId ? 'Continue With Swap' : 'Continue Without Changes';
   }
@@ -2349,6 +2405,24 @@
         card.classList.remove('is-dragging');
         document.querySelectorAll('.hunt-demon-card.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
       });
+      card.addEventListener('dragover', (event) => {
+        const payload = readRecruitDragPayload(event);
+        if (!canDropRecruitOnPoolCard(payload, card.dataset.instanceId)) return;
+
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        card.classList.add('is-drag-over');
+      });
+      card.addEventListener('dragleave', () => card.classList.remove('is-drag-over'));
+      card.addEventListener('drop', (event) => {
+        const payload = readRecruitDragPayload(event);
+        card.classList.remove('is-drag-over');
+        if (!canDropRecruitOnPoolCard(payload, card.dataset.instanceId)) return;
+
+        event.preventDefault();
+        applyRecruitCardDrop(payload, 'pool', card.dataset.instanceId);
+        renderRun();
+      });
     });
 
     document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
@@ -2370,9 +2444,8 @@
         document.querySelectorAll('.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .formation-lane-label.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
       });
       card.addEventListener('dragover', (event) => {
-        const payload = readDragPayload(event);
-        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
-        if ((payload?.type && payload.type !== 'recruit-pool') || !canDropPoolDemonOnTeamCard(poolInstanceId, card.dataset.instanceId)) return;
+        const payload = readRecruitDragPayload(event);
+        if (!canDropRecruitOnTeamCard(payload, card.dataset.instanceId)) return;
 
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
@@ -2380,13 +2453,12 @@
       });
       card.addEventListener('dragleave', () => card.classList.remove('is-drag-over'));
       card.addEventListener('drop', (event) => {
-        const payload = readDragPayload(event);
-        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
+        const payload = readRecruitDragPayload(event);
         card.classList.remove('is-drag-over');
-        if ((payload?.type && payload.type !== 'recruit-pool') || !canDropPoolDemonOnTeamCard(poolInstanceId, card.dataset.instanceId)) return;
+        if (!canDropRecruitOnTeamCard(payload, card.dataset.instanceId)) return;
 
         event.preventDefault();
-        swapPoolDemonIntoTeam(poolInstanceId, card.dataset.instanceId);
+        applyRecruitCardDrop(payload, 'team', card.dataset.instanceId);
         renderRun();
       });
     });
@@ -2415,7 +2487,7 @@
 
         if (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) {
           event.preventDefault();
-          moveDraftTeamDemon(teamInstanceId, lane.dataset.formationDrop);
+          moveDraftTeamDemon(teamInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY));
           renderRun();
           return;
         }
@@ -2454,7 +2526,8 @@
 
         if (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) {
           event.preventDefault();
-          moveDraftTeamDemon(teamInstanceId, position);
+          const lane = label.closest('.formation-lane')?.querySelector('.formation-lane-cards');
+          moveDraftTeamDemon(teamInstanceId, position, getLaneDropDraftIndex(lane, event.clientY));
           renderRun();
           return;
         }
@@ -2472,7 +2545,10 @@
       lane.addEventListener('dragover', (event) => {
         const payload = readDragPayload(event);
         const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
-        if ((payload?.type && payload.type !== 'recruit-team') || !canReturnTeamDemonToPool(teamInstanceId)) return;
+        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
+        const isTeamDrop = (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && canReturnTeamDemonToPool(teamInstanceId);
+        const isPoolMove = (payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId);
+        if (!isTeamDrop && !isPoolMove) return;
 
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
@@ -2482,12 +2558,21 @@
       lane.addEventListener('drop', (event) => {
         const payload = readDragPayload(event);
         const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
         lane.classList.remove('is-drag-over');
-        if ((payload?.type && payload.type !== 'recruit-team') || !canReturnTeamDemonToPool(teamInstanceId)) return;
 
-        event.preventDefault();
-        returnTeamDemonToPool(teamInstanceId, lane.dataset.formationDrop);
-        renderRun();
+        if ((payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && canReturnTeamDemonToPool(teamInstanceId)) {
+          event.preventDefault();
+          returnTeamDemonToPool(teamInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY));
+          renderRun();
+          return;
+        }
+
+        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId)) {
+          event.preventDefault();
+          moveDraftPoolDemon(poolInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY));
+          renderRun();
+        }
       });
     });
   }
@@ -2716,9 +2801,10 @@
   }
 
   function canPointerDropOnCard(payload, card) {
-    if (!payload || !card.closest('#teamGrid')) return false;
-    if (payload.type !== 'recruit-pool') return false;
-    return canDropPoolDemonOnTeamCard(payload.instanceId, card.dataset.instanceId);
+    if (!payload) return false;
+    if (card.closest('#teamGrid')) return canDropRecruitOnTeamCard(payload, card.dataset.instanceId);
+    if (card.closest('#enemyGrid')) return canDropRecruitOnPoolCard(payload, card.dataset.instanceId);
+    return false;
   }
 
   function canPointerDropOnLane(payload, lane) {
@@ -2729,7 +2815,10 @@
     }
 
     if (payload.type === 'recruit-pool') {
-      return Boolean(lane.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId));
+      return Boolean(
+        (lane.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId)) ||
+        (lane.closest('#enemyGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId))
+      );
     }
 
     if (payload.type === 'recruit-team') {
@@ -2761,14 +2850,20 @@
 
     if (payload.type === 'recruit-pool') {
       if (target.kind === 'card') {
-        swapPoolDemonIntoTeam(payload.instanceId, target.element.dataset.instanceId);
+        applyRecruitCardDrop(payload, target.element.closest('#teamGrid') ? 'team' : 'pool', target.element.dataset.instanceId);
         renderRun();
         return;
       }
 
       const position = target.element.dataset.formationDrop;
-      if (position && canAddPoolDemonToTeam(payload.instanceId)) {
+      if (position && target.element.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId)) {
         addPoolDemonToTeam(payload.instanceId, position, target.insertIndex);
+        renderRun();
+        return;
+      }
+
+      if (position && target.element.closest('#enemyGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId)) {
+        moveDraftPoolDemon(payload.instanceId, position, target.insertIndex);
         renderRun();
       }
       return;
@@ -2779,13 +2874,13 @@
       if (!position) return;
 
       if (target.element.closest('#teamGrid')) {
-        moveDraftTeamDemon(payload.instanceId, position);
+        moveDraftTeamDemon(payload.instanceId, position, target.insertIndex);
         renderRun();
         return;
       }
 
       if (target.element.closest('#enemyGrid') && canReturnTeamDemonToPool(payload.instanceId)) {
-        returnTeamDemonToPool(payload.instanceId, position);
+        returnTeamDemonToPool(payload.instanceId, position, target.insertIndex);
         renderRun();
       }
     }
@@ -2869,25 +2964,76 @@
 
   function teamHasDraftRecruit(exceptInstanceId = null) {
     return (state.recruitDraftTeam || []).some((demon) => (
-      demon.recruitSource === 'reward' &&
+      demon.recruitSource !== 'team' &&
       demon.instanceId !== exceptInstanceId
     ));
   }
 
+  function hasDraftPoolAddition() {
+    return (state.recruitDraftTeam || []).some((demon) => demon.recruitSource !== 'team');
+  }
+
   function canAddPoolDemonToTeam(poolInstanceId) {
     const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
-    if (!poolDemon || poolDemon.recruitSource !== 'reward') return false;
+    if (!poolDemon) return false;
     return (state.recruitDraftTeam || []).length < getRecruitTeamLimit();
   }
 
-  function canDropPoolDemonOnTeamCard(poolInstanceId, teamInstanceId) {
-    return canSwapPoolDemonIntoTeam(poolInstanceId, teamInstanceId);
+  function canDropRecruitOnTeamCard(payload, teamInstanceId) {
+    if (!payload || !teamInstanceId) return false;
+    if (payload.type === 'recruit-pool') return canSwapPoolDemonIntoTeam(payload.instanceId, teamInstanceId);
+    if (payload.type === 'recruit-team') return canSwapDraftDemons(state.recruitDraftTeam, payload.instanceId, teamInstanceId);
+    return false;
+  }
+
+  function canDropRecruitOnPoolCard(payload, poolInstanceId) {
+    if (!payload || !poolInstanceId) return false;
+    if (payload.type === 'recruit-team') return canSwapTeamDemonIntoPool(payload.instanceId, poolInstanceId);
+    if (payload.type === 'recruit-pool') return canSwapDraftDemons(state.recruitDraftPool, payload.instanceId, poolInstanceId);
+    return false;
+  }
+
+  function applyRecruitCardDrop(payload, targetSide, targetInstanceId) {
+    if (targetSide === 'team') {
+      if (payload.type === 'recruit-pool') {
+        swapPoolDemonIntoTeam(payload.instanceId, targetInstanceId);
+      } else if (payload.type === 'recruit-team') {
+        swapDraftDemons(state.recruitDraftTeam, payload.instanceId, targetInstanceId);
+        refreshRecruitDraftOrder();
+        syncRecruitDraftSelection();
+      }
+      return;
+    }
+
+    if (payload.type === 'recruit-team') {
+      swapTeamDemonIntoPool(payload.instanceId, targetInstanceId);
+    } else if (payload.type === 'recruit-pool') {
+      swapDraftDemons(state.recruitDraftPool, payload.instanceId, targetInstanceId);
+      refreshRecruitDraftPoolOrder();
+      syncRecruitDraftSelection();
+    }
   }
 
   function canSwapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
     const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
     const teamDemon = findDraftDemon(state.recruitDraftTeam, teamInstanceId);
     return Boolean(poolDemon && teamDemon);
+  }
+
+  function canSwapTeamDemonIntoPool(teamInstanceId, poolInstanceId) {
+    const teamDemon = findDraftDemon(state.recruitDraftTeam, teamInstanceId);
+    const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
+    return Boolean(teamDemon && poolDemon && (state.recruitDraftTeam || []).length > 1);
+  }
+
+  function canSwapDraftDemons(collection, sourceInstanceId, targetInstanceId) {
+    return Boolean(
+      sourceInstanceId &&
+      targetInstanceId &&
+      sourceInstanceId !== targetInstanceId &&
+      findDraftDemon(collection, sourceInstanceId) &&
+      findDraftDemon(collection, targetInstanceId)
+    );
   }
 
   function addPoolDemonToTeam(poolInstanceId, position, insertIndex = null) {
@@ -2930,6 +3076,32 @@
     });
     state.recruitSwapEffectIds = [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
     refreshRecruitDraftOrder();
+    refreshRecruitDraftPoolOrder();
+    syncRecruitDraftSelection();
+  }
+
+  function swapTeamDemonIntoPool(teamInstanceId, poolInstanceId) {
+    const teamIndex = getDraftTeamIndex(teamInstanceId);
+    const poolIndex = getDraftPoolIndex(poolInstanceId);
+    const teamDemon = removeDraftDemon(state.recruitDraftTeam, teamInstanceId);
+    const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
+    if (!teamDemon || !poolDemon) {
+      if (teamDemon) state.recruitDraftTeam.push(teamDemon);
+      if (poolDemon) state.recruitDraftPool.push(poolDemon);
+      return;
+    }
+
+    state.recruitDraftTeam.splice(Math.max(teamIndex, 0), 0, {
+      ...poolDemon,
+      position: getDemonPosition(teamDemon)
+    });
+    state.recruitDraftPool.splice(Math.max(poolIndex, 0), 0, {
+      ...teamDemon,
+      position: getDemonPosition(poolDemon)
+    });
+    state.recruitSwapEffectIds = [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
+    refreshRecruitDraftOrder();
+    refreshRecruitDraftPoolOrder();
     syncRecruitDraftSelection();
   }
 
@@ -2956,26 +3128,38 @@
     return String(value).replace(/["\\]/g, '\\$&');
   }
 
-  function moveDraftTeamDemon(instanceId, position) {
-    const demon = findDraftDemon(state.recruitDraftTeam, instanceId);
-    if (!demon) return;
-    demon.position = position;
+  function moveDraftTeamDemon(instanceId, position, insertIndex = null) {
+    moveDraftDemonWithin(state.recruitDraftTeam, instanceId, position, insertIndex);
+    refreshRecruitDraftOrder();
+    syncRecruitDraftSelection();
+  }
+
+  function moveDraftPoolDemon(instanceId, position, insertIndex = null) {
+    moveDraftDemonWithin(state.recruitDraftPool, instanceId, position, insertIndex);
+    refreshRecruitDraftPoolOrder();
     syncRecruitDraftSelection();
   }
 
   function canReturnTeamDemonToPool(instanceId) {
     const demon = findDraftDemon(state.recruitDraftTeam, instanceId);
-    return Boolean(demon?.recruitSource === 'reward' && (state.recruitDraftTeam || []).length > (state.run?.team || []).length);
+    return Boolean(demon && (state.recruitDraftTeam || []).length > 1);
   }
 
-  function returnTeamDemonToPool(instanceId, position) {
+  function returnTeamDemonToPool(instanceId, position, insertIndex = null) {
     const demon = removeDraftDemon(state.recruitDraftTeam, instanceId);
     if (!demon) return;
 
-    state.recruitDraftPool.push({
+    const draftDemon = {
       ...demon,
       position
-    });
+    };
+    if (Number.isInteger(insertIndex) && insertIndex >= 0) {
+      state.recruitDraftPool.splice(insertIndex, 0, draftDemon);
+    } else {
+      state.recruitDraftPool.push(draftDemon);
+    }
+    refreshRecruitDraftOrder();
+    refreshRecruitDraftPoolOrder();
     syncRecruitDraftSelection();
   }
 
@@ -2989,23 +3173,61 @@
     return (state.recruitDraftTeam || []).findIndex((demon) => demon.instanceId === instanceId);
   }
 
+  function getDraftPoolIndex(instanceId) {
+    return (state.recruitDraftPool || []).findIndex((demon) => demon.instanceId === instanceId);
+  }
+
   function getLaneDropDraftIndex(lane, clientY = null) {
     if (!lane) return null;
+    const collection = getDraftCollectionForLane(lane);
     const cards = Array.from(lane.querySelectorAll('.hunt-demon-card[data-instance-id]'));
-    if (!cards.length) return (state.recruitDraftTeam || []).length;
+    if (!cards.length) return (collection || []).length;
 
     if (Number.isFinite(clientY)) {
       for (const card of cards) {
         const rect = card.getBoundingClientRect();
         if (clientY < rect.top + (rect.height / 2)) {
-          const cardIndex = getDraftTeamIndex(card.dataset.instanceId);
+          const cardIndex = getDraftIndex(collection, card.dataset.instanceId);
           return cardIndex >= 0 ? cardIndex : null;
         }
       }
     }
 
-    const lastCardIndex = getDraftTeamIndex(cards[cards.length - 1].dataset.instanceId);
+    const lastCardIndex = getDraftIndex(collection, cards[cards.length - 1].dataset.instanceId);
     return lastCardIndex >= 0 ? lastCardIndex + 1 : null;
+  }
+
+  function getDraftCollectionForLane(lane) {
+    if (lane?.closest('#enemyGrid')) return state.recruitDraftPool;
+    return state.recruitDraftTeam;
+  }
+
+  function getDraftIndex(collection, instanceId) {
+    return (collection || []).findIndex((demon) => demon.instanceId === instanceId);
+  }
+
+  function moveDraftDemonWithin(collection, instanceId, position, insertIndex = null) {
+    const fromIndex = getDraftIndex(collection, instanceId);
+    if (fromIndex === -1) return;
+
+    const [demon] = collection.splice(fromIndex, 1);
+    demon.position = position;
+    let targetIndex = Number.isInteger(insertIndex) && insertIndex >= 0 ? insertIndex : collection.length;
+    if (targetIndex > fromIndex) targetIndex -= 1;
+    targetIndex = Math.max(0, Math.min(targetIndex, collection.length));
+    collection.splice(targetIndex, 0, demon);
+  }
+
+  function swapDraftDemons(collection, sourceInstanceId, targetInstanceId) {
+    const sourceIndex = getDraftIndex(collection, sourceInstanceId);
+    const targetIndex = getDraftIndex(collection, targetInstanceId);
+    if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex) return;
+
+    const sourcePosition = getDemonPosition(collection[sourceIndex]);
+    collection[sourceIndex].position = getDemonPosition(collection[targetIndex]);
+    collection[targetIndex].position = sourcePosition;
+    [collection[sourceIndex], collection[targetIndex]] = [collection[targetIndex], collection[sourceIndex]];
+    state.recruitSwapEffectIds = [sourceInstanceId, targetInstanceId].filter(Boolean);
   }
 
   function sortRecruitDraftTeam() {
@@ -3025,6 +3247,12 @@
 
   function refreshRecruitDraftOrder() {
     (state.recruitDraftTeam || []).forEach((demon, index) => {
+      demon.draftOrder = index;
+    });
+  }
+
+  function refreshRecruitDraftPoolOrder() {
+    (state.recruitDraftPool || []).forEach((demon, index) => {
       demon.draftOrder = index;
     });
   }
@@ -3052,6 +3280,18 @@
     } catch (error) {
       return null;
     }
+  }
+
+  function readRecruitDragPayload(event) {
+    const payload = readDragPayload(event);
+    if (payload) return payload;
+    if (state.draggedRecruitPoolInstanceId) {
+      return { type: 'recruit-pool', instanceId: state.draggedRecruitPoolInstanceId };
+    }
+    if (state.draggedFormationInstanceId) {
+      return { type: 'recruit-team', instanceId: state.draggedFormationInstanceId };
+    }
+    return null;
   }
 
   function renderDemonCards(demons, options = {}) {

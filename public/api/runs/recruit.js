@@ -1,9 +1,10 @@
 const express = require('express');
+const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { createRng } = require('../lib/rng');
 const { createHuntEnemies } = require('../lib/hunt-enemies');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
-const { normalizePosition, resetRunDemon } = require('../lib/run-demons');
+const { createRunDemonFromCollection, normalizePosition, resetRunDemon } = require('../lib/run-demons');
 const { getDungeonTeamLimit } = require('../lib/dungeon-rules');
 
 const router = express.Router();
@@ -25,13 +26,14 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   }
 
   if (skipRecruit) {
+    run.state.awaitingCollectionReinforcement = false;
     await advanceFloor(run);
     await saveRun(run);
     return res.json({ team: run.state.team, skipped: true });
   }
 
   if (stagedTeam) {
-    const team = buildStagedTeam(run, stagedTeam);
+    const team = await buildStagedTeam(run, stagedTeam);
     run.state.team = team;
 
     const recruitedRewardIds = new Set(
@@ -45,6 +47,10 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
         reward.claimed = true;
       }
     });
+    if (stagedTeam.some((item) => item && item.source === 'collection')) {
+      run.state.collectionReinforcementUsed = true;
+    }
+    run.state.awaitingCollectionReinforcement = false;
 
     if (run.status === 'active') {
       await advanceFloor(run);
@@ -91,6 +97,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   }
 
   if (run.status === 'active') {
+    run.state.awaitingCollectionReinforcement = false;
     await advanceFloor(run);
   }
 
@@ -104,10 +111,11 @@ async function advanceFloor(run) {
   run.state.currentFloor = run.floor;
   run.state.enemies = await createHuntEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length);
   run.state.awaitingRecruit = false;
+  run.state.awaitingCollectionReinforcement = false;
   run.state.mapProgress.push({ floor: run.floor, type: 'battle', status: 'available' });
 }
 
-function buildStagedTeam(run, stagedTeam) {
+async function buildStagedTeam(run, stagedTeam) {
   const teamLimit = getDungeonTeamLimit(run.floor + 1);
   if (!stagedTeam.length || stagedTeam.length > teamLimit) {
     const error = new Error(`Choose between 1 and ${teamLimit} demons for your team.`);
@@ -115,7 +123,28 @@ function buildStagedTeam(run, stagedTeam) {
     throw error;
   }
 
-  return stagedTeam.map((item, index) => {
+  const collectionItems = stagedTeam.filter((item) => item && item.source === 'collection');
+  if (collectionItems.length > 1) {
+    const error = new Error('Choose only one collection reinforcement.');
+    error.status = 400;
+    throw error;
+  }
+  if (collectionItems.length && !run.state.awaitingCollectionReinforcement) {
+    const error = new Error('Collection reinforcement is not available.');
+    error.status = 409;
+    throw error;
+  }
+
+  const selectedCollectionIds = new Set();
+  const existingCollectionIds = new Set(
+    (run.state.team || [])
+      .map((demon) => Number(demon.collectionDemonId))
+      .filter(Boolean)
+  );
+  const team = [];
+
+  for (let index = 0; index < stagedTeam.length; index += 1) {
+    const item = stagedTeam[index];
     if (!item || !item.source) {
       const error = new Error('Invalid staged team.');
       error.status = 400;
@@ -133,10 +162,11 @@ function buildStagedTeam(run, stagedTeam) {
         throw error;
       }
 
-      return {
+      team.push({
         ...resetRunDemon(demon, demon.instanceId),
         position
-      };
+      });
+      continue;
     }
 
     if (item.source === 'reward') {
@@ -153,16 +183,50 @@ function buildStagedTeam(run, stagedTeam) {
         throw error;
       }
 
-      return {
+      team.push({
         ...resetRunDemon(reward.demon, `player-${run.floor}-${reward.rewardId}`),
         position
-      };
+      });
+      continue;
+    }
+
+    if (item.source === 'collection') {
+      const demonId = Number(item.demonId || item.collectionDemonId);
+      if (!demonId || selectedCollectionIds.has(demonId) || existingCollectionIds.has(demonId)) {
+        const error = new Error('Collection reinforcement not found.');
+        error.status = 404;
+        throw error;
+      }
+
+      const [rows] = await db.query(
+        `SELECT id, source_demon_id, type_id, species, rarity, image_url, hp, atk, speed
+         FROM player_demons
+         WHERE id = ? AND player_id = ?
+         LIMIT 1`,
+        [demonId, run.playerId]
+      );
+
+      if (!rows.length) {
+        const error = new Error('Collection reinforcement not found.');
+        error.status = 404;
+        throw error;
+      }
+
+      selectedCollectionIds.add(demonId);
+      const demon = await createRunDemonFromCollection(rows[0], `player-collection-${demonId}`);
+      team.push({
+        ...resetRunDemon(demon, `player-collection-${demonId}`),
+        position
+      });
+      continue;
     }
 
     const error = new Error('Invalid staged team source.');
     error.status = 400;
     throw error;
-  });
+  }
+
+  return team;
 }
 
 module.exports = router;
