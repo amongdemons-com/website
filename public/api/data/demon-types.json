@@ -5,16 +5,32 @@
     "targeting": "front",
     "preferredPosition": "front",
     "spawnWeight": 26,
-    "strengths": ["Reliable baseline", "Balanced health", "Good tempo"],
-    "weaknesses": ["Only hits the front line", "No special effect"],
+    "strengths": [
+      "Reliable front-line pressure",
+      "Good tempo",
+      "Naturally beats fragile backliners once frontline falls"
+    ],
+    "weaknesses": [
+      "Only hits the front line",
+      "Loses value against heavy tanks and poison attrition"
+    ],
     "ability": {
       "kind": "basic_attack",
       "hits": 1
     },
     "baseStats": {
-      "hp": [92, 118],
-      "atk": [9, 12],
-      "speed": [8, 10]
+      "hp": [
+        104,
+        130
+      ],
+      "atk": [
+        11,
+        14
+      ],
+      "speed": [
+        9,
+        11
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -28,19 +44,36 @@
   "2": {
     "name": "Gon G'ah",
     "role": "ranged",
-    "targeting": "lowest_hp",
+    "targeting": "lowest_max_hp",
     "preferredPosition": "back",
     "spawnWeight": 18,
-    "strengths": ["Can hit any enemy", "Finishes wounded targets", "Solid attack speed"],
-    "weaknesses": ["Low health", "Lower damage than melee"],
+    "strengths": [
+      "Can hit any enemy",
+      "Prioritizes naturally fragile enemies",
+      "Strong against healer and poison backline"
+    ],
+    "weaknesses": [
+      "Very low health",
+      "Loses 1v1 to melee pressure",
+      "Weak if protected target has enough max HP"
+    ],
     "ability": {
-      "kind": "ranged_execute",
+      "kind": "ranged_snipe",
       "hits": 1
     },
     "baseStats": {
-      "hp": [72, 92],
-      "atk": [7, 10],
-      "speed": [7, 9]
+      "hp": [
+        58,
+        74
+      ],
+      "atk": [
+        10,
+        13
+      ],
+      "speed": [
+        7,
+        9
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -57,21 +90,39 @@
     "targeting": "highest_hp",
     "preferredPosition": "back",
     "spawnWeight": 13,
-    "strengths": ["Can hit any enemy", "Pressures high health enemies", "Poison keeps dealing damage"],
-    "weaknesses": ["Low health", "Poison ticks slowly", "Needs time to reach full value"],
+    "strengths": [
+      "Pressures highest health enemies",
+      "Poison bypasses retaliation",
+      "Strong against tanks and juggernauts"
+    ],
+    "weaknesses": [
+      "Low immediate damage",
+      "Needs time to win",
+      "Weak into fast sniper pressure and healing"
+    ],
     "ability": {
       "kind": "poison",
       "hits": 1,
       "maxStacksPerTarget": null,
-      "durationTicks": 160,
+      "durationTicks": 140,
       "tickInterval": 20,
-      "damagePerTickScale": 1.0,
-      "spreadMode": "highest_hp_then_cycle"
+      "damagePerTickScale": 1.15,
+      "spreadMode": "highest_hp_then_cycle",
+      "triggersRetaliate": false
     },
     "baseStats": {
-      "hp": [64, 84],
-      "atk": [4, 5],
-      "speed": [7, 9]
+      "hp": [
+        68,
+        88
+      ],
+      "atk": [
+        4,
+        6
+      ],
+      "speed": [
+        8,
+        10
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -88,16 +139,34 @@
     "targeting": "all",
     "preferredPosition": "back",
     "spawnWeight": 10,
-    "strengths": ["Hits every enemy", "Strong against wide teams", "Consistent chip damage"],
-    "weaknesses": ["Lowest single target damage", "Fragile", "Poor at finishing one threat"],
+    "strengths": [
+      "Hits every enemy",
+      "Softens teams for assassin executes",
+      "Medium health avoids being first sniper target"
+    ],
+    "weaknesses": [
+      "Low single-target damage",
+      "Poor at killing tanks alone",
+      "Needs allies to finish targets"
+    ],
     "ability": {
       "kind": "aoe_attack",
-      "hits": "all_enemies"
+      "hits": "all_enemies",
+      "damageScale": 0.75
     },
     "baseStats": {
-      "hp": [70, 90],
-      "atk": [4, 5],
-      "speed": [5, 6]
+      "hp": [
+        98,
+        120
+      ],
+      "atk": [
+        5,
+        7
+      ],
+      "speed": [
+        6,
+        8
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -114,16 +183,33 @@
     "targeting": "front",
     "preferredPosition": "front",
     "spawnWeight": 8,
-    "strengths": ["Higher health than basic melee", "Stable front line damage", "Good staying power"],
-    "weaknesses": ["Only hits the front line", "Slower than basic melee"],
+    "strengths": [
+      "Durable front-line fighter",
+      "Good into assassin pressure",
+      "Stable damage without replacing tanks"
+    ],
+    "weaknesses": [
+      "Only hits front line",
+      "Vulnerable to poison over time",
+      "Less burst than striker or juggernaut"
+    ],
     "ability": {
       "kind": "basic_attack",
       "hits": 1
     },
     "baseStats": {
-      "hp": [122, 152],
-      "atk": [10, 13],
-      "speed": [6, 8]
+      "hp": [
+        138,
+        168
+      ],
+      "atk": [
+        10,
+        13
+      ],
+      "speed": [
+        6,
+        8
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -140,16 +226,33 @@
     "targeting": "lowest_hp",
     "preferredPosition": "back",
     "spawnWeight": 7,
-    "strengths": ["Can hit any enemy", "Fastest attacker", "Excellent finisher"],
-    "weaknesses": ["Fragile", "Low damage per hit", "Struggles into heavy healing"],
+    "strengths": [
+      "Targets lowest current HP",
+      "Fastest finisher",
+      "Combos well with AOE chip damage"
+    ],
+    "weaknesses": [
+      "Fragile",
+      "Weak into healing",
+      "Struggles to start kills alone"
+    ],
     "ability": {
       "kind": "fast_execute",
       "hits": 1
     },
     "baseStats": {
-      "hp": [66, 86],
-      "atk": [5, 8],
-      "speed": [12, 14]
+      "hp": [
+        60,
+        78
+      ],
+      "atk": [
+        7,
+        10
+      ],
+      "speed": [
+        13,
+        16
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -166,16 +269,33 @@
     "targeting": "front",
     "preferredPosition": "front",
     "spawnWeight": 6,
-    "strengths": ["High melee cleave damage", "Hits every available front liner", "Sweeps the back line after the front falls"],
-    "weaknesses": ["Must stand front or wait behind a living front liner", "Middling health", "Lower speed"],
+    "strengths": [
+      "High front-row pressure",
+      "Breaks through protected sniper teams",
+      "Sweeps after frontline collapses"
+    ],
+    "weaknesses": [
+      "Needs access to front row",
+      "Middling durability",
+      "Slow enough to be punished by poison/healer comps"
+    ],
     "ability": {
       "kind": "cleave_attack",
       "hits": "available_row"
     },
     "baseStats": {
-      "hp": [112, 144],
-      "atk": [14, 17],
-      "speed": [5, 7]
+      "hp": [
+        112,
+        140
+      ],
+      "atk": [
+        15,
+        19
+      ],
+      "speed": [
+        5,
+        7
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -192,16 +312,39 @@
     "targeting": "none",
     "preferredPosition": "front",
     "spawnWeight": 5,
-    "strengths": ["Very high health", "Punishes attackers", "Excellent damage sponge"],
-    "weaknesses": ["Does not attack proactively", "Can be ignored by ranged targeters", "Weak when enemies avoid hitting it"],
+    "strengths": [
+      "Very high health",
+      "Punishes direct attackers",
+      "Excellent against melee-heavy teams"
+    ],
+    "weaknesses": [
+      "Does not attack proactively",
+      "Poison bypasses retaliation",
+      "Can be ignored by sniper and assassin targeting"
+    ],
     "ability": {
       "kind": "retaliate",
-      "damageSource": "atk"
+      "damageSource": "atk",
+      "triggersOn": [
+        "direct_damage"
+      ],
+      "ignoredBy": [
+        "poison_tick"
+      ]
     },
     "baseStats": {
-      "hp": [175, 215],
-      "atk": [7, 9],
-      "speed": [1, 2]
+      "hp": [
+        185,
+        230
+      ],
+      "atk": [
+        8,
+        10
+      ],
+      "speed": [
+        1,
+        2
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -218,16 +361,33 @@
     "targeting": "front",
     "preferredPosition": "front",
     "spawnWeight": 4,
-    "strengths": ["Very high health", "Huge single hit damage", "Punishes slow fights"],
-    "weaknesses": ["Extremely slow", "Only hits the front line", "Vulnerable to kiting and execute targeting"],
+    "strengths": [
+      "Very high health",
+      "Huge single hit damage",
+      "Breaks tanks and bruisers in slow fights"
+    ],
+    "weaknesses": [
+      "Extremely slow",
+      "Only hits the front line",
+      "Very vulnerable to poison"
+    ],
     "ability": {
       "kind": "slow_crushing_attack",
       "hits": 1
     },
     "baseStats": {
-      "hp": [160, 200],
-      "atk": [24, 32],
-      "speed": [2, 3]
+      "hp": [
+        168,
+        208
+      ],
+      "atk": [
+        26,
+        34
+      ],
+      "speed": [
+        2,
+        3
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -244,17 +404,35 @@
     "targeting": "highest_missing_hp",
     "preferredPosition": "back",
     "spawnWeight": 2,
-    "strengths": ["Restores the most injured ally", "Strong in durable teams", "Forces enemies to finish targets"],
-    "weaknesses": ["Does not damage enemies", "Low health for its rarity", "Weak if focused early"],
+    "strengths": [
+      "Fast emergency healing",
+      "Stabilizes tanks before they collapse",
+      "Strong against poison and chip damage"
+    ],
+    "weaknesses": [
+      "Does not damage enemies",
+      "Low max HP makes it sniper bait",
+      "Weak if killed before value ramps"
+    ],
     "ability": {
       "kind": "heal",
-      "healScale": 1.0,
-      "targeting": "highest_missing_hp"
+      "healScale": 1.25,
+      "targeting": "highest_missing_hp",
+      "openingHealDelayMultiplier": 0.5
     },
     "baseStats": {
-      "hp": [80, 100],
-      "atk": [8, 10],
-      "speed": [5, 7]
+      "hp": [
+        76,
+        94
+      ],
+      "atk": [
+        9,
+        12
+      ],
+      "speed": [
+        9,
+        12
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,
@@ -271,18 +449,38 @@
     "targeting": "chaotic",
     "preferredPosition": "back",
     "spawnWeight": 1,
-    "strengths": ["Hits random enemies", "Slightly higher back line health", "High upside when chaos lands well"],
-    "weaknesses": ["Random damage from 1 to attack", "Unreliable in close fights"],
+    "strengths": [
+      "Random enemy targeting ignores normal protection",
+      "High damage ceiling",
+      "Can upset predictable comps"
+    ],
+    "weaknesses": [
+      "Unreliable targeting",
+      "Random damage roll",
+      "Can waste hits into tanks"
+    ],
     "ability": {
       "kind": "chaotic_attack",
       "hits": 1,
       "targetPool": "enemy",
-      "damageRoll": [1, "atk"]
+      "damageRoll": [
+        1,
+        "atk"
+      ]
     },
     "baseStats": {
-      "hp": [100, 124],
-      "atk": [30, 38],
-      "speed": [6, 8]
+      "hp": [
+        96,
+        118
+      ],
+      "atk": [
+        28,
+        40
+      ],
+      "speed": [
+        6,
+        8
+      ]
     },
     "rarityMultiplier": {
       "common": 1.0,

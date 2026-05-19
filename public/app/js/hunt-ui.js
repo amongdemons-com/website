@@ -1720,6 +1720,7 @@
       instanceId: demon.instanceId,
       originalInstanceId: demon.instanceId,
       recruitSource: 'team',
+      draftOrder: index,
       position: getDemonPosition(demon, index)
     }));
     state.recruitDraftPool = getCurrentRecruitRewards().map((reward, index) => ({
@@ -2849,12 +2850,14 @@
 
     state.recruitDraftTeam.push({
       ...poolDemon,
+      draftOrder: (state.recruitDraftTeam || []).length,
       position
     });
     syncRecruitDraftSelection();
   }
 
   function swapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
+    const targetIndex = (state.recruitDraftTeam || []).findIndex((demon) => demon.instanceId === teamInstanceId);
     const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
     const teamDemon = removeDraftDemon(state.recruitDraftTeam, teamInstanceId);
     if (!poolDemon || !teamDemon) {
@@ -2864,12 +2867,14 @@
     }
 
     const targetPosition = getDemonPosition(teamDemon);
-    state.recruitDraftTeam.push({
+    state.recruitDraftTeam.splice(Math.max(targetIndex, 0), 0, {
       ...poolDemon,
+      draftOrder: getDraftOrder(teamDemon),
       position: targetPosition
     });
     state.recruitDraftPool.push({
       ...teamDemon,
+      draftOrder: getDraftOrder(poolDemon),
       position: getDemonPosition(poolDemon)
     });
     sortRecruitDraftTeam();
@@ -2908,10 +2913,16 @@
   function sortRecruitDraftTeam() {
     const originalOrder = new Map((state.run?.team || []).map((demon, index) => [demon.instanceId, index]));
     state.recruitDraftTeam.sort((a, b) => {
-      const aOrder = originalOrder.has(a.originalInstanceId) ? originalOrder.get(a.originalInstanceId) : 99;
-      const bOrder = originalOrder.has(b.originalInstanceId) ? originalOrder.get(b.originalInstanceId) : 99;
+      const aOrder = getDraftOrder(a, originalOrder);
+      const bOrder = getDraftOrder(b, originalOrder);
       return aOrder - bOrder;
     });
+  }
+
+  function getDraftOrder(demon, originalOrder = null) {
+    if (Number.isFinite(demon?.draftOrder)) return demon.draftOrder;
+    if (originalOrder?.has(demon?.originalInstanceId)) return originalOrder.get(demon.originalInstanceId);
+    return 99;
   }
 
   function syncRecruitDraftSelection() {

@@ -3441,6 +3441,11 @@ body.dungeon-page .navbar {
     18% {
         opacity: 1;
     }
+    72% {
+        opacity: 0.86;
+        margin-top: -3.9rem;
+        transform: translate(-50%, -50%) rotate(var(--spark-angle, 0deg)) scaleY(1.12);
+    }
     100% {
         opacity: 0;
         margin-top: -4.6rem;

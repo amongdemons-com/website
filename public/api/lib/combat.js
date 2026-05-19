@@ -74,6 +74,10 @@ function chooseTarget(rng, attacker, enemies, demonTypes) {
     return [...available].sort((a, b) => a.hp - b.hp)[0];
   }
 
+  if (targeting === 'lowest_max_hp') {
+    return [...available].sort((a, b) => (a.maxHp - b.maxHp) || (a.hp - b.hp))[0];
+  }
+
   if (targeting === 'highest_hp') {
     return [...available].sort((a, b) => b.hp - a.hp)[0];
   }
