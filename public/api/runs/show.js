@@ -25,6 +25,15 @@ router.get('/runs/:id', requireAuth, async (req, res) => {
 });
 
 function serializeRun(run) {
+  const collectionReinforcementAvailable = Boolean(
+    run.state.awaitingCollectionReinforcement ||
+    (
+      !run.state.collectionReinforcementUsed &&
+      run.state.awaitingRecruit &&
+      Number(run.floor) === 3
+    )
+  );
+
   return {
     runId: run.id,
     seed: run.seed,
@@ -35,7 +44,7 @@ function serializeRun(run) {
     enemies: run.state.enemies,
     rewards: run.rewards,
     awaitingRecruit: Boolean(run.state.awaitingRecruit),
-    collectionReinforcementAvailable: Boolean(run.state.awaitingCollectionReinforcement),
+    collectionReinforcementAvailable,
     awaitingFinalPick: Boolean(run.state.awaitingFinalPick),
     lastBattle: run.state.lastBattle || null,
     earned: run.state.earned || { xp: 0, souls: 0 },

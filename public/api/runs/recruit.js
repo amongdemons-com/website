@@ -129,7 +129,7 @@ async function buildStagedTeam(run, stagedTeam) {
     error.status = 400;
     throw error;
   }
-  if (collectionItems.length && !run.state.awaitingCollectionReinforcement) {
+  if (collectionItems.length && !isCollectionReinforcementAvailable(run)) {
     const error = new Error('Collection reinforcement is not available.');
     error.status = 409;
     throw error;
@@ -227,6 +227,17 @@ async function buildStagedTeam(run, stagedTeam) {
   }
 
   return team;
+}
+
+function isCollectionReinforcementAvailable(run) {
+  return Boolean(
+    run.state.awaitingCollectionReinforcement ||
+    (
+      !run.state.collectionReinforcementUsed &&
+      run.state.awaitingRecruit &&
+      Number(run.floor) === 3
+    )
+  );
 }
 
 module.exports = router;

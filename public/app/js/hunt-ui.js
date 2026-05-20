@@ -47,10 +47,14 @@
     recruitSwapEffectIds: [],
     recruitDraftTeam: null,
     recruitDraftPool: null,
+    collectionDemons: null,
     collectionReinforcements: null,
+    collectionReinforcementPlaceholderInteracted: false,
+    collectionReinforcementStagedInteracted: true,
     combatLog: [],
     combatDemons: new Map(),
     battleSpeed: getStoredBattleSpeed(),
+    isBattleAnimating: false,
     endNotice: null,
     endSummary: null,
     endedReplayRun: null,
@@ -179,6 +183,7 @@
   async function loadCurrentRun() {
     try {
       state.run = await api('/api/runs/current');
+      await ensureCollectionLoaded();
       state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
       state.isRecruiting = Boolean(state.run.awaitingRecruit);
       state.showPostWinActions = false;
@@ -193,6 +198,7 @@
 
   async function loadStartOptions() {
     state.startOptions = await api('/api/runs/start-options');
+    state.collectionDemons = state.startOptions.collection || [];
     state.selectedStarters = [];
     state.activeStarterTab = 'draft';
   }
@@ -252,15 +258,13 @@
   async function loadRun(runId, options = {}) {
     try {
       state.run = await api(`/api/runs/${encodeURIComponent(runId)}`);
+      await ensureCollectionLoaded();
       state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
       state.showPostWinActions = Boolean(options.showPostWinActions && state.run.awaitingRecruit);
       state.isRecruiting = Boolean(state.run.awaitingRecruit && !state.showPostWinActions);
       if (!state.isRecruiting) {
         state.recruitDraftTeam = null;
         state.recruitDraftPool = null;
-      }
-      if (!state.run?.collectionReinforcementAvailable) {
-        state.collectionReinforcements = null;
       }
       localStorage.setItem(RUN_KEY, state.run.runId);
       renderRun();
@@ -275,7 +279,7 @@
   }
 
   async function battle() {
-    if (!state.run) return;
+    if (!state.run || state.isBattleAnimating) return;
     showCombatPanel();
 
     await withBusy(elements.battleBtn, async () => {
@@ -382,6 +386,9 @@
 
   async function saveReward(rewardId) {
     try {
+      const reward = (state.run?.rewards || []).find((item) => Number(item.rewardId) === Number(rewardId));
+      if (reward?.demon && !(await confirmCollectionReplacement(reward.demon))) return;
+
       const saved = await api('/api/demons/save', {
         method: 'POST',
         body: {
@@ -389,6 +396,7 @@
           rewardId
         }
       });
+      state.collectionDemons = null;
       getModal(elements.teamChoiceModal).hide();
       await finishRun(saved.replaced
         ? 'Dungeon complete. Collection demon replaced.'
@@ -481,7 +489,7 @@
 
     return `
       <div class="cashout-candidate">
-        ${renderSharedDemonCard(demon, {
+        ${renderDungeonDemonCard(demon, {
           tag: 'button',
           className: 'cashout-demon-card',
           active,
@@ -500,6 +508,8 @@
       return;
     }
 
+    if (!(await confirmCollectionReplacement(candidate.demon))) return;
+
     await withBusy(elements.cashoutConfirmBtn, async () => {
       try {
         const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/cashout`, {
@@ -511,6 +521,7 @@
           }
         });
         localStorage.removeItem(RUN_KEY);
+        state.collectionDemons = null;
         state.run = null;
         state.selectedCashoutDemonKey = null;
         state.recruitDraftTeam = null;
@@ -700,6 +711,7 @@
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
     bindPointerDragAndDrop();
+    bindCollectionReinforcementPlaceholders();
     bindDemonDetailCards();
     playRecruitSwapEffect();
     watchFormationLaneSizing();
@@ -765,10 +777,11 @@
   }
 
   function renderChoiceCard(demon, options) {
-    return renderSharedDemonCard(demon, {
+    return renderDungeonDemonCard(demon, {
       tag: 'button',
       className: 'hunt-choice-card',
       active: options.selected,
+      suppressCollectionMissingTag: options.type === 'collection',
       attributes: {
         'data-choice-type': options.type,
         'data-choice-value': options.value
@@ -847,63 +860,70 @@
 
     const allDemonsById = new Map([...(state.run.team || []), ...(state.run.enemies || [])].map((demon) => [demon.instanceId, demon]));
     const steps = groupCombatLog(state.combatLog);
+    state.isBattleAnimating = true;
+    renderRun();
     renderFightLog();
 
-    for (let index = 0; index < steps.length; index += 1) {
-      const step = steps[index];
+    try {
+      for (let index = 0; index < steps.length; index += 1) {
+        const step = steps[index];
 
-      step.entries.forEach((entry) => {
-        const target = allDemonsById.get(entry.target);
-        if (target) {
-          target.hp = entry.targetHp;
+        step.entries.forEach((entry) => {
+          const target = allDemonsById.get(entry.target);
+          if (target) {
+            target.hp = entry.targetHp;
+            if (entry.effect === 'poison_apply') {
+              target.statusEffects = target.statusEffects || {};
+              target.statusEffects.poison = Array.from({ length: Math.max(1, Number(entry.poisonStacks) || 1) }, () => ({}));
+            }
+            if (entry.effect === 'poison' && Object.prototype.hasOwnProperty.call(entry, 'poisonStacks')) {
+              target.statusEffects = target.statusEffects || {};
+              target.statusEffects.poison = Array.from({ length: Math.max(0, Number(entry.poisonStacks) || 0) }, () => ({}));
+            }
+          }
+        });
+
+        updateTeamHp();
+        setActiveLogRow(index);
+        if (step.primaryEffect !== 'poison') animateAttackerCard(step.attacker, step.primaryEffect);
+        const attackerSide = getDemonSide(step.attacker);
+        step.entries.forEach((entry, entryIndex) => {
+          if (entry.effect === 'poison') {
+            if (entryIndex === 0) {
+              showFloatingDamage(entry.target, getPoisonBurstDamage(step), 'poison', entry.attacker, entry.effect, {
+                burstCount: step.entries.length
+              });
+            }
+            updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+            syncPoisonStatus(entry.target, entry.poisonStacks);
+            return;
+          }
+
+          if (entry.effect === 'heal') {
+            drawHealEffect(entry.attacker, entry.target);
+            updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing });
+            showFloatingDamage(entry.target, entry.healing, 'heal', entry.attacker, entry.effect);
+            return;
+          }
+
           if (entry.effect === 'poison_apply') {
-            target.statusEffects = target.statusEffects || {};
-            target.statusEffects.poison = Array.from({ length: Math.max(1, Number(entry.poisonStacks) || 1) }, () => ({}));
+            drawAttackZap(step.attacker, entry.target, { effect: entry.effect, poison: true, bubbles: 15, variant: 'poison-flame' });
+            syncPoisonStatus(entry.target, entry.poisonStacks || 1);
+            updateTargetCard(entry.target, entry.targetHp, attackerSide);
+            return;
           }
-          if (entry.effect === 'poison' && Object.prototype.hasOwnProperty.call(entry, 'poisonStacks')) {
-            target.statusEffects = target.statusEffects || {};
-            target.statusEffects.poison = Array.from({ length: Math.max(0, Number(entry.poisonStacks) || 0) }, () => ({}));
+
+          drawCombatAnimation(entry);
+          if (Number(entry.dmg) > 0) {
+            showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
           }
-        }
-      });
-
-      updateTeamHp();
-      setActiveLogRow(index);
-      if (step.primaryEffect !== 'poison') animateAttackerCard(step.attacker, step.primaryEffect);
-      const attackerSide = getDemonSide(step.attacker);
-      step.entries.forEach((entry, entryIndex) => {
-        if (entry.effect === 'poison') {
-          if (entryIndex === 0) {
-            showFloatingDamage(entry.target, getPoisonBurstDamage(step), 'poison', entry.attacker, entry.effect, {
-              burstCount: step.entries.length
-            });
-          }
-          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
-          syncPoisonStatus(entry.target, entry.poisonStacks);
-          return;
-        }
-
-        if (entry.effect === 'heal') {
-          drawHealEffect(entry.attacker, entry.target);
-          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing });
-          showFloatingDamage(entry.target, entry.healing, 'heal', entry.attacker, entry.effect);
-          return;
-        }
-
-        if (entry.effect === 'poison_apply') {
-          drawAttackZap(step.attacker, entry.target, { effect: entry.effect, poison: true, bubbles: 15, variant: 'poison-flame' });
-          syncPoisonStatus(entry.target, entry.poisonStacks || 1);
           updateTargetCard(entry.target, entry.targetHp, attackerSide);
-          return;
-        }
-
-        drawCombatAnimation(entry);
-        if (Number(entry.dmg) > 0) {
-          showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
-        }
-        updateTargetCard(entry.target, entry.targetHp, attackerSide);
-      });
-      await sleep(scaleCombatDuration(getCombatStepDelay(step)));
+        });
+        await sleep(scaleCombatDuration(getCombatStepDelay(step)));
+      }
+    } finally {
+      state.isBattleAnimating = false;
+      renderRun();
     }
 
     setActiveLogRow(-1);
@@ -947,8 +967,9 @@
         </div>
         ${demon ? `
           <div class="dungeon-end-demon" aria-label="Collected demon">
-            ${renderSharedDemonCard(demon, {
+            ${renderDungeonDemonCard(demon, {
               className: 'dungeon-end-demon-card',
+              suppressCollectionMissingTag: true,
               attributes: { 'data-instance-id': demon.instanceId || `end-${demon.id || 'demon'}` }
             })}
           </div>
@@ -1767,6 +1788,10 @@
     state.draggedRecruitPoolInstanceId = null;
     state.draggedFormationInstanceId = null;
     state.selectedRecruitPoolInstanceId = null;
+    if (state.run.collectionReinforcementAvailable && !getSelectedCollectionReinforcement()) {
+      state.collectionReinforcementPlaceholderInteracted = false;
+      state.collectionReinforcementStagedInteracted = true;
+    }
     ensureRecruitDraft();
     renderRun();
   }
@@ -1810,23 +1835,22 @@
         recruitSource: 'reward',
         isTapSelected: state.selectedRecruitPoolInstanceId === `reward-${reward.rewardId}`,
         position: getDemonPosition(reward.demon, index)
-      })),
-      ...getAvailableCollectionReinforcements().map((demon, index) => ({
-        ...getFullHpDemon(demon),
-        instanceId: `collection-${demon.id}`,
-        collectionDemonId: demon.id,
-        recruitSource: 'collection',
-        isTapSelected: state.selectedRecruitPoolInstanceId === `collection-${demon.id}`,
-        position: getDemonPosition(demon, index)
       }))
     ];
   }
 
-  async function ensureCollectionReinforcementsLoaded() {
-    if (!state.run?.collectionReinforcementAvailable || state.collectionReinforcements) return;
+  async function ensureCollectionLoaded() {
+    if (state.collectionDemons) return;
 
     const payload = await api('/api/demons');
-    state.collectionReinforcements = payload.demons || [];
+    state.collectionDemons = payload.demons || [];
+  }
+
+  async function ensureCollectionReinforcementsLoaded() {
+    if (!state.run?.collectionReinforcementAvailable) return;
+
+    await ensureCollectionLoaded();
+    state.collectionReinforcements = getAvailableCollectionReinforcements();
   }
 
   function getAvailableCollectionReinforcements() {
@@ -1835,8 +1859,37 @@
       .map((demon) => Number(demon.collectionDemonId))
       .filter(Boolean));
 
-    return (state.collectionReinforcements || [])
-      .filter((demon) => !existingCollectionIds.has(Number(demon.id)));
+    const usedCollectionIds = new Set([
+      ...(state.recruitDraftTeam || []),
+      ...(state.recruitDraftPool || [])
+    ]
+      .map((demon) => Number(demon.collectionDemonId))
+      .filter(Boolean));
+
+    return (state.collectionDemons || [])
+      .filter((demon) => !existingCollectionIds.has(Number(demon.id)) && !usedCollectionIds.has(Number(demon.id)));
+  }
+
+  function getCollectionSlotKey(demon) {
+    const typeId = Number(demon?.typeId || demon?.type_id || demon?.type);
+    const rarity = String(demon?.rarity || '').toLowerCase();
+    if (!typeId || !rarity) return null;
+    return `${typeId}:${rarity}`;
+  }
+
+  function isDemonInCollection(demon) {
+    if (demon?.recruitSource === 'collection') return true;
+    if (demon?.collectionDemonId) return true;
+    const key = getCollectionSlotKey(demon);
+    if (!key) return false;
+    return (state.collectionDemons || []).some((collectionDemon) => getCollectionSlotKey(collectionDemon) === key);
+  }
+
+  function shouldShowCollectionMissingTag(demon, options = {}) {
+    if (options.suppressCollectionMissingTag) return false;
+    if (state.isBattleAnimating) return false;
+    if (!Array.isArray(state.collectionDemons)) return false;
+    return Boolean(!isDemonInCollection(demon));
   }
 
   function getFullHpDemon(demon) {
@@ -1888,8 +1941,8 @@
     const isDefeated = state.run?.status === 'defeated';
     const canStart = !state.endSummary && (!state.run || isDefeated || state.run.status === 'ended');
     const canBattle = Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
-    const canReplay = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
-    const canViewLog = Boolean(!state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
+    const canReplay = Boolean(!state.isBattleAnimating && !state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
+    const canViewLog = Boolean(!state.isBattleAnimating && !state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
     const canContinueAfterWin = Boolean(state.run?.awaitingRecruit && state.showPostWinActions);
     const canChooseRecruit = Boolean(state.run?.awaitingRecruit && state.isRecruiting);
 
@@ -2149,6 +2202,7 @@
 
   function renderTeamChoiceModal() {
     if (!state.run) return;
+    setTeamChoiceModalFullscreen(true);
 
     const currentFloorRewards = (state.run.rewards || []).filter((reward) => reward.floor === state.run.currentFloor);
 
@@ -2204,6 +2258,230 @@
     if (modalContinueBtn) modalContinueBtn.addEventListener('click', confirmRecruitReward);
   }
 
+  async function openCollectionReinforcementModal() {
+    if (!state.run?.collectionReinforcementAvailable) return;
+
+    try {
+      await ensureCollectionLoaded();
+      markCollectionReinforcementPlaceholderInteracted();
+      renderCollectionReinforcementModal('');
+      getModal(elements.teamChoiceModal).show();
+    } catch (error) {
+      showError(error);
+    }
+  }
+
+  function renderCollectionReinforcementModal(query = '') {
+    setTeamChoiceModalFullscreen(false);
+    const selected = getSelectedCollectionReinforcement();
+    const normalizedQuery = query.trim().toLowerCase();
+    const candidates = getAvailableCollectionReinforcements()
+      .filter((demon) => !normalizedQuery || [
+        demon.species,
+        demon.rarity,
+        demon.typeId
+      ].some((value) => String(value || '').toLowerCase().includes(normalizedQuery)))
+      .sort(compareCollectionReinforcementDemons);
+
+    elements.teamChoiceModalTitle.textContent = 'Collection reinforcement';
+    elements.teamChoiceModalSubtitle.textContent = selected
+      ? 'One collection demon is already staged. Choose another to replace it, or remove it from the draft.'
+      : 'Choose one collection demon to place on the Recruit side, then drag it into your team if you want it for the next floor.';
+    elements.teamChoiceModalBody.innerHTML = `
+      ${selected ? `
+        <div class="collection-reinforcement-current">
+          <div>
+            <span class="hunt-phase-eyebrow">Staged</span>
+            ${renderSharedDemonCard(selected, { className: 'collection-reinforcement-card' })}
+          </div>
+          <button class="btn btn-outline-warning btn-sm" id="removeCollectionReinforcementBtn" type="button">Remove</button>
+        </div>
+      ` : ''}
+      <div class="collection-reinforcement-toolbar">
+        <input class="form-control form-control-sm" id="collectionReinforcementSearch" type="search" value="${escapeHtml(query)}" placeholder="Search collection">
+      </div>
+      <div class="starter-card-grid collection-reinforcement-grid">
+        ${candidates.length ? candidates.map(renderCollectionReinforcementChoice).join('') : renderEmptyText('No available collection demons.')}
+      </div>
+    `;
+    elements.teamChoiceModalFooter.innerHTML = `
+      <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Done</button>
+    `;
+
+    document.getElementById('collectionReinforcementSearch')?.addEventListener('input', (event) => {
+      renderCollectionReinforcementModal(event.target.value);
+      const input = document.getElementById('collectionReinforcementSearch');
+      input?.focus();
+      input?.setSelectionRange(input.value.length, input.value.length);
+    });
+    document.getElementById('removeCollectionReinforcementBtn')?.addEventListener('click', () => {
+      removeCollectionReinforcement();
+      getModal(elements.teamChoiceModal).hide();
+      renderRun();
+    });
+    document.querySelectorAll('.js-call-collection-reinforcement').forEach((button) => {
+      button.addEventListener('click', () => {
+        addCollectionReinforcementToPool(Number(button.dataset.demonId));
+        getModal(elements.teamChoiceModal).hide();
+        renderRun();
+      });
+    });
+  }
+
+  function renderCollectionReinforcementChoice(demon) {
+    const existing = getSelectedCollectionReinforcement();
+    const selected = Number(existing?.collectionDemonId) === Number(demon.id);
+
+    return renderDungeonDemonCard(demon, {
+      tag: 'button',
+      className: 'hunt-choice-card js-call-collection-reinforcement',
+      active: selected,
+      suppressCollectionMissingTag: true,
+      attributes: {
+        type: 'button',
+        'data-demon-id': demon.id,
+        disabled: selected
+      }
+    });
+  }
+
+  function compareCollectionReinforcementDemons(a, b) {
+    return getRarityRank(b.rarity) - getRarityRank(a.rarity) ||
+      (Number(b.typeId) || 0) - (Number(a.typeId) || 0) ||
+      (Number(b.atk) || 0) - (Number(a.atk) || 0);
+  }
+
+  function getRarityRank(rarity) {
+    return {
+      common: 1,
+      uncommon: 2,
+      rare: 3,
+      epic: 4,
+      legendary: 5,
+      mythic: 6
+    }[String(rarity || '').toLowerCase()] || 0;
+  }
+
+  function getSelectedCollectionReinforcement() {
+    return [
+      ...(state.recruitDraftTeam || []),
+      ...(state.recruitDraftPool || [])
+    ].find((demon) => demon.recruitSource === 'collection') || null;
+  }
+
+  function addCollectionReinforcementToPool(demonId) {
+    ensureRecruitDraft();
+    removeCollectionReinforcement();
+
+    const demon = (state.collectionDemons || []).find((item) => Number(item.id) === Number(demonId));
+    if (!demon) return;
+
+    const position = getPreferredDemonPosition(demon);
+    state.recruitDraftPool.splice(getFirstDraftIndexForPosition(state.recruitDraftPool, position), 0, {
+      ...getFullHpDemon(demon),
+      instanceId: `collection-${demon.id}`,
+      collectionDemonId: demon.id,
+      recruitSource: 'collection',
+      position
+    });
+    state.collectionReinforcementStagedInteracted = false;
+    refreshRecruitDraftPoolOrder();
+    syncRecruitDraftSelection();
+  }
+
+  function removeCollectionReinforcement() {
+    state.recruitDraftTeam = (state.recruitDraftTeam || []).filter((demon) => demon.recruitSource !== 'collection');
+    state.recruitDraftPool = (state.recruitDraftPool || []).filter((demon) => demon.recruitSource !== 'collection');
+    state.collectionReinforcementStagedInteracted = true;
+    refreshRecruitDraftOrder();
+    refreshRecruitDraftPoolOrder();
+    syncRecruitDraftSelection();
+  }
+
+  function markCollectionReinforcementPlaceholderInteracted() {
+    state.collectionReinforcementPlaceholderInteracted = true;
+    document.querySelectorAll('.collection-reinforcement-placeholder').forEach((card) => {
+      card.classList.remove('is-collection-reinforcement-attention');
+    });
+  }
+
+  function markCollectionReinforcementStagedInteracted(instanceId = null) {
+    const staged = getSelectedCollectionReinforcement();
+    if (!staged || (instanceId && staged.instanceId !== instanceId)) return;
+
+    state.collectionReinforcementStagedInteracted = true;
+    document.querySelectorAll(`.hunt-demon-card[data-instance-id="${cssEscape(staged.instanceId)}"]`).forEach((card) => {
+      card.classList.remove('is-collection-reinforcement-attention');
+    });
+  }
+
+  async function confirmCollectionReplacement(incomingDemon) {
+    await ensureCollectionLoaded();
+    const existing = findCollectionReplacement(incomingDemon);
+    if (!existing) return true;
+
+    return new Promise((resolve) => {
+      const modalElement = document.createElement('div');
+      modalElement.className = 'modal fade hunt-modal';
+      modalElement.tabIndex = -1;
+      modalElement.setAttribute('aria-hidden', 'true');
+      modalElement.innerHTML = `
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <div>
+                <h2 class="modal-title h4">Replace collection demon?</h2>
+                <p class="text-muted mb-0">This slot already has a demon. Choose whether to keep it or replace it.</p>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="collection-replace-preview">
+                <div>
+                  <span class="hunt-phase-eyebrow">Current</span>
+                  ${renderDungeonDemonCard(existing, { className: 'collection-replace-card', suppressCollectionMissingTag: true })}
+                </div>
+                <div>
+                  <span class="hunt-phase-eyebrow">Incoming</span>
+                  ${renderDungeonDemonCard(incomingDemon, { className: 'collection-replace-card' })}
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-light" data-choice="keep">Keep Current</button>
+              <button type="button" class="btn btn-warning" data-choice="replace">Replace</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modalElement);
+      const modal = getModal(modalElement);
+      let decided = false;
+
+      modalElement.querySelector('[data-choice="keep"]')?.addEventListener('click', () => {
+        decided = true;
+        resolve(false);
+        modal.hide();
+      });
+      modalElement.querySelector('[data-choice="replace"]')?.addEventListener('click', () => {
+        decided = true;
+        resolve(true);
+        modal.hide();
+      });
+      modalElement.addEventListener('hidden.bs.modal', () => {
+        if (!decided) resolve(false);
+        modalElement.remove();
+      }, { once: true });
+      modal.show();
+    });
+  }
+
+  function findCollectionReplacement(demon) {
+    const key = getCollectionSlotKey(demon);
+    if (!key) return null;
+    return (state.collectionDemons || []).find((collectionDemon) => getCollectionSlotKey(collectionDemon) === key) || null;
+  }
+
   function renderRecruitReward(reward) {
     const selected = state.selectedRecruitRewardId === reward.rewardId;
     return `
@@ -2252,7 +2530,7 @@
             const displayDemon = isSwapTarget && previewReward ? previewReward.demon : demon;
             return `
             <div class="col">
-              ${renderSharedDemonCard(displayDemon, {
+              ${renderDungeonDemonCard(displayDemon, {
                 tag: 'button',
                 className: `team-editor-card ${needsSwap ? 'is-clickable swap-choice' : ''}`,
                 active: isSwapTarget,
@@ -2293,7 +2571,7 @@
   }
 
   function renderRewardDemon(demon) {
-    return renderSharedDemonCard(demon, { className: 'reward-demon-card' });
+    return renderDungeonDemonCard(demon, { className: 'reward-demon-card' });
   }
 
   function bindRewardButtons() {
@@ -2356,6 +2634,7 @@
           instanceId: card.dataset.instanceId
         }));
         state.draggedFormationInstanceId = card.dataset.instanceId;
+        markCollectionReinforcementStagedInteracted(card.dataset.instanceId);
         card.classList.add('is-dragging');
       });
       card.addEventListener('dragend', () => {
@@ -2403,6 +2682,7 @@
         }));
         state.draggedRewardId = poolDemon.rewardId || null;
         state.draggedRecruitPoolInstanceId = card.dataset.instanceId;
+        markCollectionReinforcementStagedInteracted(card.dataset.instanceId);
         card.classList.add('is-dragging');
       });
       card.addEventListener('dragend', () => {
@@ -2591,6 +2871,12 @@
     });
   }
 
+  function bindCollectionReinforcementPlaceholders() {
+    document.querySelectorAll('.collection-reinforcement-placeholder').forEach((button) => {
+      button.addEventListener('click', openCollectionReinforcementModal);
+    });
+  }
+
   function startPointerDrag(event) {
     if (event.button !== undefined && event.button !== 0) return;
     if (event.pointerType === 'mouse') return;
@@ -2707,8 +2993,12 @@
       const poolDemon = findDraftDemon(state.recruitDraftPool, drag.payload.instanceId);
       state.draggedRewardId = poolDemon?.rewardId || null;
       state.draggedRecruitPoolInstanceId = drag.payload.instanceId;
+      markCollectionReinforcementStagedInteracted(drag.payload.instanceId);
     } else {
       state.draggedFormationInstanceId = drag.payload.instanceId;
+      if (drag.payload.type === 'recruit-team') {
+        markCollectionReinforcementStagedInteracted(drag.payload.instanceId);
+      }
     }
 
     drag.ghost = drag.card.cloneNode(true);
@@ -2919,6 +3209,9 @@
 
         const demon = getDemonForDetailCard(card);
         if (!demon) return;
+        if (demon.recruitSource === 'collection') {
+          markCollectionReinforcementStagedInteracted(demon.instanceId);
+        }
 
         openDemonDetailsModal(demon, {
           actions: getDungeonDetailActions()
@@ -3061,6 +3354,7 @@
 
   function swapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
     const targetIndex = (state.recruitDraftTeam || []).findIndex((demon) => demon.instanceId === teamInstanceId);
+    const poolIndex = getDraftPoolIndex(poolInstanceId);
     const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
     const teamDemon = removeDraftDemon(state.recruitDraftTeam, teamInstanceId);
     if (!poolDemon || !teamDemon) {
@@ -3075,7 +3369,7 @@
       draftOrder: getDraftOrder(teamDemon),
       position: targetPosition
     });
-    state.recruitDraftPool.push({
+    state.recruitDraftPool.splice(Math.max(poolIndex, 0), 0, {
       ...teamDemon,
       draftOrder: getDraftOrder(poolDemon),
       position: getDemonPosition(poolDemon)
@@ -3325,6 +3619,9 @@
   function renderFormationLane(position, demons, options) {
     const laneDemons = demons.filter((demon, index) => getDemonPosition(demon, index) === position);
     const label = getPositionLabel(position);
+    const placeholder = shouldShowCollectionReinforcementPlaceholders(options)
+      ? renderCollectionReinforcementPlaceholder(position)
+      : '';
 
     return `
       <div class="formation-lane formation-lane-${position}" data-formation-position="${position}">
@@ -3333,7 +3630,7 @@
           <span>${escapeHtml(label)}</span>
         </div>
         <div class="formation-lane-cards" data-formation-drop="${position}">
-          ${laneDemons.length ? laneDemons.map((demon) => renderDemonCard(demon, options)).join('') : renderEmptyFormationLane(position, label)}
+          ${placeholder}${laneDemons.length ? laneDemons.map((demon) => renderDemonCard(demon, options)).join('') : (placeholder ? '' : renderEmptyFormationLane(position, label))}
         </div>
       </div>
     `;
@@ -3355,6 +3652,43 @@
     return renderIcon('melee', { className: 'button-melee-icon' });
   }
 
+  function shouldShowCollectionReinforcementPlaceholders(options) {
+    return Boolean(
+      state.isRecruiting &&
+      options.side === 'enemy' &&
+      state.run?.collectionReinforcementAvailable &&
+      !getSelectedCollectionReinforcement()
+    );
+  }
+
+  function renderCollectionReinforcementPlaceholder(position) {
+    const attentionClass = state.collectionReinforcementPlaceholderInteracted ? '' : 'is-collection-reinforcement-attention';
+    return `
+      <button class="hunt-demon-card collection-reinforcement-placeholder ${attentionClass}" type="button" data-collection-reinforcement-position="${position}" aria-label="Choose collection reinforcement">
+        <div class="collection-reinforcement-placeholder-icon">${renderIcon('collection')}</div>
+        <div class="collection-reinforcement-placeholder-copy">
+          <span>Collection</span>
+          <small>${position === 'front' ? 'Melee' : 'Ranged'} slot</small>
+        </div>
+      </button>
+    `;
+  }
+
+  function renderDungeonDemonCard(demon, options = {}) {
+    const showMissingTag = shouldShowCollectionMissingTag(demon, options);
+    const className = [
+      options.className || '',
+      showMissingTag ? 'is-new-encounter' : ''
+    ].filter(Boolean).join(' ');
+    const overlayHtml = `${options.overlayHtml || ''}${showMissingTag ? renderNewEncounterBadge() : ''}`;
+
+    return renderSharedDemonCard(demon, {
+      ...options,
+      className,
+      overlayHtml
+    });
+  }
+
   function renderDemonCard(demon, options) {
     const isPlayer = options.side !== 'enemy';
     const isRecruitPoolDemon = Boolean(options.allowRecruitDrag && demon.recruitSource);
@@ -3364,11 +3698,12 @@
     const classes = [
       'hunt-demon-card',
       isRecruitPoolDemon ? 'is-recruit-draggable' : '',
+      demon.recruitSource === 'collection' && !state.collectionReinforcementStagedInteracted ? 'is-collection-reinforcement-attention' : '',
       canDropRecruit ? 'is-recruit-drop-target' : '',
       hasPoisonStatus(demon) ? 'is-poisoned' : '',
     ].filter(Boolean).join(' ');
 
-    return renderSharedDemonCard(demon, {
+    return renderDungeonDemonCard(demon, {
       className: classes.replace('hunt-demon-card', '').trim(),
       defeated: Number(demon.hp) <= 0,
       active: state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId || demon.isTapSelected,
@@ -3398,6 +3733,14 @@
     `;
   }
 
+  function renderNewEncounterBadge() {
+    return `
+      <div class="new-encounter-badge" title="Missing from collection" aria-label="Missing from collection">
+        New
+      </div>
+    `;
+  }
+
   function hasPoisonStatus(demon) {
     return getPoisonStackCount(demon) > 0;
   }
@@ -3412,6 +3755,17 @@
 
   function getDemonPosition(demon, index = 0) {
     return demon.position === 'back' || (!demon.position && index > 0) ? 'back' : 'front';
+  }
+
+  function getPreferredDemonPosition(demon, index = 0) {
+    if (demon.position === 'back' || demon.position === 'front') return demon.position;
+    if (demon.preferredPosition === 'back' || demon.preferredPosition === 'front') return demon.preferredPosition;
+    return index > 0 ? 'back' : 'front';
+  }
+
+  function getFirstDraftIndexForPosition(collection, position) {
+    const index = (collection || []).findIndex((demon, demonIndex) => getDemonPosition(demon, demonIndex) === position);
+    return index >= 0 ? index : (collection || []).length;
   }
 
   function renderCombatStats(demon) {
@@ -3474,11 +3828,21 @@
     return bootstrap.Modal.getOrCreateInstance(element, options);
   }
 
+  function setTeamChoiceModalFullscreen(isFullscreen) {
+    const dialog = elements.teamChoiceModal?.querySelector('.modal-dialog');
+    if (!dialog) return;
+
+    dialog.classList.toggle('modal-fullscreen', Boolean(isFullscreen));
+    dialog.classList.toggle('modal-lg', !isFullscreen);
+    dialog.classList.toggle('modal-dialog-centered', !isFullscreen);
+    dialog.classList.toggle('modal-dialog-scrollable', !isFullscreen);
+  }
+
   function syncActionButtons(fallbackButton) {
     const hasActiveRun = Boolean(state.run && state.run.status === 'active');
     const waitingForChoice = Boolean(state.run && (state.run.awaitingRecruit || state.run.awaitingFinalPick));
 
-    if (elements.battleBtn) elements.battleBtn.disabled = !hasActiveRun || waitingForChoice;
+    if (elements.battleBtn) elements.battleBtn.disabled = !hasActiveRun || waitingForChoice || state.isBattleAnimating;
     if (elements.confirmStarterBtn) elements.confirmStarterBtn.disabled = !hasRequiredStarterSelection();
     if (fallbackButton && ![elements.confirmStarterBtn, elements.battleBtn].includes(fallbackButton)) {
       fallbackButton.disabled = false;
