@@ -62,11 +62,15 @@
 
       <section class="card collection-gallery-card">
         <div class="card-header d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3">
-          <div class="d-flex align-items-center justify-content-between gap-3 w-100 w-xl-auto">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 w-100 w-xl-auto">
             <span>Collected Demons</span>
             <span class="collection-count" id="collectionCount">0</span>
+            <button class="btn btn-outline-light btn-sm collection-filters-toggle" id="filtersToggleBtn" type="button" aria-expanded="false" aria-controls="collectionControlsPanel">
+              <i data-lucide="sliders-horizontal"></i>
+              <span>Show Filters</span>
+            </button>
           </div>
-          <div class="collection-controls">
+          <div class="collection-controls" id="collectionControlsPanel">
             <label class="visually-hidden" for="typeFilter">Demon Type</label>
             <select class="form-select form-select-sm" id="typeFilter" aria-label="Demon Type">
               <option value="all">All Types</option>
@@ -82,11 +86,14 @@
               <option value="speed">Speed</option>
               <option value="hp">HP</option>
             </select>
+            <label class="collection-checkbox" for="hideMissingFilter">
+              <input class="form-check-input" type="checkbox" id="hideMissingFilter">
+              <span>Hide missing</span>
+            </label>
           </div>
         </div>
         <div class="card-body">
           <div class="collection-card-grid demon-card-grid" id="collectionGrid"></div>
-          <nav class="collection-pagination d-none" id="collectionPagination" aria-label="Collection pages"></nav>
         </div>
       </section>
     </main>

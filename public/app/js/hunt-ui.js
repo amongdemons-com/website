@@ -390,7 +390,9 @@
         }
       });
       getModal(elements.teamChoiceModal).hide();
-      await finishRun('Dungeon complete. Final demon added to your collection.', {
+      await finishRun(saved.replaced
+        ? 'Dungeon complete. Collection demon replaced.'
+        : 'Dungeon complete. Final demon added to your collection.', {
         completed: true,
         demon: saved.demon
       });
@@ -518,14 +520,18 @@
         state.combatDemons = new Map();
         state.endSummary = {
           title: 'Dungeon ended',
-          message: `${result.demon?.species || 'Demon'} joined your collection.`,
+          message: result.replaced
+            ? `${result.demon?.species || 'Demon'} replaced your previous collection demon.`
+            : `${result.demon?.species || 'Demon'} joined your collection.`,
           demon: result.demon || null,
           xp: result.xp,
           souls: result.souls
         };
         state.endedReplayRun = null;
         state.endNotice = {
-          text: `Dungeon ended. ${result.demon?.species || 'Demon'} joined your collection. You earned ${result.xp} XP and ${result.souls} souls.`,
+          text: result.replaced
+            ? `Dungeon ended. ${result.demon?.species || 'Demon'} replaced your previous collection demon. You earned ${result.xp} XP and ${result.souls} souls.`
+            : `Dungeon ended. ${result.demon?.species || 'Demon'} joined your collection. You earned ${result.xp} XP and ${result.souls} souls.`,
           type: 'success'
         };
         getModal(elements.cashoutModal).hide();

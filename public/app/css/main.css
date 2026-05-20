@@ -4515,15 +4515,42 @@ body.collection-page {
 
 .collection-controls {
     display: grid;
-    grid-template-columns: repeat(3, minmax(10rem, 1fr));
+    grid-template-columns: repeat(3, minmax(10rem, 1fr)) minmax(9rem, auto);
     gap: 0.5rem;
-    width: min(100%, 38rem);
+    width: min(100%, 49rem);
 }
 
 .collection-controls .form-select {
     border-color: rgba(161,212,201,0.18);
     background-color: rgba(4,10,12,0.72);
     color: var(--ad-text);
+}
+
+.collection-filters-toggle {
+    display: none;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.collection-checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(1.5em + 0.5rem + 2px);
+    gap: 0.45rem;
+    padding: 0.25rem 0.65rem;
+    border: 1px solid rgba(161,212,201,0.18);
+    border-radius: 0.375rem;
+    background: rgba(4,10,12,0.72);
+    color: var(--ad-text);
+    font-size: 0.875rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.collection-checkbox .form-check-input {
+    margin: 0;
 }
 
 .collection-card-grid {
@@ -4541,10 +4568,6 @@ body.collection-page {
     grid-column: 1 / -1;
 }
 
-.collection-pagination {
-    margin-top: 1rem;
-}
-
 .collection-demon-card {
     width: 100%;
     background: rgba(3,9,11,0.55);
@@ -4558,6 +4581,33 @@ body.collection-page {
     background: rgba(3,9,11,0.4);
 }
 
+.collection-missing-card {
+    --rarity-color: rgba(161,212,201,0.45) !important;
+    border-color: rgba(161,212,201,0.14);
+    border-style: dashed;
+    opacity: 0.62;
+    filter: grayscale(0.95);
+    cursor: default;
+}
+
+.collection-missing-card .hunt-demon-rarity-gem {
+    opacity: 0.35;
+}
+
+.collection-missing-card img {
+    opacity: 0.7;
+    filter: grayscale(1) contrast(0.78) brightness(0.78);
+}
+
+.collection-missing-label {
+    margin-top: 0.45rem;
+    color: rgba(209,219,218,0.72);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-align: center;
+}
+
 .collection-empty-state {
     min-height: 320px;
     border: 1px dashed rgba(161,212,201,0.2);
@@ -4566,8 +4616,22 @@ body.collection-page {
 }
 
 @media (max-width: 767.98px) {
+    .collection-filters-toggle {
+        display: inline-flex;
+    }
+
     .collection-controls {
+        display: none;
         grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .collection-controls.is-mobile-open {
+        display: grid;
+    }
+
+    .collection-checkbox {
+        justify-content: flex-start;
     }
 
     .collection-card-grid {

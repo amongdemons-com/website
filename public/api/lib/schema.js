@@ -26,6 +26,23 @@ async function addIndexIfMissing(tableName, indexName, definition) {
   }
 }
 
+async function dedupePlayerDemonSlots() {
+  await db.query(`
+    DELETE old_demon FROM player_demons old_demon
+    INNER JOIN player_demons newer_demon
+      ON newer_demon.player_id = old_demon.player_id
+      AND newer_demon.type_id = old_demon.type_id
+      AND newer_demon.rarity = old_demon.rarity
+      AND (
+        newer_demon.created_at > old_demon.created_at
+        OR (
+          newer_demon.created_at = old_demon.created_at
+          AND newer_demon.id > old_demon.id
+        )
+      )
+  `);
+}
+
 async function initializeSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS players (
@@ -76,6 +93,12 @@ async function initializeSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
   await normalizeUtf8Column('player_demons', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await dedupePlayerDemonSlots();
+  await addIndexIfMissing(
+    'player_demons',
+    'uniq_player_demons_slot',
+    'UNIQUE INDEX uniq_player_demons_slot (player_id, type_id, rarity)'
+  );
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS runs (

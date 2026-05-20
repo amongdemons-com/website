@@ -101,7 +101,7 @@ Open `http://localhost:3000`.
 | `/register` | Registration page |
 | `/play` | Account dashboard and compact collection view |
 | `/account` | Alias for `/play` |
-| `/collection` | Full authenticated collection browser with filters, sorting, and pagination |
+| `/collection` | Full authenticated collection browser with filters, sorting, and missing slots |
 | `/summon` | Authenticated Souls/summon placeholder page |
 | `/rank` | Redirects to `/rankings` |
 | `/rankings` | Leaderboard sorted by level by default |
@@ -194,6 +194,7 @@ All API routes are mounted under `/api`.
 - Cashing out between fights saves one eligible new demon and grants accumulated XP/Souls.
 - Clearing floor 20 marks the run `completed` and offers final rewards from the surviving team plus final enemies.
 - Only one final-floor demon can be saved through `/api/demons/save`.
+- The permanent collection has one slot per demon type and rarity, for 66 total slots. Saving another demon with the same type and rarity replaces that slot.
 
 ## Combat Rules
 
@@ -250,7 +251,7 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/app/js/index.js` | Static demon type browser |
 | `public/app/js/auth-ui.js` | Login and register forms |
 | `public/app/js/play-ui.js` | Account dashboard, progression, compact collection, admin check |
-| `public/app/js/collection-ui.js` | Full collection filters, sorting, pagination |
+| `public/app/js/collection-ui.js` | Full collection filters, sorting, and missing-slot display |
 | `public/app/js/summon-ui.js` | Authenticated Souls/summon placeholder state |
 | `public/app/js/rankings-ui.js` | Leaderboard UI |
 | `public/app/js/hunt-ui.js` | Dungeon UI, battle replay, drag/drop, recruitment, cashout, final save |

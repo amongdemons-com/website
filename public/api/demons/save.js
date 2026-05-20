@@ -1,6 +1,6 @@
 const express = require('express');
-const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
+const { saveCollectionDemon } = require('../lib/collection-demons');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { MAX_DUNGEON_FLOOR } = require('../lib/dungeon-rules');
 
@@ -41,43 +41,17 @@ router.post('/demons/save', requireAuth, async (req, res) => {
   }
 
   const demon = reward.demon;
-
-  const [result] = await db.query(
-    `INSERT INTO player_demons
-       (player_id, source_demon_id, type_id, species, rarity, image_url, hp, atk, speed)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      req.player.id,
-      demon.sourceDemonId,
-      demon.typeId,
-      demon.species,
-      demon.rarity,
-      demon.imageUrl,
-      demon.maxHp || demon.hp,
-      demon.atk,
-      demon.speed
-    ]
-  );
+  const saved = await saveCollectionDemon(req.player.id, demon);
 
   reward.saved = true;
   reward.claimed = true;
-  reward.savedDemonId = result.insertId;
+  reward.savedDemonId = saved.demon.id;
   run.state.awaitingFinalPick = false;
   await saveRun(run);
 
-  res.status(201).json({
-    demon: {
-      id: result.insertId,
-      sourceDemonId: demon.sourceDemonId,
-      typeId: demon.typeId,
-      species: demon.species,
-      rarity: demon.rarity,
-      imageUrl: demon.imageUrl,
-      preferredPosition: demon.preferredPosition,
-      hp: demon.maxHp || demon.hp,
-      atk: demon.atk,
-      speed: demon.speed
-    }
+  res.status(saved.replaced ? 200 : 201).json({
+    demon: saved.demon,
+    replaced: saved.replaced
   });
 });
 
