@@ -573,9 +573,13 @@ body.dungeon-page .navbar {
 }
 
 .battle-side .battle-formation {
-    grid-template-columns: repeat(2, max-content);
+    --dungeon-demon-card-width: clamp(4.8rem, 8.5vh, 7.2rem);
+    --dungeon-demon-card-height: calc(var(--dungeon-demon-card-width) * 1.333);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
     justify-content: center;
     align-items: stretch;
+    width: 100%;
     height: 100%;
     min-height: 0;
 }
@@ -645,6 +649,28 @@ body.dungeon-page .navbar {
     border-radius: 6px;
 }
 
+.battle-side .formation-lane {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+}
+
+.battle-side .formation-lane-label {
+    flex: 0 0 4.65rem;
+    justify-content: flex-start;
+    min-width: 0;
+}
+
+.battle-side .formation-lane-cards {
+    flex-direction: row;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.battle-side-enemy .formation-lane-cards {
+    justify-content: flex-end;
+}
+
 .dungeon-hand-cards.is-drag-over {
     outline: 0;
     box-shadow:
@@ -656,6 +682,49 @@ body.dungeon-page .navbar {
     outline: 2px dashed rgba(250,197,28,0.68);
     outline-offset: 3px;
     border-radius: 6px;
+}
+
+.formation-group {
+    display: grid;
+    grid-template-columns: 4.65rem minmax(0, 1fr);
+    gap: 0.45rem;
+    min-width: 0;
+    min-height: 0;
+}
+
+.battle-side-enemy .formation-group {
+    grid-template-columns: minmax(0, 1fr) 4.65rem;
+}
+
+.formation-group-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.35rem;
+    min-width: 0;
+    color: #aeb8c2;
+    font-size: 0.72rem;
+    font-weight: bold;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.battle-side-enemy .formation-group-title {
+    grid-column: 2;
+    justify-content: flex-end;
+}
+
+.battle-side-enemy .formation-group-rows {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.formation-group-rows {
+    display: grid;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    min-width: 0;
+    min-height: 0;
 }
 
 .formation-empty {
@@ -2357,11 +2426,15 @@ body.dungeon-page .navbar {
     }
 
     .battle-side .battle-formation {
-        grid-template-columns: repeat(2, max-content);
+        --dungeon-demon-card-width: clamp(4.2rem, 8vh, 6.2rem);
+        --dungeon-demon-card-height: calc(var(--dungeon-demon-card-width) * 1.333);
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: repeat(2, minmax(0, 1fr));
     }
 
     .battle-side .hunt-demon-card {
-        width: var(--dungeon-demon-card-width, 9.25rem);
+        width: var(--dungeon-demon-card-width, 6.2rem);
+        height: var(--dungeon-demon-card-height);
         flex-basis: auto;
     }
 }
@@ -2596,7 +2669,10 @@ body.dungeon-page .navbar {
     }
 
     .battle-side .battle-formation {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        --dungeon-demon-card-width: clamp(2.9rem, 8.2vh, 4.75rem);
+        --dungeon-demon-card-height: calc(var(--dungeon-demon-card-width) * 1.333);
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: repeat(2, minmax(0, 1fr));
         gap: 0.35rem;
         height: 100%;
         width: 100%;
@@ -2623,10 +2699,16 @@ body.dungeon-page .navbar {
     }
 
     .battle-side .formation-lane-cards {
-        display: flex;
         gap: 0.22rem;
-        justify-content: space-evenly;
         width: 100%;
+    }
+
+    .battle-side-player .formation-lane-cards {
+        justify-content: flex-start;
+    }
+
+    .battle-side-enemy .formation-lane-cards {
+        justify-content: flex-end;
     }
 
     .formation-lane-cards.is-compressed {
@@ -2647,12 +2729,22 @@ body.dungeon-page .navbar {
         font-size: 0.58rem;
     }
 
-    .formation-lane-label {
+    .formation-group,
+    .battle-side-enemy .formation-group {
+        grid-template-columns: 2.65rem minmax(0, 1fr);
+        gap: 0.2rem;
+    }
+
+    .battle-side-enemy .formation-group {
+        grid-template-columns: minmax(0, 1fr) 2.65rem;
+    }
+
+    .formation-group-title {
         gap: 0.18rem;
         font-size: 0.52rem;
     }
 
-    .formation-lane-label .formation-lane-icon {
+    .formation-group-title .formation-lane-icon {
         width: 0.68rem;
         height: 0.68rem;
     }
@@ -2716,6 +2808,11 @@ body.dungeon-page .navbar {
     .formation-lane-cards {
         display: grid;
         grid-template-columns: 1fr;
+    }
+
+    .battle-side .formation-lane-cards {
+        display: flex;
+        grid-template-columns: none;
     }
 }
 
@@ -2781,6 +2878,11 @@ body.dungeon-page .navbar {
     .formation-lane-cards {
         display: grid;
         grid-template-columns: 1fr;
+    }
+
+    .battle-side .formation-lane-cards {
+        display: flex;
+        grid-template-columns: none;
     }
 
     .hunt-demon-card {

@@ -10,6 +10,7 @@
   const BATTLE_SPEED_KEY = 'amongdemons-battle-speed';
   const MAX_DUNGEON_FLOOR = 20;
   const MAX_DUNGEON_TEAM_SIZE = 6;
+  const FORMATION_ROW_CAPACITY = 2;
   const BATTLE_SPEED_OPTIONS = [0.5, 1, 2, 4];
   const session = window.AmongDemons.getSession();
   const COMBAT_THEMES = {
@@ -56,6 +57,7 @@
     endNotice: null,
     endSummary: null,
     endedReplayRun: null,
+    formationRows: new Map(),
     isLoading: true
   };
   const elements = {};
@@ -1479,7 +1481,7 @@
         lane.style.removeProperty('--dungeon-demon-card-width');
         lane.style.removeProperty('--dungeon-demon-card-height');
 
-        if (cards.length < 3) return;
+        if (!cards.length) return;
 
         const laneRect = lane.getBoundingClientRect();
         const lastCard = cards[cards.length - 1];
@@ -1487,8 +1489,14 @@
         if (!overflows) return;
 
         const gap = parseFloat(getComputedStyle(lane).rowGap || getComputedStyle(lane).gap) || 0;
-        const availableCardHeight = Math.max(72, (laneRect.height - gap * (cards.length - 1)) / cards.length);
-        const nextWidth = Math.max(72, Math.min(148, availableCardHeight * 0.75));
+        const isHorizontalLane = getComputedStyle(lane).flexDirection.startsWith('row');
+        const availableCardHeight = isHorizontalLane
+          ? laneRect.height
+          : (laneRect.height - gap * (cards.length - 1)) / cards.length;
+        const availableCardWidth = isHorizontalLane
+          ? (laneRect.width - gap * (cards.length - 1)) / cards.length
+          : availableCardHeight * 0.75;
+        const nextWidth = Math.max(46, Math.min(148, availableCardHeight * 0.75, availableCardWidth));
         lane.style.setProperty('--dungeon-demon-card-width', `${nextWidth}px`);
         lane.style.setProperty('--dungeon-demon-card-height', 'auto');
         lane.classList.add('is-compressed');
@@ -1875,6 +1883,7 @@
       originalInstanceId: demon.instanceId,
       recruitSource: 'team',
       draftOrder: index,
+      formationRow: getDemonFormationRow(demon, state.run.team || [], index),
       position: getDemonPosition(demon, index)
     }));
     state.recruitDraftPool = [
@@ -2502,14 +2511,19 @@
     });
   }
 
-  async function setDemonPosition(instanceId, position) {
+  async function setDemonPosition(instanceId, position, rowIndex = null) {
     if (!state.run) return;
 
     const team = state.run.team || [];
     const target = team.find((demon) => demon.instanceId === instanceId);
-    if (!target || target.position === position) return;
+    const targetIndex = team.findIndex((demon) => demon.instanceId === instanceId);
+    const nextRow = normalizeFormationRow(rowIndex);
+    const previousPosition = target?.position;
+    const previousRow = target ? getDemonFormationRow(target, team, targetIndex) : null;
+    if (!target || (target.position === position && previousRow === nextRow)) return;
 
     target.position = position;
+    setDemonFormationRow(target, nextRow);
     renderRun();
 
     try {
@@ -2523,9 +2537,11 @@
         }
       });
       state.run.team = result.team || team;
+      setStoredFormationRow(instanceId, nextRow);
       renderRun();
     } catch (error) {
-      target.position = position === 'front' ? 'back' : 'front';
+      target.position = previousPosition;
+      setDemonFormationRow(target, previousRow);
       renderRun();
       showError(error);
     }
@@ -2558,6 +2574,8 @@
       lane.addEventListener('dragover', (event) => {
         const payload = readDragPayload(event);
         if (payload?.type !== 'formation' && !state.draggedFormationInstanceId) return;
+        const instanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        if (!canDropFormationOnLane(instanceId, lane)) return;
 
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
@@ -2569,9 +2587,10 @@
         const instanceId = payload?.instanceId || state.draggedFormationInstanceId;
         lane.classList.remove('is-drag-over');
         if (!instanceId) return;
+        if (!canDropFormationOnLane(instanceId, lane)) return;
 
         event.preventDefault();
-        setDemonPosition(instanceId, lane.dataset.formationDrop);
+        setDemonPosition(instanceId, lane.dataset.formationDrop, getFormationLaneInfo(lane)?.rowIndex);
       });
     });
   }
@@ -2668,7 +2687,8 @@
         const isTeamMove = (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && findDraftDemon(state.recruitDraftTeam, teamInstanceId);
         if (!isPoolDrop && !isTeamMove) return;
 
-        if (isPoolDrop && !canAddPoolDemonToTeam(poolInstanceId)) return;
+        if (isPoolDrop && !canAddPoolDemonToTeam(poolInstanceId, lane)) return;
+        if (isTeamMove && !canMoveTeamDemonToLane(teamInstanceId, lane)) return;
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
         lane.classList.add('is-drag-over');
@@ -2688,9 +2708,9 @@
           return;
         }
 
-        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId)) {
+        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId, lane)) {
           event.preventDefault();
-          addPoolDemonToTeam(poolInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY));
+          addPoolDemonToTeam(poolInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY, event.clientX), getFormationLaneInfo(lane)?.rowIndex);
           renderRun();
         }
       });
@@ -2706,7 +2726,9 @@
         const isTeamMove = (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && findDraftDemon(state.recruitDraftTeam, teamInstanceId);
         if (!position || (!isPoolDrop && !isTeamMove)) return;
 
-        if (isPoolDrop && !canAddPoolDemonToTeam(poolInstanceId)) return;
+        const lane = label.closest('.formation-lane')?.querySelector('.formation-lane-cards');
+        if (isPoolDrop && !canAddPoolDemonToTeam(poolInstanceId, lane)) return;
+        if (isTeamMove && !canMoveTeamDemonToLane(teamInstanceId, lane)) return;
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
         label.classList.add('is-drag-over');
@@ -2717,21 +2739,20 @@
         const payload = readRecruitDragPayload(event);
         const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
         const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
+        const lane = label.closest('.formation-lane')?.querySelector('.formation-lane-cards');
         label.classList.remove('is-drag-over');
         if (!position || (!poolInstanceId && !teamInstanceId)) return;
 
         if (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) {
           event.preventDefault();
-          const lane = label.closest('.formation-lane')?.querySelector('.formation-lane-cards');
           applyTeamLaneDrop(teamInstanceId, lane, position, event.clientY, event.clientX);
           renderRun();
           return;
         }
 
-        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId)) {
+        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId, lane)) {
           event.preventDefault();
-          const lane = label.closest('.formation-lane')?.querySelector('.formation-lane-cards');
-          addPoolDemonToTeam(poolInstanceId, position, getLaneDropDraftIndex(lane, event.clientY));
+          addPoolDemonToTeam(poolInstanceId, position, getLaneDropDraftIndex(lane, event.clientY, event.clientX), getFormationLaneInfo(lane)?.rowIndex);
           renderRun();
         }
       });
@@ -3014,19 +3035,19 @@
     if (!payload) return false;
 
     if (payload.type === 'formation') {
-      return Boolean(lane.closest('#teamGrid'));
+      return Boolean(lane.closest('#teamGrid') && canDropFormationOnLane(payload.instanceId, lane));
     }
 
     if (payload.type === 'recruit-pool') {
       return Boolean(
-        (lane.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId)) ||
+        (lane.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId, lane)) ||
         (lane.closest('#dungeonHandGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId))
       );
     }
 
     if (payload.type === 'recruit-team') {
       return Boolean(
-        (lane.closest('#teamGrid') && findDraftDemon(state.recruitDraftTeam, payload.instanceId)) ||
+        (lane.closest('#teamGrid') && canMoveTeamDemonToLane(payload.instanceId, lane)) ||
         (lane.closest('#dungeonHandGrid') && canReturnTeamDemonToPool(payload.instanceId))
       );
     }
@@ -3047,7 +3068,7 @@
 
     if (payload.type === 'formation') {
       const position = target.element.dataset.formationDrop;
-      if (position) setDemonPosition(payload.instanceId, position);
+      if (position) setDemonPosition(payload.instanceId, position, getFormationLaneInfo(target.element)?.rowIndex);
       return;
     }
 
@@ -3059,8 +3080,8 @@
       }
 
       const position = target.element.dataset.formationDrop;
-      if (position && target.element.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId)) {
-        addPoolDemonToTeam(payload.instanceId, position, target.insertIndex);
+      if (position && target.element.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId, target.element)) {
+        addPoolDemonToTeam(payload.instanceId, position, target.insertIndex, getFormationLaneInfo(target.element)?.rowIndex);
         renderRun();
         return;
       }
@@ -3169,10 +3190,29 @@
     return (collection || []).find((demon) => demon.instanceId === instanceId) || null;
   }
 
-  function canAddPoolDemonToTeam(poolInstanceId) {
+  function canAddPoolDemonToTeam(poolInstanceId, lane = null) {
     const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
     if (!poolDemon) return false;
-    return (state.recruitDraftTeam || []).length < getRecruitTeamLimit();
+    return (state.recruitDraftTeam || []).length < getRecruitTeamLimit() && canAddDemonToFormationLane(state.recruitDraftTeam, lane);
+  }
+
+  function canMoveTeamDemonToLane(instanceId, lane) {
+    const demon = findDraftDemon(state.recruitDraftTeam, instanceId);
+    if (!demon || !lane) return false;
+    if (isDemonInFormationLane(state.recruitDraftTeam, instanceId, lane)) return true;
+    return canAddDemonToFormationLane(state.recruitDraftTeam, lane);
+  }
+
+  function canDropFormationOnLane(instanceId, lane) {
+    const demon = findDraftDemon(state.run?.team || [], instanceId);
+    if (!demon || !lane) return false;
+    if (isDemonInFormationLane(state.run?.team || [], instanceId, lane)) return true;
+    return canAddDemonToFormationLane(state.run?.team || [], lane);
+  }
+
+  function canAddDemonToFormationLane(collection, lane) {
+    if (!lane?.closest('#teamGrid')) return true;
+    return getFormationLaneDemons(collection, lane).length < FORMATION_ROW_CAPACITY;
   }
 
   function canDropRecruitOnTeamCard(payload, teamInstanceId) {
@@ -3232,13 +3272,15 @@
     );
   }
 
-  function addPoolDemonToTeam(poolInstanceId, position, insertIndex = null) {
+  function addPoolDemonToTeam(poolInstanceId, position, insertIndex = null, rowIndex = null) {
     const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
     if (!poolDemon) return;
 
+    const targetRow = normalizeFormationRow(rowIndex);
     const draftDemon = {
       ...poolDemon,
-      position
+      position,
+      formationRow: targetRow
     };
     if (Number.isInteger(insertIndex) && insertIndex >= 0) {
       state.recruitDraftTeam.splice(insertIndex, 0, draftDemon);
@@ -3252,6 +3294,10 @@
   function swapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
     const targetIndex = (state.recruitDraftTeam || []).findIndex((demon) => demon.instanceId === teamInstanceId);
     const poolIndex = getDraftPoolIndex(poolInstanceId);
+    const currentTeamDemon = state.recruitDraftTeam?.[targetIndex];
+    const currentPoolDemon = state.recruitDraftPool?.[poolIndex];
+    const targetRow = getDemonFormationRow(currentTeamDemon, state.recruitDraftTeam, targetIndex);
+    const poolRow = getDemonFormationRow(currentPoolDemon, state.recruitDraftPool, poolIndex);
     const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
     const teamDemon = removeDraftDemon(state.recruitDraftTeam, teamInstanceId);
     if (!poolDemon || !teamDemon) {
@@ -3264,12 +3310,14 @@
     state.recruitDraftTeam.splice(Math.max(targetIndex, 0), 0, {
       ...poolDemon,
       draftOrder: getDraftOrder(teamDemon),
-      position: targetPosition
+      position: targetPosition,
+      formationRow: targetRow
     });
     state.recruitDraftPool.splice(Math.max(poolIndex, 0), 0, {
       ...teamDemon,
       draftOrder: getDraftOrder(poolDemon),
-      position: getDemonPosition(poolDemon)
+      position: getDemonPosition(poolDemon),
+      formationRow: poolRow
     });
     state.recruitSwapEffectIds = [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
     refreshRecruitDraftOrder();
@@ -3280,6 +3328,10 @@
   function swapTeamDemonIntoPool(teamInstanceId, poolInstanceId) {
     const teamIndex = getDraftTeamIndex(teamInstanceId);
     const poolIndex = getDraftPoolIndex(poolInstanceId);
+    const currentTeamDemon = state.recruitDraftTeam?.[teamIndex];
+    const currentPoolDemon = state.recruitDraftPool?.[poolIndex];
+    const teamRow = getDemonFormationRow(currentTeamDemon, state.recruitDraftTeam, teamIndex);
+    const poolRow = getDemonFormationRow(currentPoolDemon, state.recruitDraftPool, poolIndex);
     const teamDemon = removeDraftDemon(state.recruitDraftTeam, teamInstanceId);
     const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
     if (!teamDemon || !poolDemon) {
@@ -3290,11 +3342,13 @@
 
     state.recruitDraftTeam.splice(Math.max(teamIndex, 0), 0, {
       ...poolDemon,
-      position: getDemonPosition(teamDemon)
+      position: getDemonPosition(teamDemon),
+      formationRow: teamRow
     });
     state.recruitDraftPool.splice(Math.max(poolIndex, 0), 0, {
       ...teamDemon,
-      position: getDemonPosition(poolDemon)
+      position: getDemonPosition(poolDemon),
+      formationRow: poolRow
     });
     state.recruitSwapEffectIds = [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
     refreshRecruitDraftOrder();
@@ -3345,8 +3399,8 @@
     return String(value).replace(/["\\]/g, '\\$&');
   }
 
-  function moveDraftTeamDemon(instanceId, position, insertIndex = null) {
-    moveDraftDemonWithin(state.recruitDraftTeam, instanceId, position, insertIndex);
+  function moveDraftTeamDemon(instanceId, position, insertIndex = null, rowIndex = null) {
+    moveDraftDemonWithin(state.recruitDraftTeam, instanceId, position, insertIndex, rowIndex);
     refreshRecruitDraftOrder();
     syncRecruitDraftSelection();
   }
@@ -3354,6 +3408,7 @@
   function applyTeamLaneDrop(instanceId, lane, position, clientY = null, clientX = null, insertIndex = null) {
     const demon = findDraftDemon(state.recruitDraftTeam, instanceId);
     if (!demon || !position) return;
+    if (!canMoveTeamDemonToLane(instanceId, lane)) return;
 
     const targetInstanceId = getLaneSwapTargetInstanceId(lane, instanceId, clientY, clientX);
     if (targetInstanceId && getDemonPosition(demon) !== position) {
@@ -3363,7 +3418,12 @@
       return;
     }
 
-    moveDraftTeamDemon(instanceId, position, Number.isInteger(insertIndex) ? insertIndex : getLaneDropDraftIndex(lane, clientY, clientX));
+    moveDraftTeamDemon(
+      instanceId,
+      position,
+      Number.isInteger(insertIndex) ? insertIndex : getLaneDropDraftIndex(lane, clientY, clientX),
+      getFormationLaneInfo(lane)?.rowIndex
+    );
   }
 
   function moveDraftPoolDemon(instanceId, position, insertIndex = null) {
@@ -3398,6 +3458,7 @@
       ...demon,
       position: getHandDropPosition(position, demon)
     };
+    delete draftDemon.formationRow;
     if (Number.isInteger(insertIndex) && insertIndex >= 0) {
       state.recruitDraftPool.splice(insertIndex, 0, draftDemon);
     } else {
@@ -3441,7 +3502,7 @@
       .filter((card) => card.dataset.instanceId !== sourceInstanceId);
     if (!cards.length) return null;
 
-    const useHorizontalDistance = isHandLane(lane) && Number.isFinite(clientX);
+    const useHorizontalDistance = isHorizontalDropLane(lane) && Number.isFinite(clientX);
     const pointerCoordinate = useHorizontalDistance ? clientX : clientY;
     if (!Number.isFinite(pointerCoordinate)) return cards[0].dataset.instanceId || null;
 
@@ -3463,9 +3524,9 @@
     if (!lane) return null;
     const collection = getDraftCollectionForLane(lane);
     const cards = Array.from(lane.querySelectorAll('.hunt-demon-card[data-instance-id]'));
-    if (!cards.length) return (collection || []).length;
+    if (!cards.length) return getFormationRowInsertIndex(collection, lane);
 
-    if (isHandLane(lane) && Number.isFinite(clientX)) {
+    if (isHorizontalDropLane(lane) && Number.isFinite(clientX)) {
       for (const card of cards) {
         const rect = card.getBoundingClientRect();
         if (clientX < rect.left + (rect.width / 2)) {
@@ -3492,20 +3553,106 @@
     return state.recruitDraftTeam;
   }
 
+  function getFormationRowInsertIndex(collection, lane) {
+    const rowInfo = getFormationLaneInfo(lane);
+    if (!rowInfo || !lane.closest('#teamGrid')) return (collection || []).length;
+
+    const positionedDemons = getDemonsForPosition(collection || [], rowInfo.position)
+      .map((demon) => ({
+        demon,
+        index: getDraftIndex(collection, demon.instanceId)
+      }))
+      .filter((item) => item.index >= 0);
+    const targetOffset = rowInfo.rowIndex * FORMATION_ROW_CAPACITY;
+    if (targetOffset < positionedDemons.length) return positionedDemons[targetOffset].index;
+    if (positionedDemons.length) return positionedDemons[positionedDemons.length - 1].index + 1;
+    return (collection || []).length;
+  }
+
+  function getFormationLaneInfo(lane) {
+    const formationLane = lane?.closest('.formation-lane');
+    if (!formationLane) return null;
+    const position = formationLane.dataset.formationPosition || lane.dataset.formationDrop;
+    const rowIndex = Number(formationLane.dataset.formationRow || lane.dataset.formationRow || 0);
+    if (!position) return null;
+    return {
+      position,
+      rowIndex: Number.isFinite(rowIndex) ? rowIndex : 0
+    };
+  }
+
+  function getFormationLaneDemons(collection, lane) {
+    const rowInfo = getFormationLaneInfo(lane);
+    if (!rowInfo) return [];
+    return getDemonsForFormationRow(collection || [], rowInfo.position, rowInfo.rowIndex);
+  }
+
+  function isDemonInFormationLane(collection, instanceId, lane) {
+    return getFormationLaneDemons(collection, lane)
+      .some((demon) => demon.instanceId === instanceId);
+  }
+
+  function getDemonFormationRow(demon, collection = [], index = 0) {
+    if (!demon) return 0;
+
+    const explicitRow = getExplicitFormationRow(demon);
+    if (explicitRow !== null) return explicitRow;
+
+    const position = getDemonPosition(demon, index);
+    const buckets = getFormationRowBuckets(collection || [], position);
+    const rowIndex = buckets.findIndex((row) => row.some((item) => item.instanceId === demon.instanceId));
+    return rowIndex >= 0 ? rowIndex : 0;
+  }
+
+  function getExplicitFormationRow(demon) {
+    const ownRow = Number(demon?.formationRow);
+    if (Number.isInteger(ownRow)) return normalizeFormationRow(ownRow);
+
+    if (demon?.instanceId && state.formationRows.has(demon.instanceId)) {
+      return normalizeFormationRow(state.formationRows.get(demon.instanceId));
+    }
+
+    return null;
+  }
+
+  function normalizeFormationRow(rowIndex) {
+    return Math.max(0, Math.min(1, Number(rowIndex) || 0));
+  }
+
+  function setDemonFormationRow(demon, rowIndex) {
+    if (!demon) return;
+
+    const normalizedRow = normalizeFormationRow(rowIndex);
+    demon.formationRow = normalizedRow;
+    setStoredFormationRow(demon.instanceId, normalizedRow);
+  }
+
+  function setStoredFormationRow(instanceId, rowIndex) {
+    if (!instanceId) return;
+    state.formationRows.set(instanceId, normalizeFormationRow(rowIndex));
+  }
+
   function isHandLane(lane) {
     return Boolean(lane?.closest('#dungeonHandGrid'));
+  }
+
+  function isHorizontalDropLane(lane) {
+    return Boolean(isHandLane(lane) || lane?.closest('#teamGrid'));
   }
 
   function getDraftIndex(collection, instanceId) {
     return (collection || []).findIndex((demon) => demon.instanceId === instanceId);
   }
 
-  function moveDraftDemonWithin(collection, instanceId, position, insertIndex = null) {
+  function moveDraftDemonWithin(collection, instanceId, position, insertIndex = null, rowIndex = null) {
     const fromIndex = getDraftIndex(collection, instanceId);
     if (fromIndex === -1) return;
 
     const [demon] = collection.splice(fromIndex, 1);
     demon.position = position;
+    if (rowIndex !== null && rowIndex !== undefined) {
+      demon.formationRow = normalizeFormationRow(rowIndex);
+    }
     let targetIndex = Number.isInteger(insertIndex) && insertIndex >= 0 ? insertIndex : collection.length;
     if (targetIndex > fromIndex) targetIndex -= 1;
     targetIndex = Math.max(0, Math.min(targetIndex, collection.length));
@@ -3518,9 +3665,16 @@
     if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex) return;
 
     const sourcePosition = getDemonPosition(collection[sourceIndex]);
+    const sourceRow = getDemonFormationRow(collection[sourceIndex], collection, sourceIndex);
+    const targetRow = getDemonFormationRow(collection[targetIndex], collection, targetIndex);
+    const swapsFormationRows = collection === state.recruitDraftTeam;
     collection[sourceIndex].position = getDemonPosition(collection[targetIndex]);
     collection[targetIndex].position = sourcePosition;
     [collection[sourceIndex], collection[targetIndex]] = [collection[targetIndex], collection[sourceIndex]];
+    if (swapsFormationRows) {
+      setDemonFormationRow(collection[sourceIndex], sourceRow);
+      setDemonFormationRow(collection[targetIndex], targetRow);
+    }
     state.recruitSwapEffectIds = [sourceInstanceId, targetInstanceId].filter(Boolean);
   }
 
@@ -3586,37 +3740,85 @@
 
     return `
       <div class="battle-formation">
-        ${getFormationOrder(options).map((position) => renderFormationLane(position, normalizedDemons, options)).join('')}
+        ${getFormationGroups().map((group) => renderFormationGroup(group, normalizedDemons, options)).join('')}
       </div>
     `;
   }
 
-  function getFormationOrder(options) {
-    return options.side === 'enemy' ? ['front', 'back'] : ['back', 'front'];
+  function getFormationGroups() {
+    return [
+      { position: 'back', label: 'Ranged' },
+      { position: 'front', label: 'Melee' }
+    ];
+  }
+
+  function renderFormationGroup(group, demons, options) {
+    return `
+      <div class="formation-group formation-group-${group.position}">
+        <div class="formation-group-title">
+          ${renderFormationLaneIcon(group.position)}
+          <span>${escapeHtml(group.label)}</span>
+        </div>
+        <div class="formation-group-rows">
+          ${[0, 1].map((rowIndex) => renderFormationLane({
+            position: group.position,
+            rowIndex,
+            label: group.label
+          }, demons, options)).join('')}
+        </div>
+      </div>
+    `;
   }
 
   function getPositionLabel(position) {
     return position === 'front' ? 'Melee' : 'Ranged';
   }
 
-  function renderFormationLane(position, demons, options) {
-    const laneDemons = demons.filter((demon, index) => getDemonPosition(demon, index) === position);
+  function renderFormationLane(row, demons, options) {
+    const { position, rowIndex } = row;
+    const laneDemons = getDemonsForFormationRow(demons, position, rowIndex);
     const label = getPositionLabel(position);
     const placeholder = shouldShowCollectionReinforcementPlaceholders(options)
       ? renderCollectionReinforcementPlaceholder(position)
       : '';
 
     return `
-      <div class="formation-lane formation-lane-${position}" data-formation-position="${position}">
-        <div class="formation-lane-label">
-          ${renderFormationLaneIcon(position)}
-          <span>${escapeHtml(label)}</span>
-        </div>
-        <div class="formation-lane-cards" data-formation-drop="${position}">
+      <div class="formation-lane formation-lane-${position}" data-formation-position="${position}" data-formation-row="${rowIndex}" aria-label="${escapeHtml(label)} row ${rowIndex + 1}">
+        <div class="formation-lane-cards" data-formation-drop="${position}" data-formation-row="${rowIndex}">
           ${placeholder}${laneDemons.length ? laneDemons.map((demon) => renderDemonCard(demon, options)).join('') : (placeholder ? '' : renderEmptyFormationLane(position, label))}
         </div>
       </div>
     `;
+  }
+
+  function getDemonsForFormationRow(demons, position, rowIndex) {
+    return getFormationRowBuckets(demons, position)[normalizeFormationRow(rowIndex)] || [];
+  }
+
+  function getFormationRowBuckets(demons, position) {
+    const buckets = [[], []];
+
+    getDemonsForPosition(demons, position).forEach((demon) => {
+      const explicitRow = getExplicitFormationRow(demon);
+      if (explicitRow !== null && buckets[explicitRow].length < FORMATION_ROW_CAPACITY) {
+        buckets[explicitRow].push(demon);
+        return;
+      }
+
+      const fallbackRow = buckets.findIndex((row) => row.length < FORMATION_ROW_CAPACITY);
+      if (fallbackRow >= 0) {
+        buckets[fallbackRow].push(demon);
+        return;
+      }
+
+      buckets[explicitRow ?? 1].push(demon);
+    });
+
+    return buckets;
+  }
+
+  function getDemonsForPosition(demons, position) {
+    return (demons || []).filter((demon, index) => getDemonPosition(demon, index) === position);
   }
 
   function renderEmptyFormationLane(position, label) {
