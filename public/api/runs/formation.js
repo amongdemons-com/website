@@ -1,7 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../lib/auth');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
-const { normalizePosition } = require('../lib/run-demons');
+const { getFormationSlotPosition, normalizeFormationSlot, normalizePosition } = require('../lib/run-demons');
 
 const router = express.Router();
 
@@ -25,16 +25,31 @@ router.post('/runs/:id/formation', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'formation is required.' });
   }
 
-  const positionsById = new Map(
+  const formationById = new Map(
     formation
       .filter((item) => item && item.instanceId)
-      .map((item) => [String(item.instanceId), normalizePosition(item.position)])
+      .map((item) => {
+        const formationSlot = normalizeFormationSlot(item.formationSlot ?? item.formationRow);
+        return [String(item.instanceId), {
+          position: normalizePosition(item.position),
+          formationSlot
+        }];
+      })
   );
 
-  run.state.team = (run.state.team || []).map((demon, index) => ({
-    ...demon,
-    position: positionsById.get(demon.instanceId) || normalizePosition(demon.position || (index === 0 ? 'front' : 'back'))
-  }));
+  run.state.team = (run.state.team || []).map((demon, index) => {
+    const formation = formationById.get(demon.instanceId);
+    const fallbackSlot = normalizeFormationSlot(demon.formationSlot ?? demon.formationRow);
+    const formationSlot = formation?.formationSlot ?? fallbackSlot;
+
+    return {
+      ...demon,
+      position: formationSlot !== null
+        ? getFormationSlotPosition(formationSlot, 'player')
+        : (formation?.position || normalizePosition(demon.position || (index === 0 ? 'front' : 'back'))),
+      ...(formationSlot !== null ? { formationSlot } : {})
+    };
+  });
 
   await saveRun(run);
   res.json({ team: run.state.team });

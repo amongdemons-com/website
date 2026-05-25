@@ -10,10 +10,12 @@
   const BATTLE_SPEED_KEY = 'amongdemons-battle-speed';
   const MAX_DUNGEON_FLOOR = 20;
   const MAX_DUNGEON_TEAM_SIZE = 6;
-  const FORMATION_ROW_CAPACITY = 3;
+  const FORMATION_GRID_COLUMNS = 3;
+  const FORMATION_GRID_SIZE = 9;
+  const FORMATION_CELL_CAPACITY = 1;
   const BATTLE_SPEED_OPTIONS = [0.5, 1, 2, 4];
   const FORMATION_DRAG_OVER_SELECTOR = '.formation-lane-cards.is-drag-over';
-  const RECRUIT_DRAG_OVER_SELECTOR = '.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .formation-lane-label.is-drag-over';
+  const RECRUIT_DRAG_OVER_SELECTOR = '.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over';
   const session = window.AmongDemons.getSession();
   const COMBAT_THEMES = {
     default: { color: '#FAC51C', shadow: 'rgba(250,197,28,0.85)' },
@@ -1814,6 +1816,7 @@
       recruitSource: 'team',
       draftOrder: index,
       formationRow: getDemonFormationRow(demon, state.run.team || [], index),
+      formationSlot: getDemonFormationRow(demon, state.run.team || [], index),
       position: getDemonPosition(demon, index)
     }));
     state.recruitDraftPool = [
@@ -1902,7 +1905,8 @@
         instanceId: demon.originalInstanceId || demon.instanceId,
         rewardId: demon.rewardId || undefined,
         demonId: demon.collectionDemonId || undefined,
-        position: getDemonPosition(demon, index)
+        position: getDemonPosition(demon, index),
+        formationSlot: getDemonFormationRow(demon, draftTeam, index)
       }))
     };
   }
@@ -2448,7 +2452,8 @@
         body: {
           formation: team.map((demon, index) => ({
             instanceId: demon.instanceId,
-            position: getDemonPosition(demon, index)
+            position: getDemonPosition(demon, index),
+            formationSlot: getDemonFormationRow(demon, team, index)
           }))
         }
       });
@@ -2676,14 +2681,6 @@
       bindTeamFormationDropTarget(lane, () => lane, () => lane.dataset.formationDrop);
     });
 
-    document.querySelectorAll('#teamGrid .formation-lane-label').forEach((label) => {
-      bindTeamFormationDropTarget(
-        label,
-        () => label.closest('.formation-lane')?.querySelector('.formation-lane-cards'),
-        () => label.closest('.formation-lane')?.dataset.formationPosition
-      );
-    });
-
     document.querySelectorAll('#dungeonHandGrid .formation-lane-cards').forEach(bindHandFormationDropTarget);
   }
 
@@ -2889,15 +2886,13 @@
 
     const card = element.closest('.hunt-demon-card[data-instance-id]');
     const lane = element.closest('.formation-lane-cards');
-    const label = element.closest('.formation-lane-label');
 
     if (card && canPointerDropOnCard(drag.payload, card)) {
       return { element: card, kind: 'card' };
     }
 
-    const laneElement = lane || label?.closest('.formation-lane')?.querySelector('.formation-lane-cards');
-    if (laneElement && canPointerDropOnLane(drag.payload, laneElement)) {
-      return { element: laneElement, kind: 'lane', insertIndex: getLaneDropDraftIndex(laneElement, y, x), clientX: x, clientY: y };
+    if (lane && canPointerDropOnLane(drag.payload, lane)) {
+      return { element: lane, kind: 'lane', insertIndex: getLaneDropDraftIndex(lane, y, x), clientX: x, clientY: y };
     }
 
     return null;
@@ -3091,7 +3086,7 @@
 
   function canAddDemonToFormationLane(collection, lane) {
     if (!lane?.closest('#teamGrid')) return true;
-    return getFormationLaneDemons(collection, lane).length < FORMATION_ROW_CAPACITY;
+    return getFormationLaneDemons(collection, lane).length < FORMATION_CELL_CAPACITY;
   }
 
   function canDropRecruitOnTeamCard(payload, teamInstanceId) {
@@ -3159,7 +3154,8 @@
     const draftDemon = {
       ...poolDemon,
       position,
-      formationRow: targetRow
+      formationRow: targetRow,
+      formationSlot: targetRow
     };
     if (Number.isInteger(insertIndex) && insertIndex >= 0) {
       state.recruitDraftTeam.splice(insertIndex, 0, draftDemon);
@@ -3190,13 +3186,15 @@
       ...poolDemon,
       draftOrder: getDraftOrder(teamDemon),
       position: targetPosition,
-      formationRow: targetRow
+      formationRow: targetRow,
+      formationSlot: targetRow
     });
     state.recruitDraftPool.splice(Math.max(poolIndex, 0), 0, {
       ...teamDemon,
       draftOrder: getDraftOrder(poolDemon),
       position: getDemonPosition(poolDemon),
-      formationRow: poolRow
+      formationRow: poolRow,
+      formationSlot: poolRow
     });
     state.recruitSwapEffectIds = [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
     refreshRecruitDraftOrder();
@@ -3222,12 +3220,14 @@
     state.recruitDraftTeam.splice(Math.max(teamIndex, 0), 0, {
       ...poolDemon,
       position: getDemonPosition(teamDemon),
-      formationRow: teamRow
+      formationRow: teamRow,
+      formationSlot: teamRow
     });
     state.recruitDraftPool.splice(Math.max(poolIndex, 0), 0, {
       ...teamDemon,
       position: getDemonPosition(poolDemon),
-      formationRow: poolRow
+      formationRow: poolRow,
+      formationSlot: poolRow
     });
     state.recruitSwapEffectIds = [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
     refreshRecruitDraftOrder();
@@ -3338,6 +3338,7 @@
       position: getHandDropPosition(position, demon)
     };
     delete draftDemon.formationRow;
+    delete draftDemon.formationSlot;
     if (Number.isInteger(insertIndex) && insertIndex >= 0) {
       state.recruitDraftPool.splice(insertIndex, 0, draftDemon);
     } else {
@@ -3441,16 +3442,7 @@
     const rowInfo = getFormationLaneInfo(lane);
     if (!rowInfo || !lane.closest('#teamGrid')) return (collection || []).length;
 
-    const positionedDemons = getDemonsForPosition(collection || [], rowInfo.position)
-      .map((demon) => ({
-        demon,
-        index: getDraftIndex(collection, demon.instanceId)
-      }))
-      .filter((item) => item.index >= 0);
-    const targetOffset = rowInfo.rowIndex * FORMATION_ROW_CAPACITY;
-    if (targetOffset < positionedDemons.length) return positionedDemons[targetOffset].index;
-    if (positionedDemons.length) return positionedDemons[positionedDemons.length - 1].index + 1;
-    return (collection || []).length;
+    return Math.min(normalizeFormationRow(rowInfo.rowIndex), (collection || []).length);
   }
 
   function getFormationLaneInfo(lane) {
@@ -3482,13 +3474,14 @@
     const explicitRow = getExplicitFormationRow(demon);
     if (explicitRow !== null) return explicitRow;
 
-    const position = getDemonPosition(demon, index);
-    const buckets = getFormationRowBuckets(collection || [], position);
-    const rowIndex = buckets.findIndex((row) => row.some((item) => item.instanceId === demon.instanceId));
-    return rowIndex >= 0 ? rowIndex : 0;
+    const collectionIndex = (collection || []).findIndex((item) => item.instanceId && item.instanceId === demon.instanceId);
+    return normalizeFormationRow(collectionIndex >= 0 ? collectionIndex : index);
   }
 
   function getExplicitFormationRow(demon) {
+    const ownSlot = Number(demon?.formationSlot);
+    if (Number.isInteger(ownSlot)) return normalizeFormationRow(ownSlot);
+
     const ownRow = Number(demon?.formationRow);
     if (Number.isInteger(ownRow)) return normalizeFormationRow(ownRow);
 
@@ -3500,7 +3493,9 @@
   }
 
   function normalizeFormationRow(rowIndex) {
-    return 0;
+    const numericRow = Number(rowIndex);
+    if (!Number.isInteger(numericRow)) return 0;
+    return Math.max(0, Math.min(FORMATION_GRID_SIZE - 1, numericRow));
   }
 
   function setDemonFormationRow(demon, rowIndex) {
@@ -3508,6 +3503,7 @@
 
     const normalizedRow = normalizeFormationRow(rowIndex);
     demon.formationRow = normalizedRow;
+    demon.formationSlot = normalizedRow;
     setStoredFormationRow(demon.instanceId, normalizedRow);
   }
 
@@ -3535,7 +3531,7 @@
     const [demon] = collection.splice(fromIndex, 1);
     demon.position = position;
     if (rowIndex !== null && rowIndex !== undefined) {
-      demon.formationRow = normalizeFormationRow(rowIndex);
+      setDemonFormationRow(demon, rowIndex);
     }
     let targetIndex = Number.isInteger(insertIndex) && insertIndex >= 0 ? insertIndex : collection.length;
     if (targetIndex > fromIndex) targetIndex -= 1;
@@ -3616,121 +3612,116 @@
   }
 
   function renderDemonCards(demons, options = {}) {
-    if (!demons.length && !options.allowRecruitDrag && !options.allowFormationDrag) return renderEmptyText('No demons.');
-    const normalizedDemons = demons.map((demon, index) => ({
-      ...demon,
-      position: getDemonPosition(demon, index)
-    }));
+    const side = options.side === 'enemy' ? 'enemy' : 'player';
+    const assignments = getFormationGridAssignments(demons || [], side);
 
     return `
-      <div class="battle-formation">
-        ${getFormationGroups(options).map((group) => renderFormationGroup(group, normalizedDemons, options)).join('')}
+      <div class="battle-formation battle-formation-grid battle-formation-${side}" role="list" aria-label="${side === 'enemy' ? 'Enemy' : 'Your team'} formation">
+        ${assignments.map((demon, cellIndex) => renderFormationSlot(demon, cellIndex, options, side)).join('')}
       </div>
     `;
   }
 
-  function getFormationGroups(options = {}) {
-    const playerGroups = [
-      { position: 'back', label: 'Ranged' },
-      { position: 'front', label: 'Melee' }
-    ];
-    const enemyGroups = [
-      { position: 'front', label: 'Melee' },
-      { position: 'back', label: 'Ranged' }
-    ];
-
-    return options.side === 'enemy' ? enemyGroups : playerGroups;
-  }
-
-  function renderFormationGroup(group, demons, options) {
-    return `
-      <div class="formation-group formation-group-${group.position}">
-        <div class="formation-group-title">
-          ${renderFormationLaneIcon(group.position)}
-          <span>${escapeHtml(group.label)}</span>
-        </div>
-        <div class="formation-group-rows">
-          ${renderFormationLane({
-            position: group.position,
-            rowIndex: 0,
-            label: group.label
-          }, demons, options)}
-        </div>
-      </div>
-    `;
-  }
-
-  function getPositionLabel(position) {
-    return position === 'front' ? 'Melee' : 'Ranged';
-  }
-
-  function renderFormationLane(row, demons, options) {
-    const { position, rowIndex } = row;
-    const laneDemons = getDemonsForFormationRow(demons, position, rowIndex);
-    const label = getPositionLabel(position);
+  function renderFormationSlot(demon, cellIndex, options, side) {
+    const position = getFormationSlotPosition(cellIndex, side);
+    const slotNumber = cellIndex + 1;
+    const sideLabel = options.side === 'enemy' ? 'Enemy' : 'Your team';
     const placeholder = shouldShowCollectionReinforcementPlaceholders(options)
       ? renderCollectionReinforcementPlaceholder(position)
       : '';
+    const slotContent = demon
+      ? renderDemonCard(demon, options)
+      : (placeholder || renderEmptyFormationSlot(position, slotNumber));
 
     return `
-      <div class="formation-lane formation-lane-${position}" data-formation-position="${position}" data-formation-row="${rowIndex}" aria-label="${escapeHtml(label)} row ${rowIndex + 1}">
-        <div class="formation-lane-cards" data-formation-drop="${position}" data-formation-row="${rowIndex}">
-          ${placeholder}${renderFormationLaneCards(laneDemons, position, label, options, Boolean(placeholder))}
+      <div class="formation-slot formation-lane formation-slot-${position} ${demon ? 'has-demon' : 'is-empty'}" data-formation-position="${position}" data-formation-row="${cellIndex}" data-formation-slot="${cellIndex}" role="listitem" aria-label="${escapeHtml(`${sideLabel} slot ${slotNumber}`)}">
+        <div class="formation-lane-cards formation-slot-cards" data-formation-drop="${position}" data-formation-row="${cellIndex}">
+          ${slotContent}
         </div>
       </div>
     `;
   }
 
-  function renderFormationLaneCards(laneDemons, position, label, options, hasPlaceholder = false) {
-    const cards = laneDemons.map((demon) => renderDemonCard(demon, options)).join('');
-    if (options.side === 'enemy') return cards;
+  function getFormationGridAssignments(demons = [], side = 'player') {
+    const cells = Array.from({ length: FORMATION_GRID_SIZE }, () => null);
+    const pending = [];
+    const overflow = [];
 
-    const emptyCount = hasPlaceholder ? 0 : Math.max(0, FORMATION_ROW_CAPACITY - laneDemons.length);
-    return `${cards}${Array.from({ length: emptyCount }, () => renderEmptyFormationLane(position, label, options)).join('')}`;
+    (demons || []).slice(0, FORMATION_GRID_SIZE).forEach((demon, index) => {
+      const explicitCell = getExplicitFormationRow(demon);
+      const explicitPosition = explicitCell !== null ? getFormationSlotPosition(explicitCell, side) : null;
+      const normalizedDemon = {
+        ...demon,
+        position: explicitPosition || getDemonPosition(demon, index)
+      };
+      if (explicitCell !== null && !cells[explicitCell] && getFormationSlotPosition(explicitCell, side) === normalizedDemon.position) {
+        cells[explicitCell] = normalizedDemon;
+        return;
+      }
+
+      pending.push({
+        demon: normalizedDemon,
+        preferredCell: normalizeFormationRow(index)
+      });
+    });
+
+    pending.forEach(({ demon, preferredCell }) => {
+      if (!cells[preferredCell] && getFormationSlotPosition(preferredCell, side) === demon.position) {
+        cells[preferredCell] = demon;
+        return;
+      }
+
+      overflow.push(demon);
+    });
+
+    overflow.forEach((demon) => {
+      const cellIndex = getNextOpenFormationCell(cells, side, demon.position);
+      if (cellIndex >= 0) cells[cellIndex] = demon;
+    });
+
+    return cells;
+  }
+
+  function getNextOpenFormationCell(cells, side = 'player', position = null) {
+    for (const index of getFormationSlotOrder(side, position)) {
+      if (!cells[index]) return index;
+    }
+
+    return cells.findIndex((cell) => !cell);
+  }
+
+  function getFormationSlotPosition(cellIndex, side = 'player') {
+    const column = normalizeFormationRow(cellIndex) % FORMATION_GRID_COLUMNS;
+    const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
+    return column === frontColumn ? 'front' : 'back';
+  }
+
+  function getFormationSlotOrder(side = 'player', position = null) {
+    const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
+    const middleColumn = 1;
+    const outerColumn = side === 'enemy' ? FORMATION_GRID_COLUMNS - 1 : 0;
+    const columns = position === 'front'
+      ? [frontColumn]
+      : position === 'back'
+        ? [middleColumn, outerColumn]
+        : [frontColumn, middleColumn, outerColumn];
+
+    return columns.flatMap((column) => (
+      Array.from({ length: FORMATION_GRID_COLUMNS }, (item, rowIndex) => rowIndex * FORMATION_GRID_COLUMNS + column)
+    ));
   }
 
   function getDemonsForFormationRow(demons, position, rowIndex) {
-    return getFormationRowBuckets(demons, position)[normalizeFormationRow(rowIndex)] || [];
+    const demon = getFormationGridAssignments(demons)[normalizeFormationRow(rowIndex)];
+    return demon ? [demon] : [];
   }
 
-  function getFormationRowBuckets(demons, position) {
-    const buckets = [[]];
-
-    getDemonsForPosition(demons, position).forEach((demon) => {
-      const explicitRow = getExplicitFormationRow(demon);
-      if (explicitRow !== null && buckets[explicitRow].length < FORMATION_ROW_CAPACITY) {
-        buckets[explicitRow].push(demon);
-        return;
-      }
-
-      const fallbackRow = buckets.findIndex((row) => row.length < FORMATION_ROW_CAPACITY);
-      if (fallbackRow >= 0) {
-        buckets[fallbackRow].push(demon);
-        return;
-      }
-
-      buckets[0].push(demon);
-    });
-
-    return buckets;
-  }
-
-  function getDemonsForPosition(demons, position) {
-    return (demons || []).filter((demon, index) => getDemonPosition(demon, index) === position);
-  }
-
-  function renderEmptyFormationLane(position, label, options = {}) {
-    if (options.side === 'enemy') return '';
-
+  function renderEmptyFormationSlot(position, slotNumber) {
     return `
-      <div class="formation-empty formation-empty-${position}">
+      <div class="formation-empty formation-empty-${position}" aria-hidden="true" data-slot-number="${slotNumber}">
         <span>Empty</span>
       </div>
     `;
-  }
-
-  function renderFormationLaneIcon(position) {
-    return renderIcon(position === 'front' ? 'melee' : 'ranged', { className: 'formation-lane-icon' });
   }
 
   function renderButtonMeleeIcon() {

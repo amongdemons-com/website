@@ -4,7 +4,14 @@ const { requireAuth } = require('../lib/auth');
 const { createRng } = require('../lib/rng');
 const { createHuntEnemies } = require('../lib/hunt-enemies');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
-const { createRunDemonFromCollection, normalizePosition, resetRunDemon } = require('../lib/run-demons');
+const {
+  assignFormationSlots,
+  createRunDemonFromCollection,
+  getFormationSlotPosition,
+  normalizeFormationSlot,
+  normalizePosition,
+  resetRunDemon
+} = require('../lib/run-demons');
 const { getDungeonTeamLimit } = require('../lib/dungeon-rules');
 
 const router = express.Router();
@@ -109,7 +116,10 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
 });
 
 async function advanceFloor(run) {
-  run.state.team = run.state.team.map((demon) => resetRunDemon(demon, demon.instanceId));
+  run.state.team = assignFormationSlots(
+    run.state.team.map((demon) => resetRunDemon(demon, demon.instanceId)),
+    'player'
+  );
   run.floor += 1;
   run.state.currentFloor = run.floor;
   run.state.enemies = await createHuntEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length);
@@ -156,7 +166,10 @@ async function buildStagedTeam(run, stagedTeam) {
       throw error;
     }
 
-    const position = normalizePosition(item.position || (index === 0 ? 'front' : 'back'));
+    const formationSlot = normalizeFormationSlot(item.formationSlot ?? item.formationRow);
+    const position = formationSlot !== null
+      ? getFormationSlotPosition(formationSlot, 'player')
+      : normalizePosition(item.position || (index === 0 ? 'front' : 'back'));
 
     if (item.source === 'team') {
       const instanceId = String(item.instanceId || item.originalInstanceId || '');
@@ -169,7 +182,8 @@ async function buildStagedTeam(run, stagedTeam) {
 
       team.push({
         ...resetRunDemon(demon, demon.instanceId),
-        position
+        position,
+        ...(formationSlot !== null ? { formationSlot } : {})
       });
       continue;
     }
@@ -190,7 +204,8 @@ async function buildStagedTeam(run, stagedTeam) {
 
       team.push({
         ...resetRunDemon(reward.demon, `player-${run.floor}-${reward.rewardId}`),
-        position
+        position,
+        ...(formationSlot !== null ? { formationSlot } : {})
       });
       continue;
     }
@@ -221,7 +236,8 @@ async function buildStagedTeam(run, stagedTeam) {
       const demon = await createRunDemonFromCollection(rows[0], `player-collection-${demonId}`);
       team.push({
         ...resetRunDemon(demon, `player-collection-${demonId}`),
-        position
+        position,
+        ...(formationSlot !== null ? { formationSlot } : {})
       });
       continue;
     }
@@ -231,7 +247,7 @@ async function buildStagedTeam(run, stagedTeam) {
     throw error;
   }
 
-  return team;
+  return assignFormationSlots(team, 'player');
 }
 
 function isCollectionReinforcementAvailable(run) {

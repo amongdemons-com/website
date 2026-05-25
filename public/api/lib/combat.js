@@ -62,11 +62,29 @@ function isBlockedBehindFrontline(demon, allies) {
   return alive(allies).some((ally) => normalizePosition(ally.position) === 'front');
 }
 
-function chooseTarget(rng, attacker, enemies, demonTypes) {
+function getFormationDepth(demon, side = 'enemy') {
+  const slot = Number(demon.formationSlot);
+  if (!Number.isInteger(slot) || slot < 0 || slot > 8) {
+    return normalizePosition(demon.position) === 'front' ? 0 : 1;
+  }
+
+  const column = slot % 3;
+  return side === 'enemy' ? column : 2 - column;
+}
+
+function frontToBack(targets, side = 'enemy') {
+  return [...targets].sort((a, b) => (
+    getFormationDepth(a, side) - getFormationDepth(b, side)
+  ));
+}
+
+function chooseTarget(rng, attacker, enemies, demonTypes, targetSide = 'enemy') {
   const targeting = getTargeting(attacker, demonTypes);
   const living = alive(enemies);
-  const frontRow = living.filter((demon) => normalizePosition(demon.position) === 'front');
-  const available = targeting === 'front' && frontRow.length ? frontRow : living;
+  const frontRow = frontToBack(living.filter((demon) => normalizePosition(demon.position) === 'front'), targetSide);
+  const available = targeting === 'front'
+    ? (frontRow.length ? frontRow : frontToBack(living, targetSide))
+    : living;
 
   if (!available.length || targeting === 'none') return null;
 
@@ -104,14 +122,14 @@ function chooseHealTarget(allies) {
     .sort((a, b) => (b.maxHp - b.hp) - (a.maxHp - a.hp))[0] || null;
 }
 
-function chooseTargets(rng, attacker, enemies, demonTypes) {
+function chooseTargets(rng, attacker, enemies, demonTypes, targetSide = 'enemy') {
   const targeting = getTargeting(attacker, demonTypes);
   const ability = getAbility(attacker, demonTypes);
   const living = alive(enemies);
 
   if (ability.kind === 'cleave_attack') {
-    const frontRow = living.filter((demon) => normalizePosition(demon.position) === 'front');
-    return frontRow.length ? frontRow : living;
+    const frontRow = frontToBack(living.filter((demon) => normalizePosition(demon.position) === 'front'), targetSide);
+    return frontRow.length ? frontRow : frontToBack(living, targetSide);
   }
 
   if (targeting === 'all') {
@@ -122,7 +140,7 @@ function chooseTargets(rng, attacker, enemies, demonTypes) {
     return [];
   }
 
-  const target = chooseTarget(rng, attacker, enemies, demonTypes);
+  const target = chooseTarget(rng, attacker, enemies, demonTypes, targetSide);
   return target ? [target] : [];
 }
 
@@ -320,6 +338,7 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
       const actorIsPlayer = players.some((demon) => demon.instanceId === actor.instanceId);
       const allies = actorIsPlayer ? players : enemies;
       const targets = actorIsPlayer ? enemies : players;
+      const targetSide = actorIsPlayer ? 'enemy' : 'player';
       if (!alive(targets).length) break;
       if (isBlockedBehindFrontline(actor, allies)) continue;
 
@@ -345,7 +364,7 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
 
       const chosenTargets = ability.kind === 'chaotic_attack'
         ? chooseChaoticTargets(rng, actor, players, enemies, ability)
-        : chooseTargets(rng, actor, targets, demonTypes);
+        : chooseTargets(rng, actor, targets, demonTypes, targetSide);
       const targeting = ability.kind === 'cleave_attack' ? 'cleave' : getTargeting(actor, demonTypes);
 
       chosenTargets.forEach((target, targetIndex) => {

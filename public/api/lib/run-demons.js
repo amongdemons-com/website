@@ -1,7 +1,68 @@
 const { getDemonTypes } = require('./game-data');
 
+const FORMATION_GRID_COLUMNS = 3;
+const FORMATION_GRID_SIZE = 9;
+
 function normalizePosition(position) {
   return position === 'back' ? 'back' : 'front';
+}
+
+function normalizeFormationSlot(slot) {
+  const number = Number(slot);
+  if (!Number.isInteger(number)) return null;
+  return Math.max(0, Math.min(FORMATION_GRID_SIZE - 1, number));
+}
+
+function getFormationSlotPosition(slot, side = 'player') {
+  const normalizedSlot = normalizeFormationSlot(slot);
+  const column = (normalizedSlot === null ? 0 : normalizedSlot) % FORMATION_GRID_COLUMNS;
+  const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
+  return column === frontColumn ? 'front' : 'back';
+}
+
+function getFormationSlotOrder(position, side = 'player') {
+  const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
+  const middleColumn = 1;
+  const outerColumn = side === 'enemy' ? FORMATION_GRID_COLUMNS - 1 : 0;
+  const columns = position === 'front'
+    ? [frontColumn]
+    : position === 'back'
+      ? [middleColumn, outerColumn]
+      : [frontColumn, middleColumn, outerColumn];
+
+  return columns.flatMap((column) => (
+    Array.from({ length: FORMATION_GRID_COLUMNS }, (item, rowIndex) => rowIndex * FORMATION_GRID_COLUMNS + column)
+  ));
+}
+
+function chooseFormationSlot(takenSlots, position, side = 'player') {
+  const preferredSlot = getFormationSlotOrder(position, side).find((slot) => !takenSlots.has(slot));
+  if (preferredSlot !== undefined) return preferredSlot;
+  return Array.from({ length: FORMATION_GRID_SIZE }, (item, index) => index)
+    .find((slot) => !takenSlots.has(slot));
+}
+
+function assignFormationSlots(team, side = 'player') {
+  const takenSlots = new Set();
+
+  return (team || []).slice(0, FORMATION_GRID_SIZE).map((demon, index) => {
+    const explicitSlot = normalizeFormationSlot(demon.formationSlot ?? demon.formationRow);
+    const requestedPosition = explicitSlot !== null
+      ? getFormationSlotPosition(explicitSlot, side)
+      : normalizePosition(demon.position || (index === 0 ? 'front' : 'back'));
+    const slot = explicitSlot !== null && !takenSlots.has(explicitSlot)
+      ? explicitSlot
+      : chooseFormationSlot(takenSlots, requestedPosition, side);
+    const normalizedSlot = normalizeFormationSlot(slot) ?? 0;
+
+    takenSlots.add(normalizedSlot);
+
+    return {
+      ...demon,
+      position: getFormationSlotPosition(normalizedSlot, side),
+      formationSlot: normalizedSlot
+    };
+  });
 }
 
 async function createRunDemonFromCollection(row, instanceId) {
@@ -28,6 +89,7 @@ async function createRunDemonFromCollection(row, instanceId) {
 function resetRunDemon(demon, instanceId) {
   const maxHp = Number(demon.maxHp) || Number(demon.hp) || 1;
   const preferredPosition = demon.preferredPosition === 'back' ? 'back' : 'front';
+  const formationSlot = normalizeFormationSlot(demon.formationSlot ?? demon.formationRow);
 
   return {
     ...demon,
@@ -35,7 +97,8 @@ function resetRunDemon(demon, instanceId) {
     maxHp,
     hp: maxHp,
     preferredPosition,
-    position: preferredPosition,
+    position: normalizePosition(demon.position || preferredPosition),
+    ...(formationSlot !== null ? { formationSlot } : {}),
     attackMeter: 0,
     statusEffects: {
       poison: []
@@ -95,9 +158,12 @@ function getPreferredPositionFromTypes(types, typeId) {
 }
 
 module.exports = {
+  assignFormationSlots,
   createRunDemonFromCollection,
   enrichDemonPreferredPositions,
   enrichRunPreferredPositions,
+  getFormationSlotPosition,
+  normalizeFormationSlot,
   normalizePosition,
   resetRunDemon
 };

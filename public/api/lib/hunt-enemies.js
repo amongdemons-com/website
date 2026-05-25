@@ -1,5 +1,6 @@
 const { createDemon } = require('./demon-factory');
 const { MAX_DUNGEON_FLOOR, getDungeonTeamLimit } = require('./dungeon-rules');
+const { assignFormationSlots } = require('./run-demons');
 
 const STARTER_TYPE_IDS = [1, 2, 3];
 const MAX_HUNT_TYPE_ID = 11;
@@ -34,7 +35,7 @@ async function createHuntEnemies(rng, floor, size) {
       }));
     }
 
-    return applyEnemyPreferredPositions(enemies);
+    return assignFormationSlots(applyEnemyPreferredPositions(enemies), 'enemy');
   }
 
   const positions = getEnemyPositions(teamSize);
@@ -50,7 +51,7 @@ async function createHuntEnemies(rng, floor, size) {
     }));
   }
 
-  return applyEnemyPreferredPositions(enemies);
+  return assignFormationSlots(applyEnemyPreferredPositions(enemies), 'enemy');
 }
 
 function getEnemyGenerationOptions(floor, options = {}) {

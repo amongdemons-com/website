@@ -4,7 +4,7 @@ const { simulateFight } = require('../lib/combat');
 const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
-const { resetRunDemon } = require('../lib/run-demons');
+const { assignFormationSlots, resetRunDemon } = require('../lib/run-demons');
 const { MAX_DUNGEON_FLOOR } = require('../lib/dungeon-rules');
 
 const router = express.Router();
@@ -26,6 +26,8 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 
   const rng = createRng(run.seed + run.floor);
   const demonTypes = await getDemonTypes();
+  run.state.team = assignFormationSlots(run.state.team || [], 'player');
+  run.state.enemies = assignFormationSlots(run.state.enemies || [], 'enemy');
   const playerTeamBefore = cloneForBattleReplay(run.state.team || []);
   const enemyTeamBefore = cloneForBattleReplay(run.state.enemies || []);
   const result = simulateFight(rng, run.state.team, run.state.enemies, { demonTypes });
