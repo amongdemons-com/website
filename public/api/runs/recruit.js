@@ -26,6 +26,9 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   }
 
   if (skipRecruit) {
+    if (Number(run.floor) === 0) {
+      return res.status(400).json({ error: 'Add at least one demon to your team before starting the dungeon.' });
+    }
     run.state.awaitingCollectionReinforcement = false;
     await advanceFloor(run);
     await saveRun(run);
@@ -48,7 +51,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
       }
     });
     if (stagedTeam.some((item) => item && item.source === 'collection')) {
-      run.state.collectionReinforcementUsed = true;
+      run.state.collectionReinforcementUsed = Number(run.floor) !== 0;
     }
     run.state.awaitingCollectionReinforcement = false;
 
@@ -112,6 +115,7 @@ async function advanceFloor(run) {
   run.state.enemies = await createHuntEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length);
   run.state.awaitingRecruit = false;
   run.state.awaitingCollectionReinforcement = false;
+  delete run.state.collectionReinforcementLimit;
   run.state.mapProgress.push({ floor: run.floor, type: 'battle', status: 'available' });
 }
 
@@ -124,8 +128,9 @@ async function buildStagedTeam(run, stagedTeam) {
   }
 
   const collectionItems = stagedTeam.filter((item) => item && item.source === 'collection');
-  if (collectionItems.length > 1) {
-    const error = new Error('Choose only one collection reinforcement.');
+  const collectionReinforcementLimit = getCollectionReinforcementLimit(run);
+  if (collectionItems.length > collectionReinforcementLimit) {
+    const error = new Error(`Choose up to ${collectionReinforcementLimit} collection reinforcement${collectionReinforcementLimit === 1 ? '' : 's'}.`);
     error.status = 400;
     throw error;
   }
@@ -230,6 +235,15 @@ async function buildStagedTeam(run, stagedTeam) {
 }
 
 function isCollectionReinforcementAvailable(run) {
+  return getCollectionReinforcementLimit(run) > 0;
+}
+
+function getCollectionReinforcementLimit(run) {
+  const explicitLimit = Number(run.state.collectionReinforcementLimit);
+  if (explicitLimit > 0 && run.state.awaitingRecruit) return explicitLimit;
+
+  if (run.state.awaitingRecruit && Number(run.floor) === 0) return 2;
+
   return Boolean(
     run.state.awaitingCollectionReinforcement ||
     (
@@ -237,7 +251,7 @@ function isCollectionReinforcementAvailable(run) {
       run.state.awaitingRecruit &&
       Number(run.floor) === 3
     )
-  );
+  ) ? 1 : 0;
 }
 
 module.exports = router;

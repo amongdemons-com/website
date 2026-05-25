@@ -28,14 +28,8 @@ router.get('/runs/:id', requireAuth, async (req, res) => {
 });
 
 async function serializeRun(run) {
-  const collectionReinforcementAvailable = Boolean(
-    run.state.awaitingCollectionReinforcement ||
-    (
-      !run.state.collectionReinforcementUsed &&
-      run.state.awaitingRecruit &&
-      Number(run.floor) === 3
-    )
-  );
+  const collectionReinforcementLimit = getCollectionReinforcementLimit(run);
+  const collectionReinforcementAvailable = collectionReinforcementLimit > 0;
 
   return {
     runId: run.id,
@@ -49,6 +43,7 @@ async function serializeRun(run) {
     rewards: run.rewards,
     awaitingRecruit: Boolean(run.state.awaitingRecruit),
     collectionReinforcementAvailable,
+    collectionReinforcementLimit,
     awaitingFinalPick: Boolean(run.state.awaitingFinalPick),
     lastBattle: run.state.lastBattle || null,
     earned: run.state.earned || { xp: 0, souls: 0 },
@@ -63,6 +58,22 @@ async function getNextEnemiesPreview(run) {
   if (nextFloor > MAX_DUNGEON_FLOOR) return [];
 
   return createHuntEnemies(createRng(run.seed + nextFloor), nextFloor, (run.state.team || []).length);
+}
+
+function getCollectionReinforcementLimit(run) {
+  const explicitLimit = Number(run.state.collectionReinforcementLimit);
+  if (explicitLimit > 0 && run.state.awaitingRecruit) return explicitLimit;
+
+  if (run.state.awaitingRecruit && Number(run.floor) === 0) return 2;
+
+  return Boolean(
+    run.state.awaitingCollectionReinforcement ||
+    (
+      !run.state.collectionReinforcementUsed &&
+      run.state.awaitingRecruit &&
+      Number(run.floor) === 3
+    )
+  ) ? 1 : 0;
 }
 
 module.exports = router;

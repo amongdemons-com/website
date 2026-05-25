@@ -4,14 +4,13 @@ const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { createRng } = require('../lib/rng');
 const { createTeam } = require('../lib/demon-factory');
-const { STARTER_TYPE_IDS, createHuntEnemies } = require('../lib/hunt-enemies');
+const { STARTER_TYPE_IDS } = require('../lib/hunt-enemies');
 const { closeOpenRunsForPlayer } = require('../lib/runs');
-const { createRunDemonFromCollection, enrichDemonPreferredPositions, resetRunDemon } = require('../lib/run-demons');
+const { enrichDemonPreferredPositions, resetRunDemon } = require('../lib/run-demons');
 
 const router = express.Router();
 const draftTokenSecret = crypto.randomBytes(32);
-const DRAFT_STARTER_COUNT = 6;
-const STARTING_TEAM_SIZE = 2;
+const DRAFT_STARTER_COUNT = 2;
 
 router.get('/runs/start-options', requireAuth, async (req, res) => {
   const draftSeed = crypto.randomInt(1, 4294967295);
@@ -43,110 +42,53 @@ router.get('/runs/start-options', requireAuth, async (req, res) => {
 router.post('/runs/start', requireAuth, async (req, res) => {
   const runId = crypto.randomUUID();
   const seed = crypto.randomInt(1, 4294967295);
-  const starters = await getStarterDemons(req);
-  const startingTeam = starters.map((starter, index) => resetRunDemon(starter, `player-${index + 1}`));
-  const enemies = await createHuntEnemies(createRng(seed + 1), 1, startingTeam.length);
+  const draft = await getStartingDraft(req);
+  const startingHand = draft.map((demon, index) => resetRunDemon(demon, `recruit-0-${index + 1}`));
   const state = {
-    currentFloor: 1,
-    hp: startingTeam.reduce((sum, demon) => sum + demon.hp, 0),
-    team: startingTeam,
-    enemies,
-    mapProgress: [{ floor: 1, type: 'battle', status: 'available' }]
+    currentFloor: 0,
+    hp: 0,
+    team: [],
+    enemies: [],
+    awaitingRecruit: true,
+    awaitingCollectionReinforcement: true,
+    collectionReinforcementLimit: 2,
+    mapProgress: []
   };
-  const rewards = [];
+  const rewards = startingHand.map((demon, index) => ({
+    rewardId: index + 1,
+    floor: 0,
+    type: 'recruit',
+    demon,
+    claimed: false,
+    recruited: false
+  }));
 
   await closeOpenRunsForPlayer(req.player.id);
 
   await db.query(
     `INSERT INTO runs (id, player_id, seed, status, floor, state, rewards)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [runId, req.player.id, seed, 'active', 1, JSON.stringify(state), JSON.stringify(rewards)]
+    [runId, req.player.id, seed, 'active', 0, JSON.stringify(state), JSON.stringify(rewards)]
   );
 
   res.status(201).json({
     runId,
     seed,
-    startingTeam
+    startingHand
   });
 });
 
-async function getStarterDemons(req) {
-  const choices = Array.isArray(req.body.starters)
-    ? req.body.starters
-    : [req.body];
+async function getStartingDraft(req) {
+  const draftToken = req.body?.draftToken;
+  const draftSeed = draftToken
+    ? verifyDraftToken(String(draftToken), req.player.id).draftSeed
+    : crypto.randomInt(1, 4294967295);
 
-  if (choices.length !== STARTING_TEAM_SIZE) {
-    const error = new Error(`Choose exactly ${STARTING_TEAM_SIZE} demons to begin the dungeon.`);
-    error.status = 400;
-    throw error;
-  }
-
-  const choiceKeys = new Set();
-  choices.forEach((choice) => {
-    const source = String(choice?.source || 'draft');
-    const value = source === 'collection' ? Number(choice?.demonId) : Number(choice?.draftIndex);
-    const key = `${source}:${value}`;
-    if (choiceKeys.has(key)) {
-      const error = new Error('Choose two different demons to begin the dungeon.');
-      error.status = 400;
-      throw error;
-    }
-    choiceKeys.add(key);
-  });
-
-  const draftToken = choices.find((choice) => String(choice?.source || 'draft') !== 'collection')?.draftToken || req.body.draftToken;
-  const draftData = draftToken ? verifyDraftToken(String(draftToken), req.player.id) : null;
-  const draft = draftData ? await createTeam(createRng(draftData.draftSeed), DRAFT_STARTER_COUNT, {
+  return createTeam(createRng(draftSeed), DRAFT_STARTER_COUNT, {
     prefix: 'draft',
     allowedTypeIds: STARTER_TYPE_IDS,
     allowedRarities: ['common', 'uncommon', 'rare']
-  }) : [];
-
-  const starters = [];
-  for (const choice of choices) {
-    starters.push(await getStarterDemon(req, choice, draft));
-  }
-
-  return starters;
-}
-
-async function getStarterDemon(req, choice, draft) {
-  choice = choice || {};
-  const source = String(choice.source || 'draft');
-
-  if (source === 'collection') {
-    const demonId = Number(choice.demonId);
-    if (!demonId) {
-      const error = new Error('demonId is required.');
-      error.status = 400;
-      throw error;
-    }
-
-    const [rows] = await db.query(
-      `SELECT id, source_demon_id, type_id, species, rarity, image_url, hp, atk, speed
-       FROM player_demons
-       WHERE id = ? AND player_id = ?
-       LIMIT 1`,
-      [demonId, req.player.id]
-    );
-
-    if (!rows.length) {
-      const error = new Error('Collection demon not found.');
-      error.status = 404;
-      throw error;
-    }
-
-    return createRunDemonFromCollection(rows[0], 'player-1');
-  }
-
-  const draftIndex = Number(choice.draftIndex);
-  if (!draft.length || !Number.isInteger(draftIndex) || draftIndex < 0 || draftIndex >= DRAFT_STARTER_COUNT) {
-    const error = new Error('draftToken and draftIndex are required.');
-    error.status = 400;
-    throw error;
-  }
-
-  return draft[draftIndex];
+  });
 }
 
 function signDraftToken(payload) {
@@ -195,7 +137,7 @@ function safeEqual(value, expected) {
 }
 
 function throwDraftTokenError() {
-  const error = new Error('Draft starter choices have expired. Refresh and choose again.');
+  const error = new Error('Starting hand options have expired. Refresh and try again.');
   error.status = 400;
   throw error;
 }

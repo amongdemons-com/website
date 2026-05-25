@@ -9,7 +9,6 @@
   const RUN_KEY = 'amongdemons-current-run';
   const BATTLE_SPEED_KEY = 'amongdemons-battle-speed';
   const MAX_DUNGEON_FLOOR = 20;
-  const STARTER_SELECTION_SIZE = 2;
   const MAX_DUNGEON_TEAM_SIZE = 6;
   const BATTLE_SPEED_OPTIONS = [0.5, 1, 2, 4];
   const session = window.AmongDemons.getSession();
@@ -33,8 +32,6 @@
     player: session.player || null,
     run: null,
     startOptions: null,
-    selectedStarters: [],
-    activeStarterTab: 'draft',
     selectedRecruitRewardId: null,
     selectedSwapInstanceId: null,
     selectedCashoutDemonKey: null,
@@ -44,6 +41,8 @@
     draggedFormationInstanceId: null,
     recruitSwapEffectIds: [],
     pendingHandFlowSources: null,
+    isEnemyPreviewDeferred: false,
+    enemyRevealEffectIds: [],
     battleHandPreview: null,
     recruitDraftTeam: null,
     recruitDraftPool: null,
@@ -57,7 +56,6 @@
     endNotice: null,
     endSummary: null,
     endedReplayRun: null,
-    promptedStarter: false,
     isLoading: true
   };
   const elements = {};
@@ -98,8 +96,6 @@
       'fightLogTitle',
       'fightLog',
       'fightLogActions',
-      'starterModal',
-      'starterModalBody',
       'teamChoiceModal',
       'teamChoiceModalTitle',
       'teamChoiceModalSubtitle',
@@ -114,8 +110,6 @@
       elements[id] = document.getElementById(id);
     });
 
-    elements.confirmStarterBtn = document.getElementById('confirmStarterBtn');
-    elements.battleBtn = document.getElementById('battleBtn');
     elements.logoutBtn = document.getElementById('logoutBtn');
   }
 
@@ -125,11 +119,9 @@
       window.location.href = '/login';
     });
 
-    elements.confirmStarterBtn.addEventListener('click', startRun);
     elements.cashoutConfirmBtn.addEventListener('click', cashOutDungeon);
     elements.confirmShortTeamBtn.addEventListener('click', continueShortTeam);
     window.addEventListener('resize', syncCompressedFormationLanes);
-    if (elements.battleBtn) elements.battleBtn.addEventListener('click', battle);
   }
 
   async function refreshAll() {
@@ -146,14 +138,12 @@
       } else if (await loadSavedRun()) {
         showPendingChoiceModal();
       } else {
-        await loadStartOptions();
-        renderRun();
-        if (!state.promptedStarter) {
-          state.promptedStarter = true;
-          openStarterModal();
-        }
+        await startRun();
       }
       setDungeonLoading(false);
+      if (canStartCurrentBattle()) {
+        await battle();
+      }
     } catch (error) {
       setDungeonLoading(false);
       handleAuthError(error);
@@ -201,60 +191,49 @@
   async function loadStartOptions() {
     state.startOptions = await api('/api/runs/start-options');
     state.collectionDemons = state.startOptions.collection || [];
-    state.selectedStarters = [];
-    state.activeStarterTab = 'draft';
-  }
-
-  async function openStarterModal() {
-    if (state.run) return;
-
-    try {
-      if (!state.startOptions) {
-        await loadStartOptions();
-      }
-      renderStarterModal();
-      getModal(elements.starterModal).show();
-    } catch (error) {
-      showError(error);
-    }
   }
 
   async function startRun() {
     if (state.run) return;
 
-    await withBusy(elements.confirmStarterBtn, async () => {
-      try {
-        if (!state.startOptions) {
-          await loadStartOptions();
-          renderStarterModal();
-          setMessage(`Choose ${STARTER_SELECTION_SIZE} demons to begin the dungeon.`, 'warning');
-          return;
-        }
+    try {
+      const payload = await createRunFromStartOptions();
+      state.combatLog = [];
+      state.endNotice = null;
+      state.endSummary = null;
+      state.endedReplayRun = null;
+      state.isRecruiting = false;
+      state.battleHandPreview = null;
+      state.startOptions = null;
+      localStorage.setItem(RUN_KEY, payload.runId);
+      await loadRun(payload.runId);
+    } catch (error) {
+      showError(error);
+    }
+  }
 
-        if (!hasRequiredStarterSelection()) {
-          setMessage(`Choose ${STARTER_SELECTION_SIZE} demons to begin the dungeon.`, 'warning');
-          return;
-        }
-
-        const payload = await api('/api/runs/start', {
-          method: 'POST',
-          body: { starters: state.selectedStarters }
-        });
-        state.combatLog = [];
-        state.endNotice = null;
-        state.endSummary = null;
-        state.isRecruiting = false;
-        state.battleHandPreview = null;
-        state.selectedStarters = [];
-        state.startOptions = null;
-        getModal(elements.starterModal).hide();
-        localStorage.setItem(RUN_KEY, payload.runId);
-        await loadRun(payload.runId);
-        await battle();
-      } catch (error) {
-        showError(error);
+  async function createRunFromStartOptions() {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (!state.startOptions) {
+        await loadStartOptions();
       }
-    });
+
+      try {
+        return await api('/api/runs/start', {
+          method: 'POST',
+          body: { draftToken: state.startOptions?.draftToken || null }
+        });
+      } catch (error) {
+        if (attempt === 0 && error.status === 400 && /expired/i.test(error.message || '')) {
+          state.startOptions = null;
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    throw new Error('Unable to start dungeon.');
   }
 
   async function loadRun(runId) {
@@ -284,7 +263,7 @@
     if (!state.run || state.isBattleAnimating || state.isResultAnimating) return;
     showCombatPanel();
 
-    await withBusy(elements.battleBtn, async () => {
+    await withBusy(null, async () => {
       try {
         setFightLogTitle('Fight Log');
         const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/battle`, { method: 'POST' });
@@ -303,6 +282,7 @@
           const handFlowSources = captureEnemyHandFlowSources();
           const resultOverlay = showBattleResultOverlay('victory');
           state.pendingHandFlowSources = handFlowSources;
+          state.isEnemyPreviewDeferred = true;
           await loadRun(state.run.runId);
           state.battleHandPreview = null;
           await resultOverlay;
@@ -370,6 +350,11 @@
     const runId = state.run.runId;
     const handPreview = cloneDemons(state.recruitDraftPool || []);
     const recruitChoice = getDraftRecruitPayload();
+    if (!recruitChoice.team.length && Number(state.run.currentFloor) <= 0) {
+      setMessage('Add at least one demon to your team before starting the dungeon.', 'warning');
+      return;
+    }
+
     const body = recruitChoice && recruitChoice.team.length
       ? recruitChoice
       : { skipRecruit: true };
@@ -659,7 +644,6 @@
         type: summary.completed || !message ? 'success' : 'warning'
       };
       getModal(elements.teamChoiceModal).hide();
-      getModal(elements.starterModal).hide();
       await loadStartOptions();
       renderRun();
     } catch (error) {
@@ -707,7 +691,7 @@
       renderTeamSideTitle();
       if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
       updateDungeonJoiner();
-      elements.runEmpty.innerHTML = state.endSummary ? renderDungeonEndScreen() : renderDungeonEmptyScreen();
+      elements.runEmpty.innerHTML = state.endSummary ? renderDungeonEndScreen() : renderEmptyText('Preparing dungeon...');
       bindDungeonEmptyButtons();
       renderFightLog();
       renderFightLogActions();
@@ -719,10 +703,10 @@
     const isHandStrategy = Boolean(state.isRecruiting && run.awaitingRecruit);
     const arena = elements.runPanel?.querySelector('.dungeon-arena');
     const team = isHandStrategy ? getRecruitPreviewTeam() : run.team || [];
-    const enemies = isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || [];
+    const enemies = isHandStrategy && state.isEnemyPreviewDeferred ? [] : (isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || []);
     const showBattleHand = Boolean(!isHandStrategy && state.isBattleAnimating && state.battleHandPreview?.length);
     const hand = isHandStrategy ? getRecruitPreviewHand() : (showBattleHand ? cloneDemons(state.battleHandPreview) : []);
-    const showHand = isHandStrategy || showBattleHand;
+    const showHand = true;
 
     elements.runPanel?.classList.toggle('has-hand', showHand);
     arena?.classList.toggle('is-hand-strategy', isHandStrategy);
@@ -730,7 +714,7 @@
       side: 'player',
       allowFormationDrag: run.status === 'active' && (!run.awaitingRecruit || state.isRecruiting) && !run.awaitingFinalPick
     });
-    elements.enemyGrid.innerHTML = renderDemonCards((run.team || []).length ? enemies : [], {
+    elements.enemyGrid.innerHTML = renderDemonCards((isHandStrategy || (run.team || []).length) ? enemies : [], {
       side: 'enemy',
       allowRecruitDrag: false
     });
@@ -744,141 +728,13 @@
     bindCollectionReinforcementPlaceholders();
     bindDemonDetailCards();
     playRecruitSwapEffect();
+    playEnemyRevealEffect();
     watchFormationLaneSizing();
     renderFightLog();
     renderFightLogActions();
     renderPhaseTitle();
     syncActionButtons();
     playPendingHandFlowAnimation(isHandStrategy);
-  }
-
-  function renderStarterModal() {
-    if (!state.startOptions) {
-      elements.starterModalBody.innerHTML = `
-        <img src="/app/images/demons/thumbnails/1.png" alt="">
-        <p class="mb-0 text-muted">Loading starter demons...</p>
-      `;
-      elements.confirmStarterBtn.disabled = true;
-      return;
-    }
-
-    const collection = state.startOptions.collection || [];
-    const draft = state.startOptions.draft || [];
-    const selectedTab = state.activeStarterTab === 'collection' ? 'collection' : 'draft';
-    const selectedCount = state.selectedStarters.length;
-
-    elements.starterModalBody.innerHTML = `
-      <div class="starter-picker w-100">
-        <div class="fight-log-notice text-muted mb-3">Choose ${STARTER_SELECTION_SIZE} demons. ${selectedCount} / ${STARTER_SELECTION_SIZE} selected.</div>
-        <ul class="nav nav-tabs starter-tabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link ${selectedTab === 'draft' ? 'active' : ''}" id="starterDraftTab" data-bs-toggle="tab" data-bs-target="#starterDraftPanel" type="button" role="tab" aria-controls="starterDraftPanel" aria-selected="${selectedTab === 'draft'}">New Demons</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link ${selectedTab === 'collection' ? 'active' : ''}" id="starterCollectionTab" data-bs-toggle="tab" data-bs-target="#starterCollectionPanel" type="button" role="tab" aria-controls="starterCollectionPanel" aria-selected="${selectedTab === 'collection'}">Collection</button>
-          </li>
-        </ul>
-        <div class="tab-content starter-tab-content">
-          <div class="tab-pane fade ${selectedTab === 'draft' ? 'show active' : ''}" id="starterDraftPanel" role="tabpanel" aria-labelledby="starterDraftTab" tabindex="0">
-            <div class="starter-card-grid">
-              ${draft.map((demon, index) => renderChoiceCard(demon, {
-                type: 'draft',
-                value: index,
-                selected: hasSelectedStarter('draft', index)
-              })).join('')}
-            </div>
-          </div>
-          <div class="tab-pane fade ${selectedTab === 'collection' ? 'show active' : ''}" id="starterCollectionPanel" role="tabpanel" aria-labelledby="starterCollectionTab" tabindex="0">
-            ${collection.length ? `
-              <div class="starter-card-grid">
-                ${collection.map((demon) => renderChoiceCard(demon, {
-                  type: 'collection',
-                  value: demon.id,
-                  selected: hasSelectedStarter('collection', demon.id)
-                })).join('')}
-              </div>
-            ` : '<p class="text-muted mb-0 py-3">No saved demons yet.</p>'}
-          </div>
-        </div>
-      </div>
-    `;
-    elements.confirmStarterBtn.disabled = !hasRequiredStarterSelection();
-    bindStarterTabs();
-    bindStarterButtons();
-  }
-
-  function renderChoiceCard(demon, options) {
-    return renderDungeonDemonCard(demon, {
-      tag: 'button',
-      className: 'hunt-choice-card',
-      active: options.selected,
-      suppressCollectionMissingTag: options.type === 'collection',
-      attributes: {
-        'data-choice-type': options.type,
-        'data-choice-value': options.value
-      }
-    });
-  }
-
-  function bindStarterTabs() {
-    const draftTab = document.getElementById('starterDraftTab');
-    const collectionTab = document.getElementById('starterCollectionTab');
-
-    if (draftTab) {
-      draftTab.addEventListener('click', () => {
-        state.activeStarterTab = 'draft';
-      });
-    }
-
-    if (collectionTab) {
-      collectionTab.addEventListener('click', () => {
-        state.activeStarterTab = 'collection';
-      });
-    }
-  }
-
-  function bindStarterButtons() {
-    document.querySelectorAll('.hunt-choice-card').forEach((button) => {
-      button.addEventListener('click', () => {
-        const type = button.dataset.choiceType;
-        const rawValue = Number(button.dataset.choiceValue);
-        toggleStarterSelection(type, rawValue);
-        renderStarterModal();
-      });
-    });
-  }
-
-  function hasRequiredStarterSelection() {
-    return state.selectedStarters.length === STARTER_SELECTION_SIZE;
-  }
-
-  function hasSelectedStarter(type, value) {
-    return state.selectedStarters.some((starter) => getStarterChoiceKey(starter) === `${type}:${value}`);
-  }
-
-  function toggleStarterSelection(type, value) {
-    const selected = type === 'collection'
-      ? { source: 'collection', demonId: value }
-      : { source: 'draft', draftToken: state.startOptions.draftToken, draftIndex: value };
-    const key = getStarterChoiceKey(selected);
-    const existingIndex = state.selectedStarters.findIndex((starter) => getStarterChoiceKey(starter) === key);
-
-    if (existingIndex >= 0) {
-      state.selectedStarters.splice(existingIndex, 1);
-      return;
-    }
-
-    if (state.selectedStarters.length >= STARTER_SELECTION_SIZE) {
-      state.selectedStarters.shift();
-    }
-
-    state.selectedStarters.push(selected);
-  }
-
-  function getStarterChoiceKey(starter) {
-    return starter.source === 'collection'
-      ? `collection:${starter.demonId}`
-      : `draft:${starter.draftIndex}`;
   }
 
   async function playCombatLog() {
@@ -1021,33 +877,6 @@
     `;
   }
 
-  function renderDungeonEmptyScreen() {
-    return `
-      <div class="dungeon-end-screen dungeon-empty-screen">
-        <div class="dungeon-end-copy">
-          <span class="hunt-phase-eyebrow">Ready</span>
-          <h2>No active dungeon</h2>
-          <p>Your last run has ended or was completed on another device. Start fresh when you are ready.</p>
-        </div>
-        <div class="dungeon-empty-preview" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-        <div class="dungeon-end-actions">
-          <a class="btn btn-outline-light" href="/play">
-            ${renderIcon('back')}
-            Back
-          </a>
-          <button class="btn btn-primary" id="startNewDungeonBtn" type="button">
-            ${renderIcon('play')}
-            Start Dungeon
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
   function bindDungeonEmptyButtons() {
     const startNewDungeonBtn = document.getElementById('startNewDungeonBtn');
 
@@ -1056,7 +885,7 @@
         state.endSummary = null;
         state.endNotice = null;
         state.endedReplayRun = null;
-        await openStarterModal();
+        await startRun();
         renderRun();
       });
     }
@@ -1549,7 +1378,10 @@
 
     let text = '';
     let type = '';
-    if (state.run?.awaitingRecruit) {
+    if (state.run?.awaitingRecruit && Number(state.run.currentFloor) <= 0) {
+      text = 'Preparation';
+      type = 'victory';
+    } else if (state.run?.awaitingRecruit) {
       text = 'Victory';
       type = 'victory';
     } else if (state.run?.status === 'defeated') {
@@ -1889,26 +1721,43 @@
     const sources = state.pendingHandFlowSources;
     if (!sources) return;
     state.pendingHandFlowSources = null;
-    if (!sources.length) return;
-    if (!isHandStrategy || !elements.dungeonHandGrid) return;
+    if (!sources.length || !isHandStrategy || !elements.dungeonHandGrid) {
+      revealDeferredEnemyPreview();
+      return;
+    }
 
     const targets = getHandFlowTargetCards();
-    if (!targets.length) return;
+    if (!targets.length) {
+      revealDeferredEnemyPreview();
+      return;
+    }
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    sources.slice(0, targets.length).forEach((source, index) => {
+    const flowAnimations = sources.slice(0, targets.length).map((source, index) => {
       const target = targets[index];
-      if (!target) return;
+      if (!target) return Promise.resolve();
 
       target.classList.add('is-hand-flow-arriving');
       if (reducedMotion) {
         target.classList.remove('is-hand-flow-arriving');
         markHandFlowLanded(target);
-        return;
+        return Promise.resolve();
       }
 
-      flowEnemyCardToHand(source, target, index);
+      return flowEnemyCardToHand(source, target, index);
     });
+
+    Promise.all(flowAnimations).then(() => {
+      revealDeferredEnemyPreview();
+    });
+  }
+
+  function revealDeferredEnemyPreview() {
+    if (!state.isEnemyPreviewDeferred) return;
+
+    state.isEnemyPreviewDeferred = false;
+    state.enemyRevealEffectIds = getRecruitPreviewEnemyTeam().map((demon) => demon.instanceId).filter(Boolean);
+    renderRun();
   }
 
   function getHandFlowTargetCards() {
@@ -1920,13 +1769,13 @@
     const targetRect = target.getBoundingClientRect();
     if (!targetRect.width || !targetRect.height) {
       target.classList.remove('is-hand-flow-arriving');
-      return;
+      return Promise.resolve();
     }
 
     const ghost = createHandFlowGhost(source);
     if (!ghost) {
       target.classList.remove('is-hand-flow-arriving');
-      return;
+      return Promise.resolve();
     }
 
     document.body.appendChild(ghost);
@@ -1934,7 +1783,7 @@
       ghost.remove();
       target.classList.remove('is-hand-flow-arriving');
       markHandFlowLanded(target);
-      return;
+      return Promise.resolve();
     }
 
     const deltaX = targetRect.left - source.rect.left;
@@ -1970,7 +1819,7 @@
       fill: 'both'
     });
 
-    animation.finished
+    return animation.finished
       .catch(() => {})
       .then(() => {
         ghost.remove();
@@ -2016,6 +1865,9 @@
   function ensureRecruitDraft() {
     if (!state.run?.awaitingRecruit || !state.isRecruiting) return;
     if (state.recruitDraftTeam && state.recruitDraftPool) return;
+    if (!state.pendingHandFlowSources) {
+      state.isEnemyPreviewDeferred = false;
+    }
 
     state.recruitDraftTeam = (state.run.team || []).map((demon, index) => ({
       ...getFullHpDemon(demon),
@@ -2044,7 +1896,7 @@
   }
 
   function getAvailableCollectionReinforcements() {
-    if (!state.run?.collectionReinforcementAvailable) return [];
+    if (!state.run?.collectionReinforcementAvailable || getSelectedCollectionReinforcements().length >= getCollectionReinforcementLimit()) return [];
     const existingCollectionIds = new Set((state.run.team || [])
       .map((demon) => Number(demon.collectionDemonId))
       .filter(Boolean));
@@ -2058,6 +1910,12 @@
 
     return (state.collectionDemons || [])
       .filter((demon) => !existingCollectionIds.has(Number(demon.id)) && !usedCollectionIds.has(Number(demon.id)));
+  }
+
+  function getCollectionReinforcementLimit() {
+    const limit = Number(state.run?.collectionReinforcementLimit);
+    if (limit > 0) return limit;
+    return state.run?.collectionReinforcementAvailable ? 1 : 0;
   }
 
   function getCollectionSlotKey(demon) {
@@ -2124,7 +1982,6 @@
           Loading
         </span>
       `;
-      elements.battleBtn = null;
       return;
     }
 
@@ -2134,9 +1991,8 @@
       state.run?.status === 'active' &&
       !state.run.awaitingFinalPick &&
       !state.isResultAnimating &&
-      (state.isBattleAnimating || !state.run.awaitingRecruit)
+      state.isBattleAnimating
     );
-    const canBattle = Boolean(canStartCurrentBattle() && !state.isBattleAnimating && !state.isResultAnimating);
     const hasCurrentFightLog = Boolean(isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
     const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
     const canViewLog = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
@@ -2144,12 +2000,6 @@
 
     elements.fightLogActions.innerHTML = `
       ${canShowSpeedControl ? renderBattleSpeedControl() : ''}
-      ${canBattle ? `
-        <button class="btn btn-hunt-battle btn-sm" id="battleBtn" type="button">
-          ${renderIcon('battle')}
-          Battle
-        </button>
-      ` : ''}
       ${canReplay ? `
         <button class="btn btn-warning btn-sm btn-icon-only" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
           ${renderIcon('replay')}
@@ -2180,13 +2030,11 @@
       ` : ''}
     `;
 
-    elements.battleBtn = document.getElementById('battleBtn');
-    if (elements.battleBtn) elements.battleBtn.addEventListener('click', battle);
     document.querySelectorAll('[data-battle-speed]').forEach((button) => {
       button.addEventListener('click', () => setBattleSpeed(Number(button.dataset.battleSpeed)));
     });
     const startButton = document.getElementById('fightLogStartBtn');
-    if (startButton) startButton.addEventListener('click', isDefeated ? startNewHuntAfterDefeat : openStarterModal);
+    if (startButton) startButton.addEventListener('click', isDefeated ? startNewHuntAfterDefeat : startRun);
     const replayButton = document.getElementById('fightLogReplayBtn');
     if (replayButton) replayButton.addEventListener('click', replayFight);
     const logToggleButton = document.getElementById('fightLogToggleBtn');
@@ -2221,12 +2069,12 @@
 
   async function startNewHuntAfterDefeat() {
     if (!state.run || state.run.status !== 'defeated') {
-      await openStarterModal();
+      await startRun();
       return;
     }
 
     await finishRun('Your team was defeated.');
-    await openStarterModal();
+    await startRun();
   }
 
   async function replayFight() {
@@ -2398,7 +2246,8 @@
 
   function renderCollectionReinforcementModal(query = '') {
     setTeamChoiceModalFullscreen(false);
-    const selected = getSelectedCollectionReinforcement();
+    const selected = getSelectedCollectionReinforcements();
+    const limit = getCollectionReinforcementLimit();
     const normalizedQuery = query.trim().toLowerCase();
     const candidates = getAvailableCollectionReinforcements()
       .filter((demon) => !normalizedQuery || [
@@ -2409,23 +2258,25 @@
       .sort(compareCollectionReinforcementDemons);
 
     elements.teamChoiceModalTitle.textContent = 'Collection reinforcement';
-    elements.teamChoiceModalSubtitle.textContent = selected
-      ? 'One collection demon is already staged. Choose another to replace it, or remove it from the draft.'
-      : 'Choose one collection demon to place in hand, then drag it into your team if you want it for the next floor.';
+    elements.teamChoiceModalSubtitle.textContent = selected.length
+      ? `${selected.length} / ${limit} collection demons staged. Remove one to choose another if the limit is full.`
+      : `Choose up to ${limit} collection demon${limit === 1 ? '' : 's'} to place in hand, then drag them into your team.`;
     elements.teamChoiceModalBody.innerHTML = `
-      ${selected ? `
+      ${selected.length ? `
         <div class="collection-reinforcement-current">
-          <div>
-            <span class="hunt-phase-eyebrow">Staged</span>
-            ${renderSharedDemonCard(selected, { className: 'collection-reinforcement-card' })}
-          </div>
-          <button class="btn btn-outline-warning btn-sm" id="removeCollectionReinforcementBtn" type="button">Remove</button>
+          ${selected.map((demon) => `
+            <div>
+              <span class="hunt-phase-eyebrow">Staged</span>
+              ${renderSharedDemonCard(demon, { className: 'collection-reinforcement-card' })}
+              <button class="btn btn-outline-warning btn-sm js-remove-collection-reinforcement" data-instance-id="${escapeHtml(demon.instanceId)}" type="button">Remove</button>
+            </div>
+          `).join('')}
         </div>
       ` : ''}
       <div class="collection-reinforcement-toolbar">
         <input class="form-control form-control-sm" id="collectionReinforcementSearch" type="search" value="${escapeHtml(query)}" placeholder="Search collection">
       </div>
-      <div class="starter-card-grid collection-reinforcement-grid">
+      <div class="choice-card-grid collection-reinforcement-grid">
         ${candidates.length ? candidates.map(renderCollectionReinforcementChoice).join('') : renderEmptyText('No available collection demons.')}
       </div>
     `;
@@ -2439,10 +2290,12 @@
       input?.focus();
       input?.setSelectionRange(input.value.length, input.value.length);
     });
-    document.getElementById('removeCollectionReinforcementBtn')?.addEventListener('click', () => {
-      removeCollectionReinforcement();
-      getModal(elements.teamChoiceModal).hide();
-      renderRun();
+    document.querySelectorAll('.js-remove-collection-reinforcement').forEach((button) => {
+      button.addEventListener('click', () => {
+        removeCollectionReinforcement(button.dataset.instanceId);
+        renderCollectionReinforcementModal(query);
+        renderRun();
+      });
     });
     document.querySelectorAll('.js-call-collection-reinforcement').forEach((button) => {
       button.addEventListener('click', () => {
@@ -2454,8 +2307,8 @@
   }
 
   function renderCollectionReinforcementChoice(demon) {
-    const existing = getSelectedCollectionReinforcement();
-    const selected = Number(existing?.collectionDemonId) === Number(demon.id);
+    const selected = getSelectedCollectionReinforcements()
+      .some((item) => Number(item.collectionDemonId) === Number(demon.id));
 
     return renderDungeonDemonCard(demon, {
       tag: 'button',
@@ -2488,21 +2341,25 @@
   }
 
   function getSelectedCollectionReinforcement() {
+    return getSelectedCollectionReinforcements()[0] || null;
+  }
+
+  function getSelectedCollectionReinforcements() {
     return [
       ...(state.recruitDraftTeam || []),
       ...(state.recruitDraftPool || [])
-    ].find((demon) => demon.recruitSource === 'collection') || null;
+    ].filter((demon) => demon.recruitSource === 'collection');
   }
 
   function addCollectionReinforcementToPool(demonId) {
     ensureRecruitDraft();
-    removeCollectionReinforcement();
+    if (getSelectedCollectionReinforcements().length >= getCollectionReinforcementLimit()) return;
 
     const demon = (state.collectionDemons || []).find((item) => Number(item.id) === Number(demonId));
     if (!demon) return;
 
     const position = getPreferredDemonPosition(demon);
-    state.recruitDraftPool.splice(getFirstDraftIndexForPosition(state.recruitDraftPool, position), 0, {
+    state.recruitDraftPool.splice(getCollectionHandInsertIndex(), 0, {
       ...getFullHpDemon(demon),
       instanceId: `collection-${demon.id}`,
       collectionDemonId: demon.id,
@@ -2514,9 +2371,18 @@
     syncRecruitDraftSelection();
   }
 
-  function removeCollectionReinforcement() {
-    state.recruitDraftTeam = (state.recruitDraftTeam || []).filter((demon) => demon.recruitSource !== 'collection');
-    state.recruitDraftPool = (state.recruitDraftPool || []).filter((demon) => demon.recruitSource !== 'collection');
+  function getCollectionHandInsertIndex() {
+    const firstNonCollectionIndex = (state.recruitDraftPool || []).findIndex((demon) => demon.recruitSource !== 'collection');
+    return firstNonCollectionIndex >= 0 ? firstNonCollectionIndex : (state.recruitDraftPool || []).length;
+  }
+
+  function removeCollectionReinforcement(instanceId = null) {
+    const shouldRemove = (demon) => (
+      demon.recruitSource === 'collection' &&
+      (!instanceId || demon.instanceId === instanceId)
+    );
+    state.recruitDraftTeam = (state.recruitDraftTeam || []).filter((demon) => !shouldRemove(demon));
+    state.recruitDraftPool = (state.recruitDraftPool || []).filter((demon) => !shouldRemove(demon));
     state.collectionReinforcementStagedInteracted = true;
     refreshRecruitDraftOrder();
     refreshRecruitDraftPoolOrder();
@@ -2531,7 +2397,9 @@
   }
 
   function markCollectionReinforcementStagedInteracted(instanceId = null) {
-    const staged = getSelectedCollectionReinforcement();
+    const staged = instanceId
+      ? getSelectedCollectionReinforcements().find((demon) => demon.instanceId === instanceId)
+      : getSelectedCollectionReinforcement();
     if (!staged || (instanceId && staged.instanceId !== instanceId)) return;
 
     state.collectionReinforcementStagedInteracted = true;
@@ -3452,6 +3320,26 @@
     });
   }
 
+  function playEnemyRevealEffect() {
+    if (!state.enemyRevealEffectIds.length) return;
+
+    const effectIds = state.enemyRevealEffectIds;
+    state.enemyRevealEffectIds = [];
+    effectIds.forEach((instanceId, index) => {
+      const card = document.querySelector(`#enemyGrid .hunt-demon-card[data-instance-id="${cssEscape(instanceId)}"]`);
+      if (!card) return;
+
+      card.classList.remove('is-enemy-revealed');
+      card.style.setProperty('--enemy-reveal-delay', `${index * 90}ms`);
+      void card.offsetWidth;
+      card.classList.add('is-enemy-revealed');
+      window.setTimeout(() => {
+        card.classList.remove('is-enemy-revealed');
+        card.style.removeProperty('--enemy-reveal-delay');
+      }, 980 + index * 90);
+    });
+  }
+
   function cssEscape(value) {
     if (window.CSS?.escape) return window.CSS.escape(String(value));
     return String(value).replace(/["\\]/g, '\\$&');
@@ -3690,7 +3578,7 @@
   }
 
   function renderDemonCards(demons, options = {}) {
-    if (!demons.length && !options.allowRecruitDrag) return renderEmptyText('No demons.');
+    if (!demons.length && !options.allowRecruitDrag && !options.allowFormationDrag) return renderEmptyText('No demons.');
     const normalizedDemons = demons.map((demon, index) => ({
       ...demon,
       position: getDemonPosition(demon, index)
@@ -3752,7 +3640,7 @@
       state.isRecruiting &&
       options.side === 'hand' &&
       state.run?.collectionReinforcementAvailable &&
-      !getSelectedCollectionReinforcement()
+      getSelectedCollectionReinforcements().length < getCollectionReinforcementLimit()
     );
   }
 
@@ -3916,7 +3804,7 @@
   }
 
   async function withBusy(button, task) {
-    button.disabled = true;
+    if (button) button.disabled = true;
     try {
       await task();
     } finally {
@@ -3939,12 +3827,7 @@
   }
 
   function syncActionButtons(fallbackButton) {
-    const hasActiveRun = Boolean(state.run && state.run.status === 'active');
-    const waitingForChoice = Boolean(state.run && (state.run.awaitingRecruit || state.run.awaitingFinalPick));
-
-    if (elements.battleBtn) elements.battleBtn.disabled = !hasActiveRun || waitingForChoice || state.isBattleAnimating || state.isResultAnimating;
-    if (elements.confirmStarterBtn) elements.confirmStarterBtn.disabled = !hasRequiredStarterSelection();
-    if (fallbackButton && ![elements.confirmStarterBtn, elements.battleBtn].includes(fallbackButton)) {
+    if (fallbackButton) {
       fallbackButton.disabled = false;
     }
   }
