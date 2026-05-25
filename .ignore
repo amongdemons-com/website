@@ -1,0 +1,8 @@
+# Keep default ripgrep/search output focused on source text.
+# Image assets are large and should be inspected explicitly when needed.
+public/app/images/**/*.png
+public/app/images/**/*.ico
+
+# Local dependency and repository internals.
+node_modules/
+.git/
