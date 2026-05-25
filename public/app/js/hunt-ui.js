@@ -39,10 +39,12 @@
     selectedSwapInstanceId: null,
     selectedCashoutDemonKey: null,
     isRecruiting: false,
+    isResultAnimating: false,
     draggedRecruitPoolInstanceId: null,
     draggedFormationInstanceId: null,
     recruitSwapEffectIds: [],
     pendingHandFlowSources: null,
+    battleHandPreview: null,
     recruitDraftTeam: null,
     recruitDraftPool: null,
     collectionDemons: null,
@@ -242,6 +244,7 @@
         state.endNotice = null;
         state.endSummary = null;
         state.isRecruiting = false;
+        state.battleHandPreview = null;
         state.selectedStarters = [];
         state.startOptions = null;
         getModal(elements.starterModal).hide();
@@ -278,7 +281,7 @@
   }
 
   async function battle() {
-    if (!state.run || state.isBattleAnimating) return;
+    if (!state.run || state.isBattleAnimating || state.isResultAnimating) return;
     showCombatPanel();
 
     await withBusy(elements.battleBtn, async () => {
@@ -294,18 +297,25 @@
         if (result.winner === 'enemy') {
           state.run.status = 'defeated';
           state.run.lastBattle = result.lastBattle || state.run.lastBattle;
+          state.battleHandPreview = null;
           await finishRun('Your team was defeated.', { defeated: true });
         } else {
           const handFlowSources = captureEnemyHandFlowSources();
-          await showBattleResultOverlay('victory');
+          const resultOverlay = showBattleResultOverlay('victory');
           state.pendingHandFlowSources = handFlowSources;
           await loadRun(state.run.runId);
+          state.battleHandPreview = null;
+          await resultOverlay;
           setMessage(getWinMessage(), 'success');
         }
       } catch (error) {
         showError(error);
       }
     });
+  }
+
+  function canStartCurrentBattle() {
+    return Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
   }
 
   function getWinMessage() {
@@ -357,6 +367,8 @@
   async function confirmRecruitReward() {
     if (!state.run) return;
 
+    const runId = state.run.runId;
+    const handPreview = cloneDemons(state.recruitDraftPool || []);
     const recruitChoice = getDraftRecruitPayload();
     const body = recruitChoice && recruitChoice.team.length
       ? recruitChoice
@@ -378,6 +390,7 @@
       state.isRecruiting = false;
       state.draggedRecruitPoolInstanceId = null;
       state.draggedFormationInstanceId = null;
+      state.battleHandPreview = handPreview;
       state.recruitDraftTeam = null;
       state.recruitDraftPool = null;
       state.combatLog = [];
@@ -386,9 +399,15 @@
       state.endSummary = null;
       state.endedReplayRun = null;
       getModal(elements.teamChoiceModal).hide();
-      await loadRun(state.run.runId);
+      await loadRun(runId);
+      if (canStartCurrentBattle()) {
+        await battle();
+        return;
+      }
+      state.battleHandPreview = null;
       setMessage(body.skipRecruit ? 'Continuing to the next floor.' : 'Team updated.', 'success');
     } catch (error) {
+      state.battleHandPreview = null;
       showError(error);
     }
   }
@@ -533,6 +552,7 @@
         state.collectionDemons = null;
         state.run = null;
         state.selectedCashoutDemonKey = null;
+        state.battleHandPreview = null;
         state.recruitDraftTeam = null;
         state.recruitDraftPool = null;
         state.combatLog = [];
@@ -575,6 +595,7 @@
         localStorage.removeItem(RUN_KEY);
         state.run = null;
         state.selectedCashoutDemonKey = null;
+        state.battleHandPreview = null;
         state.recruitDraftTeam = null;
         state.recruitDraftPool = null;
         state.combatLog = [];
@@ -617,6 +638,7 @@
       state.selectedRecruitRewardId = null;
       state.selectedSwapInstanceId = null;
       state.isRecruiting = false;
+      state.battleHandPreview = null;
       state.draggedRecruitPoolInstanceId = null;
       state.draggedFormationInstanceId = null;
       state.recruitDraftTeam = null;
@@ -698,9 +720,11 @@
     const arena = elements.runPanel?.querySelector('.dungeon-arena');
     const team = isHandStrategy ? getRecruitPreviewTeam() : run.team || [];
     const enemies = isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || [];
-    const hand = isHandStrategy ? getRecruitPreviewHand() : [];
+    const showBattleHand = Boolean(!isHandStrategy && state.isBattleAnimating && state.battleHandPreview?.length);
+    const hand = isHandStrategy ? getRecruitPreviewHand() : (showBattleHand ? cloneDemons(state.battleHandPreview) : []);
+    const showHand = isHandStrategy || showBattleHand;
 
-    elements.runPanel?.classList.toggle('has-hand', isHandStrategy);
+    elements.runPanel?.classList.toggle('has-hand', showHand);
     arena?.classList.toggle('is-hand-strategy', isHandStrategy);
     elements.teamGrid.innerHTML = renderDemonCards(team, {
       side: 'player',
@@ -710,11 +734,9 @@
       side: 'enemy',
       allowRecruitDrag: false
     });
-    renderHandBar(hand, isHandStrategy);
+    renderHandBar(hand, showHand, isHandStrategy);
     renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
-    if (elements.enemySideTitle) elements.enemySideTitle.textContent = isHandStrategy
-      ? `Floor ${getNextFloorNumber()} Enemies`
-      : 'Enemies';
+    if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
     updateDungeonJoiner();
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
@@ -1543,6 +1565,9 @@
   function showBattleResultOverlay(type) {
     const existing = document.querySelector('.battle-result-burst');
     if (existing) existing.remove();
+    state.isResultAnimating = true;
+    renderFightLogActions();
+    syncActionButtons();
 
     const overlay = document.createElement('div');
     overlay.className = `battle-result-burst is-${type}`;
@@ -1560,6 +1585,9 @@
     return new Promise((resolve) => {
       setTimeout(() => {
         overlay.remove();
+        state.isResultAnimating = false;
+        renderFightLogActions();
+        syncActionButtons();
         resolve();
       }, 2200);
     });
@@ -1819,11 +1847,7 @@
     return cloneDemons(state.run?.nextEnemies || []);
   }
 
-  function getNextFloorNumber() {
-    return Math.min(MAX_DUNGEON_FLOOR, (Number(state.run?.currentFloor) || 1) + 1);
-  }
-
-  function renderHandBar(hand, isVisible) {
+  function renderHandBar(hand, isVisible, isInteractive = false) {
     if (!elements.dungeonHandBar || !elements.dungeonHandGrid) return;
 
     elements.dungeonHandBar.classList.toggle('d-none', !isVisible);
@@ -1838,16 +1862,16 @@
       elements.dungeonHandTitle.textContent = `${count} ${count === 1 ? 'demon' : 'demons'}`;
     }
 
-    elements.dungeonHandGrid.innerHTML = renderHandCards(hand);
+    elements.dungeonHandGrid.innerHTML = renderHandCards(hand, isInteractive);
   }
 
-  function renderHandCards(demons) {
-    const placeholder = shouldShowCollectionReinforcementHandPlaceholder()
+  function renderHandCards(demons, isInteractive = false) {
+    const placeholder = isInteractive && shouldShowCollectionReinforcementHandPlaceholder()
       ? renderCollectionReinforcementPlaceholder('hand')
       : '';
     const cardHtml = demons.map((demon) => renderDemonCard(demon, {
       side: 'hand',
-      allowRecruitDrag: true
+      allowRecruitDrag: isInteractive
     })).join('');
 
     return `
@@ -2106,15 +2130,21 @@
 
     const isDefeated = state.run?.status === 'defeated';
     const canStart = !state.endSummary && (!state.run || isDefeated || state.run.status === 'ended');
-    const canBattle = Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
+    const canShowSpeedControl = Boolean(
+      state.run?.status === 'active' &&
+      !state.run.awaitingFinalPick &&
+      !state.isResultAnimating &&
+      (state.isBattleAnimating || !state.run.awaitingRecruit)
+    );
+    const canBattle = Boolean(canStartCurrentBattle() && !state.isBattleAnimating && !state.isResultAnimating);
     const hasCurrentFightLog = Boolean(isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
-    const canReplay = Boolean(!state.isBattleAnimating && hasCurrentFightLog);
-    const canViewLog = Boolean(!state.isBattleAnimating && hasCurrentFightLog);
-    const canChooseRecruit = Boolean(state.run?.awaitingRecruit && state.isRecruiting);
+    const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
+    const canViewLog = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
+    const canChooseRecruit = Boolean(!state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
 
     elements.fightLogActions.innerHTML = `
+      ${canShowSpeedControl ? renderBattleSpeedControl() : ''}
       ${canBattle ? `
-        ${renderBattleSpeedControl()}
         <button class="btn btn-hunt-battle btn-sm" id="battleBtn" type="button">
           ${renderIcon('battle')}
           Battle
@@ -2211,12 +2241,17 @@
       renderRun();
     }
 
-    if (wasRecruiting) state.isRecruiting = false;
+    const previousBattleHandPreview = state.battleHandPreview;
+    if (wasRecruiting) {
+      state.battleHandPreview = getRecruitPreviewHand();
+      state.isRecruiting = false;
+    }
     showCombatPanel();
     if (!lastBattle?.combatLog?.length) {
       if (state.combatLog.length) renderFightLog();
       if (wasRecruiting) {
         state.isRecruiting = true;
+        state.battleHandPreview = previousBattleHandPreview;
         renderRun();
       }
       if (replayingEndedRun) {
@@ -2241,6 +2276,7 @@
     } finally {
       if (wasRecruiting) {
         state.isRecruiting = true;
+        state.battleHandPreview = previousBattleHandPreview;
         renderRun();
       }
 
@@ -2710,6 +2746,7 @@
         if (!canDropRecruitOnPoolCard(payload, card.dataset.instanceId)) return;
 
         event.preventDefault();
+        event.stopPropagation();
         applyRecruitCardDrop(payload, 'pool', card.dataset.instanceId);
         renderRun();
       });
@@ -2748,6 +2785,7 @@
         if (!canDropRecruitOnTeamCard(payload, card.dataset.instanceId)) return;
 
         event.preventDefault();
+        event.stopPropagation();
         applyRecruitCardDrop(payload, 'team', card.dataset.instanceId);
         renderRun();
       });
@@ -2777,7 +2815,7 @@
 
         if (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) {
           event.preventDefault();
-          moveDraftTeamDemon(teamInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY));
+          applyTeamLaneDrop(teamInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
           renderRun();
           return;
         }
@@ -2817,7 +2855,7 @@
         if (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) {
           event.preventDefault();
           const lane = label.closest('.formation-lane')?.querySelector('.formation-lane-cards');
-          moveDraftTeamDemon(teamInstanceId, position, getLaneDropDraftIndex(lane, event.clientY));
+          applyTeamLaneDrop(teamInstanceId, lane, position, event.clientY, event.clientX);
           renderRun();
           return;
         }
@@ -2853,14 +2891,14 @@
 
         if ((payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && canReturnTeamDemonToPool(teamInstanceId)) {
           event.preventDefault();
-          returnTeamDemonToPool(teamInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY, event.clientX));
+          applyTeamToPoolLaneDrop(teamInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
           renderRun();
           return;
         }
 
         if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId)) {
           event.preventDefault();
-          moveDraftPoolDemon(poolInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY, event.clientX));
+          applyPoolLaneDrop(poolInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
           renderRun();
         }
       });
@@ -3091,7 +3129,7 @@
 
     const laneElement = lane || label?.closest('.formation-lane')?.querySelector('.formation-lane-cards');
     if (laneElement && canPointerDropOnLane(drag.payload, laneElement)) {
-      return { element: laneElement, kind: 'lane', insertIndex: getLaneDropDraftIndex(laneElement, y, x) };
+      return { element: laneElement, kind: 'lane', insertIndex: getLaneDropDraftIndex(laneElement, y, x), clientX: x, clientY: y };
     }
 
     return null;
@@ -3160,7 +3198,7 @@
       }
 
       if (position && target.element.closest('#dungeonHandGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId)) {
-        moveDraftPoolDemon(payload.instanceId, position, target.insertIndex);
+        applyPoolLaneDrop(payload.instanceId, target.element, position, target.clientY, target.clientX, target.insertIndex);
         renderRun();
       }
       return;
@@ -3171,13 +3209,13 @@
       if (!position) return;
 
       if (target.element.closest('#teamGrid')) {
-        moveDraftTeamDemon(payload.instanceId, position, target.insertIndex);
+        applyTeamLaneDrop(payload.instanceId, target.element, position, target.clientY, target.clientX, target.insertIndex);
         renderRun();
         return;
       }
 
       if (target.element.closest('#dungeonHandGrid') && canReturnTeamDemonToPool(payload.instanceId)) {
-        returnTeamDemonToPool(payload.instanceId, position, target.insertIndex);
+        applyTeamToPoolLaneDrop(payload.instanceId, target.element, position, target.clientY, target.clientX, target.insertIndex);
         renderRun();
       }
     }
@@ -3234,7 +3272,7 @@
 
     return [
       ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []),
-      ...(state.isRecruiting ? getRecruitPreviewHand() : []),
+      ...(state.isRecruiting ? getRecruitPreviewHand() : state.battleHandPreview || []),
       ...(state.isRecruiting ? getRecruitPreviewEnemyTeam() : state.run?.enemies || [])
     ].find((demon) => demon.instanceId === instanceId) || null;
   }
@@ -3425,11 +3463,38 @@
     syncRecruitDraftSelection();
   }
 
+  function applyTeamLaneDrop(instanceId, lane, position, clientY = null, clientX = null, insertIndex = null) {
+    const demon = findDraftDemon(state.recruitDraftTeam, instanceId);
+    if (!demon || !position) return;
+
+    const targetInstanceId = getLaneSwapTargetInstanceId(lane, instanceId, clientY, clientX);
+    if (targetInstanceId && getDemonPosition(demon) !== position) {
+      swapDraftDemons(state.recruitDraftTeam, instanceId, targetInstanceId);
+      refreshRecruitDraftOrder();
+      syncRecruitDraftSelection();
+      return;
+    }
+
+    moveDraftTeamDemon(instanceId, position, Number.isInteger(insertIndex) ? insertIndex : getLaneDropDraftIndex(lane, clientY, clientX));
+  }
+
   function moveDraftPoolDemon(instanceId, position, insertIndex = null) {
     const demon = findDraftDemon(state.recruitDraftPool, instanceId);
     moveDraftDemonWithin(state.recruitDraftPool, instanceId, getHandDropPosition(position, demon), insertIndex);
     refreshRecruitDraftPoolOrder();
     syncRecruitDraftSelection();
+  }
+
+  function applyPoolLaneDrop(instanceId, lane, position, clientY = null, clientX = null, insertIndex = null) {
+    const targetInstanceId = getLaneSwapTargetInstanceId(lane, instanceId, clientY, clientX);
+    if (targetInstanceId) {
+      swapDraftDemons(state.recruitDraftPool, instanceId, targetInstanceId);
+      refreshRecruitDraftPoolOrder();
+      syncRecruitDraftSelection();
+      return;
+    }
+
+    moveDraftPoolDemon(instanceId, position, Number.isInteger(insertIndex) ? insertIndex : getLaneDropDraftIndex(lane, clientY, clientX));
   }
 
   function canReturnTeamDemonToPool(instanceId) {
@@ -3455,6 +3520,16 @@
     syncRecruitDraftSelection();
   }
 
+  function applyTeamToPoolLaneDrop(instanceId, lane, position, clientY = null, clientX = null, insertIndex = null) {
+    const targetInstanceId = getLaneSwapTargetInstanceId(lane, instanceId, clientY, clientX);
+    if (targetInstanceId && canSwapTeamDemonIntoPool(instanceId, targetInstanceId)) {
+      swapTeamDemonIntoPool(instanceId, targetInstanceId);
+      return;
+    }
+
+    returnTeamDemonToPool(instanceId, position, Number.isInteger(insertIndex) ? insertIndex : getLaneDropDraftIndex(lane, clientY, clientX));
+  }
+
   function getHandDropPosition(position, demon) {
     return position === 'hand' ? getDemonPosition(demon) : position;
   }
@@ -3471,6 +3546,29 @@
 
   function getDraftPoolIndex(instanceId) {
     return (state.recruitDraftPool || []).findIndex((demon) => demon.instanceId === instanceId);
+  }
+
+  function getLaneSwapTargetInstanceId(lane, sourceInstanceId, clientY = null, clientX = null) {
+    const cards = Array.from(lane?.querySelectorAll('.hunt-demon-card[data-instance-id]') || [])
+      .filter((card) => card.dataset.instanceId !== sourceInstanceId);
+    if (!cards.length) return null;
+
+    const useHorizontalDistance = isHandLane(lane) && Number.isFinite(clientX);
+    const pointerCoordinate = useHorizontalDistance ? clientX : clientY;
+    if (!Number.isFinite(pointerCoordinate)) return cards[0].dataset.instanceId || null;
+
+    return cards
+      .map((card) => {
+        const rect = card.getBoundingClientRect();
+        const center = useHorizontalDistance
+          ? rect.left + (rect.width / 2)
+          : rect.top + (rect.height / 2);
+        return {
+          instanceId: card.dataset.instanceId,
+          distance: Math.abs(pointerCoordinate - center)
+        };
+      })
+      .sort((a, b) => a.distance - b.distance)[0]?.instanceId || null;
   }
 
   function getLaneDropDraftIndex(lane, clientY = null, clientX = null) {
@@ -3844,7 +3942,7 @@
     const hasActiveRun = Boolean(state.run && state.run.status === 'active');
     const waitingForChoice = Boolean(state.run && (state.run.awaitingRecruit || state.run.awaitingFinalPick));
 
-    if (elements.battleBtn) elements.battleBtn.disabled = !hasActiveRun || waitingForChoice || state.isBattleAnimating;
+    if (elements.battleBtn) elements.battleBtn.disabled = !hasActiveRun || waitingForChoice || state.isBattleAnimating || state.isResultAnimating;
     if (elements.confirmStarterBtn) elements.confirmStarterBtn.disabled = !hasRequiredStarterSelection();
     if (fallbackButton && ![elements.confirmStarterBtn, elements.battleBtn].includes(fallbackButton)) {
       fallbackButton.disabled = false;
