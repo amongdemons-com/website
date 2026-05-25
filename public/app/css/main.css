@@ -788,6 +788,33 @@ body.dungeon-page .navbar {
     animation: recruit-swap-confirm 720ms cubic-bezier(0.18, 0.84, 0.18, 1);
 }
 
+.hand-flow-ghost {
+    position: fixed;
+    z-index: 1200;
+    pointer-events: none;
+    transform-origin: 0 0;
+    will-change: transform, opacity, filter;
+}
+
+.hand-flow-ghost .hunt-demon-card,
+.hunt-demon-card.is-hand-flow-card {
+    width: 100%;
+    height: 100%;
+    flex: none;
+    box-shadow:
+        0 18px 36px rgba(0,0,0,0.36),
+        0 0 24px rgba(232,199,106,0.18);
+}
+
+.hunt-demon-card.is-hand-flow-arriving {
+    opacity: 0.16;
+    transform: translateY(0.25rem) scale(0.96);
+}
+
+.hunt-demon-card.is-hand-flow-landed {
+    animation: hand-flow-landed 760ms cubic-bezier(0.18, 0.84, 0.18, 1);
+}
+
 .hunt-demon-card.is-new-encounter {
     box-shadow:
         0 0 0 2px rgba(141,231,255,0.18),
@@ -1968,28 +1995,6 @@ body.dungeon-page .navbar {
     }
 }
 
-.swap-choice {
-    width: 100%;
-    height: 100%;
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 6px;
-    background: rgba(0,0,0,0.16);
-    color: #fff;
-    text-align: left;
-    padding: 0.75rem;
-    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
-
-.swap-choice:hover,
-.swap-choice.active {
-    border-color: rgba(65,168,95,0.8);
-    box-shadow: 0 0 0 2px rgba(65,168,95,0.18);
-}
-
-.swap-choice.active {
-    transform: translateY(-1px);
-}
-
 .hunt-choice-card {
     border-color: color-mix(in srgb, var(--rarity-color, #D1D5D8) 62%, rgba(255,255,255,0.16));
     color: #fff;
@@ -2008,76 +2013,6 @@ body.dungeon-page .navbar {
 
 .hunt-choice-card.active {
     transform: scale(1.055);
-}
-
-.swap-choice {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-}
-
-.swap-choice img {
-    width: 54px;
-    height: 54px;
-    object-fit: cover;
-    border-radius: 4px;
-    flex: 0 0 auto;
-}
-
-.swap-choice span {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: bold;
-}
-
-.team-editor-card {
-    display: grid;
-    grid-template-columns: 88px minmax(0, 1fr);
-    gap: 0.85rem;
-    align-items: start;
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 6px;
-    background: rgba(0,0,0,0.16);
-    color: #fff;
-    text-align: left;
-    padding: 0.75rem;
-    width: 100%;
-}
-
-.team-editor-card.active {
-    border-color: rgba(250,197,28,0.8);
-    box-shadow: 0 0 0 2px rgba(250,197,28,0.16);
-}
-
-.team-editor-card.is-clickable:not(:disabled) {
-    cursor: pointer;
-}
-
-.team-editor-card:disabled {
-    opacity: 0.72;
-}
-
-.team-editor-card img {
-    width: 88px;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    border-radius: 4px;
-}
-
-.team-editor-card-body {
-    min-width: 0;
-}
-
-.team-editor-card .combat-stat-strip {
-    margin-top: 0.25rem;
-}
-
-.swap-note {
-    color: #FAC51C;
-    font-size: 0.78rem;
-    font-weight: bold;
 }
 
 .vs-divider {
@@ -2257,15 +2192,6 @@ body.dungeon-page .navbar {
     background: rgba(226,80,65,0.05);
 }
 
-.battle-side-enemy.is-recruit-side .formation-lane {
-    border-color: rgba(65,168,95,0.24);
-    background: rgba(65,168,95,0.07);
-}
-
-.battle-side-enemy.is-recruit-side .battle-side-heading {
-    color: #80d697;
-}
-
 .dungeon-vs {
     align-self: stretch;
     flex-direction: column;
@@ -2274,44 +2200,6 @@ body.dungeon-page .navbar {
     width: 3.25rem;
     margin: 1.75rem 0 0;
     font-size: 1.55rem;
-}
-
-.dungeon-vs.is-recruiting {
-    gap: 0.55rem;
-    width: 3.4rem;
-    color: #80d697;
-    font-size: 2.6rem;
-}
-
-.dungeon-vs-stack {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.28rem;
-    padding: 0.28rem 0 0.28rem 3px;
-    background: linear-gradient(90deg, rgba(7,27,32,0), rgba(7,27,32,0.88) 22%, rgba(7,27,32,0.88) 78%, rgba(7,27,32,0));
-}
-
-.dungeon-vs-symbol {
-    display: block;
-    line-height: 0.78;
-}
-
-.dungeon-vs-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2.6rem;
-    white-space: nowrap;
-    border: 1px solid rgba(65,168,95,0.36);
-    border-radius: 4px;
-    background: rgba(65,168,95,0.1);
-    color: #80d697;
-    font-size: 0.74rem;
-    font-weight: 800;
-    line-height: 1;
-    padding: 0.18rem 0.35rem;
 }
 
 .dungeon-vs::before,
@@ -2361,6 +2249,80 @@ body.dungeon-page .navbar {
 #teamGrid,
 #enemyGrid {
     height: 100%;
+    min-height: 0;
+}
+
+#runPanel {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
+}
+
+#runPanel.d-none {
+    display: none !important;
+}
+
+#runPanel.has-hand {
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0.75rem;
+}
+
+.dungeon-hand-bar {
+    display: grid;
+    grid-template-rows: auto minmax(0, auto);
+    gap: 0.45rem;
+    min-height: 0;
+    border: 1px solid rgba(232,199,106,0.24);
+    border-radius: 6px;
+    background: rgba(7,18,20,0.72);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 -10px 30px rgba(0,0,0,0.2);
+    padding: 0.55rem;
+}
+
+.dungeon-hand-bar.d-none {
+    display: none !important;
+}
+
+.dungeon-hand-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+    color: #dce6ee;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.dungeon-hand-grid {
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.15rem 0.2rem 0.25rem;
+    scrollbar-color: rgba(232,199,106,0.48) rgba(255,255,255,0.06);
+}
+
+.dungeon-hand-cards {
+    --dungeon-hand-card-width: clamp(5.6rem, 9vw, 7.25rem);
+    flex-direction: row;
+    justify-content: flex-start;
+    width: max-content;
+    min-width: 100%;
+    min-height: calc(var(--dungeon-hand-card-width) * 1.333 + 0.4rem);
+    padding: 0.18rem;
+}
+
+.dungeon-hand-cards .hunt-demon-card,
+.dungeon-hand-cards .collection-reinforcement-placeholder,
+.dungeon-hand-empty {
+    width: var(--dungeon-hand-card-width);
+    height: calc(var(--dungeon-hand-card-width) * 1.333);
+    flex: 0 0 var(--dungeon-hand-card-width);
+}
+
+.dungeon-hand-empty {
     min-height: 0;
 }
 
@@ -2741,22 +2703,6 @@ body.dungeon-page .navbar {
         font-size: 0.6rem;
     }
 
-    .dungeon-vs.is-recruiting {
-        width: 2.6rem;
-        font-size: 1.4rem;
-    }
-
-    .dungeon-vs-stack {
-        gap: 0.2rem;
-        padding: 0.2rem 0 0.2rem 3px;
-    }
-
-    .dungeon-vs-count {
-        min-width: 2.35rem;
-        padding: 0.12rem 0.24rem;
-        font-size: 0.58rem;
-    }
-
     .dungeon-vs::before,
     .dungeon-vs::after {
         min-height: 1.75rem;
@@ -2807,14 +2753,6 @@ body.dungeon-page .navbar {
 }
 
 @media (max-width: 420px) {
-    .team-editor-card {
-        grid-template-columns: 68px minmax(0, 1fr);
-    }
-
-    .team-editor-card img {
-        width: 68px;
-    }
-
     .formation-lane-cards {
         display: grid;
         grid-template-columns: 1fr;
@@ -2887,6 +2825,40 @@ body.dungeon-page .navbar {
 
     .hunt-demon-card {
         flex-basis: 100%;
+    }
+
+    #runPanel.has-hand {
+        gap: 0.35rem;
+    }
+
+    .dungeon-arena.is-hand-strategy {
+        --dungeon-demon-card-width: clamp(3.35rem, calc((100vw - 4.4rem) / 4), 5.2rem);
+        --dungeon-demon-card-height: calc(var(--dungeon-demon-card-width) * 1.333);
+    }
+
+    .dungeon-hand-bar {
+        gap: 0.28rem;
+        padding: 0.35rem;
+    }
+
+    .dungeon-hand-header {
+        font-size: 0.62rem;
+    }
+
+    .dungeon-hand-grid {
+        padding: 0.05rem 0.08rem 0.18rem;
+    }
+
+    .dungeon-hand-cards {
+        --dungeon-hand-card-width: clamp(3.6rem, 18vw, 4.9rem);
+        display: flex;
+        grid-template-columns: none;
+        gap: 0.32rem;
+        min-height: calc(var(--dungeon-hand-card-width) * 1.333 + 0.2rem);
+    }
+
+    .dungeon-hand-cards .hunt-demon-card-title {
+        display: none;
     }
 }
 
@@ -3627,6 +3599,27 @@ body.dungeon-page .navbar {
     }
 }
 
+@keyframes hand-flow-landed {
+    0% {
+        opacity: 0.68;
+        transform: translateY(0.16rem) scale(0.96);
+        box-shadow: 0 0 0 0 rgba(232,199,106,0);
+    }
+    42% {
+        opacity: 1;
+        transform: translateY(0) scale(1.045);
+        border-color: rgba(232,199,106,0.95);
+        box-shadow:
+            0 0 0 3px rgba(232,199,106,0.24),
+            0 0 24px rgba(111,214,189,0.3);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        box-shadow: 0 0 0 0 rgba(232,199,106,0);
+    }
+}
+
 @keyframes collection-reinforcement-pulse {
     0%,
     100% {
@@ -3687,6 +3680,16 @@ body.dungeon-page .navbar {
     .hunt-demon-card.is-swap-confirmed {
         animation: none;
         box-shadow: 0 0 0 2px rgba(250,197,28,0.24), 0 0 18px rgba(65,168,95,0.2);
+    }
+
+    .hunt-demon-card.is-hand-flow-arriving {
+        opacity: 1;
+        transform: none;
+    }
+
+    .hunt-demon-card.is-hand-flow-landed {
+        animation: none;
+        box-shadow: 0 0 0 2px rgba(232,199,106,0.18), 0 0 18px rgba(111,214,189,0.18);
     }
 
     .hunt-demon-card.is-collection-reinforcement-attention,
@@ -3972,8 +3975,6 @@ a:hover {
 }
 
 .stat-box,
-.team-editor-card,
-.swap-choice,
 .cashout-demon-card,
 .reward-item,
 .hunt-phase-panel {
@@ -4325,11 +4326,6 @@ a:hover {
     background: rgba(156,122,200,0.08);
 }
 
-.battle-side-enemy.is-recruit-side .formation-lane {
-    border-color: rgba(128,214,151,0.3);
-    background: rgba(128,214,151,0.09);
-}
-
 .formation-lane-label,
 .battle-side-heading {
     color: #cfe2dc;
@@ -4344,11 +4340,8 @@ a:hover {
     color: var(--ad-gold);
 }
 
-.dungeon-vs.is-recruiting,
-.battle-side-enemy.is-recruit-side .battle-side-heading,
 .dungeon-battle-outcome.is-victory,
-.battle-side-count,
-.dungeon-vs-count {
+.battle-side-count {
     color: var(--ad-green);
 }
 
@@ -4368,7 +4361,6 @@ a:hover {
 }
 
 .demon-card-grid .col,
-.team-editor-list .col,
 #cashoutModalBody .col,
 .reward-item {
     display: flex;
@@ -4381,14 +4373,12 @@ a:hover {
 }
 
 .demon-card-grid .hunt-demon-card,
-.team-editor-list .hunt-demon-card,
 #cashoutModalBody .hunt-demon-card,
 .reward-item .hunt-demon-card {
     width: min(100%, 9.25rem);
     flex: 0 0 auto;
 }
 
-.hunt-demon-card.team-editor-card,
 .hunt-demon-card.cashout-demon-card,
 .hunt-demon-card.reward-demon-card {
     display: block;
@@ -4432,7 +4422,6 @@ a:hover {
 .hunt-demon-card.active,
 .hunt-choice-card:hover,
 .hunt-choice-card.active,
-.team-editor-card.active,
 .cashout-demon-card.active {
     border-color: rgba(232,199,106,0.8);
     box-shadow: 0 0 0 2px rgba(232,199,106,0.16), 0 0 20px rgba(232,199,106,0.16);
@@ -4487,7 +4476,6 @@ a:hover {
 }
 
 .hunt-phase-eyebrow,
-.swap-note,
 .dungeon-reward-card .dungeon-reward-title,
 .current-player-rank td:first-child {
     color: var(--ad-gold) !important;

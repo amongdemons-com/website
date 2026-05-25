@@ -39,16 +39,13 @@
     selectedSwapInstanceId: null,
     selectedCashoutDemonKey: null,
     isRecruiting: false,
-    showPostWinActions: false,
-    draggedRewardId: null,
     draggedRecruitPoolInstanceId: null,
     draggedFormationInstanceId: null,
-    selectedRecruitPoolInstanceId: null,
     recruitSwapEffectIds: [],
+    pendingHandFlowSources: null,
     recruitDraftTeam: null,
     recruitDraftPool: null,
     collectionDemons: null,
-    collectionReinforcements: null,
     collectionReinforcementPlaceholderInteracted: false,
     collectionReinforcementStagedInteracted: true,
     combatLog: [],
@@ -89,6 +86,9 @@
       'runPanel',
       'teamGrid',
       'enemyGrid',
+      'dungeonHandBar',
+      'dungeonHandGrid',
+      'dungeonHandTitle',
       'teamSideTitle',
       'enemySideTitle',
       'dungeonJoiner',
@@ -186,7 +186,7 @@
       await ensureCollectionLoaded();
       state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
       state.isRecruiting = Boolean(state.run.awaitingRecruit);
-      state.showPostWinActions = false;
+      if (state.isRecruiting) prepareRecruitStrategyState();
       localStorage.setItem(RUN_KEY, state.run.runId);
       renderRun();
       return true;
@@ -242,7 +242,6 @@
         state.endNotice = null;
         state.endSummary = null;
         state.isRecruiting = false;
-        state.showPostWinActions = false;
         state.selectedStarters = [];
         state.startOptions = null;
         getModal(elements.starterModal).hide();
@@ -255,13 +254,13 @@
     });
   }
 
-  async function loadRun(runId, options = {}) {
+  async function loadRun(runId) {
     try {
       state.run = await api(`/api/runs/${encodeURIComponent(runId)}`);
       await ensureCollectionLoaded();
       state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
-      state.showPostWinActions = Boolean(options.showPostWinActions && state.run.awaitingRecruit);
-      state.isRecruiting = Boolean(state.run.awaitingRecruit && !state.showPostWinActions);
+      state.isRecruiting = Boolean(state.run.awaitingRecruit);
+      if (state.isRecruiting) prepareRecruitStrategyState();
       if (!state.isRecruiting) {
         state.recruitDraftTeam = null;
         state.recruitDraftPool = null;
@@ -297,8 +296,10 @@
           state.run.lastBattle = result.lastBattle || state.run.lastBattle;
           await finishRun('Your team was defeated.', { defeated: true });
         } else {
+          const handFlowSources = captureEnemyHandFlowSources();
           await showBattleResultOverlay('victory');
-          await loadRun(state.run.runId, { showPostWinActions: true });
+          state.pendingHandFlowSources = handFlowSources;
+          await loadRun(state.run.runId);
           setMessage(getWinMessage(), 'success');
         }
       } catch (error) {
@@ -309,15 +310,26 @@
 
   function getWinMessage() {
     if (state.run?.status === 'completed') return `Floor ${MAX_DUNGEON_FLOOR} cleared. Choose your final demon.`;
-    return 'Battle won. Choose one defeated demon for the next fight.';
+    return 'Battle won. Adjust your team from hand, then continue.';
   }
 
-  function selectRecruitReward(rewardId) {
-    if (!state.run) return;
-
-    state.selectedRecruitRewardId = rewardId;
-    state.selectedSwapInstanceId = null;
-    renderTeamChoiceModal();
+  function captureEnemyHandFlowSources() {
+    return Array.from(document.querySelectorAll('#enemyGrid .hunt-demon-card[data-instance-id]'))
+      .map((card, index) => {
+        const rect = card.getBoundingClientRect();
+        return {
+          index,
+          instanceId: card.dataset.instanceId,
+          html: card.outerHTML,
+          rect: {
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height
+          }
+        };
+      })
+      .filter((source) => source.rect.width > 0 && source.rect.height > 0);
   }
 
   function requestRecruitContinue() {
@@ -364,11 +376,8 @@
       state.selectedRecruitRewardId = null;
       state.selectedSwapInstanceId = null;
       state.isRecruiting = false;
-      state.showPostWinActions = false;
-      state.draggedRewardId = null;
       state.draggedRecruitPoolInstanceId = null;
       state.draggedFormationInstanceId = null;
-      state.selectedRecruitPoolInstanceId = null;
       state.recruitDraftTeam = null;
       state.recruitDraftPool = null;
       state.combatLog = [];
@@ -526,7 +535,6 @@
         state.selectedCashoutDemonKey = null;
         state.recruitDraftTeam = null;
         state.recruitDraftPool = null;
-        state.selectedRecruitPoolInstanceId = null;
         state.combatLog = [];
         state.combatDemons = new Map();
         state.endSummary = {
@@ -569,7 +577,6 @@
         state.selectedCashoutDemonKey = null;
         state.recruitDraftTeam = null;
         state.recruitDraftPool = null;
-        state.selectedRecruitPoolInstanceId = null;
         state.combatLog = [];
         state.combatDemons = new Map();
         state.endSummary = {
@@ -610,11 +617,8 @@
       state.selectedRecruitRewardId = null;
       state.selectedSwapInstanceId = null;
       state.isRecruiting = false;
-      state.showPostWinActions = false;
-      state.draggedRewardId = null;
       state.draggedRecruitPoolInstanceId = null;
       state.draggedFormationInstanceId = null;
-      state.selectedRecruitPoolInstanceId = null;
       state.recruitDraftTeam = null;
       state.recruitDraftPool = null;
       state.endSummary = {
@@ -675,10 +679,12 @@
 
     if (!run) {
       if (laneResizeObserver) laneResizeObserver.disconnect();
-      if (elements.teamSideTitle) elements.teamSideTitle.textContent = 'Your Team';
+      elements.runPanel?.classList.remove('has-hand');
+      elements.runPanel?.querySelector('.dungeon-arena')?.classList.remove('is-hand-strategy');
+      elements.dungeonHandBar?.classList.add('d-none');
+      renderTeamSideTitle();
       if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
-      updateDungeonJoiner(false);
-      document.querySelector('.battle-side-enemy')?.classList.remove('is-recruit-side');
+      updateDungeonJoiner();
       elements.runEmpty.innerHTML = state.endSummary ? renderDungeonEndScreen() : renderDungeonEmptyScreen();
       bindDungeonEmptyButtons();
       renderFightLog();
@@ -688,26 +694,28 @@
       return;
     }
 
-    const team = state.isRecruiting ? getRecruitPreviewTeam() : run.team || [];
-    const enemies = state.isRecruiting ? getRecruitPreviewEnemies() : run.enemies || [];
+    const isHandStrategy = Boolean(state.isRecruiting && run.awaitingRecruit);
+    const arena = elements.runPanel?.querySelector('.dungeon-arena');
+    const team = isHandStrategy ? getRecruitPreviewTeam() : run.team || [];
+    const enemies = isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || [];
+    const hand = isHandStrategy ? getRecruitPreviewHand() : [];
+
+    elements.runPanel?.classList.toggle('has-hand', isHandStrategy);
+    arena?.classList.toggle('is-hand-strategy', isHandStrategy);
     elements.teamGrid.innerHTML = renderDemonCards(team, {
       side: 'player',
-      allowFormationDrag: run.status === 'active' && !run.awaitingRecruit && !run.awaitingFinalPick
+      allowFormationDrag: run.status === 'active' && (!run.awaitingRecruit || state.isRecruiting) && !run.awaitingFinalPick
     });
     elements.enemyGrid.innerHTML = renderDemonCards((run.team || []).length ? enemies : [], {
       side: 'enemy',
-      allowRecruitDrag: state.isRecruiting
+      allowRecruitDrag: false
     });
-    if (elements.teamSideTitle) {
-      if (state.isRecruiting) {
-        elements.teamSideTitle.textContent = 'Your Team';
-      } else {
-        elements.teamSideTitle.textContent = 'Your Team';
-      }
-    }
-    if (elements.enemySideTitle) elements.enemySideTitle.textContent = state.isRecruiting ? 'Recruit' : 'Enemies';
-    updateDungeonJoiner(state.isRecruiting, team.length, getRecruitTeamLimit());
-    document.querySelector('.battle-side-enemy')?.classList.toggle('is-recruit-side', state.isRecruiting);
+    renderHandBar(hand, isHandStrategy);
+    renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
+    if (elements.enemySideTitle) elements.enemySideTitle.textContent = isHandStrategy
+      ? `Floor ${getNextFloorNumber()} Enemies`
+      : 'Enemies';
+    updateDungeonJoiner();
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
     bindPointerDragAndDrop();
@@ -719,6 +727,7 @@
     renderFightLogActions();
     renderPhaseTitle();
     syncActionButtons();
+    playPendingHandFlowAnimation(isHandStrategy);
   }
 
   function renderStarterModal() {
@@ -848,11 +857,6 @@
     return starter.source === 'collection'
       ? `collection:${starter.demonId}`
       : `draft:${starter.draftIndex}`;
-  }
-
-  function renderRewardsPanel() {
-    renderRewards(state.run.rewards || []);
-    bindRewardButtons();
   }
 
   async function playCombatLog() {
@@ -1523,7 +1527,7 @@
 
     let text = '';
     let type = '';
-    if (state.run?.awaitingRecruit && state.showPostWinActions) {
+    if (state.run?.awaitingRecruit) {
       text = 'Victory';
       type = 'victory';
     } else if (state.run?.status === 'defeated') {
@@ -1561,12 +1565,20 @@
     });
   }
 
-  function updateDungeonJoiner(isRecruiting, teamCount = 0, teamLimit = 0) {
+  function renderTeamSideTitle(teamCount = null, teamLimit = null) {
+    if (!elements.teamSideTitle) return;
+
+    const countHtml = Number.isFinite(teamCount) && Number.isFinite(teamLimit)
+      ? `<span class="battle-side-count" aria-label="${teamCount} of ${teamLimit} team slots used">${teamCount}/${teamLimit}</span>`
+      : '';
+
+    elements.teamSideTitle.innerHTML = `<span>Your Team</span>${countHtml ? ` ${countHtml}` : ''}`;
+  }
+
+  function updateDungeonJoiner() {
     if (!elements.dungeonJoiner) return;
-    elements.dungeonJoiner.classList.toggle('is-recruiting', Boolean(isRecruiting));
-    elements.dungeonJoiner.innerHTML = isRecruiting
-      ? `<span class="dungeon-vs-stack"><span class="dungeon-vs-symbol">+</span><span class="dungeon-vs-count">${teamCount} / ${teamLimit}</span></span>`
-      : '<span>VS</span>';
+    elements.dungeonJoiner.classList.remove('is-recruiting');
+    elements.dungeonJoiner.innerHTML = '<span>VS</span>';
   }
 
   function showCombatPanel() {
@@ -1626,11 +1638,12 @@
 
   function renderRewardTags(extraClass = '') {
     const earned = state.run?.earned || { xp: 0, souls: 0 };
+    const handCount = state.run?.awaitingRecruit ? getCurrentRecruitRewards().length : 1;
     const showLabel = !extraClass.includes('dungeon-header-rewards');
     return `
       <div class="dungeon-meta-group dungeon-reward-meta ${extraClass}">
         ${showLabel ? '<span class="hunt-phase-eyebrow">Rewards</span>' : ''}
-        <span>+1 Demon</span>
+        <span>${handCount} ${handCount === 1 ? 'Demon' : 'Demons'}</span>
         <span>${earned.xp || 0} XP</span>
         <span>${earned.souls || 0} souls</span>
       </div>
@@ -1770,30 +1783,17 @@
     return `<div class="${className}">${escapeHtml(state.endNotice.text)}</div>`;
   }
 
-  async function beginRecruiting() {
-    if (!state.run?.awaitingRecruit) return;
-
-    try {
-      await ensureCollectionReinforcementsLoaded();
-    } catch (error) {
-      showError(error);
-      return;
-    }
-
-    state.isRecruiting = true;
-    state.showPostWinActions = false;
+  function prepareRecruitStrategyState() {
     state.selectedRecruitRewardId = null;
     state.selectedSwapInstanceId = null;
-    state.draggedRewardId = null;
     state.draggedRecruitPoolInstanceId = null;
     state.draggedFormationInstanceId = null;
-    state.selectedRecruitPoolInstanceId = null;
-    if (state.run.collectionReinforcementAvailable && !getSelectedCollectionReinforcement()) {
+    state.recruitDraftTeam = null;
+    state.recruitDraftPool = null;
+    if (state.run?.collectionReinforcementAvailable) {
       state.collectionReinforcementPlaceholderInteracted = false;
       state.collectionReinforcementStagedInteracted = true;
     }
-    ensureRecruitDraft();
-    renderRun();
   }
 
   function getCurrentRecruitRewards() {
@@ -1810,9 +1810,183 @@
     return cloneDemons(state.recruitDraftTeam || []);
   }
 
-  function getRecruitPreviewEnemies() {
+  function getRecruitPreviewHand() {
     ensureRecruitDraft();
     return cloneDemons(state.recruitDraftPool || []);
+  }
+
+  function getRecruitPreviewEnemyTeam() {
+    return cloneDemons(state.run?.nextEnemies || []);
+  }
+
+  function getNextFloorNumber() {
+    return Math.min(MAX_DUNGEON_FLOOR, (Number(state.run?.currentFloor) || 1) + 1);
+  }
+
+  function renderHandBar(hand, isVisible) {
+    if (!elements.dungeonHandBar || !elements.dungeonHandGrid) return;
+
+    elements.dungeonHandBar.classList.toggle('d-none', !isVisible);
+    if (!isVisible) {
+      elements.dungeonHandGrid.innerHTML = '';
+      if (elements.dungeonHandTitle) elements.dungeonHandTitle.textContent = '0 demons';
+      return;
+    }
+
+    const count = hand.length;
+    if (elements.dungeonHandTitle) {
+      elements.dungeonHandTitle.textContent = `${count} ${count === 1 ? 'demon' : 'demons'}`;
+    }
+
+    elements.dungeonHandGrid.innerHTML = renderHandCards(hand);
+  }
+
+  function renderHandCards(demons) {
+    const placeholder = shouldShowCollectionReinforcementHandPlaceholder()
+      ? renderCollectionReinforcementPlaceholder('hand')
+      : '';
+    const cardHtml = demons.map((demon) => renderDemonCard(demon, {
+      side: 'hand',
+      allowRecruitDrag: true
+    })).join('');
+
+    return `
+      <div class="dungeon-hand-cards formation-lane-cards" data-formation-drop="hand">
+        ${placeholder}${cardHtml || (placeholder ? '' : renderEmptyHand())}
+      </div>
+    `;
+  }
+
+  function renderEmptyHand() {
+    return '<div class="formation-empty dungeon-hand-empty"><span>Empty</span></div>';
+  }
+
+  function playPendingHandFlowAnimation(isHandStrategy) {
+    const sources = state.pendingHandFlowSources;
+    if (!sources) return;
+    state.pendingHandFlowSources = null;
+    if (!sources.length) return;
+    if (!isHandStrategy || !elements.dungeonHandGrid) return;
+
+    const targets = getHandFlowTargetCards();
+    if (!targets.length) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    sources.slice(0, targets.length).forEach((source, index) => {
+      const target = targets[index];
+      if (!target) return;
+
+      target.classList.add('is-hand-flow-arriving');
+      if (reducedMotion) {
+        target.classList.remove('is-hand-flow-arriving');
+        markHandFlowLanded(target);
+        return;
+      }
+
+      flowEnemyCardToHand(source, target, index);
+    });
+  }
+
+  function getHandFlowTargetCards() {
+    return Array.from(elements.dungeonHandGrid.querySelectorAll('.hunt-demon-card[data-instance-id]'))
+      .filter((card) => card.dataset.recruitSource === 'reward' || card.dataset.rewardId);
+  }
+
+  function flowEnemyCardToHand(source, target, index) {
+    const targetRect = target.getBoundingClientRect();
+    if (!targetRect.width || !targetRect.height) {
+      target.classList.remove('is-hand-flow-arriving');
+      return;
+    }
+
+    const ghost = createHandFlowGhost(source);
+    if (!ghost) {
+      target.classList.remove('is-hand-flow-arriving');
+      return;
+    }
+
+    document.body.appendChild(ghost);
+    if (typeof ghost.animate !== 'function') {
+      ghost.remove();
+      target.classList.remove('is-hand-flow-arriving');
+      markHandFlowLanded(target);
+      return;
+    }
+
+    const deltaX = targetRect.left - source.rect.left;
+    const deltaY = targetRect.top - source.rect.top;
+    const scaleX = targetRect.width / source.rect.width;
+    const scaleY = targetRect.height / source.rect.height;
+    const lift = Math.max(24, Math.min(90, Math.abs(deltaY) * 0.2));
+    const arcX = deltaX * 0.46;
+    const arcY = deltaY * 0.46 - lift;
+    const tilt = index % 2 === 0 ? -2.4 : 2.4;
+
+    const animation = ghost.animate([
+      {
+        opacity: 0.98,
+        transform: 'translate3d(0, 0, 0) scale(1, 1) rotate(0deg)',
+        filter: 'brightness(1)'
+      },
+      {
+        offset: 0.58,
+        opacity: 0.96,
+        transform: `translate3d(${arcX}px, ${arcY}px, 0) scale(${Math.max(scaleX, 0.88)}, ${Math.max(scaleY, 0.88)}) rotate(${tilt}deg)`,
+        filter: 'brightness(1.18)'
+      },
+      {
+        opacity: 0.2,
+        transform: `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY}) rotate(0deg)`,
+        filter: 'brightness(1.06)'
+      }
+    ], {
+      delay: index * 90,
+      duration: 760,
+      easing: 'cubic-bezier(0.18, 0.84, 0.18, 1)',
+      fill: 'both'
+    });
+
+    animation.finished
+      .catch(() => {})
+      .then(() => {
+        ghost.remove();
+        target.classList.remove('is-hand-flow-arriving');
+        markHandFlowLanded(target);
+      });
+  }
+
+  function createHandFlowGhost(source) {
+    if (!source?.html || !source.rect?.width || !source.rect?.height) return null;
+
+    const ghost = document.createElement('div');
+    ghost.className = 'hand-flow-ghost';
+    ghost.style.left = `${source.rect.left}px`;
+    ghost.style.top = `${source.rect.top}px`;
+    ghost.style.width = `${source.rect.width}px`;
+    ghost.style.height = `${source.rect.height}px`;
+    ghost.innerHTML = source.html;
+
+    const card = ghost.firstElementChild;
+    if (card) {
+      card.classList.remove('is-dragging', 'is-drag-over', 'is-pointer-dragging');
+      card.classList.add('is-hand-flow-card');
+      card.removeAttribute('id');
+      card.removeAttribute('role');
+      card.removeAttribute('tabindex');
+      card.removeAttribute('draggable');
+      card.setAttribute('aria-hidden', 'true');
+    }
+
+    return ghost;
+  }
+
+  function markHandFlowLanded(target) {
+    target.classList.remove('is-hand-flow-landed');
+    void target.offsetWidth;
+    target.classList.add('is-hand-flow-landed');
+    window.setTimeout(() => {
+      target.classList.remove('is-hand-flow-landed');
+    }, 760);
   }
 
   function ensureRecruitDraft() {
@@ -1833,7 +2007,6 @@
         instanceId: `reward-${reward.rewardId}`,
         rewardId: reward.rewardId,
         recruitSource: 'reward',
-        isTapSelected: state.selectedRecruitPoolInstanceId === `reward-${reward.rewardId}`,
         position: getDemonPosition(reward.demon, index)
       }))
     ];
@@ -1844,13 +2017,6 @@
 
     const payload = await api('/api/demons');
     state.collectionDemons = payload.demons || [];
-  }
-
-  async function ensureCollectionReinforcementsLoaded() {
-    if (!state.run?.collectionReinforcementAvailable) return;
-
-    await ensureCollectionLoaded();
-    state.collectionReinforcements = getAvailableCollectionReinforcements();
   }
 
   function getAvailableCollectionReinforcements() {
@@ -1941,9 +2107,9 @@
     const isDefeated = state.run?.status === 'defeated';
     const canStart = !state.endSummary && (!state.run || isDefeated || state.run.status === 'ended');
     const canBattle = Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
-    const canReplay = Boolean(!state.isBattleAnimating && !state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
-    const canViewLog = Boolean(!state.isBattleAnimating && !state.isRecruiting && isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
-    const canContinueAfterWin = Boolean(state.run?.awaitingRecruit && state.showPostWinActions);
+    const hasCurrentFightLog = Boolean(isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
+    const canReplay = Boolean(!state.isBattleAnimating && hasCurrentFightLog);
+    const canViewLog = Boolean(!state.isBattleAnimating && hasCurrentFightLog);
     const canChooseRecruit = Boolean(state.run?.awaitingRecruit && state.isRecruiting);
 
     elements.fightLogActions.innerHTML = `
@@ -1962,12 +2128,6 @@
       ${canViewLog ? `
         <button class="btn btn-outline-light btn-sm btn-icon-only" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log">
           ${renderIcon('log')}
-        </button>
-      ` : ''}
-      ${canContinueAfterWin ? `
-        <button class="btn btn-success btn-sm" id="fightLogContinueBtn" type="button">
-          ${renderIcon('skip')}
-          Continue
         </button>
       ` : ''}
       ${canChooseRecruit ? `
@@ -2001,8 +2161,6 @@
     if (replayButton) replayButton.addEventListener('click', replayFight);
     const logToggleButton = document.getElementById('fightLogToggleBtn');
     if (logToggleButton) logToggleButton.addEventListener('click', toggleFightLogPanel);
-    const continueButton = document.getElementById('fightLogContinueBtn');
-    if (continueButton) continueButton.addEventListener('click', beginRecruiting);
     bindPathButtons();
   }
 
@@ -2045,6 +2203,7 @@
     const replayingEndedRun = !state.run && Boolean(state.endedReplayRun);
     const activeRun = state.run || state.endedReplayRun;
     const lastBattle = activeRun?.lastBattle;
+    const wasRecruiting = Boolean(!replayingEndedRun && state.run?.awaitingRecruit && state.isRecruiting);
 
     if (replayingEndedRun) {
       state.run = createReplayRunSnapshot(state.endedReplayRun);
@@ -2052,9 +2211,14 @@
       renderRun();
     }
 
+    if (wasRecruiting) state.isRecruiting = false;
     showCombatPanel();
     if (!lastBattle?.combatLog?.length) {
       if (state.combatLog.length) renderFightLog();
+      if (wasRecruiting) {
+        state.isRecruiting = true;
+        renderRun();
+      }
       if (replayingEndedRun) {
         state.run = null;
         renderRun();
@@ -2069,14 +2233,21 @@
     setFightLogTitle('Fight Log');
     elements.fightLog.innerHTML = '';
     elements.fightLog.classList.remove('text-muted');
-    await playCombatLog();
-    state.run.team = cloneDemons(lastBattle.playerTeamAfter || state.run.team || []);
-    state.run.enemies = cloneDemons(lastBattle.enemyTeamAfter || state.run.enemies || []);
-    renderRun();
-
-    if (replayingEndedRun) {
-      state.run = null;
+    try {
+      await playCombatLog();
+      state.run.team = cloneDemons(lastBattle.playerTeamAfter || state.run.team || []);
+      state.run.enemies = cloneDemons(lastBattle.enemyTeamAfter || state.run.enemies || []);
       renderRun();
+    } finally {
+      if (wasRecruiting) {
+        state.isRecruiting = true;
+        renderRun();
+      }
+
+      if (replayingEndedRun) {
+        state.run = null;
+        renderRun();
+      }
     }
   }
 
@@ -2144,57 +2315,9 @@
     return `<span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(demon.species || 'Demon')}</span>`;
   }
 
-  function renderRewards(rewards) {
-    if (!state.run) return renderEmptyText('Choose a starter to begin.');
-
-    const currentFloorRewards = rewards.filter((reward) => reward.floor === state.run.currentFloor);
-    const finalRewards = currentFloorRewards.filter((reward) => reward.type === 'final');
-    const recruitRewards = currentFloorRewards.filter((reward) => reward.type === 'recruit');
-
-    if (state.run.status === 'completed') {
-      return `
-        <div class="reward-phase">
-          <h3 class="h6 mb-2">Dungeon complete</h3>
-          <p class="text-muted">${hasSavedFinalReward() ? 'Final demon saved to your collection.' : 'Choose one of your team demons, or exit without collecting.'}</p>
-          <button class="btn btn-outline-info btn-sm js-open-choice-modal" type="button" ${hasSavedFinalReward() ? 'disabled' : ''}>
-            ${renderIcon('stars')}
-            Finish Dungeon
-          </button>
-        </div>
-      `;
-    }
-
-    if (state.run.awaitingRecruit) {
-      return `
-        <div class="reward-phase">
-          <h3 class="h6 mb-2">${recruitRewards.length} defeated demons available${state.run.collectionReinforcementAvailable ? ' + collection reinforcement' : ''}</h3>
-          <p class="text-muted">${state.run.collectionReinforcementAvailable ? 'Pick a defeated demon or call one collection demon into the run.' : 'Pick one in the team editor, preview your swap, then continue.'}</p>
-          <button class="btn btn-outline-success btn-sm js-open-choice-modal" type="button">
-            ${renderIcon('recruit')}
-            Edit Team
-          </button>
-        </div>
-      `;
-    }
-
-    const earned = state.run.earned || { xp: 0, souls: 0 };
-    return renderEmptyText(`Clear the floor to recruit a defeated demon. Dungeon earnings: ${earned.xp || 0} XP, ${earned.souls || 0} souls.`);
-  }
-
   function showPendingChoiceModal() {
     if (!state.run || !(state.run.awaitingFinalPick || state.run.status === 'completed')) return;
     if (state.run.status === 'completed' && hasSavedFinalReward()) return;
-
-    renderTeamChoiceModal();
-    getModal(elements.teamChoiceModal, { backdrop: 'static', keyboard: false }).show();
-  }
-
-  async function openTeamChoiceModal() {
-    if (!state.run) return;
-    if (state.run.awaitingRecruit && state.run.status === 'active') {
-      await beginRecruiting();
-      return;
-    }
 
     renderTeamChoiceModal();
     getModal(elements.teamChoiceModal, { backdrop: 'static', keyboard: false }).show();
@@ -2206,56 +2329,22 @@
 
     const currentFloorRewards = (state.run.rewards || []).filter((reward) => reward.floor === state.run.currentFloor);
 
-    if (state.run.status === 'completed') {
-      const finalRewards = currentFloorRewards.filter((reward) => reward.type === 'final');
-      elements.teamChoiceModalTitle.textContent = 'Dungeon complete';
-      elements.teamChoiceModalSubtitle.textContent = 'Choose one available demon for your collection, or exit without collecting.';
-      elements.teamChoiceModalBody.innerHTML = `
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
-          ${finalRewards.map(renderFinalReward).join('')}
-        </div>
-      `;
-      elements.teamChoiceModalFooter.innerHTML = `
-        <button type="button" class="btn btn-outline-light" id="modalExitHuntBtn">
-          Exit Without Collecting
-        </button>
-      `;
-      bindRewardButtons();
-      const modalExitHuntBtn = document.getElementById('modalExitHuntBtn');
-      if (modalExitHuntBtn) modalExitHuntBtn.addEventListener('click', () => finishRun('Dungeon complete.', { completed: true }));
-      return;
-    }
-
-    const recruitRewards = currentFloorRewards.filter((reward) => reward.type === 'recruit');
-    const teamLimit = getRecruitTeamLimit();
-    const needsSwap = (state.run.team || []).length >= teamLimit;
-    elements.teamChoiceModalTitle.textContent = 'Edit your team';
-    elements.teamChoiceModalSubtitle.textContent = needsSwap
-      ? 'Choose a defeated demon, tap one of your demons to preview the swap, then continue.'
-      : 'Choose one defeated demon, then continue to the next floor.';
+    const finalRewards = currentFloorRewards.filter((reward) => reward.type === 'final');
+    elements.teamChoiceModalTitle.textContent = 'Dungeon complete';
+    elements.teamChoiceModalSubtitle.textContent = 'Choose one available demon for your collection, or exit without collecting.';
     elements.teamChoiceModalBody.innerHTML = `
-      <div class="row g-4">
-        <div class="col-12 col-xl-8">
-          <h3 class="h6 text-muted">Defeated Demons</h3>
-          <div class="row row-cols-1 row-cols-sm-2 row-cols-xxl-3 g-3">
-            ${recruitRewards.map(renderRecruitReward).join('')}
-          </div>
-        </div>
-        <div class="col-12 col-xl-4">
-          <h3 class="h6 text-muted">Current Team</h3>
-          ${renderTeamEditorCards()}
-        </div>
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
+        ${finalRewards.map(renderFinalReward).join('')}
       </div>
     `;
     elements.teamChoiceModalFooter.innerHTML = `
-      <button type="button" class="btn btn-success" id="modalContinueBtn" ${canConfirmTeamChoice() ? '' : 'disabled'}>
-        ${renderIcon('skip')}
-        ${getContinueButtonLabel()}
+      <button type="button" class="btn btn-outline-light" id="modalExitHuntBtn">
+        Exit Without Collecting
       </button>
     `;
     bindRewardButtons();
-    const modalContinueBtn = document.getElementById('modalContinueBtn');
-    if (modalContinueBtn) modalContinueBtn.addEventListener('click', confirmRecruitReward);
+    const modalExitHuntBtn = document.getElementById('modalExitHuntBtn');
+    if (modalExitHuntBtn) modalExitHuntBtn.addEventListener('click', () => finishRun('Dungeon complete.', { completed: true }));
   }
 
   async function openCollectionReinforcementModal() {
@@ -2286,7 +2375,7 @@
     elements.teamChoiceModalTitle.textContent = 'Collection reinforcement';
     elements.teamChoiceModalSubtitle.textContent = selected
       ? 'One collection demon is already staged. Choose another to replace it, or remove it from the draft.'
-      : 'Choose one collection demon to place on the Recruit side, then drag it into your team if you want it for the next floor.';
+      : 'Choose one collection demon to place in hand, then drag it into your team if you want it for the next floor.';
     elements.teamChoiceModalBody.innerHTML = `
       ${selected ? `
         <div class="collection-reinforcement-current">
@@ -2482,77 +2571,6 @@
     return (state.collectionDemons || []).find((collectionDemon) => getCollectionSlotKey(collectionDemon) === key) || null;
   }
 
-  function renderRecruitReward(reward) {
-    const selected = state.selectedRecruitRewardId === reward.rewardId;
-    return `
-      <div class="col">
-        <div class="reward-item border rounded p-3 ${selected ? 'active' : ''}">
-          ${renderRewardDemon(reward.demon)}
-          <button class="btn ${selected ? 'btn-success' : 'btn-outline-success'} btn-sm w-100 mt-3 js-select-recruit" data-reward-id="${reward.rewardId}">
-            ${getRecruitButtonLabel(reward)}
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  function getRecruitButtonLabel(reward) {
-    if (reward.recruited) return 'Recruited';
-    if ((state.run.team || []).length >= getRecruitTeamLimit()) return state.selectedRecruitRewardId === reward.rewardId ? 'Selected' : 'Add to Team';
-    if (state.selectedRecruitRewardId === reward.rewardId) return 'Selected';
-    return 'Add to Team';
-  }
-
-  function canConfirmTeamChoice() {
-    return true;
-  }
-
-  function getContinueButtonLabel() {
-    if (!hasDraftPoolAddition()) return 'Continue Without Changes';
-    if ((state.run.team || []).length < getRecruitTeamLimit()) return 'Continue With Recruit';
-    return state.selectedSwapInstanceId ? 'Continue With Swap' : 'Continue Without Changes';
-  }
-
-  function renderTeamEditorCards() {
-    const team = state.run.team || [];
-    const teamLimit = getRecruitTeamLimit();
-    const needsSwap = team.length >= teamLimit;
-    const previewReward = getSelectedRecruitReward();
-
-    return `
-      <div class="team-editor-list">
-        ${needsSwap ? `
-          <p class="text-muted small">${state.selectedRecruitRewardId ? 'Tap a teammate to preview the swap.' : 'Select a defeated demon first.'}</p>
-        ` : `<p class="text-muted small">There is room for ${teamLimit - team.length} more ${teamLimit - team.length === 1 ? 'demon' : 'demons'}.</p>`}
-        <div class="row row-cols-1 g-3">
-          ${team.map((demon) => {
-            const isSwapTarget = state.selectedSwapInstanceId === demon.instanceId;
-            const displayDemon = isSwapTarget && previewReward ? previewReward.demon : demon;
-            return `
-            <div class="col">
-              ${renderDungeonDemonCard(displayDemon, {
-                tag: 'button',
-                className: `team-editor-card ${needsSwap ? 'is-clickable swap-choice' : ''}`,
-                active: isSwapTarget,
-                attributes: {
-                  'data-swap-id': demon.instanceId,
-                  disabled: !(needsSwap && state.selectedRecruitRewardId)
-                },
-                footerHtml: isSwapTarget ? `<p class="swap-note mb-0 mt-2">Replacing ${escapeHtml(demon.species || 'Demon')}</p>` : ''
-              })}
-            </div>
-          `;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  function getSelectedRecruitReward() {
-    if (!state.selectedRecruitRewardId) return null;
-    return (state.run?.rewards || []).find((reward) => reward.rewardId === state.selectedRecruitRewardId) || null;
-  }
-
   function renderFinalReward(reward) {
     return `
       <div class="col">
@@ -2575,20 +2593,8 @@
   }
 
   function bindRewardButtons() {
-    document.querySelectorAll('.js-select-recruit').forEach((button) => {
-      button.addEventListener('click', () => selectRecruitReward(Number(button.dataset.rewardId)));
-    });
     document.querySelectorAll('.js-save').forEach((button) => {
       button.addEventListener('click', () => saveReward(Number(button.dataset.rewardId)));
-    });
-    document.querySelectorAll('.js-open-choice-modal').forEach((button) => {
-      button.addEventListener('click', openTeamChoiceModal);
-    });
-    document.querySelectorAll('.swap-choice').forEach((button) => {
-      button.addEventListener('click', () => {
-        state.selectedSwapInstanceId = button.dataset.swapId;
-        renderTeamChoiceModal();
-      });
     });
   }
 
@@ -2670,7 +2676,7 @@
     if (!state.run?.awaitingRecruit || !state.isRecruiting) return;
     ensureRecruitDraft();
 
-    document.querySelectorAll('#enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+    document.querySelectorAll('#dungeonHandGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
       card.addEventListener('dragstart', (event) => {
         const poolDemon = findDraftDemon(state.recruitDraftPool, card.dataset.instanceId);
         if (!poolDemon) return;
@@ -2680,16 +2686,14 @@
           type: 'recruit-pool',
           instanceId: card.dataset.instanceId
         }));
-        state.draggedRewardId = poolDemon.rewardId || null;
         state.draggedRecruitPoolInstanceId = card.dataset.instanceId;
         markCollectionReinforcementStagedInteracted(card.dataset.instanceId);
         card.classList.add('is-dragging');
       });
       card.addEventListener('dragend', () => {
-        state.draggedRewardId = null;
         state.draggedRecruitPoolInstanceId = null;
         card.classList.remove('is-dragging');
-        document.querySelectorAll('.hunt-demon-card.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
+        document.querySelectorAll('.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .formation-lane-label.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
       });
       card.addEventListener('dragover', (event) => {
         const payload = readRecruitDragPayload(event);
@@ -2751,7 +2755,7 @@
 
     document.querySelectorAll('#teamGrid .formation-lane-cards').forEach((lane) => {
       lane.addEventListener('dragover', (event) => {
-        const payload = readDragPayload(event);
+        const payload = readRecruitDragPayload(event);
         const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
         const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
         const isPoolDrop = (payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId);
@@ -2765,7 +2769,7 @@
       });
       lane.addEventListener('dragleave', () => lane.classList.remove('is-drag-over'));
       lane.addEventListener('drop', (event) => {
-        const payload = readDragPayload(event);
+        const payload = readRecruitDragPayload(event);
         const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
         const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
         lane.classList.remove('is-drag-over');
@@ -2789,7 +2793,7 @@
     document.querySelectorAll('#teamGrid .formation-lane-label').forEach((label) => {
       label.addEventListener('dragover', (event) => {
         const position = label.closest('.formation-lane')?.dataset.formationPosition;
-        const payload = readDragPayload(event);
+        const payload = readRecruitDragPayload(event);
         const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
         const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
         const isPoolDrop = (payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId);
@@ -2804,7 +2808,7 @@
       label.addEventListener('dragleave', () => label.classList.remove('is-drag-over'));
       label.addEventListener('drop', (event) => {
         const position = label.closest('.formation-lane')?.dataset.formationPosition;
-        const payload = readDragPayload(event);
+        const payload = readRecruitDragPayload(event);
         const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
         const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
         label.classList.remove('is-drag-over');
@@ -2827,9 +2831,9 @@
       });
     });
 
-    document.querySelectorAll('#enemyGrid .formation-lane-cards').forEach((lane) => {
+    document.querySelectorAll('#dungeonHandGrid .formation-lane-cards').forEach((lane) => {
       lane.addEventListener('dragover', (event) => {
-        const payload = readDragPayload(event);
+        const payload = readRecruitDragPayload(event);
         const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
         const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
         const isTeamDrop = (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && canReturnTeamDemonToPool(teamInstanceId);
@@ -2842,21 +2846,21 @@
       });
       lane.addEventListener('dragleave', () => lane.classList.remove('is-drag-over'));
       lane.addEventListener('drop', (event) => {
-        const payload = readDragPayload(event);
+        const payload = readRecruitDragPayload(event);
         const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
         const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
         lane.classList.remove('is-drag-over');
 
         if ((payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && canReturnTeamDemonToPool(teamInstanceId)) {
           event.preventDefault();
-          returnTeamDemonToPool(teamInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY));
+          returnTeamDemonToPool(teamInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY, event.clientX));
           renderRun();
           return;
         }
 
         if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId)) {
           event.preventDefault();
-          moveDraftPoolDemon(poolInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY));
+          moveDraftPoolDemon(poolInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY, event.clientX));
           renderRun();
         }
       });
@@ -2864,7 +2868,7 @@
   }
 
   function bindPointerDragAndDrop() {
-    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
       card.addEventListener('pointerdown', startPointerDrag);
       card.addEventListener('mousedown', startMouseDrag);
       card.addEventListener('touchstart', startTouchDrag, { passive: false });
@@ -2990,8 +2994,6 @@
     if (drag.pointerId !== null) drag.card.setPointerCapture?.(drag.pointerId);
 
     if (drag.payload.type === 'recruit-pool') {
-      const poolDemon = findDraftDemon(state.recruitDraftPool, drag.payload.instanceId);
-      state.draggedRewardId = poolDemon?.rewardId || null;
       state.draggedRecruitPoolInstanceId = drag.payload.instanceId;
       markCollectionReinforcementStagedInteracted(drag.payload.instanceId);
     } else {
@@ -3043,7 +3045,6 @@
     drag.card.classList.remove('is-dragging', 'is-pointer-dragging');
     drag.ghost?.remove();
     setPointerDropTarget(drag, null);
-    state.draggedRewardId = null;
     state.draggedRecruitPoolInstanceId = null;
     state.draggedFormationInstanceId = null;
 
@@ -3057,7 +3058,7 @@
     if (!instanceId) return null;
 
     if (state.run?.awaitingRecruit && state.isRecruiting) {
-      if (card.closest('#enemyGrid') && findDraftDemon(state.recruitDraftPool, instanceId)) {
+      if (card.closest('#dungeonHandGrid') && findDraftDemon(state.recruitDraftPool, instanceId)) {
         return { type: 'recruit-pool', instanceId };
       }
       if (card.closest('#teamGrid') && findDraftDemon(state.recruitDraftTeam, instanceId)) {
@@ -3090,7 +3091,7 @@
 
     const laneElement = lane || label?.closest('.formation-lane')?.querySelector('.formation-lane-cards');
     if (laneElement && canPointerDropOnLane(drag.payload, laneElement)) {
-      return { element: laneElement, kind: 'lane', insertIndex: getLaneDropDraftIndex(laneElement, y) };
+      return { element: laneElement, kind: 'lane', insertIndex: getLaneDropDraftIndex(laneElement, y, x) };
     }
 
     return null;
@@ -3099,7 +3100,7 @@
   function canPointerDropOnCard(payload, card) {
     if (!payload) return false;
     if (card.closest('#teamGrid')) return canDropRecruitOnTeamCard(payload, card.dataset.instanceId);
-    if (card.closest('#enemyGrid')) return canDropRecruitOnPoolCard(payload, card.dataset.instanceId);
+    if (card.closest('#dungeonHandGrid')) return canDropRecruitOnPoolCard(payload, card.dataset.instanceId);
     return false;
   }
 
@@ -3113,14 +3114,14 @@
     if (payload.type === 'recruit-pool') {
       return Boolean(
         (lane.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId)) ||
-        (lane.closest('#enemyGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId))
+        (lane.closest('#dungeonHandGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId))
       );
     }
 
     if (payload.type === 'recruit-team') {
       return Boolean(
         (lane.closest('#teamGrid') && findDraftDemon(state.recruitDraftTeam, payload.instanceId)) ||
-        (lane.closest('#enemyGrid') && canReturnTeamDemonToPool(payload.instanceId))
+        (lane.closest('#dungeonHandGrid') && canReturnTeamDemonToPool(payload.instanceId))
       );
     }
 
@@ -3158,7 +3159,7 @@
         return;
       }
 
-      if (position && target.element.closest('#enemyGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId)) {
+      if (position && target.element.closest('#dungeonHandGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId)) {
         moveDraftPoolDemon(payload.instanceId, position, target.insertIndex);
         renderRun();
       }
@@ -3175,7 +3176,7 @@
         return;
       }
 
-      if (target.element.closest('#enemyGrid') && canReturnTeamDemonToPool(payload.instanceId)) {
+      if (target.element.closest('#dungeonHandGrid') && canReturnTeamDemonToPool(payload.instanceId)) {
         returnTeamDemonToPool(payload.instanceId, position, target.insertIndex);
         renderRun();
       }
@@ -3203,7 +3204,7 @@
   }
 
   function bindDemonDetailCards() {
-    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
       card.addEventListener('click', (event) => {
         if (event.defaultPrevented || card.classList.contains('is-dragging') || card.classList.contains('suppress-detail-click')) return;
 
@@ -3233,7 +3234,8 @@
 
     return [
       ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []),
-      ...(state.isRecruiting ? getRecruitPreviewEnemies() : state.run?.enemies || [])
+      ...(state.isRecruiting ? getRecruitPreviewHand() : []),
+      ...(state.isRecruiting ? getRecruitPreviewEnemyTeam() : state.run?.enemies || [])
     ].find((demon) => demon.instanceId === instanceId) || null;
   }
 
@@ -3253,23 +3255,12 @@
   }
 
   function isStrategyPhase() {
-    return Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick && !state.isRecruiting);
+    return Boolean(state.run?.status === 'active' && !state.run.awaitingFinalPick && (!state.run.awaitingRecruit || state.isRecruiting));
   }
 
   function findDraftDemon(collection, instanceId) {
     if (!instanceId) return null;
     return (collection || []).find((demon) => demon.instanceId === instanceId) || null;
-  }
-
-  function teamHasDraftRecruit(exceptInstanceId = null) {
-    return (state.recruitDraftTeam || []).some((demon) => (
-      demon.recruitSource !== 'team' &&
-      demon.instanceId !== exceptInstanceId
-    ));
-  }
-
-  function hasDraftPoolAddition() {
-    return (state.recruitDraftTeam || []).some((demon) => demon.recruitSource !== 'team');
   }
 
   function canAddPoolDemonToTeam(poolInstanceId) {
@@ -3435,7 +3426,8 @@
   }
 
   function moveDraftPoolDemon(instanceId, position, insertIndex = null) {
-    moveDraftDemonWithin(state.recruitDraftPool, instanceId, position, insertIndex);
+    const demon = findDraftDemon(state.recruitDraftPool, instanceId);
+    moveDraftDemonWithin(state.recruitDraftPool, instanceId, getHandDropPosition(position, demon), insertIndex);
     refreshRecruitDraftPoolOrder();
     syncRecruitDraftSelection();
   }
@@ -3451,7 +3443,7 @@
 
     const draftDemon = {
       ...demon,
-      position
+      position: getHandDropPosition(position, demon)
     };
     if (Number.isInteger(insertIndex) && insertIndex >= 0) {
       state.recruitDraftPool.splice(insertIndex, 0, draftDemon);
@@ -3461,6 +3453,10 @@
     refreshRecruitDraftOrder();
     refreshRecruitDraftPoolOrder();
     syncRecruitDraftSelection();
+  }
+
+  function getHandDropPosition(position, demon) {
+    return position === 'hand' ? getDemonPosition(demon) : position;
   }
 
   function removeDraftDemon(collection, instanceId) {
@@ -3477,13 +3473,21 @@
     return (state.recruitDraftPool || []).findIndex((demon) => demon.instanceId === instanceId);
   }
 
-  function getLaneDropDraftIndex(lane, clientY = null) {
+  function getLaneDropDraftIndex(lane, clientY = null, clientX = null) {
     if (!lane) return null;
     const collection = getDraftCollectionForLane(lane);
     const cards = Array.from(lane.querySelectorAll('.hunt-demon-card[data-instance-id]'));
     if (!cards.length) return (collection || []).length;
 
-    if (Number.isFinite(clientY)) {
+    if (isHandLane(lane) && Number.isFinite(clientX)) {
+      for (const card of cards) {
+        const rect = card.getBoundingClientRect();
+        if (clientX < rect.left + (rect.width / 2)) {
+          const cardIndex = getDraftIndex(collection, card.dataset.instanceId);
+          return cardIndex >= 0 ? cardIndex : null;
+        }
+      }
+    } else if (Number.isFinite(clientY)) {
       for (const card of cards) {
         const rect = card.getBoundingClientRect();
         if (clientY < rect.top + (rect.height / 2)) {
@@ -3498,8 +3502,12 @@
   }
 
   function getDraftCollectionForLane(lane) {
-    if (lane?.closest('#enemyGrid')) return state.recruitDraftPool;
+    if (lane?.closest('#dungeonHandGrid')) return state.recruitDraftPool;
     return state.recruitDraftTeam;
+  }
+
+  function isHandLane(lane) {
+    return Boolean(lane?.closest('#dungeonHandGrid'));
   }
 
   function getDraftIndex(collection, instanceId) {
@@ -3530,18 +3538,8 @@
     state.recruitSwapEffectIds = [sourceInstanceId, targetInstanceId].filter(Boolean);
   }
 
-  function sortRecruitDraftTeam() {
-    const originalOrder = new Map((state.run?.team || []).map((demon, index) => [demon.instanceId, index]));
-    state.recruitDraftTeam.sort((a, b) => {
-      const aOrder = getDraftOrder(a, originalOrder);
-      const bOrder = getDraftOrder(b, originalOrder);
-      return aOrder - bOrder;
-    });
-  }
-
-  function getDraftOrder(demon, originalOrder = null) {
+  function getDraftOrder(demon) {
     if (Number.isFinite(demon?.draftOrder)) return demon.draftOrder;
-    if (originalOrder?.has(demon?.originalInstanceId)) return originalOrder.get(demon.originalInstanceId);
     return 99;
   }
 
@@ -3558,7 +3556,6 @@
   }
 
   function syncRecruitDraftSelection() {
-    state.selectedRecruitPoolInstanceId = null;
     const recruit = (state.recruitDraftTeam || []).find((demon) => demon.recruitSource === 'reward' && demon.rewardId);
     state.selectedRecruitRewardId = recruit?.rewardId || null;
 
@@ -3655,20 +3652,25 @@
   function shouldShowCollectionReinforcementPlaceholders(options) {
     return Boolean(
       state.isRecruiting &&
-      options.side === 'enemy' &&
+      options.side === 'hand' &&
       state.run?.collectionReinforcementAvailable &&
       !getSelectedCollectionReinforcement()
     );
   }
 
+  function shouldShowCollectionReinforcementHandPlaceholder() {
+    return shouldShowCollectionReinforcementPlaceholders({ side: 'hand' });
+  }
+
   function renderCollectionReinforcementPlaceholder(position) {
     const attentionClass = state.collectionReinforcementPlaceholderInteracted ? '' : 'is-collection-reinforcement-attention';
+    const label = position === 'hand' ? 'Hand' : `${position === 'front' ? 'Melee' : 'Ranged'} slot`;
     return `
       <button class="hunt-demon-card collection-reinforcement-placeholder ${attentionClass}" type="button" data-collection-reinforcement-position="${position}" aria-label="Choose collection reinforcement">
         <div class="collection-reinforcement-placeholder-icon">${renderIcon('collection')}</div>
         <div class="collection-reinforcement-placeholder-copy">
           <span>Collection</span>
-          <small>${position === 'front' ? 'Melee' : 'Ranged'} slot</small>
+          <small>${label}</small>
         </div>
       </button>
     `;
@@ -3690,7 +3692,7 @@
   }
 
   function renderDemonCard(demon, options) {
-    const isPlayer = options.side !== 'enemy';
+    const isPlayer = options.side === 'player';
     const isRecruitPoolDemon = Boolean(options.allowRecruitDrag && demon.recruitSource);
     const canDropRecruit = Boolean(state.isRecruiting && isPlayer);
     const canDragFormation = Boolean((options.allowFormationDrag || state.isRecruiting) && isPlayer);
@@ -3706,7 +3708,7 @@
     return renderDungeonDemonCard(demon, {
       className: classes.replace('hunt-demon-card', '').trim(),
       defeated: Number(demon.hp) <= 0,
-      active: state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId || demon.isTapSelected,
+      active: state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId,
       overlayHtml: renderDemonStatus(demon),
       attributes: {
         'data-instance-id': demon.instanceId,

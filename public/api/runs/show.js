@@ -1,6 +1,9 @@
 const express = require('express');
 const { requireAuth } = require('../lib/auth');
+const { createHuntEnemies } = require('../lib/hunt-enemies');
+const { createRng } = require('../lib/rng');
 const { getCurrentRunForPlayer, getRunForPlayer } = require('../lib/runs');
+const { MAX_DUNGEON_FLOOR } = require('../lib/dungeon-rules');
 
 const router = express.Router();
 
@@ -11,7 +14,7 @@ router.get('/runs/current', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Run not found.' });
   }
 
-  res.json(serializeRun(run));
+  res.json(await serializeRun(run));
 });
 
 router.get('/runs/:id', requireAuth, async (req, res) => {
@@ -21,10 +24,10 @@ router.get('/runs/:id', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Run not found.' });
   }
 
-  res.json(serializeRun(run));
+  res.json(await serializeRun(run));
 });
 
-function serializeRun(run) {
+async function serializeRun(run) {
   const collectionReinforcementAvailable = Boolean(
     run.state.awaitingCollectionReinforcement ||
     (
@@ -42,6 +45,7 @@ function serializeRun(run) {
     hp: run.state.hp,
     team: run.state.team,
     enemies: run.state.enemies,
+    nextEnemies: await getNextEnemiesPreview(run),
     rewards: run.rewards,
     awaitingRecruit: Boolean(run.state.awaitingRecruit),
     collectionReinforcementAvailable,
@@ -50,6 +54,15 @@ function serializeRun(run) {
     earned: run.state.earned || { xp: 0, souls: 0 },
     mapProgress: run.state.mapProgress
   };
+}
+
+async function getNextEnemiesPreview(run) {
+  if (!run.state.awaitingRecruit || run.status !== 'active') return [];
+
+  const nextFloor = Number(run.floor) + 1;
+  if (nextFloor > MAX_DUNGEON_FLOOR) return [];
+
+  return createHuntEnemies(createRng(run.seed + nextFloor), nextFloor, (run.state.team || []).length);
 }
 
 module.exports = router;
