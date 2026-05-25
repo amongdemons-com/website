@@ -12,6 +12,8 @@
   const MAX_DUNGEON_TEAM_SIZE = 6;
   const FORMATION_ROW_CAPACITY = 2;
   const BATTLE_SPEED_OPTIONS = [0.5, 1, 2, 4];
+  const FORMATION_DRAG_OVER_SELECTOR = '.formation-lane-cards.is-drag-over';
+  const RECRUIT_DRAG_OVER_SELECTOR = '.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .formation-lane-label.is-drag-over';
   const session = window.AmongDemons.getSession();
   const COMBAT_THEMES = {
     default: { color: '#FAC51C', shadow: 'rgba(250,197,28,0.85)' },
@@ -116,13 +118,13 @@
   }
 
   function bindActions() {
-    elements.logoutBtn.addEventListener('click', () => {
+    bindClick(elements.logoutBtn, () => {
       window.AmongDemons.clearSession();
       window.location.href = '/login';
     });
 
-    elements.cashoutConfirmBtn.addEventListener('click', cashOutDungeon);
-    elements.confirmShortTeamBtn.addEventListener('click', continueShortTeam);
+    bindClick(elements.cashoutConfirmBtn, cashOutDungeon);
+    bindClick(elements.confirmShortTeamBtn, continueShortTeam);
     window.addEventListener('resize', syncCompressedFormationLanes);
   }
 
@@ -159,7 +161,7 @@
     try {
       await loadRun(runId);
       if (state.run?.status === 'ended') {
-        localStorage.removeItem(RUN_KEY);
+        clearCurrentRun();
         state.run = null;
         state.combatLog = [];
         return false;
@@ -167,7 +169,7 @@
       return true;
     } catch (error) {
       if (error.status !== 404) throw error;
-      localStorage.removeItem(RUN_KEY);
+      clearCurrentRun();
       state.run = null;
       state.combatLog = [];
       return false;
@@ -181,7 +183,7 @@
       state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
       state.isRecruiting = Boolean(state.run.awaitingRecruit);
       if (state.isRecruiting) prepareRecruitStrategyState();
-      localStorage.setItem(RUN_KEY, state.run.runId);
+      storeCurrentRun(state.run.runId);
       renderRun();
       return true;
     } catch (error) {
@@ -201,13 +203,11 @@
     try {
       const payload = await createRunFromStartOptions();
       state.combatLog = [];
-      state.endNotice = null;
-      state.endSummary = null;
-      state.endedReplayRun = null;
+      resetEndState();
       state.isRecruiting = false;
       state.battleHandPreview = null;
       state.startOptions = null;
-      localStorage.setItem(RUN_KEY, payload.runId);
+      storeCurrentRun(payload.runId);
       await loadRun(payload.runId);
     } catch (error) {
       showError(error);
@@ -240,20 +240,19 @@
 
   async function loadRun(runId) {
     try {
-      state.run = await api(`/api/runs/${encodeURIComponent(runId)}`);
+      state.run = await api(runPath(runId));
       await ensureCollectionLoaded();
       state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
       state.isRecruiting = Boolean(state.run.awaitingRecruit);
       if (state.isRecruiting) prepareRecruitStrategyState();
       if (!state.isRecruiting) {
-        state.recruitDraftTeam = null;
-        state.recruitDraftPool = null;
+        clearRecruitDrafts();
       }
-      localStorage.setItem(RUN_KEY, state.run.runId);
+      storeCurrentRun(state.run.runId);
       renderRun();
       showPendingChoiceModal();
     } catch (error) {
-      localStorage.removeItem(RUN_KEY);
+      clearCurrentRun();
       state.run = null;
       await loadStartOptions();
       renderRun();
@@ -268,7 +267,7 @@
     await withBusy(null, async () => {
       try {
         setFightLogTitle('Fight Log');
-        const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/battle`, { method: 'POST' });
+        const result = await api(activeRunPath('battle'), { method: 'POST' });
         state.combatDemons = createCombatDemonMap();
         state.combatLog = result.combatLog || [];
         if (result.lastBattle) state.run.lastBattle = result.lastBattle;
@@ -368,23 +367,17 @@
     }
 
     try {
-      await api(`/api/runs/${encodeURIComponent(state.run.runId)}/recruit`, {
+      await api(activeRunPath('recruit'), {
         method: 'POST',
         body
       });
-      state.selectedRecruitRewardId = null;
-      state.selectedSwapInstanceId = null;
+      clearRecruitSelection();
       state.isRecruiting = false;
-      state.draggedRecruitPoolInstanceId = null;
-      state.draggedFormationInstanceId = null;
+      clearDragState();
       state.battleHandPreview = handPreview;
-      state.recruitDraftTeam = null;
-      state.recruitDraftPool = null;
-      state.combatLog = [];
-      state.combatDemons = new Map();
-      state.endNotice = null;
-      state.endSummary = null;
-      state.endedReplayRun = null;
+      clearRecruitDrafts();
+      resetCombatState();
+      resetEndState();
       getModal(elements.teamChoiceModal).hide();
       await loadRun(runId);
       if (canStartCurrentBattle()) {
@@ -458,14 +451,11 @@
     `;
     elements.cashoutConfirmBtn.disabled = !state.selectedCashoutDemonKey;
 
-    document.querySelectorAll('.cashout-demon-card').forEach((button) => {
-      button.addEventListener('click', () => {
-        state.selectedCashoutDemonKey = button.dataset.cashoutKey;
-        renderCashoutModal();
-      });
+    bindClicks('.cashout-demon-card', (button) => {
+      state.selectedCashoutDemonKey = button.dataset.cashoutKey;
+      renderCashoutModal();
     });
-
-    document.getElementById('cashoutSkipDemonBtn')?.addEventListener('click', cashOutWithoutDemon);
+    bindClick(document.getElementById('cashoutSkipDemonBtn'), cashOutWithoutDemon);
   }
 
   function getCashoutCandidates() {
@@ -525,46 +515,13 @@
 
     if (!(await confirmCollectionReplacement(candidate.demon))) return;
 
-    await withBusy(elements.cashoutConfirmBtn, async () => {
-      try {
-        const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/cashout`, {
-          method: 'POST',
-          body: {
-            source: candidate.source,
-            instanceId: candidate.instanceId,
-            rewardId: candidate.rewardId
-          }
-        });
-        localStorage.removeItem(RUN_KEY);
-        state.collectionDemons = null;
-        state.run = null;
-        state.selectedCashoutDemonKey = null;
-        state.battleHandPreview = null;
-        state.recruitDraftTeam = null;
-        state.recruitDraftPool = null;
-        state.combatLog = [];
-        state.combatDemons = new Map();
-        state.endSummary = {
-          title: 'Dungeon ended',
-          message: result.replaced
-            ? `${result.demon?.species || 'Demon'} replaced your previous collection demon.`
-            : `${result.demon?.species || 'Demon'} joined your collection.`,
-          demon: result.demon || null,
-          xp: result.xp,
-          souls: result.souls
-        };
-        state.endedReplayRun = null;
-        state.endNotice = {
-          text: result.replaced
-            ? `Dungeon ended. ${result.demon?.species || 'Demon'} replaced your previous collection demon. You earned ${result.xp} XP and ${result.souls} souls.`
-            : `Dungeon ended. ${result.demon?.species || 'Demon'} joined your collection. You earned ${result.xp} XP and ${result.souls} souls.`,
-          type: 'success'
-        };
-        getModal(elements.cashoutModal).hide();
-        await loadStartOptions();
-        renderRun();
-      } catch (error) {
-        showError(error);
+    await cashOut({
+      button: elements.cashoutConfirmBtn,
+      clearCollection: true,
+      body: {
+        source: candidate.source,
+        instanceId: candidate.instanceId,
+        rewardId: candidate.rewardId
       }
     });
   }
@@ -572,40 +529,58 @@
   async function cashOutWithoutDemon() {
     if (!state.run) return;
 
-    const skipButton = document.getElementById('cashoutSkipDemonBtn');
-    await withBusy(skipButton, async () => {
+    await cashOut({
+      button: document.getElementById('cashoutSkipDemonBtn'),
+      body: { skipDemon: true }
+    });
+  }
+
+  async function cashOut({ button, body, clearCollection = false }) {
+    await withBusy(button, async () => {
       try {
-        const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/cashout`, {
-          method: 'POST',
-          body: { skipDemon: true }
-        });
-        localStorage.removeItem(RUN_KEY);
-        state.run = null;
-        state.selectedCashoutDemonKey = null;
-        state.battleHandPreview = null;
-        state.recruitDraftTeam = null;
-        state.recruitDraftPool = null;
-        state.combatLog = [];
-        state.combatDemons = new Map();
-        state.endSummary = {
-          title: 'Dungeon ended',
-          message: 'You left without recruiting a demon.',
-          demon: null,
-          xp: result.xp,
-          souls: result.souls
-        };
-        state.endedReplayRun = null;
-        state.endNotice = {
-          text: `Dungeon ended. You earned ${result.xp} XP and ${result.souls} souls.`,
-          type: 'success'
-        };
-        getModal(elements.cashoutModal).hide();
-        await loadStartOptions();
-        renderRun();
+        const result = await api(activeRunPath('cashout'), { method: 'POST', body });
+        await finishCashout(result, { clearCollection, skippedDemon: Boolean(body.skipDemon) });
       } catch (error) {
         showError(error);
       }
     });
+  }
+
+  async function finishCashout(result, options = {}) {
+    const skippedDemon = Boolean(options.skippedDemon);
+    const demonMessage = skippedDemon ? '' : getCashoutDemonMessage(result);
+
+    clearCurrentRun();
+    if (options.clearCollection) state.collectionDemons = null;
+    state.run = null;
+    state.selectedCashoutDemonKey = null;
+    state.battleHandPreview = null;
+    clearRecruitDrafts();
+    resetCombatState();
+    state.endSummary = {
+      title: 'Dungeon ended',
+      message: skippedDemon ? 'You left without recruiting a demon.' : demonMessage,
+      demon: skippedDemon ? null : result.demon || null,
+      xp: result.xp,
+      souls: result.souls
+    };
+    state.endedReplayRun = null;
+    state.endNotice = {
+      text: skippedDemon
+        ? `Dungeon ended. You earned ${result.xp} XP and ${result.souls} souls.`
+        : `Dungeon ended. ${demonMessage} You earned ${result.xp} XP and ${result.souls} souls.`,
+      type: 'success'
+    };
+    getModal(elements.cashoutModal).hide();
+    await loadStartOptions();
+    renderRun();
+  }
+
+  function getCashoutDemonMessage(result) {
+    const species = result.demon?.species || 'Demon';
+    return result.replaced
+      ? `${species} replaced your previous collection demon.`
+      : `${species} joined your collection.`;
   }
 
   async function endRun() {
@@ -619,17 +594,14 @@
 
     try {
       const replayRun = summary.defeated ? createReplayRunSnapshot(state.run) : null;
-      const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/end`, { method: 'POST' });
-      localStorage.removeItem(RUN_KEY);
+      const result = await api(activeRunPath('end'), { method: 'POST' });
+      clearCurrentRun();
       state.run = null;
-      state.selectedRecruitRewardId = null;
-      state.selectedSwapInstanceId = null;
+      clearRecruitSelection();
       state.isRecruiting = false;
       state.battleHandPreview = null;
-      state.draggedRecruitPoolInstanceId = null;
-      state.draggedFormationInstanceId = null;
-      state.recruitDraftTeam = null;
-      state.recruitDraftPool = null;
+      clearDragState();
+      clearRecruitDrafts();
       state.endSummary = {
         title: summary.completed ? 'Dungeon complete' : 'Dungeon ended',
         outcome: summary.defeated ? 'defeat' : 'victory',
@@ -880,20 +852,12 @@
   }
 
   function bindDungeonEmptyButtons() {
-    const startNewDungeonBtn = document.getElementById('startNewDungeonBtn');
-
-    if (startNewDungeonBtn) {
-      startNewDungeonBtn.addEventListener('click', async () => {
-        state.endSummary = null;
-        state.endNotice = null;
-        state.endedReplayRun = null;
-        await startRun();
-        renderRun();
-      });
-    }
-
-    const replayEndedDungeonBtn = document.getElementById('replayEndedDungeonBtn');
-    if (replayEndedDungeonBtn) replayEndedDungeonBtn.addEventListener('click', replayFight);
+    bindClick(document.getElementById('startNewDungeonBtn'), async () => {
+      resetEndState();
+      await startRun();
+      renderRun();
+    });
+    bindClick(document.getElementById('replayEndedDungeonBtn'), replayFight);
   }
 
   function renderHuntProgress(run) {
@@ -927,43 +891,21 @@
       return;
     }
 
-    if (typeId === 2) {
-      drawDarkSpike(entry.attacker, entry.target);
-      return;
-    }
+    const typeAnimation = {
+      2: () => drawDarkSpike(entry.attacker, entry.target),
+      4: () => drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'fiery', flames: 14 }),
+      5: () => drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'heavy', duration: 520 }),
+      6: () => drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'assassin', duration: 240 }),
+      7: () => drawSwordSwing(entry.attacker, entry.target),
+      8: () => drawThornBurst(entry.attacker, entry.target),
+      9: () => {
+        drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'crushing', duration: 960 });
+        shakeTargetCard(entry.target);
+      }
+    }[typeId];
 
-    if (typeId === 4) {
-      drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'fiery', flames: 14 });
-      return;
-    }
-
-    if (typeId === 5) {
-      drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'heavy', duration: 520 });
-      return;
-    }
-
-    if (typeId === 6) {
-      drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'assassin', duration: 240 });
-      return;
-    }
-
-    if (typeId === 7) {
-      drawSwordSwing(entry.attacker, entry.target);
-      return;
-    }
-
-    if (typeId === 8) {
-      drawThornBurst(entry.attacker, entry.target);
-      return;
-    }
-
-    if (typeId === 9) {
-      drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'crushing', duration: 960 });
-      shakeTargetCard(entry.target);
-      return;
-    }
-
-    drawAttackZap(entry.attacker, entry.target, { effect: entry.effect });
+    if (typeAnimation) typeAnimation();
+    else drawAttackZap(entry.attacker, entry.target, { effect: entry.effect });
   }
 
   function drawAttackZap(attackerId, targetId, options = {}) {
@@ -1012,26 +954,21 @@
         }).join('')
       : '';
 
-    const zap = document.createElement('div');
-    applyCombatTheme(zap, getCombatTheme(attackerId, options.effect));
-    zap.className = [
+    const zap = createCombatElement([
       'attack-zap',
       getDemonSide(attackerId) === 'player' ? 'is-player-attack' : 'is-enemy-attack',
       isBackLineAttack ? 'is-back-attack' : '',
       options.variant ? `is-${options.variant}` : '',
       options.poison ? 'is-poison-apply' : ''
-    ].filter(Boolean).join(' ');
-    zap.innerHTML = `
-      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+    ].filter(Boolean).join(' '), attackerId, options.effect);
+    zap.innerHTML = renderViewportSvg(`
         <path class="attack-zap-trail" d="M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${controlX.toFixed(1)} ${controlY.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" />
         ${options.variant === 'assassin' ? `<path class="attack-zap-trail attack-zap-trail-secondary" d="M ${(x1 + normalX * 7).toFixed(1)} ${(y1 + normalY * 7).toFixed(1)} Q ${(controlX + normalX * 7).toFixed(1)} ${(controlY + normalY * 7).toFixed(1)} ${(x2 + normalX * 7).toFixed(1)} ${(y2 + normalY * 7).toFixed(1)}" />` : ''}
         ${bubbleHtml}
         ${flameHtml}
         <circle class="attack-zap-impact" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="${isBackLineAttack ? 5 : 4}" />
-      </svg>
-    `;
-    document.body.appendChild(zap);
-    setTimeout(() => zap.remove(), scaleCombatDuration(options.duration || 320));
+    `);
+    appendTemporaryElement(zap, options.duration || 320);
   }
 
   function updateTargetCard(instanceId, hp, attackerSide = 'unknown', options = {}) {
@@ -1075,9 +1012,7 @@
     const card = findDemonCard(instanceId);
     if (!card) return;
 
-    const floating = document.createElement('div');
-    floating.className = `floating-combat-number is-${type}`;
-    applyCombatTheme(floating, getCombatTheme(attackerId, effect || type));
+    const floating = createCombatElement(`floating-combat-number is-${type}`, attackerId, effect || type);
     floating.innerHTML = type === 'heal'
       ? `+${escapeHtml(amount)}`
       : `-${escapeHtml(amount)}`;
@@ -1086,8 +1021,7 @@
       const scale = Math.min(2.2, 1 + (burstCount - 1) * 0.12);
       floating.style.fontSize = `calc(1.22rem * ${scale.toFixed(2)})`;
     }
-    card.appendChild(floating);
-    setTimeout(() => floating.remove(), scaleCombatDuration(760));
+    appendTemporaryElement(floating, 760, card);
   }
 
   function drawSwordSwing(attackerId, targetId) {
@@ -1102,11 +1036,8 @@
     const x = startX + Math.cos(angle) * distance;
     const y = startY + Math.sin(angle) * distance;
     const endOffset = Math.max(22, attackerRect.width * 0.26);
-    const swing = document.createElement('div');
-    applyCombatTheme(swing, getCombatTheme(attackerId));
-    swing.className = 'sword-swing';
-    swing.innerHTML = `
-      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+    const swing = createCombatElement('sword-swing', attackerId);
+    swing.innerHTML = renderViewportSvg(`
         ${[-0.18, 0, 0.18].map((offset, index) => {
           const offsetX = x + Math.cos(angle + Math.PI / 2) * height * offset;
           const offsetY = y + Math.sin(angle + Math.PI / 2) * height * offset;
@@ -1114,10 +1045,8 @@
           const transform = `rotate(${(angle * 180 / Math.PI).toFixed(1)} ${offsetX.toFixed(1)} ${offsetY.toFixed(1)}) translate(${endOffset.toFixed(1)} 0)`;
           return `<path class="sword-swing-belly sword-scratch-${index + 1}" d="${d}" transform="${transform}" /><path class="sword-swing-arc sword-scratch-${index + 1}" d="${d}" transform="${transform}" />`;
         }).join('')}
-      </svg>
-    `;
-    document.body.appendChild(swing);
-    setTimeout(() => swing.remove(), scaleCombatDuration(440));
+    `);
+    appendTemporaryElement(swing, 440);
   }
 
   function drawThornBurst(attackerId, targetId) {
@@ -1130,12 +1059,9 @@
     const originX = startX + Math.cos(angle) * originDistance;
     const originY = startY + Math.sin(angle) * originDistance;
     const thornLength = Math.max(22, attackerRect.width * 0.28);
-    const thorns = document.createElement('div');
+    const thorns = createCombatElement('thorn-burst', attackerId);
     const offsets = [-0.48, -0.28, -0.1, 0.1, 0.28, 0.48];
-    applyCombatTheme(thorns, getCombatTheme(attackerId));
-    thorns.className = 'thorn-burst';
-    thorns.innerHTML = `
-      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+    thorns.innerHTML = renderViewportSvg(`
         ${offsets.map((offset, index) => {
           const thornAngle = angle + offset;
           const length = thornLength * (0.74 + (index % 2) * 0.16);
@@ -1146,10 +1072,8 @@
           const tipY = baseY + Math.sin(thornAngle) * length;
           return `<path class="thorn-spike" d="M ${baseX.toFixed(1)} ${baseY.toFixed(1)} L ${tipX.toFixed(1)} ${tipY.toFixed(1)}" />`;
         }).join('')}
-      </svg>
-    `;
-    document.body.appendChild(thorns);
-    setTimeout(() => thorns.remove(), scaleCombatDuration(520));
+    `);
+    appendTemporaryElement(thorns, 520);
   }
 
   function shakeTargetCard(instanceId) {
@@ -1166,18 +1090,13 @@
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
     const ring = Math.max(18, rect.width * 0.18);
-    const heal = document.createElement('div');
-    applyCombatTheme(heal, getCombatTheme(attackerId, 'heal'));
-    heal.className = 'heal-effect';
-    heal.innerHTML = `
-      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+    const heal = createCombatElement('heal-effect', attackerId, 'heal');
+    heal.innerHTML = renderViewportSvg(`
         <circle class="heal-ring" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${ring.toFixed(1)}" />
         <circle class="heal-ring heal-ring-secondary" cx="${(x - ring * 0.6).toFixed(1)}" cy="${(y + ring * 0.16).toFixed(1)}" r="${(ring * 0.72).toFixed(1)}" />
         <circle class="heal-ring heal-ring-tertiary" cx="${(x + ring * 0.58).toFixed(1)}" cy="${(y - ring * 0.14).toFixed(1)}" r="${(ring * 0.58).toFixed(1)}" />
-      </svg>
-    `;
-    document.body.appendChild(heal);
-    setTimeout(() => heal.remove(), scaleCombatDuration(620));
+    `);
+    appendTemporaryElement(heal, 620);
   }
 
   function drawChaoticLightning(attackerId, targetId) {
@@ -1189,24 +1108,19 @@
     const top = Math.max(0, rect.top - Math.min(170, window.innerHeight * 0.24));
     const strikeY = rect.top + rect.height * 0.56;
     const branchY = rect.top + rect.height * 0.26;
-    const zap = document.createElement('div');
-    applyCombatTheme(zap, getCombatTheme(attackerId));
-    zap.className = 'chaos-lightning is-thunderstrike';
+    const zap = createCombatElement('chaos-lightning is-thunderstrike', attackerId);
     const boltD = `M ${(x - 12).toFixed(1)} ${top.toFixed(1)} L ${(x + 10).toFixed(1)} ${(top + 42).toFixed(1)} L ${(x - 8).toFixed(1)} ${(top + 42).toFixed(1)} L ${(x + 7).toFixed(1)} ${(branchY + 10).toFixed(1)} L ${(x - 16).toFixed(1)} ${(branchY + 10).toFixed(1)} L ${(x + 4).toFixed(1)} ${strikeY.toFixed(1)}`;
     const branchOneD = `M ${(x + 7).toFixed(1)} ${(branchY - 4).toFixed(1)} L ${(x + 34).toFixed(1)} ${(branchY + 10).toFixed(1)} L ${(x + 14).toFixed(1)} ${(branchY + 18).toFixed(1)}`;
     const branchTwoD = `M ${(x - 4).toFixed(1)} ${(branchY + 22).toFixed(1)} L ${(x - 35).toFixed(1)} ${(branchY + 34).toFixed(1)} L ${(x - 13).toFixed(1)} ${(branchY + 43).toFixed(1)}`;
-    zap.innerHTML = `
-      <svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">
+    zap.innerHTML = renderViewportSvg(`
         <path class="chaos-thunder-border chaos-thunder-core" d="${boltD}" />
         <path class="chaos-thunder-border chaos-thunder-branch" d="${branchOneD}" />
         <path class="chaos-thunder-border chaos-thunder-branch" d="${branchTwoD}" />
         <path class="chaos-thunder-core" d="${boltD}" />
         <path class="chaos-thunder-branch" d="${branchOneD}" />
         <path class="chaos-thunder-branch" d="${branchTwoD}" />
-      </svg>
-    `;
-    document.body.appendChild(zap);
-    setTimeout(() => zap.remove(), scaleCombatDuration(360));
+    `);
+    appendTemporaryElement(zap, 360);
   }
 
   function drawDarkSpike(attackerId, targetId) {
@@ -1222,16 +1136,12 @@
     const endY = targetRect.top + targetRect.height / 2;
     const angle = Math.atan2(endY - startY, endX - startX);
     const length = Math.max(24, Math.hypot(endX - startX, endY - startY));
-    const spike = document.createElement('div');
-
-    spike.className = 'dark-spike';
+    const spike = createCombatElement('dark-spike', attackerId);
     spike.style.left = `${startX}px`;
     spike.style.top = `${startY}px`;
     spike.style.width = `${length}px`;
     spike.style.setProperty('--dark-spike-angle', `${angle}rad`);
-    applyCombatTheme(spike, getCombatTheme(attackerId));
-    document.body.appendChild(spike);
-    setTimeout(() => spike.remove(), scaleCombatDuration(340));
+    appendTemporaryElement(spike, 340);
   }
 
   function getCombatTheme(attackerId, effect) {
@@ -1247,6 +1157,23 @@
     element.style.setProperty('--combat-color', theme.color);
     element.style.setProperty('--combat-shadow', theme.shadow);
     element.style.setProperty('--combat-text-outline', theme.outline || '#fff');
+  }
+
+  function createCombatElement(className, attackerId, effect) {
+    const element = document.createElement('div');
+    element.className = className;
+    applyCombatTheme(element, getCombatTheme(attackerId, effect));
+    return element;
+  }
+
+  function appendTemporaryElement(element, duration, parent = document.body) {
+    parent.appendChild(element);
+    setTimeout(() => element.remove(), scaleCombatDuration(duration));
+    return element;
+  }
+
+  function renderViewportSvg(content) {
+    return `<svg viewBox="0 0 ${window.innerWidth} ${window.innerHeight}" aria-hidden="true" focusable="false">${content}</svg>`;
   }
 
   function getAttackGeometry(attacker, target) {
@@ -1341,10 +1268,7 @@
     card.classList.add(className);
     card[timerKey] = setTimeout(() => {
       card.classList.remove(className);
-      if (className === 'is-attacking') {
-        card.classList.remove('is-player-attack', 'is-enemy-attack');
-      }
-      if (className === 'is-hit') {
+      if (className === 'is-attacking' || className === 'is-hit') {
         card.classList.remove('is-player-attack', 'is-enemy-attack');
       }
       card[timerKey] = null;
@@ -1652,12 +1576,9 @@
   }
 
   function prepareRecruitStrategyState() {
-    state.selectedRecruitRewardId = null;
-    state.selectedSwapInstanceId = null;
-    state.draggedRecruitPoolInstanceId = null;
-    state.draggedFormationInstanceId = null;
-    state.recruitDraftTeam = null;
-    state.recruitDraftPool = null;
+    clearRecruitSelection();
+    clearDragState();
+    clearRecruitDrafts();
     if (state.run?.collectionReinforcementAvailable) {
       state.collectionReinforcementPlaceholderInteracted = false;
       state.collectionReinforcementStagedInteracted = true;
@@ -2039,15 +1960,10 @@
       ` : ''}
     `;
 
-    document.querySelectorAll('[data-battle-speed]').forEach((button) => {
-      button.addEventListener('click', () => setBattleSpeed(Number(button.dataset.battleSpeed)));
-    });
-    const startButton = document.getElementById('fightLogStartBtn');
-    if (startButton) startButton.addEventListener('click', isDefeated ? startNewHuntAfterDefeat : startRun);
-    const replayButton = document.getElementById('fightLogReplayBtn');
-    if (replayButton) replayButton.addEventListener('click', replayFight);
-    const logToggleButton = document.getElementById('fightLogToggleBtn');
-    if (logToggleButton) logToggleButton.addEventListener('click', toggleFightLogPanel);
+    bindClicks('[data-battle-speed]', (button) => setBattleSpeed(Number(button.dataset.battleSpeed)));
+    bindClick(document.getElementById('fightLogStartBtn'), isDefeated ? startNewHuntAfterDefeat : startRun);
+    bindClick(document.getElementById('fightLogReplayBtn'), replayFight);
+    bindClick(document.getElementById('fightLogToggleBtn'), toggleFightLogPanel);
     bindPathButtons();
   }
 
@@ -2070,10 +1986,8 @@
   }
 
   function bindPathButtons() {
-    const getRewardButton = document.getElementById('getRewardBtn');
-    if (getRewardButton) getRewardButton.addEventListener('click', openCashoutModal);
-    const continueHuntButton = document.getElementById('fightLogContinueHuntBtn');
-    if (continueHuntButton) continueHuntButton.addEventListener('click', requestRecruitContinue);
+    bindClick(document.getElementById('getRewardBtn'), openCashoutModal);
+    bindClick(document.getElementById('fightLogContinueHuntBtn'), requestRecruitContinue);
   }
 
   async function startNewHuntAfterDefeat() {
@@ -2236,8 +2150,7 @@
       </button>
     `;
     bindRewardButtons();
-    const modalExitHuntBtn = document.getElementById('modalExitHuntBtn');
-    if (modalExitHuntBtn) modalExitHuntBtn.addEventListener('click', () => finishRun('Dungeon complete.', { completed: true }));
+    bindClick(document.getElementById('modalExitHuntBtn'), () => finishRun('Dungeon complete.', { completed: true }));
   }
 
   async function openCollectionReinforcementModal() {
@@ -2299,19 +2212,15 @@
       input?.focus();
       input?.setSelectionRange(input.value.length, input.value.length);
     });
-    document.querySelectorAll('.js-remove-collection-reinforcement').forEach((button) => {
-      button.addEventListener('click', () => {
-        removeCollectionReinforcement(button.dataset.instanceId);
-        renderCollectionReinforcementModal(query);
-        renderRun();
-      });
+    bindClicks('.js-remove-collection-reinforcement', (button) => {
+      removeCollectionReinforcement(button.dataset.instanceId);
+      renderCollectionReinforcementModal(query);
+      renderRun();
     });
-    document.querySelectorAll('.js-call-collection-reinforcement').forEach((button) => {
-      button.addEventListener('click', () => {
-        addCollectionReinforcementToPool(Number(button.dataset.demonId));
-        getModal(elements.teamChoiceModal).hide();
-        renderRun();
-      });
+    bindClicks('.js-call-collection-reinforcement', (button) => {
+      addCollectionReinforcementToPool(Number(button.dataset.demonId));
+      getModal(elements.teamChoiceModal).hide();
+      renderRun();
     });
   }
 
@@ -2460,12 +2369,12 @@
       const modal = getModal(modalElement);
       let decided = false;
 
-      modalElement.querySelector('[data-choice="keep"]')?.addEventListener('click', () => {
+      bindClick(modalElement.querySelector('[data-choice="keep"]'), () => {
         decided = true;
         resolve(false);
         modal.hide();
       });
-      modalElement.querySelector('[data-choice="replace"]')?.addEventListener('click', () => {
+      bindClick(modalElement.querySelector('[data-choice="replace"]'), () => {
         decided = true;
         resolve(true);
         modal.hide();
@@ -2506,9 +2415,7 @@
   }
 
   function bindRewardButtons() {
-    document.querySelectorAll('.js-save').forEach((button) => {
-      button.addEventListener('click', () => saveReward(Number(button.dataset.rewardId)));
-    });
+    bindClicks('.js-save', (button) => saveReward(Number(button.dataset.rewardId)));
   }
 
   async function setDemonPosition(instanceId, position, rowIndex = null) {
@@ -2527,7 +2434,7 @@
     renderRun();
 
     try {
-      const result = await api(`/api/runs/${encodeURIComponent(state.run.runId)}/formation`, {
+      const result = await api(activeRunPath('formation'), {
         method: 'POST',
         body: {
           formation: team.map((demon, index) => ({
@@ -2547,52 +2454,190 @@
     }
   }
 
+  function bindNativeDragSource(card, options) {
+    card.addEventListener('dragstart', (event) => {
+      const payload = options.getPayload(card);
+      if (!payload) return;
+
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', JSON.stringify(payload));
+      state[options.stateKey] = payload.instanceId;
+      if (options.markStaged) markCollectionReinforcementStagedInteracted(payload.instanceId);
+      card.classList.add('is-dragging');
+    });
+
+    card.addEventListener('dragend', () => {
+      state[options.stateKey] = null;
+      card.classList.remove('is-dragging');
+      clearDragOverTargets(options.clearSelector);
+    });
+  }
+
+  function bindNativeDropTarget(target, options) {
+    target.addEventListener('dragover', (event) => {
+      const payload = options.readPayload(event);
+      if (!(options.canDragOver || options.canDrop)(payload, event, target)) return;
+
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      target.classList.add('is-drag-over');
+    });
+
+    target.addEventListener('dragleave', () => target.classList.remove('is-drag-over'));
+    target.addEventListener('drop', (event) => {
+      const payload = options.readPayload(event);
+      target.classList.remove('is-drag-over');
+      if (!options.canDrop(payload, event, target)) return;
+
+      event.preventDefault();
+      if (options.stopPropagation) event.stopPropagation();
+      options.onDrop(payload, event, target);
+      if (options.renderAfterDrop) renderRun();
+    });
+  }
+
+  function clearDragOverTargets(selector) {
+    document.querySelectorAll(selector).forEach((target) => target.classList.remove('is-drag-over'));
+  }
+
   function bindFormationDragAndDrop() {
     if (!state.run || state.run.awaitingRecruit || state.run.awaitingFinalPick) return;
 
     document.querySelectorAll('#teamGrid .hunt-demon-card[draggable="true"]').forEach((card) => {
       if (card.dataset.rewardId) return;
 
-      card.addEventListener('dragstart', (event) => {
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', JSON.stringify({
+      bindNativeDragSource(card, {
+        stateKey: 'draggedFormationInstanceId',
+        clearSelector: FORMATION_DRAG_OVER_SELECTOR,
+        markStaged: true,
+        getPayload: () => ({
           type: 'formation',
           instanceId: card.dataset.instanceId
-        }));
-        state.draggedFormationInstanceId = card.dataset.instanceId;
-        markCollectionReinforcementStagedInteracted(card.dataset.instanceId);
-        card.classList.add('is-dragging');
-      });
-      card.addEventListener('dragend', () => {
-        state.draggedFormationInstanceId = null;
-        card.classList.remove('is-dragging');
-        document.querySelectorAll('.formation-lane-cards.is-drag-over').forEach((lane) => lane.classList.remove('is-drag-over'));
+        })
       });
     });
 
     document.querySelectorAll('#teamGrid .formation-lane-cards').forEach((lane) => {
-      lane.addEventListener('dragover', (event) => {
-        const payload = readDragPayload(event);
-        if (payload?.type !== 'formation' && !state.draggedFormationInstanceId) return;
-        const instanceId = payload?.instanceId || state.draggedFormationInstanceId;
-        if (!canDropFormationOnLane(instanceId, lane)) return;
-
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-        lane.classList.add('is-drag-over');
-      });
-      lane.addEventListener('dragleave', () => lane.classList.remove('is-drag-over'));
-      lane.addEventListener('drop', (event) => {
-        const payload = readDragPayload(event);
-        const instanceId = payload?.instanceId || state.draggedFormationInstanceId;
-        lane.classList.remove('is-drag-over');
-        if (!instanceId) return;
-        if (!canDropFormationOnLane(instanceId, lane)) return;
-
-        event.preventDefault();
-        setDemonPosition(instanceId, lane.dataset.formationDrop, getFormationLaneInfo(lane)?.rowIndex);
+      bindNativeDropTarget(lane, {
+        readPayload: readDragPayload,
+        canDrop: (payload) => {
+          if (payload?.type !== 'formation' && !state.draggedFormationInstanceId) return false;
+          return canDropFormationOnLane(payload?.instanceId || state.draggedFormationInstanceId, lane);
+        },
+        onDrop: (payload) => {
+          const instanceId = payload?.instanceId || state.draggedFormationInstanceId;
+          if (!instanceId) return;
+          setDemonPosition(instanceId, lane.dataset.formationDrop, getFormationLaneInfo(lane)?.rowIndex);
+        }
       });
     });
+  }
+
+  function bindRecruitCardDragAndDrop(card, options) {
+    bindNativeDragSource(card, {
+      stateKey: options.stateKey,
+      clearSelector: RECRUIT_DRAG_OVER_SELECTOR,
+      markStaged: options.markStaged,
+      getPayload: options.getPayload
+    });
+
+    bindNativeDropTarget(card, {
+      readPayload: readRecruitDragPayload,
+      stopPropagation: true,
+      renderAfterDrop: true,
+      canDrop: (payload) => options.canDrop(payload, card.dataset.instanceId),
+      onDrop: (payload) => applyRecruitCardDrop(payload, options.targetSide, card.dataset.instanceId)
+    });
+  }
+
+  function getRecruitDragPayload(collection, type, card) {
+    return findDraftDemon(collection, card.dataset.instanceId)
+      ? { type, instanceId: card.dataset.instanceId }
+      : null;
+  }
+
+  function getRecruitDropContext(event) {
+    const payload = readRecruitDragPayload(event);
+    const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
+    const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
+    const hasPoolPayload = payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId);
+    const hasTeamPayload = payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId);
+
+    return {
+      payload,
+      poolInstanceId,
+      teamInstanceId,
+      hasPoolPayload,
+      hasTeamPayload,
+      isPoolDrop: hasPoolPayload && findDraftDemon(state.recruitDraftPool, poolInstanceId),
+      isTeamMove: hasTeamPayload && findDraftDemon(state.recruitDraftTeam, teamInstanceId)
+    };
+  }
+
+  function bindTeamFormationDropTarget(target, getLane, getPosition) {
+    bindNativeDropTarget(target, {
+      readPayload: getRecruitDropContext,
+      renderAfterDrop: true,
+      canDragOver: (context) => canDragOverTeamFormationTarget(context, getLane(), getPosition()),
+      canDrop: (context) => canDropOnTeamFormationTarget(context, getLane(), getPosition()),
+      onDrop: (context, event) => applyTeamFormationTargetDrop(context, getLane(), getPosition(), event)
+    });
+  }
+
+  function canDragOverTeamFormationTarget(context, lane, position) {
+    if (!position || (!context.isPoolDrop && !context.isTeamMove)) return false;
+    if (context.isPoolDrop && !canAddPoolDemonToTeam(context.poolInstanceId, lane)) return false;
+    if (context.isTeamMove && !canMoveTeamDemonToLane(context.teamInstanceId, lane)) return false;
+    return true;
+  }
+
+  function canDropOnTeamFormationTarget(context, lane, position) {
+    if (!position || (!context.poolInstanceId && !context.teamInstanceId)) return false;
+    if (context.hasTeamPayload) return true;
+    return context.hasPoolPayload && canAddPoolDemonToTeam(context.poolInstanceId, lane);
+  }
+
+  function applyTeamFormationTargetDrop(context, lane, position, event) {
+    if (context.hasTeamPayload) {
+      applyTeamLaneDrop(context.teamInstanceId, lane, position, event.clientY, event.clientX);
+      return;
+    }
+
+    if (context.hasPoolPayload && canAddPoolDemonToTeam(context.poolInstanceId, lane)) {
+      addPoolDemonToTeam(
+        context.poolInstanceId,
+        position,
+        getLaneDropDraftIndex(lane, event.clientY, event.clientX),
+        getFormationLaneInfo(lane)?.rowIndex
+      );
+    }
+  }
+
+  function bindHandFormationDropTarget(lane) {
+    bindNativeDropTarget(lane, {
+      readPayload: getRecruitDropContext,
+      renderAfterDrop: true,
+      canDragOver: (context) => canDragOverHandFormationTarget(context),
+      canDrop: (context) => canDragOverHandFormationTarget(context),
+      onDrop: (context, event) => applyHandFormationTargetDrop(context, lane, event)
+    });
+  }
+
+  function canDragOverHandFormationTarget(context) {
+    const isTeamDrop = context.hasTeamPayload && canReturnTeamDemonToPool(context.teamInstanceId);
+    const isPoolMove = context.hasPoolPayload && findDraftDemon(state.recruitDraftPool, context.poolInstanceId);
+    return Boolean(isTeamDrop || isPoolMove);
+  }
+
+  function applyHandFormationTargetDrop(context, lane, event) {
+    if (context.hasTeamPayload && canReturnTeamDemonToPool(context.teamInstanceId)) {
+      applyTeamToPoolLaneDrop(context.teamInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
+      return;
+    }
+
+    if (context.hasPoolPayload && findDraftDemon(state.recruitDraftPool, context.poolInstanceId)) {
+      applyPoolLaneDrop(context.poolInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
+    }
   }
 
   function bindRecruitDragAndDrop() {
@@ -2600,198 +2645,37 @@
     ensureRecruitDraft();
 
     document.querySelectorAll('#dungeonHandGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
-      card.addEventListener('dragstart', (event) => {
-        const poolDemon = findDraftDemon(state.recruitDraftPool, card.dataset.instanceId);
-        if (!poolDemon) return;
-
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', JSON.stringify({
-          type: 'recruit-pool',
-          instanceId: card.dataset.instanceId
-        }));
-        state.draggedRecruitPoolInstanceId = card.dataset.instanceId;
-        markCollectionReinforcementStagedInteracted(card.dataset.instanceId);
-        card.classList.add('is-dragging');
-      });
-      card.addEventListener('dragend', () => {
-        state.draggedRecruitPoolInstanceId = null;
-        card.classList.remove('is-dragging');
-        document.querySelectorAll('.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .formation-lane-label.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
-      });
-      card.addEventListener('dragover', (event) => {
-        const payload = readRecruitDragPayload(event);
-        if (!canDropRecruitOnPoolCard(payload, card.dataset.instanceId)) return;
-
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-        card.classList.add('is-drag-over');
-      });
-      card.addEventListener('dragleave', () => card.classList.remove('is-drag-over'));
-      card.addEventListener('drop', (event) => {
-        const payload = readRecruitDragPayload(event);
-        card.classList.remove('is-drag-over');
-        if (!canDropRecruitOnPoolCard(payload, card.dataset.instanceId)) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-        applyRecruitCardDrop(payload, 'pool', card.dataset.instanceId);
-        renderRun();
+      bindRecruitCardDragAndDrop(card, {
+        stateKey: 'draggedRecruitPoolInstanceId',
+        targetSide: 'pool',
+        markStaged: true,
+        getPayload: () => getRecruitDragPayload(state.recruitDraftPool, 'recruit-pool', card),
+        canDrop: canDropRecruitOnPoolCard
       });
     });
 
     document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
-      card.addEventListener('dragstart', (event) => {
-        const teamDemon = findDraftDemon(state.recruitDraftTeam, card.dataset.instanceId);
-        if (!teamDemon) return;
-
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData('text/plain', JSON.stringify({
-          type: 'recruit-team',
-          instanceId: card.dataset.instanceId
-        }));
-        state.draggedFormationInstanceId = card.dataset.instanceId;
-        card.classList.add('is-dragging');
-      });
-      card.addEventListener('dragend', () => {
-        state.draggedFormationInstanceId = null;
-        card.classList.remove('is-dragging');
-        document.querySelectorAll('.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .formation-lane-label.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
-      });
-      card.addEventListener('dragover', (event) => {
-        const payload = readRecruitDragPayload(event);
-        if (!canDropRecruitOnTeamCard(payload, card.dataset.instanceId)) return;
-
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-        card.classList.add('is-drag-over');
-      });
-      card.addEventListener('dragleave', () => card.classList.remove('is-drag-over'));
-      card.addEventListener('drop', (event) => {
-        const payload = readRecruitDragPayload(event);
-        card.classList.remove('is-drag-over');
-        if (!canDropRecruitOnTeamCard(payload, card.dataset.instanceId)) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-        applyRecruitCardDrop(payload, 'team', card.dataset.instanceId);
-        renderRun();
+      bindRecruitCardDragAndDrop(card, {
+        stateKey: 'draggedFormationInstanceId',
+        targetSide: 'team',
+        getPayload: () => getRecruitDragPayload(state.recruitDraftTeam, 'recruit-team', card),
+        canDrop: canDropRecruitOnTeamCard
       });
     });
 
     document.querySelectorAll('#teamGrid .formation-lane-cards').forEach((lane) => {
-      lane.addEventListener('dragover', (event) => {
-        const payload = readRecruitDragPayload(event);
-        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
-        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
-        const isPoolDrop = (payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId);
-        const isTeamMove = (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && findDraftDemon(state.recruitDraftTeam, teamInstanceId);
-        if (!isPoolDrop && !isTeamMove) return;
-
-        if (isPoolDrop && !canAddPoolDemonToTeam(poolInstanceId, lane)) return;
-        if (isTeamMove && !canMoveTeamDemonToLane(teamInstanceId, lane)) return;
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-        lane.classList.add('is-drag-over');
-      });
-      lane.addEventListener('dragleave', () => lane.classList.remove('is-drag-over'));
-      lane.addEventListener('drop', (event) => {
-        const payload = readRecruitDragPayload(event);
-        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
-        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
-        lane.classList.remove('is-drag-over');
-        if (!poolInstanceId && !teamInstanceId) return;
-
-        if (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) {
-          event.preventDefault();
-          applyTeamLaneDrop(teamInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
-          renderRun();
-          return;
-        }
-
-        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId, lane)) {
-          event.preventDefault();
-          addPoolDemonToTeam(poolInstanceId, lane.dataset.formationDrop, getLaneDropDraftIndex(lane, event.clientY, event.clientX), getFormationLaneInfo(lane)?.rowIndex);
-          renderRun();
-        }
-      });
+      bindTeamFormationDropTarget(lane, () => lane, () => lane.dataset.formationDrop);
     });
 
     document.querySelectorAll('#teamGrid .formation-lane-label').forEach((label) => {
-      label.addEventListener('dragover', (event) => {
-        const position = label.closest('.formation-lane')?.dataset.formationPosition;
-        const payload = readRecruitDragPayload(event);
-        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
-        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
-        const isPoolDrop = (payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId);
-        const isTeamMove = (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && findDraftDemon(state.recruitDraftTeam, teamInstanceId);
-        if (!position || (!isPoolDrop && !isTeamMove)) return;
-
-        const lane = label.closest('.formation-lane')?.querySelector('.formation-lane-cards');
-        if (isPoolDrop && !canAddPoolDemonToTeam(poolInstanceId, lane)) return;
-        if (isTeamMove && !canMoveTeamDemonToLane(teamInstanceId, lane)) return;
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-        label.classList.add('is-drag-over');
-      });
-      label.addEventListener('dragleave', () => label.classList.remove('is-drag-over'));
-      label.addEventListener('drop', (event) => {
-        const position = label.closest('.formation-lane')?.dataset.formationPosition;
-        const payload = readRecruitDragPayload(event);
-        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
-        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
-        const lane = label.closest('.formation-lane')?.querySelector('.formation-lane-cards');
-        label.classList.remove('is-drag-over');
-        if (!position || (!poolInstanceId && !teamInstanceId)) return;
-
-        if (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) {
-          event.preventDefault();
-          applyTeamLaneDrop(teamInstanceId, lane, position, event.clientY, event.clientX);
-          renderRun();
-          return;
-        }
-
-        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && canAddPoolDemonToTeam(poolInstanceId, lane)) {
-          event.preventDefault();
-          addPoolDemonToTeam(poolInstanceId, position, getLaneDropDraftIndex(lane, event.clientY, event.clientX), getFormationLaneInfo(lane)?.rowIndex);
-          renderRun();
-        }
-      });
+      bindTeamFormationDropTarget(
+        label,
+        () => label.closest('.formation-lane')?.querySelector('.formation-lane-cards'),
+        () => label.closest('.formation-lane')?.dataset.formationPosition
+      );
     });
 
-    document.querySelectorAll('#dungeonHandGrid .formation-lane-cards').forEach((lane) => {
-      lane.addEventListener('dragover', (event) => {
-        const payload = readRecruitDragPayload(event);
-        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
-        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
-        const isTeamDrop = (payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && canReturnTeamDemonToPool(teamInstanceId);
-        const isPoolMove = (payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId);
-        if (!isTeamDrop && !isPoolMove) return;
-
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-        lane.classList.add('is-drag-over');
-      });
-      lane.addEventListener('dragleave', () => lane.classList.remove('is-drag-over'));
-      lane.addEventListener('drop', (event) => {
-        const payload = readRecruitDragPayload(event);
-        const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
-        const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
-        lane.classList.remove('is-drag-over');
-
-        if ((payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId)) && canReturnTeamDemonToPool(teamInstanceId)) {
-          event.preventDefault();
-          applyTeamToPoolLaneDrop(teamInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
-          renderRun();
-          return;
-        }
-
-        if ((payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId)) && findDraftDemon(state.recruitDraftPool, poolInstanceId)) {
-          event.preventDefault();
-          applyPoolLaneDrop(poolInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
-          renderRun();
-        }
-      });
-    });
+    document.querySelectorAll('#dungeonHandGrid .formation-lane-cards').forEach(bindHandFormationDropTarget);
   }
 
   function bindPointerDragAndDrop() {
@@ -2803,9 +2687,7 @@
   }
 
   function bindCollectionReinforcementPlaceholders() {
-    document.querySelectorAll('.collection-reinforcement-placeholder').forEach((button) => {
-      button.addEventListener('click', openCollectionReinforcementModal);
-    });
+    bindClicks('.collection-reinforcement-placeholder', () => openCollectionReinforcementModal());
   }
 
   function startPointerDrag(event) {
@@ -2816,29 +2698,17 @@
     const payload = getPointerDragPayload(card);
     if (!payload) return;
 
-    const drag = {
+    trackPointerDrag(createDragSession(
       card,
       payload,
-      pointerId: event.pointerId,
-      listenerTarget: card,
-      moveEvent: 'pointermove',
-      upEvent: 'pointerup',
-      cancelEvent: 'pointercancel',
-      startX: event.clientX,
-      startY: event.clientY,
-      currentTarget: null,
-      ghost: null,
-      active: false
-    };
-
-    const onMove = (moveEvent) => movePointerDrag(moveEvent, drag);
-    const onUp = (upEvent) => finishPointerDrag(upEvent, drag, onMove, onUp, onCancel);
-    const onCancel = (cancelEvent) => cancelPointerDrag(cancelEvent, drag, onMove, onUp, onCancel);
-
-    card.setPointerCapture?.(event.pointerId);
-    card.addEventListener('pointermove', onMove);
-    card.addEventListener('pointerup', onUp);
-    card.addEventListener('pointercancel', onCancel);
+      event.clientX,
+      event.clientY,
+      card,
+      'pointermove',
+      'pointerup',
+      'pointercancel',
+      event.pointerId
+    ));
   }
 
   function startMouseDrag(event) {
@@ -2850,13 +2720,7 @@
     const payload = getPointerDragPayload(card);
     if (!payload) return;
 
-    const drag = createDragSession(card, payload, event.clientX, event.clientY, document, 'mousemove', 'mouseup', 'mouseup');
-    const onMove = (moveEvent) => movePointerDrag(moveEvent, drag);
-    const onUp = (upEvent) => finishPointerDrag(upEvent, drag, onMove, onUp, onCancel);
-    const onCancel = (cancelEvent) => cancelPointerDrag(cancelEvent, drag, onMove, onUp, onCancel);
-
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+    trackPointerDrag(createDragSession(card, payload, event.clientX, event.clientY, document, 'mousemove', 'mouseup', 'mouseup'));
   }
 
   function startTouchDrag(event) {
@@ -2868,21 +2732,28 @@
     if (!payload) return;
 
     const touch = event.touches[0];
-    const drag = createDragSession(card, payload, touch.clientX, touch.clientY, document, 'touchmove', 'touchend', 'touchcancel');
+    trackPointerDrag(
+      createDragSession(card, payload, touch.clientX, touch.clientY, document, 'touchmove', 'touchend', 'touchcancel'),
+      { moveOptions: { passive: false } }
+    );
+  }
+
+  function trackPointerDrag(drag, options = {}) {
     const onMove = (moveEvent) => movePointerDrag(moveEvent, drag);
     const onUp = (upEvent) => finishPointerDrag(upEvent, drag, onMove, onUp, onCancel);
     const onCancel = (cancelEvent) => cancelPointerDrag(cancelEvent, drag, onMove, onUp, onCancel);
 
-    document.addEventListener('touchmove', onMove, { passive: false });
-    document.addEventListener('touchend', onUp);
-    document.addEventListener('touchcancel', onCancel);
+    if (drag.pointerId !== null) drag.card.setPointerCapture?.(drag.pointerId);
+    drag.listenerTarget.addEventListener(drag.moveEvent, onMove, options.moveOptions);
+    drag.listenerTarget.addEventListener(drag.upEvent, onUp);
+    drag.listenerTarget.addEventListener(drag.cancelEvent, onCancel);
   }
 
-  function createDragSession(card, payload, startX, startY, listenerTarget, moveEvent, upEvent, cancelEvent) {
+  function createDragSession(card, payload, startX, startY, listenerTarget, moveEvent, upEvent, cancelEvent, pointerId = null) {
     return {
       card,
       payload,
-      pointerId: null,
+      pointerId,
       listenerTarget,
       moveEvent,
       upEvent,
@@ -2972,8 +2843,7 @@
     drag.card.classList.remove('is-dragging', 'is-pointer-dragging');
     drag.ghost?.remove();
     setPointerDropTarget(drag, null);
-    state.draggedRecruitPoolInstanceId = null;
-    state.draggedFormationInstanceId = null;
+    clearDragState();
 
     window.setTimeout(() => {
       drag.card.classList.remove('suppress-detail-click');
@@ -3972,6 +3842,49 @@
     return `<p class="text-muted mb-0">${escapeHtml(text)}</p>`;
   }
 
+  function runPath(runId, action = '') {
+    const suffix = action ? `/${action}` : '';
+    return `/api/runs/${encodeURIComponent(runId)}${suffix}`;
+  }
+
+  function activeRunPath(action = '') {
+    return runPath(state.run.runId, action);
+  }
+
+  function storeCurrentRun(runId) {
+    localStorage.setItem(RUN_KEY, runId);
+  }
+
+  function clearCurrentRun() {
+    localStorage.removeItem(RUN_KEY);
+  }
+
+  function clearRecruitSelection() {
+    state.selectedRecruitRewardId = null;
+    state.selectedSwapInstanceId = null;
+  }
+
+  function clearDragState() {
+    state.draggedRecruitPoolInstanceId = null;
+    state.draggedFormationInstanceId = null;
+  }
+
+  function clearRecruitDrafts() {
+    state.recruitDraftTeam = null;
+    state.recruitDraftPool = null;
+  }
+
+  function resetCombatState() {
+    state.combatLog = [];
+    state.combatDemons = new Map();
+  }
+
+  function resetEndState() {
+    state.endNotice = null;
+    state.endSummary = null;
+    state.endedReplayRun = null;
+  }
+
   function handleAuthError(error) {
     if (error.status === 401) {
       window.AmongDemons.clearSession();
@@ -4012,6 +3925,16 @@
     } finally {
       syncActionButtons(button);
     }
+  }
+
+  function bindClick(element, handler) {
+    if (element) element.addEventListener('click', handler);
+  }
+
+  function bindClicks(selector, handler, root = document) {
+    root.querySelectorAll(selector).forEach((element) => {
+      element.addEventListener('click', (event) => handler(element, event));
+    });
   }
 
   function getModal(element, options) {
