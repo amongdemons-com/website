@@ -254,7 +254,7 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/app/js/collection-ui.js` | Full collection filters, sorting, and missing-slot display |
 | `public/app/js/summon-ui.js` | Authenticated Souls/summon placeholder state |
 | `public/app/js/rankings-ui.js` | Leaderboard UI |
-| `public/app/js/hunt-ui.js` | Dungeon UI, battle replay, drag/drop, recruitment, cashout, final save |
+| `public/app/js/dungeon.js` and `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, cashout, final save |
 | `public/app/js/demon-cards.js` | Shared demon card rendering |
 | `public/app/js/api-test.js` | Manual API test page helper |
 
