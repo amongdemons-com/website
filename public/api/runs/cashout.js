@@ -13,7 +13,7 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Run not found.' });
   }
 
-  const canCashOut = (run.status === 'active' && run.state.awaitingRecruit) || run.status === 'completed';
+  const canCashOut = run.status === 'active' && run.state.awaitingRecruit;
   if (!canCashOut) {
     return res.status(409).json({ error: 'Rewards can only be claimed between dungeon fights.' });
   }
@@ -153,10 +153,12 @@ function getReservedCashoutDemon(run, body) {
 }
 
 function getEarnedForPayout(run, options = {}) {
+  if (run.status === 'defeated') {
+    return { xp: 0, souls: 0 };
+  }
+
   const earned = run.state.earned || { xp: 0, souls: 0 };
-  const souls = run.status === 'defeated'
-    ? 0
-    : Math.max(0, (Number(earned.souls) || 0) - (options.savedDemon ? 1 : 0));
+  const souls = Math.max(0, (Number(earned.souls) || 0) - (options.savedDemon ? 1 : 0));
 
   return {
     xp: Number(earned.xp) || 0,

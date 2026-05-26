@@ -51,8 +51,7 @@ router.post('/runs/start', requireAuth, async (req, res) => {
     enemies: [],
     awaitingRecruit: true,
     awaitingCollectionReinforcement: true,
-    collectionReinforcementLimit: 2,
-    mapProgress: []
+    collectionReinforcementLimit: 2
   };
   const rewards = startingHand.map((demon, index) => ({
     rewardId: index + 1,

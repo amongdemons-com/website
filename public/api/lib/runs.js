@@ -26,12 +26,11 @@ async function getCurrentRunForPlayer(playerId) {
   const [rows] = await db.query(
     `SELECT * FROM runs
      WHERE player_id = ?
-       AND status <> 'ended'
+       AND status IN ('active', 'defeated')
      ORDER BY
        CASE status
          WHEN 'active' THEN 1
-         WHEN 'completed' THEN 2
-         WHEN 'defeated' THEN 3
+         WHEN 'defeated' THEN 2
          ELSE 4
        END,
        updated_at DESC,

@@ -8,8 +8,9 @@ The current loop is:
 2. Start a Dungeon with two demons chosen from six tokenized draft starters and/or your permanent collection.
 3. Arrange the active team into front/back positions.
 4. Run automatic server-simulated battles.
-5. Recruit defeated demons into the temporary Dungeon team, skip recruitment, cash out between fights, or clear floor 20.
-6. Earn XP and Souls, then save eligible demons into the permanent collection.
+5. Recruit defeated demons into the temporary Dungeon team, skip recruitment, extract between fights, or continue to the next floor.
+6. Keep pushing through unlimited floors until you extract between fights or lose.
+7. Extraction grants earned XP/Souls and optionally saves one eligible demon; losing grants 0 XP, 0 Souls, and 0 demons.
 
 Combat, RNG, reward generation, XP, Souls, run status, and collection writes are server-authoritative. The browser displays state and stages player choices, but it must not calculate gameplay outcomes.
 
@@ -148,7 +149,6 @@ All API routes are mounted under `/api`.
 | `GET` | `/account/progression` | Return level, XP, Souls, and unlocks |
 | `GET` | `/demons` | List owned permanent demons |
 | `GET` | `/demons/:id` | Return one owned permanent demon |
-| `POST` | `/demons/save` | Save one final-floor demon reward after completing floor 20 |
 
 ### Dungeon Runs
 
@@ -156,14 +156,14 @@ All API routes are mounted under `/api`.
 | --- | --- | --- |
 | `GET` | `/runs/start-options` | Return six draft starters, a short-lived signed draft token, and the player's collection |
 | `POST` | `/runs/start` | Start a new Dungeon run from two draft or collection demons |
-| `GET` | `/runs/current` | Return the player's current active/completed pending run |
+| `GET` | `/runs/current` | Return the player's current active or defeated pending run |
 | `GET` | `/runs/:id` | Return one run state owned by the player |
 | `POST` | `/runs/:id/formation` | Update front/back positions before battle |
 | `POST` | `/runs/:id/battle` | Simulate the next battle server-side |
 | `POST` | `/runs/:id/reward` | Mark a reward as claimed |
 | `POST` | `/runs/:id/recruit` | Stage or commit recruitment choices and advance to the next floor |
-| `POST` | `/runs/:id/cashout` | Leave between fights, save one eligible demon, and claim earned XP/Souls |
-| `POST` | `/runs/:id/end` | End a run and grant accumulated XP/Souls |
+| `POST` | `/runs/:id/cashout` | Extract between fights, save one eligible demon, and claim earned XP/Souls |
+| `POST` | `/runs/:id/end` | Finalize a defeated run with zero payout |
 
 ### Game Data, Rankings, Admin
 
@@ -185,15 +185,14 @@ All API routes are mounted under `/api`.
 - Floor 1 starts at 2 demons, then team and enemy size grow by 1 per floor until capping at 6 on floor 5.
 - Enemy teams are 2 demons on floor 1, 3 on floor 2, 4 on floor 3, 5 on floor 4, and 6 from floor 5 onward.
 - Floors 1 through 3 use the starter type pool; later floors unlock more types based on floor.
-- From floor 4 onward, enemy generation applies floor pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`.
+- Dungeons have no final floor; after each win the run pauses for recruitment/extraction, then advances to the next floor.
+- From floor 4 onward, enemy generation applies floor pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`. The pressure eventually caps, but floors continue indefinitely.
 - Legendary and mythic enemy rarities can only appear from floor 10 onward.
-- After clearing floor 10, the player may call in one collection demon as a one-time reinforcement while editing the team for floor 11.
-- Floor 20 always includes type `11` as the first enemy.
-- After a win before floor 20, defeated enemies become recruit rewards.
-- Between fights, the player may stage a whole team, recruit one demon, swap demons, skip recruitment, or cash out.
-- Cashing out between fights saves one eligible new demon and grants accumulated XP/Souls.
-- Clearing floor 20 marks the run `completed` and offers final rewards from the surviving team plus final enemies.
-- Only one final-floor demon can be saved through `/api/demons/save`.
+- After clearing floor 3, the player may call in one collection demon as a one-time reinforcement while editing the team for the next floor.
+- After every win, defeated enemies become recruit rewards.
+- Between fights, the player may stage a whole team, recruit one demon, swap demons, skip recruitment, or extract.
+- Extracting between fights saves one eligible new demon and grants accumulated XP/Souls.
+- Losing immediately ends the run and grants 0 XP, 0 Souls, and 0 demons, regardless of rewards staged before the loss.
 - The permanent collection has one slot per demon type and rarity, for 66 total slots. Saving another demon with the same type and rarity replaces that slot.
 
 ## Combat Rules
@@ -206,7 +205,7 @@ Combat is automatic and simulated in `public/api/lib/combat.js`.
 - Front-row targeting prefers living front-row enemies and falls back to any living enemy.
 - Team state is cloned for battle, then persisted from the simulator result.
 - The API returns both a combat log and before/after snapshots for UI replay.
-- Poison effects tick slowly over time, can stack without a per-target cap, and are cleared from teams between winning floors.
+- Poison effects tick slowly over time, can stack without a per-target cap, and are cleared from teams between cleared floors.
 
 Implemented ability kinds include:
 
@@ -254,7 +253,7 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/app/js/collection-ui.js` | Full collection filters, sorting, and missing-slot display |
 | `public/app/js/summon-ui.js` | Authenticated Souls/summon placeholder state |
 | `public/app/js/rankings-ui.js` | Leaderboard UI |
-| `public/app/js/dungeon.js` and `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, cashout, final save |
+| `public/app/js/dungeon.js` and `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, extraction |
 | `public/app/js/demon-cards.js` | Shared demon card rendering |
 | `public/app/js/api-test.js` | Manual API test page helper |
 

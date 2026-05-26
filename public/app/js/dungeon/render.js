@@ -1,7 +1,7 @@
 import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
-import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_FLOOR, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
+import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
@@ -14,7 +14,6 @@ const bindRecruitDragAndDrop = (...args) => dungeonActions.bindRecruitDragAndDro
 const bindRewardDragAndDrop = (...args) => dungeonActions.bindRewardDragAndDrop(...args);
 const canExtractRun = (...args) => dungeonActions.canExtractRun(...args);
 const formatBattleSpeed = (...args) => dungeonActions.formatBattleSpeed(...args);
-const getFinalRewardHand = (...args) => dungeonActions.getFinalRewardHand(...args);
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
@@ -22,7 +21,6 @@ const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...a
 const groupCombatLog = (...args) => dungeonActions.groupCombatLog(...args);
 const init = (...args) => dungeonActions.init(...args);
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
-const isFinalRewardPhase = (...args) => dungeonActions.isFinalRewardPhase(...args);
 const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
 const playEnemyRevealEffect = (...args) => dungeonActions.playEnemyRevealEffect(...args);
 const playPendingHandFlowAnimation = (...args) => dungeonActions.playPendingHandFlowAnimation(...args);
@@ -59,7 +57,6 @@ function renderRun() {
   elements.runEmpty.classList.toggle('d-none', state.isLoading || hasRun);
   elements.runPanel.classList.toggle('d-none', state.isLoading || !hasRun);
   elements.huntTitle.innerHTML = renderHuntTitle(run);
-  renderHuntProgress(run);
   renderDungeonRewardStrip();
   renderBattleOutcome();
   showCombatPanel();
@@ -93,22 +90,21 @@ function renderRun() {
   }
 
   const isHandStrategy = Boolean(state.isRecruiting && run.awaitingRecruit);
-  const isFinalPick = isFinalRewardPhase();
   const arena = elements.runPanel?.querySelector('.dungeon-arena');
   const team = isHandStrategy ? getRecruitPreviewTeam() : run.team || [];
   const enemies = isHandStrategy && state.isEnemyPreviewDeferred ? [] : (isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || []);
   const showBattleHand = Boolean(!isHandStrategy && state.isBattleAnimating && state.battleHandPreview?.length);
-  const hand = isFinalPick ? getFinalRewardHand() : (isHandStrategy ? getRecruitPreviewHand() : (showBattleHand ? cloneDemons(state.battleHandPreview) : []));
-  const handMode = isFinalPick ? 'final' : 'recruit';
+  const hand = isHandStrategy ? getRecruitPreviewHand() : (showBattleHand ? cloneDemons(state.battleHandPreview) : []);
+  const handMode = 'recruit';
   const showHand = true;
-  const rewardInteractive = Boolean(isHandStrategy || isFinalPick);
+  const rewardInteractive = Boolean(isHandStrategy);
 
   elements.runPanel?.classList.toggle('has-hand', showHand);
   elements.dungeonBottomPanel?.classList.toggle('d-none', !showHand);
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
   elements.teamGrid.innerHTML = renderDemonCards(team, {
     side: 'player',
-    allowFormationDrag: run.status === 'active' && (!run.awaitingRecruit || state.isRecruiting) && !run.awaitingFinalPick
+    allowFormationDrag: run.status === 'active' && (!run.awaitingRecruit || state.isRecruiting)
   });
   elements.enemyGrid.innerHTML = renderDemonCards((isHandStrategy || (run.team || []).length) ? enemies : [], {
     side: 'enemy',
@@ -136,7 +132,7 @@ function renderRun() {
 }
 
 function renderHuntTitle(run) {
-  const floor = run ? Math.max(1, Math.min(MAX_DUNGEON_FLOOR, Number(run.currentFloor) || 1)) : MAX_DUNGEON_FLOOR;
+  const floor = run ? Math.max(1, Number(run.currentFloor) || 1) : 1;
 
   return `
     <div class="dungeon-title-brand">
@@ -147,7 +143,7 @@ function renderHuntTitle(run) {
       <div class="dungeon-title-copy">
         <span class="dungeon-title-text">Dungeon</span>
         ${run ? `<span class="hunt-floor-title">
-          <span class="hunt-floor-label">Floor ${floor} / ${MAX_DUNGEON_FLOOR}</span>
+          <span class="hunt-floor-label">Floor ${floor}</span>
         </span>` : ''}
       </div>
     </div>
@@ -158,13 +154,14 @@ function renderDungeonEndScreen() {
   const summary = state.endSummary || {};
   const demon = summary.demon;
   const isDefeat = summary.outcome === 'defeat';
+  const eyebrow = isDefeat ? 'Defeat' : 'Extraction';
 
   return `
-    <div class="dungeon-end-screen ${isDefeat ? 'is-defeat' : 'is-victory'}">
+    <div class="dungeon-end-screen ${isDefeat ? 'is-defeat' : 'is-extraction'}">
       <div class="dungeon-end-copy">
-        <span class="hunt-phase-eyebrow">${isDefeat ? 'Defeat' : 'Victory'}</span>
-        <h2>${escapeHtml(summary.title || 'Dungeon complete')}</h2>
-        <p>${escapeHtml(summary.message || 'Congratulations. You cleared the dungeon.')}</p>
+        <span class="hunt-phase-eyebrow">${eyebrow}</span>
+        <h2>${escapeHtml(summary.title || 'Dungeon ended')}</h2>
+        <p>${escapeHtml(summary.message || 'Run extracted.')}</p>
       </div>
       ${demon ? `
         <div class="dungeon-end-demon" aria-label="Collected demon">
@@ -203,13 +200,6 @@ function bindDungeonEmptyButtons() {
     renderRun();
   });
   bindClick(document.getElementById('replayEndedDungeonBtn'), replayFight);
-}
-
-function renderHuntProgress(run) {
-  if (!elements.huntProgress) return;
-  const floor = run ? Math.max(1, Math.min(MAX_DUNGEON_FLOOR, Number(run.currentFloor) || 1)) : 0;
-  const percent = Math.round((floor / MAX_DUNGEON_FLOOR) * 100);
-  elements.huntProgress.querySelector('span').style.width = `${percent}%`;
 }
 
 function renderFightLog() {
@@ -410,7 +400,6 @@ function renderFightLogActions() {
   const canStart = !state.endSummary && (!state.run || isDefeated || state.run.status === 'ended');
   const canShowSpeedControl = Boolean(
     state.run?.status === 'active' &&
-    !state.run.awaitingFinalPick &&
     !state.isResultAnimating &&
     state.isBattleAnimating
   );
@@ -490,7 +479,6 @@ export {
   renderHuntTitle,
   renderDungeonEndScreen,
   bindDungeonEmptyButtons,
-  renderHuntProgress,
   renderFightLog,
   renderBattleOutcome,
   showBattleResultOverlay,

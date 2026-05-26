@@ -1,7 +1,7 @@
 import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
-import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_FLOOR, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
+import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
@@ -9,50 +9,18 @@ const addCollectionReinforcementToPool = (...args) => dungeonActions.addCollecti
 const battle = (...args) => dungeonActions.battle(...args);
 const ensureCollectionLoaded = (...args) => dungeonActions.ensureCollectionLoaded(...args);
 const findCollectionReplacement = (...args) => dungeonActions.findCollectionReplacement(...args);
-const finishRun = (...args) => dungeonActions.finishRun(...args);
 const getAvailableCollectionReinforcements = (...args) => dungeonActions.getAvailableCollectionReinforcements(...args);
 const getCollectionReinforcementLimit = (...args) => dungeonActions.getCollectionReinforcementLimit(...args);
-const getFinalRewardHand = (...args) => dungeonActions.getFinalRewardHand(...args);
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
 const getSelectedCollectionReinforcements = (...args) => dungeonActions.getSelectedCollectionReinforcements(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
-const isFinalRewardPhase = (...args) => dungeonActions.isFinalRewardPhase(...args);
 const markCollectionReinforcementPlaceholderInteracted = (...args) => dungeonActions.markCollectionReinforcementPlaceholderInteracted(...args);
 const markCollectionReinforcementStagedInteracted = (...args) => dungeonActions.markCollectionReinforcementStagedInteracted(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const renderEmptyText = (...args) => dungeonActions.renderEmptyText(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
-const saveReward = (...args) => dungeonActions.saveReward(...args);
-
-function showPendingChoiceModal() {
-  if (!state.run || !(state.run.awaitingFinalPick || state.run.status === 'completed')) return;
-  renderRun();
-}
-
-function renderTeamChoiceModal() {
-  if (!state.run) return;
-  setTeamChoiceModalFullscreen(true);
-
-  const currentFloorRewards = (state.run.rewards || []).filter((reward) => reward.floor === state.run.currentFloor);
-
-  const finalRewards = currentFloorRewards.filter((reward) => reward.type === 'final');
-  elements.teamChoiceModalTitle.textContent = 'Dungeon complete';
-  elements.teamChoiceModalSubtitle.textContent = 'Choose one available demon for your collection, or exit without collecting.';
-  elements.teamChoiceModalBody.innerHTML = `
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
-      ${finalRewards.map(renderFinalReward).join('')}
-    </div>
-  `;
-  elements.teamChoiceModalFooter.innerHTML = `
-    <button type="button" class="btn btn-outline-light" id="modalExitHuntBtn">
-      Exit Without Collecting
-    </button>
-  `;
-  bindRewardButtons();
-  bindClick(document.getElementById('modalExitHuntBtn'), () => finishRun('Dungeon complete.', { completed: true }));
-}
 
 async function openCollectionReinforcementModal() {
   if (!state.run?.collectionReinforcementAvailable) return;
@@ -201,31 +169,6 @@ async function confirmCollectionReplacement(incomingDemon) {
   });
 }
 
-function renderFinalReward(reward) {
-  return `
-    <div class="col">
-      <div class="reward-item border rounded p-3">
-        ${renderRewardDemon(reward.demon)}
-        <button class="btn btn-outline-info btn-sm w-100 mt-3 js-save" data-reward-id="${reward.rewardId}" ${reward.saved || hasSavedFinalReward() ? 'disabled' : ''}>
-          ${reward.saved ? 'Saved' : 'Extract'}
-        </button>
-      </div>
-    </div>
-  `;
-}
-
-function hasSavedFinalReward() {
-  return (state.run?.rewards || []).some((reward) => reward.type === 'final' && reward.saved);
-}
-
-function renderRewardDemon(demon) {
-  return renderDungeonDemonCard(demon, { className: 'reward-demon-card' });
-}
-
-function bindRewardButtons() {
-  bindClicks('.js-save', (button) => saveReward(Number(button.dataset.rewardId)));
-}
-
 function bindCollectionReinforcementPlaceholders() {
   bindClicks('.collection-reinforcement-placeholder', () => openCollectionReinforcementModal());
 }
@@ -267,7 +210,6 @@ function getDemonForDetailCard(card) {
   return [
     selectedReward?.demon,
     ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []),
-    ...(isFinalRewardPhase() ? getFinalRewardHand() : []),
     ...(state.isRecruiting ? getRecruitPreviewHand() : state.battleHandPreview || []),
     ...(state.isRecruiting ? getRecruitPreviewEnemyTeam() : state.run?.enemies || [])
   ].filter(Boolean).find((demon) => demon.instanceId === instanceId) || null;
@@ -289,22 +231,16 @@ function getDungeonDetailActions() {
 }
 
 function isStrategyPhase() {
-  return Boolean(state.run?.status === 'active' && !state.run.awaitingFinalPick && (!state.run.awaitingRecruit || state.isRecruiting));
+  return Boolean(state.run?.status === 'active' && (!state.run.awaitingRecruit || state.isRecruiting));
 }
 
 export {
-  showPendingChoiceModal,
-  renderTeamChoiceModal,
   openCollectionReinforcementModal,
   renderCollectionReinforcementModal,
   renderCollectionReinforcementChoice,
   compareCollectionReinforcementDemons,
   getRarityRank,
   confirmCollectionReplacement,
-  renderFinalReward,
-  hasSavedFinalReward,
-  renderRewardDemon,
-  bindRewardButtons,
   bindCollectionReinforcementPlaceholders,
   bindDemonDetailCards,
   getDemonForDetailCard,

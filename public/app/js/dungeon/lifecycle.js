@@ -1,7 +1,7 @@
 import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
-import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_FLOOR, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
+import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
@@ -26,7 +26,6 @@ const setDungeonLoading = (...args) => dungeonActions.setDungeonLoading(...args)
 const setFightLogTitle = (...args) => dungeonActions.setFightLogTitle(...args);
 const showBattleResultOverlay = (...args) => dungeonActions.showBattleResultOverlay(...args);
 const showCombatPanel = (...args) => dungeonActions.showCombatPanel(...args);
-const showPendingChoiceModal = (...args) => dungeonActions.showPendingChoiceModal(...args);
 const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelectionFromRun(...args);
 
 async function init() {
@@ -50,11 +49,7 @@ async function refreshAll() {
 
     if (state.run && state.run.runId) {
       await loadRun(state.run.runId);
-    } else if (await loadCurrentRun()) {
-      showPendingChoiceModal();
-    } else if (await loadSavedRun()) {
-      showPendingChoiceModal();
-    } else {
+    } else if (!(await loadCurrentRun()) && !(await loadSavedRun())) {
       await startRun();
     }
     setDungeonLoading(false);
@@ -73,7 +68,7 @@ async function loadSavedRun() {
 
   try {
     await loadRun(runId);
-    if (state.run?.status === 'ended') {
+    if (state.run?.status !== 'active' && state.run?.status !== 'defeated') {
       clearCurrentRun();
       state.run = null;
       state.combatLog = [];
@@ -166,7 +161,6 @@ async function loadRun(runId) {
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
     renderRun();
-    showPendingChoiceModal();
   } catch (error) {
     clearCurrentRun();
     state.run = null;
@@ -212,11 +206,10 @@ async function battle() {
 }
 
 function canStartCurrentBattle() {
-  return Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !state.run.awaitingFinalPick);
+  return Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit);
 }
 
 function getWinMessage() {
-  if (state.run?.status === 'completed') return `Floor ${MAX_DUNGEON_FLOOR} cleared. Choose your final demon.`;
   return 'Battle won. Adjust your team from hand, then continue.';
 }
 
@@ -331,11 +324,9 @@ async function finishRun(message, summary = {}) {
     clearDragState();
     clearRecruitDrafts();
     state.endSummary = {
-      title: summary.completed ? 'Dungeon complete' : 'Dungeon ended',
-      outcome: summary.defeated ? 'defeat' : 'victory',
-      message: summary.completed
-        ? 'Congratulations. You cleared the dungeon.'
-        : (message || 'Dungeon ended.'),
+      title: 'Dungeon ended',
+      outcome: summary.defeated ? 'defeat' : 'extraction',
+      message: message || 'Dungeon ended.',
       demon: summary.demon || null,
       xp: result.xp,
       souls: result.souls
@@ -343,7 +334,7 @@ async function finishRun(message, summary = {}) {
     state.endedReplayRun = replayRun;
     state.endNotice = {
       text: `${message || 'Dungeon ended.'} You earned ${result.xp} XP and ${result.souls} souls.`,
-      type: summary.completed || !message ? 'success' : 'warning'
+      type: summary.defeated ? 'warning' : 'success'
     };
     getModal(elements.teamChoiceModal).hide();
     await loadStartOptions();
@@ -437,8 +428,7 @@ function createReplayRunSnapshot(run) {
       playerTeamAfter: cloneDemons(run.lastBattle.playerTeamAfter || []),
       enemyTeamAfter: cloneDemons(run.lastBattle.enemyTeamAfter || [])
     } : null,
-    awaitingRecruit: false,
-    awaitingFinalPick: false
+    awaitingRecruit: false
   };
 }
 

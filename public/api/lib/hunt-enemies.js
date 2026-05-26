@@ -1,9 +1,10 @@
 const { createDemon } = require('./demon-factory');
-const { MAX_DUNGEON_FLOOR, getDungeonTeamLimit } = require('./dungeon-rules');
+const { getDungeonTeamLimit } = require('./dungeon-rules');
 const { assignFormationSlots } = require('./run-demons');
 
 const STARTER_TYPE_IDS = [1, 2, 3];
 const MAX_HUNT_TYPE_ID = 11;
+const DIFFICULTY_RAMP_FLOORS = 20;
 const PRE_LEGENDARY_RARITIES = ['common', 'uncommon', 'rare', 'epic'];
 
 function getAllowedHuntTypeIds(floor) {
@@ -15,29 +16,6 @@ function getAllowedHuntTypeIds(floor) {
 async function createHuntEnemies(rng, floor, size) {
   const allowedTypeIds = getAllowedHuntTypeIds(floor);
   const teamSize = getHuntEnemyTeamSize(floor, size);
-
-  if (floor === MAX_DUNGEON_FLOOR && teamSize > 0) {
-    const enemies = [
-      await createDemon(rng, {
-        ...getEnemyGenerationOptions(floor, { elite: true }),
-        instanceId: `enemy-${floor}-1`,
-        position: 'front',
-        typeId: 11
-      })
-    ];
-
-    for (let index = 1; index < teamSize; index += 1) {
-      enemies.push(await createDemon(rng, {
-        ...getEnemyGenerationOptions(floor, { elite: index === 1 }),
-        instanceId: `enemy-${floor}-${index + 1}`,
-        position: index === 1 ? 'back' : 'front',
-        allowedTypeIds
-      }));
-    }
-
-    return assignFormationSlots(applyEnemyPreferredPositions(enemies), 'enemy');
-  }
-
   const positions = getEnemyPositions(teamSize);
   const eliteIndex = teamSize > 1 ? teamSize - 1 : 0;
   const enemies = [];
@@ -72,7 +50,7 @@ function getEnemyGenerationOptions(floor, options = {}) {
 }
 
 function getFloorSpawnPressure(floor) {
-  return clamp((Number(floor) - 3) / (MAX_DUNGEON_FLOOR - 3), 0, 1);
+  return clamp((Number(floor) - 3) / (DIFFICULTY_RAMP_FLOORS - 3), 0, 1);
 }
 
 function getFloorTypeWeightMultiplier(typeId, baseWeight, pressure) {

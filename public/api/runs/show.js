@@ -3,7 +3,6 @@ const { requireAuth } = require('../lib/auth');
 const { createHuntEnemies } = require('../lib/hunt-enemies');
 const { createRng } = require('../lib/rng');
 const { getCurrentRunForPlayer, getRunForPlayer } = require('../lib/runs');
-const { MAX_DUNGEON_FLOOR } = require('../lib/dungeon-rules');
 
 const router = express.Router();
 
@@ -44,11 +43,9 @@ async function serializeRun(run) {
     awaitingRecruit: Boolean(run.state.awaitingRecruit),
     collectionReinforcementAvailable,
     collectionReinforcementLimit,
-    awaitingFinalPick: Boolean(run.state.awaitingFinalPick),
     extractChoice: run.state.extractChoice || null,
     lastBattle: run.state.lastBattle || null,
-    earned: run.state.earned || { xp: 0, souls: 0 },
-    mapProgress: run.state.mapProgress
+    earned: run.state.earned || { xp: 0, souls: 0 }
   };
 }
 
@@ -56,8 +53,6 @@ async function getNextEnemiesPreview(run) {
   if (!run.state.awaitingRecruit || run.status !== 'active') return [];
 
   const nextFloor = Number(run.floor) + 1;
-  if (nextFloor > MAX_DUNGEON_FLOOR) return [];
-
   return createHuntEnemies(createRng(run.seed + nextFloor), nextFloor, (run.state.team || []).length);
 }
 

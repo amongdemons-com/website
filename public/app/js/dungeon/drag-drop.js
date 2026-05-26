@@ -1,7 +1,7 @@
 import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
-import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_FLOOR, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
+import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
@@ -19,7 +19,6 @@ const getRewardCandidateFromPayload = (...args) => dungeonActions.getRewardCandi
 const getRewardCandidates = (...args) => dungeonActions.getRewardCandidates(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
 const init = (...args) => dungeonActions.init(...args);
-const isFinalRewardPhase = (...args) => dungeonActions.isFinalRewardPhase(...args);
 const markCollectionReinforcementStagedInteracted = (...args) => dungeonActions.markCollectionReinforcementStagedInteracted(...args);
 const moveRewardSelectionToPoolLane = (...args) => dungeonActions.moveRewardSelectionToPoolLane(...args);
 const moveRewardSelectionToTeamLane = (...args) => dungeonActions.moveRewardSelectionToTeamLane(...args);
@@ -111,7 +110,7 @@ function clearDragOverTargets(selector) {
 }
 
 function bindFormationDragAndDrop() {
-  if (!state.run || state.run.awaitingRecruit || state.run.awaitingFinalPick) return;
+  if (!state.run || state.run.awaitingRecruit) return;
 
   document.querySelectorAll('#teamGrid .hunt-demon-card[draggable="true"]').forEach((card) => {
     if (card.dataset.rewardId) return;
@@ -199,8 +198,6 @@ function canDropRecruitPayloadOnLane(payload, lane, position = null) {
     if (zone === 'pool') return canMoveRewardSelectionToPool();
     return false;
   }
-
-  if (payload.type === 'final-reward') return false;
 
   if (zone === 'team') {
     if (!position) return false;
@@ -370,32 +367,6 @@ function bindRewardDragAndDrop() {
     });
   });
 
-  if (!isFinalRewardPhase()) return;
-
-  document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
-    const candidate = getRewardCandidateForCard(card);
-    if (!candidate) return;
-
-    card.setAttribute('draggable', 'true');
-    card.dataset.rewardCandidateKey = candidate.key;
-    bindNativeDragSource(card, {
-      stateKey: 'draggedRewardDemonKey',
-      clearSelector: REWARD_DRAG_OVER_SELECTOR,
-      getPayload: () => ({
-        type: 'final-reward',
-        key: candidate.key
-      })
-    });
-  });
-
-  document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #teamGrid .formation-lane-cards, #dungeonHandGrid .formation-lane-cards').forEach((target) => {
-    bindNativeDropTarget(target, {
-      readPayload: readRewardDragPayload,
-      renderAfterDrop: true,
-      canDrop: (payload) => payload?.type === 'reward-selection',
-      onDrop: removeRewardSelection
-    });
-  });
 }
 
 function getRewardCandidateForCard(card) {
@@ -524,7 +495,7 @@ function activatePointerDrag(event, drag) {
   if (drag.payload.type === 'recruit-pool') {
     state.draggedRecruitPoolInstanceId = drag.payload.instanceId;
     markCollectionReinforcementStagedInteracted(drag.payload.instanceId);
-  } else if (drag.payload.type === 'reward-selection' || drag.payload.type === 'final-reward') {
+  } else if (drag.payload.type === 'reward-selection') {
     state.draggedRewardDemonKey = drag.payload.key;
   } else {
     state.draggedFormationInstanceId = drag.payload.instanceId;
@@ -601,12 +572,7 @@ function getPointerDragPayload(card) {
     return null;
   }
 
-  if (isFinalRewardPhase()) {
-    const candidate = getRewardCandidateForCard(card);
-    if (candidate) return { type: 'final-reward', key: candidate.key };
-  }
-
-  if (state.run && !state.run.awaitingRecruit && !state.run.awaitingFinalPick && card.closest('#teamGrid')) {
+  if (state.run && !state.run.awaitingRecruit && card.closest('#teamGrid')) {
     return { type: 'formation', instanceId };
   }
 
@@ -695,8 +661,6 @@ function applyPointerDrop(payload, target) {
     renderRun();
     return;
   }
-
-  if (payload.type === 'final-reward') return;
 
   if (payload.type === 'formation') {
     const position = target.element.dataset.formationDrop;

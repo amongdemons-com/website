@@ -1,7 +1,7 @@
 import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
-import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_FLOOR, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
+import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
@@ -10,7 +10,6 @@ const canAddDemonToFormationLane = (...args) => dungeonActions.canAddDemonToForm
 const confirmCollectionReplacement = (...args) => dungeonActions.confirmCollectionReplacement(...args);
 const ensureRecruitDraft = (...args) => dungeonActions.ensureRecruitDraft(...args);
 const findDraftDemon = (...args) => dungeonActions.findDraftDemon(...args);
-const finishRun = (...args) => dungeonActions.finishRun(...args);
 const getDemonFormationRow = (...args) => dungeonActions.getDemonFormationRow(...args);
 const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
 const getDraftPayloadSource = (...args) => dungeonActions.getDraftPayloadSource(...args);
@@ -28,33 +27,6 @@ const removeDraftDemon = (...args) => dungeonActions.removeDraftDemon(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
 const syncRecruitDraftSelection = (...args) => dungeonActions.syncRecruitDraftSelection(...args);
-
-async function saveReward(rewardId) {
-  try {
-    const reward = (state.run?.rewards || []).find((item) => Number(item.rewardId) === Number(rewardId));
-    if (reward?.demon && !(await confirmCollectionReplacement(reward.demon))) return;
-
-    const saved = await api('/api/demons/save', {
-      method: 'POST',
-      body: {
-        runId: state.run.runId,
-        rewardId
-      }
-    });
-    state.collectionDemons = null;
-    getModal(elements.teamChoiceModal).hide();
-    getModal(elements.cashoutModal).hide();
-    clearRewardSelection();
-    await finishRun(saved.replaced
-      ? 'Dungeon complete. Collection demon replaced.'
-      : 'Dungeon complete. Final demon added to your collection.', {
-      completed: true,
-      demon: saved.demon
-    });
-  } catch (error) {
-    showError(error);
-  }
-}
 
 function openCashoutModal() {
   if (!canExtractRun()) return;
@@ -85,7 +57,7 @@ function renderCashoutModal() {
         `}
       </div>
       <div class="cashout-extract-copy">
-        <span class="hunt-phase-eyebrow">${isFinalRewardPhase() ? 'Dungeon complete' : 'Leave dungeon'}</span>
+        <span class="hunt-phase-eyebrow">Leave dungeon</span>
         <p>${demon
           ? `${escapeHtml(demon.species || 'This demon')} will be added to your collection.`
           : 'You can drag a demon into Reward before extracting. Extracting now leaves without a demon.'}</p>
@@ -100,7 +72,6 @@ function renderCashoutModal() {
 }
 
 function getRewardCandidates() {
-  if (isFinalRewardPhase()) return getFinalRewardCandidates();
   if (!state.run?.awaitingRecruit || !state.isRecruiting) return [];
 
   ensureRecruitDraft();
@@ -122,31 +93,6 @@ function getRewardCandidates() {
       demon
     }))
   ].filter((candidate) => canRewardCandidate(candidate));
-}
-
-function getFinalRewardCandidates() {
-  if (!state.run) return [];
-
-  return (state.run.rewards || [])
-    .filter((reward) => (
-      reward.type === 'final' &&
-      reward.floor === state.run.currentFloor &&
-      reward.demon &&
-      !reward.saved
-    ))
-    .map((reward) => ({
-      key: `final:${reward.rewardId}`,
-      source: 'final',
-      origin: 'final',
-      instanceId: reward.sourceInstanceId || reward.demon.instanceId,
-      sourceInstanceId: reward.sourceInstanceId || null,
-      rewardId: reward.rewardId,
-      demon: {
-        ...reward.demon,
-        rewardId: reward.rewardId,
-        rewardCandidateKey: `final:${reward.rewardId}`
-      }
-    }));
 }
 
 function getRewardCandidateByKey(key) {
@@ -187,7 +133,6 @@ function getRewardCandidateKey(demon) {
 
 function getRewardCandidateFromPayload(payload) {
   if (!payload) return null;
-  if (payload.type === 'final-reward') return getRewardCandidateByKey(payload.key);
   if (payload.type === 'reward-selection') return getSelectedRewardCandidate();
   if (payload.type !== 'recruit-pool' && payload.type !== 'recruit-team') return null;
 
@@ -503,11 +448,7 @@ function getPayoutPreview(savedDemon = false) {
 }
 
 function canExtractRun() {
-  return Boolean((state.run?.awaitingRecruit && state.isRecruiting) || isFinalRewardPhase());
-}
-
-function isFinalRewardPhase() {
-  return Boolean(state.run?.awaitingFinalPick || state.run?.status === 'completed');
+  return Boolean(state.run?.status === 'active' && state.run?.awaitingRecruit && state.isRecruiting);
 }
 
 function syncRewardSelectionFromRun() {
@@ -547,28 +488,6 @@ async function cashOutDungeon() {
   if (!state.run || !canExtractRun()) return;
 
   const candidate = getSelectedRewardCandidate();
-  if (isFinalRewardPhase()) {
-    if (candidate && candidate.source !== 'final') {
-      if (!(await confirmCollectionReplacement(candidate.demon))) return;
-      await cashOut({
-        button: elements.cashoutConfirmBtn,
-        clearCollection: true,
-        body: getCashoutBodyForCandidate(candidate)
-      });
-      return;
-    }
-
-    await withBusy(elements.cashoutConfirmBtn, async () => {
-      if (candidate) {
-        await saveReward(candidate.rewardId);
-      } else {
-        getModal(elements.cashoutModal).hide();
-        await finishRun('Dungeon complete.', { completed: true });
-      }
-    });
-    return;
-  }
-
   if (candidate && !(await confirmCollectionReplacement(candidate.demon))) return;
 
   await cashOut({
@@ -614,6 +533,7 @@ async function finishCashout(result, options = {}) {
   resetCombatState();
   state.endSummary = {
     title: 'Dungeon ended',
+    outcome: 'extraction',
     message: skippedDemon ? 'No demon was extracted.' : demonMessage,
     demon: skippedDemon ? null : result.demon || null,
     xp: result.xp,
@@ -638,22 +558,10 @@ function getCashoutDemonMessage(result) {
     : `${species} joined your collection.`;
 }
 
-function getFinalRewardHand() {
-  const selectedKey = state.selectedRewardDemonKey;
-  return getFinalRewardCandidates()
-    .filter((candidate) => candidate.key !== selectedKey)
-    .map((candidate) => ({
-      ...candidate.demon,
-      rewardCandidateKey: candidate.key
-    }));
-}
-
 export {
-  saveReward,
   openCashoutModal,
   renderCashoutModal,
   getRewardCandidates,
-  getFinalRewardCandidates,
   getRewardCandidateByKey,
   getSelectedRewardCandidate,
   setRewardSelection,
@@ -679,13 +587,11 @@ export {
   swapRewardSelectionWithDraftTarget,
   getPayoutPreview,
   canExtractRun,
-  isFinalRewardPhase,
   syncRewardSelectionFromRun,
   getStoredExtractChoiceKey,
   cashOutDungeon,
   getCashoutBodyForCandidate,
   cashOut,
   finishCashout,
-  getCashoutDemonMessage,
-  getFinalRewardHand
+  getCashoutDemonMessage
 };

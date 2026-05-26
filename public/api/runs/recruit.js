@@ -134,7 +134,6 @@ async function advanceFloor(run) {
   run.state.awaitingRecruit = false;
   run.state.awaitingCollectionReinforcement = false;
   delete run.state.collectionReinforcementLimit;
-  run.state.mapProgress.push({ floor: run.floor, type: 'battle', status: 'available' });
 }
 
 async function buildStagedTeam(run, stagedTeam) {

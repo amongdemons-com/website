@@ -1,4 +1,3 @@
-const MAX_DUNGEON_FLOOR = 20;
 const MAX_DUNGEON_TEAM_SIZE = 6;
 
 function getDungeonTeamLimit(floor) {
@@ -6,7 +5,6 @@ function getDungeonTeamLimit(floor) {
 }
 
 module.exports = {
-  MAX_DUNGEON_FLOOR,
   MAX_DUNGEON_TEAM_SIZE,
   getDungeonTeamLimit
 };

@@ -1,6 +1,5 @@
 export const RUN_KEY = 'amongdemons-current-run';
 export const BATTLE_SPEED_KEY = 'amongdemons-battle-speed';
-export const MAX_DUNGEON_FLOOR = 20;
 export const MAX_DUNGEON_TEAM_SIZE = 6;
 export const FORMATION_GRID_COLUMNS = 3;
 export const FORMATION_GRID_SIZE = 9;

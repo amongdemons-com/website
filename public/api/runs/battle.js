@@ -5,7 +5,6 @@ const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { assignFormationSlots, resetRunDemon } = require('../lib/run-demons');
-const { MAX_DUNGEON_FLOOR } = require('../lib/dungeon-rules');
 
 const router = express.Router();
 
@@ -46,32 +45,23 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 
   let rewards = {};
   if (result.winner === 'player') {
-    const isFinalFloor = run.floor >= MAX_DUNGEON_FLOOR;
-    const floorRewards = isFinalFloor ? createFinalTeamRewards(run) : createDefeatedDemonRewards(run);
+    const floorRewards = createDefeatedDemonRewards(run);
     rewards = floorRewards;
     run.rewards.push(...floorRewards);
     run.state.earned = run.state.earned || { xp: 0, souls: 0 };
     run.state.earned.xp += 10 + run.floor * 5;
     run.state.earned.souls += countDefeatedDemons(result.enemyTeam);
-    run.state.mapProgress[run.floor - 1].status = 'cleared';
 
-    if (isFinalFloor) {
-      run.status = 'completed';
-      run.state.awaitingFinalPick = true;
-    } else {
-      clearPoisonEffects(run.state.team);
-      clearPoisonEffects(run.state.enemies);
-      run.state.awaitingRecruit = true;
-      if (run.floor === 3 && !run.state.collectionReinforcementUsed) {
-        run.state.awaitingCollectionReinforcement = true;
-      }
+    clearPoisonEffects(run.state.team);
+    clearPoisonEffects(run.state.enemies);
+    run.state.awaitingRecruit = true;
+    if (run.floor === 3 && !run.state.collectionReinforcementUsed) {
+      run.state.awaitingCollectionReinforcement = true;
     }
   } else {
     run.status = 'defeated';
-    run.state.earned = {
-      ...(run.state.earned || { xp: 0, souls: 0 }),
-      souls: 0
-    };
+    run.state.earned = { xp: 0, souls: 0 };
+    delete run.state.extractChoice;
   }
 
   await saveRun(run);
@@ -109,30 +99,6 @@ function createDefeatedDemonRewards(run) {
     type: 'recruit',
     floor: run.floor,
     demon: resetRunDemon(enemy, `recruit-${run.floor}-${index + 1}`),
-    souls: 0,
-    xp: 0,
-    claimed: false
-  }));
-}
-
-function createFinalTeamRewards(run) {
-  const teamRewards = (run.state.team || []).map((demon) => ({
-    source: 'team',
-    demon
-  }));
-  const finalFightRewards = (run.state.enemies || [])
-    .map((demon) => ({
-      source: 'final_enemy',
-      demon
-    }));
-
-  return [...teamRewards, ...finalFightRewards].map((choice, index) => ({
-    rewardId: run.rewards.length + index + 1,
-    type: 'final',
-    floor: run.floor,
-    source: choice.source,
-    sourceInstanceId: choice.demon.instanceId,
-    demon: resetRunDemon(choice.demon, `final-${run.floor}-${index + 1}`),
     souls: 0,
     xp: 0,
     claimed: false

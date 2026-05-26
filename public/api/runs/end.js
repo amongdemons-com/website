@@ -16,15 +16,11 @@ router.post('/runs/:id/end', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Run has already ended.' });
   }
 
-  const baseEarned = run.state.earned || run.rewards.reduce((total, reward) => ({
-    xp: total.xp + (reward.xp || 0),
-    souls: total.souls + (reward.souls || 0)
-  }), { xp: 0, souls: 0 });
-  const savedDemon = run.rewards.some((reward) => reward.saved);
-  const earned = {
-    xp: Number(baseEarned.xp) || 0,
-    souls: run.status === 'defeated' ? 0 : Math.max(0, (Number(baseEarned.souls) || 0) - (savedDemon ? 1 : 0))
-  };
+  if (run.status !== 'defeated') {
+    return res.status(409).json({ error: 'Extract between fights to end a live dungeon.' });
+  }
+
+  const earned = { xp: 0, souls: 0 };
 
   const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [req.player.id]);
   const nextXp = playerRows[0].xp + earned.xp;

@@ -81,17 +81,6 @@
       params: ['demonId']
     },
     {
-      group: 'accountEndpoints',
-      title: 'Save Demon Reward',
-      method: 'POST',
-      path: '/api/demons/save',
-      auth: true,
-      body: () => ({
-        runId: state.runId || '',
-        rewardId: Number(state.rewardId || 1)
-      })
-    },
-    {
       group: 'runEndpoints',
       title: 'Start Run',
       method: 'POST',

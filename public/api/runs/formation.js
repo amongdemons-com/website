@@ -16,7 +16,7 @@ router.post('/runs/:id/formation', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Run is not active.' });
   }
 
-  if (run.state.awaitingRecruit || run.state.awaitingFinalPick) {
+  if (run.state.awaitingRecruit) {
     return res.status(409).json({ error: 'Resolve the pending dungeon choice before changing formation.' });
   }
 
