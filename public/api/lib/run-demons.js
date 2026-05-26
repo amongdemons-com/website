@@ -24,11 +24,17 @@ function getFormationSlotOrder(position, side = 'player') {
   const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
   const middleColumn = 1;
   const outerColumn = side === 'enemy' ? FORMATION_GRID_COLUMNS - 1 : 0;
-  const columns = position === 'front'
-    ? [frontColumn]
-    : position === 'back'
-      ? [middleColumn, outerColumn]
-      : [frontColumn, middleColumn, outerColumn];
+  const columns = side === 'enemy'
+    ? position === 'front'
+      ? [frontColumn, middleColumn]
+      : position === 'back'
+        ? [outerColumn, middleColumn]
+        : [frontColumn, middleColumn, outerColumn]
+    : position === 'front'
+      ? [frontColumn]
+      : position === 'back'
+        ? [middleColumn, outerColumn]
+        : [frontColumn, middleColumn, outerColumn];
 
   return columns.flatMap((column) => (
     Array.from({ length: FORMATION_GRID_COLUMNS }, (item, rowIndex) => rowIndex * FORMATION_GRID_COLUMNS + column)

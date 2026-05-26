@@ -895,7 +895,7 @@
 
     const typeAnimation = {
       2: () => drawDarkSpike(entry.attacker, entry.target),
-      4: () => drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'fiery', flames: 14 }),
+      4: () => drawFireball(entry.attacker, entry.target, { effect: entry.effect }),
       5: () => drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'heavy', duration: 520 }),
       6: () => drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'assassin', duration: 240 }),
       7: () => drawSwordSwing(entry.attacker, entry.target),
@@ -973,6 +973,50 @@
     appendTemporaryElement(zap, options.duration || 320);
   }
 
+  function drawFireball(attackerId, targetId, options = {}) {
+    const attacker = findDemonCard(attackerId);
+    const target = findDemonCard(targetId);
+    if (!attacker || !target) return;
+
+    const { attackerRect, targetRect, startX, startY, endX, endY, angle } = getAttackGeometry(attacker, target);
+    const attackerDemon = getCombatDemon(attackerId);
+    const isBackLineAttack = attackerDemon && getDemonPosition(attackerDemon) === 'back';
+    const startOffset = Math.min(attackerRect.width * (isBackLineAttack ? 0.28 : 0.42), 46);
+    const endOffset = Math.min(targetRect.width * 0.18, 22);
+    const x1 = startX + Math.cos(angle) * startOffset;
+    const y1 = startY + Math.sin(angle) * startOffset;
+    const x2 = endX - Math.cos(angle) * endOffset;
+    const y2 = endY - Math.sin(angle) * endOffset;
+    const distance = Math.max(1, Math.hypot(x2 - x1, y2 - y1));
+    const normalX = -(y2 - y1) / distance;
+    const normalY = (x2 - x1) / distance;
+    const impactRadius = Math.max(12, Math.min(24, targetRect.width * 0.18));
+    const emberCount = 8;
+    const emberHtml = Array.from({ length: emberCount }, (_, index) => {
+      const t = 0.12 + (index / Math.max(1, emberCount - 1)) * 0.72;
+      const drift = ((index % 2) ? -1 : 1) * (4 + (index % 3) * 2);
+      const x = x1 + (x2 - x1) * t + normalX * drift;
+      const y = y1 + (y2 - y1) * t + normalY * drift;
+      const radius = 1.8 + (index % 3) * 0.8;
+      return `<circle class="fireball-ember" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${radius.toFixed(1)}" style="animation-delay: ${scaleCombatDuration(70 + index * 28).toFixed(0)}ms" />`;
+    }).join('');
+
+    const fireball = createCombatElement([
+      'fireball-shot',
+      getDemonSide(attackerId) === 'player' ? 'is-player-attack' : 'is-enemy-attack',
+      isBackLineAttack ? 'is-back-attack' : ''
+    ].filter(Boolean).join(' '), attackerId, options.effect);
+    fireball.innerHTML = renderViewportSvg(`
+        ${emberHtml}
+        <g class="fireball-projectile" style="--fireball-start-x: ${x1.toFixed(1)}px; --fireball-start-y: ${y1.toFixed(1)}px; --fireball-end-x: ${x2.toFixed(1)}px; --fireball-end-y: ${y2.toFixed(1)}px;">
+          <circle class="fireball-core" cx="0" cy="0" r="8.5" />
+          <circle class="fireball-hot" cx="3.6" cy="-2.2" r="4.2" />
+        </g>
+        <circle class="fireball-impact" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="${impactRadius.toFixed(1)}" />
+    `);
+    appendTemporaryElement(fireball, 620);
+  }
+
   function updateTargetCard(instanceId, hp, attackerSide = 'unknown', options = {}) {
     const card = findDemonCard(instanceId);
     if (!card) return;
@@ -1014,7 +1058,10 @@
     const card = findDemonCard(instanceId);
     if (!card) return;
 
+    const rect = card.getBoundingClientRect();
     const floating = createCombatElement(`floating-combat-number is-${type}`, attackerId, effect || type);
+    floating.style.left = `${(rect.left + rect.width / 2).toFixed(1)}px`;
+    floating.style.top = `${Math.max(6, rect.top + rect.height * 0.08).toFixed(1)}px`;
     floating.innerHTML = type === 'heal'
       ? `+${escapeHtml(amount)}`
       : `-${escapeHtml(amount)}`;
@@ -1023,7 +1070,7 @@
       const scale = Math.min(2.2, 1 + (burstCount - 1) * 0.12);
       floating.style.fontSize = `calc(1.22rem * ${scale.toFixed(2)})`;
     }
-    appendTemporaryElement(floating, 760, card);
+    appendTemporaryElement(floating, 760);
   }
 
   function drawSwordSwing(attackerId, targetId) {
@@ -1203,6 +1250,7 @@
       ...(step.entries || []).map((entry) => {
         const typeId = Number(getCombatDemon(entry.attacker)?.typeId);
         if (entry.effect === 'heal') return 500;
+        if (typeId === 4) return 520;
         if (typeId === 5 || typeId === 8) return 520;
         if (typeId === 9) return 960;
         return 320;
@@ -3700,11 +3748,17 @@
     const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
     const middleColumn = 1;
     const outerColumn = side === 'enemy' ? FORMATION_GRID_COLUMNS - 1 : 0;
-    const columns = position === 'front'
-      ? [frontColumn]
-      : position === 'back'
-        ? [middleColumn, outerColumn]
-        : [frontColumn, middleColumn, outerColumn];
+    const columns = side === 'enemy'
+      ? position === 'front'
+        ? [frontColumn, middleColumn]
+        : position === 'back'
+          ? [outerColumn, middleColumn]
+          : [frontColumn, middleColumn, outerColumn]
+      : position === 'front'
+        ? [frontColumn]
+        : position === 'back'
+          ? [middleColumn, outerColumn]
+          : [frontColumn, middleColumn, outerColumn];
 
     return columns.flatMap((column) => (
       Array.from({ length: FORMATION_GRID_COLUMNS }, (item, rowIndex) => rowIndex * FORMATION_GRID_COLUMNS + column)
