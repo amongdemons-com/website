@@ -110,7 +110,7 @@ function renderRun() {
     side: 'enemy',
     allowRecruitDrag: false
   });
-  renderHandBar(hand, showHand, isHandStrategy || isFinalPick, handMode);
+  renderHandBar(hand, showHand, isHandStrategy, handMode);
   renderRewardBox(showHand, rewardInteractive);
   renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
   if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
