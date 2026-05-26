@@ -2,7 +2,7 @@ import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_FLOOR, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
+import { renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const addCollectionReinforcementToPool = (...args) => dungeonActions.addCollectionReinforcementToPool(...args);
@@ -16,13 +16,11 @@ const getFinalRewardHand = (...args) => dungeonActions.getFinalRewardHand(...arg
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
-const getSelectedCollectionReinforcement = (...args) => dungeonActions.getSelectedCollectionReinforcement(...args);
 const getSelectedCollectionReinforcements = (...args) => dungeonActions.getSelectedCollectionReinforcements(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
 const isFinalRewardPhase = (...args) => dungeonActions.isFinalRewardPhase(...args);
 const markCollectionReinforcementPlaceholderInteracted = (...args) => dungeonActions.markCollectionReinforcementPlaceholderInteracted(...args);
 const markCollectionReinforcementStagedInteracted = (...args) => dungeonActions.markCollectionReinforcementStagedInteracted(...args);
-const removeCollectionReinforcement = (...args) => dungeonActions.removeCollectionReinforcement(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const renderEmptyText = (...args) => dungeonActions.renderEmptyText(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
@@ -71,7 +69,6 @@ async function openCollectionReinforcementModal() {
 
 function renderCollectionReinforcementModal(query = '') {
   setTeamChoiceModalFullscreen(false);
-  const selected = getSelectedCollectionReinforcements();
   const limit = getCollectionReinforcementLimit();
   const normalizedQuery = query.trim().toLowerCase();
   const candidates = getAvailableCollectionReinforcements()
@@ -82,22 +79,9 @@ function renderCollectionReinforcementModal(query = '') {
     ].some((value) => String(value || '').toLowerCase().includes(normalizedQuery)))
     .sort(compareCollectionReinforcementDemons);
 
-  elements.teamChoiceModalTitle.textContent = 'Collection reinforcement';
-  elements.teamChoiceModalSubtitle.textContent = selected.length
-    ? `${selected.length} / ${limit} collection demons staged. Remove one to choose another if the limit is full.`
-    : `Choose up to ${limit} collection demon${limit === 1 ? '' : 's'} to place in hand, then drag them into your team.`;
+  elements.teamChoiceModalTitle.textContent = 'Add from collection';
+  elements.teamChoiceModalSubtitle.textContent = `Choose a collection demon to add to your hand${limit > 1 ? ', then add another if you want' : ''}.`;
   elements.teamChoiceModalBody.innerHTML = `
-    ${selected.length ? `
-      <div class="collection-reinforcement-current">
-        ${selected.map((demon) => `
-          <div>
-            <span class="hunt-phase-eyebrow">Staged</span>
-            ${renderSharedDemonCard(demon, { className: 'collection-reinforcement-card' })}
-            <button class="btn btn-outline-warning btn-sm js-remove-collection-reinforcement" data-instance-id="${escapeHtml(demon.instanceId)}" type="button">Remove</button>
-          </div>
-        `).join('')}
-      </div>
-    ` : ''}
     <div class="collection-reinforcement-toolbar">
       <input class="form-control form-control-sm" id="collectionReinforcementSearch" type="search" value="${escapeHtml(query)}" placeholder="Search collection">
     </div>
@@ -114,11 +98,6 @@ function renderCollectionReinforcementModal(query = '') {
     const input = document.getElementById('collectionReinforcementSearch');
     input?.focus();
     input?.setSelectionRange(input.value.length, input.value.length);
-  });
-  bindClicks('.js-remove-collection-reinforcement', (button) => {
-    removeCollectionReinforcement(button.dataset.instanceId);
-    renderCollectionReinforcementModal(query);
-    renderRun();
   });
   bindClicks('.js-call-collection-reinforcement', (button) => {
     addCollectionReinforcementToPool(Number(button.dataset.demonId));
@@ -252,7 +231,7 @@ function bindCollectionReinforcementPlaceholders() {
 }
 
 function bindDemonDetailCards() {
-  document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+  document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id], #dungeonRewardGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
     card.addEventListener('click', (event) => {
       if (event.defaultPrevented || card.classList.contains('is-dragging') || card.classList.contains('suppress-detail-click')) return;
 
@@ -279,9 +258,14 @@ function bindDemonDetailCards() {
 function getDemonForDetailCard(card) {
   const instanceId = card.dataset.instanceId;
   if (!instanceId) return null;
+  const selectedReward = getSelectedRewardCandidate();
+
+  if (card.closest('#dungeonRewardGrid')) {
+    return selectedReward?.demon || null;
+  }
 
   return [
-    getSelectedRewardCandidate()?.demon,
+    selectedReward?.demon,
     ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []),
     ...(isFinalRewardPhase() ? getFinalRewardHand() : []),
     ...(state.isRecruiting ? getRecruitPreviewHand() : state.battleHandPreview || []),

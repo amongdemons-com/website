@@ -151,13 +151,12 @@ function shouldShowCollectionReinforcementHandPlaceholder() {
 
 function renderCollectionReinforcementPlaceholder(position) {
   const attentionClass = state.collectionReinforcementPlaceholderInteracted ? '' : 'is-collection-reinforcement-attention';
-  const label = position === 'hand' ? 'Hand' : `${position === 'front' ? 'Melee' : 'Ranged'} slot`;
   return `
-    <button class="hunt-demon-card collection-reinforcement-placeholder ${attentionClass}" type="button" data-collection-reinforcement-position="${position}" aria-label="Choose collection reinforcement">
+    <button class="hunt-demon-card collection-reinforcement-placeholder ${attentionClass}" type="button" data-collection-reinforcement-position="${position}" aria-label="Add from collection">
       <div class="collection-reinforcement-placeholder-icon">${renderIcon('collection')}</div>
       <div class="collection-reinforcement-placeholder-copy">
-        <span>Collection</span>
-        <small>${label}</small>
+        <span>Add from</span>
+        <small>Collection</small>
       </div>
     </button>
   `;

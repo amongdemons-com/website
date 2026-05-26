@@ -71,23 +71,25 @@ function renderRewardBox(isVisible, isInteractive = false) {
 
   elements.dungeonRewardGrid.innerHTML = `
     <div class="dungeon-reward-dropzone formation-lane-cards ${candidate ? 'has-demon' : 'is-empty'}" data-reward-drop="true">
-      ${renderRewardPayout(earned)}
       <div class="dungeon-reward-slot">
         ${candidate ? renderRewardBoxCard(candidate, isInteractive) : renderEmptyRewardSlot()}
       </div>
+      ${renderRewardPayout(earned)}
     </div>
   `;
 }
 
 function renderRewardPayout(earned) {
+  const xp = Number(earned.xp) || 0;
+  const souls = Number(earned.souls) || 0;
   return `
     <div class="dungeon-reward-payout" aria-label="Dungeon rewards">
       <div class="dungeon-reward-payout-item">
-        <strong>${escapeHtml(earned.xp || 0)}</strong>
+        <strong>${escapeHtml(String(xp))}</strong>
         <span>XP</span>
       </div>
       <div class="dungeon-reward-payout-item">
-        <strong>${escapeHtml(earned.souls || 0)}</strong>
+        <strong>${escapeHtml(String(souls))}</strong>
         <span>souls</span>
       </div>
     </div>
