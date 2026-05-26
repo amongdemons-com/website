@@ -2406,7 +2406,7 @@ body.dungeon-page .navbar {
 .dungeon-bottom-panel {
     --dungeon-reward-card-width: clamp(5.6rem, 9vw, 7.25rem);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) calc(var(--dungeon-reward-card-width) + 1.45rem);
+    grid-template-columns: minmax(0, 1fr) minmax(13.5rem, calc(var(--dungeon-reward-card-width) + 6.5rem));
     align-items: stretch;
     gap: 0.75rem;
     min-width: 0;
@@ -2481,7 +2481,17 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-reward-box {
-    width: calc(var(--dungeon-reward-card-width) + 1.45rem);
+    width: 100%;
+}
+
+.dungeon-reward-title-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
 }
 
 .dungeon-reward-grid {
@@ -2492,18 +2502,20 @@ body.dungeon-page .navbar {
 
 .dungeon-reward-dropzone {
     display: grid;
-    place-items: center;
+    grid-template-columns: minmax(4.8rem, 1fr) auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
     width: 100%;
     min-height: calc(var(--dungeon-reward-card-width) * 1.333 + 0.4rem);
-    padding: 0.18rem;
-    border: 1px dashed rgba(232,199,106,0.24);
+    padding: 0.2rem;
+    border: 1px dashed transparent;
     border-radius: 6px;
-    background: rgba(232,199,106,0.04);
+    background: transparent;
 }
 
 .dungeon-reward-dropzone.has-demon {
-    border-style: solid;
-    border-color: rgba(232,199,106,0.36);
+    border-color: transparent;
 }
 
 .dungeon-reward-dropzone.is-drag-over {
@@ -2511,6 +2523,47 @@ body.dungeon-page .navbar {
     box-shadow:
         0 0 0 2px rgba(232,199,106,0.18),
         0 0 24px rgba(232,199,106,0.2);
+}
+
+.dungeon-reward-payout {
+    display: grid;
+    align-self: stretch;
+    align-content: center;
+    gap: 0.42rem;
+    min-width: 4.8rem;
+    padding: 0.5rem 0.52rem;
+    border: 1px solid rgba(232,199,106,0.18);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.07), rgba(3,9,11,0.18)),
+        rgba(3,9,11,0.42);
+}
+
+.dungeon-reward-payout-item {
+    display: grid;
+    gap: 0.08rem;
+    min-width: 0;
+    text-align: left;
+}
+
+.dungeon-reward-payout-item strong {
+    color: #f3dc93;
+    font-size: clamp(0.86rem, 1vw, 1.04rem);
+    line-height: 1;
+}
+
+.dungeon-reward-payout-item span {
+    color: rgba(220,232,229,0.68);
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.dungeon-reward-slot {
+    display: grid;
+    place-items: center;
+    min-width: var(--dungeon-reward-card-width);
 }
 
 .dungeon-reward-demon-card,
@@ -3056,7 +3109,7 @@ body.dungeon-page .navbar {
 
     .dungeon-bottom-panel {
         --dungeon-reward-card-width: clamp(3.6rem, 18vw, 4.9rem);
-        grid-template-columns: minmax(0, 1fr) calc(var(--dungeon-reward-card-width) + 0.9rem);
+        grid-template-columns: minmax(0, 1fr) minmax(7.4rem, calc(var(--dungeon-reward-card-width) + 3.5rem));
         gap: 0.35rem;
     }
 
@@ -3091,12 +3144,28 @@ body.dungeon-page .navbar {
     }
 
     .dungeon-reward-box {
-        width: calc(var(--dungeon-reward-card-width) + 0.9rem);
+        width: 100%;
     }
 
     .dungeon-reward-dropzone {
+        grid-template-columns: minmax(2.7rem, 1fr) auto;
+        gap: 0.25rem;
         min-height: calc(var(--dungeon-reward-card-width) * 1.333 + 0.2rem);
         padding: 0.12rem;
+    }
+
+    .dungeon-reward-payout {
+        min-width: 2.7rem;
+        gap: 0.28rem;
+        padding: 0.34rem 0.3rem;
+    }
+
+    .dungeon-reward-payout-item strong {
+        font-size: 0.68rem;
+    }
+
+    .dungeon-reward-payout-item span {
+        font-size: 0.44rem;
     }
 
     .dungeon-reward-empty {
@@ -5496,7 +5565,7 @@ body.summon-page {
 
 .dungeon-bottom-panel {
     --dungeon-reward-card-width: clamp(6.15rem, 7.8vw, 7.8rem);
-    grid-template-columns: minmax(0, 1fr) minmax(9.5rem, calc(var(--dungeon-reward-card-width) + 2.45rem));
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, calc(var(--dungeon-reward-card-width) + 7rem));
 }
 
 .dungeon-reward-box {
@@ -5531,11 +5600,21 @@ body.summon-page {
         0 0 16px color-mix(in srgb, var(--rarity-color, #D1D5D8) 10%, transparent);
 }
 
-.dungeon-hand-empty,
-.dungeon-reward-empty {
+.dungeon-hand-empty {
     border-color: rgba(232,199,106,0.22);
     background: rgba(232,199,106,0.04);
     color: rgba(243,220,147,0.5);
+}
+
+.dungeon-reward-empty {
+    border-color: rgba(161,212,201,0.14);
+    background: rgba(161,212,201,0.035);
+    color: rgba(220,232,229,0.42);
+}
+
+.dungeon-reward-dropzone.is-drag-over .dungeon-reward-empty {
+    border-color: rgba(232,199,106,0.42);
+    color: rgba(243,220,147,0.68);
 }
 
 #cashoutModalBody .cashout-selected-reward .hunt-demon-card,
@@ -5650,7 +5729,7 @@ body.summon-page {
 
     .dungeon-bottom-panel {
         --dungeon-reward-card-width: clamp(3.8rem, 19vw, 5.15rem);
-        grid-template-columns: minmax(0, 1fr) minmax(5.7rem, calc(var(--dungeon-reward-card-width) + 1.05rem));
+        grid-template-columns: minmax(0, 1fr) minmax(7.4rem, calc(var(--dungeon-reward-card-width) + 3.5rem));
     }
 
     .dungeon-reward-box {

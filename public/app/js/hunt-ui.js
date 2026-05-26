@@ -2157,7 +2157,25 @@
 
     elements.dungeonRewardGrid.innerHTML = `
       <div class="dungeon-reward-dropzone formation-lane-cards ${candidate ? 'has-demon' : 'is-empty'}" data-reward-drop="true">
-        ${candidate ? renderRewardBoxCard(candidate, isInteractive) : renderEmptyRewardSlot()}
+        ${renderRewardPayout(earned)}
+        <div class="dungeon-reward-slot">
+          ${candidate ? renderRewardBoxCard(candidate, isInteractive) : renderEmptyRewardSlot()}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderRewardPayout(earned) {
+    return `
+      <div class="dungeon-reward-payout" aria-label="Dungeon rewards">
+        <div class="dungeon-reward-payout-item">
+          <strong>${escapeHtml(earned.xp || 0)}</strong>
+          <span>XP</span>
+        </div>
+        <div class="dungeon-reward-payout-item">
+          <strong>${escapeHtml(earned.souls || 0)}</strong>
+          <span>souls</span>
+        </div>
       </div>
     `;
   }
