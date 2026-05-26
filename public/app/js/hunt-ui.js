@@ -15,7 +15,7 @@
   const FORMATION_CELL_CAPACITY = 1;
   const BATTLE_SPEED_OPTIONS = [0.5, 1, 2, 4];
   const FORMATION_DRAG_OVER_SELECTOR = '.formation-lane-cards.is-drag-over';
-  const RECRUIT_DRAG_OVER_SELECTOR = '.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over';
+  const REWARD_DRAG_OVER_SELECTOR = '.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .dungeon-reward-dropzone.is-drag-over';
   const session = window.AmongDemons.getSession();
   const COMBAT_THEMES = {
     default: { color: '#FAC51C', shadow: 'rgba(250,197,28,0.85)' },
@@ -39,11 +39,13 @@
     startOptions: null,
     selectedRecruitRewardId: null,
     selectedSwapInstanceId: null,
-    selectedCashoutDemonKey: null,
+    selectedRewardDemonKey: null,
+    rewardDraftCandidate: null,
     isRecruiting: false,
     isResultAnimating: false,
     draggedRecruitPoolInstanceId: null,
     draggedFormationInstanceId: null,
+    draggedRewardDemonKey: null,
     recruitSwapEffectIds: [],
     pendingHandFlowSources: null,
     isEnemyPreviewDeferred: false,
@@ -90,11 +92,15 @@
       'runLoading',
       'runEmpty',
       'runPanel',
+      'dungeonBottomPanel',
       'teamGrid',
       'enemyGrid',
       'dungeonHandBar',
       'dungeonHandGrid',
       'dungeonHandTitle',
+      'dungeonRewardBox',
+      'dungeonRewardGrid',
+      'dungeonRewardTitle',
       'teamSideTitle',
       'enemySideTitle',
       'dungeonJoiner',
@@ -185,6 +191,7 @@
       state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
       state.isRecruiting = Boolean(state.run.awaitingRecruit);
       if (state.isRecruiting) prepareRecruitStrategyState();
+      syncRewardSelectionFromRun();
       storeCurrentRun(state.run.runId);
       renderRun();
       return true;
@@ -208,6 +215,7 @@
       resetEndState();
       state.isRecruiting = false;
       state.battleHandPreview = null;
+      clearRewardSelection();
       state.startOptions = null;
       storeCurrentRun(payload.runId);
       await loadRun(payload.runId);
@@ -250,6 +258,7 @@
       if (!state.isRecruiting) {
         clearRecruitDrafts();
       }
+      syncRewardSelectionFromRun();
       storeCurrentRun(state.run.runId);
       renderRun();
       showPendingChoiceModal();
@@ -353,6 +362,7 @@
     const runId = state.run.runId;
     const handPreview = cloneDemons(state.recruitDraftPool || []);
     const recruitChoice = getDraftRecruitPayload();
+    const extractChoice = getRewardExtractionChoicePayload();
     if (!recruitChoice.team.length) {
       setMessage('Keep at least one demon on your team before continuing.', 'warning');
       return;
@@ -367,6 +377,7 @@
       delete body.position;
       delete body.team;
     }
+    body.extractChoice = extractChoice;
 
     try {
       await api(activeRunPath('recruit'), {
@@ -408,6 +419,8 @@
       });
       state.collectionDemons = null;
       getModal(elements.teamChoiceModal).hide();
+      getModal(elements.cashoutModal).hide();
+      clearRewardSelection();
       await finishRun(saved.replaced
         ? 'Dungeon complete. Collection demon replaced.'
         : 'Dungeon complete. Final demon added to your collection.', {
@@ -420,121 +433,537 @@
   }
 
   function openCashoutModal() {
-    if (!state.run?.awaitingRecruit) return;
+    if (!canExtractRun()) return;
 
-    state.selectedCashoutDemonKey = null;
     const subtitle = document.getElementById('cashoutModalSubtitle');
-    if (subtitle) subtitle.textContent = 'Pick one demon to keep, or leave without one.';
+    if (subtitle) subtitle.textContent = 'Confirm what you want to extract from this run.';
     renderCashoutModal();
     getModal(elements.cashoutModal).show();
   }
 
   function renderCashoutModal() {
-    const earned = state.run?.earned || { xp: 0, souls: 0 };
-    const candidates = getCashoutCandidates();
+    const candidate = getSelectedRewardCandidate();
+    const earned = getPayoutPreview(Boolean(candidate));
+    const demon = candidate?.demon || null;
 
     elements.cashoutModalBody.innerHTML = `
-      <div class="cashout-summary cashout-summary-compact">
-        <div>
-          <span class="hunt-phase-eyebrow">Leave now</span>
-          <p class="mb-0">Pick one demon to keep, or leave with only the earned rewards.</p>
+      <div class="cashout-summary cashout-extract-summary">
+        <div class="cashout-selected-reward">
+          <span class="hunt-phase-eyebrow">Demon</span>
+          ${demon ? renderDungeonDemonCard(demon, {
+            className: 'cashout-demon-card',
+            suppressCollectionMissingTag: true,
+            attributes: { 'data-instance-id': demon.instanceId || `extract-${candidate.key}` }
+          }) : `
+            <div class="dungeon-reward-empty">
+              <span>No demon selected</span>
+            </div>
+          `}
         </div>
-        <div class="cashout-reward-chips" aria-label="Dungeon rewards">
-          <span>${earned.xp || 0} XP</span>
-          <span>${earned.souls || 0} souls</span>
+        <div class="cashout-extract-copy">
+          <span class="hunt-phase-eyebrow">${isFinalRewardPhase() ? 'Dungeon complete' : 'Leave dungeon'}</span>
+          <p>${demon
+            ? `${escapeHtml(demon.species || 'This demon')} will be added to your collection.`
+            : 'You can drag a demon into Reward before extracting. Extracting now leaves without a demon.'}</p>
+          <div class="cashout-reward-chips" aria-label="Dungeon rewards">
+            <span>${earned.xp || 0} XP</span>
+            <span>${earned.souls || 0} souls</span>
+          </div>
         </div>
       </div>
-      <div class="cashout-candidate-grid">
-        ${candidates.map(renderCashoutCandidate).join('')}
-      </div>
-      <button class="btn btn-outline-light w-100 mt-3" id="cashoutSkipDemonBtn" type="button">
-        Leave Without Demon
-      </button>
     `;
-    elements.cashoutConfirmBtn.disabled = !state.selectedCashoutDemonKey;
-
-    bindClicks('.cashout-demon-card', (button) => {
-      state.selectedCashoutDemonKey = button.dataset.cashoutKey;
-      renderCashoutModal();
-    });
-    bindClick(document.getElementById('cashoutSkipDemonBtn'), cashOutWithoutDemon);
+    elements.cashoutConfirmBtn.disabled = false;
   }
 
-  function getCashoutCandidates() {
+  function getRewardCandidates() {
+    if (isFinalRewardPhase()) return getFinalRewardCandidates();
+    if (!state.run?.awaitingRecruit || !state.isRecruiting) return [];
+
     ensureRecruitDraft();
     return [
       ...(state.recruitDraftTeam || []).map((demon) => ({
-        key: getCashoutCandidateKey(demon),
+        key: getRewardCandidateKey(demon),
         source: getDraftPayloadSource(demon),
+        origin: 'team',
         instanceId: demon.originalInstanceId || demon.instanceId,
         rewardId: demon.rewardId || null,
         demon
       })),
       ...(state.recruitDraftPool || []).map((demon) => ({
-        key: getCashoutCandidateKey(demon),
+        key: getRewardCandidateKey(demon),
         source: getDraftPayloadSource(demon),
+        origin: 'pool',
         instanceId: demon.originalInstanceId || demon.instanceId,
         rewardId: demon.rewardId || null,
         demon
       }))
-    ].filter((candidate) => canCashoutCandidate(candidate));
+    ].filter((candidate) => canRewardCandidate(candidate));
   }
 
-  function canCashoutCandidate(candidate) {
-    return candidate.source === 'reward' || !candidate.demon.collectionDemonId;
+  function getFinalRewardCandidates() {
+    if (!state.run) return [];
+
+    return (state.run.rewards || [])
+      .filter((reward) => (
+        reward.type === 'final' &&
+        reward.floor === state.run.currentFloor &&
+        reward.demon &&
+        !reward.saved
+      ))
+      .map((reward) => ({
+        key: `final:${reward.rewardId}`,
+        source: 'final',
+        origin: 'final',
+        instanceId: reward.sourceInstanceId || reward.demon.instanceId,
+        sourceInstanceId: reward.sourceInstanceId || null,
+        rewardId: reward.rewardId,
+        demon: {
+          ...reward.demon,
+          rewardId: reward.rewardId,
+          rewardCandidateKey: `final:${reward.rewardId}`
+        }
+      }));
   }
 
-  function getCashoutCandidateKey(demon) {
+  function getRewardCandidateByKey(key) {
+    return getRewardCandidates().find((candidate) => candidate.key === key) || null;
+  }
+
+  function getSelectedRewardCandidate() {
+    if (state.rewardDraftCandidate) return cloneRewardCandidate(state.rewardDraftCandidate);
+
+    const candidate = getRewardCandidateByKey(state.selectedRewardDemonKey);
+    if (!candidate && state.selectedRewardDemonKey) state.selectedRewardDemonKey = null;
+    return candidate;
+  }
+
+  function setRewardSelection(candidate) {
+    state.rewardDraftCandidate = candidate ? cloneRewardCandidate(candidate) : null;
+    state.selectedRewardDemonKey = state.rewardDraftCandidate?.key || null;
+  }
+
+  function cloneRewardCandidate(candidate) {
+    if (!candidate) return null;
+    return {
+      ...candidate,
+      demon: candidate.demon ? { ...candidate.demon } : null
+    };
+  }
+
+  function canRewardCandidate(candidate) {
+    return candidate.source === 'reward' || candidate.source === 'team' || candidate.source === 'reserved';
+  }
+
+  function getRewardCandidateKey(demon) {
     if (demon.recruitSource === 'reward') return `reward:${demon.rewardId}`;
     if (demon.recruitSource === 'collection') return `collection:${demon.collectionDemonId}`;
+    if (demon.recruitSource === 'reserved') return `reserved:${demon.originalInstanceId || demon.instanceId}`;
     return `team:${demon.originalInstanceId || demon.instanceId}`;
   }
 
-  function renderCashoutCandidate(candidate) {
-    const demon = candidate.demon;
-    const active = state.selectedCashoutDemonKey === candidate.key;
+  function getRewardCandidateFromPayload(payload) {
+    if (!payload) return null;
+    if (payload.type === 'final-reward') return getRewardCandidateByKey(payload.key);
+    if (payload.type === 'reward-selection') return getSelectedRewardCandidate();
+    if (payload.type !== 'recruit-pool' && payload.type !== 'recruit-team') return null;
 
-    return `
-      <div class="cashout-candidate">
-        ${renderDungeonDemonCard(demon, {
-          tag: 'button',
-          className: 'cashout-demon-card',
-          active,
-          attributes: { 'data-cashout-key': candidate.key }
-        })}
-      </div>
-    `;
+    ensureRecruitDraft();
+    const collection = payload.type === 'recruit-pool' ? state.recruitDraftPool : state.recruitDraftTeam;
+    const demon = findDraftDemon(collection, payload.instanceId);
+    if (!demon) return null;
+
+    const candidate = {
+      key: getRewardCandidateKey(demon),
+      source: getDraftPayloadSource(demon),
+      origin: payload.type === 'recruit-pool' ? 'pool' : 'team',
+      instanceId: demon.originalInstanceId || demon.instanceId,
+      rewardId: demon.rewardId || null,
+      demon
+    };
+    return canRewardCandidate(candidate) ? candidate : null;
   }
 
-  async function cashOutDungeon() {
-    if (!state.run || !state.selectedCashoutDemonKey) return;
+  function canDropOnRewardBox(payload) {
+    return Boolean(getRewardCandidateFromPayload(payload));
+  }
 
-    const candidate = getCashoutCandidates().find((item) => item.key === state.selectedCashoutDemonKey);
-    if (!candidate) {
-      setMessage('Choose a demon reward.', 'warning');
+  function applyRewardBoxDrop(payload) {
+    const candidate = getRewardCandidateFromPayload(payload);
+    if (!candidate) return;
+    if (candidate.key === state.selectedRewardDemonKey && state.rewardDraftCandidate) return;
+
+    const previous = getSelectedRewardCandidate();
+    const sourcePlacement = getRewardCandidateCurrentPlacement(candidate);
+    const reserved = detachRewardCandidate(candidate);
+    if (!reserved) return;
+
+    if (previous && previous.key !== reserved.key) {
+      insertRewardCandidateIntoPlacement(previous, sourcePlacement) ||
+        restoreRewardCandidateToOrigin(previous);
+    }
+    setRewardSelection(reserved);
+    refreshRewardDraftState();
+  }
+
+  function clearRewardSelection(options = {}) {
+    const { restore = false } = options;
+    const candidate = restore ? getSelectedRewardCandidate() : null;
+    state.selectedRewardDemonKey = null;
+    state.rewardDraftCandidate = null;
+    if (candidate) {
+      restoreRewardCandidateToOrigin(candidate);
+      refreshRewardDraftState();
+    }
+  }
+
+  function detachRewardCandidate(candidate) {
+    if (!candidate) return null;
+    ensureRecruitDraft();
+
+    if (candidate.origin === 'team') {
+      const index = getDraftTeamIndex(candidate.demon?.instanceId);
+      const demon = removeDraftDemon(state.recruitDraftTeam, candidate.demon?.instanceId);
+      if (!demon) return null;
+      return cloneRewardCandidate({
+        ...candidate,
+        originIndex: index,
+        originPosition: getDemonPosition(demon),
+        originFormationRow: getDemonFormationRow(demon, state.recruitDraftTeam, index),
+        demon
+      });
+    }
+
+    if (candidate.origin === 'pool') {
+      const index = getDraftPoolIndex(candidate.demon?.instanceId);
+      const demon = removeDraftDemon(state.recruitDraftPool, candidate.demon?.instanceId);
+      if (!demon) return null;
+      return cloneRewardCandidate({
+        ...candidate,
+        originIndex: index,
+        originPosition: getDemonPosition(demon),
+        demon
+      });
+    }
+
+    return cloneRewardCandidate(candidate);
+  }
+
+  function getRewardCandidateCurrentPlacement(candidate) {
+    if (!candidate?.demon) return null;
+
+    if (candidate.origin === 'team') {
+      const index = getDraftTeamIndex(candidate.demon.instanceId);
+      return {
+        zone: 'team',
+        index,
+        position: getDemonPosition(candidate.demon),
+        rowIndex: getDemonFormationRow(candidate.demon, state.recruitDraftTeam, index)
+      };
+    }
+
+    if (candidate.origin === 'pool') {
+      return {
+        zone: 'pool',
+        index: getDraftPoolIndex(candidate.demon.instanceId),
+        position: getDemonPosition(candidate.demon)
+      };
+    }
+
+    return null;
+  }
+
+  function insertRewardCandidateIntoPlacement(candidate, placement) {
+    if (!placement) return false;
+
+    if (placement.zone === 'team') {
+      return insertRewardCandidateIntoTeam(
+        candidate,
+        placement.position || getDemonPosition(candidate?.demon),
+        Number.isInteger(placement.index) ? placement.index : null,
+        Number.isInteger(placement.rowIndex) ? placement.rowIndex : null
+      );
+    }
+
+    if (placement.zone === 'pool') {
+      return insertRewardCandidateIntoPool(
+        candidate,
+        placement.position || getDemonPosition(candidate?.demon),
+        Number.isInteger(placement.index) ? placement.index : null
+      );
+    }
+
+    return false;
+  }
+
+  function restoreRewardCandidateToOrigin(candidate) {
+    if (!candidate) return false;
+    if (!state.isRecruiting || !state.run?.awaitingRecruit) return false;
+    ensureRecruitDraft();
+
+    if (candidate.origin === 'team') {
+      return insertRewardCandidateIntoTeam(
+        candidate,
+        candidate.originPosition || getDemonPosition(candidate.demon),
+        Number.isInteger(candidate.originIndex) ? candidate.originIndex : null,
+        Number.isInteger(candidate.originFormationRow) ? candidate.originFormationRow : null
+      );
+    }
+
+    if (candidate.origin === 'pool') {
+      return insertRewardCandidateIntoPool(
+        candidate,
+        candidate.originPosition || getDemonPosition(candidate.demon),
+        Number.isInteger(candidate.originIndex) ? candidate.originIndex : null
+      );
+    }
+
+    return false;
+  }
+
+  function insertRewardCandidateIntoTeam(candidate, position, insertIndex = null, rowIndex = null) {
+    if (!candidate?.demon) return false;
+    ensureRecruitDraft();
+
+    const targetRow = normalizeFormationRow(rowIndex);
+    const draftDemon = {
+      ...candidate.demon,
+      position: position || getDemonPosition(candidate.demon),
+      formationRow: targetRow,
+      formationSlot: targetRow
+    };
+
+    if (Number.isInteger(insertIndex) && insertIndex >= 0) {
+      state.recruitDraftTeam.splice(Math.min(insertIndex, state.recruitDraftTeam.length), 0, draftDemon);
+    } else {
+      state.recruitDraftTeam.push(draftDemon);
+    }
+    return true;
+  }
+
+  function insertRewardCandidateIntoPool(candidate, position, insertIndex = null) {
+    if (!candidate?.demon) return false;
+    ensureRecruitDraft();
+
+    const draftDemon = {
+      ...candidate.demon,
+      position: getHandDropPosition(position || 'hand', candidate.demon)
+    };
+    delete draftDemon.formationRow;
+    delete draftDemon.formationSlot;
+
+    if (Number.isInteger(insertIndex) && insertIndex >= 0) {
+      state.recruitDraftPool.splice(Math.min(insertIndex, state.recruitDraftPool.length), 0, draftDemon);
+    } else {
+      state.recruitDraftPool.push(draftDemon);
+    }
+    return true;
+  }
+
+  function refreshRewardDraftState() {
+    refreshRecruitDraftOrder();
+    refreshRecruitDraftPoolOrder();
+    syncRecruitDraftSelection();
+  }
+
+  function removeRewardSelection() {
+    clearRewardSelection({ restore: true });
+  }
+
+  function canMoveRewardSelectionToTeam(lane) {
+    const candidate = getSelectedRewardCandidate();
+    if (!candidate) return false;
+    if (!state.isRecruiting || !state.run?.awaitingRecruit) return true;
+    return (state.recruitDraftTeam || []).length < getRecruitTeamLimit() &&
+      canAddDemonToFormationLane(state.recruitDraftTeam, lane);
+  }
+
+  function canMoveRewardSelectionToPool() {
+    return Boolean(getSelectedRewardCandidate());
+  }
+
+  function moveRewardSelectionToTeamLane(lane, position, event = null, insertIndex = null) {
+    const candidate = getSelectedRewardCandidate();
+    if (!candidate) return false;
+
+    if (!state.isRecruiting || !state.run?.awaitingRecruit) {
+      clearRewardSelection();
+      return true;
+    }
+
+    if (!canMoveRewardSelectionToTeam(lane)) return false;
+
+    const laneInfo = getFormationLaneInfo(lane);
+    const targetIndex = Number.isInteger(insertIndex)
+      ? insertIndex
+      : getLaneDropDraftIndex(lane, event?.clientY, event?.clientX);
+    clearRewardSelection();
+    const inserted = insertRewardCandidateIntoTeam(
+      candidate,
+      position || laneInfo?.position || getDemonPosition(candidate.demon),
+      targetIndex,
+      laneInfo?.rowIndex
+    );
+    refreshRewardDraftState();
+    return inserted;
+  }
+
+  function moveRewardSelectionToPoolLane(lane, event = null, insertIndex = null) {
+    const candidate = getSelectedRewardCandidate();
+    if (!candidate) return false;
+
+    if (!state.isRecruiting || !state.run?.awaitingRecruit) {
+      clearRewardSelection();
+      return true;
+    }
+
+    const targetIndex = Number.isInteger(insertIndex)
+      ? insertIndex
+      : getLaneDropDraftIndex(lane, event?.clientY, event?.clientX);
+    clearRewardSelection();
+    const inserted = insertRewardCandidateIntoPool(
+      candidate,
+      lane?.dataset.formationDrop || 'hand',
+      targetIndex
+    );
+    refreshRewardDraftState();
+    return inserted;
+  }
+
+  function swapRewardSelectionWithDraftTarget(targetSide, targetInstanceId) {
+    const candidate = getSelectedRewardCandidate();
+    if (!candidate || !targetInstanceId) return false;
+
+    if (!state.isRecruiting || !state.run?.awaitingRecruit) {
+      clearRewardSelection();
+      return true;
+    }
+
+    const targetPayload = {
+      type: targetSide === 'team' ? 'recruit-team' : 'recruit-pool',
+      instanceId: targetInstanceId
+    };
+    const targetCandidate = getRewardCandidateFromPayload(targetPayload);
+    if (!targetCandidate || targetCandidate.key === candidate.key) return false;
+
+    const targetIndex = targetSide === 'team' ? getDraftTeamIndex(targetInstanceId) : getDraftPoolIndex(targetInstanceId);
+    const targetPosition = getDemonPosition(targetCandidate.demon);
+    const targetRow = targetSide === 'team'
+      ? getDemonFormationRow(targetCandidate.demon, state.recruitDraftTeam, targetIndex)
+      : null;
+    const reservedTarget = detachRewardCandidate(targetCandidate);
+    if (!reservedTarget) return false;
+
+    clearRewardSelection();
+    const inserted = targetSide === 'team'
+      ? insertRewardCandidateIntoTeam(candidate, targetPosition, targetIndex, targetRow)
+      : insertRewardCandidateIntoPool(candidate, targetPosition, targetIndex);
+    if (!inserted) {
+      restoreRewardCandidateToOrigin(reservedTarget);
+      refreshRewardDraftState();
+      return false;
+    }
+
+    setRewardSelection(reservedTarget);
+    refreshRewardDraftState();
+    return true;
+  }
+
+  function getPayoutPreview(savedDemon = false) {
+    const earned = state.run?.earned || { xp: 0, souls: 0 };
+    return {
+      xp: Number(earned.xp) || 0,
+      souls: state.run?.status === 'defeated'
+        ? 0
+        : Math.max(0, (Number(earned.souls) || 0) - (savedDemon ? 1 : 0))
+    };
+  }
+
+  function canExtractRun() {
+    return Boolean((state.run?.awaitingRecruit && state.isRecruiting) || isFinalRewardPhase());
+  }
+
+  function isFinalRewardPhase() {
+    return Boolean(state.run?.awaitingFinalPick || state.run?.status === 'completed');
+  }
+
+  function syncRewardSelectionFromRun() {
+    if (!state.run || !Object.prototype.hasOwnProperty.call(state.run, 'extractChoice')) return;
+    const choice = state.run.extractChoice;
+    if (!choice?.demon) {
+      setRewardSelection(null);
       return;
     }
 
-    if (!(await confirmCollectionReplacement(candidate.demon))) return;
-
-    await cashOut({
-      button: elements.cashoutConfirmBtn,
-      clearCollection: true,
-      body: {
-        source: candidate.source,
-        instanceId: candidate.instanceId,
-        rewardId: candidate.rewardId
+    const key = choice.key || getStoredExtractChoiceKey(choice);
+    setRewardSelection({
+      key,
+      source: choice.source || 'reserved',
+      origin: 'reserved',
+      instanceId: choice.instanceId || choice.demon.instanceId,
+      rewardId: choice.rewardId || null,
+      demon: {
+        ...choice.demon,
+        instanceId: choice.demon.instanceId || choice.instanceId || `reserved-${key}`,
+        originalInstanceId: choice.instanceId || choice.demon.originalInstanceId || choice.demon.instanceId,
+        rewardId: choice.rewardId || choice.demon.rewardId || null,
+        rewardCandidateKey: key,
+        recruitSource: 'reserved'
       }
     });
   }
 
-  async function cashOutWithoutDemon() {
-    if (!state.run) return;
+  function getStoredExtractChoiceKey(choice) {
+    if (choice?.key) return choice.key;
+    if (choice?.source === 'reward' && choice.rewardId) return `reward:${choice.rewardId}`;
+    if (choice?.source === 'team' && choice.instanceId) return `team:${choice.instanceId}`;
+    return `reserved:${choice?.instanceId || choice?.rewardId || 'demon'}`;
+  }
+
+  async function cashOutDungeon() {
+    if (!state.run || !canExtractRun()) return;
+
+    const candidate = getSelectedRewardCandidate();
+    if (isFinalRewardPhase()) {
+      if (candidate && candidate.source !== 'final') {
+        if (!(await confirmCollectionReplacement(candidate.demon))) return;
+        await cashOut({
+          button: elements.cashoutConfirmBtn,
+          clearCollection: true,
+          body: getCashoutBodyForCandidate(candidate)
+        });
+        return;
+      }
+
+      await withBusy(elements.cashoutConfirmBtn, async () => {
+        if (candidate) {
+          await saveReward(candidate.rewardId);
+        } else {
+          getModal(elements.cashoutModal).hide();
+          await finishRun('Dungeon complete.', { completed: true });
+        }
+      });
+      return;
+    }
+
+    if (candidate && !(await confirmCollectionReplacement(candidate.demon))) return;
 
     await cashOut({
-      button: document.getElementById('cashoutSkipDemonBtn'),
-      body: { skipDemon: true }
+      button: elements.cashoutConfirmBtn,
+      clearCollection: Boolean(candidate),
+      body: getCashoutBodyForCandidate(candidate)
     });
+  }
+
+  function getCashoutBodyForCandidate(candidate) {
+    if (!candidate) return { skipDemon: true };
+    if (candidate.source === 'reserved' || candidate.origin === 'reserved') {
+      return { source: 'reserved' };
+    }
+    return {
+      source: candidate.source,
+      instanceId: candidate.instanceId,
+      rewardId: candidate.rewardId
+    };
   }
 
   async function cashOut({ button, body, clearCollection = false }) {
@@ -555,13 +984,13 @@
     clearCurrentRun();
     if (options.clearCollection) state.collectionDemons = null;
     state.run = null;
-    state.selectedCashoutDemonKey = null;
+    clearRewardSelection();
     state.battleHandPreview = null;
     clearRecruitDrafts();
     resetCombatState();
     state.endSummary = {
       title: 'Dungeon ended',
-      message: skippedDemon ? 'You left without recruiting a demon.' : demonMessage,
+      message: skippedDemon ? 'No demon was extracted.' : demonMessage,
       demon: skippedDemon ? null : result.demon || null,
       xp: result.xp,
       souls: result.souls
@@ -600,6 +1029,7 @@
       clearCurrentRun();
       state.run = null;
       clearRecruitSelection();
+      clearRewardSelection();
       state.isRecruiting = false;
       state.battleHandPreview = null;
       clearDragState();
@@ -663,7 +1093,9 @@
       if (laneResizeObserver) laneResizeObserver.disconnect();
       elements.runPanel?.classList.remove('has-hand');
       elements.runPanel?.querySelector('.dungeon-arena')?.classList.remove('is-hand-strategy');
+      elements.dungeonBottomPanel?.classList.add('d-none');
       elements.dungeonHandBar?.classList.add('d-none');
+      elements.dungeonRewardBox?.classList.add('d-none');
       renderTeamSideTitle();
       if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
       updateDungeonJoiner();
@@ -677,14 +1109,18 @@
     }
 
     const isHandStrategy = Boolean(state.isRecruiting && run.awaitingRecruit);
+    const isFinalPick = isFinalRewardPhase();
     const arena = elements.runPanel?.querySelector('.dungeon-arena');
     const team = isHandStrategy ? getRecruitPreviewTeam() : run.team || [];
     const enemies = isHandStrategy && state.isEnemyPreviewDeferred ? [] : (isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || []);
     const showBattleHand = Boolean(!isHandStrategy && state.isBattleAnimating && state.battleHandPreview?.length);
-    const hand = isHandStrategy ? getRecruitPreviewHand() : (showBattleHand ? cloneDemons(state.battleHandPreview) : []);
+    const hand = isFinalPick ? getFinalRewardHand() : (isHandStrategy ? getRecruitPreviewHand() : (showBattleHand ? cloneDemons(state.battleHandPreview) : []));
+    const handMode = isFinalPick ? 'final' : 'recruit';
     const showHand = true;
+    const rewardInteractive = Boolean(isHandStrategy || isFinalPick);
 
     elements.runPanel?.classList.toggle('has-hand', showHand);
+    elements.dungeonBottomPanel?.classList.toggle('d-none', !showHand);
     arena?.classList.toggle('is-hand-strategy', isHandStrategy);
     elements.teamGrid.innerHTML = renderDemonCards(team, {
       side: 'player',
@@ -694,12 +1130,14 @@
       side: 'enemy',
       allowRecruitDrag: false
     });
-    renderHandBar(hand, showHand, isHandStrategy);
+    renderHandBar(hand, showHand, isHandStrategy || isFinalPick, handMode);
+    renderRewardBox(showHand, rewardInteractive);
     renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
     if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
     updateDungeonJoiner();
     bindFormationDragAndDrop();
     bindRecruitDragAndDrop();
+    bindRewardDragAndDrop();
     bindPointerDragAndDrop();
     bindCollectionReinforcementPlaceholders();
     bindDemonDetailCards();
@@ -1487,25 +1925,9 @@
     });
   }
 
-  function renderRewardTags(extraClass = '') {
-    const earned = state.run?.earned || { xp: 0, souls: 0 };
-    const handCount = state.run?.awaitingRecruit ? getCurrentRecruitRewards().length : 1;
-    const showLabel = !extraClass.includes('dungeon-header-rewards');
-    return `
-      <div class="dungeon-meta-group dungeon-reward-meta ${extraClass}">
-        ${showLabel ? '<span class="hunt-phase-eyebrow">Rewards</span>' : ''}
-        <span>${handCount} ${handCount === 1 ? 'Demon' : 'Demons'}</span>
-        <span>${earned.xp || 0} XP</span>
-        <span>${earned.souls || 0} souls</span>
-      </div>
-    `;
-  }
-
   function renderDungeonRewardStrip() {
     if (!elements.dungeonRewardStrip) return;
-
-    const shouldShow = Boolean(!state.isLoading && state.run?.awaitingRecruit && state.isRecruiting);
-    elements.dungeonRewardStrip.innerHTML = shouldShow ? renderRewardTags('dungeon-mobile-rewards') : '';
+    elements.dungeonRewardStrip.innerHTML = '';
   }
 
   function renderPhaseTitle() {
@@ -1636,6 +2058,7 @@
 
   function prepareRecruitStrategyState() {
     clearRecruitSelection();
+    clearRewardSelection();
     clearDragState();
     clearRecruitDrafts();
     if (state.run?.collectionReinforcementAvailable) {
@@ -1667,7 +2090,17 @@
     return cloneDemons(state.run?.nextEnemies || []);
   }
 
-  function renderHandBar(hand, isVisible, isInteractive = false) {
+  function getFinalRewardHand() {
+    const selectedKey = state.selectedRewardDemonKey;
+    return getFinalRewardCandidates()
+      .filter((candidate) => candidate.key !== selectedKey)
+      .map((candidate) => ({
+        ...candidate.demon,
+        rewardCandidateKey: candidate.key
+      }));
+  }
+
+  function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit') {
     if (!elements.dungeonHandBar || !elements.dungeonHandGrid) return;
 
     elements.dungeonHandBar.classList.toggle('d-none', !isVisible);
@@ -1682,16 +2115,17 @@
       elements.dungeonHandTitle.textContent = `${count} ${count === 1 ? 'demon' : 'demons'}`;
     }
 
-    elements.dungeonHandGrid.innerHTML = renderHandCards(hand, isInteractive);
+    elements.dungeonHandGrid.innerHTML = renderHandCards(hand, isInteractive, mode);
   }
 
-  function renderHandCards(demons, isInteractive = false) {
-    const placeholder = isInteractive && shouldShowCollectionReinforcementHandPlaceholder()
+  function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
+    const placeholder = isInteractive && mode === 'recruit' && shouldShowCollectionReinforcementHandPlaceholder()
       ? renderCollectionReinforcementPlaceholder('hand')
       : '';
     const cardHtml = demons.map((demon) => renderDemonCard(demon, {
       side: 'hand',
-      allowRecruitDrag: isInteractive
+      allowRecruitDrag: isInteractive && mode === 'recruit',
+      allowRewardDrag: isInteractive && mode === 'final'
     })).join('');
 
     return `
@@ -1703,6 +2137,56 @@
 
   function renderEmptyHand() {
     return '<div class="formation-empty dungeon-hand-empty"><span>Empty</span></div>';
+  }
+
+  function renderRewardBox(isVisible, isInteractive = false) {
+    if (!elements.dungeonRewardBox || !elements.dungeonRewardGrid) return;
+
+    elements.dungeonRewardBox.classList.toggle('d-none', !isVisible);
+    if (!isVisible) {
+      elements.dungeonRewardGrid.innerHTML = '';
+      if (elements.dungeonRewardTitle) elements.dungeonRewardTitle.textContent = '0 XP / 0 souls';
+      return;
+    }
+
+    const candidate = getSelectedRewardCandidate();
+    const earned = getPayoutPreview(Boolean(candidate));
+    if (elements.dungeonRewardTitle) {
+      elements.dungeonRewardTitle.textContent = `${earned.xp || 0} XP / ${earned.souls || 0} souls`;
+    }
+
+    elements.dungeonRewardGrid.innerHTML = `
+      <div class="dungeon-reward-dropzone formation-lane-cards ${candidate ? 'has-demon' : 'is-empty'}" data-reward-drop="true">
+        ${candidate ? renderRewardBoxCard(candidate, isInteractive) : renderEmptyRewardSlot()}
+      </div>
+    `;
+  }
+
+  function renderRewardBoxCard(candidate, isInteractive = false) {
+    const demon = {
+      ...candidate.demon,
+      rewardCandidateKey: candidate.key
+    };
+
+    return renderDungeonDemonCard(demon, {
+      className: 'dungeon-reward-demon-card',
+      suppressCollectionMissingTag: true,
+      attributes: {
+        'data-instance-id': demon.instanceId || `reward-${candidate.key}`,
+        'data-reward-candidate-key': candidate.key,
+        role: 'button',
+        tabindex: '0',
+        draggable: isInteractive
+      }
+    });
+  }
+
+  function renderEmptyRewardSlot() {
+    return `
+      <div class="formation-empty dungeon-reward-empty">
+        <span>Drop Demon</span>
+      </div>
+    `;
   }
 
   function playPendingHandFlowAnimation(isHandStrategy) {
@@ -1959,9 +2443,22 @@
     };
   }
 
+  function getRewardExtractionChoicePayload() {
+    const candidate = getSelectedRewardCandidate();
+    if (!candidate || candidate.source === 'final') return null;
+
+    return {
+      source: candidate.origin === 'reserved' ? 'reserved' : candidate.source,
+      instanceId: candidate.instanceId || null,
+      rewardId: candidate.rewardId || null,
+      key: candidate.key
+    };
+  }
+
   function getDraftPayloadSource(demon) {
     if (demon.recruitSource === 'reward') return 'reward';
     if (demon.recruitSource === 'collection') return 'collection';
+    if (demon.recruitSource === 'reserved') return 'reserved';
     return 'team';
   }
 
@@ -1988,6 +2485,7 @@
     const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
     const canViewLog = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
     const canChooseRecruit = Boolean(!state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
+    const canExtract = Boolean(!state.isResultAnimating && canExtractRun());
 
     elements.fightLogActions.innerHTML = `
       ${canShowSpeedControl ? renderBattleSpeedControl() : ''}
@@ -2001,12 +2499,13 @@
           ${renderIcon('log')}
         </button>
       ` : ''}
-      ${canChooseRecruit ? `
-        ${shouldUseMobileRewardStrip() ? '' : renderRewardTags('dungeon-header-rewards')}
+      ${canExtract ? `
         <button class="btn btn-warning btn-sm" id="getRewardBtn" type="button">
           ${renderIcon('flag')}
-          Get Reward
+          Extract
         </button>
+      ` : ''}
+      ${canChooseRecruit ? `
         <span class="dungeon-action-or">or</span>
         <button class="btn btn-success btn-sm" id="fightLogContinueHuntBtn" type="button">
           ${renderButtonMeleeIcon()}
@@ -2185,10 +2684,7 @@
 
   function showPendingChoiceModal() {
     if (!state.run || !(state.run.awaitingFinalPick || state.run.status === 'completed')) return;
-    if (state.run.status === 'completed' && hasSavedFinalReward()) return;
-
-    renderTeamChoiceModal();
-    getModal(elements.teamChoiceModal, { backdrop: 'static', keyboard: false }).show();
+    renderRun();
   }
 
   function renderTeamChoiceModal() {
@@ -2460,7 +2956,7 @@
         <div class="reward-item border rounded p-3">
           ${renderRewardDemon(reward.demon)}
           <button class="btn btn-outline-info btn-sm w-100 mt-3 js-save" data-reward-id="${reward.rewardId}" ${reward.saved || hasSavedFinalReward() ? 'disabled' : ''}>
-            ${reward.saved ? 'Saved' : 'Add to Collection'}
+            ${reward.saved ? 'Saved' : 'Extract'}
           </button>
         </div>
       </div>
@@ -2523,8 +3019,8 @@
 
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', JSON.stringify(payload));
-      state[options.stateKey] = payload.instanceId;
-      if (options.markStaged) markCollectionReinforcementStagedInteracted(payload.instanceId);
+      state[options.stateKey] = payload.instanceId || payload.key || null;
+      if (options.markStaged && payload.instanceId) markCollectionReinforcementStagedInteracted(payload.instanceId);
       card.classList.add('is-dragging');
     });
 
@@ -2598,7 +3094,7 @@
   function bindRecruitCardDragAndDrop(card, options) {
     bindNativeDragSource(card, {
       stateKey: options.stateKey,
-      clearSelector: RECRUIT_DRAG_OVER_SELECTOR,
+      clearSelector: REWARD_DRAG_OVER_SELECTOR,
       markStaged: options.markStaged,
       getPayload: options.getPayload
     });
@@ -2607,8 +3103,8 @@
       readPayload: readRecruitDragPayload,
       stopPropagation: true,
       renderAfterDrop: true,
-      canDrop: (payload) => options.canDrop(payload, card.dataset.instanceId),
-      onDrop: (payload) => applyRecruitCardDrop(payload, options.targetSide, card.dataset.instanceId)
+      canDrop: (payload) => canDropRecruitPayloadOnCard(payload, card),
+      onDrop: (payload) => applyRecruitPayloadToCard(payload, card)
     });
   }
 
@@ -2620,20 +3116,7 @@
 
   function getRecruitDropContext(event) {
     const payload = readRecruitDragPayload(event);
-    const poolInstanceId = payload?.instanceId || state.draggedRecruitPoolInstanceId;
-    const teamInstanceId = payload?.instanceId || state.draggedFormationInstanceId;
-    const hasPoolPayload = payload?.type === 'recruit-pool' || (!payload?.type && poolInstanceId);
-    const hasTeamPayload = payload?.type === 'recruit-team' || (!payload?.type && teamInstanceId);
-
-    return {
-      payload,
-      poolInstanceId,
-      teamInstanceId,
-      hasPoolPayload,
-      hasTeamPayload,
-      isPoolDrop: hasPoolPayload && findDraftDemon(state.recruitDraftPool, poolInstanceId),
-      isTeamMove: hasTeamPayload && findDraftDemon(state.recruitDraftTeam, teamInstanceId)
-    };
+    return { payload };
   }
 
   function bindTeamFormationDropTarget(target, getLane, getPosition) {
@@ -2646,60 +3129,144 @@
     });
   }
 
+  function getDraftDropZone(element) {
+    if (element?.closest('#teamGrid')) return 'team';
+    if (element?.closest('#dungeonHandGrid')) return 'pool';
+    if (element?.closest('#dungeonRewardGrid')) return 'reward';
+    return null;
+  }
+
+  function canDropRecruitPayloadOnLane(payload, lane, position = null) {
+    if (!payload) return false;
+    const zone = getDraftDropZone(lane);
+
+    if (zone === 'reward') return canDropOnRewardBox(payload);
+
+    if (payload.type === 'reward-selection') {
+      if (zone === 'team') return canMoveRewardSelectionToTeam(lane);
+      if (zone === 'pool') return canMoveRewardSelectionToPool();
+      return false;
+    }
+
+    if (payload.type === 'final-reward') return false;
+
+    if (zone === 'team') {
+      if (!position) return false;
+      if (payload.type === 'recruit-pool') return canAddPoolDemonToTeam(payload.instanceId, lane);
+      if (payload.type === 'recruit-team') return canMoveTeamDemonToLane(payload.instanceId, lane);
+      return false;
+    }
+
+    if (zone === 'pool') {
+      if (payload.type === 'recruit-team') return canReturnTeamDemonToPool(payload.instanceId);
+      if (payload.type === 'recruit-pool') return Boolean(findDraftDemon(state.recruitDraftPool, payload.instanceId));
+    }
+
+    return false;
+  }
+
+  function applyRecruitPayloadToLane(payload, lane, position, event = null, insertIndex = null) {
+    if (!payload || !lane) return false;
+    const zone = getDraftDropZone(lane);
+
+    if (zone === 'reward') {
+      applyRewardBoxDrop(payload);
+      return true;
+    }
+
+    if (payload.type === 'reward-selection') {
+      return zone === 'team'
+        ? moveRewardSelectionToTeamLane(lane, position, event, insertIndex)
+        : moveRewardSelectionToPoolLane(lane, event, insertIndex);
+    }
+
+    if (payload.type === 'recruit-pool') {
+      if (zone === 'team' && canAddPoolDemonToTeam(payload.instanceId, lane)) {
+        addPoolDemonToTeam(
+          payload.instanceId,
+          position,
+          Number.isInteger(insertIndex) ? insertIndex : getLaneDropDraftIndex(lane, event?.clientY, event?.clientX),
+          getFormationLaneInfo(lane)?.rowIndex
+        );
+        return true;
+      }
+
+      if (zone === 'pool' && findDraftDemon(state.recruitDraftPool, payload.instanceId)) {
+        applyPoolLaneDrop(payload.instanceId, lane, position, event?.clientY, event?.clientX, insertIndex);
+        return true;
+      }
+    }
+
+    if (payload.type === 'recruit-team') {
+      if (zone === 'team') {
+        applyTeamLaneDrop(payload.instanceId, lane, position, event?.clientY, event?.clientX, insertIndex);
+        return true;
+      }
+
+      if (zone === 'pool' && canReturnTeamDemonToPool(payload.instanceId)) {
+        applyTeamToPoolLaneDrop(payload.instanceId, lane, position, event?.clientY, event?.clientX, insertIndex);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  function canDropRecruitPayloadOnCard(payload, card) {
+    if (!payload || !card) return false;
+    const zone = getDraftDropZone(card);
+
+    if (zone === 'reward') return canDropOnRewardBox(payload);
+    if (zone === 'team') return canDropRecruitOnTeamCard(payload, card.dataset.instanceId);
+    if (zone === 'pool') return canDropRecruitOnPoolCard(payload, card.dataset.instanceId);
+    return false;
+  }
+
+  function applyRecruitPayloadToCard(payload, card) {
+    if (!payload || !card) return false;
+    const zone = getDraftDropZone(card);
+
+    if (zone === 'reward') {
+      applyRewardBoxDrop(payload);
+      return true;
+    }
+
+    if (zone === 'team' || zone === 'pool') {
+      applyRecruitCardDrop(payload, zone === 'team' ? 'team' : 'pool', card.dataset.instanceId);
+      return true;
+    }
+
+    return false;
+  }
+
   function canDragOverTeamFormationTarget(context, lane, position) {
-    if (!position || (!context.isPoolDrop && !context.isTeamMove)) return false;
-    if (context.isPoolDrop && !canAddPoolDemonToTeam(context.poolInstanceId, lane)) return false;
-    if (context.isTeamMove && !canMoveTeamDemonToLane(context.teamInstanceId, lane)) return false;
-    return true;
+    return canDropRecruitPayloadOnLane(context.payload, lane, position);
   }
 
   function canDropOnTeamFormationTarget(context, lane, position) {
-    if (!position || (!context.poolInstanceId && !context.teamInstanceId)) return false;
-    if (context.hasTeamPayload) return canMoveTeamDemonToLane(context.teamInstanceId, lane);
-    return context.hasPoolPayload && canAddPoolDemonToTeam(context.poolInstanceId, lane);
+    return canDropRecruitPayloadOnLane(context.payload, lane, position);
   }
 
   function applyTeamFormationTargetDrop(context, lane, position, event) {
-    if (context.hasTeamPayload) {
-      applyTeamLaneDrop(context.teamInstanceId, lane, position, event.clientY, event.clientX);
-      return;
-    }
-
-    if (context.hasPoolPayload && canAddPoolDemonToTeam(context.poolInstanceId, lane)) {
-      addPoolDemonToTeam(
-        context.poolInstanceId,
-        position,
-        getLaneDropDraftIndex(lane, event.clientY, event.clientX),
-        getFormationLaneInfo(lane)?.rowIndex
-      );
-    }
+    applyRecruitPayloadToLane(context.payload, lane, position, event);
   }
 
   function bindHandFormationDropTarget(lane) {
     bindNativeDropTarget(lane, {
       readPayload: getRecruitDropContext,
       renderAfterDrop: true,
-      canDragOver: (context) => canDragOverHandFormationTarget(context),
-      canDrop: (context) => canDragOverHandFormationTarget(context),
+      canDragOver: (context) => canDragOverHandFormationTarget(context, lane),
+      canDrop: (context) => canDragOverHandFormationTarget(context, lane),
       onDrop: (context, event) => applyHandFormationTargetDrop(context, lane, event)
     });
   }
 
-  function canDragOverHandFormationTarget(context) {
-    const isTeamDrop = context.hasTeamPayload && canReturnTeamDemonToPool(context.teamInstanceId);
-    const isPoolMove = context.hasPoolPayload && findDraftDemon(state.recruitDraftPool, context.poolInstanceId);
-    return Boolean(isTeamDrop || isPoolMove);
+  function canDragOverHandFormationTarget(context, lane) {
+    return canDropRecruitPayloadOnLane(context.payload, lane, 'hand');
   }
 
   function applyHandFormationTargetDrop(context, lane, event) {
-    if (context.hasTeamPayload && canReturnTeamDemonToPool(context.teamInstanceId)) {
-      applyTeamToPoolLaneDrop(context.teamInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
-      return;
-    }
-
-    if (context.hasPoolPayload && findDraftDemon(state.recruitDraftPool, context.poolInstanceId)) {
-      applyPoolLaneDrop(context.poolInstanceId, lane, lane.dataset.formationDrop, event.clientY, event.clientX);
-    }
+    applyRecruitPayloadToLane(context.payload, lane, lane.dataset.formationDrop, event);
   }
 
   function bindRecruitDragAndDrop() {
@@ -2709,19 +3276,15 @@
     document.querySelectorAll('#dungeonHandGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
       bindRecruitCardDragAndDrop(card, {
         stateKey: 'draggedRecruitPoolInstanceId',
-        targetSide: 'pool',
         markStaged: true,
-        getPayload: () => getRecruitDragPayload(state.recruitDraftPool, 'recruit-pool', card),
-        canDrop: canDropRecruitOnPoolCard
+        getPayload: () => getRecruitDragPayload(state.recruitDraftPool, 'recruit-pool', card)
       });
     });
 
     document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
       bindRecruitCardDragAndDrop(card, {
         stateKey: 'draggedFormationInstanceId',
-        targetSide: 'team',
-        getPayload: () => getRecruitDragPayload(state.recruitDraftTeam, 'recruit-team', card),
-        canDrop: canDropRecruitOnTeamCard
+        getPayload: () => getRecruitDragPayload(state.recruitDraftTeam, 'recruit-team', card)
       });
     });
 
@@ -2732,8 +3295,73 @@
     document.querySelectorAll('#dungeonHandGrid .formation-lane-cards').forEach(bindHandFormationDropTarget);
   }
 
+  function bindRewardDragAndDrop() {
+    if (!canExtractRun()) return;
+
+    document.querySelectorAll('#dungeonRewardGrid .hunt-demon-card[data-reward-candidate-key]').forEach((card) => {
+      bindNativeDragSource(card, {
+        stateKey: 'draggedRewardDemonKey',
+        clearSelector: REWARD_DRAG_OVER_SELECTOR,
+        getPayload: () => ({
+          type: 'reward-selection',
+          key: card.dataset.rewardCandidateKey || state.selectedRewardDemonKey
+        })
+      });
+    });
+
+    document.querySelectorAll('#dungeonRewardGrid .dungeon-reward-dropzone').forEach((dropzone) => {
+      bindNativeDropTarget(dropzone, {
+        readPayload: readRewardDragPayload,
+        renderAfterDrop: true,
+        canDrop: canDropOnRewardBox,
+        onDrop: applyRewardBoxDrop
+      });
+    });
+
+    if (!isFinalRewardPhase()) return;
+
+    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+      const candidate = getRewardCandidateForCard(card);
+      if (!candidate) return;
+
+      card.setAttribute('draggable', 'true');
+      card.dataset.rewardCandidateKey = candidate.key;
+      bindNativeDragSource(card, {
+        stateKey: 'draggedRewardDemonKey',
+        clearSelector: REWARD_DRAG_OVER_SELECTOR,
+        getPayload: () => ({
+          type: 'final-reward',
+          key: candidate.key
+        })
+      });
+    });
+
+    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #teamGrid .formation-lane-cards, #dungeonHandGrid .formation-lane-cards').forEach((target) => {
+      bindNativeDropTarget(target, {
+        readPayload: readRewardDragPayload,
+        renderAfterDrop: true,
+        canDrop: (payload) => payload?.type === 'reward-selection',
+        onDrop: removeRewardSelection
+      });
+    });
+  }
+
+  function getRewardCandidateForCard(card) {
+    const explicitKey = card?.dataset.rewardCandidateKey;
+    if (explicitKey) return getRewardCandidateByKey(explicitKey);
+
+    const instanceId = card?.dataset.instanceId;
+    if (!instanceId) return null;
+
+    return getRewardCandidates().find((candidate) => (
+      candidate.instanceId === instanceId ||
+      candidate.sourceInstanceId === instanceId ||
+      candidate.demon?.instanceId === instanceId
+    )) || null;
+  }
+
   function bindPointerDragAndDrop() {
-    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+    document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id], #dungeonRewardGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
       card.addEventListener('pointerdown', startPointerDrag);
       card.addEventListener('mousedown', startMouseDrag);
       card.addEventListener('touchstart', startTouchDrag, { passive: false });
@@ -2848,6 +3476,8 @@
     if (drag.payload.type === 'recruit-pool') {
       state.draggedRecruitPoolInstanceId = drag.payload.instanceId;
       markCollectionReinforcementStagedInteracted(drag.payload.instanceId);
+    } else if (drag.payload.type === 'reward-selection' || drag.payload.type === 'final-reward') {
+      state.draggedRewardDemonKey = drag.payload.key;
     } else {
       state.draggedFormationInstanceId = drag.payload.instanceId;
       if (drag.payload.type === 'recruit-team') {
@@ -2908,6 +3538,11 @@
     const instanceId = card.dataset.instanceId;
     if (!instanceId) return null;
 
+    if (card.closest('#dungeonRewardGrid') && state.selectedRewardDemonKey) {
+      if (!canExtractRun()) return null;
+      return { type: 'reward-selection', key: state.selectedRewardDemonKey };
+    }
+
     if (state.run?.awaitingRecruit && state.isRecruiting) {
       if (card.closest('#dungeonHandGrid') && findDraftDemon(state.recruitDraftPool, instanceId)) {
         return { type: 'recruit-pool', instanceId };
@@ -2916,6 +3551,11 @@
         return { type: 'recruit-team', instanceId };
       }
       return null;
+    }
+
+    if (isFinalRewardPhase()) {
+      const candidate = getRewardCandidateForCard(card);
+      if (candidate) return { type: 'final-reward', key: candidate.key };
     }
 
     if (state.run && !state.run.awaitingRecruit && !state.run.awaitingFinalPick && card.closest('#teamGrid')) {
@@ -2932,8 +3572,13 @@
     if (drag.ghost) drag.ghost.style.display = ghostDisplay || '';
     if (!element) return null;
 
+    const rewardDropzone = element.closest('#dungeonRewardGrid .dungeon-reward-dropzone');
     const card = element.closest('.hunt-demon-card[data-instance-id]');
     const lane = element.closest('.formation-lane-cards');
+
+    if (rewardDropzone && canPointerDropOnRewardBox(drag.payload)) {
+      return { element: rewardDropzone, kind: 'reward' };
+    }
 
     if (card && canPointerDropOnCard(drag.payload, card)) {
       return { element: card, kind: 'card' };
@@ -2947,10 +3592,11 @@
   }
 
   function canPointerDropOnCard(payload, card) {
-    if (!payload) return false;
-    if (card.closest('#teamGrid')) return canDropRecruitOnTeamCard(payload, card.dataset.instanceId);
-    if (card.closest('#dungeonHandGrid')) return canDropRecruitOnPoolCard(payload, card.dataset.instanceId);
-    return false;
+    return canDropRecruitPayloadOnCard(payload, card);
+  }
+
+  function canPointerDropOnRewardBox(payload) {
+    return canDropOnRewardBox(payload);
   }
 
   function canPointerDropOnLane(payload, lane) {
@@ -2960,21 +3606,7 @@
       return Boolean(lane.closest('#teamGrid') && canDropFormationOnLane(payload.instanceId, lane));
     }
 
-    if (payload.type === 'recruit-pool') {
-      return Boolean(
-        (lane.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId, lane)) ||
-        (lane.closest('#dungeonHandGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId))
-      );
-    }
-
-    if (payload.type === 'recruit-team') {
-      return Boolean(
-        (lane.closest('#teamGrid') && canMoveTeamDemonToLane(payload.instanceId, lane)) ||
-        (lane.closest('#dungeonHandGrid') && canReturnTeamDemonToPool(payload.instanceId))
-      );
-    }
-
-    return false;
+    return canDropRecruitPayloadOnLane(payload, lane, lane.dataset.formationDrop);
   }
 
   function setPointerDropTarget(drag, target) {
@@ -2986,7 +3618,37 @@
   }
 
   function applyPointerDrop(payload, target) {
-    if (!target) return;
+    if (!target) {
+      if (payload?.type === 'reward-selection') {
+        removeRewardSelection();
+        renderRun();
+      }
+      return;
+    }
+
+    if (target.kind === 'reward') {
+      applyRewardBoxDrop(payload);
+      renderRun();
+      return;
+    }
+
+    if (payload.type === 'reward-selection') {
+      if (target.kind === 'card') {
+        applyRecruitPayloadToCard(payload, target.element);
+      } else {
+        applyRecruitPayloadToLane(
+          payload,
+          target.element,
+          target.element.dataset.formationDrop,
+          { clientY: target.clientY, clientX: target.clientX },
+          target.insertIndex
+        );
+      }
+      renderRun();
+      return;
+    }
+
+    if (payload.type === 'final-reward') return;
 
     if (payload.type === 'formation') {
       const position = target.element.dataset.formationDrop;
@@ -2996,39 +3658,37 @@
 
     if (payload.type === 'recruit-pool') {
       if (target.kind === 'card') {
-        applyRecruitCardDrop(payload, target.element.closest('#teamGrid') ? 'team' : 'pool', target.element.dataset.instanceId);
+        applyRecruitPayloadToCard(payload, target.element);
         renderRun();
         return;
       }
 
-      const position = target.element.dataset.formationDrop;
-      if (position && target.element.closest('#teamGrid') && canAddPoolDemonToTeam(payload.instanceId, target.element)) {
-        addPoolDemonToTeam(payload.instanceId, position, target.insertIndex, getFormationLaneInfo(target.element)?.rowIndex);
-        renderRun();
-        return;
-      }
-
-      if (position && target.element.closest('#dungeonHandGrid') && findDraftDemon(state.recruitDraftPool, payload.instanceId)) {
-        applyPoolLaneDrop(payload.instanceId, target.element, position, target.clientY, target.clientX, target.insertIndex);
-        renderRun();
-      }
+      applyRecruitPayloadToLane(
+        payload,
+        target.element,
+        target.element.dataset.formationDrop,
+        { clientY: target.clientY, clientX: target.clientX },
+        target.insertIndex
+      );
+      renderRun();
       return;
     }
 
     if (payload.type === 'recruit-team') {
-      const position = target.element.dataset.formationDrop;
-      if (!position) return;
-
-      if (target.element.closest('#teamGrid')) {
-        applyTeamLaneDrop(payload.instanceId, target.element, position, target.clientY, target.clientX, target.insertIndex);
+      if (target.kind === 'card') {
+        applyRecruitPayloadToCard(payload, target.element);
         renderRun();
         return;
       }
 
-      if (target.element.closest('#dungeonHandGrid') && canReturnTeamDemonToPool(payload.instanceId)) {
-        applyTeamToPoolLaneDrop(payload.instanceId, target.element, position, target.clientY, target.clientX, target.insertIndex);
-        renderRun();
-      }
+      applyRecruitPayloadToLane(
+        payload,
+        target.element,
+        target.element.dataset.formationDrop,
+        { clientY: target.clientY, clientX: target.clientX },
+        target.insertIndex
+      );
+      renderRun();
     }
   }
 
@@ -3042,10 +3702,6 @@
     if (event.touches?.length) return event.touches[0];
     if (Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) return event;
     return null;
-  }
-
-  function shouldUseMobileRewardStrip() {
-    return window.matchMedia('(max-width: 575.98px)').matches;
   }
 
   function shouldUseCustomMouseDrag() {
@@ -3082,10 +3738,12 @@
     if (!instanceId) return null;
 
     return [
+      getSelectedRewardCandidate()?.demon,
       ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []),
+      ...(isFinalRewardPhase() ? getFinalRewardHand() : []),
       ...(state.isRecruiting ? getRecruitPreviewHand() : state.battleHandPreview || []),
       ...(state.isRecruiting ? getRecruitPreviewEnemyTeam() : state.run?.enemies || [])
-    ].find((demon) => demon.instanceId === instanceId) || null;
+    ].filter(Boolean).find((demon) => demon.instanceId === instanceId) || null;
   }
 
   function getDungeonDetailActions() {
@@ -3139,6 +3797,9 @@
 
   function canDropRecruitOnTeamCard(payload, teamInstanceId) {
     if (!payload || !teamInstanceId) return false;
+    if (payload.type === 'reward-selection') {
+      return Boolean(getSelectedRewardCandidate() && getRewardCandidateFromPayload({ type: 'recruit-team', instanceId: teamInstanceId }));
+    }
     if (payload.type === 'recruit-pool') return canSwapPoolDemonIntoTeam(payload.instanceId, teamInstanceId);
     if (payload.type === 'recruit-team') return canSwapDraftDemons(state.recruitDraftTeam, payload.instanceId, teamInstanceId);
     return false;
@@ -3146,12 +3807,20 @@
 
   function canDropRecruitOnPoolCard(payload, poolInstanceId) {
     if (!payload || !poolInstanceId) return false;
+    if (payload.type === 'reward-selection') {
+      return Boolean(getSelectedRewardCandidate() && getRewardCandidateFromPayload({ type: 'recruit-pool', instanceId: poolInstanceId }));
+    }
     if (payload.type === 'recruit-team') return canSwapTeamDemonIntoPool(payload.instanceId, poolInstanceId);
     if (payload.type === 'recruit-pool') return canSwapDraftDemons(state.recruitDraftPool, payload.instanceId, poolInstanceId);
     return false;
   }
 
   function applyRecruitCardDrop(payload, targetSide, targetInstanceId) {
+    if (payload.type === 'reward-selection') {
+      swapRewardSelectionWithDraftTarget(targetSide, targetInstanceId);
+      return;
+    }
+
     if (targetSide === 'team') {
       if (payload.type === 'recruit-pool') {
         swapPoolDemonIntoTeam(payload.instanceId, targetInstanceId);
@@ -3181,7 +3850,7 @@
   function canSwapTeamDemonIntoPool(teamInstanceId, poolInstanceId) {
     const teamDemon = findDraftDemon(state.recruitDraftTeam, teamInstanceId);
     const poolDemon = findDraftDemon(state.recruitDraftPool, poolInstanceId);
-    return Boolean(teamDemon && poolDemon && (state.recruitDraftTeam || []).length > 1);
+    return Boolean(teamDemon && poolDemon);
   }
 
   function canSwapDraftDemons(collection, sourceInstanceId, targetInstanceId) {
@@ -3650,12 +4319,24 @@
   function readRecruitDragPayload(event) {
     const payload = readDragPayload(event);
     if (payload) return payload;
+    if (state.draggedRewardDemonKey) {
+      return { type: 'reward-selection', key: state.draggedRewardDemonKey };
+    }
     if (state.draggedRecruitPoolInstanceId) {
       return { type: 'recruit-pool', instanceId: state.draggedRecruitPoolInstanceId };
     }
     if (state.draggedFormationInstanceId) {
       return { type: 'recruit-team', instanceId: state.draggedFormationInstanceId };
     }
+    return null;
+  }
+
+  function readRewardDragPayload(event) {
+    const payload = readDragPayload(event);
+    if (payload) return payload;
+    if (state.draggedRewardDemonKey) return { type: 'reward-selection', key: state.draggedRewardDemonKey };
+    if (state.draggedRecruitPoolInstanceId) return { type: 'recruit-pool', instanceId: state.draggedRecruitPoolInstanceId };
+    if (state.draggedFormationInstanceId) return { type: 'recruit-team', instanceId: state.draggedFormationInstanceId };
     return null;
   }
 
@@ -3827,12 +4508,14 @@
   function renderDemonCard(demon, options) {
     const isPlayer = options.side === 'player';
     const isRecruitPoolDemon = Boolean(options.allowRecruitDrag && demon.recruitSource);
+    const isRewardDraggable = Boolean(options.allowRewardDrag && demon.rewardCandidateKey);
     const canDropRecruit = Boolean(state.isRecruiting && isPlayer);
     const canDragFormation = Boolean((options.allowFormationDrag || state.isRecruiting) && isPlayer);
-    const draggable = isRecruitPoolDemon || canDragFormation;
+    const draggable = isRecruitPoolDemon || isRewardDraggable || canDragFormation;
     const classes = [
       'hunt-demon-card',
       isRecruitPoolDemon ? 'is-recruit-draggable' : '',
+      isRewardDraggable ? 'is-reward-draggable' : '',
       demon.recruitSource === 'collection' && !state.collectionReinforcementStagedInteracted ? 'is-collection-reinforcement-attention' : '',
       canDropRecruit ? 'is-recruit-drop-target' : '',
       hasPoisonStatus(demon) ? 'is-poisoned' : '',
@@ -3841,11 +4524,14 @@
     return renderDungeonDemonCard(demon, {
       className: classes.replace('hunt-demon-card', '').trim(),
       defeated: Number(demon.hp) <= 0,
-      active: state.selectedSwapInstanceId === demon.instanceId || state.selectedRecruitRewardId === demon.rewardId,
+      active: state.selectedSwapInstanceId === demon.instanceId ||
+        state.selectedRecruitRewardId === demon.rewardId ||
+        state.selectedRewardDemonKey === demon.rewardCandidateKey,
       overlayHtml: renderDemonStatus(demon),
       attributes: {
         'data-instance-id': demon.instanceId,
         'data-reward-id': demon.rewardId || null,
+        'data-reward-candidate-key': demon.rewardCandidateKey || null,
         'data-recruit-source': demon.recruitSource || null,
         role: 'button',
         tabindex: '0',
@@ -3942,6 +4628,7 @@
   function clearDragState() {
     state.draggedRecruitPoolInstanceId = null;
     state.draggedFormationInstanceId = null;
+    state.draggedRewardDemonKey = null;
   }
 
   function clearRecruitDrafts() {

@@ -45,6 +45,7 @@ async function serializeRun(run) {
     collectionReinforcementAvailable,
     collectionReinforcementLimit,
     awaitingFinalPick: Boolean(run.state.awaitingFinalPick),
+    extractChoice: run.state.extractChoice || null,
     lastBattle: run.state.lastBattle || null,
     earned: run.state.earned || { xp: 0, souls: 0 },
     mapProgress: run.state.mapProgress

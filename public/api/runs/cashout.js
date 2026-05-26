@@ -13,7 +13,8 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Run not found.' });
   }
 
-  if (run.status !== 'active' || !run.state.awaitingRecruit) {
+  const canCashOut = (run.status === 'active' && run.state.awaitingRecruit) || run.status === 'completed';
+  if (!canCashOut) {
     return res.status(409).json({ error: 'Rewards can only be claimed between dungeon fights.' });
   }
 
@@ -85,17 +86,15 @@ async function endRunWithoutDemon(run, playerId, res) {
 }
 
 function getCashoutDemon(run, body) {
+  const reservedDemon = getReservedCashoutDemon(run, body);
+  if (reservedDemon) return reservedDemon;
+
   if (body.source === 'team') {
     const instanceId = String(body.instanceId || '');
     const demon = (run.state.team || []).find((item) => item.instanceId === instanceId);
     if (!demon) {
       const error = new Error('Team demon not found.');
       error.status = 404;
-      throw error;
-    }
-    if (demon.collectionDemonId) {
-      const error = new Error('Choose a demon that is not already in your collection.');
-      error.status = 409;
       throw error;
     }
     return demon;
@@ -122,6 +121,35 @@ function getCashoutDemon(run, body) {
   const error = new Error('Choose a demon reward.');
   error.status = 400;
   throw error;
+}
+
+function getReservedCashoutDemon(run, body) {
+  const choice = run.state.extractChoice;
+  if (!choice?.demon) return null;
+
+  const matchesExplicitReserved = body.source === 'reserved';
+  const matchesTeam = body.source === 'team' &&
+    choice.source === 'team' &&
+    String(body.instanceId || '') === String(choice.instanceId || '');
+  const matchesReward = body.source === 'reward' &&
+    choice.source === 'reward' &&
+    Number(body.rewardId) === Number(choice.rewardId);
+  if (!matchesExplicitReserved && !matchesTeam && !matchesReward) return null;
+
+  if (choice.source === 'reward') {
+    const reward = run.rewards.find((item) => Number(item.rewardId) === Number(choice.rewardId));
+    if (reward) {
+      reward.claimed = true;
+      reward.saved = true;
+      reward.extracted = true;
+    }
+  }
+
+  run.state.extractChoice = {
+    ...choice,
+    saved: true
+  };
+  return choice.demon;
 }
 
 function getEarnedForPayout(run, options = {}) {

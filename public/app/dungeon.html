@@ -90,13 +90,22 @@
                       <div id="enemyGrid"></div>
                     </section>
                   </div>
-                  <section id="dungeonHandBar" class="dungeon-hand-bar d-none" aria-label="Demon hand">
-                    <div class="dungeon-hand-header">
-                      <span class="hunt-phase-eyebrow">Hand</span>
-                      <span id="dungeonHandTitle">0 demons</span>
-                    </div>
-                    <div id="dungeonHandGrid" class="dungeon-hand-grid"></div>
-                  </section>
+                  <div id="dungeonBottomPanel" class="dungeon-bottom-panel d-none">
+                    <section id="dungeonHandBar" class="dungeon-hand-bar d-none" aria-label="Demon hand">
+                      <div class="dungeon-hand-header">
+                        <span class="hunt-phase-eyebrow">Hand</span>
+                        <span id="dungeonHandTitle">0 demons</span>
+                      </div>
+                      <div id="dungeonHandGrid" class="dungeon-hand-grid"></div>
+                    </section>
+                    <section id="dungeonRewardBox" class="dungeon-hand-bar dungeon-reward-box d-none" aria-label="Extraction reward">
+                      <div class="dungeon-hand-header dungeon-reward-header">
+                        <span class="hunt-phase-eyebrow">Reward</span>
+                        <span id="dungeonRewardTitle">0 XP / 0 souls</span>
+                      </div>
+                      <div id="dungeonRewardGrid" class="dungeon-reward-grid"></div>
+                    </section>
+                  </div>
                 </div>
               </div>
               <div class="tab-pane fade" id="battleLogPanel" role="tabpanel" aria-label="Fight Log" tabindex="0">
@@ -129,15 +138,15 @@
           <div class="modal-header">
             <div>
               <h2 class="modal-title h4" id="cashoutModalTitle">Leave Dungeon</h2>
-              <p class="text-muted mb-0" id="cashoutModalSubtitle">Choose one new demon to add to your collection before leaving.</p>
+              <p class="text-muted mb-0" id="cashoutModalSubtitle">Confirm what you want to extract from this run.</p>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body" id="cashoutModalBody"></div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-warning" id="cashoutConfirmBtn" disabled>
-              Add to Collection
+            <button type="button" class="btn btn-warning" id="cashoutConfirmBtn">
+              Extract
             </button>
           </div>
         </div>

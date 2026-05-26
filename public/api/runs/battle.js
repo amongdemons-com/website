@@ -131,6 +131,7 @@ function createFinalTeamRewards(run) {
     type: 'final',
     floor: run.floor,
     source: choice.source,
+    sourceInstanceId: choice.demon.instanceId,
     demon: resetRunDemon(choice.demon, `final-${run.floor}-${index + 1}`),
     souls: 0,
     xp: 0,

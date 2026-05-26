@@ -23,6 +23,8 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   const replaceInstanceId = req.body.replaceInstanceId ? String(req.body.replaceInstanceId) : null;
   const requestedPosition = req.body.position ? normalizePosition(req.body.position) : null;
   const skipRecruit = Boolean(req.body.skipRecruit);
+  const hasExtractChoice = Object.prototype.hasOwnProperty.call(req.body || {}, 'extractChoice');
+  const extractChoice = hasExtractChoice ? req.body.extractChoice : undefined;
 
   if (!run) {
     return res.status(404).json({ error: 'Run not found.' });
@@ -36,6 +38,9 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     if (Number(run.floor) === 0) {
       return res.status(400).json({ error: 'Add at least one demon to your team before starting the dungeon.' });
     }
+    if (hasExtractChoice) {
+      stageExtractChoice(run, extractChoice);
+    }
     run.state.awaitingCollectionReinforcement = false;
     await advanceFloor(run);
     await saveRun(run);
@@ -44,6 +49,9 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
 
   if (stagedTeam) {
     const team = await buildStagedTeam(run, stagedTeam);
+    if (hasExtractChoice) {
+      stageExtractChoice(run, extractChoice);
+    }
     run.state.team = team;
 
     const recruitedRewardIds = new Set(
@@ -242,12 +250,93 @@ async function buildStagedTeam(run, stagedTeam) {
       continue;
     }
 
+    if (item.source === 'reserved') {
+      const choice = run.state.extractChoice;
+      if (!choice?.demon) {
+        const error = new Error('Reserved extract demon not found.');
+        error.status = 404;
+        throw error;
+      }
+
+      team.push({
+        ...resetRunDemon(choice.demon, choice.instanceId || choice.demon.instanceId || `player-reserved-${index + 1}`),
+        position,
+        ...(formationSlot !== null ? { formationSlot } : {})
+      });
+      continue;
+    }
+
     const error = new Error('Invalid staged team source.');
     error.status = 400;
     throw error;
   }
 
   return assignFormationSlots(team, 'player');
+}
+
+function stageExtractChoice(run, choice) {
+  if (!choice) {
+    delete run.state.extractChoice;
+    return;
+  }
+
+  if (choice.source === 'reserved') {
+    if (!run.state.extractChoice?.demon) {
+      const error = new Error('Reserved extract demon not found.');
+      error.status = 404;
+      throw error;
+    }
+    return;
+  }
+
+  if (choice.source === 'team') {
+    const instanceId = String(choice.instanceId || '');
+    const demon = (run.state.team || []).find((item) => item.instanceId === instanceId);
+    if (!demon) {
+      const error = new Error('Team demon not found.');
+      error.status = 404;
+      throw error;
+    }
+
+    run.state.extractChoice = {
+      key: choice.key || `team:${instanceId}`,
+      source: 'team',
+      instanceId,
+      rewardId: null,
+      demon: { ...demon }
+    };
+    return;
+  }
+
+  if (choice.source === 'reward') {
+    const rewardId = Number(choice.rewardId);
+    const reward = run.rewards.find((item) => (
+      Number(item.rewardId) === rewardId &&
+      item.type === 'recruit' &&
+      item.floor === run.floor &&
+      item.demon
+    ));
+    if (!reward) {
+      const error = new Error('Reward demon not found.');
+      error.status = 404;
+      throw error;
+    }
+
+    reward.claimed = true;
+    reward.extracted = true;
+    run.state.extractChoice = {
+      key: choice.key || `reward:${rewardId}`,
+      source: 'reward',
+      instanceId: choice.instanceId || reward.demon.instanceId,
+      rewardId,
+      demon: { ...reward.demon }
+    };
+    return;
+  }
+
+  const error = new Error('Invalid extract demon source.');
+  error.status = 400;
+  throw error;
 }
 
 function isCollectionReinforcementAvailable(run) {
