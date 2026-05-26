@@ -2456,6 +2456,15 @@ body.dungeon-page .navbar {
     min-height: 0;
 }
 
+.dungeon-hand-battle-placeholder {
+    border-style: solid;
+    border-color: rgba(232,199,106,0.26);
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.09), rgba(3,9,11,0.22)),
+        rgba(3,9,11,0.42);
+    color: rgba(243,220,147,0.78);
+}
+
 .dungeon-reward-box {
     width: 100%;
 }
@@ -5564,6 +5573,14 @@ body.summon-page {
     border-color: rgba(232,199,106,0.22);
     background: rgba(232,199,106,0.04);
     color: rgba(243,220,147,0.5);
+}
+
+.dungeon-hand-battle-placeholder {
+    border-color: rgba(232,199,106,0.3);
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.1), rgba(3,9,11,0.24)),
+        rgba(3,9,11,0.48);
+    color: rgba(243,220,147,0.78);
 }
 
 .dungeon-reward-empty {

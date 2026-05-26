@@ -26,7 +26,9 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
 
   const count = hand.length;
   if (elements.dungeonHandTitle) {
-    elements.dungeonHandTitle.textContent = `${count} ${count === 1 ? 'demon' : 'demons'}`;
+    elements.dungeonHandTitle.textContent = mode === 'battle'
+      ? 'Fighting'
+      : `${count} ${count === 1 ? 'demon' : 'demons'}`;
   }
 
   elements.dungeonHandGrid.innerHTML = renderHandCards(hand, isInteractive, mode);
@@ -43,12 +45,16 @@ function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
 
   return `
     <div class="dungeon-hand-cards formation-lane-cards" data-formation-drop="hand">
-      ${placeholder}${cardHtml || (placeholder ? '' : renderEmptyHand())}
+      ${placeholder}${cardHtml || (placeholder ? '' : renderEmptyHand(mode))}
     </div>
   `;
 }
 
-function renderEmptyHand() {
+function renderEmptyHand(mode = 'recruit') {
+  if (mode === 'battle') {
+    return '<div class="formation-empty dungeon-hand-empty dungeon-hand-battle-placeholder"><span>Fighting</span></div>';
+  }
+
   return '<div class="formation-empty dungeon-hand-empty"><span>Empty</span></div>';
 }
 

@@ -4,8 +4,18 @@ const { assignFormationSlots } = require('./run-demons');
 
 const STARTER_TYPE_IDS = [1, 2, 3];
 const MAX_HUNT_TYPE_ID = 11;
+const MAX_HUNT_ENEMY_TEAM_SIZE = 9;
+const ENEMY_SIZE_INCREASE_START_FLOOR = 35;
+const ENEMY_SIZE_INCREASE_INTERVAL = 5;
 const DIFFICULTY_RAMP_FLOORS = 20;
-const PRE_LEGENDARY_RARITIES = ['common', 'uncommon', 'rare', 'epic'];
+const RARITY_RANK = {
+  common: 0,
+  uncommon: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
+  mythic: 5
+};
 
 function getAllowedHuntTypeIds(floor) {
   if (floor <= 3) return STARTER_TYPE_IDS;
@@ -43,10 +53,21 @@ function getEnemyGenerationOptions(floor, options = {}) {
   const elitePressure = options.elite ? Math.min(1, pressure + 0.32) : pressure;
 
   return {
-    allowedRarities: floor < 10 ? PRE_LEGENDARY_RARITIES : undefined,
+    allowedRarities: getAllowedEnemyRarities(floor),
     typeWeightMultiplier: (typeId, baseWeight) => getFloorTypeWeightMultiplier(typeId, baseWeight, elitePressure),
     rarityWeightMultiplier: (rarity, baseWeight) => getFloorRarityWeightMultiplier(rarity, baseWeight, elitePressure)
   };
+}
+
+function getAllowedEnemyRarities(floor) {
+  const floorNumber = Number(floor) || 1;
+  if (floorNumber <= 3) return ['common', 'uncommon', 'rare'];
+  if (floorNumber < 7) return ['common', 'uncommon', 'rare', 'epic'];
+  if (floorNumber < 10) return ['uncommon', 'rare', 'epic'];
+  if (floorNumber < 15) return ['rare', 'epic', 'legendary'];
+  if (floorNumber < 20) return ['epic', 'legendary', 'mythic'];
+  if (floorNumber < 30) return ['legendary', 'mythic'];
+  return ['mythic'];
 }
 
 function getFloorSpawnPressure(floor) {
@@ -60,16 +81,12 @@ function getFloorTypeWeightMultiplier(typeId, baseWeight, pressure) {
 }
 
 function getFloorRarityWeightMultiplier(rarity, baseWeight, pressure) {
-  const multipliers = {
-    common: 1 - pressure * 0.42,
-    uncommon: 1 - pressure * 0.12,
-    rare: 1 + pressure * 0.95,
-    epic: 1 + pressure * 2.1,
-    legendary: 1 + pressure * 3.6,
-    mythic: 1 + pressure * 5.2
-  };
+  const rank = RARITY_RANK[rarity] ?? 0;
+  const normalizedRank = rank / RARITY_RANK.mythic;
+  const highTierBoost = 1 + pressure * Math.pow(normalizedRank, 1.5) * 18;
+  const lowTierPenalty = Math.pow(Math.max(0.08, 1 - pressure * 0.72), RARITY_RANK.mythic - rank);
 
-  return Math.max(0.08, multipliers[rarity] || 1);
+  return Math.max(0.04, highTierBoost * lowTierPenalty);
 }
 
 function clamp(value, min, max) {
@@ -77,7 +94,13 @@ function clamp(value, min, max) {
 }
 
 function getHuntEnemyTeamSize(floor, fallbackSize) {
-  return getDungeonTeamLimit(floor);
+  const baseSize = getDungeonTeamLimit(floor);
+  const floorNumber = Number(floor) || 1;
+  const extraEnemies = floorNumber >= ENEMY_SIZE_INCREASE_START_FLOOR
+    ? Math.floor((floorNumber - ENEMY_SIZE_INCREASE_START_FLOOR) / ENEMY_SIZE_INCREASE_INTERVAL) + 1
+    : 0;
+
+  return Math.min(MAX_HUNT_ENEMY_TEAM_SIZE, baseSize + extraEnemies);
 }
 
 function getEnemyPositions(size) {
@@ -103,6 +126,8 @@ module.exports = {
   STARTER_TYPE_IDS,
   createHuntEnemies,
   getAllowedHuntTypeIds,
+  getAllowedEnemyRarities,
   getEnemyGenerationOptions,
-  getHuntEnemyTeamSize
+  getHuntEnemyTeamSize,
+  MAX_HUNT_ENEMY_TEAM_SIZE
 };

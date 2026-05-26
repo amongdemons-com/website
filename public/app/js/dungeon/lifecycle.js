@@ -258,7 +258,6 @@ async function confirmRecruitReward() {
   if (!state.run) return;
 
   const runId = state.run.runId;
-  const handPreview = cloneDemons(state.recruitDraftPool || []);
   const recruitChoice = getDraftRecruitPayload();
   const extractChoice = getRewardExtractionChoicePayload();
   if (!recruitChoice.team.length) {
@@ -285,7 +284,7 @@ async function confirmRecruitReward() {
     clearRecruitSelection();
     state.isRecruiting = false;
     clearDragState();
-    state.battleHandPreview = handPreview;
+    state.battleHandPreview = null;
     clearRecruitDrafts();
     resetCombatState();
     resetEndState();

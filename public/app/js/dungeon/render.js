@@ -93,9 +93,9 @@ function renderRun() {
   const arena = elements.runPanel?.querySelector('.dungeon-arena');
   const team = isHandStrategy ? getRecruitPreviewTeam() : run.team || [];
   const enemies = isHandStrategy && state.isEnemyPreviewDeferred ? [] : (isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || []);
-  const showBattleHand = Boolean(!isHandStrategy && state.isBattleAnimating && state.battleHandPreview?.length);
-  const hand = isHandStrategy ? getRecruitPreviewHand() : (showBattleHand ? cloneDemons(state.battleHandPreview) : []);
-  const handMode = 'recruit';
+  const isBattleHandPlaceholder = Boolean(!isHandStrategy && state.isBattleAnimating);
+  const hand = isHandStrategy ? getRecruitPreviewHand() : [];
+  const handMode = isBattleHandPlaceholder ? 'battle' : 'recruit';
   const showHand = true;
   const rewardInteractive = Boolean(isHandStrategy);
 
