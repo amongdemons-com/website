@@ -28,8 +28,13 @@ body.dungeon-page {
     min-height: 100vh;
     min-height: 100dvh;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    background:
+        linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
+        radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
+        url("/app/images/amongdemons_dungeon_background.png") center / cover no-repeat,
+        #071013;
     overscroll-behavior: none;
 }
 
@@ -38,8 +43,10 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-main {
-    flex: 1 1 auto;
     display: grid;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
     min-height: 0;
     border: 0;
     overflow: hidden;
@@ -452,6 +459,9 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-loading-state {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
     min-height: 100%;
     gap: 1.25rem;
     color: #dce8e5;
@@ -1575,13 +1585,15 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-end-screen {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     width: min(100%, 42rem);
-    min-height: min(58vh, 34rem);
+    min-height: 100%;
     margin: 0 auto;
+    padding: clamp(1.25rem, 5vh, 3rem) 1rem;
     text-align: center;
 }
 
@@ -2150,9 +2162,18 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-battle-card {
+    position: fixed;
+    inset: 0;
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
     min-height: 0;
+    border: 0;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -2247,13 +2268,15 @@ body.dungeon-page .navbar {
 .dungeon-battle-body {
     position: relative;
     display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
     min-height: 0;
     overflow: hidden;
-    padding-top: 1rem;
+    padding: 0;
     background:
         linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
-        url("/app/images/amongdemons_dungeon_background.png") center / cover fixed no-repeat;
-    background-attachment: fixed;
+        url("/app/images/amongdemons_dungeon_background.png") center / cover no-repeat;
+    background-attachment: scroll;
 }
 
 .dungeon-arena {
@@ -2348,11 +2371,14 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-tab-content > .tab-pane.active {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
     height: 100%;
     min-height: 0;
 }
 
 #combatPanel {
+    height: 100%;
     min-height: 0;
 }
 
@@ -2362,6 +2388,19 @@ body.dungeon-page .navbar {
 #enemyGrid {
     height: 100%;
     min-height: 0;
+}
+
+.dungeon-page #runEmpty,
+.dungeon-page #runLoading {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+.dungeon-page #runEmpty:not(.d-none) {
+    display: grid;
+    place-items: center;
+    align-content: center;
 }
 
 #runPanel {
@@ -2837,7 +2876,7 @@ body.dungeon-page .navbar {
     }
 
     .dungeon-battle-card:has(.dungeon-reward-strip:not(:empty)) {
-        grid-template-rows: auto auto auto minmax(0, 1fr);
+        grid-template-rows: auto auto minmax(0, 1fr);
     }
 
     .dungeon-reward-strip:empty {
@@ -4383,8 +4422,8 @@ a:hover {
     background:
         linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        url("/app/images/amongdemons_dungeon_background.png") center / cover fixed no-repeat;
-    background-attachment: fixed;
+        url("/app/images/amongdemons_dungeon_background.png") center / cover no-repeat;
+    background-attachment: scroll;
 }
 
 .demon-type-page {
@@ -5711,6 +5750,61 @@ body.summon-page {
 
     .dungeon-reward-box {
         width: 100%;
+    }
+}
+
+@media (max-width: 575.98px) and (orientation: portrait) {
+    #runPanel.has-hand {
+        gap: 0.25rem;
+    }
+
+    .dungeon-bottom-panel {
+        --dungeon-reward-card-width: clamp(3.2rem, 15vw, 4.6rem);
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        gap: 0.28rem;
+    }
+
+    .dungeon-hand-bar {
+        padding: 0.3rem;
+    }
+
+    .dungeon-hand-grid {
+        overflow: visible;
+        padding: 0.04rem 0;
+    }
+
+    .dungeon-hand-cards {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        min-height: 0;
+        gap: 0.22rem;
+        padding: 0.08rem;
+    }
+
+    .dungeon-hand-cards.is-battle {
+        grid-template-columns: minmax(0, 4.25rem);
+        justify-content: center;
+    }
+
+    .dungeon-hand-cards .hunt-demon-card,
+    .dungeon-hand-cards .collection-reinforcement-placeholder,
+    .dungeon-hand-empty {
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        aspect-ratio: 3 / 4;
+        flex: 0 1 auto;
+    }
+
+    .dungeon-reward-dropzone {
+        grid-template-columns: auto minmax(4.2rem, 1fr);
+        min-height: calc(var(--dungeon-reward-card-width) * 1.333 + 0.18rem);
+        gap: 0.32rem;
+        padding: 0.1rem;
     }
 }
 

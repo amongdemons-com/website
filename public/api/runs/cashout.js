@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { saveCollectionDemon } = require('../lib/collection-demons');
+const { getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 
 const router = express.Router();
@@ -28,7 +29,7 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
   const earned = getEarnedForPayout(run, { savedDemon: true });
   const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [req.player.id]);
   const nextXp = playerRows[0].xp + (earned.xp || 0);
-  const nextLevel = Math.max(playerRows[0].level, Math.floor(nextXp / 100) + 1);
+  const nextLevel = getNextAccountLevel(playerRows[0].level, nextXp);
 
   await db.query(
     'UPDATE players SET xp = xp + ?, souls = souls + ?, level = ? WHERE id = ?',
@@ -59,7 +60,7 @@ async function endRunWithoutDemon(run, playerId, res) {
   const earned = getEarnedForPayout(run, { savedDemon: false });
   const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [playerId]);
   const nextXp = playerRows[0].xp + (earned.xp || 0);
-  const nextLevel = Math.max(playerRows[0].level, Math.floor(nextXp / 100) + 1);
+  const nextLevel = getNextAccountLevel(playerRows[0].level, nextXp);
 
   await db.query(
     'UPDATE players SET xp = xp + ?, souls = souls + ?, level = ? WHERE id = ?',

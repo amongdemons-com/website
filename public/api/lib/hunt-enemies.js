@@ -43,7 +43,14 @@ async function createHuntEnemies(rng, floor, size) {
 }
 
 function getEnemyGenerationOptions(floor, options = {}) {
-  if (floor <= 3) {
+  const floorNumber = Number(floor) || 1;
+  if (floorNumber === 1) {
+    return {
+      allowedRarities: ['common']
+    };
+  }
+
+  if (floorNumber <= 3) {
     return {
       allowedRarities: ['common', 'uncommon', 'rare']
     };
@@ -61,6 +68,7 @@ function getEnemyGenerationOptions(floor, options = {}) {
 
 function getAllowedEnemyRarities(floor) {
   const floorNumber = Number(floor) || 1;
+  if (floorNumber === 1) return ['common'];
   if (floorNumber <= 3) return ['common', 'uncommon', 'rare'];
   if (floorNumber < 7) return ['common', 'uncommon', 'rare', 'epic'];
   if (floorNumber < 10) return ['uncommon', 'rare', 'epic'];
@@ -94,8 +102,10 @@ function clamp(value, min, max) {
 }
 
 function getHuntEnemyTeamSize(floor, fallbackSize) {
-  const baseSize = getDungeonTeamLimit(floor);
   const floorNumber = Number(floor) || 1;
+  if (floorNumber === 1) return 1;
+
+  const baseSize = getDungeonTeamLimit(floor);
   const extraEnemies = floorNumber >= ENEMY_SIZE_INCREASE_START_FLOOR
     ? Math.floor((floorNumber - ENEMY_SIZE_INCREASE_START_FLOOR) / ENEMY_SIZE_INCREASE_INTERVAL) + 1
     : 0;

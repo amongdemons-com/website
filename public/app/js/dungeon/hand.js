@@ -38,13 +38,14 @@ function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
   const placeholder = isInteractive && mode === 'recruit' && shouldShowCollectionReinforcementHandPlaceholder()
     ? renderCollectionReinforcementPlaceholder('hand')
     : '';
+  const modeClass = mode === 'battle' ? 'is-battle' : 'is-recruit';
   const cardHtml = demons.map((demon) => renderDemonCard(demon, {
     side: 'hand',
     allowRecruitDrag: isInteractive && mode === 'recruit'
   })).join('');
 
   return `
-    <div class="dungeon-hand-cards formation-lane-cards" data-formation-drop="hand">
+    <div class="dungeon-hand-cards formation-lane-cards ${modeClass}" data-formation-drop="hand" data-hand-count="${demons.length}">
       ${placeholder}${cardHtml || (placeholder ? '' : renderEmptyHand(mode))}
     </div>
   `;

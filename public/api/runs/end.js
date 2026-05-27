@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
+const { getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 
 const router = express.Router();
@@ -24,7 +25,7 @@ router.post('/runs/:id/end', requireAuth, async (req, res) => {
 
   const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [req.player.id]);
   const nextXp = playerRows[0].xp + earned.xp;
-  const nextLevel = Math.max(playerRows[0].level, Math.floor(nextXp / 100) + 1);
+  const nextLevel = getNextAccountLevel(playerRows[0].level, nextXp);
 
   await db.query(
     'UPDATE players SET xp = xp + ?, souls = souls + ?, level = ? WHERE id = ?',

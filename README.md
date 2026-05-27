@@ -182,8 +182,8 @@ All API routes are mounted under `/api`.
 - New Dungeon runs start with exactly 2 demons.
 - The active Dungeon team can contain up to 6 demons.
 - The player can use permanent collection demons as starting Dungeon demons.
-- Floor 1 starts at 2 demons, then the player team and enemy team grow by 1 per floor until the player team caps at 6 on floor 5.
-- Enemy teams are 2 demons on floor 1, 3 on floor 2, 4 on floor 3, 5 on floor 4, and 6 from floor 5 onward. Only enemies continue scaling deeper: 7 enemies on floor 35, 8 on floor 40, and 9 on floor 45 onward.
+- The player team starts at 2 demons, then can grow by 1 per floor until it caps at 6 on floor 5.
+- Floor 1 is an easier opener with 1 common enemy. Enemy teams are 3 demons on floor 2, 4 on floor 3, 5 on floor 4, and 6 from floor 5 onward. Only enemies continue scaling deeper: 7 enemies on floor 35, 8 on floor 40, and 9 on floor 45 onward.
 - Floors 1 through 3 use the starter type pool; later floors unlock more types based on floor.
 - Dungeons have no final floor; after each win the run pauses for recruitment/extraction, then advances to the next floor.
 - From floor 4 onward, enemy generation applies floor pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`. The pressure eventually caps, but floors continue indefinitely.
@@ -193,6 +193,7 @@ All API routes are mounted under `/api`.
 - Between fights, the player may stage a whole team, recruit one demon, swap demons, skip recruitment, or extract.
 - Extracting between fights saves one eligible new demon and grants accumulated XP/Souls.
 - Losing immediately ends the run and grants 0 XP, 0 Souls, and 0 demons, regardless of rewards staged before the loss.
+- Account levels use total XP thresholds of `250 * (level - 1)^1.65`; payout updates never reduce an already stored level.
 - The permanent collection has one slot per demon type and rarity, for 66 total slots. Saving another demon with the same type and rarity replaces that slot.
 
 ## Combat Rules
