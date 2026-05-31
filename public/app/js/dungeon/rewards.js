@@ -2,7 +2,7 @@ import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
+import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, getRarityColor } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const battle = (...args) => dungeonActions.battle(...args);
@@ -32,7 +32,7 @@ function openCashoutModal() {
   if (!canExtractRun()) return;
 
   const subtitle = document.getElementById('cashoutModalSubtitle');
-  if (subtitle) subtitle.textContent = 'Confirm what you want to extract from this run.';
+  if (subtitle) subtitle.textContent = 'Choose what leaves the dungeon with you.';
   renderCashoutModal();
   getModal(elements.cashoutModal).show();
 }
@@ -41,11 +41,17 @@ function renderCashoutModal() {
   const candidate = getSelectedRewardCandidate();
   const earned = getPayoutPreview(Boolean(candidate));
   const demon = candidate?.demon || null;
+  const demonName = escapeHtml(demon?.species || 'Demon');
+  const demonRarity = String(demon?.rarity || 'common').toLowerCase();
+  const demonRarityLabel = escapeHtml(capitalize(demonRarity));
+  const demonRarityColor = escapeHtml(getRarityColor(demonRarity));
 
   elements.cashoutModalBody.innerHTML = `
     <div class="cashout-summary cashout-extract-summary">
       <div class="cashout-selected-reward">
-        <span class="hunt-phase-eyebrow">Demon</span>
+        <div class="cashout-section-title">
+          <span>Demon Extract</span>
+        </div>
         ${demon ? renderDungeonDemonCard(demon, {
           className: 'cashout-demon-card',
           suppressCollectionMissingTag: true,
@@ -57,14 +63,31 @@ function renderCashoutModal() {
         `}
       </div>
       <div class="cashout-extract-copy">
-        <span class="hunt-phase-eyebrow">Leave dungeon</span>
-        <p>${demon
-          ? `${escapeHtml(demon.species || 'This demon')} will be added to your collection.`
-          : 'You can drag a demon into Reward before extracting. Extracting now leaves without a demon.'}</p>
-        <div class="cashout-reward-chips" aria-label="Dungeon rewards">
-          <span>${earned.xp || 0} XP</span>
-          <span>${earned.souls || 0} souls</span>
+        <div class="cashout-demon-summary">
+          <h3 class="cashout-demon-name-line">${demon ? `
+            <span class="cashout-rarity-label" style="--rarity-color: ${demonRarityColor}">${demonRarityLabel}</span>
+            <span>${demonName}</span>
+          ` : 'No Demon Selected'}</h3>
+          <span class="cashout-status-pill">
+            ${renderIcon(demon ? 'stars' : 'info')}
+            ${demon ? 'Demon Saved' : 'No Demon'}
+          </span>
+          <p>${demon
+            ? 'Will be added to your collection.'
+            : 'Extract now to claim run rewards only.'}</p>
         </div>
+        <div class="cashout-divider" aria-hidden="true"></div>
+        <div class="cashout-section-title">
+          <span>Run Rewards</span>
+        </div>
+        <div class="cashout-reward-chips" aria-label="Dungeon rewards">
+          <span>${renderIcon('stars')}${earned.xp || 0} XP</span>
+          <span>${renderIcon('flame')}${earned.souls || 0} Souls</span>
+        </div>
+      </div>
+      <div class="cashout-extract-note">
+        ${renderIcon('info')}
+        <span>Your run will end after extraction.</span>
       </div>
     </div>
   `;

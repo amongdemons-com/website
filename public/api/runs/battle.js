@@ -5,6 +5,7 @@ const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { assignFormationSlots, resetRunDemon } = require('../lib/run-demons');
+const { COLLECTION_REINFORCEMENT_FLOOR } = require('../lib/dungeon-rules');
 
 const router = express.Router();
 
@@ -55,7 +56,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     clearPoisonEffects(run.state.team);
     clearPoisonEffects(run.state.enemies);
     run.state.awaitingRecruit = true;
-    if (run.floor === 3 && !run.state.collectionReinforcementUsed) {
+    if (run.floor === COLLECTION_REINFORCEMENT_FLOOR && !run.state.collectionReinforcementUsed) {
       run.state.awaitingCollectionReinforcement = true;
     }
   } else {

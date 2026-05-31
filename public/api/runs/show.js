@@ -3,6 +3,7 @@ const { requireAuth } = require('../lib/auth');
 const { createHuntEnemies } = require('../lib/hunt-enemies');
 const { createRng } = require('../lib/rng');
 const { getCurrentRunForPlayer, getRunForPlayer } = require('../lib/runs');
+const { COLLECTION_REINFORCEMENT_FLOOR } = require('../lib/dungeon-rules');
 
 const router = express.Router();
 
@@ -67,7 +68,7 @@ function getCollectionReinforcementLimit(run) {
     (
       !run.state.collectionReinforcementUsed &&
       run.state.awaitingRecruit &&
-      Number(run.floor) === 3
+      Number(run.floor) === COLLECTION_REINFORCEMENT_FLOOR
     )
   ) ? 1 : 0;
 }

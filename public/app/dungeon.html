@@ -132,12 +132,12 @@
     </div>
 
     <div class="modal fade hunt-modal" id="cashoutModal" tabindex="-1" aria-labelledby="cashoutModalTitle" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable cashout-modal-dialog">
+        <div class="modal-content cashout-modal-content">
           <div class="modal-header">
             <div>
-              <h2 class="modal-title h4" id="cashoutModalTitle">Leave Dungeon</h2>
-              <p class="text-muted mb-0" id="cashoutModalSubtitle">Confirm what you want to extract from this run.</p>
+              <h2 class="modal-title h4" id="cashoutModalTitle">Extract Rewards</h2>
+              <p class="text-muted mb-0" id="cashoutModalSubtitle">Choose what leaves the dungeon with you.</p>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -145,7 +145,7 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-warning" id="cashoutConfirmBtn">
-              Extract
+              Extract &amp; Leave
             </button>
           </div>
         </div>
@@ -157,31 +157,17 @@
         <div class="modal-content">
           <div class="modal-header">
             <div>
-              <h2 class="modal-title h4" id="shortTeamModalTitle">Recruit Before You Continue?</h2>
-              <p class="text-muted mb-0" id="shortTeamModalSubtitle">A defeated enemy can still join your team for the next floor.</p>
+              <h2 class="modal-title h4" id="shortTeamModalTitle">Recruit First?</h2>
+              <p class="text-muted mb-0" id="shortTeamModalSubtitle">You have an open team slot.</p>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body short-team-help">
-            <p class="short-team-warning mb-3">Your team has an open slot. If you continue now, you will skip this recruit opportunity.</p>
-            <div class="short-team-steps" aria-label="How to recruit">
-              <div>
-                <span>1</span>
-                <p>Look at the defeated demons in your hand.</p>
-              </div>
-              <div>
-                <span>2</span>
-                <p>Drag one into an empty Melee or Ranged slot on Your Team.</p>
-              </div>
-              <div>
-                <span>3</span>
-                <p>Then press Continue to enter the next floor with that demon.</p>
-              </div>
-            </div>
-            <p class="text-muted mb-0 mt-3">You can also tap a demon card to inspect it before deciding.</p>
+            <p class="short-team-warning mb-0">Continuing now skips this recruit.</p>
+            <p class="short-team-copy mb-0">Drag a defeated demon into your team, or skip it.</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-success" data-bs-dismiss="modal">Choose a Demon</button>
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal">Choose Recruit</button>
             <button type="button" class="btn btn-outline-warning" id="confirmShortTeamBtn">Skip Recruit</button>
           </div>
         </div>

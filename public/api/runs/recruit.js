@@ -12,7 +12,7 @@ const {
   normalizePosition,
   resetRunDemon
 } = require('../lib/run-demons');
-const { getDungeonTeamLimit } = require('../lib/dungeon-rules');
+const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 
 const router = express.Router();
 
@@ -353,7 +353,7 @@ function getCollectionReinforcementLimit(run) {
     (
       !run.state.collectionReinforcementUsed &&
       run.state.awaitingRecruit &&
-      Number(run.floor) === 3
+      Number(run.floor) === COLLECTION_REINFORCEMENT_FLOOR
     )
   ) ? 1 : 0;
 }
