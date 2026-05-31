@@ -105,7 +105,7 @@ Open `http://localhost:3000`.
 | `/collection` | Full authenticated collection browser with filters, sorting, and missing slots |
 | `/summon` | Authenticated Souls/summon placeholder page |
 | `/rank` | Redirects to `/rankings` |
-| `/rankings` | Leaderboard sorted by level by default |
+| `/rankings` | Leaderboard sorted by highest conquered dungeon floor by default |
 | `/rankings/souls` | Leaderboard page using the Souls sort |
 
 ## Authentication
@@ -171,7 +171,7 @@ All API routes are mounted under `/api`.
 | --- | --- | --- |
 | `GET` | `/game/demon-types` | Return demon type, role, stat, targeting, and ability data |
 | `GET` | `/game/demons` | Return demon asset mappings |
-| `GET` | `/leaderboard?sort=level\|xp\|souls` | Return up to 100 players sorted by level, XP, or Souls |
+| `GET` | `/leaderboard?sort=floor\|level\|xp\|souls` | Return up to 100 players sorted by highest floor, level, XP, or Souls |
 | `POST` | `/admin/demon-balance` | Prototype placeholder; returns `501` and does not mutate data |
 
 ## Dungeon Rules

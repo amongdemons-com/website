@@ -11,6 +11,7 @@ router.get('/account/progression', requireAuth, async (req, res) => {
     level,
     xp: req.player.xp,
     souls: req.player.souls,
+    highestFloor: req.player.highestFloor || 0,
     unlocks: req.player.unlocks
   });
 });

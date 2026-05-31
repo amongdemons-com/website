@@ -26,6 +26,47 @@ async function addIndexIfMissing(tableName, indexName, definition) {
   }
 }
 
+function getConqueredFloorFromRun(row) {
+  const floor = Math.max(0, Number(row.floor) || 0);
+  let state = {};
+
+  try {
+    state = JSON.parse(row.state || '{}');
+  } catch (error) {
+    state = {};
+  }
+
+  const lastBattleFloor = Math.max(0, Number(state.lastBattle?.floor) || 0);
+
+  if (state.lastBattle?.winner === 'player') return lastBattleFloor || floor;
+  if (state.awaitingRecruit) return floor;
+  if (state.lastBattle?.winner === 'enemy' || row.status === 'defeated') {
+    return Math.max(0, floor - 1);
+  }
+
+  return 0;
+}
+
+async function backfillHighestFloors() {
+  const [rows] = await db.query('SELECT player_id, status, floor, state FROM runs WHERE player_id IS NOT NULL');
+  const highestByPlayer = new Map();
+
+  rows.forEach((row) => {
+    const conqueredFloor = getConqueredFloorFromRun(row);
+    const currentHighest = highestByPlayer.get(row.player_id) || 0;
+    if (conqueredFloor > currentHighest) {
+      highestByPlayer.set(row.player_id, conqueredFloor);
+    }
+  });
+
+  for (const [playerId, highestFloor] of highestByPlayer) {
+    await db.query(
+      'UPDATE players SET highest_floor = GREATEST(highest_floor, ?) WHERE id = ?',
+      [highestFloor, playerId]
+    );
+  }
+}
+
 async function dedupePlayerDemonSlots() {
   await db.query(`
     DELETE old_demon FROM player_demons old_demon
@@ -54,6 +95,7 @@ async function initializeSchema() {
       level INT UNSIGNED NOT NULL DEFAULT 1,
       xp INT UNSIGNED NOT NULL DEFAULT 0,
       souls INT UNSIGNED NOT NULL DEFAULT 0,
+      highest_floor INT UNSIGNED NOT NULL DEFAULT 0,
       unlocks LONGTEXT NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -62,7 +104,9 @@ async function initializeSchema() {
 
   await addColumnIfMissing('players', 'password_salt', '`password_salt` VARCHAR(64) NOT NULL DEFAULT ""');
   await addColumnIfMissing('players', 'unlocks', '`unlocks` LONGTEXT NULL');
+  await addColumnIfMissing('players', 'highest_floor', '`highest_floor` INT UNSIGNED NOT NULL DEFAULT 0');
   await normalizeUtf8Column('players', 'id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addIndexIfMissing('players', 'idx_players_rank_floor', 'INDEX idx_players_rank_floor (highest_floor, level, xp, souls)');
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_sessions (
@@ -125,6 +169,7 @@ async function initializeSchema() {
   await normalizeUtf8Column('runs', 'playerId', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
   await normalizeUtf8Column('runs', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
   await addIndexIfMissing('runs', 'idx_runs_player_id', 'INDEX idx_runs_player_id (player_id)');
+  await backfillHighestFloors();
 }
 
 module.exports = { initializeSchema };

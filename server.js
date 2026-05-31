@@ -82,7 +82,11 @@ app.get(['/rankings', '/rankings/'], (req, res) => {
   res.sendFile(path.join(appDir, 'rankings.html'));
 });
 
-app.get(['/rankings/souls', '/rankings/souls/'], (req, res) => {
+app.get(['/rankings/:sort', '/rankings/:sort/'], (req, res) => {
+  if (!['floor', 'level', 'souls'].includes(req.params.sort)) {
+    return res.redirect(302, '/rankings');
+  }
+
   res.sendFile(path.join(appDir, 'rankings.html'));
 });
 

@@ -1,4 +1,5 @@
 const express = require('express');
+const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { simulateFight } = require('../lib/combat');
 const { getDemonTypes } = require('../lib/game-data');
@@ -59,6 +60,10 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     if (run.floor === COLLECTION_REINFORCEMENT_FLOOR && !run.state.collectionReinforcementUsed) {
       run.state.awaitingCollectionReinforcement = true;
     }
+    await db.query(
+      'UPDATE players SET highest_floor = GREATEST(highest_floor, ?) WHERE id = ?',
+      [run.floor, req.player.id]
+    );
   } else {
     run.status = 'defeated';
     run.state.earned = { xp: 0, souls: 0 };

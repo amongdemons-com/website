@@ -127,7 +127,7 @@ function getDemonsForFormationRow(demons, position, rowIndex) {
 function renderEmptyFormationSlot(position, slotNumber) {
   return `
     <div class="formation-empty formation-empty-${position}" aria-hidden="true" data-slot-number="${slotNumber}">
-      <span>Empty</span>
+      <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" draggable="false">
     </div>
   `;
 }

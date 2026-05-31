@@ -5133,6 +5133,255 @@ body.rankings-page {
     color: var(--ad-text);
 }
 
+.rankings-page .rank-table {
+    border-collapse: separate;
+    border-spacing: 0 0.42rem;
+}
+
+.rankings-page .rank-table th,
+.rankings-page .rank-table td {
+    padding: 0.82rem 0.75rem;
+    vertical-align: middle;
+}
+
+.rankings-page .rank-table th:first-child,
+.rankings-page .rank-table td:first-child {
+    width: 5.4rem;
+}
+
+.rank-row td {
+    background: rgba(7,16,19,0.54);
+    border-top: 1px solid rgba(161,212,201,0.09);
+    border-bottom: 1px solid rgba(161,212,201,0.09);
+}
+
+.rank-row td:first-child {
+    border-left: 1px solid rgba(161,212,201,0.09);
+    border-radius: 8px 0 0 8px;
+}
+
+.rank-row td:last-child {
+    border-right: 1px solid rgba(161,212,201,0.09);
+    border-radius: 0 8px 8px 0;
+}
+
+.rank-top {
+    --rank-accent: var(--ad-gold);
+    --rank-border: rgba(232,199,106,0.42);
+    --rank-bg-left: rgba(232,199,106,0.2);
+    --rank-bg-right: rgba(111,214,189,0.07);
+    --rank-badge-text: #17110b;
+}
+
+.rank-top-2 {
+    --rank-accent: #d7e6e2;
+    --rank-border: rgba(215,230,226,0.36);
+    --rank-bg-left: rgba(215,230,226,0.15);
+    --rank-bg-right: rgba(111,214,189,0.07);
+    --rank-badge-text: #0d1718;
+}
+
+.rank-top-3 {
+    --rank-accent: var(--ad-ember);
+    --rank-border: rgba(231,138,85,0.38);
+    --rank-bg-left: rgba(231,138,85,0.17);
+    --rank-bg-right: rgba(156,122,200,0.07);
+    --rank-badge-text: #180f0a;
+}
+
+.rank-top-4 {
+    --rank-accent: var(--ad-teal);
+    --rank-border: rgba(111,214,189,0.34);
+    --rank-bg-left: rgba(111,214,189,0.13);
+    --rank-bg-right: rgba(232,199,106,0.055);
+    --rank-badge-text: #071313;
+}
+
+.rank-top-5 {
+    --rank-accent: var(--ad-violet);
+    --rank-border: rgba(156,122,200,0.38);
+    --rank-bg-left: rgba(156,122,200,0.14);
+    --rank-bg-right: rgba(111,214,189,0.055);
+    --rank-badge-text: #120d18;
+}
+
+.rank-top td {
+    background:
+        linear-gradient(90deg, var(--rank-bg-left), rgba(7,16,19,0.74) 42%, var(--rank-bg-right)),
+        rgba(7,16,19,0.86);
+    border-color: var(--rank-border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.055), 0 10px 22px rgba(0,0,0,0.22);
+}
+
+.rankings-page .rank-top.current-player-rank td {
+    background:
+        linear-gradient(90deg, var(--rank-bg-left), rgba(7,16,19,0.74) 42%, var(--rank-bg-right)),
+        rgba(7,16,19,0.86) !important;
+}
+
+.rank-top-1 td {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.rank-badge {
+    display: inline-grid;
+    grid-template-columns: 1rem auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    min-width: 3.65rem;
+    height: 2.35rem;
+    color: var(--ad-muted);
+    font-weight: 800;
+    clip-path: polygon(12% 0, 88% 0, 100% 50%, 88% 100%, 12% 100%, 0 50%);
+    background: rgba(161,212,201,0.1);
+}
+
+.rank-top .rank-badge {
+    color: var(--rank-badge-text);
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.55), transparent 28%),
+        var(--rank-accent);
+    box-shadow: 0 0 18px var(--rank-border);
+}
+
+.rank-badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rank-badge-icon:empty {
+    display: none;
+}
+
+.rank-badge-icon:empty + .rank-badge-number {
+    grid-column: 1 / -1;
+}
+
+.rank-badge-number {
+    line-height: 1;
+}
+
+.rank-hunter {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.12rem;
+}
+
+.rank-hunter-name {
+    max-width: 100%;
+    color: var(--ad-text);
+    font-weight: 760;
+    overflow-wrap: anywhere;
+}
+
+.rank-title {
+    color: var(--rank-accent);
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.rank-floor-cell {
+    min-width: 9rem;
+}
+
+.rank-floor {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.32rem;
+    white-space: nowrap;
+}
+
+.rank-floor-value {
+    color: var(--ad-text);
+    font-size: 1.1rem;
+    font-weight: 820;
+}
+
+.rank-top .rank-floor-value {
+    color: var(--rank-accent);
+    text-shadow: 0 0 16px var(--rank-border);
+}
+
+.rank-top-1 .rank-floor-value {
+    font-size: 1.35rem;
+}
+
+.rank-floor-label,
+.rank-metric {
+    color: var(--ad-muted);
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.rank-progress-bar {
+    display: block;
+    width: min(9rem, 100%);
+    height: 0.32rem;
+    margin: 0.32rem auto 0;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.09);
+}
+
+.rank-progress-bar span {
+    display: block;
+    width: var(--rank-progress, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--rank-accent), rgba(255,255,255,0.72));
+}
+
+.rank-metric {
+    display: inline-flex;
+    justify-content: center;
+    min-width: 3.2rem;
+    white-space: nowrap;
+}
+
+.rank-top .rank-metric {
+    color: var(--ad-text);
+}
+
+.rank-metric-souls {
+    color: var(--ad-gold);
+}
+
+.rank-sort-link.active {
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.25rem;
+}
+
+@media (max-width: 575.98px) {
+    .rankings-page .rank-table th,
+    .rankings-page .rank-table td {
+        padding: 0.68rem 0.58rem;
+    }
+
+    .rank-badge {
+        min-width: 3.1rem;
+        height: 2.08rem;
+    }
+
+    .rank-title {
+        font-size: 0.7rem;
+    }
+
+    .rank-floor-cell {
+        min-width: 7.4rem;
+    }
+
+    .rank-progress-bar {
+        width: 7.2rem;
+    }
+}
+
 body.play-page {
     min-height: 100%;
     background:
@@ -5675,6 +5924,8 @@ body.summon-page {
 .battle-side .formation-empty {
     position: relative;
     box-sizing: border-box;
+    display: grid;
+    place-items: center;
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -5688,6 +5939,17 @@ body.summon-page {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     box-shadow: inset 0 0 26px rgba(0,0,0,0.16);
+}
+
+.battle-side .formation-slot-placeholder-img {
+    display: block;
+    width: 78%;
+    height: 78%;
+    object-fit: contain;
+    opacity: 0.54;
+    filter: drop-shadow(0 0 12px rgba(207,226,220,0.14));
+    pointer-events: none;
+    user-select: none;
 }
 
 .battle-side .formation-empty::before {
@@ -5706,6 +5968,10 @@ body.summon-page {
         radial-gradient(circle at 50% 42%, rgba(226,80,65,0.09), transparent 42%),
         linear-gradient(180deg, rgba(28,9,12,0.34), rgba(0,0,0,0.24));
     color: rgba(255,159,150,0.4);
+}
+
+.battle-side-enemy .formation-slot-placeholder-img {
+    filter: drop-shadow(0 0 12px rgba(255,159,150,0.12));
 }
 
 .dungeon-vs {
