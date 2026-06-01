@@ -45,7 +45,7 @@
       <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 py-3 mb-4">
         <div>
           <h1 class="display-5 mb-1">Summon</h1>
-          <p class="mb-0 text-muted">Spend souls to call new demons from the ritual circle.</p>
+          <p class="mb-0 text-muted">Spend <span class="soul-inline-label"><img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" aria-hidden="true"> Souls</span> to call new demons from the ritual circle.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
           <a class="btn btn-outline-light" href="/collection">
@@ -63,14 +63,14 @@
       <section class="row g-3 align-items-stretch">
         <div class="col-12 col-xl-4">
           <div class="card h-100 summon-balance-card">
-            <div class="card-header">Soul Balance</div>
+            <div class="card-header"><span class="soul-heading"><img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" aria-hidden="true"> Soul Balance</span></div>
             <div class="card-body d-flex flex-column justify-content-between gap-4">
               <div>
                 <div class="summon-souls-value" id="soulsBalance">-</div>
                 <p class="text-muted mb-0" id="summonPlayerLabel">Loading hunter...</p>
               </div>
               <a class="btn btn-primary" href="/dungeon">
-                <i data-lucide="play"></i>
+                <img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" aria-hidden="true">
                 Earn Souls
               </a>
             </div>
@@ -91,19 +91,19 @@
                 <div class="col-12 col-md-4">
                   <button class="btn btn-outline-light summon-option w-100" type="button" disabled>
                     <span>Minor Summon</span>
-                    <small>25 souls</small>
+                    <small><span class="soul-cost"><img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" aria-hidden="true"> 25 Souls</span></small>
                   </button>
                 </div>
                 <div class="col-12 col-md-4">
                   <button class="btn btn-outline-light summon-option w-100" type="button" disabled>
                     <span>Greater Summon</span>
-                    <small>75 souls</small>
+                    <small><span class="soul-cost"><img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" aria-hidden="true"> 75 Souls</span></small>
                   </button>
                 </div>
                 <div class="col-12 col-md-4">
                   <button class="btn btn-outline-light summon-option w-100" type="button" disabled>
                     <span>Ancient Summon</span>
-                    <small>150 souls</small>
+                    <small><span class="soul-cost"><img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" aria-hidden="true"> 150 Souls</span></small>
                   </button>
                 </div>
               </div>

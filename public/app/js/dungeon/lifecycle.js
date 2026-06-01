@@ -2,7 +2,7 @@ import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
+import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const applyBattleSpeed = (...args) => dungeonActions.applyBattleSpeed(...args);
@@ -332,7 +332,7 @@ async function finishRun(message, summary = {}) {
     };
     state.endedReplayRun = replayRun;
     state.endNotice = {
-      text: `${message || 'Dungeon ended.'} You earned ${result.xp} XP and ${result.souls} souls.`,
+      html: renderEarnedNoticeHtml(message || 'Dungeon ended.', result),
       type: summary.defeated ? 'warning' : 'success'
     };
     getModal(elements.teamChoiceModal).hide();
@@ -341,6 +341,14 @@ async function finishRun(message, summary = {}) {
   } catch (error) {
     showError(error);
   }
+}
+
+function renderEarnedNoticeHtml(message, result) {
+  return `${escapeHtml(message)} You earned ${renderXpNoticeAmount(result.xp)} and ${renderSoulAmount(Number(result.souls) || 0, { className: 'fight-log-soul-amount' })}.`;
+}
+
+function renderXpNoticeAmount(xp) {
+  return `<span class="fight-log-reward-inline">${renderIcon('stars')}${escapeHtml(String(Number(xp) || 0))} XP</span>`;
 }
 
 async function startNewHuntAfterDefeat() {

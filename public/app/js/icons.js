@@ -30,8 +30,11 @@
     stars: 'Sparkles',
     trash: 'Trash2'
   };
+  const SOUL_ICON_PATH = '/app/images/assets/soul.svg';
 
   function renderIcon(name, options = {}) {
+    if (isSoulIcon(name)) return renderImageIcon(SOUL_ICON_PATH, 'soul', options);
+
     const lucideApi = window.lucide;
     if (!lucideApi || typeof lucideApi.createElement !== 'function') return '';
 
@@ -57,6 +60,45 @@
     };
     const svg = lucideApi.createElement(iconNode, cleanAttributes(attributes));
     return svg.outerHTML;
+  }
+
+  function renderSoulAmount(value, options = {}) {
+    const normalizedValue = value === null || value === undefined || value === '' ? '-' : value;
+    const label = options.label || 'Souls';
+    const className = [
+      'soul-amount',
+      options.className || ''
+    ].filter(Boolean).join(' ');
+    const ariaLabel = options.ariaLabel || `${normalizedValue} ${label}`;
+
+    return `
+      <span class="${escapeAttribute(className)}" aria-label="${escapeAttribute(ariaLabel)}">
+        ${renderIcon('soul', { size: options.size || 16, className: options.iconClassName || '' })}
+        <span class="soul-amount-value">${escapeHtml(normalizedValue)}</span>
+        ${options.showLabel === false ? '' : `<span class="soul-amount-label">${escapeHtml(label)}</span>`}
+      </span>
+    `;
+  }
+
+  function renderImageIcon(src, name, options = {}) {
+    const className = [
+      'ad-icon',
+      `${name}-icon`,
+      options.className || ''
+    ].filter(Boolean).join(' ');
+    const attributes = {
+      class: className,
+      src,
+      width: options.size || 16,
+      height: options.size || 16,
+      alt: options.label || '',
+      'aria-hidden': options.label ? null : 'true',
+      'aria-label': options.label || null,
+      focusable: 'false',
+      role: options.label ? 'img' : null
+    };
+
+    return `<img ${serializeAttributes(cleanAttributes(attributes))}>`;
   }
 
   function replaceStaticIcons() {
@@ -85,6 +127,10 @@
     return String(name || '').toLowerCase() === 'poison';
   }
 
+  function isSoulIcon(name) {
+    return ['soul', 'souls'].includes(String(name || '').toLowerCase());
+  }
+
   function toPascalCase(value) {
     return String(value || '')
       .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -94,7 +140,27 @@
       .join('');
   }
 
+  function serializeAttributes(attributes) {
+    return Object.entries(attributes)
+      .map(([key, value]) => `${key}="${escapeAttribute(value)}"`)
+      .join(' ');
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value);
+  }
+
   ui.renderIcon = renderIcon;
+  ui.renderSoulAmount = renderSoulAmount;
   ui.replaceStaticIcons = replaceStaticIcons;
 
   if (document.readyState === 'loading') {

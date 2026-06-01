@@ -65,14 +65,14 @@ function renderRewardBox(isVisible, isInteractive = false) {
   elements.dungeonRewardBox.classList.toggle('d-none', !isVisible);
   if (!isVisible) {
     elements.dungeonRewardGrid.innerHTML = '';
-    if (elements.dungeonRewardTitle) elements.dungeonRewardTitle.textContent = '0 XP / 0 souls';
+    if (elements.dungeonRewardTitle) elements.dungeonRewardTitle.textContent = '0 XP / 0 Souls';
     return;
   }
 
   const candidate = getSelectedRewardCandidate();
   const earned = getPayoutPreview(Boolean(candidate));
   if (elements.dungeonRewardTitle) {
-    elements.dungeonRewardTitle.textContent = `${earned.xp || 0} XP / ${earned.souls || 0} souls`;
+    elements.dungeonRewardTitle.textContent = `${earned.xp || 0} XP / ${earned.souls || 0} Souls`;
   }
 
   elements.dungeonRewardGrid.innerHTML = `
@@ -94,9 +94,9 @@ function renderRewardPayout(earned) {
         <strong>${escapeHtml(String(xp))}</strong>
         <span>XP</span>
       </div>
-      <div class="dungeon-reward-payout-item">
+      <div class="dungeon-reward-payout-item dungeon-reward-payout-souls">
         <strong>${escapeHtml(String(souls))}</strong>
-        <span>souls</span>
+        <span>${renderIcon('soul')}Souls</span>
       </div>
     </div>
   `;

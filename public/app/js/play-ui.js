@@ -3,6 +3,7 @@
 
   const api = window.AmongDemons.api;
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
+  const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const session = window.AmongDemons.getSession();
   const state = {
     player: session.player || null,
@@ -93,7 +94,12 @@
     elements.welcomeText.textContent = player.username ? `Welcome, ${player.username}.` : 'Welcome.';
     elements.levelStat.textContent = progression.level ?? player.level ?? '-';
     elements.xpStat.textContent = progression.xp ?? player.xp ?? '-';
-    elements.soulsStat.textContent = progression.souls ?? player.souls ?? '-';
+    const souls = progression.souls ?? player.souls ?? '-';
+    elements.soulsStat.innerHTML = renderSoulAmount(souls, {
+      showLabel: false,
+      className: 'stat-soul-amount',
+      ariaLabel: `${souls} Souls`
+    });
   }
 
   function renderCollection() {

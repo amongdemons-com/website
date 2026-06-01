@@ -2,6 +2,7 @@
   'use strict';
 
   const api = window.AmongDemons.api;
+  const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => String(value));
   const state = {
     player: window.AmongDemons.getSession().player || null,
     progression: null
@@ -69,10 +70,15 @@
     const souls = progression.souls ?? player.souls ?? 0;
 
     elements.navPlayerName.textContent = player.username || '';
-    elements.soulsBalance.textContent = String(souls);
+    elements.soulsBalance.innerHTML = renderSoulAmount(souls, {
+      showLabel: false,
+      className: 'summon-soul-amount',
+      size: 48,
+      ariaLabel: `${souls} Souls`
+    });
     elements.summonPlayerLabel.textContent = player.username
-      ? `${player.username}'s available souls`
-      : 'Available souls';
+      ? `${player.username}'s available balance`
+      : 'Available balance';
   }
 
   function handleAuthError(error) {

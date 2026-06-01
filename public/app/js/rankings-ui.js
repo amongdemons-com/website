@@ -3,6 +3,7 @@
 
   const elements = {};
   const session = window.AmongDemons.getSession();
+  const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const currentUsername = session.player && session.player.username;
   const pathSorts = new Set(['floor', 'level', 'souls']);
   const topRankTitles = [
@@ -104,7 +105,11 @@
           ${topRank ? '<span class="rank-progress-bar" aria-hidden="true"><span></span></span>' : ''}
         </td>
         <td><span class="rank-metric">${formatNumber(level)}</span></td>
-        <td><span class="rank-metric rank-metric-souls">${formatNumber(souls)}</span></td>
+        <td>${renderSoulAmount(formatNumber(souls), {
+          showLabel: false,
+          className: 'rank-metric rank-metric-souls',
+          ariaLabel: `${formatNumber(souls)} Souls`
+        })}</td>
       </tr>
     `;
   }

@@ -2,7 +2,7 @@ import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, getRarityColor } from './shared-ui.js';
+import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount, getRarityColor } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const battle = (...args) => dungeonActions.battle(...args);
@@ -82,7 +82,7 @@ function renderCashoutModal() {
         </div>
         <div class="cashout-reward-chips" aria-label="Dungeon rewards">
           <span>${renderIcon('stars')}${earned.xp || 0} XP</span>
-          <span>${renderIcon('flame')}${earned.souls || 0} Souls</span>
+          ${renderSoulAmount(earned.souls || 0, { className: 'cashout-soul-amount' })}
         </div>
       </div>
       <div class="cashout-extract-note">
@@ -564,14 +564,22 @@ async function finishCashout(result, options = {}) {
   };
   state.endedReplayRun = null;
   state.endNotice = {
-    text: skippedDemon
-      ? `Dungeon ended. You earned ${result.xp} XP and ${result.souls} souls.`
-      : `Dungeon ended. ${demonMessage} You earned ${result.xp} XP and ${result.souls} souls.`,
+    html: skippedDemon
+      ? renderEarnedNoticeHtml('Dungeon ended.', result)
+      : renderEarnedNoticeHtml(`Dungeon ended. ${demonMessage}`, result),
     type: 'success'
   };
   getModal(elements.cashoutModal).hide();
   await loadStartOptions();
   renderRun();
+}
+
+function renderEarnedNoticeHtml(message, result) {
+  return `${escapeHtml(message)} You earned ${renderXpNoticeAmount(result.xp)} and ${renderSoulAmount(Number(result.souls) || 0, { className: 'fight-log-soul-amount' })}.`;
+}
+
+function renderXpNoticeAmount(xp) {
+  return `<span class="fight-log-reward-inline">${renderIcon('stars')}${escapeHtml(String(Number(xp) || 0))} XP</span>`;
 }
 
 function getCashoutDemonMessage(result) {

@@ -191,6 +191,55 @@ body.dungeon-page .navbar {
     vertical-align: -0.125em;
 }
 
+.soul-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    object-fit: contain;
+    filter:
+        drop-shadow(0 0 0.22rem rgba(85,255,255,0.7))
+        drop-shadow(0 0 0.48rem rgba(85,255,255,0.22));
+}
+
+.soul-amount,
+.soul-inline-label,
+.soul-heading,
+.soul-cost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.34em;
+    color: var(--ad-soul, #55FFFF);
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.soul-amount-value {
+    line-height: 1;
+}
+
+.soul-amount-label {
+    color: currentColor;
+    font-size: 0.72em;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.soul-inline-label,
+.soul-heading {
+    text-transform: none;
+}
+
+.soul-inline-label .soul-icon,
+.soul-heading .soul-icon,
+.soul-cost .soul-icon {
+    width: 1.05em;
+    height: 1.05em;
+}
+
 .ad-icon-fill {
     fill: currentColor;
 }
@@ -431,15 +480,26 @@ body.dungeon-page .navbar {
     background: rgba(0,0,0,0.18);
 }
 
-.stat-box span {
+.stat-box > span {
     display: block;
     font-size: 1.6rem;
     font-weight: bold;
     line-height: 1.1;
 }
 
-.stat-box small {
+.stat-box > small {
     color: #9c9c9c;
+}
+
+.stat-box .soul-amount {
+    display: inline-flex;
+    color: var(--ad-soul, #55FFFF);
+    gap: 0.28em;
+}
+
+.stat-box .soul-amount .soul-icon {
+    width: 0.86em;
+    height: 0.86em;
 }
 
 .empty-state {
@@ -1671,7 +1731,7 @@ body.dungeon-page .navbar {
     margin: 1.35rem 0;
 }
 
-.dungeon-end-rewards span {
+.dungeon-end-rewards > span {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -1810,6 +1870,12 @@ body.dungeon-page .navbar {
 
 .choice-card-grid .hunt-choice-card {
     flex: 0 1 8rem;
+}
+
+.dungeon-end-rewards > .soul-amount {
+    border-color: rgba(85,255,255,0.42);
+    background: rgba(85,255,255,0.1);
+    color: var(--ad-soul, #55FFFF);
 }
 
 @media (max-width: 767.98px) {
@@ -2558,12 +2624,26 @@ body.dungeon-page .navbar {
     line-height: 1;
 }
 
-.dungeon-reward-payout-item span {
+.dungeon-reward-payout-item > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.22rem;
     color: rgba(220,232,229,0.68);
     font-size: 0.58rem;
     font-weight: 800;
     line-height: 1;
     text-transform: uppercase;
+}
+
+.dungeon-reward-payout-souls strong,
+.dungeon-reward-payout-souls > span {
+    color: var(--ad-soul, #55FFFF);
+}
+
+.dungeon-reward-payout-souls .soul-icon {
+    width: 0.9em;
+    height: 0.9em;
 }
 
 .dungeon-reward-slot {
@@ -3167,7 +3247,7 @@ body.dungeon-page .navbar {
         font-size: 0.68rem;
     }
 
-    .dungeon-reward-payout-item span {
+    .dungeon-reward-payout-item > span {
         font-size: 0.44rem;
     }
 
@@ -3552,7 +3632,7 @@ body.dungeon-page .navbar {
     justify-content: flex-start;
 }
 
-.cashout-reward-chips span {
+.cashout-reward-chips > span {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -3568,10 +3648,21 @@ body.dungeon-page .navbar {
     padding: 0.7rem 1rem;
 }
 
+.cashout-reward-chips > .soul-amount {
+    border-color: rgba(85,255,255,0.42);
+    background: rgba(6,22,24,0.74);
+    color: var(--ad-soul, #55FFFF);
+}
+
 .cashout-reward-chips .ad-icon {
     width: 1.3rem;
     height: 1.3rem;
     color: #f3c55c;
+}
+
+.cashout-reward-chips .soul-icon {
+    width: 1.45rem;
+    height: 1.45rem;
 }
 
 .cashout-extract-note {
@@ -3753,6 +3844,24 @@ body.dungeon-page .navbar {
     border-top: 1px solid rgba(255,255,255,0.14);
     border-bottom: 0;
     background: rgba(255,255,255,0.04);
+}
+
+.fight-log-reward-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+.fight-log-reward-inline .ad-icon {
+    width: 1em;
+    height: 1em;
+    margin-right: 0;
+}
+
+.fight-log-soul-amount {
+    display: inline-flex;
+    vertical-align: -0.08em;
 }
 
 .fight-log-row span {
@@ -4387,6 +4496,7 @@ body.dungeon-page .navbar {
     --ad-ember: #e78a55;
     --ad-ember-soft: rgba(231,138,85,0.16);
     --ad-gold: #e8c76a;
+    --ad-soul: #55FFFF;
     --ad-danger: #e4685e;
     --ad-radius: 6px;
 }
@@ -5348,7 +5458,23 @@ body.rankings-page {
 }
 
 .rank-metric-souls {
-    color: var(--ad-gold);
+    color: var(--ad-soul);
+}
+
+.rank-metric-souls .soul-icon {
+    width: 1.08em;
+    height: 1.08em;
+}
+
+.rank-sort-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.34rem;
+}
+
+.rank-sort-link[data-sort="souls"] .soul-icon {
+    width: 0.95em;
+    height: 0.95em;
 }
 
 .rank-sort-link.active {
@@ -5644,11 +5770,21 @@ body.summon-page {
 }
 
 .summon-souls-value {
-    color: var(--ad-gold);
+    color: var(--ad-soul);
     font-size: clamp(3rem, 8vw, 5.75rem);
     font-weight: 800;
     line-height: 0.95;
-    text-shadow: 0 0 22px rgba(232,199,106,0.22);
+    text-shadow: 0 0 22px rgba(85,255,255,0.24);
+}
+
+.summon-souls-value .soul-icon {
+    width: 0.72em;
+    height: 0.72em;
+}
+
+.summon-souls-value .soul-amount {
+    justify-content: flex-start;
+    gap: 0.18em;
 }
 
 .summon-ritual-card .card-body {
@@ -5726,8 +5862,12 @@ body.summon-page {
 }
 
 .summon-option small {
-    color: var(--ad-gold);
+    color: var(--ad-soul);
     font-weight: 700;
+}
+
+.summon-option .soul-cost {
+    font-size: 0.95em;
 }
 
 /* Dungeon tactical battle grid */
@@ -6153,7 +6293,7 @@ body.summon-page {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .cashout-reward-chips span {
+    .cashout-reward-chips > span {
         min-height: 2.8rem;
         font-size: 0.86rem;
         padding: 0.55rem 0.5rem;
