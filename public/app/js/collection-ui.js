@@ -5,6 +5,7 @@
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
   const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
   const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
+  const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const RARITY_ORDER = {
     common: 1,
     uncommon: 2,
@@ -18,6 +19,7 @@
     player: window.AmongDemons.getSession().player || null,
     collection: [],
     catalog: [],
+    visibleSlots: [],
     types: {},
     filters: {
       type: 'all',
@@ -101,24 +103,11 @@
       const card = event.target.closest('.collection-demon-card[data-demon-id]');
       if (!card) return;
 
-      const demon = state.collection.find((item) => String(item.id) === card.dataset.demonId);
+      const demon = state.visibleSlots.find((item) => String(item.id) === card.dataset.demonId);
       if (!demon) return;
 
       openDemonDetailsModal(withTypeName(demon), {
-        actions: [
-          {
-            label: 'Banish',
-            icon: 'trash',
-            variant: 'outline-danger',
-            onClick: () => setMessage('Banishing is not available yet.', 'warning')
-          },
-          {
-            label: 'Train',
-            icon: 'crosshair',
-            variant: 'success',
-            onClick: () => setMessage('Training is not available yet.', 'warning')
-          }
-        ]
+        actions: getDemonDetailsActions(demon)
       });
     });
 
@@ -161,7 +150,9 @@
     const collectedCount = ownedDemons.length;
     const playerName = state.player?.username || '';
 
+    state.visibleSlots = visibleSlots;
     elements.navPlayerName.textContent = playerName;
+    updateNavAccount(state.player || {});
     elements.collectionCount.textContent = totalSlots ? `${collectedCount}/${totalSlots}` : String(collectedCount);
     elements.collectionSummary.textContent = totalSlots
       ? renderSummary(visibleSlots.length, collectedCount, totalSlots)
@@ -206,7 +197,10 @@
           showStats: false,
           footerHtml: '<div class="collection-missing-label">Missing</div>',
           attributes: {
-            'aria-disabled': 'true',
+            'data-demon-id': demon.id,
+            role: 'button',
+            tabindex: '0',
+            'aria-label': `View details for missing ${rarity} ${typeName}`,
             title: `Missing ${rarity} ${typeName}`
           }
         })}
@@ -325,6 +319,25 @@
       : ` ${shownCount} shown.`;
 
     return `${collectedText}${shownText}`;
+  }
+
+  function getDemonDetailsActions(demon) {
+    if (demon.isMissing) return [];
+
+    return [
+      {
+        label: 'Banish',
+        icon: 'trash',
+        variant: 'outline-danger',
+        onClick: () => setMessage('Banishing is not available yet.', 'warning')
+      },
+      {
+        label: 'Train',
+        icon: 'crosshair',
+        variant: 'success',
+        onClick: () => setMessage('Training is not available yet.', 'warning')
+      }
+    ];
   }
 
   function renderEmptyState() {

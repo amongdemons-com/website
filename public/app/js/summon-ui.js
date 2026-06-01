@@ -3,6 +3,7 @@
 
   const api = window.AmongDemons.api;
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => String(value));
+  const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const state = {
     player: window.AmongDemons.getSession().player || null,
     progression: null
@@ -70,6 +71,7 @@
     const souls = progression.souls ?? player.souls ?? 0;
 
     elements.navPlayerName.textContent = player.username || '';
+    updateNavAccount(player, { souls });
     elements.soulsBalance.innerHTML = renderSoulAmount(souls, {
       showLabel: false,
       className: 'summon-soul-amount',

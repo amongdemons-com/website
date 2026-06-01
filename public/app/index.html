@@ -33,13 +33,25 @@
             </li>
           </ul>
 
-          <!-- User Info and Logout -->
-          <div class="d-flex align-items-center me-3 d-none">
-            <span class="me-2">username</span>
-            <span class="ms-2 text-secondary soul-amount" title="Total Souls collected in this session"><img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" aria-hidden="true"> <span class="soul-amount-value">12</span><span class="soul-amount-label">Souls</span></span>
-            <a href="/logout" class="btn btn-outline-danger btn-sm ms-3" title="Logout">
+          <div class="nav-auth-actions" data-nav-auth-actions>
+            <a class="btn btn-outline-light btn-sm" href="/login">Login</a>
+            <a class="btn btn-primary btn-sm" href="/register">Register</a>
+          </div>
+          <div class="nav-account d-none" data-nav-account>
+            <span class="nav-wallet" id="navSoulBalance" data-nav-souls role="status" aria-live="polite" aria-atomic="true" title="Soul balance">
+              <span class="soul-amount nav-soul-amount" aria-label="Souls loading">
+                <img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" aria-hidden="true">
+                <span class="soul-amount-value">-</span>
+                <span class="soul-amount-label">Souls</span>
+              </span>
+            </span>
+            <span class="nav-player" title="Signed in player">
+              <i data-lucide="user"></i>
+              <span id="navPlayerName" data-nav-player-name></span>
+            </span>
+            <button class="btn nav-logout-btn btn-icon-only" id="logoutBtn" type="button" title="Logout" aria-label="Logout">
               <i data-lucide="log-out"></i>
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -85,6 +97,7 @@
     <script src="/app/js/icons.js"></script>
 
     <!-- Client-side data loading -->
+    <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/app/js/demon-cards.js"></script>
     <script src="/app/js/index.js"></script>

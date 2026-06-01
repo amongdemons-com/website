@@ -80,6 +80,41 @@
     `;
   }
 
+  function updateNavAccount(player = {}, options = {}) {
+    const root = options.root || document;
+    const accountElement = options.accountElement || root.querySelector('[data-nav-account]');
+    const authElement = options.authElement || root.querySelector('[data-nav-auth-actions]');
+    const nameElement = options.nameElement || root.querySelector('[data-nav-player-name]') || root.getElementById('navPlayerName');
+    const soulElement = options.soulElement || root.querySelector('[data-nav-souls]') || root.getElementById('navSoulBalance');
+    const username = player && player.username ? player.username : 'Hunter';
+    const souls = options.souls ?? player?.souls ?? '-';
+    const formattedSouls = formatNumber(souls);
+
+    if (authElement) authElement.classList.add('d-none');
+    if (accountElement) accountElement.classList.remove('d-none');
+    if (nameElement) nameElement.textContent = username;
+    if (soulElement) {
+      soulElement.innerHTML = renderSoulAmount(formattedSouls, {
+        className: 'nav-soul-amount',
+        ariaLabel: `${formattedSouls} Souls`
+      });
+    }
+
+    return {
+      username,
+      souls: formattedSouls
+    };
+  }
+
+  function clearNavAccount(options = {}) {
+    const root = options.root || document;
+    const accountElement = options.accountElement || root.querySelector('[data-nav-account]');
+    const authElement = options.authElement || root.querySelector('[data-nav-auth-actions]');
+
+    if (accountElement) accountElement.classList.add('d-none');
+    if (authElement) authElement.classList.remove('d-none');
+  }
+
   function renderImageIcon(src, name, options = {}) {
     const className = [
       'ad-icon',
@@ -131,6 +166,16 @@
     return ['soul', 'souls'].includes(String(name || '').toLowerCase());
   }
 
+  function formatNumber(value) {
+    if (value === null || value === undefined || value === '') return '-';
+    if (typeof value === 'string' && value.trim() === '-') return '-';
+
+    const number = Number(value);
+    if (!Number.isFinite(number)) return String(value);
+
+    return number.toLocaleString();
+  }
+
   function toPascalCase(value) {
     return String(value || '')
       .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -161,6 +206,8 @@
 
   ui.renderIcon = renderIcon;
   ui.renderSoulAmount = renderSoulAmount;
+  ui.updateNavAccount = updateNavAccount;
+  ui.clearNavAccount = clearNavAccount;
   ui.replaceStaticIcons = replaceStaticIcons;
 
   if (document.readyState === 'loading') {

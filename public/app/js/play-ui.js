@@ -4,6 +4,7 @@
   const api = window.AmongDemons.api;
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
+  const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const session = window.AmongDemons.getSession();
   const state = {
     player: session.player || null,
@@ -95,6 +96,7 @@
     elements.levelStat.textContent = progression.level ?? player.level ?? '-';
     elements.xpStat.textContent = progression.xp ?? player.xp ?? '-';
     const souls = progression.souls ?? player.souls ?? '-';
+    updateNavAccount(player, { souls });
     elements.soulsStat.innerHTML = renderSoulAmount(souls, {
       showLabel: false,
       className: 'stat-soul-amount',
