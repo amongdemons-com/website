@@ -33,7 +33,7 @@ body.dungeon-page {
     background:
         linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        url("/app/images/amongdemons_dungeon_background.png") center / cover no-repeat,
+        url("/app/images/assets/background/amongdemons_dungeon.png") center / cover no-repeat,
         #071013;
     overscroll-behavior: none;
 }
@@ -2307,7 +2307,7 @@ body.dungeon-page .navbar {
     padding: 0;
     background:
         linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
-        url("/app/images/amongdemons_dungeon_background.png") center / cover no-repeat;
+        url("/app/images/assets/background/amongdemons_dungeon.png") center / cover no-repeat;
     background-attachment: scroll;
 }
 
@@ -2916,7 +2916,7 @@ body.dungeon-page .navbar {
         border-bottom: 1px solid rgba(161,212,201,0.13);
         background:
             linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
-            url("/app/images/amongdemons_dungeon_background.png") center / cover fixed no-repeat;
+            url("/app/images/assets/background/amongdemons_dungeon.png") center / cover fixed no-repeat;
         background-attachment: fixed;
     }
 
@@ -4704,7 +4704,7 @@ a:hover {
     background:
         linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        url("/app/images/amongdemons_dungeon_background.png") center / cover no-repeat;
+        url("/app/images/assets/background/amongdemons_dungeon.png") center / cover no-repeat;
     background-attachment: scroll;
 }
 
@@ -4714,7 +4714,7 @@ a:hover {
         linear-gradient(rgba(5,9,12,0.76), rgba(5,9,12,0.9)),
         radial-gradient(circle at 18% 6%, rgba(232,199,106,0.12), transparent 24rem),
         radial-gradient(circle at 82% 14%, rgba(111,214,189,0.12), transparent 22rem),
-        url("/app/images/amongdemons_home_background.png") center top / cover fixed no-repeat;
+        url("/app/images/assets/background/amongdemons_home.png") center top / cover fixed no-repeat;
     background-attachment: fixed;
 }
 
@@ -5199,7 +5199,7 @@ body.rankings-page {
     background:
         linear-gradient(rgba(6,13,16,0.48), rgba(6,13,16,0.76)),
         radial-gradient(circle at 50% 8%, rgba(232,199,106,0.12), transparent 24rem),
-        url("/app/images/amongdemons_rankings_background.png") center top / cover fixed no-repeat,
+        url("/app/images/assets/background/amongdemons_rankings.png") center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
@@ -5501,7 +5501,7 @@ body.play-page {
         linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.76)),
         radial-gradient(circle at 26% 16%, rgba(111,214,189,0.13), transparent 24rem),
         radial-gradient(circle at 78% 20%, rgba(232,199,106,0.1), transparent 22rem),
-        url("/app/images/amongdemons_home_background.png") center top / cover fixed no-repeat,
+        url("/app/images/assets/background/amongdemons_home.png") center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
@@ -5541,7 +5541,7 @@ body.collection-page {
         linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.78)),
         radial-gradient(circle at 18% 18%, rgba(111,214,189,0.14), transparent 24rem),
         radial-gradient(circle at 86% 14%, rgba(232,199,106,0.11), transparent 22rem),
-        url("/app/images/amongdemons_collection_background.png") center top / cover fixed no-repeat,
+        url("/app/images/assets/background/amongdemons_collection.png") center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
@@ -5729,7 +5729,7 @@ body.summon-page {
         linear-gradient(rgba(6,13,16,0.48), rgba(6,13,16,0.78)),
         radial-gradient(circle at 50% 34%, rgba(111,214,189,0.18), transparent 22rem),
         radial-gradient(circle at 82% 18%, rgba(232,199,106,0.1), transparent 22rem),
-        url("/app/images/amongdemons_summon_background.png") center top / cover fixed no-repeat,
+        url("/app/images/assets/background/amongdemons_summon.png") center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
