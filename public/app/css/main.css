@@ -2002,6 +2002,22 @@ body.dungeon-page .navbar {
     line-height: 1.15;
 }
 
+.demon-detail-title-link,
+.demon-detail-title-link:hover,
+.demon-detail-title-link:focus-visible {
+    color: #fff;
+}
+
+.demon-detail-title-link {
+    text-decoration: none;
+}
+
+.demon-detail-title-link:hover,
+.demon-detail-title-link:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 0.2rem;
+}
+
 .demon-detail-rarity {
     margin: 0.25rem 0 0;
     color: var(--rarity-color, #FAC51C);
@@ -2087,7 +2103,9 @@ body.dungeon-page .navbar {
 .demon-detail-actions {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    align-self: end;
+    align-items: center;
+    justify-content: flex-end;
     gap: 0.6rem;
     padding-top: 1rem;
     padding-bottom: 1rem;

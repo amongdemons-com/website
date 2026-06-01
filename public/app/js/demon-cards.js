@@ -89,6 +89,7 @@
 
     const actions = options.actions || [];
     const title = options.title || demon.species || demon.name || capitalize(demon.rarity) || 'Demon';
+    const titleHtml = renderDetailTitle(title, demon);
     const imageUrl = demon.imageUrl || demon.image_url || '';
     const rarity = capitalize(demon.rarity || 'common');
     const currentHp = Math.max(0, Number(demon.hp) || 0);
@@ -104,7 +105,7 @@
         <div class="demon-detail-panel">
           <div class="demon-detail-heading">
             <div>
-              <h2 class="demon-detail-title">${escapeHtml(title)}</h2>
+              <h2 class="demon-detail-title">${titleHtml}</h2>
               <p class="demon-detail-rarity">${escapeHtml(rarity)}</p>
             </div>
             <button type="button" class="btn-close demon-detail-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -192,16 +193,39 @@
   function renderDetailAction(action, index) {
     const variant = action.variant || 'outline-light';
     const icon = action.icon ? renderIcon(action.icon) : '';
-    const attributes = {
-      type: 'button',
-      class: `btn btn-${variant}`,
-      'data-demon-detail-action': index,
-      ...(action.dismiss ? { 'data-bs-dismiss': 'modal' } : {}),
-      ...(action.disabled ? { disabled: true } : {}),
-      ...(action.title ? { title: action.title } : {})
-    };
+    const attributes = action.href
+      ? {
+        href: action.href,
+        class: `btn btn-${variant}`,
+        ...(action.target ? { target: action.target } : {}),
+        ...(action.rel ? { rel: action.rel } : {}),
+        ...(action.title ? { title: action.title } : {})
+      }
+      : {
+        type: 'button',
+        class: `btn btn-${variant}`,
+        'data-demon-detail-action': index,
+        ...(action.dismiss ? { 'data-bs-dismiss': 'modal' } : {}),
+        ...(action.disabled ? { disabled: true } : {}),
+        ...(action.title ? { title: action.title } : {})
+      };
+    const tag = action.href ? 'a' : 'button';
 
-    return `<button ${renderAttributes(attributes)}>${icon}${escapeHtml(action.label || 'Action')}</button>`;
+    return `<${tag} ${renderAttributes(attributes)}>${icon}${escapeHtml(action.label || 'Action')}</${tag}>`;
+  }
+
+  function renderDetailTitle(title, demon = {}) {
+    const href = getDemonTypeHref(demon);
+    const text = escapeHtml(title);
+
+    return href
+      ? `<a class="demon-detail-title-link" href="${escapeHtml(href)}" target="_blank" rel="noopener">${text}</a>`
+      : text;
+  }
+
+  function getDemonTypeHref(demon = {}) {
+    const typeId = Number(demon.typeId || demon.type);
+    return typeId > 0 ? `/demons/type/${typeId}` : '';
   }
 
   function renderAttackIcon() {

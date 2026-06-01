@@ -6,6 +6,7 @@
   const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
   const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
   const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
+  const clearNavAccount = window.AmongDemons.ui.clearNavAccount || (() => {});
   const RARITY_ORDER = {
     common: 1,
     uncommon: 2,
@@ -21,6 +22,7 @@
     catalog: [],
     visibleSlots: [],
     types: {},
+    isAuthenticated: Boolean(window.AmongDemons.getToken()),
     filters: {
       type: 'all',
       rarity: 'all',
@@ -34,13 +36,9 @@
   onReady(init);
 
   async function init() {
-    if (!window.AmongDemons.getToken()) {
-      window.location.href = '/login';
-      return;
-    }
-
     cacheElements();
     bindActions();
+    syncAuthenticatedUi();
     syncFiltersToggle();
     await refreshCollection();
   }
@@ -124,21 +122,33 @@
   async function refreshCollection() {
     await withBusy(elements.refreshBtn, async () => {
       setMessage('', 'danger');
+      state.isAuthenticated = Boolean(window.AmongDemons.getToken());
+      syncAuthenticatedUi();
 
       try {
-        const [me, demons] = await Promise.all([
-          api('/api/auth/me'),
-          api('/api/demons'),
-          loadDemonTypes(),
-          loadDemonCatalog()
-        ]);
+        if (state.isAuthenticated) {
+          const [me, demons] = await Promise.all([
+            api('/api/auth/me'),
+            api('/api/demons'),
+            loadDemonTypes(),
+            loadDemonCatalog()
+          ]);
 
-        state.player = me.player;
-        state.collection = demons.demons || [];
+          state.player = me.player;
+          state.collection = demons.demons || [];
+        } else {
+          state.player = null;
+          state.collection = [];
+          await Promise.all([
+            loadDemonTypes(),
+            loadDemonCatalog()
+          ]);
+        }
+
         populateFilters();
         renderCollection();
       } catch (error) {
-        handleAuthError(error);
+        await handleCollectionError(error);
       }
     });
   }
@@ -152,7 +162,11 @@
 
     state.visibleSlots = visibleSlots;
     elements.navPlayerName.textContent = playerName;
-    updateNavAccount(state.player || {});
+    if (state.player) {
+      updateNavAccount(state.player);
+    } else {
+      clearNavAccount();
+    }
     elements.collectionCount.textContent = totalSlots ? `${collectedCount}/${totalSlots}` : String(collectedCount);
     elements.collectionSummary.textContent = totalSlots
       ? renderSummary(visibleSlots.length, collectedCount, totalSlots)
@@ -313,6 +327,10 @@
   }
 
   function renderSummary(shownCount, collectedCount, totalSlots) {
+    if (!state.isAuthenticated) {
+      return `Sign in to track your collection. All ${totalSlots} demon slots are shown as missing.`;
+    }
+
     const collectedText = `${collectedCount} of ${totalSlots} demon slots collected.`;
     const shownText = shownCount === totalSlots && !state.filters.hideMissing
       ? ''
@@ -322,7 +340,16 @@
   }
 
   function getDemonDetailsActions(demon) {
-    if (demon.isMissing) return [];
+    if (demon.isMissing) {
+      return [
+        {
+          label: 'Enter Dungeon',
+          icon: 'play',
+          variant: 'primary',
+          href: '/dungeon'
+        }
+      ];
+    }
 
     return [
       {
@@ -423,10 +450,40 @@
     if (label) label.textContent = state.filtersOpen ? 'Hide Filters' : 'Show Filters';
   }
 
-  function handleAuthError(error) {
+  function syncAuthenticatedUi() {
+    if (!state.isAuthenticated) {
+      state.filters = {
+        type: 'all',
+        rarity: 'all',
+        sort: 'default',
+        hideMissing: false
+      };
+      state.filtersOpen = false;
+    }
+
+    elements.collectionControlsPanel.classList.toggle('d-none', !state.isAuthenticated);
+    elements.filtersToggleBtn.classList.toggle('d-none', !state.isAuthenticated);
+  }
+
+  async function handleCollectionError(error) {
     if (error.status === 401) {
       window.AmongDemons.clearSession();
-      window.location.href = '/login';
+      state.isAuthenticated = false;
+      state.player = null;
+      state.collection = [];
+      syncAuthenticatedUi();
+
+      try {
+        await Promise.all([
+          loadDemonTypes(),
+          loadDemonCatalog()
+        ]);
+        populateFilters();
+        renderCollection();
+      } catch (publicError) {
+        setMessage(publicError.message || 'Something went wrong.', 'danger');
+      }
+
       return;
     }
 
