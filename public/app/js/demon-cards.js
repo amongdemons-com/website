@@ -79,7 +79,7 @@
         <div class="combat-hp-bar" aria-label="HP ${currentHp} of ${maxHp}">
           <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${hpPercent}%"></div>
         </div>
-        <div class="combat-hp-meta"><span class="combat-current-hp js-demon-hp">${currentHp}</span><span class="combat-hp-separator"> / </span><span class="combat-max-hp">${maxHp}</span>${renderIcon('hp')}</div>
+        <div class="combat-hp-meta"><span class="combat-current-hp js-demon-hp">${currentHp}</span>${renderIcon('hp')}</div>
       ` : ''}
     `;
   }

@@ -49,9 +49,6 @@ function renderCashoutModal() {
   elements.cashoutModalBody.innerHTML = `
     <div class="cashout-summary cashout-extract-summary">
       <div class="cashout-selected-reward">
-        <div class="cashout-section-title">
-          <span>Demon Extract</span>
-        </div>
         ${demon ? renderDungeonDemonCard(demon, {
           className: 'cashout-demon-card',
           suppressCollectionMissingTag: true,
@@ -67,23 +64,19 @@ function renderCashoutModal() {
           <h3 class="cashout-demon-name-line">${demon ? `
             <span class="cashout-rarity-label" style="--rarity-color: ${demonRarityColor}">${demonRarityLabel}</span>
             <span>${demonName}</span>
-          ` : 'No Demon Selected'}</h3>
-          <span class="cashout-status-pill">
-            ${renderIcon(demon ? 'stars' : 'info')}
-            ${demon ? 'Demon Saved' : 'No Demon'}
-          </span>
+          ` : 'No Demon'}</h3>
           <p>${demon
             ? 'Will be added to your collection.'
             : 'Extract now to claim run rewards only.'}</p>
         </div>
-        <div class="cashout-divider" aria-hidden="true"></div>
-        <div class="cashout-section-title">
+        <div class="cashout-section-title pt-3">
           <span>Run Rewards</span>
         </div>
         <div class="cashout-reward-chips" aria-label="Dungeon rewards">
           <span>${renderIcon('stars')}${earned.xp || 0} XP</span>
           ${renderSoulAmount(earned.souls || 0, { className: 'cashout-soul-amount' })}
         </div>
+        <div class="cashout-divider" aria-hidden="true"></div>
       </div>
       <div class="cashout-extract-note">
         ${renderIcon('info')}

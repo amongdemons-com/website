@@ -196,9 +196,6 @@ body.dungeon-page .navbar {
     width: 1em;
     height: 1em;
     object-fit: contain;
-    filter:
-        drop-shadow(0 0 0.22rem rgba(85,255,255,0.7))
-        drop-shadow(0 0 0.48rem rgba(85,255,255,0.22));
 }
 
 .soul-amount,
@@ -828,7 +825,6 @@ body.dungeon-page .navbar {
     justify-content: center;
     width: var(--dungeon-demon-card-width, 9.25rem);
     min-height: 4.6rem;
-    border: 1px dashed rgba(255,255,255,0.16);
     border-radius: 6px;
     color: #69737d;
     font-size: 0.8rem;
@@ -1047,10 +1043,6 @@ body.dungeon-page .navbar {
 .hunt-demon-card.is-recruit-draggable {
     border-color: color-mix(in srgb, var(--rarity-color, #D1D5D8) 62%, rgba(255,255,255,0.16));
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
-}
-
-.hunt-demon-card.is-recruit-drop-target {
-    border-style: dashed;
 }
 
 .hunt-demon-card.active {
@@ -2730,6 +2722,9 @@ body.dungeon-page .navbar {
     font-weight: bold;
     text-transform: uppercase;
 }
+#cashoutModalBody {
+    padding: 0;
+}
 
 @media (max-width: 991.98px) {
     .dungeon-arena {
@@ -2757,10 +2752,6 @@ body.dungeon-page .navbar {
 @media (max-width: 575.98px) {
     #cashoutModal .modal-dialog {
         margin: 0.35rem;
-    }
-
-    #cashoutModal .modal-body {
-        padding: 0.65rem;
     }
 
     #cashoutModal .modal-footer {
@@ -3449,10 +3440,6 @@ body.dungeon-page .navbar {
     right: 1.25rem;
 }
 
-#cashoutModal .modal-body {
-    padding: 1.3rem 1.6rem 0.8rem;
-}
-
 #cashoutModal .modal-footer {
     gap: 1rem;
     border-top: 0;
@@ -3476,8 +3463,8 @@ body.dungeon-page .navbar {
 
 .cashout-summary {
     margin-top: 0;
-    border: 1px solid rgba(232,199,106,0.38);
-    border-radius: 8px;
+    border-bottom: 1px solid rgba(232,199,106,0.38);
+    border-radius: 0px;
     background:
         radial-gradient(circle at 16% 0%, rgba(111,214,189,0.13), transparent 32%),
         rgba(3,12,16,0.48);
@@ -5774,7 +5761,6 @@ body.summon-page {
     font-size: clamp(3rem, 8vw, 5.75rem);
     font-weight: 800;
     line-height: 0.95;
-    text-shadow: 0 0 22px rgba(85,255,255,0.24);
 }
 
 .summon-souls-value .soul-icon {
@@ -6038,7 +6024,6 @@ body.summon-page {
 }
 
 .battle-side .combat-stat-strip {
-    justify-content: space-between;
     gap: 0.28rem;
     font-size: clamp(0.5rem, 0.62vw, 0.62rem);
 }
@@ -6069,7 +6054,6 @@ body.summon-page {
     width: 100%;
     height: 100%;
     min-height: 0;
-    border: 1px dashed rgba(161,212,201,0.2);
     border-radius: 8px;
     background:
         radial-gradient(circle at 50% 42%, rgba(161,212,201,0.1), transparent 42%),
@@ -6086,7 +6070,7 @@ body.summon-page {
     width: 78%;
     height: 78%;
     object-fit: contain;
-    opacity: 0.54;
+    opacity: 0.24;
     filter: drop-shadow(0 0 12px rgba(207,226,220,0.14));
     pointer-events: none;
     user-select: none;
@@ -6241,10 +6225,6 @@ body.summon-page {
 
     #cashoutModal .modal-header p {
         font-size: 0.88rem;
-    }
-
-    #cashoutModal .modal-body {
-        padding: 0.8rem;
     }
 
     #cashoutModal .modal-footer {
