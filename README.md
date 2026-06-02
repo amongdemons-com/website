@@ -11,6 +11,7 @@ The current loop is:
 5. Recruit defeated demons into the temporary Dungeon team, skip recruitment, extract between fights, or continue to the next floor.
 6. Keep pushing through unlimited floors until you extract between fights or lose.
 7. Extraction grants earned XP/Souls and optionally saves one eligible demon; losing grants 0 XP, 0 Souls, and 0 demons.
+8. Spend Souls in `/collection` to train saved demons toward their type-specific stat caps.
 
 Combat, RNG, reward generation, XP, Souls, run status, and collection writes are server-authoritative. The browser displays state and stages player choices, but it must not calculate gameplay outcomes.
 
@@ -102,7 +103,7 @@ Open `http://localhost:3000`.
 | `/register` | Registration page |
 | `/play` | Account dashboard and compact collection view |
 | `/account` | Alias for `/play` |
-| `/collection` | Full authenticated collection browser with filters, sorting, and missing slots |
+| `/collection` | Full authenticated collection browser with filters, sorting, missing slots, and Soul-based demon training |
 | `/summon` | Authenticated Souls/summon placeholder page |
 | `/rank` | Redirects to `/rankings` |
 | `/rankings` | Leaderboard sorted by highest conquered dungeon floor by default |
@@ -149,6 +150,7 @@ All API routes are mounted under `/api`.
 | `GET` | `/account/progression` | Return level, XP, Souls, and unlocks |
 | `GET` | `/demons` | List owned permanent demons |
 | `GET` | `/demons/:id` | Return one owned permanent demon |
+| `POST` | `/demons/:id/train` | Spend Souls to train one owned permanent demon server-side |
 
 ### Dungeon Runs
 
@@ -196,6 +198,17 @@ All API routes are mounted under `/api`.
 - Account levels use total XP thresholds of `250 * (level - 1)^1.65`; payout updates never reduce an already stored level.
 - The permanent collection has one slot per demon type and rarity, for 66 total slots. Saving another demon with the same type and rarity replaces that slot.
 
+## Collection Training Rules
+
+- Training is available from `/collection` for owned permanent demons only.
+- There is no banish action for collected demons.
+- Training is server-authoritative through `POST /api/demons/:id/train`; the route locks the player row and demon row in one transaction before checking cost, spending Souls, and updating stats.
+- Each training action can increase one trainable stat by `+1`. The stat is picked with weighted randomness from stats that are not capped, weighted by remaining room to grow.
+- Stat caps come from the matching type's `baseStats` maximum in `public/api/data/demon-types.json`. For example, if a type has `"hp": [58, 74]`, a saved demon of that type can train HP only up to `74`.
+- Training cost starts at 2 Souls and increases as the demon approaches its caps. The cost curve uses overall progress toward all stat caps plus a rarity multiplier.
+- Maxed demons cannot be trained. The collection card shows a top-right `Train` tag only for demons that still have trainable stats; maxed demons have no card tag and show maxed-out messaging inside the modal.
+- The train button is hidden when all stats are maxed. The modal shows current/max stat progress, the next training cost, and a delayed particle/result animation when training completes.
+
 ## Combat Rules
 
 Combat is automatic and simulated in `public/api/lib/combat.js`.
@@ -221,6 +234,7 @@ Implemented ability kinds include:
 ## Static Data And Assets
 
 - Demon type definitions live in `public/api/data/demon-types.json`.
+- Demon training caps use the upper value of each type's `baseStats.hp`, `baseStats.atk`, and `baseStats.speed` ranges.
 - Demon image mappings live in `public/api/data/demons.json`.
 - Full demon images live in `public/app/images/demons`.
 - Thumbnail images live in `public/app/images/demons/thumbnails`.
@@ -251,7 +265,7 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/app/js/index.js` | Static demon type browser |
 | `public/app/js/auth-ui.js` | Login and register forms |
 | `public/app/js/play-ui.js` | Account dashboard, progression, compact collection, admin check |
-| `public/app/js/collection-ui.js` | Full collection filters, sorting, and missing-slot display |
+| `public/app/js/collection-ui.js` | Full collection filters, sorting, missing-slot display, and training modal UI |
 | `public/app/js/summon-ui.js` | Authenticated Souls/summon placeholder state |
 | `public/app/js/rankings-ui.js` | Leaderboard UI |
 | `public/app/js/dungeon.js` and `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, extraction |
@@ -267,6 +281,7 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/api/lib/combat.js` | Server-side combat simulator |
 | `public/api/lib/db.js` | MySQL connection pool and `.env` loading |
 | `public/api/lib/demon-factory.js` | Demon generation, rarity selection, stat rolls |
+| `public/api/lib/demon-training.js` | Collection training caps, costs, stat rolls, and training metadata enrichment |
 | `public/api/lib/game-data.js` | JSON game-data readers |
 | `public/api/lib/hunt-enemies.js` | Dungeon enemy pool and floor sizing |
 | `public/api/lib/rng.js` | Deterministic seeded RNG helpers |

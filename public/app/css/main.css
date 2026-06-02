@@ -1957,8 +1957,10 @@ body.dungeon-page .navbar {
 }
 
 .demon-detail-art {
+    position: relative;
     min-height: 390px;
     background: rgba(0,0,0,0.28);
+    overflow: hidden;
 }
 
 .demon-detail-art img {
@@ -1971,8 +1973,8 @@ body.dungeon-page .navbar {
 }
 
 .demon-detail-panel {
-    display: grid;
-    grid-template-rows: auto auto auto 1fr auto;
+    display: flex;
+    flex-direction: column;
     min-width: 0;
     color: var(--ad-text, #f2f7ff);
 }
@@ -1980,6 +1982,7 @@ body.dungeon-page .navbar {
 .demon-detail-heading,
 .demon-detail-stats,
 .demon-detail-meta,
+.demon-detail-extra,
 .demon-detail-actions {
     padding-right: 1.25rem;
     padding-left: 1.25rem;
@@ -2100,13 +2103,19 @@ body.dungeon-page .navbar {
     white-space: nowrap;
 }
 
+.demon-detail-extra {
+    align-self: stretch;
+    padding-bottom: 1rem;
+}
+
 .demon-detail-actions {
     display: flex;
     flex-wrap: wrap;
-    align-self: end;
+    align-self: stretch;
     align-items: center;
     justify-content: flex-end;
     gap: 0.6rem;
+    margin-top: auto;
     padding-top: 1rem;
     padding-bottom: 1rem;
     border-top: 1px solid rgba(255,255,255,0.12);
@@ -2118,6 +2127,16 @@ body.dungeon-page .navbar {
     gap: 0.4rem;
     min-width: 5.2rem;
     justify-content: center;
+}
+
+.demon-detail-action-lead {
+    display: inline-flex;
+    align-items: center;
+    min-height: calc(1.5em + 0.75rem + 2px);
+}
+
+.demon-detail-actions .btn.is-training {
+    box-shadow: 0 0 0 2px rgba(85,255,255,0.2), 0 0 20px rgba(85,255,255,0.18);
 }
 
 @media (min-width: 992px) {
@@ -2166,6 +2185,11 @@ body.dungeon-page .navbar {
 
     .demon-detail-meta strong {
         font-size: 0.72rem;
+    }
+
+    .demon-detail-extra {
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
     }
 }
 
@@ -4348,6 +4372,88 @@ body.dungeon-page .navbar {
     }
 }
 
+@keyframes collection-training-particle-converge {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(var(--sx), var(--sy)) scale(calc(var(--size, 1) * 0.55)) rotate(0deg);
+    }
+    12% {
+        opacity: 1;
+    }
+    68% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translate(0, 0) scale(calc(var(--size, 1) * 1.18)) rotate(var(--spin, 0deg));
+    }
+    84% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translate(0, 0) scale(calc(var(--size, 1) * 0.34)) rotate(var(--spin, 0deg));
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(0, 0) scale(0) rotate(var(--spin, 0deg));
+    }
+}
+
+@keyframes collection-training-result-pop {
+    0% {
+        opacity: 0;
+        transform: translateY(0.85rem) scale(0.74);
+    }
+    72% {
+        opacity: 1;
+        transform: translateY(-0.12rem) scale(1.08);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes collection-training-core-impact {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.1);
+    }
+    72% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.1);
+    }
+    82% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+}
+
+@keyframes collection-training-vortex-pulse {
+    0% {
+        opacity: 0.2;
+        transform: scale(1);
+    }
+    54% {
+        opacity: 0.72;
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.72);
+    }
+}
+
+@keyframes collection-training-fed-card {
+    0%,
+    100% {
+        filter: none;
+    }
+    16%,
+    62% {
+        filter: drop-shadow(0 0 34px rgba(85,255,255,0.78)) saturate(1.34) brightness(1.18);
+    }
+}
+
 @keyframes dungeon-loading-spin {
     to {
         transform: rotate(360deg);
@@ -4430,7 +4536,12 @@ body.dungeon-page .navbar {
     .floating-combat-number,
     .dungeon-loading-mark,
     .dungeon-loading-arena span,
-    .dungeon-loading-dot {
+    .dungeon-loading-dot,
+    .collection-training-burst::before,
+    .collection-training-particle,
+    .collection-training-core,
+    .collection-training-result-pop,
+    .demon-detail-art.is-training-fed img {
         animation: none;
     }
 }
@@ -5813,6 +5924,283 @@ body.collection-page {
     font-weight: 700;
     letter-spacing: 0;
     text-align: center;
+}
+
+.collection-training-badge {
+    position: absolute;
+    top: 0.34rem;
+    right: 0.34rem;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.35rem;
+    min-height: 1.08rem;
+    padding: 0.14rem 0.42rem;
+    border: 1px solid rgba(85,255,255,0.28);
+    border-radius: 4px;
+    background: rgba(5,25,29,0.78);
+    color: #8dffff;
+    font-size: 0.56rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    pointer-events: none;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.collection-training-panel {
+    display: grid;
+    gap: 0.72rem;
+    border: 1px solid rgba(85,255,255,0.18);
+    border-radius: 6px;
+    background:
+        linear-gradient(135deg, rgba(85,255,255,0.08), rgba(250,197,28,0.05)),
+        rgba(5,14,17,0.62);
+    padding: 0.82rem;
+}
+
+.collection-training-panel.is-maxed {
+    border-color: rgba(250,197,28,0.32);
+    background:
+        linear-gradient(135deg, rgba(250,197,28,0.12), rgba(85,255,255,0.05)),
+        rgba(23,17,7,0.66);
+}
+
+.collection-training-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    min-width: 0;
+    color: #a8b6bf;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.collection-training-panel-head strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #fac51c;
+    white-space: nowrap;
+}
+
+.collection-training-cost {
+    flex: 0 0 auto;
+    font-size: 0.88rem;
+}
+
+.collection-training-action-cost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.48rem;
+    min-height: 2.4rem;
+    border: 1px solid rgba(85,255,255,0.24);
+    border-radius: 6px;
+    background: rgba(5,25,29,0.66);
+    color: #a8b6bf;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    padding: 0.42rem 0.62rem;
+    text-transform: uppercase;
+}
+
+.collection-training-action-souls {
+    color: #55ffff;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.collection-training-action-souls .soul-amount-label {
+    font-size: 0.68em;
+}
+
+.collection-training-stat-list {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.collection-training-stat {
+    display: grid;
+    gap: 0.28rem;
+}
+
+.collection-training-stat-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    color: #dce8eb;
+    font-size: 0.74rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.collection-training-stat-line span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.collection-training-stat-line .ad-icon,
+.collection-training-stat-line .combat-stat-icon {
+    width: 0.82rem;
+    height: 0.82rem;
+    color: #8dffff;
+}
+
+.collection-training-stat.is-maxed .collection-training-stat-line strong {
+    color: #fac51c;
+}
+
+.collection-training-stat-track {
+    height: 0.34rem;
+    border-radius: 999px;
+    background: rgba(207,226,220,0.14);
+    overflow: hidden;
+}
+
+.collection-training-stat-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #41a85f, #55ffff);
+}
+
+.collection-training-stat.is-maxed .collection-training-stat-track span {
+    background: linear-gradient(90deg, #e8c76a, #fac51c);
+}
+
+.collection-training-burst {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.collection-training-burst::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(85,255,255,0.22), transparent 16%),
+        radial-gradient(circle at 50% 50%, rgba(85,255,255,0.12), transparent 40%);
+    mix-blend-mode: screen;
+    animation: collection-training-vortex-pulse 4100ms ease-out both;
+}
+
+.collection-training-vortex,
+.collection-training-core {
+    position: absolute;
+    inset: 0;
+}
+
+.collection-training-particle {
+    position: absolute;
+    left: 50%;
+    top: 48%;
+    display: inline-grid;
+    place-items: center;
+    width: calc(0.7rem * var(--size, 1));
+    height: calc(0.7rem * var(--size, 1));
+    border-radius: 999px;
+    background: var(--ad-soul, #55ffff);
+    box-shadow:
+        0 0 calc(10px * var(--size, 1)) rgba(85,255,255,0.78),
+        0 0 calc(18px * var(--size, 1)) rgba(85,255,255,0.28);
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(var(--sx), var(--sy)) scale(calc(var(--size, 1) * 0.55));
+    animation: collection-training-particle-converge var(--duration, 1900ms) cubic-bezier(0.14, 0.92, 0.16, 1) both;
+    animation-delay: var(--delay, 0ms);
+}
+
+.collection-training-core {
+    inset: auto;
+    left: 50%;
+    top: 48%;
+    width: min(8.5rem, 36%);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, rgba(255,255,255,0.82) 0 8%, rgba(85,255,255,0.52) 9% 28%, transparent 62%);
+    box-shadow:
+        0 0 32px rgba(85,255,255,0.68),
+        0 0 52px rgba(85,255,255,0.3);
+    mix-blend-mode: screen;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.1);
+    animation: collection-training-core-impact 4100ms ease-out both;
+}
+
+.collection-training-result-pop {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 1.15rem;
+    left: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    animation: collection-training-result-pop 420ms cubic-bezier(0.18, 0.84, 0.18, 1) both;
+    appearance: none;
+}
+
+.collection-training-burst-modal .collection-training-result-pop {
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+}
+
+.collection-training-result-pop span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.48rem;
+    border: 2px solid rgba(250,197,28,0.66);
+    border-radius: 999px;
+    background:
+        linear-gradient(135deg, rgba(250,197,28,0.22), rgba(85,255,255,0.16)),
+        rgba(8,18,19,0.94);
+    color: #fff6ce;
+    box-shadow:
+        0 12px 32px rgba(0,0,0,0.5),
+        0 0 30px rgba(250,197,28,0.28),
+        inset 0 0 0 1px rgba(255,255,255,0.12);
+    font-size: 1.18rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.62rem 0.86rem;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.72);
+    white-space: nowrap;
+}
+
+.collection-training-result-pop .ad-icon,
+.collection-training-result-pop .combat-stat-icon {
+    width: 1.22rem;
+    height: 1.22rem;
+    color: #fac51c;
+}
+
+.demon-detail-art.is-training-fed img {
+    animation: collection-training-fed-card 1600ms ease-out both;
 }
 
 .collection-empty-state {

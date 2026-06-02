@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
-const { enrichDemonPreferredPositions } = require('../lib/run-demons');
+const { enrichCollectionDemonsWithTraining } = require('../lib/demon-training');
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.get('/demons/:id', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Demon not found.' });
   }
 
-  const [demon] = await enrichDemonPreferredPositions(rows);
+  const [demon] = await enrichCollectionDemonsWithTraining(rows);
   res.json({ demon });
 });
 

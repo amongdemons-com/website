@@ -1,5 +1,5 @@
 const db = require('./db');
-const { enrichDemonPreferredPositions } = require('./run-demons');
+const { enrichCollectionDemonsWithTraining } = require('./demon-training');
 
 function getCollectionDemonRow(demon = {}) {
   return {
@@ -49,7 +49,7 @@ async function saveCollectionDemon(playerId, demon) {
     ]
   );
 
-  const [savedDemon] = await enrichDemonPreferredPositions([{
+  const [savedDemon] = await enrichCollectionDemonsWithTraining([{
     id: result.insertId,
     sourceDemonId: row.sourceDemonId,
     typeId: row.typeId,

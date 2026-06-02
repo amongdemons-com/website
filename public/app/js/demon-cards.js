@@ -98,7 +98,7 @@
 
     detailsModalElement.querySelector('.modal-content').style.setProperty('--rarity-color', getRarityColor(demon.rarity));
     detailsModalElement.querySelector('.modal-body').innerHTML = `
-      <div class="demon-detail-layout">
+      <div class="demon-detail-layout" data-detail-demon-id="${escapeHtml(demon.id || '')}">
         <div class="demon-detail-art">
           <img src="${escapeHtml(imageUrl)}" alt="">
         </div>
@@ -125,8 +125,15 @@
 
           ${renderDetailMeta(demon)}
 
+          ${options.detailHtml ? `
+            <div class="demon-detail-extra">
+              ${options.detailHtml}
+            </div>
+          ` : ''}
+
           ${actions.length ? `
             <div class="demon-detail-actions">
+              ${options.actionsLeadHtml ? `<div class="demon-detail-action-lead">${options.actionsLeadHtml}</div>` : ''}
               ${actions.map((action, index) => renderDetailAction(action, index)).join('')}
             </div>
           ` : ''}
@@ -162,11 +169,18 @@
     const iconHtml = String(icon).includes('<svg') ? icon : renderIcon(icon);
 
     return `
-      <span class="demon-detail-stat" title="${escapeHtml(label)}">
+      <span class="demon-detail-stat" title="${escapeHtml(label)}" data-detail-stat="${escapeHtml(getDetailStatKey(label))}">
         ${iconHtml}
-        ${escapeHtml(value)}
+        <span class="demon-detail-stat-value">${escapeHtml(value)}</span>
       </span>
     `;
+  }
+
+  function getDetailStatKey(label) {
+    const normalized = String(label || '').toLowerCase();
+    if (normalized === 'attack') return 'atk';
+    if (normalized === 'hp') return 'hp';
+    return normalized;
   }
 
   function renderDetailMeta(demon) {

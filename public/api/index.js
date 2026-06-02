@@ -28,6 +28,7 @@ router.use(require('./auth/me'));
 router.use(require('./account/progression'));
 router.use(require('./demons/list'));
 router.use(require('./demons/show'));
+router.use(require('./demons/train'));
 router.use(require('./runs/start'));
 router.use(require('./runs/show'));
 router.use(require('./runs/formation'));
