@@ -190,7 +190,7 @@ All API routes are mounted under `/api`.
 - Dungeons have no final floor; after each win the run pauses for recruitment/extraction, then advances to the next floor.
 - From floor 4 onward, enemy generation applies floor pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`. The pressure eventually caps, but floors continue indefinitely.
 - Enemy rarity bands tighten as floors deepen: legendary enemies start appearing on floor 10, mythic enemies start appearing on floor 15, and floor 30 onward rolls mythic enemies only.
-- After clearing floor 3, the player may call in one collection demon as a one-time reinforcement while editing the team for the next floor.
+- After clearing floor 10, the player may call in one collection demon as a one-time reinforcement while editing the team for the next floor.
 - After every win, defeated enemies become recruit rewards.
 - Between fights, the player may stage a whole team, recruit one demon, swap demons, skip recruitment, or extract.
 - Extracting between fights saves one eligible new demon and grants accumulated XP/Souls.
@@ -201,12 +201,10 @@ All API routes are mounted under `/api`.
 ## Collection Training Rules
 
 - Training is available from `/collection` for owned permanent demons only.
-- There is no banish action for collected demons.
 - Training is server-authoritative through `POST /api/demons/:id/train`; the route locks the player row and demon row in one transaction before checking cost, spending Souls, and updating stats.
 - Each training action can increase one trainable stat by `+1`. The stat is picked with weighted randomness from stats that are not capped, weighted by remaining room to grow.
 - Stat caps come from the matching type's `baseStats` maximum in `public/api/data/demon-types.json`. For example, if a type has `"hp": [58, 74]`, a saved demon of that type can train HP only up to `74`.
 - Training cost starts at 2 Souls and increases as the demon approaches its caps. The cost curve uses overall progress toward all stat caps plus a rarity multiplier.
-- Maxed demons cannot be trained. The collection card shows a top-right `Train` tag only for demons that still have trainable stats; maxed demons have no card tag and show maxed-out messaging inside the modal.
 - The train button is hidden when all stats are maxed. The modal shows current/max stat progress, the next training cost, and a delayed particle/result animation when training completes.
 
 ## Combat Rules
@@ -317,10 +315,7 @@ node -e "require('./public/api/lib/schema').initializeSchema().then(() => { cons
 
 ## Notes For Future Work
 
-- `api.md` is older planning documentation and does not fully reflect the current implementation.
-- `idea.md` contains original gameplay notes, not a strict implementation contract.
 - Some internal code still uses `hunt` naming while the user-facing experience is now `Dungeon`.
-- `/summon` exists as an authenticated page, but summon spending/creation is not implemented yet.
 - `/admin/demon-balance` is intentionally a non-mutating placeholder.
 
 ## License
