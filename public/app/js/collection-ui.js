@@ -178,7 +178,7 @@
     elements.collectionCount.textContent = totalSlots ? `${collectedCount}/${totalSlots}` : String(collectedCount);
     elements.collectionSummary.textContent = totalSlots
       ? renderSummary(visibleSlots.length, collectedCount, totalSlots)
-      : 'Collected and summoned demons will appear here.';
+      : 'Collected demons will appear here.';
     elements.collectionGrid.innerHTML = visibleSlots.length
       ? renderDemonCards(visibleSlots)
       : collectedCount
@@ -778,7 +778,7 @@
           <img src="/app/images/amongdemons_logo_250x250.png" alt="">
           <div>
             <h2 class="h5 mb-2">No demons collected yet</h2>
-            <p class="text-muted mb-0">Earn, summon, and choose demons to bring them here.</p>
+            <p class="text-muted mb-0">Earn and choose demons to bring them here.</p>
           </div>
           <a class="btn btn-primary" href="/dungeon">
             ${renderIcon('play')}

@@ -70,10 +70,6 @@ app.get(['/collection', '/collection/'], (req, res) => {
   res.sendFile(path.join(appDir, 'collection.html'));
 });
 
-app.get(['/summon', '/summon/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'summon.html'));
-});
-
 app.get(['/rank', '/rank/'], (req, res) => {
   res.redirect(302, '/rankings');
 });
