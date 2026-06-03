@@ -4851,6 +4851,19 @@ a:hover {
     --bs-btn-active-border-color: #5fc7af;
 }
 
+.seo-enter-dungeon-button {
+    --bs-btn-color: #160413;
+    --bs-btn-bg: #ff4fbf;
+    --bs-btn-border-color: #ff4fbf;
+    --bs-btn-hover-color: #160413;
+    --bs-btn-hover-bg: #ff79cd;
+    --bs-btn-hover-border-color: #ff79cd;
+    --bs-btn-active-color: #160413;
+    --bs-btn-active-bg: #df2aa1;
+    --bs-btn-active-border-color: #df2aa1;
+    --bs-btn-focus-shadow-rgb: 255, 79, 191;
+}
+
 .btn-success {
     --bs-btn-color: #06110a;
     --bs-btn-bg: var(--ad-green);
