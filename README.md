@@ -5,7 +5,7 @@ Among Demons is a Node.js/Express prototype for a server-authoritative demon col
 The current loop is:
 
 1. Register or log in.
-2. Start a Dungeon with two demons chosen from six tokenized draft starters and/or your permanent collection.
+2. Start a Dungeon with two demons chosen from six signed draft starters and/or your permanent collection.
 3. Arrange the active team into front/back positions.
 4. Run automatic server-simulated battles.
 5. Recruit defeated demons into the temporary Dungeon team, skip recruitment, extract between fights, or continue to the next floor.

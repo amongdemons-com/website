@@ -776,7 +776,7 @@
     return `
       <div class="collection-grid-full">
         <div class="empty-state collection-empty-state">
-          <img src="/app/images/amongdemons_logo_250x250.png" alt="">
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" width="250" height="250" loading="lazy" decoding="async">
           <div>
             <h2 class="h5 mb-2">No demons collected yet</h2>
             <p class="text-muted mb-0">Earn and choose demons to bring them here.</p>
@@ -794,7 +794,7 @@
     return `
       <div class="collection-grid-full">
         <div class="empty-state collection-empty-state">
-          <img src="/app/images/amongdemons_logo_250x250.png" alt="">
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" width="250" height="250" loading="lazy" decoding="async">
           <div>
             <h2 class="h5 mb-2">No demons match these filters</h2>
             <p class="text-muted mb-0">Try another type or rarity.</p>

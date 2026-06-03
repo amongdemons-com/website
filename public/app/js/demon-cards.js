@@ -5,6 +5,9 @@
   const ui = AmongDemons.ui = AmongDemons.ui || {};
   const renderIcon = ui.renderIcon || (() => '');
   let detailsModalElement = null;
+  const DEMON_IMAGE_WIDTH = 768;
+  const DEMON_IMAGE_HEIGHT = 1024;
+  const FALLBACK_IMAGE_URL = '/app/images/amongdemons_logo_250x250.png';
   const TRAIT_LABELS_BY_TYPE = {
     1: 'Fighter',
     2: 'Sniper',
@@ -21,9 +24,10 @@
 
   function renderDemonCard(demon = {}, options = {}) {
     const tag = options.tag || 'div';
-    const imageUrl = demon.imageUrl || demon.image_url || '';
+    const imageUrl = demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
     const title = options.title || demon.species || demon.name || capitalize(demon.rarity) || 'Demon';
     const rarity = capitalize(demon.rarity || 'common');
+    const imageAlt = options.imageAlt || getDemonImageAlt(demon, title, rarity);
     const classes = [
       'hunt-demon-card',
       options.className || '',
@@ -42,7 +46,7 @@
     return `
       <${tag} class="${escapeHtml(classes)}" style="${escapeHtml(style)}" ${renderAttributes(attributes)}>
         <div class="hunt-demon-card-image" aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity">
-          <img src="${escapeHtml(imageUrl)}" alt="" draggable="false">
+          <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(imageAlt)}" width="${DEMON_IMAGE_WIDTH}" height="${DEMON_IMAGE_HEIGHT}" loading="${escapeHtml(options.imageLoading || 'lazy')}" decoding="async" draggable="false" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE_URL}';">
           <span class="hunt-demon-rarity-gem" aria-hidden="true"></span>
         </div>
         ${options.overlayHtml || ''}
@@ -90,7 +94,7 @@
     const actions = options.actions || [];
     const title = options.title || demon.species || demon.name || capitalize(demon.rarity) || 'Demon';
     const titleHtml = renderDetailTitle(title, demon);
-    const imageUrl = demon.imageUrl || demon.image_url || '';
+    const imageUrl = demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
     const rarity = capitalize(demon.rarity || 'common');
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || Number(demon.hp) || 1);
@@ -98,9 +102,9 @@
 
     detailsModalElement.querySelector('.modal-content').style.setProperty('--rarity-color', getRarityColor(demon.rarity));
     detailsModalElement.querySelector('.modal-body').innerHTML = `
-      <div class="demon-detail-layout" data-detail-demon-id="${escapeHtml(demon.id || '')}">
+        <div class="demon-detail-layout" data-detail-demon-id="${escapeHtml(demon.id || '')}">
         <div class="demon-detail-art">
-          <img src="${escapeHtml(imageUrl)}" alt="">
+          <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(getDemonImageAlt(demon, title, rarity))}" width="${DEMON_IMAGE_WIDTH}" height="${DEMON_IMAGE_HEIGHT}" loading="eager" decoding="async" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE_URL}';">
         </div>
         <div class="demon-detail-panel">
           <div class="demon-detail-heading">
@@ -325,6 +329,19 @@
     if (TRAIT_LABELS_BY_TYPE[typeId]) return TRAIT_LABELS_BY_TYPE[typeId];
     if (!demon.role) return '';
     return formatTraitLabel(demon.role);
+  }
+
+  function getDemonImageAlt(demon = {}, title = 'Demon', rarity = '') {
+    const trait = getTraitLabel(demon);
+    const position = getPositionLabel(demon);
+    const parts = [
+      rarity,
+      title,
+      trait ? `${trait.toLowerCase()} demon` : 'demon',
+      position ? `for ${position.toLowerCase()} teams` : '',
+      'in Among Demons'
+    ].filter(Boolean);
+    return parts.join(' ');
   }
 
   function formatTraitLabel(role) {

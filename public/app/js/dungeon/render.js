@@ -135,18 +135,18 @@ function renderHuntTitle(run) {
   const floor = run ? Math.max(1, Number(run.currentFloor) || 1) : 1;
 
   return `
-    <div class="dungeon-title-brand">
-      <a class="dungeon-header-brand" href="/" aria-label="Back to command hub">
+    <span class="dungeon-title-brand">
+      <a class="dungeon-header-brand" href="/play" aria-label="Back to command hub">
         ${renderIcon('back')}
-        <img src="/app/images/amongdemons_logo_250x250.png" alt="">
+        <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" width="32" height="32" loading="eager">
       </a>
-      <div class="dungeon-title-copy">
+      <span class="dungeon-title-copy">
         <span class="dungeon-title-text">Dungeon</span>
         ${run ? `<span class="hunt-floor-title">
           <span class="hunt-floor-label">Floor ${floor}</span>
         </span>` : ''}
-      </div>
-    </div>
+      </span>
+    </span>
   `;
 }
 
@@ -178,7 +178,7 @@ function renderDungeonEndScreen() {
         ${renderSoulAmount(Number(summary.souls) || 0, { className: 'soul-chip dungeon-end-soul-amount' })}
       </div>
       <div class="dungeon-end-actions">
-        <a class="btn btn-outline-light" href="/">Leave</a>
+        <a class="btn btn-outline-light" href="/play">Leave</a>
         ${state.endedReplayRun?.lastBattle?.combatLog?.length ? `
           <button class="btn btn-warning btn-icon-only" id="replayEndedDungeonBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
             ${renderIcon('replay')}

@@ -25,6 +25,7 @@
       const totalTypes = getTotalTypes(catalog.types, catalog.demons);
       const typeInfo = catalog.types[String(currentType)];
 
+      setStaticPageState(typeInfo);
       elements.title.textContent = typeInfo?.name || 'Unknown';
       elements.typeInfo.innerHTML = renderTypeInfo(typeInfo);
       elements.grid.innerHTML = renderDemonCards(catalog.demonsByType[currentType] || [], catalog.types);
@@ -233,14 +234,49 @@
     return Object.values(pageElements).every(Boolean) ? pageElements : null;
   }
 
-  function setStaticPageState() {
-    elements.currentType.textContent = currentType;
-    document.title = `Demon Type ${currentType} - Among Demons NFTs`;
+  function setStaticPageState(typeInfo = null) {
+    const typeName = typeInfo?.name || `Type ${currentType}`;
+    const title = `${typeName} Demon Type | Among Demons`;
+    const description = `Study ${typeName} demons in Among Demons, including role, stats, rarity scaling, strengths, and weaknesses for roguelike dungeon runs.`;
+    const canonicalUrl = `https://amongdemons.com/demons/type/${currentType}`;
+    const imageUrl = getTypeImageUrl(typeInfo);
+    const imageAlt = `${typeName} demon type artwork from Among Demons`;
 
-    const ogImageElement = document.querySelector('meta[property="og:image"]');
-    if (ogImageElement) {
-      ogImageElement.setAttribute('content', `/app/images/demons/thumbnails/${currentType}.png`);
+    elements.currentType.textContent = currentType;
+    document.title = title;
+    setMeta('meta[name="description"]', 'content', description);
+    setMeta('link[rel="canonical"]', 'href', canonicalUrl);
+    setMeta('meta[property="og:title"]', 'content', title);
+    setMeta('meta[property="og:description"]', 'content', description);
+    setMeta('meta[property="og:url"]', 'content', canonicalUrl);
+    setMeta('meta[property="og:image"]', 'content', imageUrl);
+    setMeta('meta[property="og:image:alt"]', 'content', imageAlt);
+    setMeta('meta[name="twitter:title"]', 'content', title);
+    setMeta('meta[name="twitter:description"]', 'content', description);
+    setMeta('meta[name="twitter:image"]', 'content', imageUrl);
+    setMeta('meta[name="twitter:image:alt"]', 'content', imageAlt);
+  }
+
+  function setMeta(selector, attribute, value) {
+    const element = document.querySelector(selector);
+    if (element) element.setAttribute(attribute, value);
+  }
+
+  function getTypeImageUrl(typeInfo) {
+    if (typeInfo?.name) {
+      return `https://amongdemons.com/app/images/demons/${slugify(`${typeInfo.name}-common`)}.png`;
     }
+
+    return `https://amongdemons.com/app/images/demons/thumbnails/${currentType}.png`;
+  }
+
+  function slugify(value) {
+    return String(value || '')
+      .normalize('NFKD')
+      .replace(/['']/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
   }
 
   function onReady(callback) {

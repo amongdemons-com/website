@@ -1,19 +1,37 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
   <head>
-    <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dungeon - Among Demons</title>
-    <meta name="description" content="Explore dungeons in the Among Demons prototype.">
-    <meta property="og:image" content="/app/images/demons/thumbnails/1.png">    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="robots" content="index, follow">
+    <title>Dungeon | Among Demons Roguelike Auto-Battler</title>
+    <meta name="description" content="Enter Among Demons dungeon runs, build your demon team, recruit defeated enemies, and survive a browser RPG roguelike auto-battler.">
+    <meta name="keywords" content="demon collection game, browser RPG, roguelike dungeon game, auto-battler, collect demons, build your team, survive dungeon runs">
+    <link rel="canonical" href="https://amongdemons.com/dungeon">
+    <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
+    <meta property="og:site_name" content="Among Demons">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Dungeon | Among Demons Roguelike Auto-Battler">
+    <meta property="og:description" content="Build your demon team and survive roguelike dungeon runs in the Among Demons browser auto-battler.">
+    <meta property="og:url" content="https://amongdemons.com/dungeon">
+    <meta property="og:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_dungeon.png">
+    <meta property="og:image:width" content="1600">
+    <meta property="og:image:height" content="900">
+    <meta property="og:image:alt" content="Among Demons roguelike dungeon gameplay artwork">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dungeon | Among Demons Roguelike Auto-Battler">
+    <meta name="twitter:description" content="Build your demon team and survive roguelike dungeon runs in the Among Demons browser auto-battler.">
+    <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_dungeon.png">
+    <meta name="twitter:image:alt" content="Among Demons roguelike dungeon gameplay artwork">
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://amongdemons.com/#website","url":"https://amongdemons.com","name":"Among Demons","description":"A browser-based demon collection roguelike auto-battler game."},{"@type":"Organization","@id":"https://amongdemons.com/#organization","name":"Among Demons","url":"https://amongdemons.com","logo":{"@type":"ImageObject","url":"https://amongdemons.com/app/images/amongdemons_logo_250x250.png","width":1000,"height":1000}},{"@type":"VideoGame","@id":"https://amongdemons.com/#videogame","name":"Among Demons","url":"https://amongdemons.com","description":"Among Demons is a browser-based demon collection roguelike auto-battler game where players collect demons, build teams, and survive dungeon runs.","genre":["Roguelike","Auto-battler","Browser RPG","Dungeon crawler","Demon collection game"],"gamePlatform":"Web browser","operatingSystem":"Any","playMode":"SinglePlayer","applicationCategory":"Game","publisher":{"@id":"https://amongdemons.com/#organization"}},{"@type":"WebPage","@id":"https://amongdemons.com/dungeon#webpage","url":"https://amongdemons.com/dungeon","name":"Dungeon | Among Demons Roguelike Auto-Battler","description":"Enter Among Demons dungeon runs, build your demon team, recruit defeated enemies, and survive a browser RPG roguelike auto-battler.","isPartOf":{"@id":"https://amongdemons.com/#website"},"about":{"@id":"https://amongdemons.com/#videogame"},"primaryImageOfPage":{"@type":"ImageObject","url":"https://amongdemons.com/app/images/assets/background/amongdemons_dungeon.png","caption":"Among Demons roguelike dungeon gameplay artwork"}}]}</script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css?v=20260601-soul-icon" rel="stylesheet">
   </head>
   <body class="dungeon-page">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
       <div class="container-fluid">
         <a class="navbar-brand" href="/">
-          <img src="/app/images/amongdemons_logo_250x250.png" alt="" class="d-inline-block align-middle me-2 logo-nav" style="width: 48px; height: 48px;">
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" class="d-inline-block align-middle me-2 logo-nav" width="48" height="48" loading="eager" style="width: 48px; height: 48px;">
           Among Demons
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,6 +40,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
             <li class="nav-item"><a class="nav-link active" href="/dungeon">Dungeon</a></li>
+            <li class="nav-item"><a class="nav-link" href="/demons">Demons</a></li>
             <li class="nav-item"><a class="nav-link" href="/collection">Collection</a></li>
             <li class="nav-item"><a class="nav-link" href="/rankings">Rankings</a></li>
           </ul>
@@ -39,7 +58,7 @@
       <section class="dungeon-layout">
         <div class="card dungeon-battle-card">
           <div class="card-header hunt-card-header dungeon-battle-header">
-            <div id="huntTitle">Dungeon</div>
+            <h1 class="h5 mb-0" id="huntTitle">Dungeon</h1>
             <div id="battleOutcome" class="dungeon-battle-outcome" aria-live="polite"></div>
             <div class="fight-log-actions dungeon-battle-actions" id="fightLogActions"></div>
           </div>
@@ -64,7 +83,7 @@
                   </div>
                 </div>
                 <div id="runEmpty" class="empty-state d-none">
-                  <img src="/app/images/demons/thumbnails/1.png" alt="">
+                  <img src="/app/images/demons/boof-nitza-common.png" alt="Boof Nitza demon preparing for a dungeon run" width="768" height="1024" loading="lazy" decoding="async">
                   <p class="mb-0 text-muted">Preparing dungeon...</p>
                 </div>
                 <div id="runPanel" class="d-none">

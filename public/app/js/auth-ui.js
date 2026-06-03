@@ -45,7 +45,7 @@
         token: payload.token,
         player: payload.player
       }));
-      window.location.href = '/';
+      window.location.href = '/play';
     } catch (error) {
       setMessage(error.message, 'danger');
     } finally {

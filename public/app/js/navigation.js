@@ -47,7 +47,7 @@
         localStorage.removeItem('amongdemons-session');
       }
 
-      window.location.href = '/demons/type/1';
+      window.location.href = '/';
     });
   }
 
