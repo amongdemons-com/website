@@ -30,7 +30,11 @@ function getCurrentRecruitRewards() {
   return (state.run.rewards || []).filter((reward) => (
     reward.floor === state.run.currentFloor &&
     reward.type === 'recruit' &&
-    !reward.recruited
+    !reward.claimed &&
+    !reward.recruited &&
+    !reward.saved &&
+    !reward.extracted &&
+    !reward.discarded
   ));
 }
 

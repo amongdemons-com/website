@@ -13,6 +13,7 @@ const {
   resetRunDemon
 } = require('../lib/run-demons');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
+const { clearPendingRewardSoul, settleDiscardedSoulRewards } = require('../lib/run-rewards');
 
 const router = express.Router();
 
@@ -42,6 +43,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
       stageExtractChoice(run, extractChoice);
     }
     run.state.awaitingCollectionReinforcement = false;
+    settleDiscardedSoulRewards(run);
     await advanceFloor(run);
     await saveRun(run);
     return res.json({ team: run.state.team, skipped: true });
@@ -63,12 +65,14 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
       if (reward.type === 'recruit' && reward.floor === run.floor && recruitedRewardIds.has(Number(reward.rewardId))) {
         reward.recruited = true;
         reward.claimed = true;
+        clearPendingRewardSoul(reward);
       }
     });
     if (stagedTeam.some((item) => item && item.source === 'collection')) {
       run.state.collectionReinforcementUsed = Number(run.floor) !== 0;
     }
     run.state.awaitingCollectionReinforcement = false;
+    settleDiscardedSoulRewards(run);
 
     if (run.status === 'active') {
       await advanceFloor(run);
@@ -100,6 +104,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
 
   reward.recruited = true;
   reward.claimed = true;
+  clearPendingRewardSoul(reward);
   const recruit = resetRunDemon(reward.demon, `player-${Date.now()}`);
 
   if (replaceInstanceId) {
@@ -116,6 +121,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
 
   if (run.status === 'active') {
     run.state.awaitingCollectionReinforcement = false;
+    settleDiscardedSoulRewards(run);
     await advanceFloor(run);
   }
 
@@ -323,6 +329,7 @@ function stageExtractChoice(run, choice) {
 
     reward.claimed = true;
     reward.extracted = true;
+    clearPendingRewardSoul(reward);
     run.state.extractChoice = {
       key: choice.key || `reward:${rewardId}`,
       source: 'reward',

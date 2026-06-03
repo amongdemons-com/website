@@ -4,6 +4,7 @@ const { requireAuth } = require('../lib/auth');
 const { saveCollectionDemon } = require('../lib/collection-demons');
 const { getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
+const { clearPendingRewardSoul, getEarnedWithPendingDiscardedSouls, settleDiscardedSoulRewards } = require('../lib/run-rewards');
 
 const router = express.Router();
 
@@ -26,7 +27,8 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
   const demon = getCashoutDemon(run, req.body || {});
   const saved = await saveCollectionDemon(req.player.id, demon);
 
-  const earned = getEarnedForPayout(run, { savedDemon: true });
+  settleDiscardedSoulRewards(run);
+  const earned = getEarnedForPayout(run);
   const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [req.player.id]);
   const nextXp = playerRows[0].xp + (earned.xp || 0);
   const nextLevel = getNextAccountLevel(playerRows[0].level, nextXp);
@@ -57,7 +59,8 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
 });
 
 async function endRunWithoutDemon(run, playerId, res) {
-  const earned = getEarnedForPayout(run, { savedDemon: false });
+  settleDiscardedSoulRewards(run);
+  const earned = getEarnedForPayout(run);
   const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [playerId]);
   const nextXp = playerRows[0].xp + (earned.xp || 0);
   const nextLevel = getNextAccountLevel(playerRows[0].level, nextXp);
@@ -116,6 +119,7 @@ function getCashoutDemon(run, body) {
     }
     reward.claimed = true;
     reward.saved = true;
+    clearPendingRewardSoul(reward);
     return reward.demon;
   }
 
@@ -143,6 +147,7 @@ function getReservedCashoutDemon(run, body) {
       reward.claimed = true;
       reward.saved = true;
       reward.extracted = true;
+      clearPendingRewardSoul(reward);
     }
   }
 
@@ -153,18 +158,12 @@ function getReservedCashoutDemon(run, body) {
   return choice.demon;
 }
 
-function getEarnedForPayout(run, options = {}) {
+function getEarnedForPayout(run) {
   if (run.status === 'defeated') {
     return { xp: 0, souls: 0 };
   }
 
-  const earned = run.state.earned || { xp: 0, souls: 0 };
-  const souls = Math.max(0, (Number(earned.souls) || 0) - (options.savedDemon ? 1 : 0));
-
-  return {
-    xp: Number(earned.xp) || 0,
-    souls
-  };
+  return getEarnedWithPendingDiscardedSouls(run);
 }
 
 module.exports = router;

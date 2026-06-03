@@ -344,7 +344,7 @@ async function finishRun(message, summary = {}) {
 }
 
 function renderEarnedNoticeHtml(message, result) {
-  return `${escapeHtml(message)} You earned ${renderXpNoticeAmount(result.xp)} and ${renderSoulAmount(Number(result.souls) || 0, { className: 'fight-log-soul-amount' })}.`;
+  return `${escapeHtml(message)} You earned ${renderXpNoticeAmount(result.xp)} and ${renderSoulAmount(Number(result.souls) || 0, { className: 'soul-chip soul-chip-inline fight-log-soul-amount' })}.`;
 }
 
 function renderXpNoticeAmount(xp) {

@@ -194,12 +194,24 @@
 
     return `
       <div class="demon-detail-meta">
-        ${rows.map(([label, value]) => `
-          <div>
-            <span>${escapeHtml(label)}</span>
-            <strong>${escapeHtml(value)}</strong>
-          </div>
-        `).join('')}
+        ${rows.map(([label, value]) => renderDetailMetaRow(label, value, demon)).join('')}
+      </div>
+    `;
+  }
+
+  function renderDetailMetaRow(label, value, demon = {}) {
+    const isType = label === 'Type';
+    const href = isType ? getDemonTypeHref(demon) : '';
+
+    return `
+      <div class="${isType && href ? 'demon-detail-meta-type' : ''}">
+        <span class="demon-detail-meta-label">
+          <span class="demon-detail-meta-label-text">${escapeHtml(label)}</span>
+          ${href ? `
+            <a class="demon-detail-type-info" href="${escapeHtml(href)}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(label)} ${escapeHtml(value)} details" title="Open type details">i</a>
+          ` : ''}
+        </span>
+        <strong>${escapeHtml(value)}</strong>
       </div>
     `;
   }

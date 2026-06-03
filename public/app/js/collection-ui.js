@@ -365,12 +365,13 @@
     if (training.maxed || !Number.isFinite(cost) || cost <= 0) return [];
 
     const canAfford = Number(state.player?.souls) >= cost;
+    const deficit = Math.max(0, cost - (Number(state.player?.souls) || 0));
     return [
       {
-        label: 'Train',
-        variant: canAfford ? 'success' : 'outline-light',
+        label: canAfford ? 'Train' : `Need ${formatNumber(deficit)} Souls`,
+        variant: canAfford ? 'success' : 'outline-danger',
         disabled: !canAfford || state.trainingDemonId === Number(demon.id),
-        title: canAfford ? `Costs ${formatNumber(cost)} Souls` : `Training costs ${formatNumber(cost)} Souls`,
+        title: canAfford ? `Costs ${formatNumber(cost)} Souls` : `Need ${formatNumber(deficit)} more Souls`,
         onClick: (modalDemon, button) => trainDemon(demon.id, button)
       }
     ];
@@ -410,8 +411,8 @@
     return `
       <div class="collection-training-panel ${training.maxed ? 'is-maxed' : ''}" aria-live="polite">
         <div class="collection-training-panel-head">
-          <span>${training.maxed ? 'All stats maxed out' : 'Training'}</span>
-          ${training.maxed || !Number.isFinite(cost) || cost <= 0 ? `<strong>${renderIcon('stars')}Maxed out</strong>` : ''}
+          <span>${training.maxed ? 'Stats' : 'Training'}</span>
+          ${training.maxed || !Number.isFinite(cost) || cost <= 0 ? `<strong>${renderIcon('stars')}Max</strong>` : ''}
         </div>
         <div class="collection-training-stat-list">
           ${TRAINING_STATS.map(([key, label, icon]) => renderTrainingStat(training.stats[key], key, label, icon)).join('')}
@@ -425,11 +426,15 @@
     const cost = Number(training.cost);
     if (training.maxed || !Number.isFinite(cost) || cost <= 0) return '';
 
+    const playerSouls = Number(state.player?.souls) || 0;
+    const canAfford = playerSouls >= cost;
+    const deficit = Math.max(0, cost - playerSouls);
+
     return `
-      <div class="collection-training-action-cost" aria-label="Training costs ${escapeHtml(formatNumber(cost))} Souls">
-        <span>Cost</span>
+      <div class="collection-training-action-cost" aria-label="Training costs ${escapeHtml(formatNumber(cost))} Souls. ${canAfford ? 'You have enough souls.' : `You need ${escapeHtml(formatNumber(deficit))} more souls.`}">
+        <span class="collection-training-cost-label">Training Cost</span>
         ${renderSoulAmount(formatNumber(cost), {
-          className: 'collection-training-action-souls',
+          className: 'soul-chip collection-training-action-souls',
           ariaLabel: `${formatNumber(cost)} Souls`
         })}
       </div>
@@ -664,7 +669,7 @@
     const head = panel.querySelector('.collection-training-panel-head');
     if (head) {
       head.innerHTML = `
-        <span>${showMaxed ? 'All stats maxed out' : 'Training'}</span>
+        <span>${showMaxed ? 'Stats' : 'Training'}</span>
         ${showMaxed ? `<strong>${renderIcon('stars')}Maxed out</strong>` : ''}
       `;
     }
@@ -700,6 +705,7 @@
     }
 
     const canAfford = Number(state.player?.souls) >= cost;
+    const deficit = Math.max(0, cost - (Number(state.player?.souls) || 0));
     const lead = actions.querySelector('.demon-detail-action-lead');
     if (lead) lead.innerHTML = renderTrainingActionCost(demon);
 
@@ -707,9 +713,9 @@
     if (!button) return;
 
     button.disabled = !canAfford || state.trainingDemonId === Number(demon.id);
-    button.className = `btn btn-${canAfford ? 'success' : 'outline-light'}`;
-    button.title = canAfford ? `Costs ${formatNumber(cost)} Souls` : `Training costs ${formatNumber(cost)} Souls`;
-    button.innerHTML = 'Train';
+    button.className = `btn btn-${canAfford ? 'success' : 'outline-danger'}`;
+    button.title = canAfford ? `Costs ${formatNumber(cost)} Souls` : `Need ${formatNumber(deficit)} more Souls`;
+    button.innerHTML = canAfford ? 'Train' : `Need ${formatNumber(deficit)} Souls`;
   }
 
   function isModalShowingDemon(modal, demonId) {

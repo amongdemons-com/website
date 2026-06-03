@@ -160,7 +160,10 @@ async function initializeSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
   await addColumnIfMissing('runs', 'player_id', '`player_id` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
-  await db.query('UPDATE `runs` SET `player_id` = `playerId` WHERE `player_id` IS NULL AND `playerId` IS NOT NULL');
+  const runColumns = await getColumns('runs');
+  if (runColumns.has('playerId')) {
+    await db.query('UPDATE `runs` SET `player_id` = `playerId` WHERE `player_id` IS NULL AND `playerId` IS NOT NULL');
+  }
   await addColumnIfMissing('runs', 'status', '`status` VARCHAR(24) NOT NULL DEFAULT "active"');
   await addColumnIfMissing('runs', 'state', '`state` LONGTEXT NULL');
   await addColumnIfMissing('runs', 'created_at', '`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');

@@ -7,6 +7,7 @@ const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { assignFormationSlots, resetRunDemon } = require('../lib/run-demons');
 const { COLLECTION_REINFORCEMENT_FLOOR } = require('../lib/dungeon-rules');
+const { createDiscardSoulRewardFields, ensureRunEarned } = require('../lib/run-rewards');
 
 const router = express.Router();
 
@@ -50,9 +51,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     const floorRewards = createDefeatedDemonRewards(run);
     rewards = floorRewards;
     run.rewards.push(...floorRewards);
-    run.state.earned = run.state.earned || { xp: 0, souls: 0 };
-    run.state.earned.xp += 10 + run.floor * 5;
-    run.state.earned.souls += countDefeatedDemons(result.enemyTeam);
+    ensureRunEarned(run).xp += 10 + run.floor * 5;
 
     clearPoisonEffects(run.state.team);
     clearPoisonEffects(run.state.enemies);
@@ -93,10 +92,6 @@ function clearPoisonEffects(team) {
   });
 }
 
-function countDefeatedDemons(team) {
-  return (team || []).filter((demon) => Number(demon.hp) <= 0).length;
-}
-
 function createDefeatedDemonRewards(run) {
   const enemies = run.state.enemies || [];
 
@@ -105,7 +100,7 @@ function createDefeatedDemonRewards(run) {
     type: 'recruit',
     floor: run.floor,
     demon: resetRunDemon(enemy, `recruit-${run.floor}-${index + 1}`),
-    souls: 0,
+    ...createDiscardSoulRewardFields(1),
     xp: 0,
     claimed: false
   }));

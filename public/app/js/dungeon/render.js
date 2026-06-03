@@ -175,7 +175,7 @@ function renderDungeonEndScreen() {
       <div class="dungeon-end-rewards" aria-label="Rewards obtained">
         ${demon ? `<span>${renderIcon('stars')}${escapeHtml(demon.species || 'Demon')}</span>` : ''}
         <span>${Number(summary.xp) || 0} XP</span>
-        ${renderSoulAmount(Number(summary.souls) || 0, { className: 'dungeon-end-soul-amount' })}
+        ${renderSoulAmount(Number(summary.souls) || 0, { className: 'soul-chip dungeon-end-soul-amount' })}
       </div>
       <div class="dungeon-end-actions">
         <a class="btn btn-outline-light" href="/play">Leave</a>

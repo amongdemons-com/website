@@ -39,7 +39,7 @@ function openCashoutModal() {
 
 function renderCashoutModal() {
   const candidate = getSelectedRewardCandidate();
-  const earned = getPayoutPreview(Boolean(candidate));
+  const earned = getPayoutPreview(candidate);
   const demon = candidate?.demon || null;
   const demonName = escapeHtml(demon?.species || 'Demon');
   const demonRarity = String(demon?.rarity || 'common').toLowerCase();
@@ -74,7 +74,7 @@ function renderCashoutModal() {
         </div>
         <div class="cashout-reward-chips" aria-label="Dungeon rewards">
           <span>${renderIcon('stars')}${earned.xp || 0} XP</span>
-          ${renderSoulAmount(earned.souls || 0, { className: 'cashout-soul-amount' })}
+          ${renderSoulAmount(earned.souls || 0, { className: 'soul-chip cashout-soul-amount' })}
         </div>
         <div class="cashout-divider" aria-hidden="true"></div>
       </div>
@@ -453,14 +453,63 @@ function swapRewardSelectionWithDraftTarget(targetSide, targetInstanceId) {
   return true;
 }
 
-function getPayoutPreview(savedDemon = false) {
+function getPayoutPreview(selectedCandidate = null) {
   const earned = state.run?.earned || { xp: 0, souls: 0 };
+  const candidate = selectedCandidate === true
+    ? getSelectedRewardCandidate()
+    : selectedCandidate;
   return {
     xp: Number(earned.xp) || 0,
     souls: state.run?.status === 'defeated'
       ? 0
-      : Math.max(0, (Number(earned.souls) || 0) - (savedDemon ? 1 : 0))
+      : (Number(earned.souls) || 0) + getPendingDiscardedSoulValue(candidate)
   };
+}
+
+function getPendingDiscardedSoulValue(candidate = null) {
+  const excludedRewardIds = getKeptOrExtractedRewardIds(candidate);
+
+  return (state.run?.rewards || []).reduce((total, reward) => {
+    if (!isPendingDiscardSoulReward(reward, excludedRewardIds)) return total;
+    return total + getRewardSoulValue(reward);
+  }, 0);
+}
+
+function getKeptOrExtractedRewardIds(candidate = null) {
+  const rewardIds = new Set();
+
+  if ((candidate?.source === 'reward' || candidate?.origin === 'reserved') && candidate.rewardId) {
+    rewardIds.add(Number(candidate.rewardId));
+  }
+
+  (state.recruitDraftTeam || []).forEach((demon) => {
+    if ((demon.recruitSource === 'reward' || demon.rewardId) && demon.rewardId) {
+      rewardIds.add(Number(demon.rewardId));
+    }
+  });
+
+  return rewardIds;
+}
+
+function isPendingDiscardSoulReward(reward, excludedRewardIds = new Set()) {
+  if (!reward || reward.type !== 'recruit') return false;
+  if (Number(reward.floor) !== Number(state.run?.currentFloor)) return false;
+  if (Number(reward.floor) <= 0) return false;
+  if (excludedRewardIds.has(Number(reward.rewardId))) return false;
+  if (!(reward.soulPending === true || (Number(reward.souls) > 0 && !reward.soulAwarded))) return false;
+  return !(
+    reward.claimed ||
+    reward.recruited ||
+    reward.saved ||
+    reward.extracted ||
+    reward.discarded ||
+    reward.soulAwarded
+  );
+}
+
+function getRewardSoulValue(reward) {
+  const souls = Number(reward?.souls);
+  return Number.isFinite(souls) && souls > 0 ? souls : 1;
 }
 
 function canExtractRun() {
@@ -568,7 +617,7 @@ async function finishCashout(result, options = {}) {
 }
 
 function renderEarnedNoticeHtml(message, result) {
-  return `${escapeHtml(message)} You earned ${renderXpNoticeAmount(result.xp)} and ${renderSoulAmount(Number(result.souls) || 0, { className: 'fight-log-soul-amount' })}.`;
+  return `${escapeHtml(message)} You earned ${renderXpNoticeAmount(result.xp)} and ${renderSoulAmount(Number(result.souls) || 0, { className: 'soul-chip soul-chip-inline fight-log-soul-amount' })}.`;
 }
 
 function renderXpNoticeAmount(xp) {
