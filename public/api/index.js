@@ -38,7 +38,6 @@ router.use(require('./runs/recruit'));
 router.use(require('./runs/cashout'));
 router.use(require('./runs/end'));
 router.use(require('./leaderboard'));
-router.use(require('./admin/demon-balance'));
 
 router.use((error, req, res, next) => {
   console.error(error);

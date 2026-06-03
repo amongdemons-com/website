@@ -70,7 +70,6 @@
       elements[id] = document.getElementById(id);
     });
 
-    elements.refreshBtn = document.getElementById('refreshBtn');
     elements.logoutBtn = document.getElementById('logoutBtn');
   }
 
@@ -79,8 +78,6 @@
       window.AmongDemons.clearSession();
       window.location.href = '/login';
     });
-
-    elements.refreshBtn.addEventListener('click', refreshCollection);
 
     elements.filtersToggleBtn.addEventListener('click', () => {
       state.filtersOpen = !state.filtersOpen;
@@ -128,37 +125,35 @@
   }
 
   async function refreshCollection() {
-    await withBusy(elements.refreshBtn, async () => {
-      setMessage('', 'danger');
-      state.isAuthenticated = Boolean(window.AmongDemons.getToken());
-      syncAuthenticatedUi();
+    setMessage('', 'danger');
+    state.isAuthenticated = Boolean(window.AmongDemons.getToken());
+    syncAuthenticatedUi();
 
-      try {
-        if (state.isAuthenticated) {
-          const [me, demons] = await Promise.all([
-            api('/api/auth/me'),
-            api('/api/demons'),
-            loadDemonTypes(),
-            loadDemonCatalog()
-          ]);
+    try {
+      if (state.isAuthenticated) {
+        const [me, demons] = await Promise.all([
+          api('/api/auth/me'),
+          api('/api/demons'),
+          loadDemonTypes(),
+          loadDemonCatalog()
+        ]);
 
-          state.player = me.player;
-          state.collection = demons.demons || [];
-        } else {
-          state.player = null;
-          state.collection = [];
-          await Promise.all([
-            loadDemonTypes(),
-            loadDemonCatalog()
-          ]);
-        }
-
-        populateFilters();
-        renderCollection();
-      } catch (error) {
-        await handleCollectionError(error);
+        state.player = me.player;
+        state.collection = demons.demons || [];
+      } else {
+        state.player = null;
+        state.collection = [];
+        await Promise.all([
+          loadDemonTypes(),
+          loadDemonCatalog()
+        ]);
       }
-    });
+
+      populateFilters();
+      renderCollection();
+    } catch (error) {
+      await handleCollectionError(error);
+    }
   }
 
   function renderCollection() {
@@ -912,15 +907,6 @@
   function setMessage(text, type) {
     elements.collectionMessage.textContent = text;
     elements.collectionMessage.className = text ? `alert alert-${type}` : 'alert d-none';
-  }
-
-  async function withBusy(button, task) {
-    button.disabled = true;
-    try {
-      await task();
-    } finally {
-      button.disabled = false;
-    }
   }
 
   function escapeHtml(value) {

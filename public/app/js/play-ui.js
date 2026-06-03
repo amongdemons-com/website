@@ -2,14 +2,13 @@
   'use strict';
 
   const api = window.AmongDemons.api;
-  const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const session = window.AmongDemons.getSession();
   const state = {
     player: session.player || null,
     progression: null,
-    collection: []
+    run: null
   };
   const elements = {};
 
@@ -17,13 +16,12 @@
 
   async function init() {
     if (!window.AmongDemons.getToken()) {
-      window.location.href = '/login';
+      window.location.href = '/demons/type/1';
       return;
     }
 
     cacheElements();
-    bindActions();
-    await refreshAll();
+    await loadHub();
   }
 
   function cacheElements() {
@@ -33,91 +31,242 @@
       'appMessage',
       'levelStat',
       'xpStat',
+      'floorStat',
       'soulsStat',
-      'collectionGrid',
-      'adminCheckResult'
+      'runActionLabel',
+      'runStatus',
+      'runFloor',
+      'runSummary',
+      'runTeam',
+      'runTeamLabel',
+      'runEnemy',
+      'runEnemyLabel',
+      'runEarned',
+      'runEarnedLabel',
+      'objectiveList'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
-
-    elements.refreshBtn = document.getElementById('refreshBtn');
-    elements.logoutBtn = document.getElementById('logoutBtn');
-    elements.adminCheckBtn = document.getElementById('adminCheckBtn');
   }
 
-  function bindActions() {
-    elements.logoutBtn.addEventListener('click', () => {
-      window.AmongDemons.clearSession();
-      window.location.href = '/login';
-    });
+  async function loadHub() {
+    try {
+      const [me, progression, run] = await Promise.all([
+        api('/api/auth/me'),
+        api('/api/account/progression'),
+        loadCurrentRun()
+      ]);
 
-    elements.refreshBtn.addEventListener('click', refreshAll);
-    elements.adminCheckBtn.addEventListener('click', adminCheck);
+      state.player = me.player;
+      state.progression = progression;
+      state.run = run;
+
+      renderPlayer();
+      renderRun();
+      renderObjectives();
+    } catch (error) {
+      handleAuthError(error);
+    }
   }
 
-  async function refreshAll() {
-    await withBusy(elements.refreshBtn, async () => {
-      try {
-        const [me, progression, demons] = await Promise.all([
-          api('/api/auth/me'),
-          api('/api/account/progression'),
-          api('/api/demons')
-        ]);
-
-        state.player = me.player;
-        state.progression = progression;
-        state.collection = demons.demons || [];
-
-        renderPlayer();
-        renderCollection();
-      } catch (error) {
-        handleAuthError(error);
-      }
-    });
-  }
-
-  async function adminCheck() {
-    await withBusy(elements.adminCheckBtn, async () => {
-      try {
-        await api('/api/admin/demon-balance', { method: 'POST', body: {} });
-        elements.adminCheckResult.textContent = 'Balance editor is available.';
-      } catch (error) {
-        elements.adminCheckResult.textContent = error.message;
-      }
-    });
+  async function loadCurrentRun() {
+    try {
+      return await api('/api/runs/current');
+    } catch (error) {
+      if (error.status === 404) return null;
+      throw error;
+    }
   }
 
   function renderPlayer() {
     const player = state.player || {};
     const progression = state.progression || {};
+    const souls = progression.souls ?? player.souls ?? '-';
 
     elements.navPlayerName.textContent = player.username || '';
-    elements.welcomeText.textContent = player.username ? `Welcome, ${player.username}.` : 'Welcome.';
-    elements.levelStat.textContent = progression.level ?? player.level ?? '-';
-    elements.xpStat.textContent = progression.xp ?? player.xp ?? '-';
-    const souls = progression.souls ?? player.souls ?? '-';
+    elements.welcomeText.textContent = player.username
+      ? `${player.username}, choose the next fight.`
+      : 'Choose the next fight.';
+    elements.levelStat.textContent = formatNumber(progression.level ?? player.level ?? '-');
+    elements.xpStat.textContent = formatNumber(progression.xp ?? player.xp ?? '-');
+    elements.floorStat.textContent = formatNumber(progression.highestFloor ?? player.highestFloor ?? 0);
     updateNavAccount(player, { souls });
-    elements.soulsStat.innerHTML = renderSoulAmount(souls, {
+    elements.soulsStat.innerHTML = renderSoulAmount(formatNumber(souls), {
       showLabel: false,
       className: 'stat-soul-amount',
-      ariaLabel: `${souls} Souls`
+      ariaLabel: `${formatNumber(souls)} Souls`
     });
   }
 
-  function renderCollection() {
-    elements.collectionGrid.innerHTML = state.collection.length
-      ? renderDemonCards(state.collection)
-      : renderEmptyText('Saved demons will appear here.');
+  function renderRun() {
+    const run = state.run;
+    const currentFloor = Number(run?.currentFloor ?? 0);
+
+    if (!run) {
+      elements.runActionLabel.textContent = 'Start Dungeon';
+      elements.runStatus.textContent = 'Ready';
+      elements.runStatus.className = 'play-status-chip is-ready';
+      elements.runFloor.textContent = '0';
+      elements.runSummary.textContent = 'No active run. Draft a team and start climbing.';
+      elements.runTeam.textContent = '-';
+      elements.runTeamLabel.textContent = 'Team';
+      elements.runEnemy.textContent = '-';
+      elements.runEnemyLabel.textContent = 'Enemies';
+      elements.runEarned.textContent = '0';
+      elements.runEarnedLabel.textContent = 'Extract Now';
+      return;
+    }
+
+    const isDefeated = run.status === 'defeated';
+    const isRecruiting = Boolean(run.awaitingRecruit);
+    const teamCount = getTeamCount(run);
+    const teamLimit = getTeamLimit(run);
+    const enemyCount = getEnemyCount(run);
+    const payout = getExtractPayout(run);
+
+    elements.runActionLabel.textContent = isDefeated ? 'Resolve Run' : 'Continue Run';
+    elements.runStatus.textContent = isDefeated ? 'Defeated' : (isRecruiting ? 'Recruit' : 'Active');
+    elements.runStatus.className = `play-status-chip ${isDefeated ? 'is-danger' : (isRecruiting ? 'is-choice' : 'is-active')}`;
+    elements.runFloor.textContent = formatNumber(currentFloor);
+    elements.runSummary.textContent = getRunSummary(run);
+    elements.runTeam.textContent = Number.isFinite(teamLimit)
+      ? `${formatNumber(teamCount)}/${formatNumber(teamLimit)}`
+      : formatNumber(teamCount);
+    elements.runTeamLabel.textContent = Number.isFinite(teamLimit) ? 'Team Slots' : 'Team';
+    elements.runEnemy.textContent = formatNumber(enemyCount);
+    elements.runEnemyLabel.textContent = isRecruiting ? 'Next Enemies' : 'Enemies';
+    elements.runEarned.textContent = `${formatNumber(payout.xp)} XP / ${formatNumber(payout.souls)} Souls`;
+    elements.runEarnedLabel.textContent = isRecruiting && !isDefeated ? 'Extract Now' : 'Banked';
   }
 
-  function renderDemonCards(demons) {
-    if (!demons.length) return renderEmptyText('No demons.');
+  function renderObjectives() {
+    const run = state.run;
+    const progression = state.progression || {};
+    const payout = run ? getExtractPayout(run) : { xp: 0, souls: 0 };
+    const bestFloor = Number(progression.highestFloor) || 0;
+    const currentFloor = Number(run?.currentFloor ?? 0);
+    const objectives = [
+      run
+        ? {
+            icon: run.awaitingRecruit ? 'user-plus' : 'swords',
+            title: run.awaitingRecruit ? 'Choose the next recruit' : 'Clear the next fight',
+            meta: run.awaitingRecruit
+              ? 'Recruit, skip, or extract before pushing deeper.'
+              : `Next target: floor ${formatNumber(currentFloor + 1)}.`
+          }
+        : {
+            icon: 'play',
+            title: 'Start a dungeon run',
+            meta: 'Draft starters, set formation, and enter floor 1.'
+          },
+      {
+        icon: 'flag',
+        title: 'Set a floor record',
+        meta: bestFloor > 0 ? `Current best: floor ${formatNumber(bestFloor)}.` : 'Your first clear sets the record.'
+      },
+      {
+        icon: 'coins',
+        title: run && (payout.xp || payout.souls) ? 'Extract current rewards' : 'Bank rewards between fights',
+        meta: run && (payout.xp || payout.souls)
+          ? `${formatNumber(payout.xp)} XP and ${formatNumber(payout.souls)} Souls can be claimed now.`
+          : 'Win fights, then extract before defeat.'
+      }
+    ];
 
-    return demons.map((demon) => `
-      <div class="col">
-        ${renderSharedDemonCard(demon)}
-      </div>
-    `).join('');
+    elements.objectiveList.innerHTML = objectives.map(renderObjective).join('');
+  }
+
+  function renderObjective(objective) {
+    return `
+      <a class="play-objective" href="/dungeon">
+        <span class="play-objective-icon">${renderIcon(objective.icon)}</span>
+        <span>
+          <strong>${escapeHtml(objective.title)}</strong>
+          <small>${escapeHtml(objective.meta)}</small>
+        </span>
+      </a>
+    `;
+  }
+
+  function getRunSummary(run) {
+    if (run.status === 'defeated') return 'The run is defeated. Resolve it in the dungeon.';
+    if (run.awaitingRecruit) return 'Victory pause. Choose a recruit, skip, or extract rewards.';
+    if ((run.enemies || []).length) return 'Formation locked. Finish the active battle.';
+    return 'Run is open. Continue from the dungeon table.';
+  }
+
+  function getTeamCount(run) {
+    return (run?.team || []).length;
+  }
+
+  function getTeamLimit(run) {
+    if (!run || run.status !== 'active') return null;
+    const floor = Number(run.currentFloor) || 0;
+    return Math.min(6, Math.max(2, floor + 2));
+  }
+
+  function getEnemyCount(run) {
+    if (!run) return 0;
+    if (run.awaitingRecruit && (run.nextEnemies || []).length) {
+      return run.nextEnemies.length;
+    }
+
+    const enemies = run.enemies || [];
+    if (!enemies.length) return 0;
+
+    const livingEnemies = enemies.filter((enemy) => Number(enemy.hp) > 0);
+    return livingEnemies.length || enemies.length;
+  }
+
+  function getExtractPayout(run) {
+    const earned = run?.earned || { xp: 0, souls: 0 };
+    if (run?.status === 'defeated') return { xp: 0, souls: 0 };
+
+    return {
+      xp: Number(earned.xp) || 0,
+      souls: (Number(earned.souls) || 0) + getPendingDiscardedSoulValue(run)
+    };
+  }
+
+  function getPendingDiscardedSoulValue(run) {
+    const excludedRewardIds = getKeptOrExtractedRewardIds(run);
+
+    return (run?.rewards || []).reduce((total, reward) => {
+      if (!isPendingDiscardSoulReward(run, reward, excludedRewardIds)) return total;
+      return total + getRewardSoulValue(reward);
+    }, 0);
+  }
+
+  function getKeptOrExtractedRewardIds(run) {
+    const rewardIds = new Set();
+    const choice = run?.extractChoice;
+
+    if (choice?.source === 'reward' && choice.rewardId) {
+      rewardIds.add(Number(choice.rewardId));
+    }
+
+    return rewardIds;
+  }
+
+  function isPendingDiscardSoulReward(run, reward, excludedRewardIds = new Set()) {
+    if (!reward || reward.type !== 'recruit') return false;
+    if (Number(reward.floor) !== Number(run?.currentFloor)) return false;
+    if (Number(reward.floor) <= 0) return false;
+    if (excludedRewardIds.has(Number(reward.rewardId))) return false;
+    if (!(reward.soulPending === true || (Number(reward.souls) > 0 && !reward.soulAwarded))) return false;
+    return !(
+      reward.claimed ||
+      reward.recruited ||
+      reward.saved ||
+      reward.extracted ||
+      reward.discarded ||
+      reward.soulAwarded
+    );
+  }
+
+  function getRewardSoulValue(reward) {
+    const souls = Number(reward?.souls);
+    return Number.isFinite(souls) && souls > 0 ? souls : 1;
   }
 
   function renderEmptyText(text) {
@@ -127,7 +276,7 @@
   function handleAuthError(error) {
     if (error.status === 401) {
       window.AmongDemons.clearSession();
-      window.location.href = '/login';
+      window.location.href = '/demons/type/1';
       return;
     }
 
@@ -143,13 +292,17 @@
     elements.appMessage.className = text ? `alert alert-${type}` : 'alert d-none';
   }
 
-  async function withBusy(button, task) {
-    button.disabled = true;
-    try {
-      await task();
-    } finally {
-      button.disabled = false;
-    }
+  function renderIcon(name) {
+    const icon = window.AmongDemons?.ui?.renderIcon;
+    return typeof icon === 'function' ? icon(name, { size: 17 }) : '';
+  }
+
+  function formatNumber(value) {
+    if (value === null || value === undefined || value === '') return '-';
+    if (typeof value === 'string' && value.trim() === '-') return '-';
+
+    const number = Number(value);
+    return Number.isFinite(number) ? number.toLocaleString() : String(value);
   }
 
   function escapeHtml(value) {

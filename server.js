@@ -35,18 +35,8 @@ app.get('/demons/type/', (req, res) => {
   return res.redirect(302, '/demons/type/1');
 });
 
-// Handle root redirect
 app.get('/', (req, res) => {
-  // If no type parameter is present, redirect to /demons/type/1
-  if (!req.query.type) {
-    return res.redirect(302, '/demons/type/1');
-  }
-
-  return res.redirect(302, `/demons/type/${req.query.type}`);
-});
-
-app.get(['/hunt', '/hunt/'], (req, res) => {
-  res.redirect(302, '/dungeon');
+  res.sendFile(path.join(appDir, 'play.html'));
 });
 
 // === Dungeon Route: GET /dungeon/
@@ -60,10 +50,6 @@ app.get(['/register', '/register/'], (req, res) => {
 
 app.get(['/login', '/login/'], (req, res) => {
   res.sendFile(path.join(appDir, 'login.html'));
-});
-
-app.get(['/play', '/play/', '/account', '/account/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'play.html'));
 });
 
 app.get(['/collection', '/collection/'], (req, res) => {

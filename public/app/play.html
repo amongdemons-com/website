@@ -21,11 +21,6 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="demonsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Demons</a>
-              <ul class="dropdown-menu dropdown-menu-end" id="demonTypesDropdown"></ul>
-            </li>
-            <li class="nav-item"><a class="nav-link active" href="/play">Play</a></li>
             <li class="nav-item"><a class="nav-link" href="/dungeon">Dungeon</a></li>
             <li class="nav-item"><a class="nav-link" href="/collection">Collection</a></li>
             <li class="nav-item"><a class="nav-link" href="/rankings">Rankings</a></li>
@@ -50,78 +45,117 @@
       </div>
     </nav>
 
-    <main class="container my-4">
-      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 py-3 mb-4">
-        <div>
-          <h1 class="display-5 mb-1">Play</h1>
-          <p class="mb-0 text-muted" id="welcomeText">Loading hunter...</p>
+    <main class="container my-4 play-hub">
+      <section class="play-hero mb-4">
+        <div class="play-hero-copy">
+          <span class="play-kicker">Command Hub</span>
+          <h1 class="display-5 mb-2">Play</h1>
+          <p class="mb-0" id="welcomeText">Loading hunter...</p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
-          <a class="btn btn-primary" href="/dungeon">
+        <div class="play-hero-actions">
+          <a class="btn btn-primary btn-lg" href="/dungeon" id="primaryDungeonBtn">
             <i data-lucide="play"></i>
-            Dungeon
+            <span id="runActionLabel">Dungeon</span>
           </a>
-          <button class="btn btn-outline-light" id="refreshBtn" type="button" title="Refresh">
-            <i data-lucide="refresh-cw"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="alert d-none" id="appMessage" role="alert"></div>
-
-      <section class="row g-3 mb-4">
-        <div class="col-12">
-          <div class="card h-100">
-            <div class="card-header">Hunter</div>
-            <div class="card-body">
-              <div class="row text-center g-2">
-                <div class="col-4">
-                  <div class="stat-box">
-                    <span id="levelStat">-</span>
-                    <small>Level</small>
-                  </div>
-                </div>
-                <div class="col-4">
-                  <div class="stat-box">
-                    <span id="xpStat">-</span>
-                    <small>XP</small>
-                  </div>
-                </div>
-                <div class="col-4">
-                  <div class="stat-box">
-                    <span id="soulsStat" class="stat-soul-amount">-</span>
-                    <small>Souls</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      <section class="row g-3">
-        <div class="col-12 col-xl-8">
-          <div class="card">
-            <div class="card-header d-flex align-items-center justify-content-between gap-3">
-              <span>Collection</span>
-              <a class="btn btn-outline-light btn-sm" href="/collection">View All</a>
-            </div>
-            <div class="card-body">
-              <div class="row row-cols-1 row-cols-md-3 g-3 demon-card-grid" id="collectionGrid"></div>
-            </div>
-          </div>
+      <div class="alert d-none" id="appMessage" role="alert"></div>
+
+      <section class="play-stat-grid mb-4" aria-label="Hunter status">
+        <div class="play-stat">
+          <span class="play-stat-icon"><i data-lucide="shield"></i></span>
+          <span class="play-stat-value" id="levelStat">-</span>
+          <span class="play-stat-label">Level</span>
         </div>
-        <div class="col-12 col-xl-4">
-          <div class="card">
-            <div class="card-header">System</div>
-            <div class="card-body">
-              <button class="btn btn-outline-light w-100 mb-3" id="adminCheckBtn" type="button">
-                <i data-lucide="sliders-horizontal"></i>
-                Balance Check
-              </button>
-              <p class="text-muted mb-0" id="adminCheckResult">Not checked.</p>
+        <div class="play-stat">
+          <span class="play-stat-icon"><i data-lucide="sparkles"></i></span>
+          <span class="play-stat-value" id="xpStat">-</span>
+          <span class="play-stat-label">XP</span>
+        </div>
+        <div class="play-stat">
+          <span class="play-stat-icon"><i data-lucide="flag"></i></span>
+          <span class="play-stat-value" id="floorStat">-</span>
+          <span class="play-stat-label">Best Floor</span>
+        </div>
+        <div class="play-stat">
+          <span class="play-stat-icon"><img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" aria-hidden="true"></span>
+          <span class="play-stat-value" id="soulsStat">-</span>
+          <span class="play-stat-label">Souls</span>
+        </div>
+      </section>
+
+      <section class="row g-3 align-items-stretch">
+        <div class="col-12 col-xl-7">
+          <section class="card play-run-card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between gap-3">
+              <span>Dungeon Briefing</span>
+              <span class="play-status-chip" id="runStatus">Loading</span>
             </div>
-          </div>
+            <div class="card-body">
+              <div class="play-run-layout">
+                <div class="play-run-main">
+                  <span class="play-run-label">Current Floor</span>
+                  <strong id="runFloor">-</strong>
+                  <p class="mb-0 text-muted" id="runSummary">Checking current run...</p>
+                </div>
+                <div class="play-run-metrics" aria-label="Current run metrics">
+                  <span>
+                    <strong id="runTeam">-</strong>
+                    <span id="runTeamLabel">Team</span>
+                  </span>
+                  <span>
+                    <strong id="runEnemy">-</strong>
+                    <span id="runEnemyLabel">Enemies</span>
+                  </span>
+                  <span>
+                    <strong id="runEarned">-</strong>
+                    <span id="runEarnedLabel">Extract Now</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-12 col-xl-5">
+          <section class="card h-100">
+            <div class="card-header">Orders</div>
+            <div class="card-body">
+              <div class="play-objective-list" id="objectiveList"></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-12">
+          <section class="card h-100">
+            <div class="card-header">Next Moves</div>
+            <div class="card-body">
+              <div class="play-action-grid">
+                <a class="play-action-tile play-action-primary" href="/dungeon">
+                  <span class="play-action-icon"><i data-lucide="swords"></i></span>
+                  <span>
+                    <strong>Dungeon</strong>
+                    <small>Fight, recruit, extract</small>
+                  </span>
+                </a>
+                <a class="play-action-tile" href="/rankings">
+                  <span class="play-action-icon"><i data-lucide="trophy"></i></span>
+                  <span>
+                    <strong>Rankings</strong>
+                    <small>Floor ladder</small>
+                  </span>
+                </a>
+                <a class="play-action-tile" href="/collection">
+                  <span class="play-action-icon"><i data-lucide="grid-3x3"></i></span>
+                  <span>
+                    <strong>Collection</strong>
+                    <small>Manage saved demons</small>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -138,7 +172,6 @@
     <script src="/app/js/icons.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
-    <script src="/app/js/demon-cards.js"></script>
     <script src="/app/js/play-ui.js"></script>
   </body>
 </html>

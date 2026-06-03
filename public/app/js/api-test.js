@@ -132,14 +132,6 @@
       path: () => `/api/runs/${encodeURIComponent(state.runId || ':id')}/end`,
       auth: true,
       params: ['runId']
-    },
-    {
-      group: 'adminEndpoints',
-      title: 'Demon Balance',
-      method: 'POST',
-      path: '/api/admin/demon-balance',
-      auth: false,
-      body: () => ({})
     }
   ];
 
