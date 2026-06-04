@@ -23,11 +23,11 @@ let catalogPromise;
 const noindexPaths = new Set([
   '/login',
   '/register',
-  '/play',
+  '/camp',
   '/app/login.html',
   '/app/register.html',
+  '/app/camp.html',
   '/app/collection.html',
-  '/app/play.html',
   '/app/api-test.html'
 ]);
 
@@ -87,8 +87,8 @@ app.get(['/demons/:slug', '/demons/:slug/'], async (req, res, next) => {
   res.send(renderDemonPage(demon, getRelatedDemons(catalog, demon)));
 });
 
-app.get(['/play', '/play/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'play.html'));
+app.get(['/camp', '/camp/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'camp.html'));
 });
 
 // === Dungeon Route: GET /dungeon/

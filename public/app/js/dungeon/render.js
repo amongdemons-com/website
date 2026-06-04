@@ -136,7 +136,7 @@ function renderHuntTitle(run) {
 
   return `
     <span class="dungeon-title-brand">
-      <a class="dungeon-header-brand" href="/play" aria-label="Back to command hub">
+      <a class="dungeon-header-brand" href="/camp" aria-label="Back to camp">
         ${renderIcon('back')}
         <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" width="32" height="32" loading="eager">
       </a>
@@ -178,7 +178,7 @@ function renderDungeonEndScreen() {
         ${renderSoulAmount(Number(summary.souls) || 0, { className: 'soul-chip dungeon-end-soul-amount' })}
       </div>
       <div class="dungeon-end-actions">
-        <a class="btn btn-outline-light" href="/play">Leave</a>
+        <a class="btn btn-outline-light" href="/camp">Leave</a>
         ${state.endedReplayRun?.lastBattle?.combatLog?.length ? `
           <button class="btn btn-warning btn-icon-only" id="replayEndedDungeonBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
             ${renderIcon('replay')}

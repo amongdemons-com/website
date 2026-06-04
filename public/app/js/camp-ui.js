@@ -21,7 +21,7 @@
     }
 
     cacheElements();
-    await loadHub();
+    await loadCamp();
   }
 
   function cacheElements() {
@@ -49,7 +49,7 @@
     });
   }
 
-  async function loadHub() {
+  async function loadCamp() {
     try {
       const [me, progression, run] = await Promise.all([
         api('/api/auth/me'),

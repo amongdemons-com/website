@@ -4,28 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Player Dashboard | Among Demons</title>
-    <meta name="description" content="Private Among Demons player dashboard for dungeon runs, rewards, and saved demon progress.">
-    <link rel="canonical" href="https://amongdemons.com/play">
+    <title>Camp | Among Demons</title>
+    <meta name="description" content="Private Among Demons player camp for dungeon runs, rewards, and saved demon progress.">
+    <link rel="canonical" href="https://amongdemons.com/camp">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <meta property="og:site_name" content="Among Demons">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Player Dashboard | Among Demons">
-    <meta property="og:description" content="Private Among Demons player dashboard for dungeon runs, rewards, and saved demon progress.">
-    <meta property="og:url" content="https://amongdemons.com/play">
+    <meta property="og:title" content="Camp | Among Demons">
+    <meta property="og:description" content="Private Among Demons player camp for dungeon runs, rewards, and saved demon progress.">
+    <meta property="og:url" content="https://amongdemons.com/camp">
     <meta property="og:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_home.png">
     <meta property="og:image:width" content="1600">
     <meta property="og:image:height" content="900">
-    <meta property="og:image:alt" content="Among Demons player dashboard artwork">
+    <meta property="og:image:alt" content="Among Demons player camp artwork">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Player Dashboard | Among Demons">
-    <meta name="twitter:description" content="Private Among Demons player dashboard for dungeon runs, rewards, and saved demon progress.">
+    <meta name="twitter:title" content="Camp | Among Demons">
+    <meta name="twitter:description" content="Private Among Demons player camp for dungeon runs, rewards, and saved demon progress.">
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_home.png">
-    <meta name="twitter:image:alt" content="Among Demons player dashboard artwork">
+    <meta name="twitter:image:alt" content="Among Demons player camp artwork">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css" rel="stylesheet">
   </head>
-  <body class="play-page">
+  <body class="camp-page">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
       <div class="container-fluid">
         <a class="navbar-brand" href="/">
@@ -50,10 +50,10 @@
                 <span class="soul-amount-label">Souls</span>
               </span>
             </span>
-            <span class="nav-player" title="Signed in player">
+            <a class="nav-player" href="/camp" title="Go to camp">
               <i data-lucide="user"></i>
               <span id="navPlayerName" data-nav-player-name></span>
-            </span>
+            </a>
             <button class="btn nav-logout-btn btn-icon-only" id="logoutBtn" type="button" title="Logout" aria-label="Logout">
               <i data-lucide="log-out"></i>
             </button>
@@ -65,8 +65,8 @@
     <main class="container my-4 play-hub">
       <section class="play-hero mb-4">
         <div class="play-hero-copy">
-          <span class="play-kicker">Command Hub</span>
-          <h1 class="display-5 mb-2">Play</h1>
+          <span class="play-kicker">Player Camp</span>
+          <h1 class="display-5 mb-2">Camp</h1>
           <p class="mb-0" id="welcomeText">Loading hunter...</p>
         </div>
         <div class="play-hero-actions">
@@ -189,7 +189,7 @@
     <script src="/app/js/icons.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
-    <script src="/app/js/play-ui.js"></script>
+    <script src="/app/js/camp-ui.js"></script>
   </body>
 </html>
 

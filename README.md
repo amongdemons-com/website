@@ -97,6 +97,7 @@ Open `http://localhost:3000`.
 | `/` | Public game landing page |
 | `/demons` | Public demon collection catalog |
 | `/demons/:slug` | Public demon detail guide |
+| `/camp` | Authenticated player camp for progression, current run briefing, and quick actions |
 | `/dungeon` | Main Dungeon run UI |
 | `/login` | Login page |
 | `/register` | Registration page |
@@ -257,7 +258,7 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/app/js/session.js` | Shared session storage and authenticated API helper |
 | `public/app/js/navigation.js` | Public demon browser navigation |
 | `public/app/js/auth-ui.js` | Login and register forms |
-| `public/app/js/play-ui.js` | Authenticated play hub, progression, current run briefing, objectives, and quick actions |
+| `public/app/js/camp-ui.js` | Authenticated player camp, progression, current run briefing, objectives, and quick actions |
 | `public/app/js/collection-ui.js` | Full collection filters, sorting, missing-slot display, and training modal UI |
 | `public/app/js/summon-ui.js` | Authenticated Souls/summon placeholder state |
 | `public/app/js/rankings-ui.js` | Leaderboard UI |

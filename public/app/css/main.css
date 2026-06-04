@@ -4701,6 +4701,14 @@ a:hover {
     color: var(--ad-muted);
     font-size: 0.86rem;
     font-weight: 700;
+    text-decoration: none;
+}
+
+.nav-player:hover,
+.nav-player:focus-visible {
+    border-color: rgba(111,214,189,0.5);
+    color: var(--ad-text);
+    text-decoration: none;
 }
 
 .nav-player .ad-icon {
@@ -4709,6 +4717,27 @@ a:hover {
 }
 
 .nav-player span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dungeon-nav-player-link {
+    display: inline-flex;
+    max-width: 13rem;
+    min-width: 0;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.dungeon-nav-player-link:hover,
+.dungeon-nav-player-link:focus-visible {
+    color: var(--ad-text) !important;
+    text-decoration: none;
+}
+
+.dungeon-nav-player-link span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -6009,7 +6038,7 @@ body.rankings-page {
     }
 }
 
-body.play-page {
+body.camp-page {
     min-height: 100%;
     background:
         linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.76)),
@@ -6019,19 +6048,19 @@ body.play-page {
         var(--ad-bg);
 }
 
-.play-page main,
+.camp-page main,
 .play-hub {
     min-height: calc(100vh - 170px);
 }
 
-.play-page h1 {
+.camp-page h1 {
     color: var(--ad-text);
     font-weight: 700;
     letter-spacing: 0;
     text-shadow: 0 2px 18px rgba(0,0,0,0.46);
 }
 
-.play-page .card {
+.camp-page .card {
     border-color: rgba(111,214,189,0.18);
     background:
         linear-gradient(180deg, rgba(111,214,189,0.052), transparent 38%),
@@ -6039,12 +6068,12 @@ body.play-page {
     backdrop-filter: blur(2px);
 }
 
-.play-page .card-header {
+.camp-page .card-header {
     border-bottom-color: rgba(161,212,201,0.13);
     background: rgba(4,10,12,0.36);
 }
 
-.play-page .stat-box {
+.camp-page .stat-box {
     background:
         linear-gradient(180deg, rgba(232,199,106,0.04), transparent),
         rgba(4,10,12,0.36);
