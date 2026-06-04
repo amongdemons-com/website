@@ -65,25 +65,8 @@ app.get('/app/images/demons/:imageName', async (req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules', 'lucide', 'dist', 'umd')));
 
-// ============================================================================
-// MAIN ROUTE: GET /demons/type/:page
-// Serves the static collection shell. Client-side JS reads the page number.
-// ============================================================================
-
-app.get('/demons/type/:page', (req, res) => {
-  const pageNumber = parseInt(req.params.page, 10);
-
-  // Validate page number
-  if (isNaN(pageNumber) || pageNumber < 1) {
-    return res.status(400).send('Invalid page number.');
-  }
-
-  res.sendFile(path.join(appDir, 'index.html'));
-});
-
-// Redirect to first page when accessing /demons/type/ without a number
-app.get('/demons/type/', (req, res) => {
-  return res.redirect(302, '/demons/type/1');
+app.get(['/demons/type', '/demons/type/', '/demons/type/:page'], (req, res) => {
+  return res.redirect(301, '/demons');
 });
 
 app.get('/', async (req, res) => {

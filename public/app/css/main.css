@@ -2035,36 +2035,6 @@ body.dungeon-page .navbar {
     min-width: 0;
 }
 
-.demon-detail-type-info {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.05rem;
-    height: 1.05rem;
-    border: 1px solid rgba(143,154,164,0.7);
-    border-radius: 50%;
-    color: #8f9aa4;
-    font-size: 0.58rem;
-    font-weight: 900;
-    line-height: 1;
-    padding-left: 1px;
-    text-decoration: none;
-    text-transform: none;
-}
-
-.demon-detail-type-info:hover,
-.demon-detail-type-info:focus-visible {
-    border-color: rgba(141,231,255,0.92);
-    background: rgba(85,255,255,0.1);
-    color: #d7ffff;
-    text-decoration: none;
-}
-
-.demon-detail-type-info:focus-visible {
-    outline: 2px solid rgba(111,214,189,0.82);
-    outline-offset: 2px;
-}
-
 .demon-detail-meta strong {
     display: block;
     min-width: 0;
@@ -5050,8 +5020,9 @@ body.seo-page {
     grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
 }
 
-.seo-demons-page .seo-demon-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+.seo-demons-page .seo-demon-grid,
+.seo-demon-page .seo-demon-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .seo-demon-card {
@@ -5184,7 +5155,8 @@ body.seo-page {
         grid-template-columns: 1fr;
     }
 
-    .seo-demons-page .seo-demon-grid {
+    .seo-demons-page .seo-demon-grid,
+    .seo-demon-page .seo-demon-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
@@ -5209,6 +5181,10 @@ body.seo-page {
 
     .seo-demons-page .seo-demon-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .seo-demon-page .seo-demon-grid {
+        grid-template-columns: 1fr;
     }
 }
 

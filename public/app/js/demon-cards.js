@@ -204,16 +204,10 @@
   }
 
   function renderDetailMetaRow(label, value, demon = {}) {
-    const isType = label === 'Type';
-    const href = isType ? getDemonTypeHref(demon) : '';
-
     return `
-      <div class="${isType && href ? 'demon-detail-meta-type' : ''}">
+      <div>
         <span class="demon-detail-meta-label">
           <span class="demon-detail-meta-label-text">${escapeHtml(label)}</span>
-          ${href ? `
-            <a class="demon-detail-type-info" href="${escapeHtml(href)}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(label)} ${escapeHtml(value)} details" title="Open type details">i</a>
-          ` : ''}
         </span>
         <strong>${escapeHtml(value)}</strong>
       </div>
@@ -245,17 +239,29 @@
   }
 
   function renderDetailTitle(title, demon = {}) {
-    const href = getDemonTypeHref(demon);
+    const href = getDemonPageHref(demon, title);
     const text = escapeHtml(title);
 
     return href
-      ? `<a class="demon-detail-title-link" href="${escapeHtml(href)}" target="_blank" rel="noopener">${text}</a>`
+      ? `<a class="demon-detail-title-link" href="${escapeHtml(href)}" aria-label="Open ${text} demon guide">${text}</a>`
       : text;
   }
 
-  function getDemonTypeHref(demon = {}) {
-    const typeId = Number(demon.typeId || demon.type);
-    return typeId > 0 ? `/demons/type/${typeId}` : '';
+  function getDemonPageHref(demon = {}, title = '') {
+    const name = demon.species || demon.typeName || demon.name || title;
+    const rarity = demon.rarity;
+    if (!name || !rarity) return '';
+
+    return `/demons/${slugify(`${name}-${rarity}`)}`;
+  }
+
+  function slugify(value) {
+    return String(value || '')
+      .normalize('NFKD')
+      .replace(/['']/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
   }
 
   function renderAttackIcon() {
