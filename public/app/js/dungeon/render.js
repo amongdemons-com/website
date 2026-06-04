@@ -19,6 +19,7 @@ const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
 const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
 const groupCombatLog = (...args) => dungeonActions.groupCombatLog(...args);
+const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
 const init = (...args) => dungeonActions.init(...args);
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
 const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
@@ -29,6 +30,7 @@ const renderButtonMeleeIcon = (...args) => dungeonActions.renderButtonMeleeIcon(
 const renderDemonCard = (...args) => dungeonActions.renderDemonCard(...args);
 const renderDemonCards = (...args) => dungeonActions.renderDemonCards(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
+const renderDemonicPacts = (...args) => dungeonActions.renderDemonicPacts(...args);
 const renderEmptyText = (...args) => dungeonActions.renderEmptyText(...args);
 const renderFightLogRow = (...args) => dungeonActions.renderFightLogRow(...args);
 const renderHandBar = (...args) => dungeonActions.renderHandBar(...args);
@@ -65,6 +67,7 @@ function renderRun() {
     if (laneResizeObserver) laneResizeObserver.disconnect();
     elements.fightLog.innerHTML = 'Loading latest dungeon state...';
     elements.fightLog.classList.add('text-muted');
+    renderDemonicPacts(false);
     renderFightLogActions();
     syncActionButtons();
     return;
@@ -73,10 +76,12 @@ function renderRun() {
   if (!run) {
     if (laneResizeObserver) laneResizeObserver.disconnect();
     elements.runPanel?.classList.remove('has-hand');
+    elements.dungeonBottomPanel?.classList.remove('has-pacts');
     elements.runPanel?.querySelector('.dungeon-arena')?.classList.remove('is-hand-strategy');
     elements.dungeonBottomPanel?.classList.add('d-none');
     elements.dungeonHandBar?.classList.add('d-none');
     elements.dungeonRewardBox?.classList.add('d-none');
+    renderDemonicPacts(false);
     renderTeamSideTitle();
     if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
     updateDungeonJoiner();
@@ -89,18 +94,21 @@ function renderRun() {
     return;
   }
 
-  const isHandStrategy = Boolean(state.isRecruiting && run.awaitingRecruit);
+  const hasPendingPacts = hasPendingBuffChoices(run);
+  const isHandStrategy = Boolean(state.isRecruiting && run.awaitingRecruit && !hasPendingPacts);
   const arena = elements.runPanel?.querySelector('.dungeon-arena');
   const team = isHandStrategy ? getRecruitPreviewTeam() : run.team || [];
   const enemies = isHandStrategy && state.isEnemyPreviewDeferred ? [] : (isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || []);
   const isBattleHandPlaceholder = Boolean(!isHandStrategy && state.isBattleAnimating);
   const hand = isHandStrategy ? getRecruitPreviewHand() : [];
   const handMode = isBattleHandPlaceholder ? 'battle' : 'recruit';
-  const showHand = true;
+  const showPacts = Boolean(hasPendingPacts && !state.isBattleAnimating);
+  const showHand = !showPacts;
   const rewardInteractive = Boolean(isHandStrategy);
 
-  elements.runPanel?.classList.toggle('has-hand', showHand);
-  elements.dungeonBottomPanel?.classList.toggle('d-none', !showHand);
+  elements.runPanel?.classList.toggle('has-hand', showHand || showPacts);
+  elements.dungeonBottomPanel?.classList.toggle('d-none', !(showHand || showPacts));
+  elements.dungeonBottomPanel?.classList.toggle('has-pacts', showPacts);
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
   elements.teamGrid.innerHTML = renderDemonCards(team, {
     side: 'player',
@@ -112,6 +120,7 @@ function renderRun() {
   });
   renderHandBar(hand, showHand, isHandStrategy, handMode);
   renderRewardBox(showHand, rewardInteractive);
+  renderDemonicPacts(showPacts);
   renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
   if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
   updateDungeonJoiner();
@@ -229,6 +238,9 @@ function renderBattleOutcome() {
   let type = '';
   if (state.run?.awaitingRecruit && Number(state.run.currentFloor) <= 0) {
     text = 'Preparation';
+    type = 'victory';
+  } else if (state.run?.awaitingRecruit && hasPendingBuffChoices(state.run)) {
+    text = 'Demonic Pact';
     type = 'victory';
   } else if (state.run?.awaitingRecruit) {
     text = 'Victory';
@@ -406,8 +418,9 @@ function renderFightLogActions() {
   const hasCurrentFightLog = Boolean(isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
   const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
   const canViewLog = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
-  const canChooseRecruit = Boolean(!state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
-  const canExtract = Boolean(!state.isResultAnimating && canExtractRun());
+  const hasPendingPacts = hasPendingBuffChoices(state.run);
+  const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
+  const canExtract = Boolean(!hasPendingPacts && !state.isResultAnimating && canExtractRun());
 
   elements.fightLogActions.innerHTML = `
     ${canShowSpeedControl ? renderBattleSpeedControl() : ''}

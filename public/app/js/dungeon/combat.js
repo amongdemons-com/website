@@ -62,6 +62,17 @@ async function playCombatLog() {
           return;
         }
 
+        if (entry.effect === 'last_breath') {
+          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+          showFloatingDamage(entry.target, 1, 'heal', entry.attacker, entry.effect);
+          return;
+        }
+
+        if (entry.effect === 'shared_pain') {
+          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+          return;
+        }
+
         if (entry.effect === 'poison_apply') {
           drawAttackZap(step.attacker, entry.target, { effect: entry.effect, poison: true, bubbles: 15, variant: 'poison-flame' });
           syncPoisonStatus(entry.target, entry.poisonStacks || 1);
@@ -611,6 +622,9 @@ function getFightLogActionText(step) {
   if (entry.effect === 'poison_apply') return `${attacker} applied poison to ${target}`;
   if (entry.effect === 'poison') return `${target} took poison damage`;
   if (entry.effect === 'heal') return `${attacker} healed ${target}`;
+  if (entry.effect === 'last_breath') return `${target} survived at 1 HP`;
+  if (entry.effect === 'shared_pain') return `Surviving allies gained direct damage`;
+  if (entry.effect === 'chain_explosion') return `${attacker} exploded into ${target}`;
   if (entry.effect === 'retaliate') return `${attacker} retaliated against ${target}`;
   if (entry.targeting === 'chaotic') return `${attacker} chaotically struck ${target}`;
   if (entry.targeting === 'cleave') return `${attacker} cleaved ${step.entries.length} demons`;
@@ -622,6 +636,9 @@ function getFightLogVerb(entry) {
   if (entry.effect === 'poison_apply') return 'poisoned';
   if (entry.effect === 'poison') return 'poisoned';
   if (entry.effect === 'heal') return 'healed';
+  if (entry.effect === 'last_breath') return 'survived';
+  if (entry.effect === 'shared_pain') return 'empowered';
+  if (entry.effect === 'chain_explosion') return 'exploded into';
   if (entry.effect === 'retaliate') return 'retaliated against';
   if (entry.targeting === 'chaotic') return 'chaotically struck';
   if (entry.targeting === 'cleave') return 'cleaved';
@@ -636,6 +653,9 @@ function getFightLogAmountText(step) {
     return `${getPoisonBurstDamage(step)} poison`;
   }
   if (entry.effect === 'heal') return `+${entry.healing || 0} hp`;
+  if (entry.effect === 'last_breath') return '1 hp';
+  if (entry.effect === 'shared_pain') return '+25% dmg';
+  if (entry.effect === 'chain_explosion') return `${entry.dmg || 0} splash`;
   if (retaliationEntry) return `${entry.dmg} dmg, ${retaliationEntry.dmg} thorns`;
   if (entry.targeting === 'cleave') return `${step.entries.length} x ${entry.dmg} cleave`;
   if (step.isAoe) return `${step.entries.length} x ${entry.dmg} dmg`;
@@ -656,10 +676,18 @@ function createCombatDemonMap() {
 }
 
 function getLogRowClass(entry) {
+  if (entry.effect === 'chain_explosion' || entry.effect === 'shared_pain' || entry.effect === 'last_breath') {
+    return 'is-player-action';
+  }
+
   return getDemonSide(entry.attacker) === 'player' ? 'is-player-action' : 'is-enemy-action';
 }
 
 function getLogSideLabel(entry) {
+  if (entry.effect === 'chain_explosion' || entry.effect === 'shared_pain' || entry.effect === 'last_breath') {
+    return 'You';
+  }
+
   return getDemonSide(entry.attacker) === 'player' ? 'You' : 'Enemy';
 }
 

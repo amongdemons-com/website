@@ -143,6 +143,10 @@ function getFullHpDemon(demon) {
 
 function getRecruitTeamLimit() {
   if (!state.run) return MAX_DUNGEON_TEAM_SIZE;
+  const serializedLimit = Number(state.run.teamLimit);
+  if (state.run.awaitingRecruit && Number.isFinite(serializedLimit) && serializedLimit > 0) {
+    return serializedLimit;
+  }
   return Math.min(MAX_DUNGEON_TEAM_SIZE, Math.max(2, Number(state.run.currentFloor) + 2));
 }
 

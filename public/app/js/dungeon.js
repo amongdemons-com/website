@@ -5,6 +5,7 @@ import * as lifecycle from './dungeon/lifecycle.js';
 import * as render from './dungeon/render.js';
 import * as combat from './dungeon/combat.js';
 import * as rewards from './dungeon/rewards.js';
+import * as pacts from './dungeon/pacts.js';
 import * as hand from './dungeon/hand.js';
 import * as recruit from './dungeon/recruit.js';
 import * as modals from './dungeon/modals.js';
@@ -18,6 +19,7 @@ registerDungeonActions({
   ...render,
   ...combat,
   ...rewards,
+  ...pacts,
   ...hand,
   ...recruit,
   ...modals,

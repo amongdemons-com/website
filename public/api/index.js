@@ -33,6 +33,7 @@ router.use(require('./runs/start'));
 router.use(require('./runs/show'));
 router.use(require('./runs/formation'));
 router.use(require('./runs/battle'));
+router.use(require('./runs/buff'));
 router.use(require('./runs/reward'));
 router.use(require('./runs/recruit'));
 router.use(require('./runs/cashout'));

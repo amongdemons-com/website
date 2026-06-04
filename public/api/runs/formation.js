@@ -1,6 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../lib/auth');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
+const { hasPendingBuffChoices } = require('../lib/run-buffs');
 const { getFormationSlotPosition, normalizeFormationSlot, normalizePosition } = require('../lib/run-demons');
 
 const router = express.Router();
@@ -18,6 +19,10 @@ router.post('/runs/:id/formation', requireAuth, async (req, res) => {
 
   if (run.state.awaitingRecruit) {
     return res.status(409).json({ error: 'Resolve the pending dungeon choice before changing formation.' });
+  }
+
+  if (hasPendingBuffChoices(run)) {
+    return res.status(409).json({ error: 'Choose a Demonic Pact before changing formation.' });
   }
 
   const formation = Array.isArray(req.body.formation) ? req.body.formation : [];

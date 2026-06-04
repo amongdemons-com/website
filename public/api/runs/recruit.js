@@ -12,6 +12,7 @@ const {
   normalizePosition,
   resetRunDemon
 } = require('../lib/run-demons');
+const { getTemporaryTeamSizeBonus, hasPendingBuffChoices } = require('../lib/run-buffs');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { clearPendingRewardSoul, settleDiscardedSoulRewards } = require('../lib/run-rewards');
 
@@ -33,6 +34,10 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
 
   if (!run.state.awaitingRecruit) {
     return res.status(409).json({ error: 'No recruit choice is pending.' });
+  }
+
+  if (hasPendingBuffChoices(run)) {
+    return res.status(409).json({ error: 'Choose a Demonic Pact before continuing.' });
   }
 
   if (skipRecruit) {
@@ -98,7 +103,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Demon already recruited.' });
   }
 
-  if (run.state.team.length >= getDungeonTeamLimit(run.floor + 1) && !replaceInstanceId) {
+  if (run.state.team.length >= getRecruitTeamLimitForRun(run) && !replaceInstanceId) {
     return res.status(400).json({ error: 'Choose one of your demons to swap out.' });
   }
 
@@ -143,7 +148,7 @@ async function advanceFloor(run) {
 }
 
 async function buildStagedTeam(run, stagedTeam) {
-  const teamLimit = getDungeonTeamLimit(run.floor + 1);
+  const teamLimit = getRecruitTeamLimitForRun(run);
   if (!stagedTeam.length || stagedTeam.length > teamLimit) {
     const error = new Error(`Choose between 1 and ${teamLimit} demons for your team.`);
     error.status = 400;
@@ -277,6 +282,10 @@ async function buildStagedTeam(run, stagedTeam) {
   }
 
   return assignFormationSlots(team, 'player');
+}
+
+function getRecruitTeamLimitForRun(run) {
+  return getDungeonTeamLimit(run.floor + 1) + getTemporaryTeamSizeBonus(run);
 }
 
 function stageExtractChoice(run, choice) {

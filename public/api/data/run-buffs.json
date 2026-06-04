@@ -1,0 +1,275 @@
+[
+  {
+    "id": "blood_pact",
+    "name": "Blood Pact",
+    "description": "All direct damage is increased by 12%.",
+    "rarity": "common",
+    "tags": ["damage"],
+    "effects": [
+      {
+        "type": "direct_damage_mult",
+        "value": 1.12
+      }
+    ]
+  },
+  {
+    "id": "thick_hide",
+    "name": "Thick Hide",
+    "description": "Max HP is increased by 15%.",
+    "rarity": "common",
+    "tags": ["defense", "health"],
+    "effects": [
+      {
+        "type": "max_hp_mult",
+        "value": 1.15
+      }
+    ]
+  },
+  {
+    "id": "quickening_curse",
+    "name": "Quickening Curse",
+    "description": "Speed is increased by 10%.",
+    "rarity": "common",
+    "tags": ["speed"],
+    "effects": [
+      {
+        "type": "speed_mult",
+        "value": 1.1
+      }
+    ]
+  },
+  {
+    "id": "first_strike",
+    "name": "First Strike",
+    "description": "Start each battle with 50% attack meter.",
+    "rarity": "uncommon",
+    "tags": ["tempo"],
+    "effects": [
+      {
+        "type": "start_attack_meter_pct",
+        "value": 0.5
+      }
+    ]
+  },
+  {
+    "id": "execution_mark",
+    "name": "Execution Mark",
+    "description": "Deal 35% more direct damage to enemies below 50% HP.",
+    "rarity": "uncommon",
+    "tags": ["damage", "execute"],
+    "effects": [
+      {
+        "type": "damage_vs_low_hp_mult",
+        "value": 1.35
+      }
+    ]
+  },
+  {
+    "id": "giant_slayer",
+    "name": "Giant Slayer",
+    "description": "Deal 30% more direct damage to enemies with higher max HP.",
+    "rarity": "uncommon",
+    "tags": ["damage", "tank-breaker"],
+    "effects": [
+      {
+        "type": "damage_vs_higher_max_hp_mult",
+        "value": 1.3
+      }
+    ]
+  },
+  {
+    "id": "venom_choir",
+    "name": "Venom Choir",
+    "description": "Poison ticks deal 25% more damage.",
+    "rarity": "common",
+    "tags": ["poison"],
+    "effects": [
+      {
+        "type": "poison_tick_damage_mult",
+        "value": 1.25
+      }
+    ]
+  },
+  {
+    "id": "endless_toxins",
+    "name": "Endless Toxins",
+    "description": "Poison duration is increased by 40%.",
+    "rarity": "uncommon",
+    "tags": ["poison", "duration"],
+    "effects": [
+      {
+        "type": "poison_duration_mult",
+        "value": 1.4
+      }
+    ]
+  },
+  {
+    "id": "corrosion",
+    "name": "Corrosion",
+    "description": "Poisoned enemies take 15% more direct damage.",
+    "rarity": "uncommon",
+    "tags": ["poison", "damage"],
+    "effects": [
+      {
+        "type": "direct_damage_vs_poisoned_mult",
+        "value": 1.15
+      }
+    ]
+  },
+  {
+    "id": "scorched_earth",
+    "name": "Scorched Earth",
+    "description": "AOE damage is increased by 20%.",
+    "rarity": "common",
+    "tags": ["aoe", "damage"],
+    "effects": [
+      {
+        "type": "aoe_damage_mult",
+        "value": 1.2
+      }
+    ]
+  },
+  {
+    "id": "chain_explosion",
+    "name": "Chain Explosion",
+    "description": "When an enemy dies, deal splash damage equal to 8% of its max HP to the enemy team.",
+    "rarity": "rare",
+    "tags": ["aoe", "death"],
+    "effects": [
+      {
+        "type": "enemy_death_splash_max_hp_pct",
+        "value": 0.08
+      }
+    ]
+  },
+  {
+    "id": "thorn_garden",
+    "name": "Thorn Garden",
+    "description": "Retaliation damage is increased by 40%.",
+    "rarity": "common",
+    "tags": ["retaliation", "damage"],
+    "effects": [
+      {
+        "type": "retaliation_damage_mult",
+        "value": 1.4
+      }
+    ]
+  },
+  {
+    "id": "living_fortress",
+    "name": "Living Fortress",
+    "description": "Max HP is increased by 25%, but speed is reduced by 10%.",
+    "rarity": "uncommon",
+    "tags": ["defense", "health", "tradeoff"],
+    "effects": [
+      {
+        "type": "max_hp_mult",
+        "value": 1.25
+      },
+      {
+        "type": "speed_mult",
+        "value": 0.9
+      }
+    ]
+  },
+  {
+    "id": "mercy_engine",
+    "name": "Mercy Engine",
+    "description": "Healing is increased by 30%.",
+    "rarity": "common",
+    "tags": ["healing"],
+    "effects": [
+      {
+        "type": "healing_mult",
+        "value": 1.3
+      }
+    ]
+  },
+  {
+    "id": "overflow_healing",
+    "name": "Overflow Healing",
+    "description": "Excess healing becomes a temporary shield.",
+    "rarity": "rare",
+    "tags": ["healing", "shield"],
+    "effects": [
+      {
+        "type": "overheal_to_shield",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "glass_cannons",
+    "name": "Glass Cannons",
+    "description": "Direct damage is increased by 40%, but max HP is reduced by 25%.",
+    "rarity": "rare",
+    "tags": ["damage", "tradeoff"],
+    "effects": [
+      {
+        "type": "direct_damage_mult",
+        "value": 1.4
+      },
+      {
+        "type": "max_hp_mult",
+        "value": 0.75
+      }
+    ]
+  },
+  {
+    "id": "cursed_momentum",
+    "name": "Cursed Momentum",
+    "description": "Speed is increased by 20%, but direct damage is reduced by 10%.",
+    "rarity": "uncommon",
+    "tags": ["speed", "tradeoff"],
+    "effects": [
+      {
+        "type": "speed_mult",
+        "value": 1.2
+      },
+      {
+        "type": "direct_damage_mult",
+        "value": 0.9
+      }
+    ]
+  },
+  {
+    "id": "shared_pain",
+    "name": "Shared Pain",
+    "description": "When an ally dies, surviving allies gain 25% direct damage for the battle.",
+    "rarity": "rare",
+    "tags": ["death", "damage"],
+    "effects": [
+      {
+        "type": "ally_death_direct_damage_mult",
+        "value": 1.25
+      }
+    ]
+  },
+  {
+    "id": "last_breath",
+    "name": "Last Breath",
+    "description": "The first ally death each battle survives at 1 HP.",
+    "rarity": "rare",
+    "tags": ["death", "survival"],
+    "effects": [
+      {
+        "type": "first_ally_death_survive",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "seventh_seal",
+    "name": "Seventh Seal",
+    "description": "Next battle only, max team size is increased by 1.",
+    "rarity": "rare",
+    "tags": ["team-size", "temporary"],
+    "effects": [
+      {
+        "type": "next_battle_team_size_add",
+        "value": 1,
+        "uses": 1
+      }
+    ]
+  }
+]

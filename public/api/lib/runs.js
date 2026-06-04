@@ -1,14 +1,18 @@
 const db = require('./db');
+const { normalizeRunBuffState } = require('./run-buffs');
 const { enrichRunPreferredPositions } = require('./run-demons');
 
 function parseRun(row) {
+  const state = JSON.parse(row.state);
+  state.buffs = normalizeRunBuffState(state.buffs || {});
+
   return {
     id: row.id,
     playerId: row.player_id,
     seed: row.seed,
     status: row.status,
     floor: row.floor,
-    state: JSON.parse(row.state),
+    state,
     rewards: JSON.parse(row.rewards)
   };
 }

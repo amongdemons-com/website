@@ -1,4 +1,12 @@
 const { pick, randomInt } = require('./rng');
+const {
+  applyDamageModifiers,
+  applyHealingModifiers,
+  applyPoisonModifiers,
+  applyPreBattleBuffs,
+  handleDeathBuffTriggers,
+  normalizeRunBuffState
+} = require('./run-buffs');
 
 function alive(team) {
   return team.filter((demon) => demon.hp > 0);
@@ -162,8 +170,9 @@ function cloneTeam(team) {
     ...demon,
     position: normalizePosition(demon.position || (index === 0 ? 'front' : 'back')),
     attackMeter: demon.attackMeter || 0,
+    shield: Math.max(0, Number(demon.shield) || 0),
     statusEffects: {
-      poison: [...(demon.statusEffects?.poison || [])]
+      poison: (demon.statusEffects?.poison || []).map((poison) => ({ ...poison }))
     }
   }));
 }
@@ -174,11 +183,10 @@ function getPoisonStacks(target, source) {
     .length;
 }
 
-function applyPoisonTick(team, tick, combatLog) {
+function applyPoisonTick(team, tick, context, targetSide) {
   alive(team).forEach((target) => {
     const poisonStacks = target.statusEffects?.poison || [];
     if (!poisonStacks.length) return;
-    const poisonEvents = [];
 
     poisonStacks.forEach((poison) => {
       if (target.hp <= 0) return;
@@ -194,9 +202,9 @@ function applyPoisonTick(team, tick, combatLog) {
 
       const damage = Math.max(1, Number(poison.damage) || 1);
       poison.nextTickIn = Math.max(1, Number(poison.tickInterval) || 1);
-      target.hp = Math.max(0, target.hp - damage);
+      const damageResult = dealDamage(target, damage);
 
-      poisonEvents.push({
+      context.combatLog.push({
         tick,
         attacker: poison.source,
         target: target.instanceId,
@@ -204,22 +212,52 @@ function applyPoisonTick(team, tick, combatLog) {
         targeting: 'poison',
         effect: 'poison',
         dmg: damage,
-        targetHp: target.hp
+        shieldDamage: damageResult.shieldDamage,
+        targetShield: target.shield || 0,
+        targetHp: target.hp,
+        poisonStacks: poisonStacks.length
+      });
+
+      handleDeathBuffTriggers({
+        ...context,
+        tick,
+        target,
+        targetSide,
+        cause: 'poison'
       });
     });
 
     target.statusEffects.poison = poisonStacks.filter((poison) => poison.remainingTicks > 0);
-    poisonEvents.forEach((event) => {
-      combatLog.push({
-        ...event,
-        poisonStacks: target.statusEffects.poison.length
-      });
-    });
   });
 }
 
-function applyDamage({ tick, attacker, target, damage, targeting, hitIndex, hitCount, demonTypes, combatLog }) {
-  target.hp = Math.max(0, target.hp - damage);
+function applyDamage({
+  tick,
+  attacker,
+  attackerSide,
+  target,
+  targetSide,
+  damage,
+  targeting,
+  hitIndex,
+  hitCount,
+  demonTypes,
+  combatLog,
+  context,
+  damageKind = 'direct'
+}) {
+  const modifiedDamage = applyDamageModifiers({
+    attacker,
+    attackerSide,
+    target,
+    targetSide,
+    damage,
+    damageKind,
+    targeting,
+    isAoe: targeting === 'all' || targeting === 'cleave' || Number(hitCount) > 1,
+    buffs: context.buffs
+  });
+  const damageResult = dealDamage(target, modifiedDamage);
 
   combatLog.push({
     tick,
@@ -230,15 +268,35 @@ function applyDamage({ tick, attacker, target, damage, targeting, hitIndex, hitC
     targeting,
     hitIndex,
     hitCount,
-    dmg: damage,
+    dmg: modifiedDamage,
+    shieldDamage: damageResult.shieldDamage,
+    targetShield: target.shield || 0,
     targetHp: target.hp
+  });
+
+  handleDeathBuffTriggers({
+    ...context,
+    tick,
+    target,
+    targetSide,
+    cause: damageKind
   });
 
   const targetAbility = getAbility(target, demonTypes);
   if (target.hp > 0 && targetAbility.kind === 'retaliate' && attacker.hp > 0) {
-    const retaliationDamage = getRetaliationDamage(target, targetAbility);
+    const retaliationDamage = applyDamageModifiers({
+      attacker: target,
+      attackerSide: targetSide,
+      target: attacker,
+      targetSide: attackerSide,
+      damage: getRetaliationDamage(target, targetAbility),
+      damageKind: 'retaliation',
+      targeting: 'retaliate',
+      isAoe: false,
+      buffs: context.buffs
+    });
+    const retaliationResult = dealDamage(attacker, retaliationDamage);
 
-    attacker.hp = Math.max(0, attacker.hp - retaliationDamage);
     combatLog.push({
       tick,
       attacker: target.instanceId,
@@ -248,17 +306,41 @@ function applyDamage({ tick, attacker, target, damage, targeting, hitIndex, hitC
       targeting: 'retaliate',
       effect: 'retaliate',
       dmg: retaliationDamage,
+      shieldDamage: retaliationResult.shieldDamage,
+      targetShield: attacker.shield || 0,
       targetHp: attacker.hp
+    });
+
+    handleDeathBuffTriggers({
+      ...context,
+      tick,
+      target: attacker,
+      targetSide: attackerSide,
+      cause: 'retaliation'
     });
   }
 }
 
-function applyHeal({ tick, healer, allies, combatLog }) {
+function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {
   const target = chooseHealTarget(allies);
   if (!target) return false;
 
-  const healing = Math.max(1, Number(healer.atk) || 1);
-  target.hp = Math.min(target.maxHp, target.hp + healing);
+  const healingResult = applyHealingModifiers({
+    healer,
+    healerSide,
+    healing: Math.max(1, Number(healer.atk) || 1),
+    buffs: context.buffs
+  });
+  const missingHp = Math.max(0, (Number(target.maxHp) || 1) - (Number(target.hp) || 0));
+  const appliedHealing = Math.min(missingHp, healingResult.healing);
+  const shieldGain = healingResult.overhealToShield
+    ? Math.max(0, healingResult.healing - appliedHealing)
+    : 0;
+
+  target.hp = Math.min(target.maxHp, target.hp + appliedHealing);
+  if (shieldGain > 0) {
+    target.shield = Math.max(0, Number(target.shield) || 0) + shieldGain;
+  }
   combatLog.push({
     tick,
     attacker: healer.instanceId,
@@ -267,27 +349,37 @@ function applyHeal({ tick, healer, allies, combatLog }) {
     targetPosition: normalizePosition(target.position),
     targeting: 'highest_missing_hp',
     effect: 'heal',
-    healing,
+    healing: appliedHealing,
+    shield: shieldGain,
+    targetShield: target.shield || 0,
     targetHp: target.hp
   });
 
   return true;
 }
 
-function applyPoison({ tick, attacker, enemies, demonTypes, combatLog }) {
+function applyPoison({ tick, attacker, attackerSide, enemies, demonTypes, combatLog, context }) {
   const target = choosePoisonTarget(attacker, enemies, demonTypes);
   if (!target) return false;
 
   const ability = getAbility(attacker, demonTypes);
   const maxStacks = getPoisonStackLimit(ability);
   const tickInterval = Math.max(1, Math.round(positiveNumber(ability.tickInterval, 1)));
+  const poisonModifiers = applyPoisonModifiers({
+    attacker,
+    attackerSide,
+    damage: Math.max(1, Math.round((Number(attacker.atk) || 1) * positiveNumber(ability.damagePerTickScale || ability.damagePerTurnScale, 1))),
+    durationTicks: Math.max(1, Math.round(positiveNumber(ability.durationTicks || ability.durationTurns, 1))),
+    buffs: context.buffs
+  });
   target.statusEffects = target.statusEffects || {};
   target.statusEffects.poison = [...(target.statusEffects.poison || [])];
 
   const poison = {
     source: attacker.instanceId,
-    damage: Math.max(1, Math.round((Number(attacker.atk) || 1) * positiveNumber(ability.damagePerTickScale || ability.damagePerTurnScale, 1))),
-    remainingTicks: Math.max(1, Math.round(positiveNumber(ability.durationTicks || ability.durationTurns, 1))),
+    sourceSide: attackerSide,
+    damage: poisonModifiers.damage,
+    remainingTicks: poisonModifiers.durationTicks,
     tickInterval,
     nextTickIn: getSyncedPoisonNextTick(target.statusEffects.poison, tickInterval)
   };
@@ -320,15 +412,29 @@ function applyPoison({ tick, attacker, enemies, demonTypes, combatLog }) {
 
 function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
   const demonTypes = options.demonTypes || {};
-  const players = cloneTeam(playerTeam);
+  const buffs = normalizeRunBuffState(options.buffs || options.runBuffs || {});
+  const players = applyPreBattleBuffs(cloneTeam(playerTeam), buffs);
   const enemies = cloneTeam(enemyTeam);
+  const battleState = {
+    lastBreathUsed: false
+  };
   const combatLog = [];
+  const context = {
+    players,
+    enemies,
+    buffs,
+    battleState,
+    combatLog,
+    dealDamage
+  };
+  const playerTeamBefore = cloneBattleTeamForReplay(players);
+  const enemyTeamBefore = cloneBattleTeamForReplay(enemies);
   let tick = 0;
 
   while (alive(players).length && alive(enemies).length && tick < 1000) {
     tick += 1;
-    applyPoisonTick(players, tick, combatLog);
-    applyPoisonTick(enemies, tick, combatLog);
+    applyPoisonTick(players, tick, context, 'player');
+    applyPoisonTick(enemies, tick, context, 'enemy');
 
     const actors = [...alive(players), ...alive(enemies)].sort((a, b) => b.speed - a.speed);
 
@@ -349,12 +455,12 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
       const ability = getAbility(actor, demonTypes);
 
       if (ability.kind === 'heal') {
-        applyHeal({ tick, healer: actor, allies, combatLog });
+        applyHeal({ tick, healer: actor, healerSide: actorIsPlayer ? 'player' : 'enemy', allies, combatLog, context });
         continue;
       }
 
       if (ability.kind === 'poison') {
-        applyPoison({ tick, attacker: actor, enemies: targets, demonTypes, combatLog });
+        applyPoison({ tick, attacker: actor, attackerSide: actorIsPlayer ? 'player' : 'enemy', enemies: targets, demonTypes, combatLog, context });
         continue;
       }
 
@@ -375,13 +481,16 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
         applyDamage({
           tick,
           attacker: actor,
+          attackerSide: actorIsPlayer ? 'player' : 'enemy',
           target,
+          targetSide: actorIsPlayer ? 'enemy' : 'player',
           damage,
           targeting,
           hitIndex: targetIndex + 1,
           hitCount: chosenTargets.length,
           demonTypes,
-          combatLog
+          combatLog,
+          context
         });
       });
     }
@@ -391,9 +500,44 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
   return {
     winner,
     combatLog,
-    playerTeam: players,
-    enemyTeam: enemies
+    playerTeamBefore,
+    enemyTeamBefore,
+    playerTeam: cloneBattleTeamForReplay(players),
+    enemyTeam: cloneBattleTeamForReplay(enemies)
   };
+}
+
+function dealDamage(target, damage) {
+  const amount = Math.max(0, Number(damage) || 0);
+  const shield = Math.max(0, Number(target.shield) || 0);
+  const shieldDamage = Math.min(shield, amount);
+  const hpDamage = amount - shieldDamage;
+
+  if (shieldDamage > 0) {
+    target.shield = Math.max(0, shield - shieldDamage);
+  }
+  if (hpDamage > 0) {
+    target.hp = Math.max(0, target.hp - hpDamage);
+  }
+
+  return {
+    shieldDamage,
+    hpDamage
+  };
+}
+
+function cloneBattleTeamForReplay(team) {
+  return (team || []).map((demon) => {
+    const clone = {
+      ...demon,
+      statusEffects: {
+        poison: (demon.statusEffects?.poison || []).map((poison) => ({ ...poison }))
+      }
+    };
+    delete clone.battleBuffs;
+    delete clone.deathBuffsHandled;
+    return clone;
+  });
 }
 
 module.exports = {

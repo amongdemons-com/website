@@ -17,6 +17,7 @@ const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
 const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
 const getRewardExtractionChoicePayload = (...args) => dungeonActions.getRewardExtractionChoicePayload(...args);
+const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
 const playCombatLog = (...args) => dungeonActions.playCombatLog(...args);
 const prepareRecruitStrategyState = (...args) => dungeonActions.prepareRecruitStrategyState(...args);
 const renderFightLog = (...args) => dungeonActions.renderFightLog(...args);
@@ -89,7 +90,7 @@ async function loadCurrentRun() {
     state.run = await api('/api/runs/current');
     await ensureCollectionLoaded();
     state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
-    state.isRecruiting = Boolean(state.run.awaitingRecruit);
+    state.isRecruiting = Boolean(state.run.awaitingRecruit && !hasPendingBuffChoices(state.run));
     if (state.isRecruiting) prepareRecruitStrategyState();
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
@@ -153,7 +154,7 @@ async function loadRun(runId) {
     state.run = await api(runPath(runId));
     await ensureCollectionLoaded();
     state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
-    state.isRecruiting = Boolean(state.run.awaitingRecruit);
+    state.isRecruiting = Boolean(state.run.awaitingRecruit && !hasPendingBuffChoices(state.run));
     if (state.isRecruiting) prepareRecruitStrategyState();
     if (!state.isRecruiting) {
       clearRecruitDrafts();
@@ -178,9 +179,13 @@ async function battle() {
     try {
       setFightLogTitle('Fight Log');
       const result = await api(activeRunPath('battle'), { method: 'POST' });
-      state.combatDemons = createCombatDemonMap();
       state.combatLog = result.combatLog || [];
-      if (result.lastBattle) state.run.lastBattle = result.lastBattle;
+      if (result.lastBattle) {
+        state.run.lastBattle = result.lastBattle;
+        state.run.team = cloneDemons(result.lastBattle.playerTeamBefore || state.run.team || []);
+        state.run.enemies = cloneDemons(result.lastBattle.enemyTeamBefore || state.run.enemies || []);
+      }
+      state.combatDemons = createCombatDemonMap();
       elements.fightLog.innerHTML = '';
       elements.fightLog.classList.remove('text-muted');
       await playCombatLog(result);
@@ -206,10 +211,14 @@ async function battle() {
 }
 
 function canStartCurrentBattle() {
-  return Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit);
+  return Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !hasPendingBuffChoices(state.run));
 }
 
 function getWinMessage() {
+  if (hasPendingBuffChoices(state.run)) {
+    return 'Choose a Demonic Pact to continue.';
+  }
+
   return 'Battle won. Adjust your team from hand, then continue.';
 }
 
@@ -233,6 +242,11 @@ function captureEnemyHandFlowSources() {
 }
 
 function requestRecruitContinue() {
+  if (hasPendingBuffChoices(state.run)) {
+    setMessage('Choose a Demonic Pact before continuing.', 'warning');
+    return;
+  }
+
   if (shouldConfirmShortTeamContinue()) {
     getModal(elements.shortTeamModal).show();
     return;
@@ -256,12 +270,21 @@ async function continueShortTeam() {
 
 async function confirmRecruitReward() {
   if (!state.run) return;
+  if (hasPendingBuffChoices(state.run)) {
+    setMessage('Choose a Demonic Pact before continuing.', 'warning');
+    return;
+  }
 
   const runId = state.run.runId;
   const recruitChoice = getDraftRecruitPayload();
   const extractChoice = getRewardExtractionChoicePayload();
   if (!recruitChoice.team.length) {
     setMessage('Keep at least one demon on your team before continuing.', 'warning');
+    return;
+  }
+
+  if (recruitChoice.team.length > getRecruitTeamLimit()) {
+    setMessage(`Choose up to ${getRecruitTeamLimit()} demons before continuing.`, 'warning');
     return;
   }
 

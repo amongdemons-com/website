@@ -19,6 +19,7 @@ const getFormationLaneInfo = (...args) => dungeonActions.getFormationLaneInfo(..
 const getHandDropPosition = (...args) => dungeonActions.getHandDropPosition(...args);
 const getLaneDropDraftIndex = (...args) => dungeonActions.getLaneDropDraftIndex(...args);
 const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
+const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
 const loadStartOptions = (...args) => dungeonActions.loadStartOptions(...args);
 const normalizeFormationRow = (...args) => dungeonActions.normalizeFormationRow(...args);
 const refreshRecruitDraftOrder = (...args) => dungeonActions.refreshRecruitDraftOrder(...args);
@@ -513,7 +514,7 @@ function getRewardSoulValue(reward) {
 }
 
 function canExtractRun() {
-  return Boolean(state.run?.status === 'active' && state.run?.awaitingRecruit && state.isRecruiting);
+  return Boolean(state.run?.status === 'active' && state.run?.awaitingRecruit && state.isRecruiting && !hasPendingBuffChoices(state.run));
 }
 
 function syncRewardSelectionFromRun() {

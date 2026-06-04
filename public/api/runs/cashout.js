@@ -4,6 +4,7 @@ const { requireAuth } = require('../lib/auth');
 const { saveCollectionDemon } = require('../lib/collection-demons');
 const { getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
+const { hasPendingBuffChoices } = require('../lib/run-buffs');
 const { clearPendingRewardSoul, getEarnedWithPendingDiscardedSouls, settleDiscardedSoulRewards } = require('../lib/run-rewards');
 
 const router = express.Router();
@@ -18,6 +19,10 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
   const canCashOut = run.status === 'active' && run.state.awaitingRecruit;
   if (!canCashOut) {
     return res.status(409).json({ error: 'Rewards can only be claimed between dungeon fights.' });
+  }
+
+  if (hasPendingBuffChoices(run)) {
+    return res.status(409).json({ error: 'Choose a Demonic Pact before extracting rewards.' });
   }
 
   if (req.body?.skipDemon) {
