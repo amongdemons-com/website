@@ -3,6 +3,8 @@ const path = require('path');
 
 const BUFF_DATA_PATH = path.join(__dirname, '..', 'data', 'run-buffs.json');
 const TEMPORARY_TEAM_SIZE_EFFECT = 'next_battle_team_size_add';
+const PACT_CHOICE_FLOOR_INTERVAL = 3;
+const PACT_REROLL_SOUL_COST = 10;
 const RARITY_WEIGHTS = {
   common: 70,
   uncommon: 24,
@@ -36,9 +38,10 @@ function getBuffById(id) {
 
 function normalizeRunBuffState(source = {}) {
   return {
-    active: currentBuffIds(source.active),
-    pendingChoices: currentBuffIds(source.pendingChoices),
-    temporary: normalizeTemporaryBuffs(source.temporary)
+    active: currentBuffIds(source.active, { unique: false }),
+    pendingChoices: currentBuffIds(source.pendingChoices, { unique: true }),
+    temporary: normalizeTemporaryBuffs(source.temporary),
+    rerolls: Math.max(0, Math.floor(Number(source.rerolls) || 0))
   };
 }
 
@@ -55,16 +58,18 @@ function serializeRunBuffState(source = {}) {
     active: state.active,
     activeBuffs: state.active.map(getBuffById).filter(Boolean),
     pendingChoices: state.pendingChoices.map(getBuffById).filter(Boolean),
-    temporary: state.temporary
+    temporary: state.temporary,
+    rerolls: state.rerolls,
+    rerollCost: PACT_REROLL_SOUL_COST
   };
 }
 
-function generateBuffChoices(run, rng, count = 3) {
+function generateBuffChoices(run, rng, count = 3, options = {}) {
   const state = ensureRunBuffState(run);
-  const selected = new Set(state.active);
   const choices = [];
+  const excluded = new Set((options.excludeIds || []).map((id) => String(id)));
   const available = loadRunBuffs()
-    .filter((buff) => !selected.has(buff.id));
+    .filter((buff) => !excluded.has(buff.id));
 
   while (choices.length < count && available.length) {
     const index = pickWeightedBuffIndex(available, rng);
@@ -73,6 +78,9 @@ function generateBuffChoices(run, rng, count = 3) {
   }
 
   state.pendingChoices = choices;
+  if (!options.preserveRerolls) {
+    state.rerolls = 0;
+  }
   return choices;
 }
 
@@ -82,12 +90,10 @@ function selectRunBuff(run, buffId) {
   const buff = getBuffById(id);
   if (!buff) return null;
 
-  if (!state.active.includes(id)) {
-    state.active.push(id);
-  }
-
+  state.active.push(id);
   addTemporaryEntriesForBuff(state, buff);
   state.pendingChoices = [];
+  state.rerolls = 0;
   run.state.buffs = normalizeRunBuffState(state);
   applyRunBuffStatModifiers(run);
   return buff;
@@ -95,6 +101,13 @@ function selectRunBuff(run, buffId) {
 
 function hasPendingBuffChoices(run) {
   return ensureRunBuffState(run).pendingChoices.length > 0;
+}
+
+function shouldOfferRunBuffChoices(runOrFloor) {
+  const floor = typeof runOrFloor === 'object'
+    ? Number(runOrFloor?.floor ?? runOrFloor?.state?.currentFloor)
+    : Number(runOrFloor);
+  return floor > 0 && floor % PACT_CHOICE_FLOOR_INTERVAL === 0;
 }
 
 function applyPreBattleBuffs(team, buffs) {
@@ -438,13 +451,15 @@ function normalizeTemporaryBuffs(source = []) {
     ));
 }
 
-function uniqueIds(values = []) {
+function buffIds(values = [], options = {}) {
   const ids = [];
   const seen = new Set();
+  const unique = options.unique !== false;
 
   (Array.isArray(values) ? values : []).forEach((value) => {
     const id = typeof value === 'string' ? value : value?.id;
-    if (!id || seen.has(String(id))) return;
+    if (!id) return;
+    if (unique && seen.has(String(id))) return;
     seen.add(String(id));
     ids.push(String(id));
   });
@@ -452,8 +467,8 @@ function uniqueIds(values = []) {
   return ids;
 }
 
-function currentBuffIds(values = []) {
-  return uniqueIds(values).filter((id) => Boolean(getBuffById(id)));
+function currentBuffIds(values = [], options = {}) {
+  return buffIds(values, options).filter((id) => Boolean(getBuffById(id)));
 }
 
 function pickWeightedBuffIndex(buffs, rng) {
@@ -519,7 +534,10 @@ module.exports = {
   hasPendingBuffChoices,
   loadRunBuffs,
   normalizeRunBuffState,
+  PACT_CHOICE_FLOOR_INTERVAL,
+  PACT_REROLL_SOUL_COST,
   selectRunBuff,
   serializeRunBuffState,
+  shouldOfferRunBuffChoices,
   ensureRunBuffState
 };

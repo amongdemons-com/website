@@ -1,8 +1,8 @@
 import { dungeonActions } from './registry.js';
 import { state, elements } from './state.js';
 import { api, activeRunPath } from './api.js';
-import { clearRecruitDrafts, setMessage, withBusy, bindClicks, capitalize, escapeHtml } from './utils.js';
-import { renderIcon } from './shared-ui.js';
+import { clearRecruitDrafts, setMessage, withBusy, bindClick, bindClicks, capitalize, escapeHtml, sleep } from './utils.js';
+import { renderIcon, renderSoulAmount } from './shared-ui.js';
 
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
 const prepareRecruitStrategyState = (...args) => dungeonActions.prepareRecruitStrategyState(...args);
@@ -25,11 +25,16 @@ function renderDemonicPacts(isVisible = hasPendingBuffChoices()) {
   elements.demonicPactOverlay.classList.toggle('d-none', !isVisible);
   if (!isVisible) {
     elements.dungeonPactGrid.innerHTML = '';
+    if (elements.dungeonPactActions) elements.dungeonPactActions.innerHTML = '';
     return;
   }
 
   const choices = getPendingBuffChoices();
   elements.dungeonPactGrid.innerHTML = choices.map(renderDemonicPactCard).join('');
+  if (elements.dungeonPactActions) {
+    elements.dungeonPactActions.innerHTML = renderDemonicPactActions();
+    bindClick(document.getElementById('demonicPactRerollBtn'), (event) => rerollDemonicPacts(event.currentTarget));
+  }
   bindClicks('[data-demonic-pact-id]', (button) => chooseDemonicPact(button.dataset.demonicPactId, button), elements.dungeonPactGrid);
 }
 
@@ -53,9 +58,7 @@ function renderDemonicPactCard(buff) {
 
 function renderActivePactIcon(buff) {
   const rarity = String(buff.rarity || 'common').toLowerCase();
-  const tags = Array.isArray(buff.tags) ? buff.tags : [];
   const tooltip = `${buff.name || buff.id}: ${buff.description || ''}`;
-  const visibleTags = tags.slice(0, 2);
 
   return `
     <button
@@ -66,19 +69,44 @@ function renderActivePactIcon(buff) {
       aria-label="${escapeHtml(tooltip)}"
       title="${escapeHtml(tooltip)}"
     >
-      <span class="active-pact-chip-art" aria-hidden="true">
-        <span class="active-pact-chip-icon">${renderIcon(buff.icon || 'sparkles', { size: 30, strokeWidth: 1.9 })}</span>
-      </span>
-      <span class="active-pact-chip-body">
-        <strong class="active-pact-chip-name">${escapeHtml(buff.name || buff.id)}</strong>
-        ${visibleTags.length ? `
-          <span class="active-pact-chip-tags">
-            ${visibleTags.map((tag) => `<span class="active-pact-chip-tag">${escapeHtml(tag)}</span>`).join('')}
-          </span>
-        ` : ''}
+      <span class="active-pact-chip-icon" aria-hidden="true">
+        ${renderIcon(buff.icon || 'sparkles', { size: 28, strokeWidth: 1.9 })}
       </span>
     </button>
   `;
+}
+
+function renderDemonicPactActions() {
+  const cost = getPactRerollCost();
+  const playerSouls = Number(state.player?.souls) || 0;
+  const canAfford = playerSouls >= cost;
+  const title = canAfford
+    ? `Recast these choices for ${cost} Souls.`
+    : `Recast costs ${cost} Souls.`;
+
+  return `
+    <button
+      class="btn btn-outline-warning demonic-pact-reroll-btn"
+      id="demonicPactRerollBtn"
+      type="button"
+      ${canAfford ? '' : 'disabled'}
+      title="${escapeHtml(title)}"
+      aria-label="${escapeHtml(title)}"
+    >
+      ${renderIcon('replay')}
+      <span>Recast</span>
+      ${renderSoulAmount(String(cost), {
+        className: 'soul-chip demonic-pact-reroll-cost',
+        ariaLabel: `${cost} Souls`,
+        showLabel: false
+      })}
+    </button>
+  `;
+}
+
+function getPactRerollCost() {
+  const serializedCost = Number(state.run?.buffs?.rerollCost);
+  return Number.isFinite(serializedCost) && serializedCost > 0 ? serializedCost : 10;
 }
 
 function getActiveBuffs(run = state.run) {
@@ -166,6 +194,70 @@ async function chooseDemonicPact(buffId, button = null) {
   });
 }
 
+async function rerollDemonicPacts(button = null) {
+  if (!state.run || !hasPendingBuffChoices(state.run)) return;
+  const cost = getPactRerollCost();
+
+  await withBusy(button, async () => {
+    try {
+      await playDemonicPactRecastOut();
+      const payload = await api(activeRunPath('buff/reroll'), {
+        method: 'POST'
+      });
+
+      state.run = payload.run || payload;
+      if (payload.player) {
+        syncPlayer(payload.player);
+      }
+      state.isPactRevealPending = false;
+      renderRun();
+      playDemonicPactRecastIn();
+      setMessage(`Demonic Pacts recast for ${cost} Souls.`, 'success');
+    } catch (error) {
+      clearDemonicPactRecastAnimation();
+      setMessage(error.message || 'Unable to recast Demonic Pacts.', 'danger');
+    }
+  });
+}
+
+async function playDemonicPactRecastOut() {
+  if (!elements.demonicPactOverlay || prefersReducedMotion()) return;
+  clearDemonicPactRecastAnimation();
+  void elements.demonicPactOverlay.offsetWidth;
+  elements.demonicPactOverlay.classList.add('is-recasting-out');
+  await sleep(340);
+}
+
+function playDemonicPactRecastIn() {
+  if (!elements.demonicPactOverlay || prefersReducedMotion()) return;
+  clearDemonicPactRecastAnimation();
+  void elements.demonicPactOverlay.offsetWidth;
+  elements.demonicPactOverlay.classList.add('is-recasting-in');
+  window.setTimeout(() => {
+    elements.demonicPactOverlay?.classList.remove('is-recasting-in');
+  }, 840);
+}
+
+function clearDemonicPactRecastAnimation() {
+  elements.demonicPactOverlay?.classList.remove('is-recasting-out', 'is-recasting-in');
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+
+function syncPlayer(player) {
+  if (!player) return;
+
+  state.player = player;
+  const session = window.AmongDemons.getSession();
+  window.AmongDemons.setSession({
+    ...session,
+    player
+  });
+  window.AmongDemons.ui?.updateNavAccount?.(player);
+}
+
 export {
   beginDeferredDemonicPactReveal,
   completeDeferredDemonicPactRevealAfter,
@@ -176,5 +268,6 @@ export {
   renderDemonicPacts,
   renderActivePactIcon,
   renderDemonicPactCard,
-  chooseDemonicPact
+  chooseDemonicPact,
+  rerollDemonicPacts
 };

@@ -16,9 +16,10 @@ const shouldShowCollectionMissingTag = (...args) => dungeonActions.shouldShowCol
 function renderDemonCards(demons, options = {}) {
   const side = options.side === 'enemy' ? 'enemy' : 'player';
   const assignments = getFormationGridAssignments(demons || [], side);
+  const styleAttribute = options.gridStyle ? ` style="${escapeHtml(options.gridStyle)}"` : '';
 
   return `
-    <div class="battle-formation battle-formation-grid battle-formation-${side}" role="list" aria-label="${side === 'enemy' ? 'Enemy' : 'Your team'} formation">
+    <div class="battle-formation battle-formation-grid battle-formation-${side}"${styleAttribute} role="list" aria-label="${side === 'enemy' ? 'Enemy' : 'Your team'} formation">
       ${assignments.map((demon, cellIndex) => renderFormationSlot(demon, cellIndex, options, side)).join('')}
     </div>
   `;

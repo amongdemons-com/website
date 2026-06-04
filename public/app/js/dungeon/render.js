@@ -105,21 +105,21 @@ function renderRun() {
   const showHand = !showPacts;
   const rewardInteractive = Boolean(isHandStrategy);
   const canExtract = Boolean(!hasPendingPacts && !state.isResultAnimating && canExtractRun());
+  const teamGridStyle = getCurrentFormationGridInlineStyle(elements.teamGrid);
+  const enemyGridStyle = getCurrentFormationGridInlineStyle(elements.enemyGrid);
 
   elements.runPanel?.classList.toggle('has-hand', showHand);
   elements.dungeonBottomPanel?.classList.toggle('d-none', !showHand);
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
-  elements.teamGrid.innerHTML = `
-    <div class="team-formation-wrap">
-      ${renderDemonCards(team, {
-        side: 'player',
-        allowFormationDrag: run.status === 'active' && (!run.awaitingRecruit || (state.isRecruiting && !hasPendingPacts))
-      })}
-    </div>
-  `;
+  elements.teamGrid.innerHTML = renderDemonCards(team, {
+    side: 'player',
+    allowFormationDrag: run.status === 'active' && (!run.awaitingRecruit || (state.isRecruiting && !hasPendingPacts)),
+    gridStyle: teamGridStyle
+  });
   elements.enemyGrid.innerHTML = renderDemonCards((isHandStrategy || (run.team || []).length) ? enemies : [], {
     side: 'enemy',
-    allowRecruitDrag: false
+    allowRecruitDrag: false,
+    gridStyle: enemyGridStyle
   });
   renderHandBar(hand, showHand, isHandStrategy, handMode);
   renderRewardBox(showHand, rewardInteractive, canExtract);
@@ -326,19 +326,24 @@ function setBattlePanel(panel) {
 function watchFormationLaneSizing() {
   if (laneResizeObserver) laneResizeObserver.disconnect();
   const lanes = Array.from(document.querySelectorAll('.battle-side .formation-lane-cards'));
-  if (!lanes.length) return;
+  const formationSizingTargets = Array.from(document.querySelectorAll('.battle-side > #teamGrid, .battle-side > #enemyGrid'));
+  if (!lanes.length && !formationSizingTargets.length) return;
 
   const observer = new ResizeObserver(() => syncCompressedFormationLanes());
   setLaneResizeObserver(observer);
   lanes.forEach((lane) => observer.observe(lane));
+  formationSizingTargets.forEach((target) => observer.observe(target));
   document.querySelectorAll('.battle-side .hunt-demon-card-image img').forEach((image) => {
     if (!image.complete) image.addEventListener('load', syncCompressedFormationLanes, { once: true });
   });
+  syncFormationGridSizing();
   syncCompressedFormationLanes();
 }
 
 function syncCompressedFormationLanes() {
+  syncFormationGridSizing();
   requestAnimationFrame(() => {
+    syncFormationGridSizing();
     const laneAdjustments = [];
     const lanes = Array.from(document.querySelectorAll('.battle-side .formation-lane-cards'));
     lanes.forEach((lane) => {
@@ -375,6 +380,57 @@ function syncCompressedFormationLanes() {
       lane.classList.add('is-compressed');
     });
   });
+}
+
+function syncFormationGridSizing() {
+  const grids = Array.from(document.querySelectorAll('.battle-side .battle-formation-grid'));
+  grids.forEach((grid) => {
+    const container = grid.parentElement;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    const style = getComputedStyle(grid);
+    const columns = 3;
+    const rows = 3;
+    const cardHeightRatio = 4 / 3;
+    const gap = cssPixels(style.gap || style.rowGap || style.columnGap);
+    const paddingX = cssPixels(style.paddingLeft) + cssPixels(style.paddingRight);
+    const paddingY = cssPixels(style.paddingTop) + cssPixels(style.paddingBottom);
+    const widthFromContainer = (rect.width - paddingX - gap * (columns - 1)) / columns;
+    const widthFromHeight = (rect.height - paddingY - gap * (rows - 1)) / (rows * cardHeightRatio);
+    const nextWidth = Math.max(42, Math.min(190, widthFromContainer, widthFromHeight));
+
+    if (!Number.isFinite(nextWidth)) return;
+    setFormationGridCardSize(grid, nextWidth, nextWidth * cardHeightRatio);
+  });
+}
+
+function getCurrentFormationGridInlineStyle(container) {
+  const grid = container?.querySelector?.('.battle-formation-grid');
+  const width = grid?.style.getPropertyValue('--dungeon-demon-card-width');
+  const height = grid?.style.getPropertyValue('--dungeon-demon-card-height');
+  if (!width || !height) return '';
+  return `--dungeon-demon-card-width: ${width}; --dungeon-demon-card-height: ${height};`;
+}
+
+function setFormationGridCardSize(grid, width, height) {
+  const widthValue = `${width}px`;
+  const heightValue = `${height}px`;
+
+  if (grid.style.getPropertyValue('--dungeon-demon-card-width') !== widthValue) {
+    grid.style.setProperty('--dungeon-demon-card-width', widthValue);
+  }
+
+  if (grid.style.getPropertyValue('--dungeon-demon-card-height') !== heightValue) {
+    grid.style.setProperty('--dungeon-demon-card-height', heightValue);
+  }
+}
+
+function cssPixels(value) {
+  const number = parseFloat(value);
+  return Number.isFinite(number) ? number : 0;
 }
 
 function renderDungeonRewardStrip() {
@@ -438,7 +494,6 @@ function renderFightLogActions() {
       </button>
     ` : ''}
     ${canChooseRecruit ? `
-      <span class="dungeon-action-or">or</span>
       <button class="btn btn-success btn-sm" id="fightLogContinueHuntBtn" type="button">
         ${renderButtonMeleeIcon()}
         Continue
@@ -498,6 +553,7 @@ export {
   setBattlePanel,
   watchFormationLaneSizing,
   syncCompressedFormationLanes,
+  syncFormationGridSizing,
   renderDungeonRewardStrip,
   renderPhaseTitle,
   setFightLogTitle,

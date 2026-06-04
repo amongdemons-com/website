@@ -22,6 +22,7 @@ function cacheElements() {
     'dungeonBottomPanel',
     'demonicPactOverlay',
     'dungeonPactGrid',
+    'dungeonPactActions',
     'teamGrid',
     'enemyGrid',
     'dungeonHandBar',

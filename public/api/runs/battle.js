@@ -5,7 +5,7 @@ const { simulateFight } = require('../lib/combat');
 const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
-const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, hasPendingBuffChoices, serializeRunBuffState } = require('../lib/run-buffs');
+const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, hasPendingBuffChoices, serializeRunBuffState, shouldOfferRunBuffChoices } = require('../lib/run-buffs');
 const { assignFormationSlots, resetRunDemon } = require('../lib/run-demons');
 const { COLLECTION_REINFORCEMENT_FLOOR } = require('../lib/dungeon-rules');
 const { createDiscardSoulRewardFields, ensureRunEarned } = require('../lib/run-rewards');
@@ -65,7 +65,9 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 
     clearPoisonEffects(run.state.team);
     clearPoisonEffects(run.state.enemies);
-    generateBuffChoices(run, createBuffChoiceRng(run));
+    if (shouldOfferRunBuffChoices(run)) {
+      generateBuffChoices(run, createBuffChoiceRng(run));
+    }
     run.state.awaitingRecruit = true;
     if (run.floor === COLLECTION_REINFORCEMENT_FLOOR && !run.state.collectionReinforcementUsed) {
       run.state.awaitingCollectionReinforcement = true;

@@ -2816,12 +2816,6 @@ body.dungeon-page .navbar {
     vertical-align: middle;
 }
 
-.dungeon-action-or {
-    color: #9da7b1;
-    font-size: 0.78rem;
-    font-weight: bold;
-    text-transform: uppercase;
-}
 #cashoutModalBody {
     padding: 0;
 }
@@ -3005,10 +2999,6 @@ body.dungeon-page .navbar {
         min-width: 1.38rem;
         padding: 0.18rem 0.16rem;
         font-size: 0.56rem;
-    }
-
-    .dungeon-action-or {
-        display: none !important;
     }
 
     .dungeon-reward-strip {
@@ -5350,8 +5340,7 @@ body.seo-page {
 }
 
 .dungeon-header-brand .ad-icon,
-.hunt-floor-label,
-.dungeon-action-or {
+.hunt-floor-label {
     color: var(--ad-muted);
 }
 
@@ -7001,6 +6990,9 @@ body.collection-page {
     align-items: center;
     justify-items: center;
     align-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
 }
 
 .battle-side-heading {
@@ -7358,9 +7350,29 @@ body.collection-page {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-rows: auto minmax(0, auto);
+    grid-template-rows: auto minmax(0, auto) auto;
     gap: clamp(1rem, 2.4vw, 1.8rem);
     width: min(100%, 74rem);
+}
+
+.demonic-pact-stage::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 58%;
+    width: clamp(7rem, 16vw, 12rem);
+    aspect-ratio: 1;
+    border: 1px solid rgba(232,199,106,0.42);
+    border-radius: 50%;
+    background:
+        repeating-conic-gradient(from 18deg, rgba(232,199,106,0.34) 0deg 7deg, transparent 8deg 18deg),
+        radial-gradient(circle, rgba(232,199,106,0.26), rgba(111,214,189,0.12) 42%, transparent 68%);
+    box-shadow:
+        inset 0 0 34px rgba(232,199,106,0.12),
+        0 0 48px rgba(232,199,106,0.18);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.5) rotate(0deg);
 }
 
 .demonic-pact-stage-heading {
@@ -7393,6 +7405,10 @@ body.collection-page {
 
 .demonic-pact-card {
     --pact-card-y: 0;
+    --pact-recast-x: 0%;
+    --pact-recast-enter-x: 0rem;
+    --pact-recast-rotate: 0deg;
+    --pact-recast-delay: 0ms;
     position: relative;
     display: grid;
     grid-template-rows: auto auto auto 1fr auto;
@@ -7420,11 +7436,22 @@ body.collection-page {
 }
 
 .demonic-pact-card:nth-child(2) {
+    --pact-recast-delay: 70ms;
     animation-delay: 90ms;
 }
 
 .demonic-pact-card:nth-child(3) {
+    --pact-recast-x: -112%;
+    --pact-recast-enter-x: 5.6rem;
+    --pact-recast-rotate: 8deg;
+    --pact-recast-delay: 140ms;
     animation-delay: 180ms;
+}
+
+.demonic-pact-card:nth-child(1) {
+    --pact-recast-x: 112%;
+    --pact-recast-enter-x: -5.6rem;
+    --pact-recast-rotate: -8deg;
 }
 
 .demonic-pact-card::before {
@@ -7529,26 +7556,99 @@ body.collection-page {
     text-transform: uppercase;
 }
 
-.team-formation-wrap {
+.demonic-pact-actions {
+    display: flex;
+    justify-content: center;
     min-width: 0;
-    min-height: 0;
+}
+
+.demonic-pact-reroll-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.48rem;
+    min-width: min(100%, 15rem);
+    min-height: 2.85rem;
+    border-color: rgba(232,199,106,0.46);
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.13), rgba(232,199,106,0.05)),
+        rgba(3,9,11,0.64);
+    color: #fff4c2;
+    font-weight: 900;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.05),
+        0 16px 34px rgba(0,0,0,0.34);
+}
+
+.demonic-pact-reroll-btn:hover,
+.demonic-pact-reroll-btn:focus-visible {
+    border-color: rgba(232,199,106,0.74);
+    color: #fff8d8;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        0 0 0 2px rgba(232,199,106,0.16),
+        0 18px 38px rgba(0,0,0,0.42);
+}
+
+.demonic-pact-reroll-btn:disabled {
+    border-color: rgba(255,255,255,0.12);
+    color: rgba(220,232,229,0.44);
+    opacity: 0.62;
+}
+
+.demonic-pact-reroll-cost {
+    min-height: 1.55rem;
+    border-color: rgba(85,255,255,0.2);
+    background: rgba(85,255,255,0.08);
+    padding: 0.22rem 0.38rem;
+}
+
+.demonic-pact-overlay.is-recasting-out .demonic-pact-card {
+    animation: demonic-pact-recast-fold-out 320ms ease-in both;
+    animation-delay: var(--pact-recast-delay);
+}
+
+.demonic-pact-overlay.is-recasting-in .demonic-pact-card {
+    animation: demonic-pact-recast-deal-in 680ms cubic-bezier(0.14, 0.88, 0.16, 1) both;
+    animation-delay: var(--pact-recast-delay);
+}
+
+.demonic-pact-overlay.is-recasting-out .demonic-pact-stage::after,
+.demonic-pact-overlay.is-recasting-in .demonic-pact-stage::after {
+    animation: demonic-pact-recast-seal 760ms ease-out both;
+}
+
+.demonic-pact-overlay.is-recasting-out .demonic-pact-actions {
+    opacity: 0;
+    transform: translateY(0.35rem);
+    transition: opacity 140ms ease, transform 140ms ease;
 }
 
 .dungeon-hand-grid.is-pacts-tab {
-    overflow: visible;
-    padding: 0.2rem 0.05rem 0.05rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.22rem;
 }
 
 .dungeon-hand-pacts {
-    --dungeon-hand-pact-card-width: clamp(5.45rem, 7.2vw, 7rem);
+    --dungeon-hand-pact-gap: 0.3rem;
+    --dungeon-hand-pact-height: calc((var(--dungeon-hand-card-width) * 1.333 - var(--dungeon-hand-pact-gap)) / 2);
+    --dungeon-hand-pact-width: calc(var(--dungeon-hand-pact-height) * 0.75);
     display: grid;
-    grid-template-columns: repeat(auto-fill, var(--dungeon-hand-pact-card-width));
+    grid-auto-columns: var(--dungeon-hand-pact-width);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-template-rows: repeat(2, var(--dungeon-hand-pact-height));
     align-items: stretch;
     align-content: start;
     justify-content: start;
-    gap: 0.55rem;
-    width: 100%;
-    min-width: 0;
+    gap: var(--dungeon-hand-pact-gap);
+    width: max-content;
+    max-height: calc(var(--dungeon-hand-pact-height) * 2 + var(--dungeon-hand-pact-gap));
+    min-width: 100%;
+    min-height: calc(var(--dungeon-hand-pact-height) * 2 + var(--dungeon-hand-pact-gap));
 }
 
 .dungeon-hand-pacts-empty {
@@ -7565,12 +7665,12 @@ body.collection-page {
 }
 
 .active-pact-chip {
+    --active-pact-icon-size: clamp(1.35rem, calc(var(--dungeon-hand-pact-height, 4rem) * 0.45), 2.25rem);
     position: relative;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
-    align-items: stretch;
-    width: 5.45rem;
-    aspect-ratio: 3 / 4;
+    place-items: center;
+    width: var(--dungeon-hand-pact-width, 3.2rem);
+    height: var(--dungeon-hand-pact-height, 4.25rem);
     min-height: 0;
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 8px;
@@ -7585,7 +7685,8 @@ body.collection-page {
 }
 
 .dungeon-hand-pacts .active-pact-chip {
-    width: var(--dungeon-hand-pact-card-width);
+    width: var(--dungeon-hand-pact-width);
+    height: var(--dungeon-hand-pact-height);
     text-align: center;
 }
 
@@ -7622,9 +7723,14 @@ body.collection-page {
         linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.06));
 }
 
+.active-pact-chip-icon {
+    display: grid;
+    place-items: center;
+}
+
 .active-pact-chip-icon .ad-icon {
-    width: clamp(1.5rem, 2.2vw, 2rem);
-    height: clamp(1.5rem, 2.2vw, 2rem);
+    width: var(--active-pact-icon-size);
+    height: var(--active-pact-icon-size);
 }
 
 .active-pact-chip-body {
@@ -7706,6 +7812,21 @@ body.collection-page {
     transform: translate(-50%, 0);
 }
 
+.dungeon-hand-pacts .active-pact-chip::after {
+    position: fixed;
+    left: 50%;
+    bottom: clamp(6.8rem, 16vh, 11rem);
+    max-width: min(24rem, 88vw);
+    transform: translate(-50%, 0.35rem);
+}
+
+.dungeon-hand-pacts .active-pact-chip:hover::after,
+.dungeon-hand-pacts .active-pact-chip:focus::after,
+.dungeon-hand-pacts .active-pact-chip:focus-visible::after,
+.dungeon-hand-pacts .active-pact-chip.is-tooltip-visible::after {
+    transform: translate(-50%, 0);
+}
+
 @keyframes demonic-pact-overlay-in {
     from {
         opacity: 0;
@@ -7754,11 +7875,59 @@ body.collection-page {
     }
 }
 
+@keyframes demonic-pact-recast-fold-out {
+    0% {
+        opacity: 1;
+        filter: brightness(1);
+        transform: translateY(var(--pact-card-y)) rotate(0deg) scale(1);
+    }
+    100% {
+        opacity: 0;
+        filter: brightness(0.7) blur(1px);
+        transform: translateX(var(--pact-recast-x)) translateY(1.4rem) rotate(var(--pact-recast-rotate)) scale(0.72);
+    }
+}
+
+@keyframes demonic-pact-recast-deal-in {
+    0% {
+        opacity: 0;
+        filter: brightness(1.8) saturate(1.18);
+        transform: translateX(var(--pact-recast-enter-x)) translateY(2.25rem) rotate(var(--pact-recast-rotate)) scale(0.78);
+    }
+    62% {
+        opacity: 1;
+        filter: brightness(1.16) saturate(1.06);
+        transform: translateX(0) translateY(-0.26rem) rotate(0deg) scale(1.025);
+    }
+    100% {
+        opacity: 1;
+        filter: brightness(1) saturate(1);
+        transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+    }
+}
+
+@keyframes demonic-pact-recast-seal {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.42) rotate(0deg);
+    }
+    34% {
+        opacity: 0.95;
+        transform: translate(-50%, -50%) scale(1.04) rotate(96deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.48) rotate(176deg);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .demonic-pact-overlay,
     .demonic-pact-backdrop::before,
     .demonic-pact-backdrop::after,
     .demonic-pact-stage-heading,
+    .demonic-pact-stage::after,
+    .demonic-pact-grid,
     .demonic-pact-card,
     .demonic-pact-card::before {
         animation: none !important;
@@ -8050,12 +8219,27 @@ body.collection-page {
         line-height: 1.25;
     }
 
+    .demonic-pact-actions {
+        align-items: stretch;
+    }
+
+    .demonic-pact-reroll-btn {
+        width: min(100%, 15rem);
+        min-height: 2.45rem;
+        font-size: 0.78rem;
+    }
+
     .active-pact-chip-tag {
         font-size: 0.36rem;
     }
 
     .active-pact-chip::after {
         max-width: min(16rem, 62vw);
+    }
+
+    .dungeon-hand-pacts .active-pact-chip::after {
+        bottom: clamp(5.2rem, 12vh, 8rem);
+        max-width: min(18rem, 86vw);
     }
 
     .dungeon-hand-tabs {
@@ -8069,13 +8253,16 @@ body.collection-page {
     }
 
     .dungeon-hand-pacts {
-        --dungeon-hand-pact-card-width: clamp(4.25rem, 17vw, 4.9rem);
-        grid-template-columns: repeat(auto-fill, var(--dungeon-hand-pact-card-width));
-        gap: 0.32rem;
+        --dungeon-hand-pact-gap: 0.22rem;
+        grid-auto-columns: var(--dungeon-hand-pact-width);
+        grid-template-columns: none;
+        grid-template-rows: repeat(2, var(--dungeon-hand-pact-height));
+        gap: var(--dungeon-hand-pact-gap);
     }
 
     .dungeon-hand-pacts .active-pact-chip {
-        width: var(--dungeon-hand-pact-card-width);
+        width: var(--dungeon-hand-pact-width);
+        height: var(--dungeon-hand-pact-height);
         min-height: 0;
     }
 
@@ -8112,6 +8299,12 @@ body.collection-page {
 
     .dungeon-hand-grid {
         overflow: visible;
+        padding: 0;
+    }
+
+    .dungeon-hand-grid.is-pacts-tab {
+        overflow-x: auto;
+        overflow-y: hidden;
         padding: 0;
     }
 
