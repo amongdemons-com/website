@@ -51,21 +51,11 @@ function renderDemonicPactCard(buff) {
   `;
 }
 
-function renderActivePactRail(run = state.run) {
-  const activeBuffs = getActiveBuffs(run);
-  if (!activeBuffs.length) return '';
-
-  return `
-    <aside class="active-pact-rail" aria-label="Active Demonic Pacts">
-      ${activeBuffs.map(renderActivePactIcon).join('')}
-    </aside>
-  `;
-}
-
 function renderActivePactIcon(buff) {
   const rarity = String(buff.rarity || 'common').toLowerCase();
   const tags = Array.isArray(buff.tags) ? buff.tags : [];
   const tooltip = `${buff.name || buff.id}: ${buff.description || ''}`;
+  const visibleTags = tags.slice(0, 2);
 
   return `
     <button
@@ -76,8 +66,17 @@ function renderActivePactIcon(buff) {
       aria-label="${escapeHtml(tooltip)}"
       title="${escapeHtml(tooltip)}"
     >
-      <span class="active-pact-chip-icon" aria-hidden="true">${renderIcon(buff.icon || 'sparkles', { size: 18, strokeWidth: 2.1 })}</span>
-      ${tags[0] ? `<span class="active-pact-chip-tag">${escapeHtml(tags[0])}</span>` : ''}
+      <span class="active-pact-chip-art" aria-hidden="true">
+        <span class="active-pact-chip-icon">${renderIcon(buff.icon || 'sparkles', { size: 30, strokeWidth: 1.9 })}</span>
+      </span>
+      <span class="active-pact-chip-body">
+        <strong class="active-pact-chip-name">${escapeHtml(buff.name || buff.id)}</strong>
+        ${visibleTags.length ? `
+          <span class="active-pact-chip-tags">
+            ${visibleTags.map((tag) => `<span class="active-pact-chip-tag">${escapeHtml(tag)}</span>`).join('')}
+          </span>
+        ` : ''}
+      </span>
     </button>
   `;
 }
@@ -152,6 +151,7 @@ async function chooseDemonicPact(buffId, button = null) {
       state.run = updatedRun;
       state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
       state.isPactRevealPending = false;
+      state.activeHandTab = 'hand';
       state.isRecruiting = Boolean(state.run.awaitingRecruit && !hasPendingBuffChoices(state.run));
       if (state.isRecruiting) {
         prepareRecruitStrategyState();
@@ -174,7 +174,6 @@ export {
   hasPendingBuffChoices,
   getPendingBuffChoices,
   renderDemonicPacts,
-  renderActivePactRail,
   renderActivePactIcon,
   renderDemonicPactCard,
   chooseDemonicPact

@@ -194,7 +194,7 @@ async function battle() {
         state.run.status = 'defeated';
         state.run.lastBattle = result.lastBattle || state.run.lastBattle;
         state.battleHandPreview = null;
-        await finishRun('Your team was defeated.', { defeated: true });
+        await finishRun(getDefeatMessage(result), { defeated: true });
       } else {
         const handFlowSources = captureEnemyHandFlowSources();
         const resultOverlay = showBattleResultOverlay('victory');
@@ -210,6 +210,16 @@ async function battle() {
       showError(error);
     }
   });
+}
+
+function getDefeatMessage(result = {}) {
+  if (result.endReason === 'stalemate') {
+    return 'Battle stalemated. Your team could not finish the fight.';
+  }
+  if (result.endReason === 'timeout') {
+    return 'Battle timed out. Your team could not finish the fight.';
+  }
+  return 'Your team was defeated.';
 }
 
 function canStartCurrentBattle() {

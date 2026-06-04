@@ -47,6 +47,8 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   run.state.lastBattle = {
     floor: run.floor,
     winner: result.winner,
+    endReason: result.endReason,
+    ticks: result.ticks,
     combatLog: result.combatLog,
     playerTeamBefore: cloneForBattleReplay(result.playerTeamBefore),
     enemyTeamBefore: cloneForBattleReplay(result.enemyTeamBefore),
@@ -82,6 +84,8 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 
   res.json({
     winner: result.winner,
+    endReason: result.endReason,
+    ticks: result.ticks,
     combatLog: result.combatLog,
     lastBattle: run.state.lastBattle,
     buffs: serializeRunBuffState(run.state.buffs),

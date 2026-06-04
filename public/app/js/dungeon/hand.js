@@ -2,7 +2,7 @@ import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderSoulAmount } from './shared-ui.js';
+import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const getPayoutPreview = (...args) => dungeonActions.getPayoutPreview(...args);
@@ -14,7 +14,11 @@ const renderCollectionReinforcementPlaceholder = (...args) => dungeonActions.ren
 const renderDemonCard = (...args) => dungeonActions.renderDemonCard(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
+const getActiveBuffs = (...args) => dungeonActions.getActiveBuffs(...args);
+const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
+const renderActivePactIcon = (...args) => dungeonActions.renderActivePactIcon(...args);
 const shouldShowCollectionReinforcementHandPlaceholder = (...args) => dungeonActions.shouldShowCollectionReinforcementHandPlaceholder(...args);
+let handTabEventsBound = false;
 
 function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit') {
   if (!elements.dungeonHandBar || !elements.dungeonHandGrid) return;
@@ -22,18 +26,73 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
   elements.dungeonHandBar.classList.toggle('d-none', !isVisible);
   if (!isVisible) {
     elements.dungeonHandGrid.innerHTML = '';
-    if (elements.dungeonHandTitle) elements.dungeonHandTitle.textContent = '0 demons';
+    elements.dungeonHandGrid.classList.remove('is-pacts-tab');
+    elements.dungeonHandBar.classList.remove('has-pacts', 'is-pacts-tab-active');
+    updateHandTabs('hand', 0);
     return;
   }
 
-  const count = hand.length;
-  if (elements.dungeonHandTitle) {
-    elements.dungeonHandTitle.textContent = mode === 'battle'
-      ? 'Fighting'
-      : `${count} ${count === 1 ? 'demon' : 'demons'}`;
+  const activePacts = getActiveBuffs();
+  const hasPacts = activePacts.length > 0;
+  if (!hasPacts || !['hand', 'pacts'].includes(state.activeHandTab)) {
+    state.activeHandTab = 'hand';
   }
 
-  elements.dungeonHandGrid.innerHTML = renderHandCards(hand, isInteractive, mode);
+  const activeTab = hasPacts && state.activeHandTab === 'pacts' ? 'pacts' : 'hand';
+
+  elements.dungeonHandBar.classList.toggle('has-pacts', hasPacts);
+  elements.dungeonHandBar.classList.toggle('is-pacts-tab-active', activeTab === 'pacts');
+  elements.dungeonHandGrid.classList.toggle('is-pacts-tab', activeTab === 'pacts');
+  updateHandTabs(activeTab, activePacts.length);
+  elements.dungeonHandGrid.innerHTML = activeTab === 'pacts'
+    ? renderHandPactTags(activePacts)
+    : renderHandCards(hand, isInteractive, mode);
+  bindHandTabs();
+}
+
+function updateHandTabs(activeTab = 'hand', pactCount = 0) {
+  const handTab = elements.dungeonHandBar?.querySelector('[data-dungeon-hand-tab="hand"]');
+  const pactsTab = elements.dungeonHandBar?.querySelector('[data-dungeon-hand-tab="pacts"]');
+
+  if (handTab) {
+    handTab.classList.toggle('active', activeTab === 'hand');
+    handTab.setAttribute('aria-selected', activeTab === 'hand' ? 'true' : 'false');
+  }
+
+  if (pactsTab) {
+    pactsTab.classList.toggle('d-none', pactCount <= 0);
+    pactsTab.classList.toggle('active', activeTab === 'pacts');
+    pactsTab.setAttribute('aria-selected', activeTab === 'pacts' ? 'true' : 'false');
+    pactsTab.disabled = pactCount <= 0;
+  }
+}
+
+function bindHandTabs() {
+  if (handTabEventsBound) return;
+  handTabEventsBound = true;
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest?.('[data-dungeon-hand-tab]');
+    if (!button || !elements.dungeonHandBar?.contains(button)) return;
+
+    const nextTab = button.dataset.dungeonHandTab === 'pacts' ? 'pacts' : 'hand';
+    if (nextTab === 'pacts' && !getActiveBuffs().length) return;
+
+    state.activeHandTab = nextTab;
+    renderRun();
+  });
+}
+
+function renderHandPactTags(activePacts) {
+  if (!activePacts.length) {
+    return '<div class="dungeon-hand-pacts-empty">No Demonic Pacts sealed.</div>';
+  }
+
+  return `
+    <div class="dungeon-hand-pacts" aria-label="Selected Demonic Pacts">
+      ${activePacts.map(renderActivePactIcon).join('')}
+    </div>
+  `;
 }
 
 function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
@@ -61,33 +120,32 @@ function renderEmptyHand(mode = 'recruit') {
   return '<div class="formation-empty dungeon-hand-empty"><span>Empty</span></div>';
 }
 
-function renderRewardBox(isVisible, isInteractive = false) {
+function renderRewardBox(isVisible, isInteractive = false, canExtract = false) {
   if (!elements.dungeonRewardBox || !elements.dungeonRewardGrid) return;
 
   elements.dungeonRewardBox.classList.toggle('d-none', !isVisible);
   if (!isVisible) {
     elements.dungeonRewardGrid.innerHTML = '';
-    if (elements.dungeonRewardTitle) elements.dungeonRewardTitle.textContent = '0 XP / 0 Souls';
     return;
   }
 
   const candidate = getSelectedRewardCandidate();
   const earned = getPayoutPreview(candidate);
-  if (elements.dungeonRewardTitle) {
-    elements.dungeonRewardTitle.textContent = `${earned.xp || 0} XP / ${earned.souls || 0} Souls`;
-  }
 
   elements.dungeonRewardGrid.innerHTML = `
-    <div class="dungeon-reward-dropzone formation-lane-cards ${candidate ? 'has-demon' : 'is-empty'}" data-reward-drop="true">
-      <div class="dungeon-reward-slot">
-        ${candidate ? renderRewardBoxCard(candidate, isInteractive) : renderEmptyRewardSlot()}
+    <div class="dungeon-reward-panel ${candidate ? 'has-demon' : 'is-empty'}">
+      <div class="dungeon-reward-dropzone formation-lane-cards ${candidate ? 'has-demon' : 'is-empty'}" data-reward-drop="true">
+        <div class="dungeon-reward-slot">
+          ${candidate ? renderRewardBoxCard(candidate, isInteractive) : renderEmptyRewardSlot()}
+        </div>
       </div>
-      ${renderRewardPayout(earned)}
+      ${renderRewardPayout(earned, canExtract)}
     </div>
   `;
+  bindClick(document.getElementById('getRewardBtn'), openCashoutModal);
 }
 
-function renderRewardPayout(earned) {
+function renderRewardPayout(earned, canExtract = false) {
   const xp = Number(earned.xp) || 0;
   const souls = Number(earned.souls) || 0;
   return `
@@ -102,6 +160,10 @@ function renderRewardPayout(earned) {
           ariaLabel: `${souls} Souls`
         })}
       </div>
+      <button class="btn btn-warning dungeon-reward-extract-btn" id="getRewardBtn" type="button" ${canExtract ? '' : 'disabled'}>
+        ${renderIcon('flag')}
+        Extract
+      </button>
     </div>
   `;
 }
@@ -283,6 +345,9 @@ function markHandFlowLanded(target) {
 
 export {
   renderHandBar,
+  updateHandTabs,
+  bindHandTabs,
+  renderHandPactTags,
   renderHandCards,
   renderEmptyHand,
   renderRewardBox,

@@ -22,6 +22,7 @@ export const state = {
   isPactRevealPending: false,
   pactRevealTimer: null,
   battleHandPreview: null,
+  activeHandTab: 'hand',
   recruitDraftTeam: null,
   recruitDraftPool: null,
   collectionDemons: null,

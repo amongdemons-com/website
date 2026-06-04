@@ -2456,15 +2456,16 @@ body.dungeon-page .navbar {
 
 #runPanel.has-hand {
     grid-template-rows: minmax(0, 1fr) auto;
-    gap: 0.75rem;
+    gap: 0.45rem;
 }
 
 .dungeon-bottom-panel {
-    --dungeon-reward-card-width: clamp(5.6rem, 9vw, 7.25rem);
+    --dungeon-hand-card-width: clamp(5.6rem, 9vw, 7.25rem);
+    --dungeon-reward-card-width: var(--dungeon-hand-card-width);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(13.5rem, calc(var(--dungeon-reward-card-width) + 6.5rem));
+    grid-template-columns: minmax(0, 1fr) minmax(17.5rem, calc(var(--dungeon-reward-card-width) + 11rem));
     align-items: stretch;
-    gap: 0.75rem;
+    gap: 0.55rem;
     min-width: 0;
     min-height: 0;
 }
@@ -2475,14 +2476,19 @@ body.dungeon-page .navbar {
 
 .dungeon-hand-bar {
     display: grid;
-    grid-template-rows: auto minmax(0, auto);
-    gap: 0.45rem;
+    gap: 0.38rem;
     min-height: 0;
     border: 1px solid rgba(232,199,106,0.24);
     border-radius: 6px;
     background: rgba(7,18,20,0.72);
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 -10px 30px rgba(0,0,0,0.2);
-    padding: 0.55rem;
+    padding: 0.42rem;
+}
+
+#dungeonHandBar {
+    grid-template-columns: clamp(3rem, 3.6vw, 3.55rem) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
 }
 
 .dungeon-hand-bar.d-none {
@@ -2506,22 +2512,68 @@ body.dungeon-page .navbar {
     text-transform: uppercase;
 }
 
+.dungeon-hand-tabs {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    align-items: stretch;
+    gap: 0.24rem;
+    min-width: 0;
+}
+
+.dungeon-hand-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 0;
+    border: 1px solid rgba(232,199,106,0.18);
+    border-radius: 6px;
+    background: rgba(3,9,11,0.38);
+    color: rgba(220,232,229,0.7);
+    font-size: 0.68rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.36rem 0.32rem;
+    text-align: center;
+    text-transform: uppercase;
+    white-space: normal;
+}
+
+.dungeon-hand-tab:hover,
+.dungeon-hand-tab:focus,
+.dungeon-hand-tab:focus-visible {
+    border-color: rgba(232,199,106,0.38);
+    color: #f5d56d;
+}
+
+.dungeon-hand-tab.active {
+    border-color: rgba(232,199,106,0.56);
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.16), rgba(232,199,106,0.06)),
+        rgba(3,9,11,0.62);
+    color: #fff4c2;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+
 .dungeon-hand-grid {
     min-width: 0;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 0.15rem 0.2rem 0.25rem;
+    padding: 0;
     scrollbar-color: rgba(232,199,106,0.48) rgba(255,255,255,0.06);
 }
 
 .dungeon-hand-cards {
-    --dungeon-hand-card-width: clamp(5.6rem, 9vw, 7.25rem);
+    --dungeon-hand-card-width: var(--dungeon-reward-card-width);
     flex-direction: row;
     justify-content: flex-start;
     width: max-content;
     min-width: 100%;
-    min-height: calc(var(--dungeon-hand-card-width) * 1.333 + 0.4rem);
-    padding: 0.18rem;
+    min-height: calc(var(--dungeon-hand-card-width) * 1.333);
+    padding: 0;
 }
 
 .dungeon-hand-cards .hunt-demon-card,
@@ -2561,19 +2613,28 @@ body.dungeon-page .navbar {
 
 .dungeon-reward-grid {
     display: grid;
+    height: 100%;
     min-width: 0;
     min-height: 0;
 }
 
+.dungeon-reward-panel {
+    display: grid;
+    grid-template-columns: var(--dungeon-reward-card-width) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0.48rem;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: calc(var(--dungeon-reward-card-width) * 1.333);
+}
+
 .dungeon-reward-dropzone {
     display: grid;
-    grid-template-columns: auto minmax(4.8rem, 1fr);
-    align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    width: 100%;
-    min-height: calc(var(--dungeon-reward-card-width) * 1.333 + 0.4rem);
-    padding: 0.2rem;
+    place-items: center;
+    min-width: 0;
+    min-height: calc(var(--dungeon-reward-card-width) * 1.333);
+    padding: 0;
     border: 1px dashed transparent;
     border-radius: 6px;
     background: transparent;
@@ -2600,11 +2661,12 @@ body.dungeon-page .navbar {
 .dungeon-reward-payout {
     display: grid;
     align-self: stretch;
-    align-content: center;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-content: stretch;
     justify-self: stretch;
-    gap: 0.42rem;
-    min-width: 4.8rem;
-    padding: 0.5rem 0.52rem;
+    gap: 0.3rem;
+    min-width: 7.5rem;
+    padding: 0.36rem;
     border: 1px solid rgba(232,199,106,0.18);
     border-radius: 8px;
     background:
@@ -2614,21 +2676,27 @@ body.dungeon-page .navbar {
 
 .dungeon-reward-payout-item {
     display: grid;
+    align-content: center;
+    justify-items: center;
     gap: 0.08rem;
     min-width: 0;
-    text-align: right;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    background: rgba(3,9,11,0.34);
+    padding: 0.25rem 0.32rem;
+    text-align: center;
 }
 
 .dungeon-reward-payout-item strong {
     color: #f3dc93;
-    font-size: clamp(0.86rem, 1vw, 1.04rem);
+    font-size: clamp(0.92rem, 1.08vw, 1.12rem);
     line-height: 1;
 }
 
 .dungeon-reward-payout-item > span {
     display: inline-flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 0.22rem;
     color: rgba(220,232,229,0.68);
     font-size: 0.58rem;
@@ -2642,8 +2710,8 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-reward-payout-soul-amount {
-    justify-content: flex-end;
-    min-height: 2.15rem;
+    justify-content: center;
+    min-height: 1.72rem;
     width: 100%;
     padding: 0.34rem 0.42rem;
 }
@@ -2651,6 +2719,23 @@ body.dungeon-page .navbar {
 .dungeon-reward-payout-souls .soul-icon {
     width: 0.9em;
     height: 0.9em;
+}
+
+.dungeon-reward-extract-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.32rem;
+    width: 100%;
+    min-height: 2.05rem;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.dungeon-reward-extract-btn .ad-icon {
+    width: 1rem;
+    height: 1rem;
 }
 
 .dungeon-reward-slot {
@@ -3192,9 +3277,10 @@ body.dungeon-page .navbar {
     }
 
     .dungeon-bottom-panel {
-        --dungeon-reward-card-width: clamp(3.6rem, 18vw, 4.9rem);
-        grid-template-columns: minmax(0, 1fr) minmax(7.4rem, calc(var(--dungeon-reward-card-width) + 3.5rem));
-        gap: 0.35rem;
+        --dungeon-hand-card-width: clamp(3.6rem, 18vw, 4.9rem);
+        --dungeon-reward-card-width: var(--dungeon-hand-card-width);
+        grid-template-columns: minmax(0, 1fr) minmax(9.6rem, calc(var(--dungeon-reward-card-width) + 5.5rem));
+        gap: 0.28rem;
     }
 
     .dungeon-arena.is-hand-strategy {
@@ -3204,7 +3290,11 @@ body.dungeon-page .navbar {
 
     .dungeon-hand-bar {
         gap: 0.28rem;
-        padding: 0.35rem;
+        padding: 0.28rem;
+    }
+
+    #dungeonHandBar {
+        grid-template-columns: clamp(2.65rem, 8.2vw, 3.1rem) minmax(0, 1fr);
     }
 
     .dungeon-hand-header {
@@ -3212,15 +3302,15 @@ body.dungeon-page .navbar {
     }
 
     .dungeon-hand-grid {
-        padding: 0.05rem 0.08rem 0.18rem;
+        padding: 0;
     }
 
     .dungeon-hand-cards {
-        --dungeon-hand-card-width: clamp(3.6rem, 18vw, 4.9rem);
+        --dungeon-hand-card-width: var(--dungeon-reward-card-width);
         display: flex;
         grid-template-columns: none;
-        gap: 0.32rem;
-        min-height: calc(var(--dungeon-hand-card-width) * 1.333 + 0.2rem);
+        gap: 0.26rem;
+        min-height: calc(var(--dungeon-hand-card-width) * 1.333);
     }
 
     .dungeon-hand-cards .hunt-demon-card-title {
@@ -3231,17 +3321,26 @@ body.dungeon-page .navbar {
         width: 100%;
     }
 
+    .dungeon-reward-panel {
+        grid-template-columns: var(--dungeon-reward-card-width) minmax(0, 1fr);
+        gap: 0.24rem;
+        min-height: calc(var(--dungeon-reward-card-width) * 1.333);
+    }
+
     .dungeon-reward-dropzone {
-        grid-template-columns: auto minmax(2.7rem, 1fr);
-        gap: 0.25rem;
-        min-height: calc(var(--dungeon-reward-card-width) * 1.333 + 0.2rem);
-        padding: 0.12rem;
+        min-height: calc(var(--dungeon-reward-card-width) * 1.333);
+        padding: 0;
     }
 
     .dungeon-reward-payout {
         min-width: 2.7rem;
-        gap: 0.28rem;
-        padding: 0.34rem 0.3rem;
+        gap: 0.2rem;
+        padding: 0.24rem;
+    }
+
+    .dungeon-reward-extract-btn {
+        min-height: 1.75rem;
+        font-size: 0.58rem;
     }
 
     .dungeon-reward-payout-item strong {
@@ -6904,23 +7003,6 @@ body.collection-page {
     align-content: center;
 }
 
-.battle-side-player > #teamGrid.has-active-pacts {
-    grid-template-columns: auto minmax(0, auto);
-    column-gap: clamp(0.25rem, 0.8vw, 0.65rem);
-}
-
-.battle-side-player > #teamGrid.has-active-pacts .active-pact-rail {
-    grid-column: 1;
-}
-
-.battle-side-player > #teamGrid.has-active-pacts .team-formation-wrap {
-    grid-column: 2;
-}
-
-.battle-side-player > #teamGrid:not(.has-active-pacts) .team-formation-wrap {
-    grid-column: 1;
-}
-
 .battle-side-heading {
     justify-content: center;
     gap: 0.42rem;
@@ -7188,15 +7270,18 @@ body.collection-page {
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.04),
         0 -14px 34px rgba(0,0,0,0.24);
-    padding: 0.65rem 0.75rem 0.7rem;
+    padding: 0.42rem 0.5rem;
 }
 
 .dungeon-bottom-panel {
-    --dungeon-reward-card-width: clamp(6.15rem, 7.8vw, 7.8rem);
-    grid-template-columns: minmax(0, 1fr) minmax(14rem, calc(var(--dungeon-reward-card-width) + 7rem));
+    --dungeon-hand-card-width: clamp(5.45rem, 7.2vw, 7rem);
+    --dungeon-reward-card-width: var(--dungeon-hand-card-width);
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, calc(var(--dungeon-reward-card-width) + 11.5rem));
 }
 
 .dungeon-reward-box {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     width: 100%;
 }
 
@@ -7449,36 +7534,59 @@ body.collection-page {
     min-height: 0;
 }
 
-.active-pact-rail {
-    --active-pact-row-count: 6;
-    display: grid;
-    grid-template-rows: repeat(var(--active-pact-row-count), auto);
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    align-items: center;
-    justify-content: center;
-    gap: 0.38rem;
-    min-width: 2.85rem;
-    max-width: min(16rem, 34vw);
+.dungeon-hand-grid.is-pacts-tab {
     overflow: visible;
-    padding: 0.4rem 0.28rem;
+    padding: 0.2rem 0.05rem 0.05rem;
+}
+
+.dungeon-hand-pacts {
+    --dungeon-hand-pact-card-width: clamp(5.45rem, 7.2vw, 7rem);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, var(--dungeon-hand-pact-card-width));
+    align-items: stretch;
+    align-content: start;
+    justify-content: start;
+    gap: 0.55rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.dungeon-hand-pacts-empty {
+    display: grid;
+    place-items: center;
+    min-height: 4.8rem;
+    border: 1px solid rgba(232,199,106,0.18);
+    border-radius: 8px;
+    background: rgba(232,199,106,0.04);
+    color: rgba(243,220,147,0.62);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
 .active-pact-chip {
     position: relative;
     display: grid;
-    place-items: center;
-    gap: 0.12rem;
-    width: 2.55rem;
-    min-height: 2.95rem;
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: stretch;
+    width: 5.45rem;
+    aspect-ratio: 3 / 4;
+    min-height: 0;
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 8px;
-    background: rgba(7,18,20,0.76);
+    background:
+        linear-gradient(180deg, rgba(7,18,20,0.74), rgba(3,9,11,0.92)),
+        radial-gradient(circle at 50% 12%, rgba(232,199,106,0.14), transparent 56%);
     color: #f5d56d;
-    padding: 0.24rem;
+    padding: 0;
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.04),
         0 8px 18px rgba(0,0,0,0.28);
+}
+
+.dungeon-hand-pacts .active-pact-chip {
+    width: var(--dungeon-hand-pact-card-width);
+    text-align: center;
 }
 
 .active-pact-chip:hover,
@@ -7503,15 +7611,62 @@ body.collection-page {
     border-top: 3px solid #2C82C9;
 }
 
+.active-pact-chip-art {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    min-height: 0;
+    border-radius: 7px 7px 0 0;
+    background:
+        radial-gradient(circle, rgba(232,199,106,0.18), rgba(3,9,11,0.04) 58%),
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.06));
+}
+
 .active-pact-chip-icon .ad-icon {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: clamp(1.5rem, 2.2vw, 2rem);
+    height: clamp(1.5rem, 2.2vw, 2rem);
+}
+
+.active-pact-chip-body {
+    display: grid;
+    align-content: end;
+    gap: 0.2rem;
+    min-width: 0;
+    min-height: 42%;
+    border-radius: 0 0 7px 7px;
+    background: linear-gradient(to top, rgba(2,7,9,0.96), rgba(2,7,9,0.72) 72%, transparent);
+    padding: 0.42rem 0.34rem 0.34rem;
+}
+
+.active-pact-chip-name {
+    min-width: 0;
+    color: #fff5c7;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(0.62rem, 0.75vw, 0.78rem);
+    font-weight: 800;
+    line-height: 1.02;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+}
+
+.active-pact-chip-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.14rem;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.dungeon-hand-pacts .active-pact-chip-tags {
+    justify-content: center;
 }
 
 .active-pact-chip-tag {
     max-width: 100%;
     color: rgba(220,232,229,0.74);
-    font-size: 0.46rem;
+    font-size: 0.42rem;
     font-weight: 900;
     line-height: 1;
     overflow: hidden;
@@ -7523,8 +7678,8 @@ body.collection-page {
 .active-pact-chip::after {
     content: attr(data-tooltip);
     position: absolute;
-    left: calc(100% + 0.55rem);
-    top: 50%;
+    left: 50%;
+    bottom: calc(100% + 0.48rem);
     z-index: 30;
     width: max-content;
     max-width: min(20rem, 54vw);
@@ -7539,7 +7694,7 @@ body.collection-page {
     padding: 0.55rem 0.65rem;
     pointer-events: none;
     opacity: 0;
-    transform: translate(-0.3rem, -50%);
+    transform: translate(-50%, 0.25rem);
     transition: opacity 140ms ease, transform 140ms ease;
 }
 
@@ -7548,7 +7703,7 @@ body.collection-page {
 .active-pact-chip:focus-visible::after,
 .active-pact-chip.is-tooltip-visible::after {
     opacity: 1;
-    transform: translate(0, -50%);
+    transform: translate(-50%, 0);
 }
 
 @keyframes demonic-pact-overlay-in {
@@ -7836,13 +7991,14 @@ body.collection-page {
     }
 
     .dungeon-hand-cards {
-        --dungeon-hand-card-width: clamp(3.45rem, 18vw, 4.75rem);
-        gap: 0.32rem;
+        --dungeon-hand-card-width: var(--dungeon-reward-card-width);
+        gap: 0.26rem;
     }
 
     .dungeon-bottom-panel {
-        --dungeon-reward-card-width: clamp(3.8rem, 19vw, 5.15rem);
-        grid-template-columns: minmax(0, 1fr) minmax(7.4rem, calc(var(--dungeon-reward-card-width) + 3.5rem));
+        --dungeon-hand-card-width: clamp(3.45rem, 18vw, 4.75rem);
+        --dungeon-reward-card-width: var(--dungeon-hand-card-width);
+        grid-template-columns: minmax(0, 1fr) minmax(9.4rem, calc(var(--dungeon-reward-card-width) + 5.2rem));
     }
 
     .dungeon-reward-box {
@@ -7894,31 +8050,41 @@ body.collection-page {
         line-height: 1.25;
     }
 
-    .battle-side-player > #teamGrid.has-active-pacts {
-        column-gap: 0.18rem;
-    }
-
-    .active-pact-rail {
-        --active-pact-row-count: 5;
-        min-width: 2.25rem;
-        max-width: min(7.2rem, 22vw);
-        gap: 0.22rem;
-        overflow: visible;
-        padding: 0.2rem 0.08rem;
-    }
-
-    .active-pact-chip {
-        width: 2.08rem;
-        min-height: 2.38rem;
-    }
-
     .active-pact-chip-tag {
-        font-size: 0.38rem;
+        font-size: 0.36rem;
     }
 
     .active-pact-chip::after {
-        left: calc(100% + 0.35rem);
         max-width: min(16rem, 62vw);
+    }
+
+    .dungeon-hand-tabs {
+        gap: 0.18rem;
+    }
+
+    .dungeon-hand-tab {
+        min-height: 0;
+        padding: 0.28rem 0.26rem;
+        font-size: 0.58rem;
+    }
+
+    .dungeon-hand-pacts {
+        --dungeon-hand-pact-card-width: clamp(4.25rem, 17vw, 4.9rem);
+        grid-template-columns: repeat(auto-fill, var(--dungeon-hand-pact-card-width));
+        gap: 0.32rem;
+    }
+
+    .dungeon-hand-pacts .active-pact-chip {
+        width: var(--dungeon-hand-pact-card-width);
+        min-height: 0;
+    }
+
+    .active-pact-chip-name {
+        font-size: 0.54rem;
+    }
+
+    .active-pact-chip-body {
+        padding: 0.3rem 0.22rem 0.24rem;
     }
 }
 
@@ -7928,7 +8094,8 @@ body.collection-page {
     }
 
     .dungeon-bottom-panel {
-        --dungeon-reward-card-width: clamp(3.2rem, 15vw, 4.6rem);
+        --dungeon-hand-card-width: clamp(3.2rem, 15vw, 4.6rem);
+        --dungeon-reward-card-width: var(--dungeon-hand-card-width);
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto auto;
         gap: 0.28rem;
@@ -7938,9 +8105,14 @@ body.collection-page {
         padding: 0.3rem;
     }
 
+    #dungeonHandBar {
+        grid-template-columns: clamp(2.65rem, 12vw, 3.1rem) minmax(0, 1fr);
+        gap: 0.25rem;
+    }
+
     .dungeon-hand-grid {
         overflow: visible;
-        padding: 0.04rem 0;
+        padding: 0;
     }
 
     .dungeon-hand-cards {
@@ -7951,7 +8123,7 @@ body.collection-page {
         max-width: 100%;
         min-height: 0;
         gap: 0.22rem;
-        padding: 0.08rem;
+        padding: 0;
     }
 
     .dungeon-hand-cards.is-battle {
@@ -7969,11 +8141,15 @@ body.collection-page {
         flex: 0 1 auto;
     }
 
+    .dungeon-reward-panel {
+        grid-template-columns: var(--dungeon-reward-card-width) minmax(0, 1fr);
+        gap: 0.28rem;
+        min-height: calc(var(--dungeon-reward-card-width) * 1.333);
+    }
+
     .dungeon-reward-dropzone {
-        grid-template-columns: auto minmax(4.2rem, 1fr);
-        min-height: calc(var(--dungeon-reward-card-width) * 1.333 + 0.18rem);
-        gap: 0.32rem;
-        padding: 0.1rem;
+        min-height: calc(var(--dungeon-reward-card-width) * 1.333);
+        padding: 0;
     }
 }
 
@@ -7983,7 +8159,13 @@ body.collection-page {
     }
 
     .dungeon-hand-cards {
+        --dungeon-hand-card-width: var(--dungeon-reward-card-width);
+    }
+
+    .dungeon-bottom-panel {
         --dungeon-hand-card-width: clamp(4.8rem, 6.8vw, 6.4rem);
+        --dungeon-reward-card-width: var(--dungeon-hand-card-width);
+        grid-template-columns: minmax(0, 1fr) minmax(15.5rem, calc(var(--dungeon-reward-card-width) + 9.5rem));
     }
 }
 

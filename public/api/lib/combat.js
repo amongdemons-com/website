@@ -8,6 +8,9 @@ const {
   normalizeRunBuffState
 } = require('./run-buffs');
 
+const MAX_COMBAT_TICKS = 1000;
+const STALEMATE_STATE_REPEAT_LIMIT = 6;
+
 function alive(team) {
   return team.filter((demon) => demon.hp > 0);
 }
@@ -429,9 +432,11 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
   };
   const playerTeamBefore = cloneBattleTeamForReplay(players);
   const enemyTeamBefore = cloneBattleTeamForReplay(enemies);
+  const seenBattleStates = new Map([[getBattleStateKey(players, enemies, battleState), 1]]);
+  let endReason = null;
   let tick = 0;
 
-  while (alive(players).length && alive(enemies).length && tick < 1000) {
+  while (alive(players).length && alive(enemies).length && tick < MAX_COMBAT_TICKS) {
     tick += 1;
     applyPoisonTick(players, tick, context, 'player');
     applyPoisonTick(enemies, tick, context, 'enemy');
@@ -494,17 +499,63 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
         });
       });
     }
+
+    if (alive(players).length && alive(enemies).length) {
+      const battleStateKey = getBattleStateKey(players, enemies, battleState);
+      const seenCount = (seenBattleStates.get(battleStateKey) || 0) + 1;
+      seenBattleStates.set(battleStateKey, seenCount);
+      if (seenCount >= STALEMATE_STATE_REPEAT_LIMIT) {
+        endReason = 'stalemate';
+        break;
+      }
+    }
   }
 
-  const winner = alive(players).length ? 'player' : 'enemy';
+  const playerAlive = alive(players).length > 0;
+  const enemyAlive = alive(enemies).length > 0;
+  const winner = playerAlive && !enemyAlive ? 'player' : 'enemy';
+  if (!endReason) {
+    endReason = !playerAlive
+      ? 'defeat'
+      : !enemyAlive
+        ? 'victory'
+        : 'timeout';
+  }
+
   return {
     winner,
+    endReason,
+    ticks: tick,
     combatLog,
     playerTeamBefore,
     enemyTeamBefore,
     playerTeam: cloneBattleTeamForReplay(players),
     enemyTeam: cloneBattleTeamForReplay(enemies)
   };
+}
+
+function getBattleStateKey(players, enemies, battleState = {}) {
+  return JSON.stringify({
+    lastBreathUsed: Boolean(battleState.lastBreathUsed),
+    players: getTeamStateKey(players),
+    enemies: getTeamStateKey(enemies)
+  });
+}
+
+function getTeamStateKey(team) {
+  return (team || []).map((demon) => ({
+    id: demon.instanceId,
+    hp: Math.max(0, Number(demon.hp) || 0),
+    shield: Math.max(0, Number(demon.shield) || 0),
+    attackMeter: Number(demon.attackMeter) || 0,
+    poison: (demon.statusEffects?.poison || []).map((poison) => ({
+      source: poison.source,
+      damage: Number(poison.damage) || 0,
+      remainingTicks: Number(poison.remainingTicks) || 0,
+      nextTickIn: Number(poison.nextTickIn) || 0,
+      tickInterval: Number(poison.tickInterval) || 0
+    }))
+  }));
 }
 
 function dealDamage(target, damage) {

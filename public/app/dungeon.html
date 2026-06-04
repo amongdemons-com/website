@@ -25,7 +25,7 @@
     <meta name="twitter:image:alt" content="Among Demons roguelike dungeon gameplay artwork">
     <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://amongdemons.com/#website","url":"https://amongdemons.com","name":"Among Demons","description":"A browser-based demon collection roguelike auto-battler game."},{"@type":"Organization","@id":"https://amongdemons.com/#organization","name":"Among Demons","url":"https://amongdemons.com","logo":{"@type":"ImageObject","url":"https://amongdemons.com/app/images/amongdemons_logo_250x250.png","width":1000,"height":1000}},{"@type":"VideoGame","@id":"https://amongdemons.com/#videogame","name":"Among Demons","url":"https://amongdemons.com","description":"Among Demons is a browser-based demon collection roguelike auto-battler game where players collect demons, build teams, and survive dungeon runs.","genre":["Roguelike","Auto-battler","Browser RPG","Dungeon crawler","Demon collection game"],"gamePlatform":"Web browser","operatingSystem":"Any","playMode":"SinglePlayer","applicationCategory":"Game","publisher":{"@id":"https://amongdemons.com/#organization"}},{"@type":"WebPage","@id":"https://amongdemons.com/dungeon#webpage","url":"https://amongdemons.com/dungeon","name":"Dungeon | Among Demons Roguelike Auto-Battler","description":"Enter Among Demons dungeon runs, build your demon team, recruit defeated enemies, and survive a browser RPG roguelike auto-battler.","isPartOf":{"@id":"https://amongdemons.com/#website"},"about":{"@id":"https://amongdemons.com/#videogame"},"primaryImageOfPage":{"@type":"ImageObject","url":"https://amongdemons.com/app/images/assets/background/amongdemons_dungeon.png","caption":"Among Demons roguelike dungeon gameplay artwork"}}]}</script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/app/css/main.css?v=20260604-demonic-pacts-v3" rel="stylesheet">
+    <link href="/app/css/main.css?v=20260604-demonic-pacts-v5" rel="stylesheet">
   </head>
   <body class="dungeon-page">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
@@ -106,17 +106,13 @@
                   </div>
                   <div id="dungeonBottomPanel" class="dungeon-bottom-panel d-none">
                     <section id="dungeonHandBar" class="dungeon-hand-bar d-none" aria-label="Demon hand">
-                      <div class="dungeon-hand-header">
-                        <span class="hunt-phase-eyebrow">Hand</span>
-                        <span id="dungeonHandTitle">0 demons</span>
+                      <div class="dungeon-hand-tabs" role="tablist" aria-label="Hand panel">
+                        <button class="dungeon-hand-tab active" type="button" data-dungeon-hand-tab="hand" role="tab" aria-selected="true" aria-controls="dungeonHandGrid">Hand</button>
+                        <button class="dungeon-hand-tab d-none" type="button" data-dungeon-hand-tab="pacts" role="tab" aria-selected="false" aria-controls="dungeonHandGrid">Pacts</button>
                       </div>
                       <div id="dungeonHandGrid" class="dungeon-hand-grid"></div>
                     </section>
                     <section id="dungeonRewardBox" class="dungeon-hand-bar dungeon-reward-box d-none" aria-label="Extraction reward">
-                      <div class="dungeon-hand-header dungeon-reward-header">
-                        <span class="hunt-phase-eyebrow">Extraction Reward</span>
-                        <span id="dungeonRewardTitle" class="dungeon-reward-title-hidden">0 XP / 0 Souls</span>
-                      </div>
                       <div id="dungeonRewardGrid" class="dungeon-reward-grid"></div>
                     </section>
                   </div>
@@ -210,7 +206,7 @@
     <script src="/app/js/navigation.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/demon-cards.js"></script>
-    <script type="module" src="/app/js/dungeon.js?v=20260604-demonic-pacts-v3"></script>
+    <script type="module" src="/app/js/dungeon.js?v=20260604-demonic-pacts-v5"></script>
   </body>
 </html>
 

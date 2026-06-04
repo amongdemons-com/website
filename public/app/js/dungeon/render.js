@@ -22,7 +22,6 @@ const groupCombatLog = (...args) => dungeonActions.groupCombatLog(...args);
 const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
 const init = (...args) => dungeonActions.init(...args);
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
-const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
 const playEnemyRevealEffect = (...args) => dungeonActions.playEnemyRevealEffect(...args);
 const playPendingHandFlowAnimation = (...args) => dungeonActions.playPendingHandFlowAnimation(...args);
 const playRecruitSwapEffect = (...args) => dungeonActions.playRecruitSwapEffect(...args);
@@ -30,9 +29,7 @@ const renderButtonMeleeIcon = (...args) => dungeonActions.renderButtonMeleeIcon(
 const renderDemonCard = (...args) => dungeonActions.renderDemonCard(...args);
 const renderDemonCards = (...args) => dungeonActions.renderDemonCards(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
-const getActiveBuffs = (...args) => dungeonActions.getActiveBuffs(...args);
 const bindActivePactTooltips = (...args) => dungeonActions.bindActivePactTooltips(...args);
-const renderActivePactRail = (...args) => dungeonActions.renderActivePactRail(...args);
 const renderDemonicPacts = (...args) => dungeonActions.renderDemonicPacts(...args);
 const renderEmptyText = (...args) => dungeonActions.renderEmptyText(...args);
 const renderFightLogRow = (...args) => dungeonActions.renderFightLogRow(...args);
@@ -107,14 +104,12 @@ function renderRun() {
   const showPacts = Boolean(hasPendingPacts && !state.isPactRevealPending && !state.isBattleAnimating && !state.isResultAnimating);
   const showHand = !showPacts;
   const rewardInteractive = Boolean(isHandStrategy);
-  const hasActivePacts = getActiveBuffs(run).length > 0;
+  const canExtract = Boolean(!hasPendingPacts && !state.isResultAnimating && canExtractRun());
 
   elements.runPanel?.classList.toggle('has-hand', showHand);
   elements.dungeonBottomPanel?.classList.toggle('d-none', !showHand);
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
-  elements.teamGrid?.classList.toggle('has-active-pacts', hasActivePacts);
   elements.teamGrid.innerHTML = `
-    ${renderActivePactRail(run)}
     <div class="team-formation-wrap">
       ${renderDemonCards(team, {
         side: 'player',
@@ -127,7 +122,7 @@ function renderRun() {
     allowRecruitDrag: false
   });
   renderHandBar(hand, showHand, isHandStrategy, handMode);
-  renderRewardBox(showHand, rewardInteractive);
+  renderRewardBox(showHand, rewardInteractive, canExtract);
   renderDemonicPacts(showPacts);
   renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
   if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
@@ -429,7 +424,6 @@ function renderFightLogActions() {
   const canViewLog = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
   const hasPendingPacts = hasPendingBuffChoices(state.run);
   const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
-  const canExtract = Boolean(!hasPendingPacts && !state.isResultAnimating && canExtractRun());
 
   elements.fightLogActions.innerHTML = `
     ${canShowSpeedControl ? renderBattleSpeedControl() : ''}
@@ -441,12 +435,6 @@ function renderFightLogActions() {
     ${canViewLog ? `
       <button class="btn btn-outline-light btn-sm btn-icon-only" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log">
         ${renderIcon('log')}
-      </button>
-    ` : ''}
-    ${canExtract ? `
-      <button class="btn btn-warning btn-sm" id="getRewardBtn" type="button">
-        ${renderIcon('flag')}
-        Extract
       </button>
     ` : ''}
     ${canChooseRecruit ? `
@@ -490,7 +478,6 @@ function renderBattleSpeedControl() {
 }
 
 function bindPathButtons() {
-  bindClick(document.getElementById('getRewardBtn'), openCashoutModal);
   bindClick(document.getElementById('fightLogContinueHuntBtn'), requestRecruitContinue);
 }
 
