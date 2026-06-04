@@ -9,91 +9,274 @@ const battle = (...args) => dungeonActions.battle(...args);
 const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
 const renderDemonStatus = (...args) => dungeonActions.renderDemonStatus(...args);
 const renderFightLog = (...args) => dungeonActions.renderFightLog(...args);
+const renderFightLogActions = (...args) => dungeonActions.renderFightLogActions(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
 
 async function playCombatLog() {
   if (!state.run) return;
 
-  const allDemonsById = new Map([...(state.run.team || []), ...(state.run.enemies || [])].map((demon) => [demon.instanceId, demon]));
   const steps = groupCombatLog(state.combatLog);
+  state.combatPlayback = {
+    currentIndex: 0,
+    isPaused: false,
+    stepDirection: 0,
+    steps,
+    totalSteps: steps.length,
+    waitResolve: null
+  };
   state.isBattleAnimating = true;
   renderRun();
   renderFightLog();
 
   try {
-    for (let index = 0; index < steps.length; index += 1) {
+    while (state.combatPlayback && state.combatPlayback.currentIndex < steps.length) {
+      const playbackCommand = await waitForCombatPlaybackReady();
+      if (!playbackCommand || !state.combatPlayback) break;
+
+      if (playbackCommand === 'previous') {
+        await replayPreviousCombatPlaybackStep();
+        continue;
+      }
+
+      const index = state.combatPlayback.currentIndex;
       const step = steps[index];
-
-      step.entries.forEach((entry) => {
-        const target = allDemonsById.get(entry.target);
-        if (target) {
-          target.hp = entry.targetHp;
-          if (entry.effect === 'poison_apply') {
-            target.statusEffects = target.statusEffects || {};
-            target.statusEffects.poison = Array.from({ length: Math.max(1, Number(entry.poisonStacks) || 1) }, () => ({}));
-          }
-          if (entry.effect === 'poison' && Object.prototype.hasOwnProperty.call(entry, 'poisonStacks')) {
-            target.statusEffects = target.statusEffects || {};
-            target.statusEffects.poison = Array.from({ length: Math.max(0, Number(entry.poisonStacks) || 0) }, () => ({}));
-          }
-        }
-      });
-
-      updateTeamHp();
-      setActiveLogRow(index);
-      if (step.primaryEffect !== 'poison') animateAttackerCard(step.attacker, step.primaryEffect);
-      const attackerSide = getDemonSide(step.attacker);
-      step.entries.forEach((entry, entryIndex) => {
-        if (entry.effect === 'poison') {
-          if (entryIndex === 0) {
-            showFloatingDamage(entry.target, getPoisonBurstDamage(step), 'poison', entry.attacker, entry.effect, {
-              burstCount: step.entries.length
-            });
-          }
-          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
-          syncPoisonStatus(entry.target, entry.poisonStacks);
-          return;
-        }
-
-        if (entry.effect === 'heal') {
-          drawHealEffect(entry.attacker, entry.target);
-          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing });
-          showFloatingDamage(entry.target, entry.healing, 'heal', entry.attacker, entry.effect);
-          return;
-        }
-
-        if (entry.effect === 'last_breath') {
-          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
-          showFloatingDamage(entry.target, 1, 'heal', entry.attacker, entry.effect);
-          return;
-        }
-
-        if (entry.effect === 'shared_pain') {
-          updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
-          return;
-        }
-
-        if (entry.effect === 'poison_apply') {
-          drawAttackZap(step.attacker, entry.target, { effect: entry.effect, poison: true, bubbles: 15, variant: 'poison-flame' });
-          syncPoisonStatus(entry.target, entry.poisonStacks || 1);
-          updateTargetCard(entry.target, entry.targetHp, attackerSide);
-          return;
-        }
-
-        drawCombatAnimation(entry);
-        if (Number(entry.dmg) > 0) {
-          showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
-        }
-        updateTargetCard(entry.target, entry.targetHp, attackerSide);
-      });
-      await sleep(scaleCombatDuration(getCombatStepDelay(step)));
+      setCombatPlaybackPausedClass(false);
+      applyCombatStep(step, index, { animate: true });
+      state.combatPlayback.currentIndex = index + 1;
+      renderFightLogActions();
+      await waitForCombatPlaybackDelay(scaleCombatDuration(getCombatStepDelay(step)));
+      setCombatPlaybackPausedClass(Boolean(state.combatPlayback?.isPaused));
     }
   } finally {
     state.isBattleAnimating = false;
+    state.combatPlayback = null;
+    setCombatPlaybackPausedClass(false);
     renderRun();
   }
 
   setActiveLogRow(-1);
+}
+
+function applyCombatStep(step, index = -1, options = {}) {
+  const allDemonsById = getCurrentBattleDemonMap();
+  const animate = options.animate !== false;
+
+  step.entries.forEach((entry) => {
+    const target = allDemonsById.get(entry.target);
+    if (target) {
+      target.hp = entry.targetHp;
+      if (entry.effect === 'poison_apply') {
+        target.statusEffects = target.statusEffects || {};
+        target.statusEffects.poison = Array.from({ length: Math.max(1, Number(entry.poisonStacks) || 1) }, () => ({}));
+      }
+      if (entry.effect === 'poison' && Object.prototype.hasOwnProperty.call(entry, 'poisonStacks')) {
+        target.statusEffects = target.statusEffects || {};
+        target.statusEffects.poison = Array.from({ length: Math.max(0, Number(entry.poisonStacks) || 0) }, () => ({}));
+      }
+    }
+  });
+
+  updateTeamHp();
+  if (!animate) return;
+
+  setActiveLogRow(index);
+  if (step.primaryEffect !== 'poison') animateAttackerCard(step.attacker, step.primaryEffect);
+  const attackerSide = getDemonSide(step.attacker);
+  step.entries.forEach((entry, entryIndex) => {
+    if (entry.effect === 'poison') {
+      if (entryIndex === 0) {
+        showFloatingDamage(entry.target, getPoisonBurstDamage(step), 'poison', entry.attacker, entry.effect, {
+          burstCount: step.entries.length
+        });
+      }
+      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+      syncPoisonStatus(entry.target, entry.poisonStacks);
+      return;
+    }
+
+    if (entry.effect === 'heal') {
+      drawHealEffect(entry.attacker, entry.target);
+      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing });
+      showFloatingDamage(entry.target, entry.healing, 'heal', entry.attacker, entry.effect);
+      return;
+    }
+
+    if (entry.effect === 'last_breath') {
+      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+      showFloatingDamage(entry.target, 1, 'heal', entry.attacker, entry.effect);
+      return;
+    }
+
+    if (entry.effect === 'shared_pain') {
+      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+      return;
+    }
+
+    if (entry.effect === 'poison_apply') {
+      drawAttackZap(step.attacker, entry.target, { effect: entry.effect, poison: true, bubbles: 15, variant: 'poison-flame' });
+      syncPoisonStatus(entry.target, entry.poisonStacks || 1);
+      updateTargetCard(entry.target, entry.targetHp, attackerSide);
+      return;
+    }
+
+    drawCombatAnimation(entry);
+    if (Number(entry.dmg) > 0) {
+      showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
+    }
+    updateTargetCard(entry.target, entry.targetHp, attackerSide);
+  });
+}
+
+async function waitForCombatPlaybackReady() {
+  while (state.combatPlayback?.isPaused) {
+    setCombatPlaybackPausedClass(true);
+    const direction = Number(state.combatPlayback.stepDirection) || 0;
+    state.combatPlayback.stepDirection = 0;
+
+    if (direction < 0) {
+      return 'previous';
+    }
+
+    if (direction > 0) {
+      return state.combatPlayback.currentIndex < state.combatPlayback.totalSteps ? 'next' : null;
+    }
+
+    await waitForCombatPlaybackSignal();
+  }
+
+  setCombatPlaybackPausedClass(false);
+  return state.combatPlayback ? 'play' : null;
+}
+
+function waitForCombatPlaybackDelay(duration) {
+  const playback = state.combatPlayback;
+  if (!playback) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(finish, Math.max(0, Number(duration) || 0));
+
+    function finish() {
+      window.clearTimeout(timer);
+      if (playback.waitResolve === finish) playback.waitResolve = null;
+      resolve();
+    }
+
+    playback.waitResolve = finish;
+  });
+}
+
+function waitForCombatPlaybackSignal() {
+  const playback = state.combatPlayback;
+  if (!playback) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    playback.waitResolve = () => {
+      playback.waitResolve = null;
+      resolve();
+    };
+  });
+}
+
+function pauseCombatPlayback() {
+  if (!state.combatPlayback || !state.isBattleAnimating) return;
+  state.combatPlayback.isPaused = true;
+  setCombatPlaybackPausedClass(true);
+  resolveCombatPlaybackWait();
+  renderFightLogActions();
+}
+
+function resumeCombatPlayback() {
+  if (!state.combatPlayback || !state.isBattleAnimating) return;
+  state.combatPlayback.isPaused = false;
+  state.combatPlayback.stepDirection = 0;
+  setCombatPlaybackPausedClass(false);
+  resolveCombatPlaybackWait();
+  renderFightLogActions();
+}
+
+function stepCombatPlayback(direction) {
+  if (!state.combatPlayback || !state.isBattleAnimating) return;
+  state.combatPlayback.isPaused = true;
+  state.combatPlayback.stepDirection = Number(direction) < 0 ? -1 : 1;
+  setCombatPlaybackPausedClass(true);
+  resolveCombatPlaybackWait();
+  renderFightLogActions();
+}
+
+function resolveCombatPlaybackWait() {
+  const resolve = state.combatPlayback?.waitResolve;
+  if (resolve) resolve();
+}
+
+function renderCombatPlaybackFrame(stepCount) {
+  if (!state.run || !state.combatPlayback) return;
+  clearCombatTransientElements();
+  resetCombatTeamsToBattleStart();
+  const steps = state.combatPlayback.steps || [];
+  const nextIndex = clamp(Math.floor(Number(stepCount) || 0), 0, steps.length);
+
+  for (let index = 0; index < nextIndex; index += 1) {
+    applyCombatStep(steps[index], index, { animate: false });
+  }
+
+  state.combatPlayback.currentIndex = nextIndex;
+  renderRun();
+  setActiveLogRow(nextIndex > 0 ? nextIndex - 1 : -1);
+}
+
+async function replayPreviousCombatPlaybackStep() {
+  const playback = state.combatPlayback;
+  if (!state.run || !playback || playback.currentIndex <= 0) return;
+
+  const steps = playback.steps || [];
+  const targetIndex = clamp(playback.currentIndex - 2, 0, steps.length - 1);
+  const step = steps[targetIndex];
+  if (!step) return;
+
+  renderCombatPlaybackFrame(targetIndex);
+  setCombatPlaybackPausedClass(false);
+  applyCombatStep(step, targetIndex, { animate: true });
+  playback.currentIndex = targetIndex + 1;
+  renderFightLogActions();
+  await waitForCombatPlaybackDelay(scaleCombatDuration(getCombatStepDelay(step)));
+
+  if (state.combatPlayback) {
+    state.combatPlayback.isPaused = true;
+    setCombatPlaybackPausedClass(true);
+    renderFightLogActions();
+  }
+}
+
+function resetCombatTeamsToBattleStart() {
+  const lastBattle = state.run?.lastBattle || {};
+  state.run.team = cloneDemons(lastBattle.playerTeamBefore || state.run.team || []);
+  state.run.enemies = cloneDemons(lastBattle.enemyTeamBefore || state.run.enemies || []);
+  state.combatDemons = createCombatDemonMap();
+}
+
+function getCurrentBattleDemonMap() {
+  return new Map([...(state.run?.team || []), ...(state.run?.enemies || [])].map((demon) => [demon.instanceId, demon]));
+}
+
+function clearCombatTransientElements() {
+  document.querySelectorAll([
+    '.attack-zap',
+    '.chaos-lightning',
+    '.dark-spike',
+    '.fireball-shot',
+    '.floating-combat-number',
+    '.heal-effect',
+    '.sword-swing',
+    '.thorn-burst'
+  ].join(',')).forEach((element) => element.remove());
+}
+
+function setCombatPlaybackPausedClass(isPaused) {
+  document.documentElement.classList.toggle('is-combat-paused', Boolean(isPaused));
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, Number(value) || 0));
 }
 
 function updateTeamHp() {
@@ -713,6 +896,9 @@ function renderFightLogDemonName(instanceId) {
 
 export {
   playCombatLog,
+  pauseCombatPlayback,
+  resumeCombatPlayback,
+  stepCombatPlayback,
   updateTeamHp,
   setActiveLogRow,
   animateAttackerCard,

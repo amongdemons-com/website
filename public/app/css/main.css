@@ -804,6 +804,63 @@ body.dungeon-page .navbar {
     background: rgba(0,0,0,0.18);
 }
 
+.battle-playback-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.12rem;
+    padding: 0.16rem;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.18);
+}
+
+.battle-playback-btn {
+    display: inline-grid;
+    place-items: center;
+    min-width: 2rem;
+    width: 2rem;
+    height: 1.75rem;
+    border: 1px solid rgba(232,199,106,0.28);
+    border-radius: 4px;
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.22), rgba(232,199,106,0.1)),
+        #142026;
+    color: #fff4c2;
+    line-height: 1;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.04),
+        0 2px 8px rgba(0,0,0,0.18);
+}
+
+.battle-playback-btn:hover,
+.battle-playback-btn:focus-visible {
+    border-color: rgba(232,199,106,0.58);
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.34), rgba(232,199,106,0.16)),
+        #172a30;
+    color: #fff9d4;
+}
+
+.battle-playback-btn.is-primary {
+    border-color: rgba(232,199,106,0.72);
+    background: var(--ad-gold, #FAC51C);
+    color: #170a03;
+}
+
+.battle-playback-btn:disabled {
+    border-color: rgba(255,255,255,0.1);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
+        #10171b;
+    color: rgba(220,230,238,0.34);
+    opacity: 0.7;
+}
+
+.battle-playback-btn .ad-icon {
+    width: 0.92rem;
+    height: 0.92rem;
+}
+
 .battle-speed-option {
     min-width: 2.15rem;
     border: 0;
@@ -825,6 +882,19 @@ body.dungeon-page .navbar {
 .battle-speed-option.active {
     background: var(--ad-gold, #FAC51C);
     color: #170a03;
+}
+
+.is-combat-paused .hunt-demon-card.is-attacking,
+.is-combat-paused .hunt-demon-card.is-shaking,
+.is-combat-paused .attack-zap *,
+.is-combat-paused .chaos-lightning *,
+.is-combat-paused .dark-spike *,
+.is-combat-paused .fireball-shot *,
+.is-combat-paused .floating-combat-number,
+.is-combat-paused .heal-effect *,
+.is-combat-paused .sword-swing *,
+.is-combat-paused .thorn-burst * {
+    animation-play-state: paused !important;
 }
 
 .hunt-demon-card[draggable="true"] {
@@ -2993,6 +3063,22 @@ body.dungeon-page .navbar {
     .battle-speed-control {
         gap: 0.08rem;
         padding: 0.1rem;
+    }
+
+    .battle-playback-control {
+        gap: 0.06rem;
+        padding: 0.1rem;
+    }
+
+    .battle-playback-btn {
+        width: 1.45rem;
+        min-width: 1.45rem;
+        height: 1.45rem;
+    }
+
+    .battle-playback-btn .ad-icon {
+        width: 0.78rem;
+        height: 0.78rem;
     }
 
     .battle-speed-option {
@@ -7814,9 +7900,14 @@ body.collection-page {
 
 .dungeon-hand-pacts .active-pact-chip::after {
     position: fixed;
-    left: 50%;
-    bottom: clamp(6.8rem, 16vh, 11rem);
+    left: var(--active-pact-tooltip-left, 50vw);
+    top: var(--active-pact-tooltip-top, 50vh);
+    bottom: auto;
     max-width: min(24rem, 88vw);
+    transform: translate(-50%, -100%) translateY(-0.35rem);
+}
+
+.dungeon-hand-pacts .active-pact-chip.is-tooltip-below::after {
     transform: translate(-50%, 0.35rem);
 }
 
@@ -7824,6 +7915,13 @@ body.collection-page {
 .dungeon-hand-pacts .active-pact-chip:focus::after,
 .dungeon-hand-pacts .active-pact-chip:focus-visible::after,
 .dungeon-hand-pacts .active-pact-chip.is-tooltip-visible::after {
+    transform: translate(-50%, -100%);
+}
+
+.dungeon-hand-pacts .active-pact-chip.is-tooltip-below:hover::after,
+.dungeon-hand-pacts .active-pact-chip.is-tooltip-below:focus::after,
+.dungeon-hand-pacts .active-pact-chip.is-tooltip-below:focus-visible::after,
+.dungeon-hand-pacts .active-pact-chip.is-tooltip-below.is-tooltip-visible::after {
     transform: translate(-50%, 0);
 }
 
@@ -8238,7 +8336,6 @@ body.collection-page {
     }
 
     .dungeon-hand-pacts .active-pact-chip::after {
-        bottom: clamp(5.2rem, 12vh, 8rem);
         max-width: min(18rem, 86vw);
     }
 

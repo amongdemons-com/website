@@ -30,6 +30,7 @@ export const state = {
   collectionReinforcementStagedInteracted: true,
   combatLog: [],
   combatDemons: new Map(),
+  combatPlayback: null,
   battleSpeed: getStoredBattleSpeed(),
   isBattleAnimating: false,
   endNotice: null,

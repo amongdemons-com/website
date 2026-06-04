@@ -119,12 +119,25 @@ function bindActivePactTooltips() {
   if (activePactTooltipEventsBound) return;
   activePactTooltipEventsBound = true;
 
+  document.addEventListener('pointerover', (event) => {
+    const chip = event.target.closest?.('.active-pact-chip');
+    if (chip) positionActivePactTooltip(chip);
+  });
+
+  document.addEventListener('focusin', (event) => {
+    const chip = event.target.closest?.('.active-pact-chip');
+    if (chip) positionActivePactTooltip(chip);
+  });
+
   document.addEventListener('click', (event) => {
     const chip = event.target.closest?.('.active-pact-chip');
     document.querySelectorAll('.active-pact-chip.is-tooltip-visible').forEach((activeChip) => {
       if (activeChip !== chip) activeChip.classList.remove('is-tooltip-visible');
     });
-    if (chip) chip.classList.add('is-tooltip-visible');
+    if (chip) {
+      positionActivePactTooltip(chip);
+      chip.classList.add('is-tooltip-visible');
+    }
   });
 
   document.addEventListener('keydown', (event) => {
@@ -133,6 +146,33 @@ function bindActivePactTooltips() {
       activeChip.classList.remove('is-tooltip-visible');
     });
   });
+
+  window.addEventListener('resize', positionVisibleActivePactTooltips);
+  window.addEventListener('scroll', positionVisibleActivePactTooltips, true);
+}
+
+function positionVisibleActivePactTooltips() {
+  document.querySelectorAll('.active-pact-chip.is-tooltip-visible').forEach(positionActivePactTooltip);
+}
+
+function positionActivePactTooltip(chip) {
+  if (!chip) return;
+
+  const rect = chip.getBoundingClientRect();
+  const tooltipWidth = Math.min(384, window.innerWidth * 0.88);
+  const left = clamp(rect.left + rect.width / 2, tooltipWidth / 2 + 8, window.innerWidth - tooltipWidth / 2 - 8);
+  const hasSpaceAbove = rect.top > 118;
+  const top = hasSpaceAbove
+    ? Math.max(8, rect.top - 8)
+    : Math.min(window.innerHeight - 8, rect.bottom + 8);
+
+  chip.style.setProperty('--active-pact-tooltip-left', `${left}px`);
+  chip.style.setProperty('--active-pact-tooltip-top', `${top}px`);
+  chip.classList.toggle('is-tooltip-below', !hasSpaceAbove);
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, Number(value) || 0));
 }
 
 function beginDeferredDemonicPactReveal() {

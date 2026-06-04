@@ -22,6 +22,7 @@ const groupCombatLog = (...args) => dungeonActions.groupCombatLog(...args);
 const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
 const init = (...args) => dungeonActions.init(...args);
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
+const pauseCombatPlayback = (...args) => dungeonActions.pauseCombatPlayback(...args);
 const playEnemyRevealEffect = (...args) => dungeonActions.playEnemyRevealEffect(...args);
 const playPendingHandFlowAnimation = (...args) => dungeonActions.playPendingHandFlowAnimation(...args);
 const playRecruitSwapEffect = (...args) => dungeonActions.playRecruitSwapEffect(...args);
@@ -37,9 +38,11 @@ const renderHandBar = (...args) => dungeonActions.renderHandBar(...args);
 const renderRewardBox = (...args) => dungeonActions.renderRewardBox(...args);
 const replayFight = (...args) => dungeonActions.replayFight(...args);
 const requestRecruitContinue = (...args) => dungeonActions.requestRecruitContinue(...args);
+const resumeCombatPlayback = (...args) => dungeonActions.resumeCombatPlayback(...args);
 const setBattleSpeed = (...args) => dungeonActions.setBattleSpeed(...args);
 const startNewHuntAfterDefeat = (...args) => dungeonActions.startNewHuntAfterDefeat(...args);
 const startRun = (...args) => dungeonActions.startRun(...args);
+const stepCombatPlayback = (...args) => dungeonActions.stepCombatPlayback(...args);
 
 function renderPlayer() {
   const player = state.player || {};
@@ -482,7 +485,7 @@ function renderFightLogActions() {
   const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
 
   elements.fightLogActions.innerHTML = `
-    ${canShowSpeedControl ? renderBattleSpeedControl() : ''}
+    ${canShowSpeedControl ? `${renderBattlePlaybackControls()}${renderBattleSpeedControl()}` : ''}
     ${canReplay ? `
       <button class="btn btn-warning btn-sm btn-icon-only" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
         ${renderIcon('replay')}
@@ -508,10 +511,61 @@ function renderFightLogActions() {
   `;
 
   bindClicks('[data-battle-speed]', (button) => setBattleSpeed(Number(button.dataset.battleSpeed)));
+  bindClick(document.getElementById('battlePlaybackToggleBtn'), () => {
+    if (state.combatPlayback?.isPaused) {
+      resumeCombatPlayback();
+    } else {
+      pauseCombatPlayback();
+    }
+  });
+  bindClicks('[data-battle-step]', (button) => stepCombatPlayback(Number(button.dataset.battleStep)));
   bindClick(document.getElementById('fightLogStartBtn'), isDefeated ? startNewHuntAfterDefeat : startRun);
   bindClick(document.getElementById('fightLogReplayBtn'), replayFight);
   bindClick(document.getElementById('fightLogToggleBtn'), toggleFightLogPanel);
   bindPathButtons();
+}
+
+function renderBattlePlaybackControls() {
+  const playback = state.combatPlayback || {};
+  const isPaused = Boolean(playback.isPaused);
+  const currentIndex = Number(playback.currentIndex) || 0;
+  const totalSteps = Number(playback.totalSteps) || 0;
+  const canStepBack = currentIndex > 0;
+  const canStepForward = currentIndex < totalSteps;
+
+  return `
+    <div class="battle-playback-control" role="group" aria-label="Battle playback">
+      <button
+        class="battle-playback-btn"
+        type="button"
+        data-battle-step="-1"
+        title="Last attack"
+        aria-label="Last attack"
+        ${canStepBack ? '' : 'disabled'}
+      >
+        ${renderIcon('last-attack')}
+      </button>
+      <button
+        class="battle-playback-btn is-primary"
+        id="battlePlaybackToggleBtn"
+        type="button"
+        title="${isPaused ? 'Play' : 'Pause'}"
+        aria-label="${isPaused ? 'Play' : 'Pause'}"
+      >
+        ${renderIcon(isPaused ? 'play' : 'pause')}
+      </button>
+      <button
+        class="battle-playback-btn"
+        type="button"
+        data-battle-step="1"
+        title="Next attack"
+        aria-label="Next attack"
+        ${canStepForward ? '' : 'disabled'}
+      >
+        ${renderIcon('next-attack')}
+      </button>
+    </div>
+  `;
 }
 
 function renderBattleSpeedControl() {
@@ -559,6 +613,7 @@ export {
   setFightLogTitle,
   renderEndNotice,
   renderFightLogActions,
+  renderBattlePlaybackControls,
   renderBattleSpeedControl,
   bindPathButtons
 };
