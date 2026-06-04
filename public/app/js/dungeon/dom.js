@@ -20,7 +20,7 @@ function cacheElements() {
     'runEmpty',
     'runPanel',
     'dungeonBottomPanel',
-    'dungeonPactPanel',
+    'demonicPactOverlay',
     'dungeonPactGrid',
     'teamGrid',
     'enemyGrid',

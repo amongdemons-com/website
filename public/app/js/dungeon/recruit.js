@@ -40,12 +40,12 @@ function getCurrentRecruitRewards() {
 
 function getRecruitPreviewTeam() {
   ensureRecruitDraft();
-  return cloneDemons(state.recruitDraftTeam || []);
+  return cloneDemons(state.recruitDraftTeam || []).map(applyRunBuffStatPreviewToDemon);
 }
 
 function getRecruitPreviewHand() {
   ensureRecruitDraft();
-  return cloneDemons(state.recruitDraftPool || []);
+  return cloneDemons(state.recruitDraftPool || []).map(applyRunBuffStatPreviewToDemon);
 }
 
 function getRecruitPreviewEnemyTeam() {
@@ -139,6 +139,69 @@ function getFullHpDemon(demon) {
     maxHp,
     hp: maxHp
   };
+}
+
+function applyRunBuffStatPreviewToDemon(demon = {}) {
+  if (!demon || demon.runBuffStatsApplied) return { ...demon };
+
+  const maxHpMult = getRunBuffEffectMultiplier('max_hp_mult');
+  const speedMult = getRunBuffEffectMultiplier('speed_mult');
+  const directDamageMult = getRunBuffEffectMultiplier('direct_damage_mult');
+  const baseMaxHp = Math.max(1, Number(demon.runBaseMaxHp) || Number(demon.maxHp) || Number(demon.hp) || 1);
+  const baseHp = Math.max(0, Number(demon.hp) || baseMaxHp);
+  const hpRatio = baseMaxHp > 0 ? Math.max(0, Math.min(1, baseHp / baseMaxHp)) : 1;
+  const nextMaxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
+  const baseSpeed = Math.max(1, Number(demon.runBaseSpeed) || Number(demon.speed) || 1);
+  const baseAtk = Math.max(0, Number(demon.runBaseAtk) || Number(demon.atk) || 0);
+
+  return {
+    ...demon,
+    effectiveAtk: baseAtk > 0 ? Math.max(1, Math.round(baseAtk * directDamageMult)) : baseAtk,
+    maxHp: nextMaxHp,
+    hp: Math.max(baseHp > 0 ? 1 : 0, Math.min(nextMaxHp, Math.round(nextMaxHp * hpRatio))),
+    speed: Math.max(1, Math.round(baseSpeed * speedMult)),
+    runBuffStatsPreviewed: true
+  };
+}
+
+function getCollectionStatPreviewDemon(demon = {}) {
+  const maxHp = Number(demon.runBaseMaxHp);
+  const atk = Number(demon.runBaseAtk);
+  const speed = Number(demon.runBaseSpeed);
+  const next = { ...demon };
+
+  if (Number.isFinite(maxHp) && maxHp > 0) {
+    next.maxHp = Math.max(1, Math.round(maxHp));
+    next.hp = next.maxHp;
+  }
+
+  if (Number.isFinite(atk) && atk > 0) {
+    next.atk = Math.max(1, Math.round(atk));
+  }
+
+  if (Number.isFinite(speed) && speed > 0) {
+    next.speed = Math.max(1, Math.round(speed));
+  }
+
+  delete next.effectiveAtk;
+  delete next.runBaseAtk;
+  delete next.runBaseMaxHp;
+  delete next.runBaseSpeed;
+  delete next.runBuffStatsApplied;
+  delete next.runBuffStatsPreviewed;
+  return next;
+}
+
+function getRunBuffEffectMultiplier(type) {
+  const activeBuffs = state.run?.buffs?.activeBuffs || [];
+  return activeBuffs.reduce((multiplier, buff) => {
+    const effects = Array.isArray(buff?.effects) ? buff.effects : [];
+    return effects.reduce((nextMultiplier, effect) => {
+      if (effect?.type !== type) return nextMultiplier;
+      const value = Number(effect.value);
+      return Number.isFinite(value) && value > 0 ? nextMultiplier * value : nextMultiplier;
+    }, multiplier);
+  }, 1);
 }
 
 function getRecruitTeamLimit() {
@@ -275,6 +338,8 @@ export {
   getRecruitTeamLimit,
   getDraftRecruitPayload,
   getRewardExtractionChoicePayload,
+  applyRunBuffStatPreviewToDemon,
+  getCollectionStatPreviewDemon,
   getDraftPayloadSource,
   getSelectedCollectionReinforcement,
   getSelectedCollectionReinforcements,

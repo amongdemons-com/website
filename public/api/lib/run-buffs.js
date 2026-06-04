@@ -36,8 +36,8 @@ function getBuffById(id) {
 
 function normalizeRunBuffState(source = {}) {
   return {
-    active: uniqueIds(source.active),
-    pendingChoices: uniqueIds(source.pendingChoices),
+    active: currentBuffIds(source.active),
+    pendingChoices: currentBuffIds(source.pendingChoices),
     temporary: normalizeTemporaryBuffs(source.temporary)
   };
 }
@@ -89,6 +89,7 @@ function selectRunBuff(run, buffId) {
   addTemporaryEntriesForBuff(state, buff);
   state.pendingChoices = [];
   run.state.buffs = normalizeRunBuffState(state);
+  applyRunBuffStatModifiers(run);
   return buff;
 }
 
@@ -98,9 +99,9 @@ function hasPendingBuffChoices(run) {
 
 function applyPreBattleBuffs(team, buffs) {
   const state = normalizeRunBuffState(buffs);
-  const maxHpMult = getEffectMultiplier(state, 'max_hp_mult');
-  const speedMult = getEffectMultiplier(state, 'speed_mult');
-  const attackMeterPct = getEffectSum(state, 'start_attack_meter_pct');
+  const statsAlreadyApplied = (team || []).some((demon) => demon.runBuffStatsApplied);
+  const maxHpMult = statsAlreadyApplied ? 1 : getEffectMultiplier(state, 'max_hp_mult');
+  const speedMult = statsAlreadyApplied ? 1 : getEffectMultiplier(state, 'speed_mult');
 
   return (team || []).map((demon) => {
     const next = {
@@ -122,12 +123,45 @@ function applyPreBattleBuffs(team, buffs) {
       next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * speedMult));
     }
 
-    if (attackMeterPct > 0) {
-      next.attackMeter = Math.min(99, Math.max(0, Math.round((Number(next.attackMeter) || 0) + attackMeterPct * 100)));
-    }
-
     return next;
   });
+}
+
+function applyRunBuffStatModifiers(run) {
+  if (!run?.state) return [];
+
+  const state = ensureRunBuffState(run);
+  const maxHpMult = getEffectMultiplier(state, 'max_hp_mult');
+  const speedMult = getEffectMultiplier(state, 'speed_mult');
+  const directDamageMult = getEffectMultiplier(state, 'direct_damage_mult');
+
+  run.state.team = (run.state.team || []).map((demon) => {
+    const baseAtk = Math.max(0, Number(demon.runBaseAtk) || Number(demon.atk) || 0);
+    const baseMaxHp = Math.max(1, Number(demon.runBaseMaxHp) || Number(demon.maxHp) || Number(demon.hp) || 1);
+    const baseSpeed = Math.max(1, Number(demon.runBaseSpeed) || Number(demon.speed) || 1);
+    const currentMaxHp = Math.max(1, Number(demon.maxHp) || baseMaxHp);
+    const hpRatio = currentMaxHp > 0
+      ? clamp((Number(demon.hp) || currentMaxHp) / currentMaxHp, 0, 1)
+      : 1;
+    const nextEffectiveAtk = baseAtk > 0 ? Math.max(1, Math.round(baseAtk * directDamageMult)) : baseAtk;
+    const nextMaxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
+    const nextSpeed = Math.max(1, Math.round(baseSpeed * speedMult));
+
+    return {
+      ...demon,
+      runBaseAtk: baseAtk,
+      runBaseMaxHp: baseMaxHp,
+      runBaseSpeed: baseSpeed,
+      runBuffStatsApplied: true,
+      effectiveAtk: nextEffectiveAtk,
+      maxHp: nextMaxHp,
+      hp: Math.max(demon.hp > 0 ? 1 : 0, Math.min(nextMaxHp, Math.round(nextMaxHp * hpRatio))),
+      speed: nextSpeed
+    };
+  });
+
+  run.state.hp = run.state.team.reduce((sum, demon) => sum + Math.max(0, Number(demon.hp) || 0), 0);
+  return run.state.team;
 }
 
 function applyDamageModifiers(context) {
@@ -256,18 +290,25 @@ function handleDeathBuffTriggers(context) {
 function getTemporaryTeamSizeBonus(run) {
   const state = ensureRunBuffState(run);
   return state.temporary
-    .filter((entry) => entry.type === TEMPORARY_TEAM_SIZE_EFFECT && entry.usesRemaining > 0)
+    .filter((entry) => isCurrentTemporaryTeamSizeEntry(entry) && entry.usesRemaining > 0)
     .reduce((sum, entry) => sum + Math.max(0, Number(entry.value) || 0), 0);
 }
 
 function consumeNextBattleTemporaryBuffs(run) {
   const state = ensureRunBuffState(run);
   state.temporary = state.temporary
+    .filter(isCurrentTemporaryTeamSizeEntry)
     .map((entry) => entry.type === TEMPORARY_TEAM_SIZE_EFFECT
       ? { ...entry, usesRemaining: Math.max(0, Number(entry.usesRemaining) - 1) }
       : entry)
     .filter((entry) => entry.usesRemaining > 0);
   run.state.buffs = state;
+}
+
+function isCurrentTemporaryTeamSizeEntry(entry) {
+  if (entry?.type !== TEMPORARY_TEAM_SIZE_EFFECT) return false;
+  const buff = getBuffById(entry.buffId);
+  return Boolean((buff?.effects || []).some((effect) => effect.type === TEMPORARY_TEAM_SIZE_EFFECT));
 }
 
 function getEffectMultiplier(state, type) {
@@ -389,7 +430,12 @@ function normalizeTemporaryBuffs(source = []) {
         usesRemaining: Math.max(0, Number(entry?.usesRemaining ?? entry?.uses ?? 1) || 0)
       };
     })
-    .filter((entry) => entry?.buffId && entry.type && entry.usesRemaining > 0);
+    .filter((entry) => (
+      entry?.buffId &&
+      entry.type &&
+      entry.usesRemaining > 0 &&
+      (entry.type !== TEMPORARY_TEAM_SIZE_EFFECT || isCurrentTemporaryTeamSizeEntry(entry))
+    ));
 }
 
 function uniqueIds(values = []) {
@@ -404,6 +450,10 @@ function uniqueIds(values = []) {
   });
 
   return ids;
+}
+
+function currentBuffIds(values = []) {
+  return uniqueIds(values).filter((id) => Boolean(getBuffById(id)));
 }
 
 function pickWeightedBuffIndex(buffs, rng) {
@@ -460,6 +510,7 @@ module.exports = {
   applyHealingModifiers,
   applyPoisonModifiers,
   applyPreBattleBuffs,
+  applyRunBuffStatModifiers,
   consumeNextBattleTemporaryBuffs,
   generateBuffChoices,
   getBuffById,

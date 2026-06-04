@@ -15,6 +15,7 @@ const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
 const getDraftPayloadSource = (...args) => dungeonActions.getDraftPayloadSource(...args);
 const getDraftPoolIndex = (...args) => dungeonActions.getDraftPoolIndex(...args);
 const getDraftTeamIndex = (...args) => dungeonActions.getDraftTeamIndex(...args);
+const getCollectionStatPreviewDemon = (...args) => dungeonActions.getCollectionStatPreviewDemon(...args);
 const getFormationLaneInfo = (...args) => dungeonActions.getFormationLaneInfo(...args);
 const getHandDropPosition = (...args) => dungeonActions.getHandDropPosition(...args);
 const getLaneDropDraftIndex = (...args) => dungeonActions.getLaneDropDraftIndex(...args);
@@ -41,7 +42,7 @@ function openCashoutModal() {
 function renderCashoutModal() {
   const candidate = getSelectedRewardCandidate();
   const earned = getPayoutPreview(candidate);
-  const demon = candidate?.demon || null;
+  const demon = candidate?.demon ? getCollectionStatPreviewDemon(candidate.demon) : null;
   const demonName = escapeHtml(demon?.species || 'Demon');
   const demonRarity = String(demon?.rarity || 'common').toLowerCase();
   const demonRarityLabel = escapeHtml(capitalize(demonRarity));

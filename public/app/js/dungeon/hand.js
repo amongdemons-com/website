@@ -8,6 +8,8 @@ import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatS
 const getPayoutPreview = (...args) => dungeonActions.getPayoutPreview(...args);
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
+const getCollectionStatPreviewDemon = (...args) => dungeonActions.getCollectionStatPreviewDemon(...args);
+const completeDeferredDemonicPactRevealAfter = (...args) => dungeonActions.completeDeferredDemonicPactRevealAfter(...args);
 const renderCollectionReinforcementPlaceholder = (...args) => dungeonActions.renderCollectionReinforcementPlaceholder(...args);
 const renderDemonCard = (...args) => dungeonActions.renderDemonCard(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
@@ -106,7 +108,7 @@ function renderRewardPayout(earned) {
 
 function renderRewardBoxCard(candidate, isInteractive = false) {
   const demon = {
-    ...candidate.demon,
+    ...getCollectionStatPreviewDemon(candidate.demon),
     rewardCandidateKey: candidate.key
   };
 
@@ -171,6 +173,9 @@ function revealDeferredEnemyPreview() {
 
   state.isEnemyPreviewDeferred = false;
   state.enemyRevealEffectIds = getRecruitPreviewEnemyTeam().map((demon) => demon.instanceId).filter(Boolean);
+  if (!state.enemyRevealEffectIds.length) {
+    completeDeferredDemonicPactRevealAfter(0);
+  }
   renderRun();
 }
 

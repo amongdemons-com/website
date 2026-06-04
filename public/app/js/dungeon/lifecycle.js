@@ -6,6 +6,7 @@ import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, 
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const applyBattleSpeed = (...args) => dungeonActions.applyBattleSpeed(...args);
+const beginDeferredDemonicPactReveal = (...args) => dungeonActions.beginDeferredDemonicPactReveal(...args);
 const bindActions = (...args) => dungeonActions.bindActions(...args);
 const cacheElements = (...args) => dungeonActions.cacheElements(...args);
 const clearRewardSelection = (...args) => dungeonActions.clearRewardSelection(...args);
@@ -90,7 +91,7 @@ async function loadCurrentRun() {
     state.run = await api('/api/runs/current');
     await ensureCollectionLoaded();
     state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
-    state.isRecruiting = Boolean(state.run.awaitingRecruit && !hasPendingBuffChoices(state.run));
+    state.isRecruiting = Boolean(state.run.awaitingRecruit && (!hasPendingBuffChoices(state.run) || state.isPactRevealPending));
     if (state.isRecruiting) prepareRecruitStrategyState();
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
@@ -154,7 +155,7 @@ async function loadRun(runId) {
     state.run = await api(runPath(runId));
     await ensureCollectionLoaded();
     state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
-    state.isRecruiting = Boolean(state.run.awaitingRecruit && !hasPendingBuffChoices(state.run));
+    state.isRecruiting = Boolean(state.run.awaitingRecruit && (!hasPendingBuffChoices(state.run) || state.isPactRevealPending));
     if (state.isRecruiting) prepareRecruitStrategyState();
     if (!state.isRecruiting) {
       clearRecruitDrafts();
@@ -197,11 +198,12 @@ async function battle() {
       } else {
         const handFlowSources = captureEnemyHandFlowSources();
         const resultOverlay = showBattleResultOverlay('victory');
+        if ((result.buffs?.pendingChoices || []).length) beginDeferredDemonicPactReveal();
         state.pendingHandFlowSources = handFlowSources;
         state.isEnemyPreviewDeferred = true;
+        await resultOverlay;
         await loadRun(state.run.runId);
         state.battleHandPreview = null;
-        await resultOverlay;
         setMessage(getWinMessage(), 'success');
       }
     } catch (error) {

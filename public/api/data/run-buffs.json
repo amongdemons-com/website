@@ -4,6 +4,7 @@
     "name": "Blood Pact",
     "description": "All direct damage is increased by 12%.",
     "rarity": "common",
+    "icon": "swords",
     "tags": ["damage"],
     "effects": [
       {
@@ -17,6 +18,7 @@
     "name": "Thick Hide",
     "description": "Max HP is increased by 15%.",
     "rarity": "common",
+    "icon": "shield",
     "tags": ["defense", "health"],
     "effects": [
       {
@@ -30,6 +32,7 @@
     "name": "Quickening Curse",
     "description": "Speed is increased by 10%.",
     "rarity": "common",
+    "icon": "zap",
     "tags": ["speed"],
     "effects": [
       {
@@ -40,14 +43,19 @@
   },
   {
     "id": "first_strike",
-    "name": "First Strike",
-    "description": "Start each battle with 50% attack meter.",
+    "name": "Razor Omen",
+    "description": "Speed is increased by 8%, and direct damage is increased by 8%.",
     "rarity": "uncommon",
-    "tags": ["tempo"],
+    "icon": "zap",
+    "tags": ["speed", "damage"],
     "effects": [
       {
-        "type": "start_attack_meter_pct",
-        "value": 0.5
+        "type": "speed_mult",
+        "value": 1.08
+      },
+      {
+        "type": "direct_damage_mult",
+        "value": 1.08
       }
     ]
   },
@@ -56,6 +64,7 @@
     "name": "Execution Mark",
     "description": "Deal 35% more direct damage to enemies below 50% HP.",
     "rarity": "uncommon",
+    "icon": "crosshair",
     "tags": ["damage", "execute"],
     "effects": [
       {
@@ -69,6 +78,7 @@
     "name": "Giant Slayer",
     "description": "Deal 30% more direct damage to enemies with higher max HP.",
     "rarity": "uncommon",
+    "icon": "mountain",
     "tags": ["damage", "tank-breaker"],
     "effects": [
       {
@@ -82,6 +92,7 @@
     "name": "Venom Choir",
     "description": "Poison ticks deal 25% more damage.",
     "rarity": "common",
+    "icon": "flask-conical",
     "tags": ["poison"],
     "effects": [
       {
@@ -95,6 +106,7 @@
     "name": "Endless Toxins",
     "description": "Poison duration is increased by 40%.",
     "rarity": "uncommon",
+    "icon": "timer",
     "tags": ["poison", "duration"],
     "effects": [
       {
@@ -108,6 +120,7 @@
     "name": "Corrosion",
     "description": "Poisoned enemies take 15% more direct damage.",
     "rarity": "uncommon",
+    "icon": "biohazard",
     "tags": ["poison", "damage"],
     "effects": [
       {
@@ -121,6 +134,7 @@
     "name": "Scorched Earth",
     "description": "AOE damage is increased by 20%.",
     "rarity": "common",
+    "icon": "flame",
     "tags": ["aoe", "damage"],
     "effects": [
       {
@@ -130,15 +144,20 @@
     ]
   },
   {
-    "id": "chain_explosion",
-    "name": "Chain Explosion",
-    "description": "When an enemy dies, deal splash damage equal to 8% of its max HP to the enemy team.",
+    "id": "dire_focus",
+    "name": "Dire Focus",
+    "description": "Direct damage is increased by 18%, and speed is increased by 8%.",
     "rarity": "rare",
-    "tags": ["aoe", "death"],
+    "icon": "eye",
+    "tags": ["damage", "speed"],
     "effects": [
       {
-        "type": "enemy_death_splash_max_hp_pct",
-        "value": 0.08
+        "type": "direct_damage_mult",
+        "value": 1.18
+      },
+      {
+        "type": "speed_mult",
+        "value": 1.08
       }
     ]
   },
@@ -147,6 +166,7 @@
     "name": "Thorn Garden",
     "description": "Retaliation damage is increased by 40%.",
     "rarity": "common",
+    "icon": "sprout",
     "tags": ["retaliation", "damage"],
     "effects": [
       {
@@ -160,6 +180,7 @@
     "name": "Living Fortress",
     "description": "Max HP is increased by 25%, but speed is reduced by 10%.",
     "rarity": "uncommon",
+    "icon": "castle",
     "tags": ["defense", "health", "tradeoff"],
     "effects": [
       {
@@ -177,6 +198,7 @@
     "name": "Mercy Engine",
     "description": "Healing is increased by 30%.",
     "rarity": "common",
+    "icon": "heart-pulse",
     "tags": ["healing"],
     "effects": [
       {
@@ -190,6 +212,7 @@
     "name": "Overflow Healing",
     "description": "Excess healing becomes a temporary shield.",
     "rarity": "rare",
+    "icon": "shield-plus",
     "tags": ["healing", "shield"],
     "effects": [
       {
@@ -203,6 +226,7 @@
     "name": "Glass Cannons",
     "description": "Direct damage is increased by 40%, but max HP is reduced by 25%.",
     "rarity": "rare",
+    "icon": "skull",
     "tags": ["damage", "tradeoff"],
     "effects": [
       {
@@ -220,6 +244,7 @@
     "name": "Cursed Momentum",
     "description": "Speed is increased by 20%, but direct damage is reduced by 10%.",
     "rarity": "uncommon",
+    "icon": "wind",
     "tags": ["speed", "tradeoff"],
     "effects": [
       {
@@ -237,6 +262,7 @@
     "name": "Shared Pain",
     "description": "When an ally dies, surviving allies gain 25% direct damage for the battle.",
     "rarity": "rare",
+    "icon": "users",
     "tags": ["death", "damage"],
     "effects": [
       {
@@ -250,6 +276,7 @@
     "name": "Last Breath",
     "description": "The first ally death each battle survives at 1 HP.",
     "rarity": "rare",
+    "icon": "heart",
     "tags": ["death", "survival"],
     "effects": [
       {
@@ -259,16 +286,20 @@
     ]
   },
   {
-    "id": "seventh_seal",
-    "name": "Seventh Seal",
-    "description": "Next battle only, max team size is increased by 1.",
+    "id": "blackened_ritual",
+    "name": "Blackened Ritual",
+    "description": "Direct damage is increased by 15%, but healing is reduced by 10%.",
     "rarity": "rare",
-    "tags": ["team-size", "temporary"],
+    "icon": "flame",
+    "tags": ["damage", "tradeoff"],
     "effects": [
       {
-        "type": "next_battle_team_size_add",
-        "value": 1,
-        "uses": 1
+        "type": "direct_damage_mult",
+        "value": 1.15
+      },
+      {
+        "type": "healing_mult",
+        "value": 0.9
       }
     ]
   }

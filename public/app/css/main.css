@@ -6904,6 +6904,23 @@ body.collection-page {
     align-content: center;
 }
 
+.battle-side-player > #teamGrid.has-active-pacts {
+    grid-template-columns: auto minmax(0, auto);
+    column-gap: clamp(0.25rem, 0.8vw, 0.65rem);
+}
+
+.battle-side-player > #teamGrid.has-active-pacts .active-pact-rail {
+    grid-column: 1;
+}
+
+.battle-side-player > #teamGrid.has-active-pacts .team-formation-wrap {
+    grid-column: 2;
+}
+
+.battle-side-player > #teamGrid:not(.has-active-pacts) .team-formation-wrap {
+    grid-column: 1;
+}
+
 .battle-side-heading {
     justify-content: center;
     gap: 0.42rem;
@@ -7183,67 +7200,173 @@ body.collection-page {
     width: 100%;
 }
 
-.dungeon-bottom-panel.has-pacts {
-    grid-template-columns: minmax(0, 1fr);
-}
-
-.dungeon-pact-panel {
+.demonic-pact-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2600;
     display: grid;
-    grid-template-rows: auto minmax(0, auto);
-    gap: 0.55rem;
-    min-width: 0;
-    min-height: 0;
-    border: 1px solid rgba(232,199,106,0.3);
-    border-radius: 8px;
+    place-items: center;
+    overflow: hidden;
     background:
-        linear-gradient(180deg, rgba(7,18,20,0.88), rgba(3,9,11,0.82)),
-        radial-gradient(circle at 50% 0%, rgba(232,199,106,0.1), transparent 54%);
-    box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.04),
-        0 -14px 34px rgba(0,0,0,0.24);
-    padding: 0.65rem 0.75rem 0.75rem;
+        linear-gradient(180deg, rgba(3,8,10,0.92), rgba(6,10,14,0.96)),
+        url("/app/images/assets/background/amongdemons_dungeon.png") center / cover no-repeat;
+    padding: clamp(1rem, 3vw, 2.4rem);
+    animation: demonic-pact-overlay-in 520ms ease-out both;
 }
 
-.dungeon-pact-panel.d-none {
+.demonic-pact-overlay.d-none {
     display: none !important;
 }
 
-.demonic-pact-header {
-    justify-content: flex-start;
+.demonic-pact-backdrop {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.demonic-pact-backdrop::before,
+.demonic-pact-backdrop::after {
+    content: "";
+    position: absolute;
+    inset: -18%;
+    background:
+        repeating-conic-gradient(from 0deg, transparent 0deg 12deg, rgba(232,199,106,0.075) 13deg 14deg, transparent 15deg 30deg);
+    opacity: 0.62;
+    animation: demonic-pact-sigil-spin 18s linear infinite;
+}
+
+.demonic-pact-backdrop::after {
+    inset: 16%;
+    border: 1px solid rgba(232,199,106,0.22);
+    border-radius: 50%;
+    background: none;
+    box-shadow:
+        inset 0 0 48px rgba(232,199,106,0.08),
+        0 0 60px rgba(111,214,189,0.08);
+    animation-direction: reverse;
+}
+
+.demonic-pact-backdrop span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1px;
+    height: 140vmax;
+    background: linear-gradient(transparent, rgba(232,199,106,0.34), transparent);
+    transform-origin: 50% 50%;
+    opacity: 0.34;
+}
+
+.demonic-pact-backdrop span:nth-child(1) {
+    transform: translate(-50%, -50%) rotate(0deg);
+}
+
+.demonic-pact-backdrop span:nth-child(2) {
+    transform: translate(-50%, -50%) rotate(62deg);
+}
+
+.demonic-pact-backdrop span:nth-child(3) {
+    transform: translate(-50%, -50%) rotate(124deg);
+}
+
+.demonic-pact-stage {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, auto);
+    gap: clamp(1rem, 2.4vw, 1.8rem);
+    width: min(100%, 74rem);
+}
+
+.demonic-pact-stage-heading {
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    text-align: center;
+    animation: demonic-pact-heading-in 540ms ease-out both;
+}
+
+.demonic-pact-stage-heading h2 {
+    margin: 0;
+    color: #fff8d8;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2.3rem, 6vw, 5.1rem);
+    line-height: 0.9;
+    letter-spacing: 0;
+    text-shadow:
+        0 2px 18px rgba(0,0,0,0.88),
+        0 0 28px rgba(232,199,106,0.34);
 }
 
 .demonic-pact-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.65rem;
+    gap: clamp(0.8rem, 2vw, 1.35rem);
     min-width: 0;
+    perspective: 1200px;
 }
 
 .demonic-pact-card {
+    --pact-card-y: 0;
+    position: relative;
     display: grid;
-    align-content: start;
-    gap: 0.38rem;
+    grid-template-rows: auto auto auto 1fr auto;
+    justify-items: center;
+    gap: 0.7rem;
     min-width: 0;
-    min-height: 8.8rem;
-    border: 1px solid rgba(255,255,255,0.14);
-    border-top-width: 4px;
+    min-height: clamp(22rem, 45vh, 31rem);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-top-width: 5px;
     border-radius: 8px;
     background:
-        linear-gradient(180deg, rgba(14,31,35,0.84), rgba(3,9,11,0.78)),
-        rgba(7,18,20,0.72);
+        linear-gradient(180deg, rgba(17,35,38,0.94), rgba(5,9,12,0.94)),
+        rgba(7,18,20,0.86);
     color: #f4f8f7;
-    padding: 0.68rem;
-    text-align: left;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 10px 24px rgba(0,0,0,0.24);
+    padding: clamp(1rem, 2vw, 1.5rem);
+    text-align: center;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.05),
+        0 28px 58px rgba(0,0,0,0.42);
+    overflow: hidden;
+    transform-origin: 50% 70%;
+    transform: translateY(var(--pact-card-y));
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    animation: demonic-pact-card-in 680ms cubic-bezier(0.16, 0.92, 0.18, 1) backwards;
+}
+
+.demonic-pact-card:nth-child(2) {
+    animation-delay: 90ms;
+}
+
+.demonic-pact-card:nth-child(3) {
+    animation-delay: 180ms;
+}
+
+.demonic-pact-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(120deg, transparent 0 32%, rgba(255,255,255,0.12) 42%, transparent 52% 100%);
+    transform: translateX(-120%);
+    opacity: 0;
 }
 
 .demonic-pact-card:hover,
 .demonic-pact-card:focus-visible {
-    border-color: rgba(232,199,106,0.58);
+    --pact-card-y: -0.38rem;
+    border-color: rgba(232,199,106,0.72);
     box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.06),
-        0 0 0 2px rgba(232,199,106,0.18),
-        0 14px 28px rgba(0,0,0,0.3);
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        0 0 0 2px rgba(232,199,106,0.2),
+        0 36px 74px rgba(0,0,0,0.52),
+        0 0 42px rgba(232,199,106,0.18);
+}
+
+.demonic-pact-card:hover::before,
+.demonic-pact-card:focus-visible::before {
+    opacity: 1;
+    animation: demonic-pact-card-shine 860ms ease-out both;
 }
 
 .demonic-pact-card.is-common {
@@ -7258,8 +7381,29 @@ body.collection-page {
     border-top-color: #2C82C9;
 }
 
+.demonic-pact-icon {
+    display: grid;
+    place-items: center;
+    width: clamp(4.5rem, 7vw, 6.2rem);
+    aspect-ratio: 1;
+    border: 1px solid rgba(232,199,106,0.3);
+    border-radius: 50%;
+    color: #f5d56d;
+    background:
+        conic-gradient(from 45deg, rgba(232,199,106,0.18), rgba(111,214,189,0.08), rgba(226,80,65,0.12), rgba(232,199,106,0.18)),
+        rgba(3,9,11,0.6);
+    box-shadow:
+        inset 0 0 22px rgba(232,199,106,0.12),
+        0 0 26px rgba(232,199,106,0.18);
+}
+
+.demonic-pact-icon .ad-icon {
+    width: 52%;
+    height: 52%;
+}
+
 .demonic-pact-rarity {
-    font-size: 0.68rem;
+    font-size: 0.74rem;
     font-weight: 900;
     line-height: 1;
     text-transform: uppercase;
@@ -7268,34 +7412,203 @@ body.collection-page {
 .demonic-pact-card strong {
     min-width: 0;
     color: #fff;
-    font-size: 1rem;
-    line-height: 1.12;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.45rem, 2.35vw, 2.2rem);
+    line-height: 1.02;
 }
 
 .demonic-pact-description {
     min-width: 0;
-    color: rgba(220,232,229,0.78);
-    font-size: 0.8rem;
-    line-height: 1.28;
+    color: rgba(220,232,229,0.84);
+    font-size: clamp(0.92rem, 1.25vw, 1.08rem);
+    line-height: 1.38;
 }
 
 .demonic-pact-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.28rem;
-    margin-top: 0.1rem;
+    justify-content: center;
+    gap: 0.34rem;
+    margin-top: 0.2rem;
 }
 
 .demonic-pact-tags span {
-    border: 1px solid rgba(141,231,255,0.2);
+    border: 1px solid rgba(141,231,255,0.22);
     border-radius: 999px;
     background: rgba(141,231,255,0.07);
-    color: rgba(202,239,245,0.86);
-    font-size: 0.62rem;
+    color: rgba(202,239,245,0.9);
+    font-size: 0.66rem;
     font-weight: 800;
     line-height: 1;
-    padding: 0.2rem 0.34rem;
+    padding: 0.24rem 0.4rem;
     text-transform: uppercase;
+}
+
+.team-formation-wrap {
+    min-width: 0;
+    min-height: 0;
+}
+
+.active-pact-rail {
+    --active-pact-row-count: 6;
+    display: grid;
+    grid-template-rows: repeat(var(--active-pact-row-count), auto);
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    justify-content: center;
+    gap: 0.38rem;
+    min-width: 2.85rem;
+    max-width: min(16rem, 34vw);
+    overflow: visible;
+    padding: 0.4rem 0.28rem;
+}
+
+.active-pact-chip {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: 0.12rem;
+    width: 2.55rem;
+    min-height: 2.95rem;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    background: rgba(7,18,20,0.76);
+    color: #f5d56d;
+    padding: 0.24rem;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.04),
+        0 8px 18px rgba(0,0,0,0.28);
+}
+
+.active-pact-chip:hover,
+.active-pact-chip:focus,
+.active-pact-chip:focus-visible {
+    border-color: rgba(232,199,106,0.58);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.06),
+        0 0 0 2px rgba(232,199,106,0.15),
+        0 10px 22px rgba(0,0,0,0.34);
+}
+
+.active-pact-chip.is-common {
+    border-top: 3px solid #D1D5D8;
+}
+
+.active-pact-chip.is-uncommon {
+    border-top: 3px solid #41A85F;
+}
+
+.active-pact-chip.is-rare {
+    border-top: 3px solid #2C82C9;
+}
+
+.active-pact-chip-icon .ad-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.active-pact-chip-tag {
+    max-width: 100%;
+    color: rgba(220,232,229,0.74);
+    font-size: 0.46rem;
+    font-weight: 900;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.active-pact-chip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 0.55rem);
+    top: 50%;
+    z-index: 30;
+    width: max-content;
+    max-width: min(20rem, 54vw);
+    border: 1px solid rgba(232,199,106,0.34);
+    border-radius: 8px;
+    background: rgba(3,9,11,0.96);
+    color: #f4f8f7;
+    box-shadow: 0 16px 34px rgba(0,0,0,0.42);
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.25;
+    padding: 0.55rem 0.65rem;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-0.3rem, -50%);
+    transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.active-pact-chip:hover::after,
+.active-pact-chip:focus::after,
+.active-pact-chip:focus-visible::after,
+.active-pact-chip.is-tooltip-visible::after {
+    opacity: 1;
+    transform: translate(0, -50%);
+}
+
+@keyframes demonic-pact-overlay-in {
+    from {
+        opacity: 0;
+        transform: scale(1.03);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes demonic-pact-sigil-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes demonic-pact-heading-in {
+    from {
+        opacity: 0;
+        transform: translateY(-0.8rem) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes demonic-pact-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(1.6rem) rotateX(18deg) scale(0.94);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) rotateX(0) scale(1);
+    }
+}
+
+@keyframes demonic-pact-card-shine {
+    from {
+        transform: translateX(-120%);
+    }
+    to {
+        transform: translateX(120%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .demonic-pact-overlay,
+    .demonic-pact-backdrop::before,
+    .demonic-pact-backdrop::after,
+    .demonic-pact-stage-heading,
+    .demonic-pact-card,
+    .demonic-pact-card::before {
+        animation: none !important;
+        transition: none !important;
+    }
 }
 
 .dungeon-hand-header {
@@ -7536,23 +7849,76 @@ body.collection-page {
         width: 100%;
     }
 
+    .demonic-pact-overlay {
+        place-items: start center;
+        overflow-y: auto;
+        padding: 0.72rem;
+    }
+
+    .demonic-pact-stage {
+        width: min(100%, 27rem);
+        gap: 0.65rem;
+        padding: 0.2rem 0 0.7rem;
+    }
+
+    .demonic-pact-stage-heading {
+        gap: 0.18rem;
+    }
+
+    .demonic-pact-stage-heading h2 {
+        font-size: clamp(2rem, 10.8vw, 3.05rem);
+        line-height: 0.95;
+    }
+
     .demonic-pact-grid {
         grid-template-columns: minmax(0, 1fr);
-        gap: 0.38rem;
+        gap: 0.5rem;
     }
 
     .demonic-pact-card {
-        min-height: 0;
-        gap: 0.24rem;
-        padding: 0.5rem;
+        min-height: 10.2rem;
+        gap: 0.34rem;
+        padding: 0.68rem;
+    }
+
+    .demonic-pact-icon {
+        width: 3.35rem;
     }
 
     .demonic-pact-card strong {
-        font-size: 0.86rem;
+        font-size: 1.2rem;
     }
 
     .demonic-pact-description {
-        font-size: 0.72rem;
+        font-size: 0.8rem;
+        line-height: 1.25;
+    }
+
+    .battle-side-player > #teamGrid.has-active-pacts {
+        column-gap: 0.18rem;
+    }
+
+    .active-pact-rail {
+        --active-pact-row-count: 5;
+        min-width: 2.25rem;
+        max-width: min(7.2rem, 22vw);
+        gap: 0.22rem;
+        overflow: visible;
+        padding: 0.2rem 0.08rem;
+    }
+
+    .active-pact-chip {
+        width: 2.08rem;
+        min-height: 2.38rem;
+    }
+
+    .active-pact-chip-tag {
+        font-size: 0.38rem;
+    }
+
+    .active-pact-chip::after {
+        left: calc(100% + 0.35rem);
+        max-width: min(16rem, 62vw);
     }
 }
 

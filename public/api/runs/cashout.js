@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
-const { saveCollectionDemon } = require('../lib/collection-demons');
+const { normalizeCollectionDemonStats, saveCollectionDemon } = require('../lib/collection-demons');
 const { getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { hasPendingBuffChoices } = require('../lib/run-buffs');
@@ -106,7 +106,7 @@ function getCashoutDemon(run, body) {
       error.status = 404;
       throw error;
     }
-    return demon;
+    return normalizeCollectionDemonStats(demon);
   }
 
   if (body.source === 'reward') {
@@ -125,7 +125,7 @@ function getCashoutDemon(run, body) {
     reward.claimed = true;
     reward.saved = true;
     clearPendingRewardSoul(reward);
-    return reward.demon;
+    return normalizeCollectionDemonStats(reward.demon);
   }
 
   const error = new Error('Choose a demon reward.');
@@ -160,7 +160,7 @@ function getReservedCashoutDemon(run, body) {
     ...choice,
     saved: true
   };
-  return choice.demon;
+  return normalizeCollectionDemonStats(choice.demon);
 }
 
 function getEarnedForPayout(run) {

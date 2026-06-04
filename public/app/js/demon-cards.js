@@ -66,6 +66,7 @@
     const hasHp = hasNumber(demon.hp) || hasNumber(demon.maxHp);
     const hasAtk = hasNumber(demon.atk);
     const hasSpeed = hasNumber(demon.speed) && !options.hideSpeed && !isRetaliateDemon(demon);
+    const attackValue = hasNumber(demon.effectiveAtk) ? demon.effectiveAtk : demon.atk;
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || currentHp || 1);
     const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
@@ -75,7 +76,7 @@
     return `
       ${hasAtk || hasSpeed ? `
         <div class="combat-stat-strip" aria-label="Combat stats">
-          ${hasAtk ? `<span>${renderAttackIcon()}${escapeHtml(demon.atk)}</span>` : ''}
+          ${hasAtk ? `<span>${renderAttackIcon()}${escapeHtml(attackValue)}</span>` : ''}
           ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(demon.speed)}</span>` : ''}
         </div>
       ` : ''}
@@ -96,6 +97,7 @@
     const titleHtml = renderDetailTitle(title, demon);
     const imageUrl = demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
     const rarity = capitalize(demon.rarity || 'common');
+    const attackValue = hasNumber(demon.effectiveAtk) ? demon.effectiveAtk : demon.atk;
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || Number(demon.hp) || 1);
     const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
@@ -116,7 +118,7 @@
           </div>
 
           <div class="demon-detail-stats" aria-label="Combat stats">
-            ${hasNumber(demon.atk) ? renderDetailStat(renderAttackIcon(), 'Attack', demon.atk) : ''}
+            ${hasNumber(demon.atk) ? renderDetailStat(renderAttackIcon(), 'Attack', attackValue) : ''}
             ${hasNumber(demon.speed) && !isRetaliateDemon(demon) ? renderDetailStat(renderSpeedIcon(), 'Speed', demon.speed) : ''}
             ${hasNumber(demon.hp) || hasNumber(demon.maxHp) ? renderDetailStat(renderIcon('hp'), 'HP', `${currentHp} / ${maxHp}`) : ''}
           </div>

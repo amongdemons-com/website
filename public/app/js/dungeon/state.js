@@ -19,6 +19,8 @@ export const state = {
   pendingHandFlowSources: null,
   isEnemyPreviewDeferred: false,
   enemyRevealEffectIds: [],
+  isPactRevealPending: false,
+  pactRevealTimer: null,
   battleHandPreview: null,
   recruitDraftTeam: null,
   recruitDraftPool: null,

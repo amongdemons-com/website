@@ -1,9 +1,10 @@
 const { createHuntEnemies } = require('./hunt-enemies');
 const { createRng } = require('./rng');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('./dungeon-rules');
-const { getTemporaryTeamSizeBonus, serializeRunBuffState } = require('./run-buffs');
+const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, serializeRunBuffState } = require('./run-buffs');
 
 async function serializeRun(run) {
+  applyRunBuffStatModifiers(run);
   const collectionReinforcementLimit = getCollectionReinforcementLimit(run);
   const collectionReinforcementAvailable = collectionReinforcementLimit > 0;
 

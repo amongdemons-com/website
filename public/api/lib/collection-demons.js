@@ -2,16 +2,47 @@ const db = require('./db');
 const { enrichCollectionDemonsWithTraining } = require('./demon-training');
 
 function getCollectionDemonRow(demon = {}) {
+  const normalizedDemon = normalizeCollectionDemonStats(demon);
+
   return {
-    sourceDemonId: Number(demon.sourceDemonId || demon.source_demon_id || demon.id),
-    typeId: Number(demon.typeId || demon.type_id || demon.type),
-    species: String(demon.species || demon.name || ''),
-    rarity: String(demon.rarity || '').toLowerCase(),
-    imageUrl: String(demon.imageUrl || demon.image_url || ''),
-    hp: Math.max(1, Number(demon.maxHp || demon.hp) || 1),
-    atk: Math.max(1, Number(demon.atk) || 1),
-    speed: Math.max(1, Number(demon.speed) || 1)
+    sourceDemonId: Number(normalizedDemon.sourceDemonId || normalizedDemon.source_demon_id || normalizedDemon.id),
+    typeId: Number(normalizedDemon.typeId || normalizedDemon.type_id || normalizedDemon.type),
+    species: String(normalizedDemon.species || normalizedDemon.name || ''),
+    rarity: String(normalizedDemon.rarity || '').toLowerCase(),
+    imageUrl: String(normalizedDemon.imageUrl || normalizedDemon.image_url || ''),
+    hp: Math.max(1, Number(normalizedDemon.maxHp || normalizedDemon.hp) || 1),
+    atk: Math.max(1, Number(normalizedDemon.atk) || 1),
+    speed: Math.max(1, Number(normalizedDemon.speed) || 1)
   };
+}
+
+function normalizeCollectionDemonStats(demon = {}) {
+  const maxHp = Number(demon.runBaseMaxHp);
+  const atk = Number(demon.runBaseAtk);
+  const speed = Number(demon.runBaseSpeed);
+  const normalized = { ...demon };
+
+  if (Number.isFinite(maxHp) && maxHp > 0) {
+    normalized.maxHp = Math.max(1, Math.round(maxHp));
+    normalized.hp = normalized.maxHp;
+  }
+
+  if (Number.isFinite(atk) && atk > 0) {
+    normalized.atk = Math.max(1, Math.round(atk));
+  }
+
+  if (Number.isFinite(speed) && speed > 0) {
+    normalized.speed = Math.max(1, Math.round(speed));
+  }
+
+  delete normalized.effectiveAtk;
+  delete normalized.runBaseAtk;
+  delete normalized.runBaseMaxHp;
+  delete normalized.runBaseSpeed;
+  delete normalized.runBuffStatsApplied;
+  delete normalized.runBuffStatsPreviewed;
+
+  return normalized;
 }
 
 async function saveCollectionDemon(playerId, demon) {
@@ -69,5 +100,6 @@ async function saveCollectionDemon(playerId, demon) {
 
 module.exports = {
   getCollectionDemonRow,
+  normalizeCollectionDemonStats,
   saveCollectionDemon
 };

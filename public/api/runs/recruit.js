@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
+const { normalizeCollectionDemonStats } = require('../lib/collection-demons');
 const { createRng } = require('../lib/rng');
 const { createHuntEnemies } = require('../lib/hunt-enemies');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
@@ -12,7 +13,7 @@ const {
   normalizePosition,
   resetRunDemon
 } = require('../lib/run-demons');
-const { getTemporaryTeamSizeBonus, hasPendingBuffChoices } = require('../lib/run-buffs');
+const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, hasPendingBuffChoices } = require('../lib/run-buffs');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { clearPendingRewardSoul, settleDiscardedSoulRewards } = require('../lib/run-rewards');
 
@@ -141,6 +142,7 @@ async function advanceFloor(run) {
   );
   run.floor += 1;
   run.state.currentFloor = run.floor;
+  applyRunBuffStatModifiers(run);
   run.state.enemies = await createHuntEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length);
   run.state.awaitingRecruit = false;
   run.state.awaitingCollectionReinforcement = false;
@@ -317,7 +319,7 @@ function stageExtractChoice(run, choice) {
       source: 'team',
       instanceId,
       rewardId: null,
-      demon: { ...demon }
+      demon: normalizeCollectionDemonStats(demon)
     };
     return;
   }
@@ -344,7 +346,7 @@ function stageExtractChoice(run, choice) {
       source: 'reward',
       instanceId: choice.instanceId || reward.demon.instanceId,
       rewardId,
-      demon: { ...reward.demon }
+      demon: normalizeCollectionDemonStats(reward.demon)
     };
     return;
   }

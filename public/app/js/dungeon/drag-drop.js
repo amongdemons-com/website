@@ -10,6 +10,7 @@ const canDropOnRewardBox = (...args) => dungeonActions.canDropOnRewardBox(...arg
 const canExtractRun = (...args) => dungeonActions.canExtractRun(...args);
 const canMoveRewardSelectionToPool = (...args) => dungeonActions.canMoveRewardSelectionToPool(...args);
 const canMoveRewardSelectionToTeam = (...args) => dungeonActions.canMoveRewardSelectionToTeam(...args);
+const completeDeferredDemonicPactRevealAfter = (...args) => dungeonActions.completeDeferredDemonicPactRevealAfter(...args);
 const ensureRecruitDraft = (...args) => dungeonActions.ensureRecruitDraft(...args);
 const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
 const getDemonsForFormationRow = (...args) => dungeonActions.getDemonsForFormationRow(...args);
@@ -930,6 +931,7 @@ function playEnemyRevealEffect() {
 
   const effectIds = state.enemyRevealEffectIds;
   state.enemyRevealEffectIds = [];
+  const revealDuration = 980 + Math.max(0, effectIds.length - 1) * 90;
   effectIds.forEach((instanceId, index) => {
     const card = document.querySelector(`#enemyGrid .hunt-demon-card[data-instance-id="${cssEscape(instanceId)}"]`);
     if (!card) return;
@@ -943,6 +945,7 @@ function playEnemyRevealEffect() {
       card.style.removeProperty('--enemy-reveal-delay');
     }, 980 + index * 90);
   });
+  completeDeferredDemonicPactRevealAfter(revealDuration);
 }
 
 function moveDraftTeamDemon(instanceId, position, insertIndex = null, rowIndex = null) {
