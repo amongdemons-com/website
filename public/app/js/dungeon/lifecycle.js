@@ -90,7 +90,7 @@ async function loadCurrentRun() {
     state.run = await api('/api/runs/current');
     await ensureCollectionLoaded();
     state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
-    state.isRecruiting = Boolean(state.run.awaitingRecruit && (!hasPendingBuffChoices(state.run) || state.isPactRevealPending));
+    state.isRecruiting = Boolean(state.run.awaitingRecruit);
     if (state.isRecruiting) prepareRecruitStrategyState();
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
@@ -154,7 +154,7 @@ async function loadRun(runId) {
     state.run = await api(runPath(runId));
     await ensureCollectionLoaded();
     state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
-    state.isRecruiting = Boolean(state.run.awaitingRecruit && (!hasPendingBuffChoices(state.run) || state.isPactRevealPending));
+    state.isRecruiting = Boolean(state.run.awaitingRecruit);
     if (state.isRecruiting) prepareRecruitStrategyState();
     if (!state.isRecruiting) {
       clearRecruitDrafts();

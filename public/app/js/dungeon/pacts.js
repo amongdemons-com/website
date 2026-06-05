@@ -24,6 +24,7 @@ function renderDemonicPacts(isVisible = hasPendingBuffChoices()) {
 
   elements.demonicPactOverlay.classList.toggle('d-none', !isVisible);
   if (!isVisible) {
+    clearDemonicPactRecastAnimation();
     elements.dungeonPactGrid.innerHTML = '';
     if (elements.dungeonPactActions) elements.dungeonPactActions.innerHTML = '';
     return;
@@ -198,8 +199,12 @@ function completeDeferredDemonicPactRevealAfter(delay = 0) {
   state.pactRevealTimer = window.setTimeout(() => {
     state.isPactRevealPending = false;
     state.pactRevealTimer = null;
-    state.isRecruiting = false;
-    clearRecruitDrafts();
+    state.isRecruiting = Boolean(state.run?.awaitingRecruit);
+    if (state.isRecruiting) {
+      prepareRecruitStrategyState();
+    } else {
+      clearRecruitDrafts();
+    }
     renderRun();
   }, Math.max(0, Number(delay) || 0) + 180);
 }
@@ -249,8 +254,8 @@ async function rerollDemonicPacts(button = null) {
         syncPlayer(payload.player);
       }
       state.isPactRevealPending = false;
+      beginDemonicPactRecastIn();
       renderRun();
-      playDemonicPactRecastIn();
       setMessage(`Demonic Pacts recast for ${cost} Souls.`, 'success');
     } catch (error) {
       clearDemonicPactRecastAnimation();
@@ -267,18 +272,20 @@ async function playDemonicPactRecastOut() {
   await sleep(340);
 }
 
-function playDemonicPactRecastIn() {
-  if (!elements.demonicPactOverlay || prefersReducedMotion()) return;
+function beginDemonicPactRecastIn() {
+  if (!elements.demonicPactOverlay || prefersReducedMotion()) return false;
   clearDemonicPactRecastAnimation();
   void elements.demonicPactOverlay.offsetWidth;
   elements.demonicPactOverlay.classList.add('is-recasting-in');
   window.setTimeout(() => {
     elements.demonicPactOverlay?.classList.remove('is-recasting-in');
+    elements.demonicPactOverlay?.classList.add('has-recast-settled');
   }, 840);
+  return true;
 }
 
 function clearDemonicPactRecastAnimation() {
-  elements.demonicPactOverlay?.classList.remove('is-recasting-out', 'is-recasting-in');
+  elements.demonicPactOverlay?.classList.remove('is-recasting-out', 'is-recasting-in', 'has-recast-settled');
 }
 
 function prefersReducedMotion() {

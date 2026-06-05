@@ -95,7 +95,7 @@ function renderRun() {
   }
 
   const hasPendingPacts = hasPendingBuffChoices(run);
-  const isHandStrategy = Boolean(state.isRecruiting && run.awaitingRecruit && (!hasPendingPacts || state.isPactRevealPending));
+  const isHandStrategy = Boolean(state.isRecruiting && run.awaitingRecruit);
   const arena = elements.runPanel?.querySelector('.dungeon-arena');
   const team = isHandStrategy ? getRecruitPreviewTeam() : run.team || [];
   const enemies = isHandStrategy && state.isEnemyPreviewDeferred ? [] : (isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || []);
@@ -103,8 +103,9 @@ function renderRun() {
   const hand = isHandStrategy ? getRecruitPreviewHand() : [];
   const handMode = isBattleHandPlaceholder ? 'battle' : 'recruit';
   const showPacts = Boolean(hasPendingPacts && !state.isPactRevealPending && !state.isBattleAnimating && !state.isResultAnimating);
-  const showHand = !showPacts;
-  const rewardInteractive = Boolean(isHandStrategy);
+  const showHand = true;
+  const handInteractive = Boolean(isHandStrategy && !showPacts);
+  const rewardInteractive = handInteractive;
   const canExtract = Boolean(!hasPendingPacts && !state.isResultAnimating && canExtractRun());
   const teamGridStyle = getCurrentFormationGridInlineStyle(elements.teamGrid);
   const enemyGridStyle = getCurrentFormationGridInlineStyle(elements.enemyGrid);
@@ -128,7 +129,7 @@ function renderRun() {
     allowRecruitDrag: false,
     gridStyle: enemyGridStyle
   }), { patchFormationGrid: true, renderKey: 'enemy' });
-  renderHandBar(hand, showHand, isHandStrategy, handMode);
+  renderHandBar(hand, showHand, handInteractive, handMode);
   renderRewardBox(showHand, rewardInteractive, canExtract);
   renderDemonicPacts(showPacts);
   renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
