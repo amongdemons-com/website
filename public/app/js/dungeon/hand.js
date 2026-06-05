@@ -3,7 +3,7 @@ import { state, elements, laneResizeObserver, setLaneResizeObserver } from './st
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
-import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
+import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, setElementHtml, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const getPayoutPreview = (...args) => dungeonActions.getPayoutPreview(...args);
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
@@ -25,7 +25,7 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
 
   elements.dungeonHandBar.classList.toggle('d-none', !isVisible);
   if (!isVisible) {
-    elements.dungeonHandGrid.innerHTML = '';
+    setElementHtml(elements.dungeonHandGrid, '');
     elements.dungeonHandGrid.classList.remove('is-pacts-tab');
     elements.dungeonHandBar.classList.remove('has-pacts', 'is-pacts-tab-active');
     updateHandTabs('hand', 0);
@@ -44,9 +44,19 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
   elements.dungeonHandBar.classList.toggle('is-pacts-tab-active', activeTab === 'pacts');
   elements.dungeonHandGrid.classList.toggle('is-pacts-tab', activeTab === 'pacts');
   updateHandTabs(activeTab, activePacts.length);
-  elements.dungeonHandGrid.innerHTML = activeTab === 'pacts'
-    ? renderHandPactTags(activePacts)
-    : renderHandCards(hand, isInteractive, mode);
+  if (activeTab === 'pacts') {
+    setElementHtml(elements.dungeonHandGrid, renderHandPactTags(activePacts));
+  } else {
+    const handRenderKey = [
+      'hand',
+      mode,
+      isInteractive ? 'interactive' : 'locked'
+    ].join(':');
+    setElementHtml(elements.dungeonHandGrid, renderHandCards(hand, isInteractive, mode), {
+      patchDemonLane: true,
+      renderKey: handRenderKey
+    });
+  }
   bindHandTabs();
 }
 
@@ -125,14 +135,14 @@ function renderRewardBox(isVisible, isInteractive = false, canExtract = false) {
 
   elements.dungeonRewardBox.classList.toggle('d-none', !isVisible);
   if (!isVisible) {
-    elements.dungeonRewardGrid.innerHTML = '';
+    setElementHtml(elements.dungeonRewardGrid, '');
     return;
   }
 
   const candidate = getSelectedRewardCandidate();
   const earned = getPayoutPreview(candidate);
 
-  elements.dungeonRewardGrid.innerHTML = `
+  const rewardChanged = setElementHtml(elements.dungeonRewardGrid, `
     <div class="dungeon-reward-panel ${candidate ? 'has-demon' : 'is-empty'}">
       <div class="dungeon-reward-dropzone formation-lane-cards ${candidate ? 'has-demon' : 'is-empty'}" data-reward-drop="true">
         <div class="dungeon-reward-slot">
@@ -141,8 +151,12 @@ function renderRewardBox(isVisible, isInteractive = false, canExtract = false) {
       </div>
       ${renderRewardPayout(earned, canExtract)}
     </div>
-  `;
-  bindClick(document.getElementById('getRewardBtn'), openCashoutModal);
+  `, { preserveDemonImages: true });
+  const rewardButton = document.getElementById('getRewardBtn');
+  if (rewardChanged || rewardButton?.dataset.rewardActionBound !== 'true') {
+    bindClick(rewardButton, openCashoutModal);
+    if (rewardButton) rewardButton.dataset.rewardActionBound = 'true';
+  }
 }
 
 function renderRewardPayout(earned, canExtract = false) {

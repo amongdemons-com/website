@@ -3,7 +3,7 @@ import { state, elements, laneResizeObserver, setLaneResizeObserver } from './st
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
-import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
+import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, setElementHtml, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const battle = (...args) => dungeonActions.battle(...args);
 const bindCollectionReinforcementPlaceholders = (...args) => dungeonActions.bindCollectionReinforcementPlaceholders(...args);
@@ -110,20 +110,26 @@ function renderRun() {
   const canExtract = Boolean(!hasPendingPacts && !state.isResultAnimating && canExtractRun());
   const teamGridStyle = getCurrentFormationGridInlineStyle(elements.teamGrid);
   const enemyGridStyle = getCurrentFormationGridInlineStyle(elements.enemyGrid);
+  const teamGridRenderKey = [
+    'player',
+    run.awaitingRecruit ? 'recruit' : 'battle',
+    state.isRecruiting ? 'interactive' : 'locked',
+    hasPendingPacts ? 'pacts' : 'ready'
+  ].join(':');
 
   elements.runPanel?.classList.toggle('has-hand', showHand);
   elements.dungeonBottomPanel?.classList.toggle('d-none', !showHand);
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
-  elements.teamGrid.innerHTML = renderDemonCards(team, {
+  setElementHtml(elements.teamGrid, renderDemonCards(team, {
     side: 'player',
     allowFormationDrag: run.status === 'active' && (!run.awaitingRecruit || (state.isRecruiting && !hasPendingPacts)),
     gridStyle: teamGridStyle
-  });
-  elements.enemyGrid.innerHTML = renderDemonCards((isHandStrategy || (run.team || []).length) ? enemies : [], {
+  }), { patchFormationGrid: true, renderKey: teamGridRenderKey });
+  setElementHtml(elements.enemyGrid, renderDemonCards((isHandStrategy || (run.team || []).length) ? enemies : [], {
     side: 'enemy',
     allowRecruitDrag: false,
     gridStyle: enemyGridStyle
-  });
+  }), { patchFormationGrid: true, renderKey: 'enemy' });
   renderHandBar(hand, showHand, isHandStrategy, handMode);
   renderRewardBox(showHand, rewardInteractive, canExtract);
   renderDemonicPacts(showPacts);
@@ -462,12 +468,12 @@ function renderEndNotice() {
 
 function renderFightLogActions() {
   if (state.isLoading) {
-    elements.fightLogActions.innerHTML = `
+    setElementHtml(elements.fightLogActions, `
       <span class="dungeon-loading-status" aria-live="polite">
         <span class="dungeon-loading-dot" aria-hidden="true"></span>
         Loading
       </span>
-    `;
+    `);
     return;
   }
 
@@ -484,7 +490,7 @@ function renderFightLogActions() {
   const hasPendingPacts = hasPendingBuffChoices(state.run);
   const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
 
-  elements.fightLogActions.innerHTML = `
+  const actionsChanged = setElementHtml(elements.fightLogActions, `
     ${canShowSpeedControl ? `${renderBattlePlaybackControls()}${renderBattleSpeedControl()}` : ''}
     ${canReplay ? `
       <button class="btn btn-warning btn-sm btn-icon-only" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
@@ -508,7 +514,9 @@ function renderFightLogActions() {
       ${isDefeated ? 'Start New Dungeon' : 'Start Dungeon'}
     </button>
     ` : ''}
-  `;
+  `);
+
+  if (!actionsChanged) return;
 
   bindClicks('[data-battle-speed]', (button) => setBattleSpeed(Number(button.dataset.battleSpeed)));
   bindClick(document.getElementById('battlePlaybackToggleBtn'), () => {

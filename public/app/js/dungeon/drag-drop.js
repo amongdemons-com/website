@@ -65,6 +65,10 @@ async function setDemonPosition(instanceId, position, rowIndex = null) {
 }
 
 function bindNativeDragSource(card, options) {
+  const boundKey = options.stateKey || 'default';
+  if (card.dataset.nativeDragSourceBound === boundKey) return;
+  card.dataset.nativeDragSourceBound = boundKey;
+
   card.addEventListener('dragstart', (event) => {
     const payload = options.getPayload(card);
     if (!payload) return;
@@ -84,6 +88,9 @@ function bindNativeDragSource(card, options) {
 }
 
 function bindNativeDropTarget(target, options) {
+  if (target.dataset.nativeDropTargetBound === 'true') return;
+  target.dataset.nativeDropTargetBound = 'true';
+
   target.addEventListener('dragover', (event) => {
     const payload = options.readPayload(event);
     if (!(options.canDragOver || options.canDrop)(payload, event, target)) return;
@@ -386,6 +393,8 @@ function getRewardCandidateForCard(card) {
 
 function bindPointerDragAndDrop() {
   document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id], #dungeonRewardGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+    if (card.dataset.pointerDragBound === 'true') return;
+    card.dataset.pointerDragBound = 'true';
     card.addEventListener('pointerdown', startPointerDrag);
     card.addEventListener('mousedown', startMouseDrag);
     card.addEventListener('touchstart', startTouchDrag, { passive: false });
@@ -518,14 +527,18 @@ function activatePointerDrag(event, drag) {
 
 function finishPointerDrag(event, drag, onMove, onUp, onCancel) {
   cleanupPointerDragListeners(drag, onMove, onUp, onCancel);
-  if (!drag.active) return;
+  if (!drag.active) {
+    clearDragState();
+    return;
+  }
 
   if (event.cancelable) event.preventDefault();
   event.stopPropagation();
   const point = getDragPoint(event);
   const target = point ? getPointerDropTarget(point.clientX, point.clientY, drag) : null;
-  applyPointerDrop(drag.payload, target);
+  suppressSyntheticClickAfterDrag(point);
   cleanupPointerDrag(drag);
+  applyPointerDrop(drag.payload, target);
 }
 
 function cancelPointerDrag(event, drag, onMove, onUp, onCancel) {
@@ -552,6 +565,29 @@ function cleanupPointerDrag(drag) {
   window.setTimeout(() => {
     drag.card.classList.remove('suppress-detail-click');
   }, 120);
+}
+
+function suppressSyntheticClickAfterDrag(point) {
+  if (!point) return;
+
+  const startedAt = Date.now();
+  const maxAgeMs = 350;
+  const maxDistancePx = 24;
+  const releaseX = point.clientX;
+  const releaseY = point.clientY;
+  const remove = () => document.removeEventListener('click', onClick, true);
+  const onClick = (event) => {
+    const age = Date.now() - startedAt;
+    const distance = Math.hypot(event.clientX - releaseX, event.clientY - releaseY);
+    remove();
+    if (age > maxAgeMs || distance > maxDistancePx) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  document.addEventListener('click', onClick, true);
+  window.setTimeout(remove, maxAgeMs);
 }
 
 function getPointerDragPayload(card) {

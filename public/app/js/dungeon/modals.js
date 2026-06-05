@@ -170,11 +170,18 @@ async function confirmCollectionReplacement(incomingDemon) {
 }
 
 function bindCollectionReinforcementPlaceholders() {
-  bindClicks('.collection-reinforcement-placeholder', () => openCollectionReinforcementModal());
+  document.querySelectorAll('.collection-reinforcement-placeholder').forEach((placeholder) => {
+    if (placeholder.dataset.collectionReinforcementBound === 'true') return;
+    placeholder.dataset.collectionReinforcementBound = 'true';
+    placeholder.addEventListener('click', () => openCollectionReinforcementModal());
+  });
 }
 
 function bindDemonDetailCards() {
   document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id], #dungeonRewardGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+    if (card.dataset.demonDetailBound === 'true') return;
+    card.dataset.demonDetailBound = 'true';
+
     card.addEventListener('click', (event) => {
       if (event.defaultPrevented || card.classList.contains('is-dragging') || card.classList.contains('suppress-detail-click')) return;
 
