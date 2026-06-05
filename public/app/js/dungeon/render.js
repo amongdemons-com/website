@@ -63,7 +63,6 @@ function renderRun() {
   elements.runPanel.classList.toggle('d-none', state.isLoading || !hasRun);
   elements.huntTitle.innerHTML = renderHuntTitle(run);
   renderDungeonRewardStrip();
-  renderBattleOutcome();
   showCombatPanel();
 
   if (state.isLoading) {
@@ -85,13 +84,12 @@ function renderRun() {
     elements.dungeonRewardBox?.classList.add('d-none');
     renderDemonicPacts(false);
     renderTeamSideTitle();
-    if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
+    renderEnemySideTitle();
     updateDungeonJoiner();
     elements.runEmpty.innerHTML = state.endSummary ? renderDungeonEndScreen() : renderEmptyText('Preparing dungeon...');
     bindDungeonEmptyButtons();
     renderFightLog();
     renderFightLogActions();
-    renderPhaseTitle();
     syncActionButtons();
     return;
   }
@@ -134,7 +132,7 @@ function renderRun() {
   renderRewardBox(showHand, rewardInteractive, canExtract);
   renderDemonicPacts(showPacts);
   renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
-  if (elements.enemySideTitle) elements.enemySideTitle.textContent = 'Enemies';
+  renderEnemySideTitle(isHandStrategy ? run.nextEnemyPressure : run.enemyPressure);
   updateDungeonJoiner();
   bindFormationDragAndDrop();
   bindRecruitDragAndDrop();
@@ -148,7 +146,6 @@ function renderRun() {
   watchFormationLaneSizing();
   renderFightLog();
   renderFightLogActions();
-  renderPhaseTitle();
   syncActionButtons();
   playPendingHandFlowAnimation(isHandStrategy);
 }
@@ -225,8 +222,6 @@ function bindDungeonEmptyButtons() {
 }
 
 function renderFightLog() {
-  renderBattleOutcome();
-
   const logRows = state.combatLog.length
     ? groupCombatLog(state.combatLog).map((step, index) => `
       ${renderFightLogRow(step, index)}
@@ -242,30 +237,6 @@ function renderFightLog() {
 
   elements.fightLog.classList.remove('text-muted');
   elements.fightLog.innerHTML = logContent;
-}
-
-function renderBattleOutcome() {
-  if (!elements.battleOutcome) return;
-
-  let text = '';
-  let type = '';
-  if (state.run?.awaitingRecruit && Number(state.run.currentFloor) <= 0) {
-    text = 'Preparation';
-    type = 'victory';
-  } else if (state.run?.awaitingRecruit && hasPendingBuffChoices(state.run)) {
-    text = 'Demonic Pact';
-    type = 'victory';
-  } else if (state.run?.awaitingRecruit) {
-    text = 'Victory';
-    type = 'victory';
-  } else if (state.run?.status === 'defeated') {
-    text = 'Defeat';
-    type = 'defeat';
-  }
-
-  elements.battleOutcome.textContent = text;
-  elements.battleOutcome.classList.toggle('is-victory', type === 'victory');
-  elements.battleOutcome.classList.toggle('is-defeat', type === 'defeat');
 }
 
 function showBattleResultOverlay(type) {
@@ -307,6 +278,51 @@ function renderTeamSideTitle(teamCount = null, teamLimit = null) {
     : '';
 
   elements.teamSideTitle.innerHTML = `<span>Your Team</span>${countHtml ? ` ${countHtml}` : ''}`;
+}
+
+function renderEnemySideTitle(pressure = null) {
+  if (!elements.enemySideTitle) return;
+
+  elements.enemySideTitle.innerHTML = `<span>Enemies</span>${renderEnemyPressureChip(pressure)}`;
+}
+
+function renderEnemyPressureChip(pressure = null) {
+  if (!pressure?.active) return '';
+
+  const hpBonus = formatBonusPercent(pressure.hpBonusPct);
+  const atkBonus = formatBonusPercent(pressure.atkBonusPct);
+  const speedBonus = formatBonusPercent(pressure.speedBonusPct);
+  const level = Math.max(0, Math.round(Number(pressure.level) || 0));
+  if (level <= 0) return '';
+
+  const tooltip = [
+    `Terror ${level}`,
+    'Demons grow stronger in darkness.',
+    `Enemy HP ${hpBonus}`,
+    `Enemy Attack ${atkBonus}`,
+    `Enemy Speed ${speedBonus}`
+  ].join('\n');
+  const escapedTooltip = escapeTooltipAttribute(tooltip);
+
+  return `
+    <span
+      class="enemy-pressure-chip"
+      tabindex="0"
+      data-tooltip="${escapedTooltip}"
+      aria-label="${escapedTooltip}"
+    >
+      <span>Terror</span>
+      <strong>${escapeHtml(String(level))}</strong>
+    </span>
+  `;
+}
+
+function formatBonusPercent(value) {
+  return `+${Math.max(0, Math.round(Number(value) || 0))}%`;
+}
+
+function escapeTooltipAttribute(value) {
+  return escapeHtml(value).replace(/\n/g, '&#10;');
 }
 
 function updateDungeonJoiner() {
@@ -445,15 +461,6 @@ function cssPixels(value) {
 function renderDungeonRewardStrip() {
   if (!elements.dungeonRewardStrip) return;
   elements.dungeonRewardStrip.innerHTML = '';
-}
-
-function renderPhaseTitle() {
-  if (!elements.fightLogTitle) return;
-  elements.fightLogTitle.textContent = 'Fight Log';
-}
-
-function setFightLogTitle(title) {
-  if (elements.fightLogTitle) elements.fightLogTitle.textContent = title;
 }
 
 function renderEndNotice() {
@@ -606,9 +613,9 @@ export {
   renderDungeonEndScreen,
   bindDungeonEmptyButtons,
   renderFightLog,
-  renderBattleOutcome,
   showBattleResultOverlay,
   renderTeamSideTitle,
+  renderEnemySideTitle,
   updateDungeonJoiner,
   showCombatPanel,
   toggleFightLogPanel,
@@ -617,8 +624,6 @@ export {
   syncCompressedFormationLanes,
   syncFormationGridSizing,
   renderDungeonRewardStrip,
-  renderPhaseTitle,
-  setFightLogTitle,
   renderEndNotice,
   renderFightLogActions,
   renderBattlePlaybackControls,

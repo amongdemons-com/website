@@ -93,15 +93,19 @@ async function createRunDemonFromCollection(row, instanceId) {
 }
 
 function resetRunDemon(demon, instanceId) {
-  const maxHp = Number(demon.maxHp) || Number(demon.hp) || 1;
+  const maxHp = getPositiveStat(demon.runBaseMaxHp, demon.maxHp, demon.hp, 1);
+  const atk = getPositiveStat(demon.runBaseAtk, demon.atk, 1);
+  const speed = getPositiveStat(demon.runBaseSpeed, demon.speed, 1);
   const preferredPosition = demon.preferredPosition === 'back' ? 'back' : 'front';
   const formationSlot = normalizeFormationSlot(demon.formationSlot ?? demon.formationRow);
 
-  return {
+  const next = {
     ...demon,
     instanceId,
     maxHp,
     hp: maxHp,
+    atk,
+    speed,
     preferredPosition,
     position: normalizePosition(demon.position || preferredPosition),
     ...(formationSlot !== null ? { formationSlot } : {}),
@@ -110,6 +114,26 @@ function resetRunDemon(demon, instanceId) {
       poison: []
     }
   };
+
+  delete next.effectiveAtk;
+  delete next.runBaseAtk;
+  delete next.runBaseMaxHp;
+  delete next.runBaseSpeed;
+  delete next.runBuffStatsApplied;
+  delete next.runBuffStatsPreviewed;
+
+  return next;
+}
+
+function getPositiveStat(...values) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isFinite(number) && number > 0) {
+      return Math.max(1, Math.round(number));
+    }
+  }
+
+  return 1;
 }
 
 async function enrichDemonPreferredPositions(demons) {

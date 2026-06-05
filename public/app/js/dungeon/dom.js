@@ -32,8 +32,6 @@ function cacheElements() {
     'teamSideTitle',
     'enemySideTitle',
     'dungeonJoiner',
-    'battleOutcome',
-    'fightLogTitle',
     'fightLog',
     'fightLogActions',
     'teamChoiceModal',

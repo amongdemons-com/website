@@ -143,7 +143,9 @@ async function advanceFloor(run) {
   run.floor += 1;
   run.state.currentFloor = run.floor;
   applyRunBuffStatModifiers(run);
-  run.state.enemies = await createHuntEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length);
+  run.state.enemies = await createHuntEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length, {
+    buffs: run.state.buffs
+  });
   run.state.awaitingRecruit = false;
   run.state.awaitingCollectionReinforcement = false;
   delete run.state.collectionReinforcementLimit;

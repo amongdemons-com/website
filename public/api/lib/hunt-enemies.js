@@ -1,6 +1,7 @@
 const { createDemon } = require('./demon-factory');
 const { getDungeonTeamLimit } = require('./dungeon-rules');
 const { assignFormationSlots } = require('./run-demons');
+const { normalizeRunBuffState } = require('./run-buffs');
 
 const STARTER_TYPE_IDS = [1, 2, 3];
 const MAX_HUNT_TYPE_ID = 11;
@@ -8,6 +9,14 @@ const MAX_HUNT_ENEMY_TEAM_SIZE = 9;
 const ENEMY_SIZE_INCREASE_START_FLOOR = 25;
 const ENEMY_SIZE_INCREASE_INTERVAL = 5;
 const DIFFICULTY_RAMP_FLOORS = 20;
+const ENEMY_PRESSURE_START_FLOOR = 18;
+const ENEMY_PRESSURE_FLOOR_HP = 0.045;
+const ENEMY_PRESSURE_FLOOR_ATK = 0.04;
+const ENEMY_PRESSURE_FLOOR_SPEED = 0.012;
+const ENEMY_PRESSURE_PACT_HP = 0.07;
+const ENEMY_PRESSURE_PACT_ATK = 0.055;
+const ENEMY_PRESSURE_PACT_SPEED = 0.02;
+const ENEMY_PRESSURE_MAX_SPEED_MULT = 1.85;
 const RARITY_RANK = {
   common: 0,
   uncommon: 1,
@@ -23,11 +32,12 @@ function getAllowedHuntTypeIds(floor) {
   return Array.from({ length: Math.min(floor + 1, MAX_HUNT_TYPE_ID) }, (item, index) => index + 1);
 }
 
-async function createHuntEnemies(rng, floor, size) {
+async function createHuntEnemies(rng, floor, size, options = {}) {
   const allowedTypeIds = getAllowedHuntTypeIds(floor);
   const teamSize = getHuntEnemyTeamSize(floor, size);
   const positions = getEnemyPositions(teamSize);
   const eliteIndex = teamSize > 1 ? teamSize - 1 : 0;
+  const pressure = getEnemyPressureMultipliers(floor, options);
   const enemies = [];
 
   for (let index = 0; index < teamSize; index += 1) {
@@ -39,7 +49,7 @@ async function createHuntEnemies(rng, floor, size) {
     }));
   }
 
-  return assignFormationSlots(applyEnemyPreferredPositions(enemies), 'enemy');
+  return assignFormationSlots(applyEnemyPreferredPositions(applyEnemyPressure(enemies, pressure)), 'enemy');
 }
 
 function getEnemyGenerationOptions(floor, options = {}) {
@@ -113,6 +123,45 @@ function getHuntEnemyTeamSize(floor, fallbackSize) {
   return Math.min(MAX_HUNT_ENEMY_TEAM_SIZE, baseSize + extraEnemies);
 }
 
+function getEnemyPressureMultipliers(floor, options = {}) {
+  const floorNumber = Math.max(1, Number(floor) || 1);
+  const activePactCount = normalizeRunBuffState(options.buffs || options.runBuffs || {}).active.length;
+  const endlessFloors = Math.max(0, floorNumber - ENEMY_PRESSURE_START_FLOOR);
+
+  return {
+    hp: 1 + endlessFloors * ENEMY_PRESSURE_FLOOR_HP + activePactCount * ENEMY_PRESSURE_PACT_HP,
+    atk: 1 + endlessFloors * ENEMY_PRESSURE_FLOOR_ATK + activePactCount * ENEMY_PRESSURE_PACT_ATK,
+    speed: Math.min(
+      ENEMY_PRESSURE_MAX_SPEED_MULT,
+      1 + endlessFloors * ENEMY_PRESSURE_FLOOR_SPEED + activePactCount * ENEMY_PRESSURE_PACT_SPEED
+    )
+  };
+}
+
+function applyEnemyPressure(enemies, pressure) {
+  if (!enemies.length || !pressure || (pressure.hp === 1 && pressure.atk === 1 && pressure.speed === 1)) {
+    return enemies;
+  }
+
+  return enemies.map((enemy) => {
+    const baseMaxHp = Math.max(1, Number(enemy.maxHp) || Number(enemy.hp) || 1);
+    const baseAtk = Math.max(1, Number(enemy.atk) || 1);
+    const baseSpeed = Math.max(1, Number(enemy.speed) || 1);
+    const maxHp = Math.max(1, Math.round(baseMaxHp * pressure.hp));
+
+    return {
+      ...enemy,
+      runBaseMaxHp: baseMaxHp,
+      runBaseAtk: baseAtk,
+      runBaseSpeed: baseSpeed,
+      maxHp,
+      hp: maxHp,
+      atk: Math.max(1, Math.round(baseAtk * pressure.atk)),
+      speed: Math.max(1, Math.round(baseSpeed * pressure.speed))
+    };
+  });
+}
+
 function getEnemyPositions(size) {
   if (size <= 1) return ['front'];
   if (size === 2) return ['front', 'back'];
@@ -138,6 +187,7 @@ module.exports = {
   getAllowedHuntTypeIds,
   getAllowedEnemyRarities,
   getEnemyGenerationOptions,
+  getEnemyPressureMultipliers,
   getHuntEnemyTeamSize,
   MAX_HUNT_ENEMY_TEAM_SIZE
 };

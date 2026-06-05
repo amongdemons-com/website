@@ -25,7 +25,6 @@ const renderFightLog = (...args) => dungeonActions.renderFightLog(...args);
 const renderPlayer = (...args) => dungeonActions.renderPlayer(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
 const setDungeonLoading = (...args) => dungeonActions.setDungeonLoading(...args);
-const setFightLogTitle = (...args) => dungeonActions.setFightLogTitle(...args);
 const showBattleResultOverlay = (...args) => dungeonActions.showBattleResultOverlay(...args);
 const showCombatPanel = (...args) => dungeonActions.showCombatPanel(...args);
 const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelectionFromRun(...args);
@@ -178,7 +177,6 @@ async function battle() {
 
   await withBusy(null, async () => {
     try {
-      setFightLogTitle('Fight Log');
       const result = await api(activeRunPath('battle'), { method: 'POST' });
       state.combatLog = result.combatLog || [];
       if (result.lastBattle) {
@@ -432,7 +430,6 @@ async function replayFight() {
   state.run.enemies = cloneDemons(lastBattle.enemyTeamBefore || state.run.enemies || []);
   state.combatLog = lastBattle.combatLog || [];
   renderRun();
-  setFightLogTitle('Fight Log');
   elements.fightLog.innerHTML = '';
   elements.fightLog.classList.remove('text-muted');
   try {

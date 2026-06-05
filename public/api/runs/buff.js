@@ -52,10 +52,17 @@ router.post('/runs/:id/buff/reroll', requireAuth, async (req, res) => {
     const state = ensureRunBuffState(run);
     const previousChoices = [...state.pendingChoices];
     state.rerolls += 1;
-    generateBuffChoices(run, createBuffChoiceRng(run, state.rerolls), 3, {
+    const nextChoices = generateBuffChoices(run, createBuffChoiceRng(run, state.rerolls), 3, {
       excludeIds: previousChoices,
       preserveRerolls: true
     });
+
+    if (!nextChoices.length) {
+      state.pendingChoices = previousChoices;
+      state.rerolls = Math.max(0, state.rerolls - 1);
+      await connection.rollback();
+      return res.status(409).json({ error: 'No alternate Demonic Pacts are available.' });
+    }
 
     await connection.query(
       'UPDATE players SET souls = souls - ? WHERE id = ?',

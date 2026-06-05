@@ -67,7 +67,6 @@ function renderActivePactIcon(buff) {
       data-active-pact-id="${escapeHtml(buff.id)}"
       data-tooltip="${escapeHtml(tooltip)}"
       aria-label="${escapeHtml(tooltip)}"
-      title="${escapeHtml(tooltip)}"
     >
       <span class="active-pact-chip-icon" aria-hidden="true">
         ${renderIcon(buff.icon || 'sparkles', { size: 28, strokeWidth: 1.9 })}
