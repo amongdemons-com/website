@@ -6417,6 +6417,32 @@ body.camp-page {
     overflow: hidden;
 }
 
+.camp-fire-card .card-body {
+    display: grid;
+    align-items: center;
+    padding: 0.85rem;
+}
+
+.camp-fire-frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(232,199,106,0.18);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.06), rgba(111,214,189,0.035)),
+        rgba(3,10,12,0.56);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.035),
+        0 18px 46px rgba(0,0,0,0.28);
+}
+
+.camp-fire-frame img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+}
+
 .play-status-chip {
     display: inline-flex;
     align-items: center;

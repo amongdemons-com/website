@@ -9,9 +9,10 @@ The current loop is:
 3. Arrange the active team into front/back positions.
 4. Run automatic server-simulated battles.
 5. Recruit defeated demons into the temporary Dungeon team, skip recruitment, extract between fights, or continue to the next floor.
-6. Keep pushing through unlimited floors until you extract between fights or lose.
-7. Extraction grants earned XP/Souls and optionally saves one eligible demon; losing grants 0 XP, 0 Souls, and 0 demons.
-8. Spend Souls in `/collection` to train saved demons toward their type-specific stat caps.
+6. Seal Demonic Pacts after milestone wins, or recast the offered choices by spending Souls.
+7. Keep pushing through unlimited floors while enemy Terror rises from dungeon depth and active pacts.
+8. Extraction grants earned XP/Souls and optionally saves one eligible demon; losing grants 0 XP, 0 Souls, and 0 demons.
+9. Spend Souls in `/collection` to train saved demons toward their type-specific stat caps.
 
 Combat, RNG, reward generation, XP, Souls, run status, and collection writes are server-authoritative. The browser displays state and stages player choices, but it must not calculate gameplay outcomes.
 
@@ -24,7 +25,7 @@ Combat, RNG, reward generation, XP, Souls, run status, and collection writes are
 | Database | MySQL via `mysql2/promise` |
 | Config | `dotenv` |
 | Frontend | Static HTML, vanilla JavaScript |
-| Styling | Bootstrap 5, Bootstrap Icons, custom CSS |
+| Styling | Bootstrap 5, Lucide icons, custom CSS |
 
 ## Project Structure
 
@@ -34,7 +35,7 @@ amongdemons.com/
 |   |-- api/
 |   |   |-- account/          # Player progression endpoints
 |   |   |-- auth/             # Register, login, session profile
-|   |   |-- data/             # Source game data JSON
+|   |   |-- data/             # Source demon, asset, and Demonic Pact JSON
 |   |   |-- demons/           # Permanent collection endpoints
 |   |   |-- game/             # Public static game-data endpoints
 |   |   |-- lib/              # Shared backend game/auth/db modules
@@ -160,6 +161,8 @@ All API routes are mounted under `/api`.
 | `GET` | `/runs/:id` | Return one run state owned by the player |
 | `POST` | `/runs/:id/formation` | Update front/back positions before battle |
 | `POST` | `/runs/:id/battle` | Simulate the next battle server-side |
+| `POST` | `/runs/:id/buff` | Choose one pending Demonic Pact for the run |
+| `POST` | `/runs/:id/buff/reroll` | Recast the current Demonic Pact choices for 10 Souls |
 | `POST` | `/runs/:id/reward` | Mark a reward as claimed |
 | `POST` | `/runs/:id/recruit` | Stage or commit recruitment choices and advance to the next floor |
 | `POST` | `/runs/:id/cashout` | Extract between fights, save one eligible demon, and claim earned XP/Souls |
@@ -185,15 +188,36 @@ All API routes are mounted under `/api`.
 - Floor 1 is an easier opener with 1 common enemy. Enemy teams are 3 demons on floor 2, 4 on floor 3, 5 on floor 4, and 6 from floor 5 onward. Only enemies continue scaling deeper: 7 enemies on floor 35, 8 on floor 40, and 9 on floor 45 onward.
 - Floors 1 through 3 use the starter type pool; later floors unlock more types based on floor.
 - Dungeons have no final floor; after each win the run pauses for recruitment/extraction, then advances to the next floor.
-- From floor 4 onward, enemy generation applies floor pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`. The pressure eventually caps, but floors continue indefinitely.
+- From floor 4 onward, enemy generation applies spawn pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`. Spawn pressure eventually caps, but floors continue indefinitely.
 - Enemy rarity bands tighten as floors deepen: legendary enemies start appearing on floor 10, mythic enemies start appearing on floor 15, and floor 30 onward rolls mythic enemies only.
 - After clearing floor 10, the player may call in one collection demon as a one-time reinforcement while editing the team for the next floor.
 - After every win, defeated enemies become recruit rewards.
+- After every third cleared floor, the run offers three Demonic Pact choices before the player can recruit, continue, or extract.
 - Between fights, the player may stage a whole team, recruit one demon, swap demons, skip recruitment, or extract.
 - Extracting between fights saves one eligible new demon and grants accumulated XP/Souls.
 - Losing immediately ends the run and grants 0 XP, 0 Souls, and 0 demons, regardless of rewards staged before the loss.
 - Account levels use total XP thresholds of `250 * (level - 1)^1.65`; payout updates never reduce an already stored level.
 - The permanent collection has one slot per demon type and rarity, for 66 total slots. Saving another demon with the same type and rarity replaces that slot.
+
+## Demonic Pacts And Enemy Terror
+
+Demonic Pacts are run-long modifiers loaded from `public/api/data/run-buffs.json` and managed by `public/api/lib/run-buffs.js`.
+
+- Pact choices are generated with rarity weights of `common: 70`, `uncommon: 24`, and `rare: 6`.
+- Each offer contains unique choices, but active pacts are intentionally not de-duplicated. The same pact can appear again in a later offer, and duplicate active pacts stack through the same effect pipeline as different pacts.
+- Recasting a pending offer costs 10 Souls through `POST /api/runs/:id/buff/reroll`. The recast excludes the choices from the current offer and returns `409` if no alternate choices exist.
+- Pending pacts block battle, recruitment, and extraction until one offered pact is chosen.
+- Pact effects can modify run stats, direct damage, retaliation, AOE damage, poison, healing, shields, ally death triggers, enemy death splash, and temporary team size.
+- Run stat buffs keep original run base stats in `runBaseMaxHp`, `runBaseAtk`, and `runBaseSpeed` so recruited enemies and saved demons do not accidentally keep temporary enemy or run scaling.
+
+Enemy Terror is the permanent enemy scaling layer shown in the Dungeon UI near the enemy formation title as `Terror <level>`. Its tooltip uses the line `Demons grow stronger in darkness.` and lists each enemy stat bonus on its own line.
+
+- Terror level is `max(0, floor - 18) + activePactCount`.
+- Enemy HP multiplier is `1 + max(0, floor - 18) * 0.045 + activePactCount * 0.07`.
+- Enemy Attack multiplier is `1 + max(0, floor - 18) * 0.04 + activePactCount * 0.055`.
+- Enemy Speed multiplier is `min(1.85, 1 + max(0, floor - 18) * 0.012 + activePactCount * 0.02)`.
+- Serialized runs include `enemyPressure` for the current floor and `nextEnemyPressure` for the next enemy preview.
+- Enemy Terror is applied only to generated enemy teams; if an enemy is recruited, `resetRunDemon` strips the enemy scaling fields before the demon joins the player team.
 
 ## Collection Training Rules
 
@@ -215,6 +239,7 @@ Combat is automatic and simulated in `public/api/lib/combat.js`.
 - Team state is cloned for battle, then persisted from the simulator result.
 - The API returns both a combat log and before/after snapshots for UI replay.
 - Poison effects tick slowly over time, can stack without a per-target cap, and are cleared from teams between cleared floors.
+- Active Demonic Pacts are applied server-side during battle simulation; the browser only renders the serialized run state and combat replay.
 
 Implemented ability kinds include:
 
@@ -231,6 +256,7 @@ Implemented ability kinds include:
 - Demon type definitions live in `public/api/data/demon-types.json`.
 - Demon training caps use the upper value of each type's `baseStats.hp`, `baseStats.atk`, and `baseStats.speed` ranges.
 - Demon image mappings live in `public/api/data/demons.json`.
+- Demonic Pact definitions live in `public/api/data/run-buffs.json`.
 - Full demon images live in `public/app/images/demons`.
 - Thumbnail images live in `public/app/images/demons/thumbnails`.
 - Page/background/logo assets live in `public/app/images`.
@@ -262,7 +288,7 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/app/js/collection-ui.js` | Full collection filters, sorting, missing-slot display, and training modal UI |
 | `public/app/js/summon-ui.js` | Authenticated Souls/summon placeholder state |
 | `public/app/js/rankings-ui.js` | Leaderboard UI |
-| `public/app/js/dungeon.js` and `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, extraction |
+| `public/app/js/dungeon.js` and `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, extraction, Demonic Pacts, active pact tooltips, enemy Terror display, and responsive hand/reward controls |
 | `public/app/js/demon-cards.js` | Shared demon card rendering |
 | `public/app/js/api-test.js` | Manual API test page helper |
 
@@ -272,14 +298,19 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | --- | --- |
 | `public/api/lib/auth.js` | Password hashing, token creation, auth middleware |
 | `public/api/lib/async-errors.js` | Express async error forwarding |
+| `public/api/lib/collection-demons.js` | Permanent collection save helpers and stat normalization for extracted demons |
 | `public/api/lib/combat.js` | Server-side combat simulator |
 | `public/api/lib/db.js` | MySQL connection pool and `.env` loading |
 | `public/api/lib/demon-factory.js` | Demon generation, rarity selection, stat rolls |
 | `public/api/lib/demon-training.js` | Collection training caps, costs, stat rolls, and training metadata enrichment |
+| `public/api/lib/dungeon-rules.js` | Shared Dungeon team-size and collection-reinforcement constants |
 | `public/api/lib/game-data.js` | JSON game-data readers |
-| `public/api/lib/hunt-enemies.js` | Dungeon enemy pool and floor sizing |
+| `public/api/lib/hunt-enemies.js` | Dungeon enemy pool, floor sizing, spawn pressure, and enemy Terror multipliers |
 | `public/api/lib/rng.js` | Deterministic seeded RNG helpers |
+| `public/api/lib/run-buffs.js` | Demonic Pact loading, serialization, stacking, rerolls, and combat/stat modifiers |
 | `public/api/lib/run-demons.js` | Run demon normalization and reset helpers |
+| `public/api/lib/run-rewards.js` | Reward Soul staging, discarded reward settlement, and earned payout helpers |
+| `public/api/lib/run-serialization.js` | Serialized run response shape, previews, pacts, team limits, and enemy Terror previews |
 | `public/api/lib/runs.js` | Run loading, serialization, and persistence helpers |
 | `public/api/lib/schema.js` | Database initialization and additive schema checks |
 
@@ -312,6 +343,9 @@ node -e "require('./public/api/lib/schema').initializeSchema().then(() => { cons
 ## Notes For Future Work
 
 - Some internal code still uses `hunt` naming while the user-facing experience is now `Dungeon`.
+
 ## License
 
-All rights reserved. Copyright 2026 Among Demons.
+MIT. See [LICENSE](LICENSE).
+
+This license allows anyone to use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the code, as long as the copyright and license notice are included.
