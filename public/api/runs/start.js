@@ -4,7 +4,7 @@ const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { createRng } = require('../lib/rng');
 const { createTeam } = require('../lib/demon-factory');
-const { STARTER_TYPE_IDS } = require('../lib/hunt-enemies');
+const { STARTER_TYPE_IDS } = require('../lib/dungeon-enemies');
 const { closeOpenRunsForPlayer } = require('../lib/runs');
 const { enrichDemonPreferredPositions, resetRunDemon } = require('../lib/run-demons');
 

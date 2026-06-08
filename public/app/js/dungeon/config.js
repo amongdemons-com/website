@@ -6,7 +6,7 @@ export const FORMATION_GRID_SIZE = 9;
 export const FORMATION_CELL_CAPACITY = 1;
 export const BATTLE_SPEED_OPTIONS = [0.5, 1, 2, 4];
 export const FORMATION_DRAG_OVER_SELECTOR = '.formation-lane-cards.is-drag-over';
-export const REWARD_DRAG_OVER_SELECTOR = '.hunt-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .dungeon-reward-dropzone.is-drag-over';
+export const REWARD_DRAG_OVER_SELECTOR = '.dungeon-demon-card.is-drag-over, .formation-lane-cards.is-drag-over, .dungeon-reward-dropzone.is-drag-over';
 export const COMBAT_THEMES = {
   default: { color: '#FAC51C', shadow: 'rgba(250,197,28,0.85)' },
   poison: { color: '#167246', shadow: 'rgba(22,114,70,0.92)' },

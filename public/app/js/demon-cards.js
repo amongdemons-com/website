@@ -29,7 +29,7 @@
     const rarity = capitalize(demon.rarity || 'common');
     const imageAlt = options.imageAlt || getDemonImageAlt(demon, title, rarity);
     const classes = [
-      'hunt-demon-card',
+      'dungeon-demon-card',
       options.className || '',
       options.active ? 'active' : '',
       shouldShowDefeated(demon, options) ? 'is-defeated' : ''
@@ -45,14 +45,14 @@
 
     return `
       <${tag} class="${escapeHtml(classes)}" style="${escapeHtml(style)}" ${renderAttributes(attributes)}>
-        <div class="hunt-demon-card-image" aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity">
+        <div class="dungeon-demon-card-image" aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity">
           <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(imageAlt)}" width="${DEMON_IMAGE_WIDTH}" height="${DEMON_IMAGE_HEIGHT}" loading="${escapeHtml(options.imageLoading || 'lazy')}" decoding="async" draggable="false" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE_URL}';">
-          <span class="hunt-demon-rarity-gem" aria-hidden="true"></span>
+          <span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>
         </div>
         ${options.overlayHtml || ''}
-        <div class="hunt-demon-card-body">
-          <div class="hunt-demon-card-title">
-            <span class="hunt-demon-card-rarity">${escapeHtml(rarity)}</span>
+        <div class="dungeon-demon-card-body">
+          <div class="dungeon-demon-card-title">
+            <span class="dungeon-demon-card-rarity">${escapeHtml(rarity)}</span>
             <span class="text-white">${escapeHtml(title)}</span>
           </div>
           ${options.showStats === false ? '' : renderCombatStats(demon, options.statsOptions || {})}

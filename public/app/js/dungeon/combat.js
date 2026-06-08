@@ -713,7 +713,7 @@ function isTypeTwoAttack(instanceId) {
 }
 
 function findDemonCard(instanceId) {
-  return Array.from(document.querySelectorAll('.hunt-demon-card'))
+  return Array.from(document.querySelectorAll('.dungeon-demon-card'))
     .find((item) => item.dataset.instanceId === instanceId);
 }
 

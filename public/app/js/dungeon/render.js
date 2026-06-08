@@ -40,7 +40,7 @@ const replayFight = (...args) => dungeonActions.replayFight(...args);
 const requestRecruitContinue = (...args) => dungeonActions.requestRecruitContinue(...args);
 const resumeCombatPlayback = (...args) => dungeonActions.resumeCombatPlayback(...args);
 const setBattleSpeed = (...args) => dungeonActions.setBattleSpeed(...args);
-const startNewHuntAfterDefeat = (...args) => dungeonActions.startNewHuntAfterDefeat(...args);
+const startNewDungeonAfterDefeat = (...args) => dungeonActions.startNewDungeonAfterDefeat(...args);
 const startRun = (...args) => dungeonActions.startRun(...args);
 const stepCombatPlayback = (...args) => dungeonActions.stepCombatPlayback(...args);
 
@@ -61,7 +61,7 @@ function renderRun() {
   if (elements.runLoading) elements.runLoading.classList.toggle('d-none', !state.isLoading);
   elements.runEmpty.classList.toggle('d-none', state.isLoading || hasRun);
   elements.runPanel.classList.toggle('d-none', state.isLoading || !hasRun);
-  elements.huntTitle.innerHTML = renderHuntTitle(run);
+  elements.dungeonTitle.innerHTML = renderDungeonTitle(run);
   renderDungeonRewardStrip();
   showCombatPanel();
 
@@ -151,7 +151,7 @@ function renderRun() {
   playPendingHandFlowAnimation(isHandStrategy);
 }
 
-function renderHuntTitle(run) {
+function renderDungeonTitle(run) {
   const floor = run ? Math.max(1, Number(run.currentFloor) || 1) : 1;
 
   return `
@@ -162,8 +162,8 @@ function renderHuntTitle(run) {
       </a>
       <span class="dungeon-title-copy">
         <span class="dungeon-title-text">Dungeon</span>
-        ${run ? `<span class="hunt-floor-title">
-          <span class="hunt-floor-label">Floor ${floor}</span>
+        ${run ? `<span class="dungeon-floor-title">
+          <span class="dungeon-floor-label">Floor ${floor}</span>
         </span>` : ''}
       </span>
     </span>
@@ -179,7 +179,7 @@ function renderDungeonEndScreen() {
   return `
     <div class="dungeon-end-screen ${isDefeat ? 'is-defeat' : 'is-extraction'}">
       <div class="dungeon-end-copy">
-        <span class="hunt-phase-eyebrow">${eyebrow}</span>
+        <span class="dungeon-phase-eyebrow">${eyebrow}</span>
         <h2>${escapeHtml(summary.title || 'Dungeon ended')}</h2>
         <p>${escapeHtml(summary.message || 'Run extracted.')}</p>
       </div>
@@ -359,7 +359,7 @@ function watchFormationLaneSizing() {
   setLaneResizeObserver(observer);
   lanes.forEach((lane) => observer.observe(lane));
   formationSizingTargets.forEach((target) => observer.observe(target));
-  document.querySelectorAll('.battle-side .hunt-demon-card-image img').forEach((image) => {
+  document.querySelectorAll('.battle-side .dungeon-demon-card-image img').forEach((image) => {
     if (!image.complete) image.addEventListener('load', syncCompressedFormationLanes, { once: true });
   });
   syncFormationGridSizing();
@@ -373,7 +373,7 @@ function syncCompressedFormationLanes() {
     const laneAdjustments = [];
     const lanes = Array.from(document.querySelectorAll('.battle-side .formation-lane-cards'));
     lanes.forEach((lane) => {
-      const cards = Array.from(lane.querySelectorAll('.hunt-demon-card'));
+      const cards = Array.from(lane.querySelectorAll('.dungeon-demon-card'));
       lane.classList.remove('is-compressed');
       lane.style.removeProperty('--dungeon-demon-card-width');
       lane.style.removeProperty('--dungeon-demon-card-height');
@@ -511,7 +511,7 @@ function renderFightLogActions() {
       </button>
     ` : ''}
     ${canChooseRecruit ? `
-      <button class="btn btn-success btn-sm" id="fightLogContinueHuntBtn" type="button">
+      <button class="btn btn-success btn-sm" id="fightLogContinueDungeonBtn" type="button">
         ${renderButtonMeleeIcon()}
         Continue
       </button>
@@ -535,7 +535,7 @@ function renderFightLogActions() {
     }
   });
   bindClicks('[data-battle-step]', (button) => stepCombatPlayback(Number(button.dataset.battleStep)));
-  bindClick(document.getElementById('fightLogStartBtn'), isDefeated ? startNewHuntAfterDefeat : startRun);
+  bindClick(document.getElementById('fightLogStartBtn'), isDefeated ? startNewDungeonAfterDefeat : startRun);
   bindClick(document.getElementById('fightLogReplayBtn'), replayFight);
   bindClick(document.getElementById('fightLogToggleBtn'), toggleFightLogPanel);
   bindPathButtons();
@@ -603,14 +603,14 @@ function renderBattleSpeedControl() {
 }
 
 function bindPathButtons() {
-  bindClick(document.getElementById('fightLogContinueHuntBtn'), requestRecruitContinue);
+  bindClick(document.getElementById('fightLogContinueDungeonBtn'), requestRecruitContinue);
 }
 
 export {
   renderPlayer,
   setDungeonLoading,
   renderRun,
-  renderHuntTitle,
+  renderDungeonTitle,
   renderDungeonEndScreen,
   bindDungeonEmptyButtons,
   renderFightLog,

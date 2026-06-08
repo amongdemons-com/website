@@ -251,7 +251,7 @@ function getRenderedHtmlCacheValue(html, renderKey = '') {
 
 function getReusableDemonImages(root) {
   const imagesByKey = new Map();
-  root.querySelectorAll('.hunt-demon-card[data-instance-id] .hunt-demon-card-image img').forEach((image) => {
+  root.querySelectorAll('.dungeon-demon-card[data-instance-id] .dungeon-demon-card-image img').forEach((image) => {
     const key = getReusableDemonImageKey(image);
     if (key && !imagesByKey.has(key)) imagesByKey.set(key, image);
   });
@@ -259,7 +259,7 @@ function getReusableDemonImages(root) {
 }
 
 function restoreReusableDemonImages(root, imagesByKey) {
-  root.querySelectorAll('.hunt-demon-card[data-instance-id] .hunt-demon-card-image img').forEach((nextImage) => {
+  root.querySelectorAll('.dungeon-demon-card[data-instance-id] .dungeon-demon-card-image img').forEach((nextImage) => {
     const key = getReusableDemonImageKey(nextImage);
     const currentImage = key ? imagesByKey.get(key) : null;
     if (!currentImage) return;
@@ -271,7 +271,7 @@ function restoreReusableDemonImages(root, imagesByKey) {
 }
 
 function getReusableDemonImageKey(image) {
-  const card = image.closest('.hunt-demon-card[data-instance-id]');
+  const card = image.closest('.dungeon-demon-card[data-instance-id]');
   const instanceId = card?.dataset.instanceId;
   const src = image.getAttribute('src') || '';
   return instanceId && src ? `${instanceId}|${src}` : '';

@@ -53,11 +53,11 @@ body.dungeon-page .navbar {
     padding: 0 !important;
 }
 
-.hunt-card-header {
+.dungeon-card-header {
     min-height: 3.35rem;
 }
 
-.hunt-floor-title {
+.dungeon-floor-title {
     display: inline-flex;
     align-items: baseline;
     gap: 0;
@@ -66,11 +66,11 @@ body.dungeon-page .navbar {
     line-height: 1;
 }
 
-.hunt-floor-title {
+.dungeon-floor-title {
     vertical-align: middle;
 }
 
-#huntTitle {
+#dungeonTitle {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -132,7 +132,7 @@ body.dungeon-page .navbar {
     object-fit: contain;
 }
 
-.hunt-floor-label {
+.dungeon-floor-label {
     color: #9da7b1;
     font-size: 0.72rem;
     font-weight: bold;
@@ -140,7 +140,7 @@ body.dungeon-page .navbar {
     text-transform: uppercase;
 }
 
-.hunt-floor-title strong {
+.dungeon-floor-title strong {
     color: #FF6E2F;
     font-size: 1.15rem;
     line-height: 1;
@@ -722,7 +722,7 @@ body.dungeon-page .navbar {
     direction: ltr;
 }
 
-.battle-side .hunt-demon-card {
+.battle-side .dungeon-demon-card {
     width: 100%;
     height: 100%;
     flex: none;
@@ -730,13 +730,13 @@ body.dungeon-page .navbar {
     min-height: 0;
 }
 
-.battle-side .hunt-demon-card-image {
+.battle-side .dungeon-demon-card-image {
     position: absolute;
     inset: 0;
     height: auto;
 }
 
-.battle-side .hunt-demon-card-body {
+.battle-side .dungeon-demon-card-body {
     min-height: 0;
 }
 
@@ -761,7 +761,7 @@ body.dungeon-page .navbar {
     font-weight: bold;
 }
 
-.hunt-demon-card {
+.dungeon-demon-card {
     position: relative;
     display: block;
     flex: 0 1 8rem;
@@ -775,12 +775,12 @@ body.dungeon-page .navbar {
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
 }
 
-.hunt-demon-card-image {
+.dungeon-demon-card-image {
     overflow: hidden;
     border-radius: 4px;
 }
 
-.hunt-demon-card * {
+.dungeon-demon-card * {
     user-select: none;
 }
 
@@ -884,8 +884,8 @@ body.dungeon-page .navbar {
     color: #170a03;
 }
 
-.is-combat-paused .hunt-demon-card.is-attacking,
-.is-combat-paused .hunt-demon-card.is-shaking,
+.is-combat-paused .dungeon-demon-card.is-attacking,
+.is-combat-paused .dungeon-demon-card.is-shaking,
 .is-combat-paused .attack-zap *,
 .is-combat-paused .chaos-lightning *,
 .is-combat-paused .dark-spike *,
@@ -897,25 +897,25 @@ body.dungeon-page .navbar {
     animation-play-state: paused !important;
 }
 
-.hunt-demon-card[draggable="true"] {
+.dungeon-demon-card[draggable="true"] {
     cursor: grab;
     touch-action: none;
 }
 
-.hunt-demon-card[role="button"]:not([draggable="true"]) {
+.dungeon-demon-card[role="button"]:not([draggable="true"]) {
     cursor: pointer;
 }
 
-.hunt-demon-card[role="button"]:focus-visible {
+.dungeon-demon-card[role="button"]:focus-visible {
     outline: 2px solid rgba(232,199,106,0.82);
     outline-offset: 3px;
 }
 
-.hunt-demon-card.is-dragging {
+.dungeon-demon-card.is-dragging {
     opacity: 0.45;
 }
 
-.hunt-demon-card.is-pointer-dragging {
+.dungeon-demon-card.is-pointer-dragging {
     cursor: grabbing;
 }
 
@@ -930,12 +930,12 @@ body.dungeon-page .navbar {
     box-shadow: 0 18px 40px rgba(0,0,0,0.44);
 }
 
-.hunt-demon-card.is-drag-over {
+.dungeon-demon-card.is-drag-over {
     border-color: rgba(250,197,28,0.86);
     box-shadow: 0 0 0 2px rgba(250,197,28,0.24), 0 0 18px rgba(250,197,28,0.2);
 }
 
-.hunt-demon-card.is-swap-confirmed {
+.dungeon-demon-card.is-swap-confirmed {
     animation: recruit-swap-confirm 720ms cubic-bezier(0.18, 0.84, 0.18, 1);
 }
 
@@ -947,8 +947,8 @@ body.dungeon-page .navbar {
     will-change: transform, opacity, filter;
 }
 
-.hand-flow-ghost .hunt-demon-card,
-.hunt-demon-card.is-hand-flow-card {
+.hand-flow-ghost .dungeon-demon-card,
+.dungeon-demon-card.is-hand-flow-card {
     width: 100%;
     height: 100%;
     flex: none;
@@ -957,26 +957,26 @@ body.dungeon-page .navbar {
         0 0 24px rgba(232,199,106,0.18);
 }
 
-.hunt-demon-card.is-hand-flow-arriving {
+.dungeon-demon-card.is-hand-flow-arriving {
     opacity: 0.16;
     transform: translateY(0.25rem) scale(0.96);
 }
 
-.hunt-demon-card.is-hand-flow-landed {
+.dungeon-demon-card.is-hand-flow-landed {
     animation: hand-flow-landed 760ms cubic-bezier(0.18, 0.84, 0.18, 1);
 }
 
-.battle-side-enemy .hunt-demon-card.is-enemy-revealed {
+.battle-side-enemy .dungeon-demon-card.is-enemy-revealed {
     animation: enemy-card-reveal 880ms cubic-bezier(0.16, 0.88, 0.2, 1) var(--enemy-reveal-delay, 0ms) both;
 }
 
-.hunt-demon-card.is-new-encounter {
+.dungeon-demon-card.is-new-encounter {
     box-shadow:
         0 0 0 2px rgba(141,231,255,0.18),
         0 0 20px rgba(141,231,255,0.16);
 }
 
-.hunt-demon-card.is-collection-reinforcement-attention,
+.dungeon-demon-card.is-collection-reinforcement-attention,
 .collection-reinforcement-placeholder.is-collection-reinforcement-attention {
     animation: collection-reinforcement-pulse 1.25s ease-in-out infinite;
 }
@@ -1040,23 +1040,23 @@ body.dungeon-page .navbar {
     text-transform: uppercase;
 }
 
-.hunt-demon-card.is-recruit-draggable {
+.dungeon-demon-card.is-recruit-draggable {
     border-color: color-mix(in srgb, var(--rarity-color, #D1D5D8) 62%, rgba(255,255,255,0.16));
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
 }
 
-.hunt-demon-card.active {
+.dungeon-demon-card.active {
     border-color: rgba(250,197,28,0.82);
     box-shadow: 0 0 0 2px rgba(250,197,28,0.18);
 }
 
-.hunt-demon-card-image {
+.dungeon-demon-card-image {
     position: absolute;
     inset: 0;
     background: rgba(0,0,0,0.2);
 }
 
-.hunt-demon-card-image img {
+.dungeon-demon-card-image img {
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -1066,7 +1066,7 @@ body.dungeon-page .navbar {
     user-select: none;
 }
 
-.hunt-demon-rarity-gem {
+.dungeon-demon-rarity-gem {
     position: absolute;
     top: 0.34rem;
     left: 0.34rem;
@@ -1079,7 +1079,7 @@ body.dungeon-page .navbar {
     transform: rotate(45deg);
 }
 
-.hunt-demon-card-body {
+.dungeon-demon-card-body {
     position: absolute;
     right: 0;
     bottom: 0;
@@ -1093,7 +1093,7 @@ body.dungeon-page .navbar {
     background: linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.62) 58%, transparent);
 }
 
-.hunt-demon-card-title {
+.dungeon-demon-card-title {
     display: flex;
     align-items: baseline;
     gap: 0.25rem;
@@ -1104,17 +1104,17 @@ body.dungeon-page .navbar {
     line-height: 1.15;
 }
 
-.dungeon-page .hunt-demon-card-title {
+.dungeon-page .dungeon-demon-card-title {
     display: none;
 }
 
-.hunt-demon-card-rarity {
+.dungeon-demon-card-rarity {
     display: none;
     flex: 0 0 auto;
     color: var(--rarity-color, #D1D5D8);
 }
 
-.hunt-demon-card-title span:last-child {
+.dungeon-demon-card-title span:last-child {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1184,28 +1184,28 @@ body.dungeon-page .navbar {
     height: 0.76rem;
 }
 
-.hunt-demon-card.is-attacking {
+.dungeon-demon-card.is-attacking {
     animation: demon-attack-hop var(--battle-duration-320, 320ms) ease;
     border-color: var(--combat-color, rgba(250,197,28,0.72));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--combat-color, #FAC51C) 28%, transparent), 0 0 18px var(--combat-shadow, rgba(250,197,28,0.34));
 }
 
-.hunt-demon-card.is-attacking.is-player-attack {
+.dungeon-demon-card.is-attacking.is-player-attack {
     border-color: var(--combat-color, rgba(65,168,95,0.82));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--combat-color, #41A85F) 28%, transparent), 0 0 18px var(--combat-shadow, rgba(65,168,95,0.34));
 }
 
-.hunt-demon-card.is-attacking.is-enemy-attack {
+.dungeon-demon-card.is-attacking.is-enemy-attack {
     border-color: var(--combat-color, rgba(226,80,65,0.82));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--combat-color, #E25041) 28%, transparent), 0 0 18px var(--combat-shadow, rgba(226,80,65,0.34));
 }
 
-.hunt-demon-card.is-healed {
+.dungeon-demon-card.is-healed {
     border-color: rgba(141,231,255,0.82);
     box-shadow: 0 0 0 2px rgba(141,231,255,0.26), 0 0 18px rgba(141,231,255,0.32);
 }
 
-.hunt-demon-card.is-shaking {
+.dungeon-demon-card.is-shaking {
     animation: demon-target-shake var(--battle-duration-360, 360ms) ease;
 }
 
@@ -1583,12 +1583,12 @@ body.dungeon-page .navbar {
     font-weight: 900;
 }
 
-.hunt-demon-card.is-poisoned .combat-hp-fill {
+.dungeon-demon-card.is-poisoned .combat-hp-fill {
     background: #167246;
 }
 
-.hunt-demon-card.is-poisoned .combat-hp-meta,
-.hunt-demon-card.is-poisoned .combat-hp-meta .ad-icon {
+.dungeon-demon-card.is-poisoned .combat-hp-meta,
+.dungeon-demon-card.is-poisoned .combat-hp-meta .ad-icon {
     color: #167246;
 }
 
@@ -1667,7 +1667,7 @@ body.dungeon-page .navbar {
     font-size: 1.05rem;
 }
 
-.dungeon-end-screen.is-defeat .hunt-phase-eyebrow {
+.dungeon-end-screen.is-defeat .dungeon-phase-eyebrow {
     color: #f19187;
 }
 
@@ -1825,12 +1825,12 @@ body.dungeon-page .navbar {
 .battle-result-burst-sparks span:nth-child(9) { --spark-angle: 288deg; }
 .battle-result-burst-sparks span:nth-child(10) { --spark-angle: 324deg; }
 
-.hunt-demon-card.is-defeated {
+.dungeon-demon-card.is-defeated {
     opacity: 0.58;
     filter: grayscale(0.75);
 }
 
-.hunt-demon-card.is-recruit-draggable.is-defeated {
+.dungeon-demon-card.is-recruit-draggable.is-defeated {
     opacity: 0.86;
     filter: grayscale(0.25);
 }
@@ -1860,7 +1860,7 @@ body.dungeon-page .navbar {
     padding: 0.25rem;
 }
 
-.choice-card-grid .hunt-choice-card {
+.choice-card-grid .dungeon-choice-card {
     flex: 0 1 8rem;
 }
 
@@ -1877,36 +1877,36 @@ body.dungeon-page .navbar {
         gap: 0.55rem;
     }
 
-    .choice-card-grid .hunt-choice-card {
+    .choice-card-grid .dungeon-choice-card {
         width: 100%;
         flex: none;
     }
 
-    .hunt-modal .modal-header,
-    .hunt-modal .modal-footer {
+    .dungeon-modal .modal-header,
+    .dungeon-modal .modal-footer {
         padding: 0.7rem;
     }
 
-    .hunt-modal .modal-title {
+    .dungeon-modal .modal-title {
         font-size: 1rem;
     }
 
-    .hunt-modal .modal-header p {
+    .dungeon-modal .modal-header p {
         font-size: 0.8rem;
         line-height: 1.25;
     }
 }
 
-.hunt-modal .modal-content {
+.dungeon-modal .modal-content {
     background: #14181c;
 }
 
-.hunt-modal .modal-header,
-.hunt-modal .modal-footer {
+.dungeon-modal .modal-header,
+.dungeon-modal .modal-footer {
     border-color: rgba(255,255,255,0.12);
 }
 
-.hunt-modal .modal-body {
+.dungeon-modal .modal-body {
     overflow: auto;
     padding: 1rem;
 }
@@ -2177,7 +2177,7 @@ body.dungeon-page .navbar {
 }
 
 @media (min-width: 992px) {
-    .hunt-modal .modal-body {
+    .dungeon-modal .modal-body {
         padding: 1.5rem 2rem;
     }
 }
@@ -2230,7 +2230,7 @@ body.dungeon-page .navbar {
     }
 }
 
-.hunt-choice-card {
+.dungeon-choice-card {
     border-color: color-mix(in srgb, var(--rarity-color, #D1D5D8) 62%, rgba(255,255,255,0.16));
     color: #fff;
     padding: 0;
@@ -2238,15 +2238,15 @@ body.dungeon-page .navbar {
     transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.hunt-choice-card:hover,
-.hunt-choice-card.active {
+.dungeon-choice-card:hover,
+.dungeon-choice-card.active {
     border-color: var(--rarity-color, #D1D5D8);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--rarity-color, #D1D5D8) 34%, transparent), 0 0 18px color-mix(in srgb, var(--rarity-color, #D1D5D8) 22%, transparent);
     transform: scale(1.035);
     z-index: 2;
 }
 
-.hunt-choice-card.active {
+.dungeon-choice-card.active {
     transform: scale(1.055);
 }
 
@@ -2313,7 +2313,7 @@ body.dungeon-page .navbar {
     min-width: 0;
 }
 
-.dungeon-meta-group span:not(.hunt-phase-eyebrow) {
+.dungeon-meta-group span:not(.dungeon-phase-eyebrow) {
     border: 1px solid rgba(255,255,255,0.14);
     border-radius: 4px;
     background: rgba(255,255,255,0.05);
@@ -2323,13 +2323,13 @@ body.dungeon-page .navbar {
     padding: 0.32rem 0.5rem;
 }
 
-.dungeon-meta-group .hunt-tag-team.is-short {
+.dungeon-meta-group .dungeon-tag-team.is-short {
     border-color: rgba(250,197,28,0.42);
     background: rgba(250,197,28,0.11);
     color: #f3c55c;
 }
 
-.dungeon-meta-group .hunt-tag-team.is-full {
+.dungeon-meta-group .dungeon-tag-team.is-full {
     border-color: rgba(65,168,95,0.42);
     background: rgba(65,168,95,0.12);
     color: #80d697;
@@ -2716,7 +2716,7 @@ body.dungeon-page .navbar {
     padding: 0;
 }
 
-.dungeon-hand-cards .hunt-demon-card,
+.dungeon-hand-cards .dungeon-demon-card,
 .dungeon-hand-cards .collection-reinforcement-placeholder,
 .dungeon-hand-empty {
     width: var(--dungeon-hand-card-width);
@@ -2916,7 +2916,7 @@ body.dungeon-page .navbar {
     max-height: none;
 }
 
-.battle-side .hunt-demon-card {
+.battle-side .dungeon-demon-card {
     aspect-ratio: auto;
     width: 100%;
     height: 100%;
@@ -2924,17 +2924,17 @@ body.dungeon-page .navbar {
     min-height: 0;
 }
 
-.battle-side .formation-lane-cards.is-compressed .hunt-demon-card {
+.battle-side .formation-lane-cards.is-compressed .dungeon-demon-card {
     aspect-ratio: auto;
 }
 
-.battle-side .formation-lane-cards.is-compressed .hunt-demon-card-image {
+.battle-side .formation-lane-cards.is-compressed .dungeon-demon-card-image {
     position: absolute;
     inset: 0;
     height: auto;
 }
 
-.battle-side .formation-lane-cards.is-compressed .hunt-demon-card-image img {
+.battle-side .formation-lane-cards.is-compressed .dungeon-demon-card-image img {
     display: block;
     width: 100%;
     height: 100%;
@@ -2976,7 +2976,7 @@ body.dungeon-page .navbar {
         grid-template-rows: minmax(0, 1fr);
     }
 
-    .battle-side .hunt-demon-card {
+    .battle-side .dungeon-demon-card {
         width: 100%;
         height: 100%;
         flex-basis: auto;
@@ -3028,11 +3028,11 @@ body.dungeon-page .navbar {
         gap: 0.25rem;
     }
 
-    #cashoutModalBody .hunt-demon-card.cashout-demon-card {
+    #cashoutModalBody .dungeon-demon-card.cashout-demon-card {
         width: 100%;
     }
 
-    #cashoutModalBody .hunt-demon-card-title {
+    #cashoutModalBody .dungeon-demon-card-title {
         font-size: 0.48rem;
     }
 
@@ -3053,7 +3053,7 @@ body.dungeon-page .navbar {
         padding: 0.35rem 0.45rem;
     }
 
-    #huntTitle {
+    #dungeonTitle {
         gap: 0.35rem;
     }
 
@@ -3083,7 +3083,7 @@ body.dungeon-page .navbar {
         font-size: 0.72rem;
     }
 
-    .hunt-floor-label {
+    .dungeon-floor-label {
         font-size: 0.55rem;
         letter-spacing: 0.04em;
     }
@@ -3234,7 +3234,7 @@ body.dungeon-page .navbar {
         --dungeon-demon-card-height: auto;
     }
 
-    .battle-side .hunt-demon-card {
+    .battle-side .dungeon-demon-card {
         width: 100%;
         height: 100%;
         flex-basis: auto;
@@ -3284,7 +3284,7 @@ body.dungeon-page .navbar {
         min-height: 1.75rem;
     }
 
-    .hunt-demon-rarity-gem {
+    .dungeon-demon-rarity-gem {
         top: 0.2rem;
         left: 0.2rem;
         width: 0.52rem;
@@ -3292,11 +3292,11 @@ body.dungeon-page .navbar {
         border-width: 1px;
     }
 
-    .hunt-demon-card-body {
+    .dungeon-demon-card-body {
         padding: 0.85rem 0.22rem 0.24rem;
     }
 
-    .hunt-demon-card-title {
+    .dungeon-demon-card-title {
         margin-bottom: 0.1rem;
         font-size: 0.48rem;
     }
@@ -3363,7 +3363,7 @@ body.dungeon-page .navbar {
         font-size: 0.64rem;
     }
 
-    .hunt-floor-label {
+    .dungeon-floor-label {
         font-size: 0.48rem;
     }
 
@@ -3385,7 +3385,7 @@ body.dungeon-page .navbar {
 }
 
 @media (max-width: 575.98px), (max-height: 760px) and (min-width: 768px) {
-    .dungeon-page .battle-side .hunt-demon-card-title {
+    .dungeon-page .battle-side .dungeon-demon-card-title {
         display: none;
     }
 
@@ -3406,7 +3406,7 @@ body.dungeon-page .navbar {
         grid-template-rows: repeat(3, minmax(0, 1fr));
     }
 
-    .hunt-demon-card {
+    .dungeon-demon-card {
         flex-basis: 100%;
     }
 
@@ -3451,7 +3451,7 @@ body.dungeon-page .navbar {
         min-height: calc(var(--dungeon-hand-card-width) * 1.333);
     }
 
-    .dungeon-hand-cards .hunt-demon-card-title {
+    .dungeon-hand-cards .dungeon-demon-card-title {
         display: none;
     }
 
@@ -3518,7 +3518,7 @@ body.dungeon-page .navbar {
     color: var(--ad-text);
 }
 
-.hunt-right-body {
+.dungeon-right-body {
     display: flex;
     flex-direction: column;
     min-height: 420px;
@@ -3534,13 +3534,13 @@ body.dungeon-page .navbar {
     border-top: 1px solid rgba(255,255,255,0.1);
 }
 
-.hunt-phase-panel {
+.dungeon-phase-panel {
     min-height: 0;
     padding: 1rem 0.75rem;
     color: #dce6ee;
 }
 
-.hunt-phase-eyebrow {
+.dungeon-phase-eyebrow {
     color: #80d697;
     font-size: 0.78rem;
     font-weight: bold;
@@ -3548,14 +3548,14 @@ body.dungeon-page .navbar {
     text-transform: uppercase;
 }
 
-.hunt-phase-panel h3 {
+.dungeon-phase-panel h3 {
     margin: 0.35rem 0 0.45rem;
     color: #fff;
     font-size: 1.45rem;
     line-height: 1.15;
 }
 
-.hunt-phase-panel p {
+.dungeon-phase-panel p {
     max-width: 32rem;
     margin: 0;
     color: #b8c3cc;
@@ -3563,14 +3563,14 @@ body.dungeon-page .navbar {
     line-height: 1.45;
 }
 
-.hunt-phase-meta {
+.dungeon-phase-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 0.9rem;
 }
 
-.hunt-phase-meta span {
+.dungeon-phase-meta span {
     border: 1px solid rgba(255,255,255,0.14);
     border-radius: 4px;
     background: rgba(255,255,255,0.05);
@@ -3585,19 +3585,19 @@ body.dungeon-page .navbar {
     background: rgba(255,255,255,0.035);
 }
 
-.recruit-phase-panel .hunt-phase-meta .hunt-tag-team.is-short {
+.recruit-phase-panel .dungeon-phase-meta .dungeon-tag-team.is-short {
     border-color: rgba(250,197,28,0.42);
     background: rgba(250,197,28,0.11);
     color: #f3c55c;
 }
 
-.recruit-phase-panel .hunt-phase-meta .hunt-tag-team.is-full {
+.recruit-phase-panel .dungeon-phase-meta .dungeon-tag-team.is-full {
     border-color: rgba(65,168,95,0.42);
     background: rgba(65,168,95,0.12);
     color: #80d697;
 }
 
-.recruit-phase-panel .hunt-phase-meta .hunt-tag-neutral {
+.recruit-phase-panel .dungeon-phase-meta .dungeon-tag-neutral {
     border-color: rgba(255,255,255,0.14);
     background: rgba(255,255,255,0.05);
     color: #f2f7ff;
@@ -3746,7 +3746,7 @@ body.dungeon-page .navbar {
     min-width: 0;
 }
 
-.cashout-selected-reward .hunt-demon-card,
+.cashout-selected-reward .dungeon-demon-card,
 .cashout-selected-reward .dungeon-reward-empty {
     width: min(100%, 12rem);
     height: 16rem;
@@ -3954,7 +3954,7 @@ body.dungeon-page .navbar {
     gap: 0.45rem;
 }
 
-.hunt-phase-card-actions {
+.dungeon-phase-card-actions {
     display: flex;
     justify-content: flex-end;
     margin-top: auto;
@@ -4696,35 +4696,35 @@ body.dungeon-page .navbar {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hunt-demon-card.is-attacking {
+    .dungeon-demon-card.is-attacking {
         animation: none;
     }
 
-    .hunt-demon-card.is-shaking {
+    .dungeon-demon-card.is-shaking {
         animation: none;
     }
 
-    .hunt-demon-card.is-swap-confirmed {
+    .dungeon-demon-card.is-swap-confirmed {
         animation: none;
         box-shadow: 0 0 0 2px rgba(250,197,28,0.24), 0 0 18px rgba(65,168,95,0.2);
     }
 
-    .hunt-demon-card.is-hand-flow-arriving {
+    .dungeon-demon-card.is-hand-flow-arriving {
         opacity: 1;
         transform: none;
     }
 
-    .hunt-demon-card.is-hand-flow-landed {
+    .dungeon-demon-card.is-hand-flow-landed {
         animation: none;
         box-shadow: 0 0 0 2px rgba(232,199,106,0.18), 0 0 18px rgba(111,214,189,0.18);
     }
 
-    .battle-side-enemy .hunt-demon-card.is-enemy-revealed {
+    .battle-side-enemy .dungeon-demon-card.is-enemy-revealed {
         animation: none;
         box-shadow: 0 0 0 2px rgba(226,80,65,0.18), 0 0 18px rgba(226,80,65,0.18);
     }
 
-    .hunt-demon-card.is-collection-reinforcement-attention,
+    .dungeon-demon-card.is-collection-reinforcement-attention,
     .collection-reinforcement-placeholder.is-collection-reinforcement-attention {
         animation: none;
         box-shadow: 0 0 0 2px rgba(141,231,255,0.24), 0 0 18px rgba(82,183,255,0.2);
@@ -5470,24 +5470,24 @@ body.seo-page {
 .stat-box,
 .cashout-demon-card,
 .reward-item,
-.hunt-phase-panel {
+.dungeon-phase-panel {
     border-color: var(--ad-border);
     background: var(--ad-surface-glass);
 }
 
-.hunt-card-header {
+.dungeon-card-header {
     background:
         linear-gradient(90deg, rgba(111,214,189,0.08), transparent 45%, rgba(156,122,200,0.08)),
         rgba(6,13,16,0.44);
 }
 
 .dungeon-title-text,
-.hunt-floor-title strong {
+.dungeon-floor-title strong {
     color: var(--ad-text);
 }
 
 .dungeon-header-brand .ad-icon,
-.hunt-floor-label {
+.dungeon-floor-label {
     color: var(--ad-muted);
 }
 
@@ -5721,7 +5721,7 @@ body.seo-page {
     padding-left: 0.65rem;
 }
 
-.demon-type-page .demon-card-grid .hunt-demon-card {
+.demon-type-page .demon-card-grid .dungeon-demon-card {
     width: min(100%, 20rem);
     border-color: color-mix(in srgb, var(--rarity-color, #D1D5D8) 72%, rgba(255,255,255,0.16));
     box-shadow:
@@ -5730,14 +5730,14 @@ body.seo-page {
         0 0 20px color-mix(in srgb, var(--rarity-color, #D1D5D8) 16%, transparent);
 }
 
-.demon-type-page .demon-card-grid .hunt-demon-card:hover {
+.demon-type-page .demon-card-grid .dungeon-demon-card:hover {
     border-color: var(--rarity-color, #D1D5D8);
     box-shadow:
         0 0 0 2px color-mix(in srgb, var(--rarity-color, #D1D5D8) 24%, transparent),
         0 20px 44px rgba(0,0,0,0.5);
 }
 
-.demon-type-page .demon-card-grid .hunt-demon-card-title {
+.demon-type-page .demon-card-grid .dungeon-demon-card-title {
     justify-content: center;
     gap: 0.22rem;
     margin: 0 -0.24rem 0;
@@ -5753,11 +5753,11 @@ body.seo-page {
     order: 20;
 }
 
-.demon-type-page .demon-card-grid .hunt-demon-card-rarity {
+.demon-type-page .demon-card-grid .dungeon-demon-card-rarity {
     display: inline;
 }
 
-.demon-type-page .demon-card-grid .hunt-demon-card-body {
+.demon-type-page .demon-card-grid .dungeon-demon-card-body {
     padding-bottom: 0;
 }
 
@@ -5788,7 +5788,7 @@ body.seo-page {
         padding-left: 0.35rem;
     }
 
-    .demon-type-page .demon-card-grid .hunt-demon-card {
+    .demon-type-page .demon-card-grid .dungeon-demon-card {
         width: min(100%, 18rem);
     }
 }
@@ -5833,14 +5833,14 @@ body.seo-page {
     color: var(--ad-green);
 }
 
-.hunt-demon-card {
+.dungeon-demon-card {
     background: rgba(3,9,11,0.42);
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.05),
         0 10px 26px rgba(0,0,0,0.24);
 }
 
-.hunt-demon-card-body {
+.dungeon-demon-card-body {
     background: linear-gradient(to top, rgba(3,8,10,0.95), rgba(3,8,10,0.62) 58%, transparent);
 }
 
@@ -5856,15 +5856,15 @@ body.seo-page {
     align-items: center;
 }
 
-.demon-card-grid .hunt-demon-card,
-#cashoutModalBody .hunt-demon-card,
-.reward-item .hunt-demon-card {
+.demon-card-grid .dungeon-demon-card,
+#cashoutModalBody .dungeon-demon-card,
+.reward-item .dungeon-demon-card {
     width: min(100%, 9.25rem);
     flex: 0 0 auto;
 }
 
-.hunt-demon-card.cashout-demon-card,
-.hunt-demon-card.reward-demon-card {
+.dungeon-demon-card.cashout-demon-card,
+.dungeon-demon-card.reward-demon-card {
     display: block;
     border-width: 2px;
     border-top-width: 5px;
@@ -5872,7 +5872,7 @@ body.seo-page {
     text-align: left;
 }
 
-.hunt-demon-card .hunt-demon-card-image img {
+.dungeon-demon-card .dungeon-demon-card-image img {
     width: 100%;
     height: 100%;
     margin: 0;
@@ -5903,9 +5903,9 @@ body.seo-page {
     color: var(--ad-muted);
 }
 
-.hunt-demon-card.active,
-.hunt-choice-card:hover,
-.hunt-choice-card.active,
+.dungeon-demon-card.active,
+.dungeon-choice-card:hover,
+.dungeon-choice-card.active,
 .cashout-demon-card.active {
     border-color: rgba(232,199,106,0.8);
     box-shadow: 0 0 0 2px rgba(232,199,106,0.16), 0 0 20px rgba(232,199,106,0.16);
@@ -5959,7 +5959,7 @@ body.seo-page {
     color: #d5c1f0;
 }
 
-.hunt-phase-eyebrow,
+.dungeon-phase-eyebrow,
 .dungeon-reward-card .dungeon-reward-title,
 .current-player-rank td:first-child {
     color: var(--ad-gold) !important;
@@ -6777,7 +6777,7 @@ body.collection-page {
     background: rgba(3,9,11,0.55);
 }
 
-.collection-card-grid .hunt-demon-card {
+.collection-card-grid .dungeon-demon-card {
     width: 100%;
 }
 
@@ -6794,7 +6794,7 @@ body.collection-page {
     cursor: pointer;
 }
 
-.collection-missing-card .hunt-demon-rarity-gem {
+.collection-missing-card .dungeon-demon-rarity-gem {
     opacity: 0.35;
 }
 
@@ -7283,7 +7283,7 @@ body.collection-page {
         0 0 24px rgba(232,199,106,0.22);
 }
 
-.battle-side .hunt-demon-card {
+.battle-side .dungeon-demon-card {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
@@ -7299,12 +7299,12 @@ body.collection-page {
         0 0 18px color-mix(in srgb, var(--rarity-color, #D1D5D8) 12%, transparent);
 }
 
-.battle-side .hunt-demon-card-image,
-.battle-side .hunt-demon-card-image img {
+.battle-side .dungeon-demon-card-image,
+.battle-side .dungeon-demon-card-image img {
     border-radius: 6px;
 }
 
-.battle-side .hunt-demon-card-body {
+.battle-side .dungeon-demon-card-body {
     min-height: 42%;
     padding: 1.1rem 0.34rem 0.34rem;
     background: linear-gradient(to top, rgba(2,7,9,0.96), rgba(2,7,9,0.72) 58%, transparent);
@@ -8130,7 +8130,7 @@ body.collection-page {
     padding: 0.22rem;
 }
 
-.dungeon-hand-cards .hunt-demon-card,
+.dungeon-hand-cards .dungeon-demon-card,
 .dungeon-hand-cards .collection-reinforcement-placeholder,
 .dungeon-hand-empty,
 .dungeon-reward-demon-card,
@@ -8139,7 +8139,7 @@ body.collection-page {
     overflow: hidden;
 }
 
-.dungeon-hand-cards .hunt-demon-card,
+.dungeon-hand-cards .dungeon-demon-card,
 .dungeon-reward-demon-card {
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.05),
@@ -8172,7 +8172,7 @@ body.collection-page {
     color: rgba(243,220,147,0.68);
 }
 
-#cashoutModalBody .cashout-selected-reward .hunt-demon-card,
+#cashoutModalBody .cashout-selected-reward .dungeon-demon-card,
 #cashoutModalBody .cashout-selected-reward .dungeon-reward-empty {
     width: min(100%, 14rem);
     height: 18.65rem;
@@ -8210,7 +8210,7 @@ body.collection-page {
         gap: 0.9rem;
     }
 
-    #cashoutModalBody .cashout-selected-reward .hunt-demon-card,
+    #cashoutModalBody .cashout-selected-reward .dungeon-demon-card,
     #cashoutModalBody .cashout-selected-reward .dungeon-reward-empty {
         width: min(100%, 9rem);
         height: 12rem;
@@ -8292,16 +8292,16 @@ body.collection-page {
     }
 
     .battle-side .formation-slot,
-    .battle-side .hunt-demon-card,
+    .battle-side .dungeon-demon-card,
     .battle-side .formation-empty {
         border-radius: 6px;
     }
 
-    .battle-side .hunt-demon-card {
+    .battle-side .dungeon-demon-card {
         border-top-width: 3px;
     }
 
-    .battle-side .hunt-demon-card-body {
+    .battle-side .dungeon-demon-card-body {
         padding: 0.75rem 0.18rem 0.2rem;
     }
 
@@ -8537,7 +8537,7 @@ body.collection-page {
         justify-content: center;
     }
 
-    .dungeon-hand-cards .hunt-demon-card,
+    .dungeon-hand-cards .dungeon-demon-card,
     .dungeon-hand-cards .collection-reinforcement-placeholder,
     .dungeon-hand-empty {
         width: 100%;

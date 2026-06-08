@@ -153,7 +153,7 @@ function shouldShowCollectionReinforcementHandPlaceholder() {
 function renderCollectionReinforcementPlaceholder(position) {
   const attentionClass = state.collectionReinforcementPlaceholderInteracted ? '' : 'is-collection-reinforcement-attention';
   return `
-    <button class="hunt-demon-card collection-reinforcement-placeholder ${attentionClass}" type="button" data-collection-reinforcement-position="${position}" aria-label="Add from collection">
+    <button class="dungeon-demon-card collection-reinforcement-placeholder ${attentionClass}" type="button" data-collection-reinforcement-position="${position}" aria-label="Add from collection">
       <div class="collection-reinforcement-placeholder-icon">${renderIcon('collection')}</div>
       <div class="collection-reinforcement-placeholder-copy">
         <span>Add from</span>
@@ -186,7 +186,7 @@ function renderDemonCard(demon, options) {
   const canDragFormation = Boolean((options.allowFormationDrag || state.isRecruiting) && isPlayer);
   const draggable = isRecruitPoolDemon || isRewardDraggable || canDragFormation;
   const classes = [
-    'hunt-demon-card',
+    'dungeon-demon-card',
     isRecruitPoolDemon ? 'is-recruit-draggable' : '',
     isRewardDraggable ? 'is-reward-draggable' : '',
     demon.recruitSource === 'collection' && !state.collectionReinforcementStagedInteracted ? 'is-collection-reinforcement-attention' : '',
@@ -195,7 +195,7 @@ function renderDemonCard(demon, options) {
   ].filter(Boolean).join(' ');
 
   return renderDungeonDemonCard(demon, {
-    className: classes.replace('hunt-demon-card', '').trim(),
+    className: classes.replace('dungeon-demon-card', '').trim(),
     defeated: Number(demon.hp) <= 0,
     active: state.selectedSwapInstanceId === demon.instanceId ||
       state.selectedRecruitRewardId === demon.rewardId ||

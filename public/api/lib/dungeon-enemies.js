@@ -4,8 +4,8 @@ const { assignFormationSlots } = require('./run-demons');
 const { normalizeRunBuffState } = require('./run-buffs');
 
 const STARTER_TYPE_IDS = [1, 2, 3];
-const MAX_HUNT_TYPE_ID = 11;
-const MAX_HUNT_ENEMY_TEAM_SIZE = 9;
+const MAX_DUNGEON_TYPE_ID = 11;
+const MAX_DUNGEON_ENEMY_TEAM_SIZE = 9;
 const ENEMY_SIZE_INCREASE_START_FLOOR = 25;
 const ENEMY_SIZE_INCREASE_INTERVAL = 5;
 const DIFFICULTY_RAMP_FLOORS = 20;
@@ -26,15 +26,15 @@ const RARITY_RANK = {
   mythic: 5
 };
 
-function getAllowedHuntTypeIds(floor) {
+function getAllowedDungeonTypeIds(floor) {
   if (floor <= 3) return STARTER_TYPE_IDS;
 
-  return Array.from({ length: Math.min(floor + 1, MAX_HUNT_TYPE_ID) }, (item, index) => index + 1);
+  return Array.from({ length: Math.min(floor + 1, MAX_DUNGEON_TYPE_ID) }, (item, index) => index + 1);
 }
 
-async function createHuntEnemies(rng, floor, size, options = {}) {
-  const allowedTypeIds = getAllowedHuntTypeIds(floor);
-  const teamSize = getHuntEnemyTeamSize(floor, size);
+async function createDungeonEnemies(rng, floor, size, options = {}) {
+  const allowedTypeIds = getAllowedDungeonTypeIds(floor);
+  const teamSize = getDungeonEnemyTeamSize(floor, size);
   const positions = getEnemyPositions(teamSize);
   const eliteIndex = teamSize > 1 ? teamSize - 1 : 0;
   const pressure = getEnemyPressureMultipliers(floor, options);
@@ -93,7 +93,7 @@ function getFloorSpawnPressure(floor) {
 }
 
 function getFloorTypeWeightMultiplier(typeId, baseWeight, pressure) {
-  const rank = clamp((Number(typeId) - 1) / (MAX_HUNT_TYPE_ID - 1), 0, 1);
+  const rank = clamp((Number(typeId) - 1) / (MAX_DUNGEON_TYPE_ID - 1), 0, 1);
   const flattenBaseWeight = Math.pow(Math.max(1, Number(baseWeight) || 1), -pressure * 0.55);
   return flattenBaseWeight * (1 + pressure * rank * 3.2);
 }
@@ -111,7 +111,7 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, Number(value) || 0));
 }
 
-function getHuntEnemyTeamSize(floor, fallbackSize) {
+function getDungeonEnemyTeamSize(floor, fallbackSize) {
   const floorNumber = Number(floor) || 1;
   if (floorNumber === 1) return 1;
 
@@ -120,7 +120,7 @@ function getHuntEnemyTeamSize(floor, fallbackSize) {
     ? Math.floor((floorNumber - ENEMY_SIZE_INCREASE_START_FLOOR) / ENEMY_SIZE_INCREASE_INTERVAL) + 1
     : 0;
 
-  return Math.min(MAX_HUNT_ENEMY_TEAM_SIZE, baseSize + extraEnemies);
+  return Math.min(MAX_DUNGEON_ENEMY_TEAM_SIZE, baseSize + extraEnemies);
 }
 
 function getEnemyPressureMultipliers(floor, options = {}) {
@@ -183,11 +183,11 @@ function applyEnemyPreferredPositions(enemies) {
 
 module.exports = {
   STARTER_TYPE_IDS,
-  createHuntEnemies,
-  getAllowedHuntTypeIds,
+  createDungeonEnemies,
+  getAllowedDungeonTypeIds,
   getAllowedEnemyRarities,
   getEnemyGenerationOptions,
   getEnemyPressureMultipliers,
-  getHuntEnemyTeamSize,
-  MAX_HUNT_ENEMY_TEAM_SIZE
+  getDungeonEnemyTeamSize,
+  MAX_DUNGEON_ENEMY_TEAM_SIZE
 };

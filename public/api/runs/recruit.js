@@ -3,7 +3,7 @@ const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { normalizeCollectionDemonStats } = require('../lib/collection-demons');
 const { createRng } = require('../lib/rng');
-const { createHuntEnemies } = require('../lib/hunt-enemies');
+const { createDungeonEnemies } = require('../lib/dungeon-enemies');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const {
   assignFormationSlots,
@@ -143,7 +143,7 @@ async function advanceFloor(run) {
   run.floor += 1;
   run.state.currentFloor = run.floor;
   applyRunBuffStatModifiers(run);
-  run.state.enemies = await createHuntEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length, {
+  run.state.enemies = await createDungeonEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length, {
     buffs: run.state.buffs
   });
   run.state.awaitingRecruit = false;

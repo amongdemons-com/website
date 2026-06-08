@@ -80,7 +80,7 @@ function renderCollectionReinforcementChoice(demon) {
 
   return renderDungeonDemonCard(demon, {
     tag: 'button',
-    className: 'hunt-choice-card js-call-collection-reinforcement',
+    className: 'dungeon-choice-card js-call-collection-reinforcement',
     active: selected,
     suppressCollectionMissingTag: true,
     attributes: {
@@ -115,7 +115,7 @@ async function confirmCollectionReplacement(incomingDemon) {
 
   return new Promise((resolve) => {
     const modalElement = document.createElement('div');
-    modalElement.className = 'modal fade hunt-modal';
+    modalElement.className = 'modal fade dungeon-modal';
     modalElement.tabIndex = -1;
     modalElement.setAttribute('aria-hidden', 'true');
     modalElement.innerHTML = `
@@ -131,11 +131,11 @@ async function confirmCollectionReplacement(incomingDemon) {
           <div class="modal-body">
             <div class="collection-replace-preview">
               <div>
-                <span class="hunt-phase-eyebrow">Current</span>
+                <span class="dungeon-phase-eyebrow">Current</span>
                 ${renderDungeonDemonCard(existing, { className: 'collection-replace-card', suppressCollectionMissingTag: true })}
               </div>
               <div>
-                <span class="hunt-phase-eyebrow">Incoming</span>
+                <span class="dungeon-phase-eyebrow">Incoming</span>
                 ${renderDungeonDemonCard(incomingDemon, { className: 'collection-replace-card' })}
               </div>
             </div>
@@ -178,7 +178,7 @@ function bindCollectionReinforcementPlaceholders() {
 }
 
 function bindDemonDetailCards() {
-  document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id], #dungeonRewardGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+  document.querySelectorAll('#teamGrid .dungeon-demon-card[data-instance-id], #dungeonHandGrid .dungeon-demon-card[data-instance-id], #enemyGrid .dungeon-demon-card[data-instance-id], #dungeonRewardGrid .dungeon-demon-card[data-instance-id]').forEach((card) => {
     if (card.dataset.demonDetailBound === 'true') return;
     card.dataset.demonDetailBound = 'true';
 

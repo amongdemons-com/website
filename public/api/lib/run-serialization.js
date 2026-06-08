@@ -1,4 +1,4 @@
-const { createHuntEnemies, getEnemyPressureMultipliers } = require('./hunt-enemies');
+const { createDungeonEnemies, getEnemyPressureMultipliers } = require('./dungeon-enemies');
 const { createRng } = require('./rng');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('./dungeon-rules');
 const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, normalizeRunBuffState, serializeRunBuffState } = require('./run-buffs');
@@ -66,7 +66,7 @@ async function getNextEnemiesPreview(run) {
   if (!run.state.awaitingRecruit || run.status !== 'active') return [];
 
   const nextFloor = Number(run.floor) + 1;
-  return createHuntEnemies(createRng(run.seed + nextFloor), nextFloor, (run.state.team || []).length, {
+  return createDungeonEnemies(createRng(run.seed + nextFloor), nextFloor, (run.state.team || []).length, {
     buffs: run.state.buffs
   });
 }

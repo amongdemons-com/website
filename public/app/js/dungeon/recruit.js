@@ -310,7 +310,7 @@ function markCollectionReinforcementStagedInteracted(instanceId = null) {
   if (!staged || (instanceId && staged.instanceId !== instanceId)) return;
 
   state.collectionReinforcementStagedInteracted = true;
-  document.querySelectorAll(`.hunt-demon-card[data-instance-id="${cssEscape(staged.instanceId)}"]`).forEach((card) => {
+  document.querySelectorAll(`.dungeon-demon-card[data-instance-id="${cssEscape(staged.instanceId)}"]`).forEach((card) => {
     card.classList.remove('is-collection-reinforcement-attention');
   });
 }

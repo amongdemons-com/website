@@ -120,7 +120,7 @@ function clearDragOverTargets(selector) {
 function bindFormationDragAndDrop() {
   if (!state.run || state.run.awaitingRecruit) return;
 
-  document.querySelectorAll('#teamGrid .hunt-demon-card[draggable="true"]').forEach((card) => {
+  document.querySelectorAll('#teamGrid .dungeon-demon-card[draggable="true"]').forEach((card) => {
     if (card.dataset.rewardId) return;
 
     bindNativeDragSource(card, {
@@ -330,7 +330,7 @@ function bindRecruitDragAndDrop() {
   if (!state.run?.awaitingRecruit || !state.isRecruiting) return;
   ensureRecruitDraft();
 
-  document.querySelectorAll('#dungeonHandGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+  document.querySelectorAll('#dungeonHandGrid .dungeon-demon-card[data-instance-id]').forEach((card) => {
     bindRecruitCardDragAndDrop(card, {
       stateKey: 'draggedRecruitPoolInstanceId',
       markStaged: true,
@@ -338,7 +338,7 @@ function bindRecruitDragAndDrop() {
     });
   });
 
-  document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+  document.querySelectorAll('#teamGrid .dungeon-demon-card[data-instance-id]').forEach((card) => {
     bindRecruitCardDragAndDrop(card, {
       stateKey: 'draggedFormationInstanceId',
       getPayload: () => getRecruitDragPayload(state.recruitDraftTeam, 'recruit-team', card)
@@ -355,7 +355,7 @@ function bindRecruitDragAndDrop() {
 function bindRewardDragAndDrop() {
   if (!canExtractRun()) return;
 
-  document.querySelectorAll('#dungeonRewardGrid .hunt-demon-card[data-reward-candidate-key]').forEach((card) => {
+  document.querySelectorAll('#dungeonRewardGrid .dungeon-demon-card[data-reward-candidate-key]').forEach((card) => {
     bindNativeDragSource(card, {
       stateKey: 'draggedRewardDemonKey',
       clearSelector: REWARD_DRAG_OVER_SELECTOR,
@@ -392,7 +392,7 @@ function getRewardCandidateForCard(card) {
 }
 
 function bindPointerDragAndDrop() {
-  document.querySelectorAll('#teamGrid .hunt-demon-card[data-instance-id], #dungeonHandGrid .hunt-demon-card[data-instance-id], #enemyGrid .hunt-demon-card[data-instance-id], #dungeonRewardGrid .hunt-demon-card[data-instance-id]').forEach((card) => {
+  document.querySelectorAll('#teamGrid .dungeon-demon-card[data-instance-id], #dungeonHandGrid .dungeon-demon-card[data-instance-id], #enemyGrid .dungeon-demon-card[data-instance-id], #dungeonRewardGrid .dungeon-demon-card[data-instance-id]').forEach((card) => {
     if (card.dataset.pointerDragBound === 'true') return;
     card.dataset.pointerDragBound = 'true';
     card.addEventListener('pointerdown', startPointerDrag);
@@ -624,7 +624,7 @@ function getPointerDropTarget(x, y, drag) {
   if (!element) return null;
 
   const rewardDropzone = element.closest('#dungeonRewardGrid .dungeon-reward-dropzone');
-  const card = element.closest('.hunt-demon-card[data-instance-id]');
+  const card = element.closest('.dungeon-demon-card[data-instance-id]');
   const lane = element.closest('.formation-lane-cards');
 
   if (rewardDropzone && canPointerDropOnRewardBox(drag.payload)) {
@@ -950,7 +950,7 @@ function playRecruitSwapEffect() {
   const effectIds = state.recruitSwapEffectIds;
   state.recruitSwapEffectIds = [];
   effectIds.forEach((instanceId) => {
-    const card = document.querySelector(`.hunt-demon-card[data-instance-id="${cssEscape(instanceId)}"]`);
+    const card = document.querySelector(`.dungeon-demon-card[data-instance-id="${cssEscape(instanceId)}"]`);
     if (!card) return;
 
     card.classList.remove('is-swap-confirmed');
@@ -969,7 +969,7 @@ function playEnemyRevealEffect() {
   state.enemyRevealEffectIds = [];
   const revealDuration = 980 + Math.max(0, effectIds.length - 1) * 90;
   effectIds.forEach((instanceId, index) => {
-    const card = document.querySelector(`#enemyGrid .hunt-demon-card[data-instance-id="${cssEscape(instanceId)}"]`);
+    const card = document.querySelector(`#enemyGrid .dungeon-demon-card[data-instance-id="${cssEscape(instanceId)}"]`);
     if (!card) return;
 
     card.classList.remove('is-enemy-revealed');
@@ -1089,7 +1089,7 @@ function getDraftPoolIndex(instanceId) {
 }
 
 function getLaneSwapTargetInstanceId(lane, sourceInstanceId, clientY = null, clientX = null) {
-  const cards = Array.from(lane?.querySelectorAll('.hunt-demon-card[data-instance-id]') || [])
+  const cards = Array.from(lane?.querySelectorAll('.dungeon-demon-card[data-instance-id]') || [])
     .filter((card) => card.dataset.instanceId !== sourceInstanceId);
   if (!cards.length) return null;
 
@@ -1114,7 +1114,7 @@ function getLaneSwapTargetInstanceId(lane, sourceInstanceId, clientY = null, cli
 function getLaneDropDraftIndex(lane, clientY = null, clientX = null) {
   if (!lane) return null;
   const collection = getDraftCollectionForLane(lane);
-  const cards = Array.from(lane.querySelectorAll('.hunt-demon-card[data-instance-id]'));
+  const cards = Array.from(lane.querySelectorAll('.dungeon-demon-card[data-instance-id]'));
   if (!cards.length) return getFormationRowInsertIndex(collection, lane);
 
   if (isHorizontalDropLane(lane) && Number.isFinite(clientX)) {

@@ -305,7 +305,7 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/api/lib/demon-training.js` | Collection training caps, costs, stat rolls, and training metadata enrichment |
 | `public/api/lib/dungeon-rules.js` | Shared Dungeon team-size and collection-reinforcement constants |
 | `public/api/lib/game-data.js` | JSON game-data readers |
-| `public/api/lib/hunt-enemies.js` | Dungeon enemy pool, floor sizing, spawn pressure, and enemy Terror multipliers |
+| `public/api/lib/dungeon-enemies.js` | Dungeon enemy pool, floor sizing, spawn pressure, and enemy Terror multipliers |
 | `public/api/lib/rng.js` | Deterministic seeded RNG helpers |
 | `public/api/lib/run-buffs.js` | Demonic Pact loading, serialization, stacking, rerolls, and combat/stat modifiers |
 | `public/api/lib/run-demons.js` | Run demon normalization and reset helpers |
@@ -339,10 +339,6 @@ Initialize or verify the database schema from the command line:
 ```bash
 node -e "require('./public/api/lib/schema').initializeSchema().then(() => { console.log('schema ready'); process.exit(0); }).catch((error) => { console.error(error); process.exit(1); })"
 ```
-
-## Notes For Future Work
-
-- Some internal code still uses `hunt` naming while the user-facing experience is now `Dungeon`.
 
 ## License
 

@@ -59,8 +59,8 @@
     <main class="container-fluid dungeon-main px-3 px-lg-4">
       <section class="dungeon-layout">
         <div class="card dungeon-battle-card">
-          <div class="card-header hunt-card-header dungeon-battle-header">
-            <h1 class="h5 mb-0" id="huntTitle">Dungeon</h1>
+          <div class="card-header dungeon-card-header dungeon-battle-header">
+            <h1 class="h5 mb-0" id="dungeonTitle">Dungeon</h1>
             <div class="fight-log-actions dungeon-battle-actions" id="fightLogActions"></div>
           </div>
           <div id="dungeonRewardStrip" class="dungeon-reward-strip" aria-live="polite"></div>
@@ -88,7 +88,7 @@
                   <p class="mb-0 text-muted">Preparing dungeon...</p>
                 </div>
                 <div id="runPanel" class="d-none">
-                  <div class="hunt-matchup dungeon-arena">
+                  <div class="dungeon-matchup dungeon-arena">
                     <section class="battle-side battle-side-player" aria-label="Your team">
                       <div class="battle-side-heading" id="teamSideTitle">
                         <span>Your Team</span>
@@ -134,7 +134,7 @@
       </div>
       <div class="demonic-pact-stage">
         <div class="demonic-pact-stage-heading">
-          <span class="hunt-phase-eyebrow">Demonic Pacts</span>
+          <span class="dungeon-phase-eyebrow">Demonic Pacts</span>
           <h2>Choose a Demonic Pact</h2>
         </div>
         <div id="dungeonPactGrid" class="demonic-pact-grid"></div>
@@ -142,7 +142,7 @@
       </div>
     </div>
 
-    <div class="modal fade hunt-modal" id="teamChoiceModal" tabindex="-1" aria-labelledby="teamChoiceModalTitle" aria-hidden="true">
+    <div class="modal fade dungeon-modal" id="teamChoiceModal" tabindex="-1" aria-labelledby="teamChoiceModalTitle" aria-hidden="true">
       <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
           <div class="modal-header">
@@ -157,7 +157,7 @@
       </div>
     </div>
 
-    <div class="modal fade hunt-modal" id="cashoutModal" tabindex="-1" aria-labelledby="cashoutModalTitle" aria-hidden="true">
+    <div class="modal fade dungeon-modal" id="cashoutModal" tabindex="-1" aria-labelledby="cashoutModalTitle" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable cashout-modal-dialog">
         <div class="modal-content cashout-modal-content">
           <div class="modal-header">
@@ -178,7 +178,7 @@
       </div>
     </div>
 
-    <div class="modal fade hunt-modal" id="shortTeamModal" tabindex="-1" aria-labelledby="shortTeamModalTitle" aria-hidden="true">
+    <div class="modal fade dungeon-modal" id="shortTeamModal" tabindex="-1" aria-labelledby="shortTeamModalTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">

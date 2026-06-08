@@ -233,7 +233,7 @@ function getWinMessage() {
 }
 
 function captureEnemyHandFlowSources() {
-  return Array.from(document.querySelectorAll('#enemyGrid .hunt-demon-card[data-instance-id]'))
+  return Array.from(document.querySelectorAll('#enemyGrid .dungeon-demon-card[data-instance-id]'))
     .map((card, index) => {
       const rect = card.getBoundingClientRect();
       return {
@@ -384,7 +384,7 @@ function renderXpNoticeAmount(xp) {
   return `<span class="fight-log-reward-inline">${renderIcon('stars')}${escapeHtml(String(Number(xp) || 0))} XP</span>`;
 }
 
-async function startNewHuntAfterDefeat() {
+async function startNewDungeonAfterDefeat() {
   if (!state.run || state.run.status !== 'defeated') {
     await startRun();
     return;
@@ -494,7 +494,7 @@ export {
   confirmRecruitReward,
   endRun,
   finishRun,
-  startNewHuntAfterDefeat,
+  startNewDungeonAfterDefeat,
   replayFight,
   createReplayRunSnapshot,
   isCurrentFloorBattle

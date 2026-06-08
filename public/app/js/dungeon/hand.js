@@ -256,7 +256,7 @@ function revealDeferredEnemyPreview() {
 }
 
 function getHandFlowTargetCards() {
-  return Array.from(elements.dungeonHandGrid.querySelectorAll('.hunt-demon-card[data-instance-id]'))
+  return Array.from(elements.dungeonHandGrid.querySelectorAll('.dungeon-demon-card[data-instance-id]'))
     .filter((card) => card.dataset.recruitSource === 'reward' || card.dataset.rewardId);
 }
 
