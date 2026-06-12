@@ -6326,6 +6326,112 @@ body.camp-page {
     padding: clamp(1rem, 2.3vw, 1.8rem);
 }
 
+.camp-hero {
+    position: relative;
+    grid-template-columns: minmax(20rem, 0.95fr) minmax(18rem, 1.05fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: clamp(1rem, 3vw, 2.4rem);
+    min-height: clamp(20rem, 34vw, 30rem);
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 72% 58%, rgba(255,126,42,0.18), transparent 24rem),
+        radial-gradient(circle at 84% 42%, rgba(232,199,106,0.12), transparent 18rem),
+        linear-gradient(110deg, rgba(5,15,17,0.94), rgba(9,24,27,0.82) 50%, rgba(47,27,16,0.74)),
+        rgba(7,16,19,0.86);
+}
+
+.camp-hero::before {
+    content: "";
+    position: absolute;
+    inset: auto -8% -28% 34%;
+    height: 58%;
+    background: radial-gradient(ellipse at center, rgba(255,117,39,0.14), transparent 68%);
+    pointer-events: none;
+}
+
+.camp-hero .play-hero-copy,
+.camp-hero .play-hero-actions {
+    position: relative;
+    z-index: 2;
+    grid-column: 1;
+}
+
+.camp-hero .play-hero-copy {
+    grid-row: 1;
+    max-width: 42rem;
+}
+
+.camp-hero .play-hero-actions {
+    grid-row: 2;
+    align-self: start;
+    justify-content: flex-start;
+}
+
+.camp-hero-fire {
+    position: relative;
+    z-index: 1;
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+    min-height: 18rem;
+    margin: -1.2rem -1.4rem -1.3rem 0;
+    cursor: pointer;
+    isolation: isolate;
+    touch-action: manipulation;
+}
+
+.camp-hero-fire::before,
+.camp-hero-fire::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+}
+
+.camp-hero-fire::before {
+    inset: 2% -18% -2%;
+    z-index: -2;
+    background:
+        radial-gradient(ellipse at 50% 54%, rgba(255,184,78,0.24), rgba(226,80,65,0.14) 34%, rgba(7,16,19,0) 70%),
+        radial-gradient(ellipse at 50% 68%, rgba(255,108,38,0.18), transparent 62%);
+    filter: blur(6px);
+}
+
+.camp-hero-fire::after {
+    left: 7%;
+    right: 5%;
+    bottom: 8%;
+    z-index: -1;
+    height: 31%;
+    background:
+        radial-gradient(ellipse at center, rgba(255,120,40,0.18), rgba(18,12,10,0.36) 42%, rgba(3,8,10,0) 74%);
+    filter: blur(2px);
+}
+
+.camp-hero-fire img {
+    display: block;
+    width: min(100%, 34rem);
+    max-width: none;
+    height: auto;
+    filter:
+        drop-shadow(0 0 24px rgba(255,131,44,0.28))
+        drop-shadow(0 0 52px rgba(226,80,65,0.22));
+    user-select: none;
+}
+
+.camp-player-name {
+    color: var(--ad-text);
+    font-size: clamp(2.9rem, 6.4vw, 5.4rem);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: 0;
+    text-shadow:
+        0 3px 24px rgba(0,0,0,0.48),
+        0 0 28px rgba(111,214,189,0.12);
+}
+
 .play-kicker {
     display: inline-flex;
     align-items: center;
@@ -6342,57 +6448,54 @@ body.camp-page {
     font-weight: 700;
 }
 
-.play-hero-actions {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.65rem;
+.camp-hero-stats {
+    display: grid;
+    grid-template-columns: minmax(13rem, 1.35fr) repeat(2, minmax(7rem, 0.8fr));
+    gap: 0.55rem;
+    max-width: 39rem;
+    margin-top: 1.15rem;
 }
 
-.play-stat-grid {
+.camp-hero-stat {
+    min-width: 0;
+    border: 1px solid rgba(161,212,201,0.14);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.08), rgba(255,255,255,0.014)),
+        rgba(3,10,12,0.46);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.025);
+    padding: 0.62rem 0.68rem;
+}
+
+.camp-hero-stat-level {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.44rem;
+}
+
+.camp-hero-stat-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
     gap: 0.75rem;
 }
 
-.play-stat {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto;
+.camp-hero-stat-label {
+    display: block;
+    color: var(--ad-muted);
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.camp-hero-stat-value {
+    display: flex;
     align-items: center;
-    column-gap: 0.65rem;
-    min-height: 5.45rem;
-    border: 1px solid rgba(111,214,189,0.18);
-    border-radius: 8px;
-    background:
-        linear-gradient(180deg, rgba(111,214,189,0.055), rgba(255,255,255,0.012)),
-        rgba(5,13,16,0.78);
-    padding: 0.82rem;
-}
-
-.play-stat-icon {
-    grid-row: 1 / 3;
-    display: inline-grid;
-    place-items: center;
-    width: 2.4rem;
-    height: 2.4rem;
-    border: 1px solid rgba(111,214,189,0.2);
-    border-radius: 8px;
-    background: rgba(111,214,189,0.08);
-    color: var(--ad-teal);
-}
-
-.play-stat-icon .ad-icon,
-.play-stat-icon .soul-icon {
-    width: 1.15rem;
-    height: 1.15rem;
-    margin: 0;
-}
-
-.play-stat-value {
     min-width: 0;
+    min-height: 1.7rem;
     color: #fff;
-    font-size: clamp(1.18rem, 2vw, 1.65rem);
+    font-size: clamp(1.08rem, 1.8vw, 1.44rem);
     font-weight: 900;
     line-height: 1.05;
     overflow: hidden;
@@ -6400,47 +6503,60 @@ body.camp-page {
     white-space: nowrap;
 }
 
-.play-stat-value .soul-amount {
+.camp-hero-stat-level .camp-hero-stat-value {
+    min-height: 0;
+    font-size: clamp(1.28rem, 2.1vw, 1.72rem);
+}
+
+.camp-hero-stat-value .soul-amount {
     justify-content: flex-start;
+    max-width: 100%;
     font-size: inherit;
 }
 
-.play-stat-label {
+.camp-hero-stat-meta {
+    display: block;
+    min-height: 1em;
     color: var(--ad-muted);
-    font-size: 0.74rem;
-    font-weight: 900;
-    line-height: 1;
-    text-transform: uppercase;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.camp-xp-progress {
+    position: relative;
+    height: 0.42rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(3,10,12,0.74);
+    box-shadow:
+        inset 0 0 0 1px rgba(161,212,201,0.1),
+        inset 0 1px 4px rgba(0,0,0,0.35);
+}
+
+.camp-xp-progress-bar {
+    display: block;
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background:
+        linear-gradient(90deg, rgba(111,214,189,0.86), rgba(232,199,106,0.92));
+    box-shadow: 0 0 14px rgba(111,214,189,0.28);
+    transition: width 260ms ease;
+}
+
+.play-hero-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
 }
 
 .play-run-card {
     overflow: hidden;
-}
-
-.camp-fire-card .card-body {
-    display: grid;
-    align-items: center;
-    padding: 0.85rem;
-}
-
-.camp-fire-frame {
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(232,199,106,0.18);
-    border-radius: 8px;
-    background:
-        linear-gradient(180deg, rgba(232,199,106,0.06), rgba(111,214,189,0.035)),
-        rgba(3,10,12,0.56);
-    box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.035),
-        0 18px 46px rgba(0,0,0,0.28);
-}
-
-.camp-fire-frame img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
 }
 
 .play-status-chip {
@@ -6479,9 +6595,56 @@ body.camp-page {
 
 .play-run-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(13rem, 0.7fr);
+    grid-template-columns: minmax(12rem, 0.55fr) minmax(0, 1fr) minmax(13rem, 0.72fr);
     gap: 1rem;
     align-items: stretch;
+}
+
+.play-run-dungeon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 12rem;
+    margin: -0.35rem -0.15rem;
+    cursor: pointer;
+    isolation: isolate;
+    touch-action: manipulation;
+}
+
+.play-run-dungeon::before,
+.play-run-dungeon::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+}
+
+.play-run-dungeon::before {
+    inset: 8% -9% 0;
+    z-index: -2;
+    background:
+        radial-gradient(ellipse at 50% 47%, rgba(111,214,189,0.2), rgba(156,122,200,0.12) 38%, transparent 70%),
+        radial-gradient(ellipse at 50% 78%, rgba(5,15,17,0.8), transparent 63%);
+    filter: blur(4px);
+}
+
+.play-run-dungeon::after {
+    inset: auto 8% 7%;
+    z-index: -1;
+    height: 28%;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.56), rgba(0,0,0,0) 72%);
+    filter: blur(5px);
+}
+
+.play-run-dungeon img {
+    display: block;
+    width: min(126%, 15rem);
+    max-width: none;
+    height: auto;
+    transform: translateY(0.2rem);
+    filter:
+        drop-shadow(0 0 18px rgba(111,214,189,0.22))
+        drop-shadow(0 0 34px rgba(156,122,200,0.18));
+    user-select: none;
 }
 
 .play-run-main {
@@ -6634,19 +6797,75 @@ body.camp-page {
         grid-template-columns: minmax(0, 1fr);
     }
 
+    .camp-hero {
+        grid-template-rows: auto auto auto;
+        min-height: 0;
+    }
+
+    .camp-hero .play-hero-copy {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .camp-hero .play-hero-actions {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .camp-hero-fire {
+        grid-column: 1;
+        grid-row: 3;
+        min-height: clamp(18rem, 42vw, 24rem);
+        margin: -0.5rem -1rem -1rem;
+    }
+
+    .camp-hero-fire img {
+        width: min(88vw, 28rem);
+    }
+
     .play-hero-actions {
         justify-content: flex-start;
     }
 
-    .play-stat-grid,
+    .camp-hero-stats,
     .play-action-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .camp-hero-stat-level {
+        grid-column: 1 / -1;
+    }
+
+    .play-run-dungeon {
+        min-height: 10.5rem;
+        margin: -0.5rem 0 -0.2rem;
+    }
+
+    .play-run-dungeon img {
+        width: min(100%, 20rem);
     }
 }
 
 @media (max-width: 575.98px) {
     .play-hero {
         padding: 1rem;
+    }
+
+    .camp-hero {
+        gap: 0.8rem;
+    }
+
+    .camp-hero-fire {
+        min-height: 17rem;
+        margin: -0.75rem -1rem -1.3rem;
+    }
+
+    .camp-hero-fire img {
+        width: min(122%, 23rem);
+    }
+
+    .camp-player-name {
+        font-size: clamp(2.45rem, 15vw, 3.7rem);
     }
 
     .play-hero-actions,
@@ -6658,13 +6877,21 @@ body.camp-page {
         justify-content: center;
     }
 
-    .play-stat-grid,
+    .camp-hero-stats,
     .play-action-grid {
         grid-template-columns: minmax(0, 1fr);
     }
 
     .play-run-main {
         min-height: 9rem;
+    }
+
+    .play-run-dungeon {
+        min-height: 8.8rem;
+    }
+
+    .play-run-dungeon img {
+        width: 124%;
     }
 }
 

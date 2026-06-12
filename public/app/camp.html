@@ -63,11 +63,31 @@
     </nav>
 
     <main class="container my-4 play-hub">
-      <section class="play-hero mb-4">
+      <section class="play-hero camp-hero mb-4">
         <div class="play-hero-copy">
-          <span class="play-kicker">Player Camp</span>
-          <h1 class="display-5 mb-2">Camp</h1>
+          <span class="play-kicker">At the Fire</span>
+          <h1 class="camp-player-name mb-2" id="campPlayerName">Camp</h1>
           <p class="mb-0" id="welcomeText">Loading hunter...</p>
+          <div class="camp-hero-stats" aria-label="Hunter status">
+            <div class="camp-hero-stat camp-hero-stat-level">
+              <div class="camp-hero-stat-row">
+                <span class="camp-hero-stat-label">Level</span>
+                <strong class="camp-hero-stat-value" id="levelStat">-</strong>
+              </div>
+              <div class="camp-xp-progress" aria-label="XP progress to next level">
+                <span class="camp-xp-progress-bar" id="xpProgressBar"></span>
+              </div>
+              <span class="camp-hero-stat-meta" id="xpStat">XP loading</span>
+            </div>
+            <div class="camp-hero-stat">
+              <span class="camp-hero-stat-label">Souls</span>
+              <strong class="camp-hero-stat-value" id="soulsStat">-</strong>
+            </div>
+            <div class="camp-hero-stat">
+              <span class="camp-hero-stat-label">Best Floor</span>
+              <strong class="camp-hero-stat-value" id="floorStat">-</strong>
+            </div>
+          </div>
         </div>
         <div class="play-hero-actions">
           <a class="btn btn-primary btn-lg" href="/dungeon" id="primaryDungeonBtn">
@@ -75,35 +95,15 @@
             <span id="runActionLabel">Dungeon</span>
           </a>
         </div>
+        <div class="camp-hero-fire" aria-hidden="true">
+          <img id="campfireFrame" src="/app/images/assets/animation/campfire/1.png" alt="" width="1254" height="1254" loading="eager" decoding="async">
+        </div>
       </section>
 
       <div class="alert d-none" id="appMessage" role="alert"></div>
 
-      <section class="play-stat-grid mb-4" aria-label="Hunter status">
-        <div class="play-stat">
-          <span class="play-stat-icon"><i data-lucide="shield"></i></span>
-          <span class="play-stat-value" id="levelStat">-</span>
-          <span class="play-stat-label">Level</span>
-        </div>
-        <div class="play-stat">
-          <span class="play-stat-icon"><i data-lucide="sparkles"></i></span>
-          <span class="play-stat-value" id="xpStat">-</span>
-          <span class="play-stat-label">XP</span>
-        </div>
-        <div class="play-stat">
-          <span class="play-stat-icon"><i data-lucide="flag"></i></span>
-          <span class="play-stat-value" id="floorStat">-</span>
-          <span class="play-stat-label">Best Floor</span>
-        </div>
-        <div class="play-stat">
-          <span class="play-stat-icon"><img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" width="16" height="16" loading="lazy" aria-hidden="true"></span>
-          <span class="play-stat-value" id="soulsStat">-</span>
-          <span class="play-stat-label">Souls</span>
-        </div>
-      </section>
-
       <section class="row g-3 align-items-stretch">
-        <div class="col-12 col-xl-6">
+        <div class="col-12">
           <section class="card play-run-card h-100">
             <div class="card-header d-flex align-items-center justify-content-between gap-3">
               <span>Dungeon Briefing</span>
@@ -111,6 +111,9 @@
             </div>
             <div class="card-body">
               <div class="play-run-layout">
+                <div class="play-run-dungeon" aria-hidden="true">
+                  <img id="dungeonFrame" src="/app/images/assets/animation/dungeon/1.png" alt="" width="1254" height="1254" loading="lazy" decoding="async">
+                </div>
                 <div class="play-run-main">
                   <span class="play-run-label">Current Floor</span>
                   <strong id="runFloor">-</strong>
@@ -130,17 +133,6 @@
                     <span id="runEarnedLabel">Extract Now</span>
                   </span>
                 </div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div class="col-12 col-xl-6">
-          <section class="card camp-fire-card h-100">
-            <div class="card-header">Campfire</div>
-            <div class="card-body">
-              <div class="camp-fire-frame">
-                <img src="/app/images/assets/animation/amongdemons_camp_fire.gif" alt="Campfire burning in the player camp" width="720" height="405" loading="eager" decoding="async">
               </div>
             </div>
           </section>
