@@ -5,7 +5,7 @@
   const ui = AmongDemons.ui = AmongDemons.ui || {};
   const renderIcon = ui.renderIcon || (() => '');
   let detailsModalElement = null;
-  const DEMON_IMAGE_WIDTH = 1024;
+  const DEMON_IMAGE_WIDTH = 768;
   const DEMON_IMAGE_HEIGHT = 1024;
   const FALLBACK_IMAGE_URL = '/app/images/amongdemons_logo_250x250.png';
   const TRAIT_LABELS_BY_TYPE = {
