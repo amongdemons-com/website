@@ -10,20 +10,6 @@
     progression: null,
     run: null
   };
-  const CAMPFIRE_FRAMES = [
-    '/app/images/assets/animation/campfire/1.png',
-    '/app/images/assets/animation/campfire/2.png',
-    '/app/images/assets/animation/campfire/3.png',
-    '/app/images/assets/animation/campfire/4.png'
-  ];
-  const DUNGEON_FRAMES = [
-    '/app/images/assets/animation/dungeon/1.png',
-    '/app/images/assets/animation/dungeon/2.png',
-    '/app/images/assets/animation/dungeon/3.png',
-    '/app/images/assets/animation/dungeon/4.png'
-  ];
-  const CAMPFIRE_FRAME_INTERVAL_MS = 180;
-  const DUNGEON_FRAME_INTERVAL_MS = 180;
   const ACCOUNT_LEVEL_BASE_XP = 250;
   const ACCOUNT_LEVEL_EXPONENT = 1.65;
   const elements = {};
@@ -37,7 +23,6 @@
     }
 
     cacheElements();
-    startInteractiveAnimations();
     await loadCamp();
   }
 
@@ -45,8 +30,6 @@
     [
       'navPlayerName',
       'campPlayerName',
-      'campfireFrame',
-      'dungeonFrame',
       'welcomeText',
       'appMessage',
       'levelStat',
@@ -117,92 +100,6 @@
       className: 'stat-soul-amount',
       ariaLabel: `${formatNumber(souls)} Souls`
     });
-  }
-
-  function startInteractiveAnimations() {
-    setupInteractiveFrameLoop({
-      frame: elements.campfireFrame,
-      target: elements.campfireFrame?.closest('.camp-hero-fire'),
-      frames: CAMPFIRE_FRAMES,
-      intervalMs: CAMPFIRE_FRAME_INTERVAL_MS
-    });
-    setupInteractiveFrameLoop({
-      frame: elements.dungeonFrame,
-      target: elements.dungeonFrame?.closest('.play-run-dungeon'),
-      frames: DUNGEON_FRAMES,
-      intervalMs: DUNGEON_FRAME_INTERVAL_MS
-    });
-  }
-
-  function setupInteractiveFrameLoop({ frame, target, frames, intervalMs }) {
-    if (!frame || !target || frames.length < 2 || prefersReducedMotion()) return;
-
-    frames.slice(1).forEach((src) => {
-      const image = new Image();
-      image.src = src;
-    });
-
-    let frameIndex = 0;
-    let intervalId = null;
-    let hoverActive = false;
-    let tapActive = false;
-
-    function advanceFrame() {
-      if (document.hidden) return;
-      frameIndex = (frameIndex + 1) % frames.length;
-      frame.src = frames[frameIndex];
-    }
-
-    function play() {
-      if (intervalId) return;
-      advanceFrame();
-      intervalId = window.setInterval(advanceFrame, CAMPFIRE_FRAME_INTERVAL_MS);
-    }
-
-    function pause() {
-      if (!intervalId) return;
-      window.clearInterval(intervalId);
-      intervalId = null;
-    }
-
-    target.addEventListener('pointerenter', (event) => {
-      if (event.pointerType === 'touch') return;
-      hoverActive = true;
-      play();
-    });
-
-    target.addEventListener('pointerleave', (event) => {
-      if (event.pointerType === 'touch') return;
-      hoverActive = false;
-      tapActive = false;
-      pause();
-    });
-
-    target.addEventListener('pointerup', (event) => {
-      if (event.pointerType === 'mouse') return;
-      tapActive = !tapActive;
-      if (tapActive) {
-        play();
-        return;
-      }
-
-      pause();
-    });
-
-    document.addEventListener('pointerup', (event) => {
-      if (target.contains(event.target)) return;
-      hoverActive = false;
-      tapActive = false;
-      pause();
-    });
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) pause();
-    });
-  }
-
-  function prefersReducedMotion() {
-    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   function renderLevelProgress(progression, player) {

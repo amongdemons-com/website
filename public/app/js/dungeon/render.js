@@ -392,8 +392,8 @@ function syncCompressedFormationLanes() {
         : (laneRect.height - gap * (cards.length - 1)) / cards.length;
       const availableCardWidth = isHorizontalLane
         ? (laneRect.width - gap * (cards.length - 1)) / cards.length
-        : availableCardHeight * 0.75;
-      const nextWidth = Math.max(46, Math.min(148, availableCardHeight * 0.75, availableCardWidth));
+        : availableCardHeight;
+      const nextWidth = Math.max(46, Math.min(148, availableCardHeight, availableCardWidth));
       laneAdjustments.push(nextWidth);
     });
 
@@ -402,7 +402,7 @@ function syncCompressedFormationLanes() {
     const sharedWidth = Math.min(...laneAdjustments);
     lanes.forEach((lane) => {
       lane.style.setProperty('--dungeon-demon-card-width', `${sharedWidth}px`);
-      lane.style.setProperty('--dungeon-demon-card-height', `${sharedWidth * 1.333}px`);
+      lane.style.setProperty('--dungeon-demon-card-height', `${sharedWidth}px`);
       lane.classList.add('is-compressed');
     });
   });
@@ -420,13 +420,13 @@ function syncFormationGridSizing() {
     const style = getComputedStyle(grid);
     const columns = 3;
     const rows = 3;
-    const cardHeightRatio = 4 / 3;
+    const cardHeightRatio = 1;
     const gap = cssPixels(style.gap || style.rowGap || style.columnGap);
     const paddingX = cssPixels(style.paddingLeft) + cssPixels(style.paddingRight);
     const paddingY = cssPixels(style.paddingTop) + cssPixels(style.paddingBottom);
     const widthFromContainer = (rect.width - paddingX - gap * (columns - 1)) / columns;
     const widthFromHeight = (rect.height - paddingY - gap * (rows - 1)) / (rows * cardHeightRatio);
-    const nextWidth = Math.max(42, Math.min(190, widthFromContainer, widthFromHeight));
+    const nextWidth = Math.max(42, Math.min(260, widthFromContainer, widthFromHeight));
 
     if (!Number.isFinite(nextWidth)) return;
     setFormationGridCardSize(grid, nextWidth, nextWidth * cardHeightRatio);
