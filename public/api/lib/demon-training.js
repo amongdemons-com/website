@@ -6,6 +6,7 @@ const STAT_KEYS = ['hp', 'atk', 'speed'];
 const TRAINING_BASE_COST = 2;
 const TRAINING_MAX_PROGRESS_BONUS = 12;
 const TRAINING_PROGRESS_EXPONENT = 2.2;
+const TRAINING_SUCCESS_CHANCE = 0.8;
 const RARITY_COST_MULTIPLIER = {
   common: 1,
   uncommon: 1.15,
@@ -50,6 +51,7 @@ function getDemonTrainingInfo(demon = {}, types = {}) {
     cost: maxed ? null : calculateTrainingCost(progress, demon.rarity),
     maxed,
     progress: Math.round(progress * 100),
+    successChance: maxed ? null : TRAINING_SUCCESS_CHANCE,
     stats,
     trainableStats: STAT_KEYS.filter((key) => stats[key].remaining > 0)
   };
@@ -79,6 +81,20 @@ function rollTrainingIncreases(training = {}) {
 
   const picked = pickWeighted(candidates);
   return picked ? { [picked.key]: 1 } : {};
+}
+
+function rollTrainingAttempt(training = {}) {
+  const configuredChance = Number(training.successChance);
+  const successChance = Number.isFinite(configuredChance)
+    ? Math.max(0, Math.min(1, configuredChance))
+    : TRAINING_SUCCESS_CHANCE;
+  const succeeded = crypto.randomInt(0, 10000) < Math.round(successChance * 10000);
+
+  return {
+    succeeded,
+    successChance,
+    increases: succeeded ? rollTrainingIncreases(training) : {}
+  };
 }
 
 function applyTrainingIncreases(demon = {}, training = {}, increases = {}) {
@@ -123,5 +139,6 @@ module.exports = {
   applyTrainingIncreases,
   enrichCollectionDemonsWithTraining,
   getDemonTrainingInfo,
+  rollTrainingAttempt,
   rollTrainingIncreases
 };

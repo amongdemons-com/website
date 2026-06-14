@@ -1934,7 +1934,7 @@ body.dungeon-page .navbar {
 }
 
 .demon-detail-modal .modal-dialog {
-    max-width: min(96vw, 960px);
+    max-width: min(96vw, 1040px);
 }
 
 .demon-detail-modal .modal-content {
@@ -1953,14 +1953,16 @@ body.dungeon-page .navbar {
 
 .demon-detail-layout {
     display: grid;
-    grid-template-columns: minmax(300px, 1fr) minmax(300px, 0.82fr);
-    align-items: start;
+    grid-template-columns: minmax(320px, 0.95fr) minmax(340px, 1fr);
+    align-items: stretch;
     min-height: 0;
 }
 
 .demon-detail-art {
     position: relative;
+    align-self: start;
     aspect-ratio: 1 / 1;
+    width: 100%;
     min-height: 0;
     background: rgba(0,0,0,0.28);
     overflow: hidden;
@@ -2121,7 +2123,7 @@ body.dungeon-page .navbar {
 .demon-detail-extra {
     align-self: stretch;
     padding-bottom: 1rem;
-    margin-top: auto;
+    margin-top: 0;
 }
 
 .demon-detail-actions {
@@ -2131,7 +2133,7 @@ body.dungeon-page .navbar {
     align-items: center;
     justify-content: flex-end;
     gap: 0.6rem;
-    margin-top: auto;
+    margin-top: 0;
     padding-top: 1rem;
     padding-bottom: 1rem;
     border-top: 1px solid rgba(255,255,255,0.12);
@@ -2157,31 +2159,101 @@ body.dungeon-page .navbar {
 
 .demon-detail-actions:has(.collection-training-action-cost) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: center;
-    gap: 0.85rem;
-    padding-top: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(8.5rem, 0.42fr);
+    align-items: stretch;
+    justify-items: stretch;
+    gap: 0.6rem;
+    padding-top: 0.75rem;
 }
 
 .demon-detail-actions:has(.collection-training-action-cost) .demon-detail-action-lead {
     display: block;
     box-sizing: border-box;
-    width: calc(100% + 2.5rem);
+    width: 100%;
     min-height: 0;
-    margin-right: -1.25rem;
-    margin-left: -1.25rem;
-    padding: 0.95rem 1.25rem;
-    border-bottom: 1px solid rgba(255,255,255,0.12);
+    margin-right: 0;
+    margin-left: 0;
+    padding: 0.7rem;
+    border: 1px solid rgba(85,255,255,0.14);
+    border-radius: 6px;
+    background: rgba(5,14,17,0.52);
 }
 
 .demon-detail-actions:has(.collection-training-action-cost) .btn {
+    width: 100%;
+    height: 100%;
     min-width: 6.8rem;
     min-height: 2.45rem;
+}
+
+.demon-detail-actions:has(.collection-training-action-cost) .collection-training-action-cost {
+    height: 100%;
+    min-height: 0;
 }
 
 @media (min-width: 992px) {
     .dungeon-modal .modal-body {
         padding: 1.5rem 2rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .demon-detail-modal:has(.collection-training-panel) .demon-detail-heading {
+        padding-top: 0.88rem;
+        padding-bottom: 0.62rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .demon-detail-title {
+        font-size: 1.34rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .demon-detail-stats {
+        gap: 0.56rem 1.05rem;
+        padding-top: 0.55rem;
+        padding-bottom: 0.55rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .demon-detail-hp {
+        height: 1.55rem;
+        margin-bottom: 0.68rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .demon-detail-meta {
+        gap: 0.55rem;
+        padding-bottom: 0.68rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .demon-detail-meta div {
+        padding: 0.44rem 0.58rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .demon-detail-extra {
+        padding-bottom: 0.68rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .collection-training-panel {
+        gap: 0.46rem;
+        padding: 0.6rem 0.66rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .collection-training-panel-head {
+        font-size: 0.68rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .collection-training-stat-list {
+        gap: 0.34rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .collection-training-stat {
+        gap: 0.2rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .collection-training-stat-line {
+        font-size: 0.7rem;
+    }
+
+    .demon-detail-modal:has(.collection-training-panel) .collection-training-stat-track {
+        height: 0.3rem;
     }
 }
 
@@ -2230,6 +2302,19 @@ body.dungeon-page .navbar {
     .demon-detail-extra {
         padding-right: 0.75rem;
         padding-left: 0.75rem;
+    }
+
+    .demon-detail-actions:has(.collection-training-action-cost) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .demon-detail-actions:has(.collection-training-action-cost) .demon-detail-action-lead {
+        padding: 0.62rem;
+    }
+
+    .demon-detail-actions:has(.collection-training-action-cost) .btn {
+        height: auto;
+        min-height: 2.45rem;
     }
 }
 
@@ -2595,7 +2680,7 @@ body.dungeon-page .navbar {
 }
 
 .dungeon-bottom-panel {
-    --dungeon-hand-card-width: clamp(4.9rem, 7vw, 6.35rem);
+    --dungeon-hand-card-width: clamp(5.65rem, 7.7vw, 7.35rem);
     --dungeon-reward-card-width: var(--dungeon-hand-card-width);
     --dungeon-bottom-panel-padding-y: 0.3rem;
     --dungeon-bottom-panel-content-height: var(--dungeon-hand-card-width);
@@ -2821,8 +2906,8 @@ body.dungeon-page .navbar {
 .dungeon-reward-payout {
     display: grid;
     align-self: stretch;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr) minmax(0, 0.82fr);
     align-content: stretch;
     justify-self: stretch;
     gap: 0.18rem;
@@ -2887,6 +2972,7 @@ body.dungeon-page .navbar {
 
 .dungeon-reward-extract-btn {
     display: inline-flex;
+    grid-column: 1 / -1;
     align-items: center;
     justify-content: center;
     gap: 0.32rem;
@@ -3441,7 +3527,7 @@ body.dungeon-page .navbar {
     }
 
     .dungeon-bottom-panel {
-        --dungeon-hand-card-width: clamp(3.6rem, 18vw, 4.9rem);
+        --dungeon-hand-card-width: clamp(4rem, 19vw, 5.4rem);
         --dungeon-reward-card-width: var(--dungeon-hand-card-width);
         --dungeon-bottom-panel-padding-y: 0.24rem;
         grid-template-columns: minmax(0, 1fr) minmax(9.6rem, calc(var(--dungeon-reward-card-width) + 5.5rem));
@@ -6018,29 +6104,180 @@ body.seo-page {
 body.rankings-page {
     min-height: 100%;
     background:
-        linear-gradient(rgba(6,13,16,0.48), rgba(6,13,16,0.76)),
-        radial-gradient(circle at 50% 8%, rgba(232,199,106,0.12), transparent 24rem),
+        linear-gradient(rgba(6,13,16,0.48), rgba(6,13,16,0.78)),
+        radial-gradient(circle at 18% 10%, rgba(111,214,189,0.14), transparent 22rem),
+        radial-gradient(circle at 78% 16%, rgba(232,199,106,0.11), transparent 24rem),
         url("/app/images/assets/background/amongdemons_rankings.png") center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
-.rankings-page main {
+.rankings-page main,
+.rankings-shell {
     min-height: calc(100vh - 170px);
 }
 
+.rankings-shell {
+    display: grid;
+    gap: 1rem;
+}
+
+.rankings-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.52fr);
+    align-items: end;
+    gap: 1rem;
+    overflow: hidden;
+    border: 1px solid rgba(161,212,201,0.18);
+    border-radius: 8px;
+    background:
+        radial-gradient(circle at 82% 18%, rgba(232,199,106,0.14), transparent 18rem),
+        linear-gradient(112deg, rgba(4,12,14,0.94), rgba(9,24,27,0.82) 58%, rgba(45,30,17,0.72)),
+        rgba(7,16,19,0.86);
+    box-shadow: 0 22px 58px rgba(0,0,0,0.34);
+    padding: 1.65rem;
+}
+
+.rankings-hero::before {
+    content: "";
+    position: absolute;
+    inset: auto -8% -38% 18%;
+    height: 52%;
+    background: radial-gradient(ellipse at center, rgba(111,214,189,0.13), transparent 68%);
+    pointer-events: none;
+}
+
+.rankings-hero-copy,
+.rankings-stats {
+    position: relative;
+    z-index: 1;
+}
+
+.rankings-kicker {
+    display: inline-flex;
+    color: var(--ad-gold);
+    font-size: 0.72rem;
+    font-weight: 840;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .rankings-page h1 {
+    margin: 0.18rem 0 0;
     color: var(--ad-text);
-    font-weight: 700;
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 0.95;
     letter-spacing: 0;
     text-shadow: 0 2px 18px rgba(0,0,0,0.42);
 }
 
-.rankings-page .card {
-    border-color: rgba(232,199,106,0.18);
+.rankings-hero-copy p {
+    max-width: 35rem;
+    margin: 0.75rem 0 0;
+    color: var(--ad-muted);
+    font-size: 1rem;
+}
+
+.rankings-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.rankings-stat {
+    min-width: 0;
+    border: 1px solid rgba(161,212,201,0.15);
+    border-radius: 6px;
+    background: rgba(4,11,13,0.44);
+    padding: 0.75rem;
+}
+
+.rankings-stat-value,
+.rankings-stat-label {
+    display: block;
+}
+
+.rankings-stat-value {
+    color: var(--ad-text);
+    font-size: 1.15rem;
+    font-weight: 870;
+    line-height: 1;
+    overflow-wrap: anywhere;
+}
+
+.rankings-stat-label {
+    margin-top: 0.32rem;
+    color: var(--ad-muted);
+    font-size: 0.72rem;
+    font-weight: 760;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.rankings-panel {
+    overflow: hidden;
+    border: 1px solid rgba(161,212,201,0.17);
+    border-radius: 8px;
     background:
-        linear-gradient(180deg, rgba(232,199,106,0.045), transparent 36%),
-        rgba(7,16,19,0.78);
+        linear-gradient(180deg, rgba(111,214,189,0.05), transparent 38%),
+        rgba(7,16,19,0.82);
+    box-shadow: 0 16px 42px rgba(0,0,0,0.25);
     backdrop-filter: blur(2px);
+}
+
+.rankings-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(161,212,201,0.13);
+    background: rgba(4,10,12,0.42);
+    padding: 0.9rem 1rem;
+}
+
+.rankings-panel-head h2 {
+    margin: 0;
+    color: var(--ad-text);
+    font-size: 1rem;
+    font-weight: 840;
+}
+
+.rankings-panel-head p {
+    margin: 0.16rem 0 0;
+    color: var(--ad-muted);
+    font-size: 0.82rem;
+}
+
+.rank-sort-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.45rem;
+}
+
+.rankings-page .rank-sort-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.28rem;
+    border: 1px solid rgba(161,212,201,0.18);
+    border-radius: 999px;
+    background: rgba(8,18,21,0.72);
+    color: var(--ad-muted);
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    padding: 0.46rem 0.78rem;
+}
+
+.rankings-page .rank-sort-link:hover,
+.rankings-page .rank-sort-link.active {
+    border-color: rgba(111,214,189,0.54);
+    background: rgba(111,214,189,0.14);
+    color: var(--ad-text);
+    text-decoration: none;
 }
 
 .rankings-page .table-dark {
@@ -6051,75 +6288,72 @@ body.rankings-page {
     color: var(--ad-text);
 }
 
+.rankings-page .rank-table {
+    min-width: 43rem;
+}
+
 .rankings-page .rank-table th,
 .rankings-page .rank-table td {
-    padding: 0.82rem 0.75rem;
+    padding: 0.86rem 0.75rem;
     vertical-align: middle;
+}
+
+.rankings-page .rank-table th {
+    color: var(--ad-muted);
+    font-size: 0.72rem;
+    font-weight: 820;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
 .rankings-page .rank-table th:first-child,
 .rankings-page .rank-table td:first-child {
-    width: 5.4rem;
+    width: 5.2rem;
+}
+
+.rank-row {
+    --rank-accent: var(--ad-teal);
+    --rank-border: rgba(161,212,201,0.14);
+    --rank-row-bg: rgba(7,16,19,0.58);
 }
 
 .rank-row td {
-    background: rgba(7,16,19,0.54);
+    background: var(--rank-row-bg);
     border-top: 1px solid rgba(161,212,201,0.09);
     border-bottom: 1px solid rgba(161,212,201,0.09);
 }
 
-.rank-top {
+.rank-top-1 {
     --rank-accent: var(--ad-gold);
     --rank-border: rgba(232,199,106,0.42);
-    --rank-bg-left: rgba(232,199,106,0.2);
-    --rank-bg-right: rgba(111,214,189,0.07);
-    --rank-badge-text: #17110b;
+    --rank-row-bg: rgba(25,21,13,0.68);
 }
 
 .rank-top-2 {
     --rank-accent: #d7e6e2;
     --rank-border: rgba(215,230,226,0.36);
-    --rank-bg-left: rgba(215,230,226,0.15);
-    --rank-bg-right: rgba(111,214,189,0.07);
-    --rank-badge-text: #0d1718;
+    --rank-row-bg: rgba(20,27,28,0.66);
 }
 
 .rank-top-3 {
     --rank-accent: var(--ad-ember);
     --rank-border: rgba(231,138,85,0.38);
-    --rank-bg-left: rgba(231,138,85,0.17);
-    --rank-bg-right: rgba(156,122,200,0.07);
-    --rank-badge-text: #180f0a;
+    --rank-row-bg: rgba(25,17,13,0.66);
 }
 
-.rank-top-4 {
-    --rank-accent: var(--ad-teal);
-    --rank-border: rgba(111,214,189,0.34);
-    --rank-bg-left: rgba(111,214,189,0.13);
-    --rank-bg-right: rgba(232,199,106,0.055);
-    --rank-badge-text: #071313;
-}
-
+.rank-top-4,
 .rank-top-5 {
-    --rank-accent: var(--ad-violet);
-    --rank-border: rgba(156,122,200,0.38);
-    --rank-bg-left: rgba(156,122,200,0.14);
-    --rank-bg-right: rgba(111,214,189,0.055);
-    --rank-badge-text: #120d18;
+    --rank-border: rgba(111,214,189,0.28);
+    --rank-row-bg: rgba(8,20,22,0.64);
 }
 
 .rank-top td {
-    background:
-        linear-gradient(90deg, var(--rank-bg-left), rgba(7,16,19,0.74) 42%, var(--rank-bg-right)),
-        rgba(7,16,19,0.86);
     border-color: var(--rank-border);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.055), 0 10px 22px rgba(0,0,0,0.22);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.055);
 }
 
 .rankings-page .rank-top.current-player-rank td {
-    background:
-        linear-gradient(90deg, var(--rank-bg-left), rgba(7,16,19,0.74) 42%, var(--rank-bg-right)),
-        rgba(7,16,19,0.86) !important;
+    background: var(--rank-row-bg) !important;
 }
 
 .rank-top-1 td {
@@ -6127,43 +6361,34 @@ body.rankings-page {
     padding-bottom: 1rem;
 }
 
-.rank-badge {
-    display: inline-grid;
-    grid-template-columns: 1rem auto;
-    align-items: center;
-    justify-content: center;
-    gap: 0.28rem;
-    min-width: 3.65rem;
-    height: 2.35rem;
-    color: var(--ad-muted);
-    font-weight: 800;
-    clip-path: polygon(12% 0, 88% 0, 100% 50%, 88% 100%, 12% 100%, 0 50%);
-    background: rgba(161,212,201,0.1);
-}
-
-.rank-top .rank-badge {
-    color: var(--rank-badge-text);
-    background:
-        linear-gradient(135deg, rgba(255,255,255,0.55), transparent 28%),
-        var(--rank-accent);
-    box-shadow: 0 0 18px var(--rank-border);
-}
-
-.rank-badge-icon {
+.rank-position {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.34rem;
+    min-width: 3.15rem;
+    color: var(--ad-muted);
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
 }
 
-.rank-badge-icon:empty {
+.rank-top .rank-position {
+    color: var(--rank-accent);
+}
+
+.rank-position-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rank-accent);
+}
+
+.rank-position-icon:empty {
     display: none;
 }
 
-.rank-badge-icon:empty + .rank-badge-number {
-    grid-column: 1 / -1;
-}
-
-.rank-badge-number {
+.rank-position-number {
     line-height: 1;
 }
 
@@ -6172,20 +6397,13 @@ body.rankings-page {
     min-width: 0;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.12rem;
 }
 
 .rank-hunter-name {
     max-width: 100%;
     color: var(--ad-text);
-    font-weight: 760;
+    font-weight: 780;
     overflow-wrap: anywhere;
-}
-
-.rank-title {
-    color: var(--rank-accent);
-    font-size: 0.76rem;
-    font-weight: 700;
 }
 
 .rank-floor-cell {
@@ -6201,8 +6419,8 @@ body.rankings-page {
 
 .rank-floor-value {
     color: var(--ad-text);
-    font-size: 1.1rem;
-    font-weight: 820;
+    font-size: 1.12rem;
+    font-weight: 860;
 }
 
 .rank-top .rank-floor-value {
@@ -6211,32 +6429,14 @@ body.rankings-page {
 }
 
 .rank-top-1 .rank-floor-value {
-    font-size: 1.35rem;
+    font-size: 1.34rem;
 }
 
 .rank-floor-label,
 .rank-metric {
     color: var(--ad-muted);
-    font-size: 0.86rem;
-    font-weight: 700;
-}
-
-.rank-progress-bar {
-    display: block;
-    width: min(9rem, 100%);
-    height: 0.32rem;
-    margin: 0.32rem auto 0;
-    overflow: hidden;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.09);
-}
-
-.rank-progress-bar span {
-    display: block;
-    width: var(--rank-progress, 0%);
-    height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, var(--rank-accent), rgba(255,255,255,0.72));
+    font-size: 0.88rem;
+    font-weight: 760;
 }
 
 .rank-metric {
@@ -6265,40 +6465,171 @@ body.rankings-page {
     gap: 0.34rem;
 }
 
-.rank-sort-link[data-sort="souls"] .soul-icon {
-    width: 0.95em;
-    height: 0.95em;
+.rank-empty-cell {
+    color: var(--ad-muted);
+    text-align: center;
+    padding: 2rem 1rem !important;
 }
 
-.rank-sort-link.active {
-    text-decoration: underline;
-    text-decoration-color: currentColor;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.25rem;
-}
+@media (max-width: 767.98px) {
+    body.rankings-page {
+        background-attachment: scroll;
+    }
 
-@media (max-width: 575.98px) {
-    .rankings-page .rank-table th,
+    .rankings-shell {
+        gap: 0.78rem;
+    }
+
+    .rankings-hero {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+
+    .rankings-page h1 {
+        font-size: 2.65rem;
+    }
+
+    .rankings-hero-copy p {
+        font-size: 0.92rem;
+    }
+
+    .rankings-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .rankings-stat {
+        padding: 0.64rem;
+    }
+
+    .rankings-stat-value {
+        font-size: 1rem;
+    }
+
+    .rankings-stat-label {
+        font-size: 0.64rem;
+    }
+
+    .rankings-panel-head {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0.85rem;
+    }
+
+    .rank-sort-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        justify-content: stretch;
+    }
+
+    .rankings-page .rank-sort-link {
+        padding-right: 0.45rem;
+        padding-left: 0.45rem;
+    }
+
+    .rankings-page .table-responsive {
+        overflow-x: visible;
+    }
+
+    .rankings-page .rank-table {
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0 0.65rem;
+        margin: 0;
+    }
+
+    .rankings-page .rank-table thead {
+        display: none;
+    }
+
+    .rankings-page .rank-table tbody,
+    .rankings-page .rank-table tr,
     .rankings-page .rank-table td {
-        padding: 0.68rem 0.58rem;
+        display: block;
+        width: 100%;
     }
 
-    .rank-badge {
-        min-width: 3.1rem;
-        height: 2.08rem;
+    .rankings-page .rank-table tbody {
+        padding: 0.15rem 0.75rem 0.75rem;
     }
 
-    .rank-title {
-        font-size: 0.7rem;
+    .rank-row {
+        overflow: hidden;
+        border: 1px solid var(--rank-border);
+        border-radius: 8px;
+        background: var(--rank-row-bg);
+    }
+
+    .rank-row td {
+        display: grid;
+        grid-template-columns: 7.5rem minmax(0, 1fr);
+        align-items: center;
+        gap: 0.7rem;
+        border: 0;
+        background: transparent;
+        text-align: right;
+        padding: 0.54rem 0.75rem;
+    }
+
+    .rank-row td::before {
+        content: attr(data-label);
+        color: var(--ad-muted);
+        font-size: 0.66rem;
+        font-weight: 820;
+        letter-spacing: 0.05em;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    .rank-position-cell {
+        padding-top: 0.75rem !important;
+    }
+
+    .rank-hunter {
+        align-items: flex-end;
     }
 
     .rank-floor-cell {
-        min-width: 7.4rem;
+        min-width: 0;
     }
 
-    .rank-progress-bar {
-        width: 7.2rem;
+    .rank-floor {
+        justify-content: flex-end;
     }
+
+    .rank-empty-row {
+        border: 0;
+        background: transparent;
+    }
+
+    .rank-empty-row td {
+        display: block !important;
+        text-align: center;
+    }
+
+    .rank-empty-row td::before {
+        display: none;
+    }
+}
+
+@media (max-width: 420px) {
+    .rankings-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .rank-row td {
+        grid-template-columns: 1fr;
+        gap: 0.22rem;
+        text-align: left;
+    }
+
+    .rank-hunter {
+        align-items: flex-start;
+    }
+
+    .rank-floor {
+        justify-content: flex-start;
+    }
+
 }
 
 body.camp-page {
@@ -6955,13 +7286,13 @@ body.collection-page {
 
 .collection-training-panel {
     display: grid;
-    gap: 0.72rem;
+    gap: 0.58rem;
     border: 1px solid rgba(85,255,255,0.18);
     border-radius: 6px;
     background:
         linear-gradient(135deg, rgba(85,255,255,0.08), rgba(250,197,28,0.05)),
         rgba(5,14,17,0.62);
-    padding: 0.82rem;
+    padding: 0.72rem;
 }
 
 .collection-training-panel.is-maxed {
@@ -7000,6 +7331,7 @@ body.collection-page {
 
 .collection-training-action-cost {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 0.55rem;
@@ -7013,9 +7345,24 @@ body.collection-page {
     text-transform: uppercase;
 }
 
+.collection-training-action-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-width: min(100%, 11rem);
+}
+
 .collection-training-cost-label {
     color: rgba(207,226,220,0.72);
     letter-spacing: 0.05em;
+}
+
+.collection-training-chance strong {
+    color: #fac51c;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+    text-transform: none;
 }
 
 .collection-training-action-souls {
@@ -7036,7 +7383,7 @@ body.collection-page {
 
 .collection-training-stat-list {
     display: grid;
-    gap: 0.5rem;
+    gap: 0.42rem;
 }
 
 .collection-training-stat {
@@ -7196,6 +7543,18 @@ body.collection-page {
     padding: 0.62rem 0.86rem;
     text-shadow: 0 2px 10px rgba(0,0,0,0.72);
     white-space: nowrap;
+}
+
+.collection-training-result-pop .is-failure {
+    border-color: rgba(228,104,94,0.72);
+    background:
+        linear-gradient(135deg, rgba(228,104,94,0.22), rgba(250,197,28,0.1)),
+        rgba(20,9,9,0.94);
+    color: #ffd7d3;
+    box-shadow:
+        0 12px 32px rgba(0,0,0,0.5),
+        0 0 30px rgba(228,104,94,0.26),
+        inset 0 0 0 1px rgba(255,255,255,0.1);
 }
 
 .collection-training-result-pop .ad-icon,
@@ -7547,7 +7906,7 @@ body.collection-page {
 }
 
 .dungeon-bottom-panel {
-    --dungeon-hand-card-width: clamp(4.9rem, 7vw, 6.35rem);
+    --dungeon-hand-card-width: clamp(5.65rem, 7.7vw, 7.35rem);
     --dungeon-reward-card-width: var(--dungeon-hand-card-width);
     grid-template-columns: minmax(0, 1fr) minmax(15rem, calc(var(--dungeon-reward-card-width) + 9.25rem));
 }
@@ -8464,7 +8823,7 @@ body.collection-page {
     }
 
     .dungeon-bottom-panel {
-        --dungeon-hand-card-width: clamp(3.45rem, 18vw, 4.75rem);
+        --dungeon-hand-card-width: clamp(3.9rem, 19vw, 5.25rem);
         --dungeon-reward-card-width: var(--dungeon-hand-card-width);
         --dungeon-bottom-panel-padding-y: 0.24rem;
         grid-template-columns: minmax(0, 1fr) minmax(9.4rem, calc(var(--dungeon-reward-card-width) + 5.2rem));
@@ -8600,7 +8959,7 @@ body.collection-page {
     }
 
     .dungeon-bottom-panel {
-        --dungeon-hand-card-width: clamp(3.2rem, 15vw, 4.6rem);
+        --dungeon-hand-card-width: clamp(3.55rem, 16vw, 5rem);
         --dungeon-reward-card-width: var(--dungeon-hand-card-width);
         --dungeon-bottom-panel-padding-y: 0.24rem;
         grid-template-columns: minmax(0, 1fr);
@@ -8676,8 +9035,8 @@ body.collection-page {
     }
 
     .dungeon-reward-payout {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        grid-template-rows: minmax(0, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: minmax(0, 1fr) minmax(0, 0.82fr);
         gap: 0.16rem;
         min-width: 0;
         padding: 0.18rem;
@@ -8703,6 +9062,7 @@ body.collection-page {
     }
 
     .dungeon-reward-extract-btn {
+        grid-column: 1 / -1;
         min-height: 100%;
         gap: 0;
         padding: 0.12rem;
@@ -8725,7 +9085,7 @@ body.collection-page {
     }
 
     .dungeon-bottom-panel {
-        --dungeon-hand-card-width: clamp(4.45rem, 6.1vw, 5.75rem);
+        --dungeon-hand-card-width: clamp(5rem, 6.6vw, 6.45rem);
         --dungeon-reward-card-width: var(--dungeon-hand-card-width);
         --dungeon-bottom-panel-padding-y: 0.26rem;
         grid-template-columns: minmax(0, 1fr) minmax(14.2rem, calc(var(--dungeon-reward-card-width) + 8.6rem));

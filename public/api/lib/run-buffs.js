@@ -147,6 +147,7 @@ function applyRunBuffStatModifiers(run) {
   const maxHpMult = getEffectMultiplier(state, 'max_hp_mult');
   const speedMult = getEffectMultiplier(state, 'speed_mult');
   const directDamageMult = getEffectMultiplier(state, 'direct_damage_mult');
+  const aoeDamageMult = getEffectMultiplier(state, 'aoe_damage_mult');
 
   run.state.team = (run.state.team || []).map((demon) => {
     const baseAtk = Math.max(0, Number(demon.runBaseAtk) || Number(demon.atk) || 0);
@@ -156,7 +157,8 @@ function applyRunBuffStatModifiers(run) {
     const hpRatio = currentMaxHp > 0
       ? clamp((Number(demon.hp) || currentMaxHp) / currentMaxHp, 0, 1)
       : 1;
-    const nextEffectiveAtk = baseAtk > 0 ? Math.max(1, Math.round(baseAtk * directDamageMult)) : baseAtk;
+    const damagePreviewMult = directDamageMult * (isAoeDemon(demon) ? aoeDamageMult : 1);
+    const nextEffectiveAtk = baseAtk > 0 ? Math.max(1, Math.round(baseAtk * damagePreviewMult)) : baseAtk;
     const nextMaxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
     const nextSpeed = Math.max(1, Math.round(baseSpeed * speedMult));
 
@@ -510,6 +512,13 @@ function hasHigherMaxHp(target, attacker) {
 
 function hasPoison(target) {
   return (target?.statusEffects?.poison || []).length > 0;
+}
+
+function isAoeDemon(demon) {
+  const typeId = Number(demon?.typeId || demon?.type_id || demon?.type);
+  const role = String(demon?.role || '').toLowerCase();
+  const targeting = String(demon?.targeting || '').toLowerCase();
+  return typeId === 4 || role === 'aoe' || targeting === 'all';
 }
 
 function normalizePosition(position) {

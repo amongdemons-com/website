@@ -5,7 +5,7 @@ const {
   applyTrainingIncreases,
   enrichCollectionDemonsWithTraining,
   getDemonTrainingInfo,
-  rollTrainingIncreases
+  rollTrainingAttempt
 } = require('../lib/demon-training');
 const { getDemonTypes } = require('../lib/game-data');
 
@@ -64,18 +64,28 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
       throw error;
     }
 
-    const increases = rollTrainingIncreases(training);
-    if (!Object.keys(increases).length) {
+    const attempt = rollTrainingAttempt(training);
+    if (attempt.succeeded && !Object.keys(attempt.increases).length) {
       const error = new Error('This demon is already maxed out.');
       error.status = 409;
       throw error;
     }
 
-    const nextStats = applyTrainingIncreases(demon, training, increases);
-    await connection.query(
-      'UPDATE player_demons SET hp = ?, atk = ?, speed = ? WHERE id = ? AND player_id = ?',
-      [nextStats.hp, nextStats.atk, nextStats.speed, demon.id, req.player.id]
-    );
+    const nextStats = attempt.succeeded
+      ? applyTrainingIncreases(demon, training, attempt.increases)
+      : {
+          hp: demon.hp,
+          atk: demon.atk,
+          speed: demon.speed
+        };
+
+    if (attempt.succeeded) {
+      await connection.query(
+        'UPDATE player_demons SET hp = ?, atk = ?, speed = ? WHERE id = ? AND player_id = ?',
+        [nextStats.hp, nextStats.atk, nextStats.speed, demon.id, req.player.id]
+      );
+    }
+
     await connection.query(
       'UPDATE players SET souls = souls - ? WHERE id = ?',
       [cost, req.player.id]
@@ -100,8 +110,10 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
       demon: updatedDemon,
       player,
       training: {
+        succeeded: attempt.succeeded,
         spent: cost,
-        increases,
+        successChance: attempt.successChance,
+        increases: attempt.increases,
         maxed: updatedDemon.training.maxed,
         nextCost: updatedDemon.training.cost
       }

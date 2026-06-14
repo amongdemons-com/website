@@ -146,7 +146,7 @@ function applyRunBuffStatPreviewToDemon(demon = {}) {
 
   const maxHpMult = getRunBuffEffectMultiplier('max_hp_mult');
   const speedMult = getRunBuffEffectMultiplier('speed_mult');
-  const directDamageMult = getRunBuffEffectMultiplier('direct_damage_mult');
+  const damagePreviewMult = getRunBuffAttackPreviewMultiplier(demon);
   const baseMaxHp = Math.max(1, Number(demon.runBaseMaxHp) || Number(demon.maxHp) || Number(demon.hp) || 1);
   const baseHp = Math.max(0, Number(demon.hp) || baseMaxHp);
   const hpRatio = baseMaxHp > 0 ? Math.max(0, Math.min(1, baseHp / baseMaxHp)) : 1;
@@ -156,7 +156,7 @@ function applyRunBuffStatPreviewToDemon(demon = {}) {
 
   return {
     ...demon,
-    effectiveAtk: baseAtk > 0 ? Math.max(1, Math.round(baseAtk * directDamageMult)) : baseAtk,
+    effectiveAtk: baseAtk > 0 ? Math.max(1, Math.round(baseAtk * damagePreviewMult)) : baseAtk,
     maxHp: nextMaxHp,
     hp: Math.max(baseHp > 0 ? 1 : 0, Math.min(nextMaxHp, Math.round(nextMaxHp * hpRatio))),
     speed: Math.max(1, Math.round(baseSpeed * speedMult)),
@@ -202,6 +202,21 @@ function getRunBuffEffectMultiplier(type) {
       return Number.isFinite(value) && value > 0 ? nextMultiplier * value : nextMultiplier;
     }, multiplier);
   }, 1);
+}
+
+function getRunBuffAttackPreviewMultiplier(demon) {
+  let multiplier = getRunBuffEffectMultiplier('direct_damage_mult');
+  if (isAoeDemon(demon)) {
+    multiplier *= getRunBuffEffectMultiplier('aoe_damage_mult');
+  }
+  return multiplier;
+}
+
+function isAoeDemon(demon) {
+  const typeId = Number(demon?.typeId || demon?.type_id || demon?.type);
+  const role = String(demon?.role || '').toLowerCase();
+  const targeting = String(demon?.targeting || '').toLowerCase();
+  return typeId === 4 || role === 'aoe' || targeting === 'all';
 }
 
 function getRecruitTeamLimit() {

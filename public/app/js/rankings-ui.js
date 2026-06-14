@@ -6,13 +6,7 @@
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const currentUsername = session.player && session.player.username;
   const pathSorts = new Set(['floor', 'level', 'souls']);
-  const topRankTitles = [
-    { title: 'Dungeon Sovereign', icon: 'crown' },
-    { title: 'Abyss Warden', icon: 'trophy' },
-    { title: 'Rift Champion', icon: 'medal' },
-    { title: 'Elite Delver', icon: 'sparkles' },
-    { title: 'Oathbound Hunter', icon: 'flame' }
-  ];
+  const topRankIcons = ['crown', 'trophy', 'medal'];
   let currentSort = getInitialSort();
 
   onReady(init);
@@ -28,6 +22,9 @@
     elements.body = document.getElementById('rankBody');
     elements.message = document.getElementById('rankMessage');
     elements.sortLinks = document.querySelectorAll('.rank-sort-link');
+    elements.statPlayers = document.querySelector('[data-rank-stat="players"]');
+    elements.statFloor = document.querySelector('[data-rank-stat="floor"]');
+    elements.statSouls = document.querySelector('[data-rank-stat="souls"]');
   }
 
   function bindSortLinks() {
@@ -44,74 +41,82 @@
 
   function syncSortLinks() {
     elements.sortLinks.forEach((link) => {
-      link.classList.toggle('active', link.dataset.sort === currentSort);
+      const isActive = link.dataset.sort === currentSort;
+      link.classList.toggle('active', isActive);
+      link.setAttribute('aria-current', isActive ? 'page' : 'false');
     });
   }
 
   async function loadRank() {
     setMessage('', '');
-    elements.body.innerHTML = '<tr><td colspan="5" class="text-muted">Loading...</td></tr>';
+    elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="5" class="rank-empty-cell">Loading rankings...</td></tr>';
 
     try {
       const payload = await window.AmongDemons.api(`/api/leaderboard?sort=${encodeURIComponent(currentSort)}`);
       renderRows(payload.players || []);
     } catch (error) {
-      elements.body.innerHTML = '<tr><td colspan="5" class="text-muted">Could not load rankings.</td></tr>';
+      elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="5" class="rank-empty-cell">Could not load rankings.</td></tr>';
+      updateStats([]);
       setMessage(error.message || 'Could not load rankings.', 'danger');
     }
   }
 
   function renderRows(players) {
-    const highestFloor = players.reduce((max, player) => Math.max(max, Number(player.highestFloor) || 0), 0);
+    updateStats(players);
 
     elements.body.innerHTML = players.length
-      ? players.map((player, index) => renderPlayerRow(player, index, highestFloor)).join('')
-      : '<tr><td colspan="5" class="text-muted">No hunters yet.</td></tr>';
+      ? players.map((player, index) => renderPlayerRow(player, index)).join('')
+      : '<tr class="rank-empty-row"><td colspan="5" class="rank-empty-cell">No hunters yet.</td></tr>';
   }
 
-  function renderPlayerRow(player, index, highestFloor) {
+  function renderPlayerRow(player, index) {
     const rank = index + 1;
     const floor = Number(player.highestFloor) || 0;
     const level = Number(player.level) || 1;
     const souls = Number(player.souls) || 0;
-    const topRank = topRankTitles[index];
+    const topRankIcon = topRankIcons[index] || '';
     const rowClasses = [
       'rank-row',
-      topRank ? `rank-top rank-top-${rank}` : '',
+      rank <= 5 ? `rank-top rank-top-${rank}` : '',
       player.username === currentUsername ? 'current-player-rank' : ''
     ].filter(Boolean).join(' ');
-    const progress = highestFloor > 0 ? Math.max(4, Math.round((floor / highestFloor) * 100)) : 0;
-    const style = topRank ? ` style="--rank-progress: ${progress}%;"` : '';
 
     return `
-      <tr class="${rowClasses}"${style}>
-        <td>
-          <span class="rank-badge">
-            <span class="rank-badge-icon">${renderRankIcon(topRank?.icon)}</span>
-            <span class="rank-badge-number">${rank}</span>
+      <tr class="${rowClasses}">
+        <td class="rank-position-cell" data-label="Rank">
+          <span class="rank-position">
+            <span class="rank-position-icon">${renderRankIcon(topRankIcon)}</span>
+            <span class="rank-position-number">#${rank}</span>
           </span>
         </td>
-        <td>
+        <td class="rank-hunter-cell" data-label="Hunter">
           <span class="rank-hunter">
             <span class="rank-hunter-name">${escapeHtml(player.username)}</span>
-            ${topRank ? `<span class="rank-title">${topRank.title}</span>` : ''}
           </span>
         </td>
-        <td class="rank-floor-cell">
+        <td class="rank-floor-cell" data-label="Highest Floor">
           <span class="rank-floor">
             <span class="rank-floor-value">${formatNumber(floor)}</span>
             <span class="rank-floor-label">floor</span>
           </span>
-          ${topRank ? '<span class="rank-progress-bar" aria-hidden="true"><span></span></span>' : ''}
         </td>
-        <td><span class="rank-metric">${formatNumber(level)}</span></td>
-        <td>${renderSoulAmount(formatNumber(souls), {
+        <td data-label="Level"><span class="rank-metric">${formatNumber(level)}</span></td>
+        <td data-label="Souls">${renderSoulAmount(formatNumber(souls), {
           showLabel: false,
           className: 'rank-metric rank-metric-souls',
           ariaLabel: `${formatNumber(souls)} Souls`
         })}</td>
       </tr>
     `;
+  }
+
+  function updateStats(players) {
+    const highestFloor = players.reduce((max, player) => Math.max(max, Number(player.highestFloor) || 0), 0);
+    const souls = players.reduce((sum, player) => sum + (Number(player.souls) || 0), 0);
+
+    setStatText(elements.statPlayers, players.length, { compact: true, label: 'Hunters' });
+    setText(elements.statFloor, formatNumber(highestFloor));
+    setStatText(elements.statSouls, souls, { compact: true, label: 'Souls held' });
   }
 
   function getInitialSort() {
@@ -133,8 +138,42 @@
     return renderIcon(iconName, { size: 16, className: 'rank-icon' });
   }
 
+  function setText(element, text) {
+    if (element) element.textContent = text;
+  }
+
+  function setStatText(element, value, options = {}) {
+    if (!element) return;
+
+    const formatted = options.compact ? formatCompactNumber(value) : formatNumber(value);
+    const fullValue = formatNumber(value);
+    element.textContent = formatted;
+    element.title = fullValue;
+    if (options.label) {
+      element.setAttribute('aria-label', `${fullValue} ${options.label}`);
+    }
+  }
+
   function formatNumber(value) {
     return Number(value || 0).toLocaleString();
+  }
+
+  function formatCompactNumber(value) {
+    const number = Number(value || 0);
+    const abs = Math.abs(number);
+
+    if (abs < 1000) return formatNumber(number);
+
+    const units = [
+      { value: 1000000000, suffix: 'b' },
+      { value: 1000000, suffix: 'm' },
+      { value: 1000, suffix: 'k' }
+    ];
+    const unit = units.find((entry) => abs >= entry.value);
+    const scaled = number / unit.value;
+    const rounded = scaled >= 100 ? Math.round(scaled) : Math.round(scaled * 10) / 10;
+
+    return `${String(rounded).replace(/\.0$/, '')}${unit.suffix}`;
   }
 
   function escapeHtml(value) {

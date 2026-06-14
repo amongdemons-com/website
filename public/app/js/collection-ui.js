@@ -361,12 +361,15 @@
 
     const canAfford = Number(state.player?.souls) >= cost;
     const deficit = Math.max(0, cost - (Number(state.player?.souls) || 0));
+    const chanceLabel = formatChance(training.successChance);
     return [
       {
         label: canAfford ? 'Train' : `Need ${formatNumber(deficit)} Souls`,
         variant: canAfford ? 'success' : 'outline-danger',
         disabled: !canAfford || state.trainingDemonId === Number(demon.id),
-        title: canAfford ? `Costs ${formatNumber(cost)} Souls` : `Need ${formatNumber(deficit)} more Souls`,
+        title: canAfford
+          ? `Costs ${formatNumber(cost)} Souls${chanceLabel ? `. ${chanceLabel} success chance` : ''}`
+          : `Need ${formatNumber(deficit)} more Souls`,
         onClick: (modalDemon, button) => trainDemon(demon.id, button)
       }
     ];
@@ -403,11 +406,14 @@
     if (!training.stats) return '';
 
     const cost = Number(training.cost);
+    const chanceLabel = formatChance(training.successChance);
     return `
       <div class="collection-training-panel ${training.maxed ? 'is-maxed' : ''}" aria-live="polite">
         <div class="collection-training-panel-head">
           <span>${training.maxed ? 'Stats' : 'Training'}</span>
-          ${training.maxed || !Number.isFinite(cost) || cost <= 0 ? `<strong>${renderIcon('stars')}Max</strong>` : ''}
+          ${training.maxed || !Number.isFinite(cost) || cost <= 0
+            ? `<strong>${renderIcon('stars')}Max</strong>`
+            : (chanceLabel ? `<strong>${escapeHtml(chanceLabel)} success</strong>` : '')}
         </div>
         <div class="collection-training-stat-list">
           ${TRAINING_STATS.map(([key, label, icon]) => renderTrainingStat(training.stats[key], key, label, icon)).join('')}
@@ -424,14 +430,23 @@
     const playerSouls = Number(state.player?.souls) || 0;
     const canAfford = playerSouls >= cost;
     const deficit = Math.max(0, cost - playerSouls);
+    const chanceLabel = formatChance(training.successChance);
 
     return `
-      <div class="collection-training-action-cost" aria-label="Training costs ${escapeHtml(formatNumber(cost))} Souls. ${canAfford ? 'You have enough souls.' : `You need ${escapeHtml(formatNumber(deficit))} more souls.`}">
-        <span class="collection-training-cost-label">Training Cost</span>
-        ${renderSoulAmount(formatNumber(cost), {
-          className: 'soul-chip collection-training-action-souls',
-          ariaLabel: `${formatNumber(cost)} Souls`
-        })}
+      <div class="collection-training-action-cost" aria-label="Training attempt costs ${escapeHtml(formatNumber(cost))} Souls${chanceLabel ? ` with a ${escapeHtml(chanceLabel)} success chance` : ''}. ${canAfford ? 'You have enough souls.' : `You need ${escapeHtml(formatNumber(deficit))} more souls.`}">
+        <div class="collection-training-action-item">
+          <span class="collection-training-cost-label">Attempt Cost</span>
+          ${renderSoulAmount(formatNumber(cost), {
+            className: 'soul-chip collection-training-action-souls',
+            ariaLabel: `${formatNumber(cost)} Souls`
+          })}
+        </div>
+        ${chanceLabel ? `
+          <div class="collection-training-action-item collection-training-chance">
+            <span class="collection-training-cost-label">Success Chance</span>
+            <strong>${escapeHtml(chanceLabel)}</strong>
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -591,6 +606,12 @@
       renderCollection();
     }
 
+    if (training.succeeded === false) {
+      setMessage(`Training failed. ${formatNumber(training.spent || 0)} Souls spent.`, 'warning');
+    } else if (training.succeeded === true) {
+      setMessage('Training succeeded.', 'success');
+    }
+
     const modal = document.getElementById('demonDetailModal');
     if (!modal?.classList.contains('show')) return;
     if (outcome.updatedDemon && !isModalShowingDemon(modal, outcome.updatedDemon.id)) return;
@@ -619,7 +640,7 @@
     result.type = 'button';
     result.className = 'collection-training-result-pop';
     result.setAttribute('aria-label', 'Dismiss training result');
-    result.innerHTML = renderIncreaseChips(training.increases || {});
+    result.innerHTML = renderIncreaseChips(training);
     result.addEventListener('click', () => result.remove());
     modal.addEventListener('hidden.bs.modal', () => result.remove(), { once: true });
     target.appendChild(result);
@@ -663,9 +684,10 @@
 
     const head = panel.querySelector('.collection-training-panel-head');
     if (head) {
+      const chanceLabel = formatChance(training.successChance);
       head.innerHTML = `
         <span>${showMaxed ? 'Stats' : 'Training'}</span>
-        ${showMaxed ? `<strong>${renderIcon('stars')}Maxed out</strong>` : ''}
+        ${showMaxed ? `<strong>${renderIcon('stars')}Maxed out</strong>` : (chanceLabel ? `<strong>${escapeHtml(chanceLabel)} success</strong>` : '')}
       `;
     }
 
@@ -701,6 +723,7 @@
 
     const canAfford = Number(state.player?.souls) >= cost;
     const deficit = Math.max(0, cost - (Number(state.player?.souls) || 0));
+    const chanceLabel = formatChance(training.successChance);
     const lead = actions.querySelector('.demon-detail-action-lead');
     if (lead) lead.innerHTML = renderTrainingActionCost(demon);
 
@@ -709,7 +732,9 @@
 
     button.disabled = !canAfford || state.trainingDemonId === Number(demon.id);
     button.className = `btn btn-${canAfford ? 'success' : 'outline-danger'}`;
-    button.title = canAfford ? `Costs ${formatNumber(cost)} Souls` : `Need ${formatNumber(deficit)} more Souls`;
+    button.title = canAfford
+      ? `Costs ${formatNumber(cost)} Souls${chanceLabel ? `. ${chanceLabel} success chance` : ''}`
+      : `Need ${formatNumber(deficit)} more Souls`;
     button.innerHTML = canAfford ? 'Train' : `Need ${formatNumber(deficit)} Souls`;
   }
 
@@ -755,7 +780,12 @@
     }).join('');
   }
 
-  function renderIncreaseChips(increases) {
+  function renderIncreaseChips(training = {}) {
+    if (training.succeeded === false) {
+      return '<span class="is-failure">Training failed</span>';
+    }
+
+    const increases = training.increases || {};
     const chips = Object.entries(increases)
       .filter(([, amount]) => Number(amount) > 0)
       .map(([key, amount]) => {
@@ -770,6 +800,14 @@
     const current = Number(stat.current) || 0;
     const max = Math.max(current, Number(stat.max) || current || 1);
     return Math.max(0, Math.min(100, Math.round((current / max) * 100)));
+  }
+
+  function formatChance(value) {
+    const chance = Number(value);
+    if (!Number.isFinite(chance) || chance <= 0) return '';
+
+    const percent = chance <= 1 ? chance * 100 : chance;
+    return `${Math.max(1, Math.min(100, Math.round(percent)))}%`;
   }
 
   function renderEmptyState() {
