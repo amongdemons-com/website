@@ -625,6 +625,109 @@ body.dungeon-page .navbar {
     text-decoration: underline;
 }
 
+.site-footer p {
+    margin-bottom: 0.35rem;
+}
+
+.footer-links {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem 0.9rem;
+    font-size: 0.82rem;
+}
+
+.footer-links a {
+    color: rgba(220,232,229,0.72);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.footer-links a:hover,
+.footer-links a:focus-visible {
+    color: #f5d56d;
+    text-decoration: underline;
+}
+
+.legal-page {
+    background:
+        radial-gradient(circle at 50% 0%, rgba(111,214,189,0.08), transparent 26rem),
+        #071013;
+}
+
+.legal-shell {
+    max-width: 56rem;
+}
+
+.legal-document {
+    border: 1px solid rgba(111,214,189,0.2);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.05), transparent 20rem),
+        rgba(7,16,19,0.88);
+    box-shadow: 0 18px 48px rgba(0,0,0,0.28);
+    color: rgba(220,232,229,0.9);
+    padding: clamp(1.15rem, 4vw, 2.25rem);
+}
+
+.legal-header {
+    margin-bottom: 1.35rem;
+    padding-bottom: 1.15rem;
+    border-bottom: 1px solid rgba(161,212,201,0.16);
+}
+
+.legal-kicker {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    color: rgba(232,199,106,0.88);
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.legal-header h1 {
+    margin: 0;
+    color: #f2f7f5;
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 900;
+    line-height: 1;
+}
+
+.legal-header p {
+    margin: 0.65rem 0 0;
+    color: rgba(220,232,229,0.66);
+}
+
+.legal-document section + section {
+    margin-top: 1.35rem;
+}
+
+.legal-document h2 {
+    margin: 0 0 0.45rem;
+    color: #f2f7f5;
+    font-size: 1.12rem;
+    font-weight: 800;
+}
+
+.legal-document p {
+    margin: 0;
+    line-height: 1.65;
+}
+
+.legal-document p + p {
+    margin-top: 0.65rem;
+}
+
+.legal-document a {
+    color: rgba(111,214,189,0.98);
+    font-weight: 700;
+}
+
+.legal-document code {
+    color: #f5d56d;
+}
+
 @media (max-width: 575.98px) {
     .auth-provider-grid {
         gap: 0.65rem;

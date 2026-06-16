@@ -79,6 +79,13 @@ https://your-domain.com/api/auth/oauth/discord/callback
 
 For local development, replace the domain with `http://localhost:3000`. Set `OAUTH_REDIRECT_ORIGIN` when the public callback origin differs from the request host.
 
+Provider app review screens may also ask for policy URLs:
+
+```txt
+Privacy Policy URL: https://amongdemons.com/privacy
+Terms URL: https://amongdemons.com/terms
+```
+
 ```txt
 OAUTH_REDIRECT_ORIGIN=https://amongdemons.com
 
@@ -121,6 +128,8 @@ Open `http://localhost:3000`.
 | `/dungeon` | Main Dungeon run UI |
 | `/login` | Login page |
 | `/register` | Registration page |
+| `/privacy` | Privacy policy for account, OAuth, and gameplay data |
+| `/terms` | Terms of service for player accounts and gameplay |
 | `/collection` | Full authenticated collection browser with filters, sorting, missing slots, and Soul-based demon training |
 | `/summon` | Authenticated Souls/summon placeholder page |
 | `/rank` | Redirects to `/rankings` |

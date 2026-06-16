@@ -28,7 +28,9 @@ const noindexPaths = new Set([
   '/app/register.html',
   '/app/camp.html',
   '/app/collection.html',
-  '/app/api-test.html'
+  '/app/api-test.html',
+  '/app/privacy.html',
+  '/app/terms.html'
 ]);
 
 app.set('trust proxy', true);
@@ -102,6 +104,14 @@ app.get(['/register', '/register/'], (req, res) => {
 
 app.get(['/login', '/login/'], (req, res) => {
   res.sendFile(path.join(appDir, 'login.html'));
+});
+
+app.get(['/privacy', '/privacy/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'privacy.html'));
+});
+
+app.get(['/terms', '/terms/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'terms.html'));
 });
 
 app.get(['/collection', '/collection/'], (req, res) => {
