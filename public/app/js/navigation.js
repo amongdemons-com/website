@@ -47,7 +47,7 @@
         localStorage.removeItem('amongdemons-session');
       }
 
-      window.location.href = '/';
+      window.location.href = window.AmongDemons?.appUrl ? window.AmongDemons.appUrl('/') : '/';
     });
   }
 

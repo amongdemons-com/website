@@ -12,6 +12,10 @@ yarn-error.log*
 /dist
 /build
 
+# Separate wrapper repositories
+/public/android/
+/public/steam/
+
 # OS/editor files
 .DS_Store
 Thumbs.db

@@ -30,11 +30,11 @@ function resetEndState() {
 }
 
 function handleAuthError(error) {
-  if (error.status === 401) {
-    window.AmongDemons.clearSession();
-    window.location.href = '/login';
-    return;
-  }
+    if (error.status === 401) {
+      window.AmongDemons.clearSession();
+      window.location.href = window.AmongDemons.appUrl('/login');
+      return;
+    }
 
   showError(error);
 }

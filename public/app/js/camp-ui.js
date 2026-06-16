@@ -18,7 +18,7 @@
 
   async function init() {
     if (!window.AmongDemons.getToken()) {
-      window.location.href = '/login';
+      window.location.href = window.AmongDemons.appUrl('/login');
       return;
     }
 
@@ -331,7 +331,7 @@
   function handleAuthError(error) {
     if (error.status === 401) {
       window.AmongDemons.clearSession();
-      window.location.href = '/login';
+      window.location.href = window.AmongDemons.appUrl('/login');
       return;
     }
 

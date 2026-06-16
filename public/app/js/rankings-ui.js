@@ -32,7 +32,8 @@
       link.addEventListener('click', async (event) => {
         event.preventDefault();
         currentSort = link.dataset.sort || 'floor';
-        window.history.replaceState({}, '', currentSort === 'floor' ? '/rankings' : `/rankings/${currentSort}`);
+        const nextPath = currentSort === 'floor' ? '/rankings' : `/rankings/${currentSort}`;
+        window.history.replaceState({}, '', window.AmongDemons.appUrl(nextPath));
         syncSortLinks();
         await loadRank();
       });
@@ -120,6 +121,9 @@
   }
 
   function getInitialSort() {
+    const querySort = new URLSearchParams(window.location.search).get('sort');
+    if (pathSorts.has(querySort)) return querySort;
+
     const normalizedPath = window.location.pathname.replace(/\/$/, '');
     const maybeSort = normalizedPath.slice(normalizedPath.lastIndexOf('/') + 1);
 

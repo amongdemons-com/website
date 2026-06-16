@@ -76,7 +76,7 @@
   function bindActions() {
     elements.logoutBtn.addEventListener('click', () => {
       window.AmongDemons.clearSession();
-      window.location.href = '/login';
+      window.location.href = window.AmongDemons.appUrl('/login');
     });
 
     elements.filtersToggleBtn.addEventListener('click', () => {

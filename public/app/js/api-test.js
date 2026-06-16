@@ -3,6 +3,7 @@
 
   const STORAGE_KEY = 'amongdemons-api-test-state';
   const renderIcon = window.AmongDemons?.ui?.renderIcon || (() => '');
+  const apiUrl = window.AmongDemons?.apiUrl || ((value) => value);
   const state = loadState();
   const elements = {};
 
@@ -255,7 +256,8 @@
     result.textContent = 'Waiting for response...';
 
     try {
-      const response = await fetch(pathInput.value.trim(), options);
+      const requestPath = pathInput.value.trim();
+      const response = await fetch(apiUrl(requestPath), options);
       const text = await response.text();
       const payload = parsePayload(text);
       const elapsed = Math.round(performance.now() - started);
@@ -272,7 +274,7 @@
 
       status.textContent = `${response.status} in ${elapsed}ms`;
       result.textContent = formatJson(output);
-      writeLog(endpoint, pathInput.value.trim(), output);
+      writeLog(endpoint, requestPath, output);
     } catch (error) {
       status.textContent = 'Failed';
       result.textContent = error.stack || error.message;

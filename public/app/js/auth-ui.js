@@ -2,6 +2,8 @@
   'use strict';
 
   const SESSION_KEY = 'amongdemons-session';
+  const api = window.AmongDemons.api;
+  const apiUrl = window.AmongDemons.apiUrl || ((value) => value);
   const mode = document.body.dataset.authMode;
   const form = document.getElementById('authForm');
   const message = document.getElementById('authMessage');
@@ -32,25 +34,16 @@
         if (email) body.email = email;
       }
 
-      const response = await fetch(`/api/auth/${mode}`, {
+      const payload = await api(`/api/auth/${mode}`, {
         method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
+        body
       });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || 'Could not continue.');
-      }
 
       localStorage.setItem(SESSION_KEY, JSON.stringify({
         token: payload.token,
         player: payload.player
       }));
-      window.location.href = '/camp';
+      window.location.href = window.AmongDemons.appUrl('/camp');
     } catch (error) {
       setMessage(error.message, 'danger');
     } finally {
@@ -61,7 +54,7 @@
   async function initOAuthButtons() {
     oauthButtons.forEach((button) => {
       const provider = button.dataset.oauthProvider;
-      button.href = `/api/auth/oauth/${encodeURIComponent(provider)}?mode=${encodeURIComponent(mode || 'login')}`;
+      button.href = apiUrl(`/api/auth/oauth/${encodeURIComponent(provider)}?mode=${encodeURIComponent(mode || 'login')}`);
       button.addEventListener('click', (event) => {
         if (button.dataset.oauthEnabled === 'false') {
           event.preventDefault();
@@ -73,11 +66,7 @@
     if (!oauthButtons.length) return;
 
     try {
-      const response = await fetch('/api/auth/oauth/providers', {
-        headers: { Accept: 'application/json' }
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Could not load providers.');
+      const payload = await api('/api/auth/oauth/providers');
       applyProviderStatus(payload.providers || []);
     } catch (error) {
       oauthButtons.forEach((button) => {

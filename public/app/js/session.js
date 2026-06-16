@@ -24,6 +24,7 @@
   }
 
   async function api(path, options = {}) {
+    const toApiUrl = window.AmongDemons?.apiUrl || ((value) => value);
     const headers = {
       Accept: 'application/json',
       ...(options.headers || {})
@@ -38,7 +39,7 @@
       headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(path, {
+    const response = await fetch(toApiUrl(path), {
       ...options,
       headers,
       body: options.body && typeof options.body !== 'string'

@@ -52,10 +52,10 @@ function cacheElements() {
 }
 
 function bindActions() {
-  bindClick(elements.logoutBtn, () => {
-    window.AmongDemons.clearSession();
-    window.location.href = '/login';
-  });
+    bindClick(elements.logoutBtn, () => {
+      window.AmongDemons.clearSession();
+      window.location.href = window.AmongDemons.appUrl('/login');
+    });
 
   bindClick(elements.cashoutConfirmBtn, cashOutDungeon);
   bindClick(elements.confirmShortTeamBtn, continueShortTeam);

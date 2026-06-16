@@ -29,11 +29,11 @@ const showBattleResultOverlay = (...args) => dungeonActions.showBattleResultOver
 const showCombatPanel = (...args) => dungeonActions.showCombatPanel(...args);
 const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelectionFromRun(...args);
 
-async function init() {
-  if (!window.AmongDemons.getToken()) {
-    window.location.href = '/login';
-    return;
-  }
+  async function init() {
+    if (!window.AmongDemons.getToken()) {
+      window.location.href = window.AmongDemons.appUrl('/login');
+      return;
+    }
 
   cacheElements();
   bindActions();
