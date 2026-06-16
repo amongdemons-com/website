@@ -15,6 +15,12 @@ function createToken() {
   return crypto.randomBytes(36).toString('base64url');
 }
 
+async function createSession(playerId) {
+  const token = createToken();
+  await db.query('INSERT INTO player_sessions (token, player_id) VALUES (?, ?)', [token, playerId]);
+  return token;
+}
+
 function cleanPlayer(row) {
   return {
     id: row.id,
@@ -56,6 +62,7 @@ async function requireAuth(req, res, next) {
 
 module.exports = {
   cleanPlayer,
+  createSession,
   createToken,
   hashPassword,
   requireAuth,

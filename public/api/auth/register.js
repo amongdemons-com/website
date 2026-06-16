@@ -1,7 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const db = require('../lib/db');
-const { cleanPlayer, createToken, hashPassword } = require('../lib/auth');
+const { cleanPlayer, createSession, hashPassword } = require('../lib/auth');
 
 const router = express.Router();
 
@@ -22,8 +22,7 @@ router.post('/auth/register', async (req, res) => {
       'INSERT INTO players (id, username, email, password_hash, password_salt, unlocks) VALUES (?, ?, ?, ?, ?, ?)',
       [playerId, username, email, hash, salt, JSON.stringify([])]
     );
-    const token = createToken();
-    await db.query('INSERT INTO player_sessions (token, player_id) VALUES (?, ?)', [token, playerId]);
+    const token = await createSession(playerId);
 
     const [rows] = await db.query('SELECT * FROM players WHERE id = ? LIMIT 1', [playerId]);
     res.status(201).json({ token, player: cleanPlayer(rows[0]) });

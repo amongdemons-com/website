@@ -103,10 +103,66 @@ async function initializeSchema() {
   `);
 
   await addColumnIfMissing('players', 'password_salt', '`password_salt` VARCHAR(64) NOT NULL DEFAULT ""');
+  await addColumnIfMissing('players', 'email', '`email` VARCHAR(255) NULL');
   await addColumnIfMissing('players', 'unlocks', '`unlocks` LONGTEXT NULL');
   await addColumnIfMissing('players', 'highest_floor', '`highest_floor` INT UNSIGNED NOT NULL DEFAULT 0');
   await normalizeUtf8Column('players', 'id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('players', 'email', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
+  await addIndexIfMissing('players', 'email', 'UNIQUE INDEX email (email)');
   await addIndexIfMissing('players', 'idx_players_rank_floor', 'INDEX idx_players_rank_floor (highest_floor, level, xp, souls)');
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_oauth_accounts (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      player_id VARCHAR(255) NOT NULL,
+      provider VARCHAR(32) NOT NULL,
+      provider_user_id VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NULL,
+      display_name VARCHAR(255) NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      UNIQUE INDEX uniq_player_oauth_provider_user (provider, provider_user_id),
+      INDEX idx_player_oauth_player_id (player_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await addColumnIfMissing('player_oauth_accounts', 'email', '`email` VARCHAR(255) NULL');
+  await addColumnIfMissing('player_oauth_accounts', 'display_name', '`display_name` VARCHAR(255) NULL');
+  await addColumnIfMissing('player_oauth_accounts', 'created_at', '`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await addColumnIfMissing('player_oauth_accounts', 'updated_at', '`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+  await normalizeUtf8Column('player_oauth_accounts', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_oauth_accounts', 'provider', 'VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_oauth_accounts', 'provider_user_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_oauth_accounts', 'email', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
+  await normalizeUtf8Column('player_oauth_accounts', 'display_name', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
+  await addIndexIfMissing(
+    'player_oauth_accounts',
+    'uniq_player_oauth_provider_user',
+    'UNIQUE INDEX uniq_player_oauth_provider_user (provider, provider_user_id)'
+  );
+  await addIndexIfMissing('player_oauth_accounts', 'idx_player_oauth_player_id', 'INDEX idx_player_oauth_player_id (player_id)');
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS oauth_states (
+      state VARCHAR(96) NOT NULL PRIMARY KEY,
+      provider VARCHAR(32) NOT NULL,
+      mode VARCHAR(16) NOT NULL,
+      redirect_path VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP NOT NULL,
+      used_at TIMESTAMP NULL,
+      INDEX idx_oauth_states_expires_at (expires_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await addColumnIfMissing('oauth_states', 'mode', '`mode` VARCHAR(16) NOT NULL DEFAULT "login"');
+  await addColumnIfMissing('oauth_states', 'redirect_path', '`redirect_path` VARCHAR(255) NOT NULL DEFAULT "/camp"');
+  await addColumnIfMissing('oauth_states', 'created_at', '`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await addColumnIfMissing('oauth_states', 'expires_at', '`expires_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await addColumnIfMissing('oauth_states', 'used_at', '`used_at` TIMESTAMP NULL');
+  await normalizeUtf8Column('oauth_states', 'state', 'VARCHAR(96) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('oauth_states', 'provider', 'VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('oauth_states', 'mode', 'VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('oauth_states', 'redirect_path', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addIndexIfMissing('oauth_states', 'idx_oauth_states_expires_at', 'INDEX idx_oauth_states_expires_at (expires_at)');
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_sessions (

@@ -1,7 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const db = require('../lib/db');
-const { cleanPlayer, createToken, hashPassword, verifyPassword } = require('../lib/auth');
+const { cleanPlayer, createSession, hashPassword, verifyPassword } = require('../lib/auth');
 
 const router = express.Router();
 
@@ -32,8 +32,7 @@ router.post('/auth/login', async (req, res) => {
     return res.status(401).json({ error: 'Invalid username or password.' });
   }
 
-  const token = createToken();
-  await db.query('INSERT INTO player_sessions (token, player_id) VALUES (?, ?)', [token, player.id]);
+  const token = await createSession(player.id);
   res.json({ token, player: cleanPlayer(player) });
 });
 

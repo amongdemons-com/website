@@ -70,6 +70,25 @@ DB_PASSWORD=your_password
 PORT=3000
 ```
 
+Optional OAuth providers can be enabled by adding their credentials. The callback URLs configured with each provider should be:
+
+```txt
+https://your-domain.com/api/auth/oauth/google/callback
+https://your-domain.com/api/auth/oauth/discord/callback
+```
+
+For local development, replace the domain with `http://localhost:3000`. Set `OAUTH_REDIRECT_ORIGIN` when the public callback origin differs from the request host.
+
+```txt
+OAUTH_REDIRECT_ORIGIN=https://amongdemons.com
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+```
+
 Start the server:
 
 ```bash
@@ -124,6 +143,8 @@ x-player-token: <token>
 
 `POST /api/auth/register` creates a new account. `POST /api/auth/login` logs in an existing account; for prototype convenience, it also creates an account when the username does not exist. Passwords use PBKDF2-SHA512 with per-user salts. Session tokens are stored in `player_sessions`.
 
+Google and Discord sign-in use `/api/auth/oauth/:provider`. Provider identities are stored in `player_oauth_accounts`. If a provider returns a verified email matching an existing password account, the provider is linked to that account; otherwise a new player is created with a generated username.
+
 The frontend stores the token and cleaned player object in `localStorage` under:
 
 ```txt
@@ -140,6 +161,9 @@ All API routes are mounted under `/api`.
 | --- | --- | --- |
 | `POST` | `/auth/register` | Create a player account and session |
 | `POST` | `/auth/login` | Log in, or create a prototype account if missing |
+| `GET` | `/auth/oauth/providers` | Return OAuth provider availability for the login/register UI |
+| `GET` | `/auth/oauth/:provider` | Start Google or Discord OAuth sign-in |
+| `GET/POST` | `/auth/oauth/:provider/callback` | Complete OAuth sign-in and create a player session |
 | `GET` | `/auth/me` | Return the authenticated player |
 
 ### Account And Collection

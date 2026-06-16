@@ -49,40 +49,50 @@
       </div>
     </nav>
 
-    <main class="container my-4 auth-shell">
-      <section class="row justify-content-center align-items-center g-4">
-        <div class="col-12 col-lg-5">
-          <img class="img-fluid auth-mark" src="/app/images/amongdemons_logo_white_text_bottom_1000x1000.png" alt="Among Demons logo" width="1000" height="1000" loading="eager" decoding="async">
-        </div>
-        <div class="col-12 col-lg-5">
-          <div class="card">
-            <div class="card-header">
-              <h1 class="h4 mb-0">Register</h1>
-            </div>
-            <div class="card-body">
+    <main class="container auth-shell">
+      <section class="auth-layout">
+        <div class="card auth-card">
+          <div class="card-body auth-card-body">
+              <h1 class="auth-title">Register</h1>
               <div class="alert d-none" id="authMessage" role="alert"></div>
-              <form id="authForm">
-                <div class="mb-3">
+              <div class="auth-provider-grid" aria-label="Social registration options">
+                <a class="btn oauth-btn oauth-google" href="/api/auth/oauth/google?mode=register" data-oauth-provider="google" aria-label="Sign up with Google" title="Sign up with Google">
+                  <img class="oauth-brand-icon" src="/app/images/assets/oauth-google.svg" alt="" width="20" height="20" aria-hidden="true">
+                  <span class="visually-hidden">Sign up with Google</span>
+                </a>
+                <a class="btn oauth-btn oauth-discord" href="/api/auth/oauth/discord?mode=register" data-oauth-provider="discord" aria-label="Sign up with Discord" title="Sign up with Discord">
+                  <img class="oauth-brand-icon" src="/app/images/assets/oauth-discord.svg" alt="" width="20" height="20" aria-hidden="true">
+                  <span class="visually-hidden">Sign up with Discord</span>
+                </a>
+              </div>
+              <div class="auth-divider"><span>or create with password</span></div>
+              <form id="authForm" class="auth-form">
+                <div class="auth-field">
                   <label class="form-label" for="username">Username</label>
                   <input class="form-control" id="username" name="username" autocomplete="username" minlength="3" required>
                 </div>
-                <div class="mb-3">
+                <div class="auth-field">
                   <label class="form-label" for="email">Email</label>
                   <input class="form-control" id="email" name="email" type="email" autocomplete="email">
                 </div>
-                <div class="mb-3">
+                <div class="auth-field">
                   <label class="form-label" for="password">Password</label>
-                  <input class="form-control" id="password" name="password" type="password" autocomplete="new-password" minlength="6" required>
+                  <div class="auth-password-field">
+                    <input class="form-control" id="password" name="password" type="password" autocomplete="new-password" minlength="6" required>
+                    <button class="auth-password-toggle" type="button" data-password-toggle="password" aria-label="Show password" aria-controls="password">
+                      <span class="password-toggle-icon password-toggle-show"><i data-lucide="eye"></i></span>
+                      <span class="password-toggle-icon password-toggle-hide"><i data-lucide="eye-off"></i></span>
+                    </button>
+                  </div>
                 </div>
-                <button class="btn btn-primary w-100" type="submit">
+                <button class="btn btn-primary auth-submit" type="submit">
                   <i data-lucide="user-plus"></i>
                   Create Hunter
                 </button>
               </form>
-            </div>
-            <div class="card-footer text-center">
+              <div class="auth-switch-link">
               <a href="/login">I already have a hunter</a>
-            </div>
+              </div>
           </div>
         </div>
       </section>

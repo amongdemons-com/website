@@ -392,12 +392,247 @@ body.dungeon-page .navbar {
 }
 
 .auth-shell {
+    display: grid;
+    place-items: center;
     min-height: calc(100vh - 190px);
+    padding-top: 2.25rem;
+    padding-bottom: 2.25rem;
+}
+
+.auth-layout {
+    width: min(100%, 28rem);
+}
+
+.auth-card {
+    border-color: rgba(111,214,189,0.24);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.06), transparent 34%),
+        rgba(7,16,19,0.9);
+    box-shadow: 0 22px 54px rgba(0,0,0,0.34);
+}
+
+.auth-card-body {
+    display: grid;
+    gap: 1.1rem;
+    padding: clamp(1.25rem, 4vw, 1.9rem);
+}
+
+.auth-title {
+    margin: 0;
+    color: #f2f7f5;
+    font-size: clamp(2rem, 6vw, 2.7rem);
+    font-weight: 900;
+    line-height: 1;
+    text-align: center;
 }
 
 .auth-mark {
     max-height: 420px;
     object-fit: contain;
+}
+
+.auth-complete-mark {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+}
+
+.auth-provider-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.oauth-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 3.2rem;
+    border-radius: 6px;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+    transition: transform 140ms ease, border-color 140ms ease, opacity 140ms ease;
+}
+
+.oauth-brand-icon {
+    display: block;
+    width: 1.32rem;
+    height: 1.32rem;
+    flex: 0 0 auto;
+    object-fit: contain;
+}
+
+.oauth-btn:hover,
+.oauth-btn:focus-visible {
+    transform: translateY(-1px);
+}
+
+.oauth-btn.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.52;
+    transform: none;
+}
+
+.oauth-google {
+    border: 1px solid rgba(255,255,255,0.35);
+    background: #f8f9fa;
+    color: #1f1f1f;
+}
+
+.oauth-google:hover,
+.oauth-google:focus-visible {
+    border-color: #8ab4f8;
+    background: #fff;
+    color: #111;
+}
+
+.oauth-discord {
+    border: 1px solid rgba(125,142,255,0.86);
+    background: #5865f2;
+    color: #fff;
+}
+
+.oauth-discord:hover,
+.oauth-discord:focus-visible {
+    border-color: #aeb7ff;
+    background: #6875ff;
+    color: #fff;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.25rem 0 0;
+    color: rgba(232,199,106,0.88);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: "";
+    flex: 1 1 0;
+    border-top: 1px solid rgba(161,212,201,0.18);
+}
+
+.auth-divider span {
+    flex: 0 0 auto;
+}
+
+.auth-form {
+    display: grid;
+    gap: 0.95rem;
+}
+
+.auth-field {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.auth-field .form-label {
+    margin: 0;
+    color: rgba(220,232,229,0.84);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.auth-card .form-control {
+    min-height: 3rem;
+    border-color: rgba(161,212,201,0.24);
+    border-radius: 8px;
+    background-color: rgba(5,12,15,0.76);
+    font-size: 0.95rem;
+}
+
+.auth-password-field {
+    position: relative;
+}
+
+.auth-password-field .form-control {
+    padding-right: 3.2rem;
+}
+
+.auth-password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.44rem;
+    display: grid;
+    place-items: center;
+    width: 2.28rem;
+    height: 2.28rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(220,232,229,0.66);
+    line-height: 1;
+    transform: translateY(-50%);
+}
+
+.auth-password-toggle:hover,
+.auth-password-toggle:focus-visible {
+    background: rgba(255,255,255,0.08);
+    color: #f2f7f5;
+}
+
+.password-toggle-icon {
+    display: grid;
+    place-items: center;
+}
+
+.password-toggle-icon .ad-icon {
+    width: 1.12rem;
+    height: 1.12rem;
+    margin-right: 0;
+}
+
+.password-toggle-hide,
+.auth-password-toggle.is-visible .password-toggle-show {
+    display: none;
+}
+
+.auth-password-toggle.is-visible .password-toggle-hide {
+    display: grid;
+}
+
+.auth-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 3rem;
+    border-radius: 8px;
+    font-weight: 800;
+}
+
+.auth-switch-link {
+    text-align: center;
+}
+
+.auth-switch-link a {
+    color: rgba(111,214,189,0.94);
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.auth-switch-link a:hover,
+.auth-switch-link a:focus-visible {
+    color: #f5d56d;
+    text-decoration: underline;
+}
+
+@media (max-width: 575.98px) {
+    .auth-provider-grid {
+        gap: 0.65rem;
+    }
+
+    .oauth-btn {
+        min-height: 3rem;
+    }
 }
 
 .stat-box {
