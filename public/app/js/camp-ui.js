@@ -23,13 +23,18 @@
     }
 
     cacheElements();
+    bindDisabledLinks();
     await loadCamp();
   }
 
   function cacheElements() {
     [
       'navPlayerName',
+      'navPlayerLevel',
       'campPlayerName',
+      'playerHudName',
+      'playerTitle',
+      'playerSubtitle',
       'welcomeText',
       'appMessage',
       'levelStat',
@@ -47,9 +52,19 @@
       'runEnemyLabel',
       'runEarned',
       'runEarnedLabel',
-      'objectiveList'
+      'objectiveList',
+      'primaryDungeonMeta',
+      'dungeonActionEyebrow'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
+    });
+  }
+
+  function bindDisabledLinks() {
+    document.querySelectorAll('[data-disabled-link]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+      });
     });
   }
 
@@ -85,21 +100,36 @@
   function renderPlayer() {
     const player = state.player || {};
     const progression = state.progression || {};
+    const username = player.username || 'Camp';
     const souls = progression.souls ?? player.souls ?? '-';
+    const level = Number(progression.level ?? player.level ?? 1) || 1;
+    const bestFloor = Number(progression.highestFloor ?? player.highestFloor ?? 0) || 0;
 
-    elements.navPlayerName.textContent = player.username || '';
-    elements.campPlayerName.textContent = player.username || 'Camp';
-    elements.welcomeText.textContent = player.username
-      ? 'Rest, review your spoils, then choose how deep to go.'
-      : 'Rest, then choose how deep to go.';
+    setText(elements.navPlayerName, player.username || '');
+    setText(elements.navPlayerLevel, `Level ${formatNumber(level)}`);
+    setText(elements.campPlayerName, username);
+    setText(elements.playerHudName, username);
+    setText(elements.welcomeText, player.username
+      ? 'Rest, plan, and push deeper.'
+      : 'Rest, plan, and push deeper.');
+    setText(elements.playerTitle, getPlayerTitle(level, bestFloor));
+
     renderLevelProgress(progression, player);
-    elements.floorStat.textContent = formatNumber(progression.highestFloor ?? player.highestFloor ?? 0);
+    setText(elements.floorStat, formatNumber(bestFloor));
     updateNavAccount(player, { souls });
-    elements.soulsStat.innerHTML = renderSoulAmount(formatNumber(souls), {
+    setHtml(elements.soulsStat, renderSoulAmount(formatNumber(souls), {
       showLabel: false,
       className: 'stat-soul-amount',
       ariaLabel: `${formatNumber(souls)} Souls`
-    });
+    }));
+  }
+
+  function getPlayerTitle(level, bestFloor) {
+    if (bestFloor >= 30) return 'Deepgate Warden';
+    if (level >= 20) return 'Abyss Marshal';
+    if (bestFloor >= 12) return 'Gatebreaker';
+    if (level >= 8) return 'Demonbound Hunter';
+    return 'Ashen Hunter';
   }
 
   function renderLevelProgress(progression, player) {
@@ -108,10 +138,10 @@
     const progress = getLevelProgress(progression, level, xp);
     const percent = Math.round(progress.percent * 100);
 
-    elements.levelStat.textContent = formatNumber(level);
-    elements.xpStat.textContent = progress.xpToNextLevel > 0
+    setText(elements.levelStat, formatNumber(level));
+    setText(elements.xpStat, progress.xpToNextLevel > 0
       ? `${formatNumber(progress.xpToNextLevel)} XP to level ${formatNumber(level + 1)}`
-      : `${formatNumber(xp)} total XP`;
+      : `${formatNumber(xp)} total XP`);
 
     if (elements.xpProgressBar) {
       elements.xpProgressBar.style.width = `${percent}%`;
@@ -158,17 +188,20 @@
     const currentFloor = Number(run?.currentFloor ?? 0);
 
     if (!run) {
-      elements.runActionLabel.textContent = 'Start Dungeon';
-      elements.runStatus.textContent = 'Ready';
-      elements.runStatus.className = 'play-status-chip is-ready';
-      elements.runFloor.textContent = '0';
-      elements.runSummary.textContent = 'No active run. Draft a team and start climbing.';
-      elements.runTeam.textContent = '-';
-      elements.runTeamLabel.textContent = 'Team';
-      elements.runEnemy.textContent = '-';
-      elements.runEnemyLabel.textContent = 'Enemies';
-      elements.runEarned.textContent = '0';
-      elements.runEarnedLabel.textContent = 'Extract Now';
+      setText(elements.runActionLabel, 'Dungeon');
+      setText(elements.dungeonActionEyebrow, 'Enter');
+      setText(elements.primaryDungeonMeta, 'Descend into the depths and face the unknown.');
+      setText(elements.playerSubtitle, 'No active run. Camp reserves are standing by.');
+      setText(elements.runStatus, 'Ready');
+      setClassName(elements.runStatus, 'play-status-chip is-ready');
+      setText(elements.runFloor, '0');
+      setText(elements.runSummary, 'No active run. Draft a team and start climbing.');
+      setText(elements.runTeam, '-');
+      setText(elements.runTeamLabel, 'Team');
+      setText(elements.runEnemy, '-');
+      setText(elements.runEnemyLabel, 'Enemies');
+      setText(elements.runEarned, '0 Souls');
+      setText(elements.runEarnedLabel, 'Extract');
       return;
     }
 
@@ -178,20 +211,26 @@
     const teamLimit = getTeamLimit(run);
     const enemyCount = getEnemyCount(run);
     const payout = getExtractPayout(run);
+    const runSummary = getRunSummary(run);
 
-    elements.runActionLabel.textContent = isDefeated ? 'Resolve Run' : 'Continue Run';
-    elements.runStatus.textContent = isDefeated ? 'Defeated' : (isRecruiting ? 'Recruit' : 'Active');
-    elements.runStatus.className = `play-status-chip ${isDefeated ? 'is-danger' : (isRecruiting ? 'is-choice' : 'is-active')}`;
-    elements.runFloor.textContent = formatNumber(currentFloor);
-    elements.runSummary.textContent = getRunSummary(run);
-    elements.runTeam.textContent = Number.isFinite(teamLimit)
+    setText(elements.runActionLabel, isDefeated ? 'Resolve Run' : 'Dungeon');
+    setText(elements.dungeonActionEyebrow, isDefeated ? 'Run Defeated' : (isRecruiting ? 'Victory Pause' : 'Enter'));
+    setText(elements.primaryDungeonMeta, runSummary);
+    setText(elements.playerSubtitle, isDefeated
+      ? 'The last breach collapsed. Resolve it before the next climb.'
+      : `Current run holding at floor ${formatNumber(currentFloor)}.`);
+    setText(elements.runStatus, isDefeated ? 'Defeated' : (isRecruiting ? 'Recruit' : 'Active'));
+    setClassName(elements.runStatus, `play-status-chip ${isDefeated ? 'is-danger' : (isRecruiting ? 'is-choice' : 'is-active')}`);
+    setText(elements.runFloor, formatNumber(currentFloor));
+    setText(elements.runSummary, runSummary);
+    setText(elements.runTeam, Number.isFinite(teamLimit)
       ? `${formatNumber(teamCount)}/${formatNumber(teamLimit)}`
-      : formatNumber(teamCount);
-    elements.runTeamLabel.textContent = Number.isFinite(teamLimit) ? 'Team Slots' : 'Team';
-    elements.runEnemy.textContent = formatNumber(enemyCount);
-    elements.runEnemyLabel.textContent = isRecruiting ? 'Next Enemies' : 'Enemies';
-    elements.runEarned.textContent = `${formatNumber(payout.xp)} XP / ${formatNumber(payout.souls)} Souls`;
-    elements.runEarnedLabel.textContent = isRecruiting && !isDefeated ? 'Extract Now' : 'Banked';
+      : formatNumber(teamCount));
+    setText(elements.runTeamLabel, Number.isFinite(teamLimit) ? 'Team Slots' : 'Team');
+    setText(elements.runEnemy, formatNumber(enemyCount));
+    setText(elements.runEnemyLabel, isRecruiting ? 'Next Enemies' : 'Enemies');
+    setText(elements.runEarned, `${formatNumber(payout.xp)} XP / ${formatNumber(payout.souls)} Souls`);
+    setText(elements.runEarnedLabel, isRecruiting && !isDefeated ? 'Extract Now' : 'Banked');
   }
 
   function renderObjectives() {
@@ -200,47 +239,89 @@
     const payout = run ? getExtractPayout(run) : { xp: 0, souls: 0 };
     const bestFloor = Number(progression.highestFloor) || 0;
     const currentFloor = Number(run?.currentFloor ?? 0);
+    const reachedFloor = Math.max(bestFloor, currentFloor);
+    const fightProgress = clamp(currentFloor || 0, 0, 3);
+    const extractProgress = payout.souls > 0 ? 1 : 0;
+    const floorTarget = Math.max(10, reachedFloor + 1);
     const objectives = [
-      run
-        ? {
-            icon: run.awaitingRecruit ? 'user-plus' : 'swords',
-            title: run.awaitingRecruit ? 'Choose the next recruit' : 'Clear the next fight',
-            meta: run.awaitingRecruit
-              ? 'Recruit, skip, or extract before pushing deeper.'
-              : `Next target: floor ${formatNumber(currentFloor + 1)}.`
-          }
-        : {
-            icon: 'play',
-            title: 'Start a dungeon run',
-            meta: 'Draft starters, set formation, and enter floor 1.'
-          },
       {
-        icon: 'flag',
-        title: 'Set a floor record',
-        meta: bestFloor > 0 ? `Current best: floor ${formatNumber(bestFloor)}.` : 'Your first clear sets the record.'
+        icon: 'swords',
+        title: 'Win 3 dungeon fights',
+        meta: run?.awaitingRecruit ? 'Victory pause active.' : 'Clear battles before extracting.',
+        current: fightProgress,
+        target: 3,
+        unit: 'plain',
+        reward: { type: 'souls', value: 15 },
+        href: '/dungeon'
       },
       {
-        icon: 'coins',
-        title: run && (payout.xp || payout.souls) ? 'Extract current rewards' : 'Bank rewards between fights',
-        meta: run && (payout.xp || payout.souls)
-          ? `${formatNumber(payout.xp)} XP and ${formatNumber(payout.souls)} Souls can be claimed now.`
-          : 'Win fights, then extract before defeat.'
+        icon: 'skull',
+        title: 'Extract 2 demons',
+        meta: payout.souls > 0 ? 'A cache is ready at extraction.' : 'Win fights to reveal extraction value.',
+        current: extractProgress,
+        target: 2,
+        unit: 'plain',
+        reward: { type: 'xp', value: 20 },
+        href: '/dungeon'
+      },
+      {
+        icon: 'flag',
+        title: `Reach floor ${formatNumber(floorTarget)}`,
+        meta: bestFloor > 0 ? `Best clear: floor ${formatNumber(bestFloor)}.` : 'Your first clear sets the record.',
+        current: reachedFloor,
+        target: floorTarget,
+        unit: 'plain',
+        reward: { type: 'souls', value: 25 },
+        href: '/dungeon'
       }
     ];
 
-    elements.objectiveList.innerHTML = objectives.map(renderObjective).join('');
+    setHtml(elements.objectiveList, objectives.map(renderObjective).join(''));
   }
 
   function renderObjective(objective) {
+    const target = Math.max(1, Number(objective.target) || 1);
+    const current = clamp(Number(objective.current) || 0, 0, target);
+    const percent = Math.round((current / target) * 100);
+
     return `
-      <a class="play-objective" href="/dungeon">
+      <a class="play-objective" href="${escapeAttribute(objective.href || '/dungeon')}">
         <span class="play-objective-icon">${renderIcon(objective.icon)}</span>
-        <span>
+        <span class="play-objective-body">
           <strong>${escapeHtml(objective.title)}</strong>
           <small>${escapeHtml(objective.meta)}</small>
+          <span class="quest-progress" aria-hidden="true">
+            <span style="width: ${percent}%"></span>
+          </span>
+          <span class="quest-progress-meta">
+            <span>${escapeHtml(formatQuestValue(current, objective.unit))} / ${escapeHtml(formatQuestValue(target, objective.unit))}</span>
+          </span>
+        </span>
+        <span class="quest-reward">
+          <small>Reward</small>
+          <strong>${renderQuestReward(objective.reward)}</strong>
         </span>
       </a>
     `;
+  }
+
+  function formatQuestValue(value, unit) {
+    const formatted = formatNumber(value);
+    if (unit === 'floor') return `F${formatted}`;
+    if (unit === 'souls') return `${formatted} Souls`;
+    return formatted;
+  }
+
+  function renderQuestReward(reward = {}) {
+    if (reward.type === 'souls') {
+      return `${renderIcon('soul')} ${escapeHtml(formatNumber(reward.value))}`;
+    }
+
+    if (reward.type === 'xp') {
+      return `<span class="quest-xp-mark">XP</span> ${escapeHtml(formatNumber(reward.value))}`;
+    }
+
+    return escapeHtml(reward.value || '-');
   }
 
   function getRunSummary(run) {
@@ -324,10 +405,6 @@
     return Number.isFinite(souls) && souls > 0 ? souls : 1;
   }
 
-  function renderEmptyText(text) {
-    return `<p class="text-muted mb-0">${text}</p>`;
-  }
-
   function handleAuthError(error) {
     if (error.status === 401) {
       window.AmongDemons.clearSession();
@@ -343,6 +420,7 @@
   }
 
   function setMessage(text, type) {
+    if (!elements.appMessage) return;
     elements.appMessage.textContent = text;
     elements.appMessage.className = text ? `alert alert-${type}` : 'alert d-none';
   }
@@ -350,6 +428,18 @@
   function renderIcon(name) {
     const icon = window.AmongDemons?.ui?.renderIcon;
     return typeof icon === 'function' ? icon(name, { size: 17 }) : '';
+  }
+
+  function setText(element, value) {
+    if (element) element.textContent = value;
+  }
+
+  function setHtml(element, value) {
+    if (element) element.innerHTML = value;
+  }
+
+  function setClassName(element, value) {
+    if (element) element.className = value;
   }
 
   function formatNumber(value) {
@@ -367,6 +457,10 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value);
   }
 
   function onReady(callback) {
