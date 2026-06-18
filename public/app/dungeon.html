@@ -162,8 +162,8 @@
         <div class="modal-content cashout-modal-content">
           <div class="modal-header">
             <div>
-              <h2 class="modal-title h4" id="cashoutModalTitle">Extract Rewards</h2>
-              <p class="text-muted mb-0" id="cashoutModalSubtitle">Choose what leaves the dungeon with you.</p>
+              <h2 class="modal-title h4" id="cashoutModalTitle">Extract</h2>
+              <p class="text-muted mb-0" id="cashoutModalSubtitle">Choose your reward</p>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -179,18 +179,18 @@
     </div>
 
     <div class="modal fade dungeon-modal" id="shortTeamModal" tabindex="-1" aria-labelledby="shortTeamModalTitle" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered short-team-dialog">
         <div class="modal-content">
           <div class="modal-header">
             <div>
               <h2 class="modal-title h4" id="shortTeamModalTitle">Recruit First?</h2>
-              <p class="text-muted mb-0" id="shortTeamModalSubtitle">You have an open team slot.</p>
+              <p class="text-muted mb-0" id="shortTeamModalSubtitle">Open team slot available.</p>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body short-team-help">
-            <p class="short-team-warning mb-0">Continuing now skips this recruit.</p>
-            <p class="short-team-copy mb-0">Drag a defeated demon into your team, or skip it.</p>
+            <img class="short-team-help-image" src="/app/images/assets/recruit_drag_tutorial_image.jpg" alt="Drag a defeated demon from hand into an open team slot" width="787" height="604" loading="lazy" decoding="async">
+            <p class="short-team-copy mb-0">Drag a demon into the open slot, or skip.</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-warning" id="confirmShortTeamBtn">Skip</button>

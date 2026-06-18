@@ -218,18 +218,19 @@
 
   function renderDetailAction(action, index) {
     const variant = action.variant || 'outline-light';
-    const icon = action.icon ? renderIcon(action.icon) : '';
+    const icon = action.icon ? renderIcon(action.icon, action.iconOptions || {}) : '';
+    const className = ['btn', `btn-${variant}`, action.className || ''].filter(Boolean).join(' ');
     const attributes = action.href
       ? {
         href: action.href,
-        class: `btn btn-${variant}`,
+        class: className,
         ...(action.target ? { target: action.target } : {}),
         ...(action.rel ? { rel: action.rel } : {}),
         ...(action.title ? { title: action.title } : {})
       }
       : {
         type: 'button',
-        class: `btn btn-${variant}`,
+        class: className,
         'data-demon-detail-action': index,
         ...(action.dismiss ? { 'data-bs-dismiss': 'modal' } : {}),
         ...(action.disabled ? { disabled: true } : {}),

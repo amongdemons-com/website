@@ -323,7 +323,6 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/app/js/rankings-ui.js` | Leaderboard UI |
 | `public/app/js/dungeon.js` and `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, extraction, Demonic Pacts, active pact tooltips, enemy Terror display, and responsive hand/reward controls |
 | `public/app/js/demon-cards.js` | Shared demon card rendering |
-| `public/app/js/api-test.js` | Manual API test page helper |
 
 ## Backend Modules
 

@@ -23,7 +23,6 @@
     elements.message = document.getElementById('rankMessage');
     elements.sortLinks = document.querySelectorAll('.rank-sort-link');
     elements.statPlayers = document.querySelector('[data-rank-stat="players"]');
-    elements.statFloor = document.querySelector('[data-rank-stat="floor"]');
     elements.statSouls = document.querySelector('[data-rank-stat="souls"]');
   }
 
@@ -112,11 +111,9 @@
   }
 
   function updateStats(players) {
-    const highestFloor = players.reduce((max, player) => Math.max(max, Number(player.highestFloor) || 0), 0);
     const souls = players.reduce((sum, player) => sum + (Number(player.souls) || 0), 0);
 
     setStatText(elements.statPlayers, players.length, { compact: true, label: 'Hunters' });
-    setText(elements.statFloor, formatNumber(highestFloor));
     setStatText(elements.statSouls, souls, { compact: true, label: 'Souls held' });
   }
 
@@ -140,10 +137,6 @@
     if (!iconName || typeof renderIcon !== 'function') return '';
 
     return renderIcon(iconName, { size: 16, className: 'rank-icon' });
-  }
-
-  function setText(element, text) {
-    if (element) element.textContent = text;
   }
 
   function setStatText(element, value, options = {}) {

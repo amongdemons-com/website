@@ -103,8 +103,9 @@ function renderRun() {
   const hand = isHandStrategy ? getRecruitPreviewHand() : [];
   const handMode = isBattleHandPlaceholder ? 'battle' : 'recruit';
   const showPacts = Boolean(hasPendingPacts && !state.isPactRevealPending && !state.isBattleAnimating && !state.isResultAnimating);
+  const pactChoiceBlocksDrag = Boolean(hasPendingPacts || state.isPactRevealPending);
   const showHand = true;
-  const handInteractive = Boolean(isHandStrategy && !showPacts);
+  const handInteractive = Boolean(isHandStrategy && !pactChoiceBlocksDrag);
   const rewardInteractive = handInteractive;
   const canExtract = Boolean(!hasPendingPacts && !state.isResultAnimating && canExtractRun());
   const teamGridStyle = getCurrentFormationGridInlineStyle(elements.teamGrid);
@@ -121,7 +122,7 @@ function renderRun() {
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
   setElementHtml(elements.teamGrid, renderDemonCards(team, {
     side: 'player',
-    allowFormationDrag: run.status === 'active' && (!run.awaitingRecruit || (state.isRecruiting && !hasPendingPacts)),
+    allowFormationDrag: run.status === 'active' && !pactChoiceBlocksDrag && (!run.awaitingRecruit || state.isRecruiting),
     gridStyle: teamGridStyle
   }), { patchFormationGrid: true, renderKey: teamGridRenderKey });
   setElementHtml(elements.enemyGrid, renderDemonCards((isHandStrategy || (run.team || []).length) ? enemies : [], {
@@ -497,6 +498,7 @@ function renderFightLogActions() {
   const canViewLog = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
   const hasPendingPacts = hasPendingBuffChoices(state.run);
   const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
+  const continuePending = Boolean(state.isRecruitContinuePending);
 
   const actionsChanged = setElementHtml(elements.fightLogActions, `
     ${canShowSpeedControl ? `${renderBattlePlaybackControls()}${renderBattleSpeedControl()}` : ''}
@@ -511,9 +513,16 @@ function renderFightLogActions() {
       </button>
     ` : ''}
     ${canChooseRecruit ? `
-      <button class="btn btn-success btn-sm" id="fightLogContinueDungeonBtn" type="button">
-        ${renderButtonMeleeIcon()}
-        Continue
+      <button
+        class="btn btn-success btn-sm fight-log-continue-btn ${continuePending ? 'is-loading' : ''}"
+        id="fightLogContinueDungeonBtn"
+        type="button"
+        ${continuePending ? 'disabled aria-busy="true"' : ''}
+      >
+        ${continuePending
+          ? '<span class="dungeon-action-spinner" aria-hidden="true"></span>'
+          : renderButtonMeleeIcon()}
+        <span>${continuePending ? 'Preparing fight' : 'Continue'}</span>
       </button>
     ` : ''}
     ${canStart ? `
@@ -603,7 +612,7 @@ function renderBattleSpeedControl() {
 }
 
 function bindPathButtons() {
-  bindClick(document.getElementById('fightLogContinueDungeonBtn'), requestRecruitContinue);
+  bindClick(document.getElementById('fightLogContinueDungeonBtn'), (event) => requestRecruitContinue(event.currentTarget));
 }
 
 export {

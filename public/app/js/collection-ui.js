@@ -57,7 +57,6 @@
     [
       'navPlayerName',
       'collectionSummary',
-      'collectionMessage',
       'collectionCount',
       'collectionGrid',
       'typeFilter',
@@ -125,7 +124,6 @@
   }
 
   async function refreshCollection() {
-    setMessage('', 'danger');
     state.isAuthenticated = Boolean(window.AmongDemons.getToken());
     syncAuthenticatedUi();
 
@@ -365,6 +363,12 @@
     return [
       {
         label: canAfford ? 'Train' : `Need ${formatNumber(deficit)} Souls`,
+        icon: 'book-plus',
+        iconOptions: {
+          size: 19,
+          className: 'collection-train-action-icon'
+        },
+        className: 'collection-train-action',
         variant: canAfford ? 'success' : 'outline-danger',
         disabled: !canAfford || state.trainingDemonId === Number(demon.id),
         title: canAfford
@@ -481,7 +485,6 @@
     state.trainingDemonId = normalizedDemonId;
     clearTrainingFeedbackArtifacts();
     setTrainingButtonBusy(button, true);
-    setMessage('', 'danger');
 
     let revealPending = false;
     try {
@@ -497,8 +500,6 @@
     } catch (error) {
       if (error.status === 401) {
         await handleCollectionError(error);
-      } else {
-        setMessage(error.message || 'Training failed.', 'danger');
       }
     } finally {
       if (!revealPending) {
@@ -539,7 +540,10 @@
       button.dataset.originalHtml = button.innerHTML;
       button.disabled = true;
       button.classList.add('is-training');
-      button.innerHTML = 'Training...';
+      button.innerHTML = `
+        <span class="collection-train-loading-dot" aria-hidden="true"></span>
+        <span>Training...</span>
+      `;
       return;
     }
 
@@ -604,12 +608,6 @@
     syncPlayer(outcome.player);
     if (outcome.updatedDemon) {
       renderCollection();
-    }
-
-    if (training.succeeded === false) {
-      setMessage(`Training failed. ${formatNumber(training.spent || 0)} Souls spent.`, 'warning');
-    } else if (training.succeeded === true) {
-      setMessage('Training succeeded.', 'success');
     }
 
     const modal = document.getElementById('demonDetailModal');
@@ -731,11 +729,21 @@
     if (!button) return;
 
     button.disabled = !canAfford || state.trainingDemonId === Number(demon.id);
-    button.className = `btn btn-${canAfford ? 'success' : 'outline-danger'}`;
+    button.className = `btn btn-${canAfford ? 'success' : 'outline-danger'} collection-train-action`;
     button.title = canAfford
       ? `Costs ${formatNumber(cost)} Souls${chanceLabel ? `. ${chanceLabel} success chance` : ''}`
       : `Need ${formatNumber(deficit)} more Souls`;
-    button.innerHTML = canAfford ? 'Train' : `Need ${formatNumber(deficit)} Souls`;
+    button.innerHTML = renderTrainingButtonContent(canAfford ? 'Train' : `Need ${formatNumber(deficit)} Souls`);
+  }
+
+  function renderTrainingButtonContent(label) {
+    return `
+      ${renderIcon('book-plus', {
+        size: 19,
+        className: 'collection-train-action-icon'
+      })}
+      <span>${escapeHtml(label)}</span>
+    `;
   }
 
   function isModalShowingDemon(modal, demonId) {
@@ -933,18 +941,13 @@
         populateFilters();
         renderCollection();
       } catch (publicError) {
-        setMessage(publicError.message || 'Something went wrong.', 'danger');
+        console.error(publicError);
       }
 
       return;
     }
 
-    setMessage(error.message || 'Something went wrong.', 'danger');
-  }
-
-  function setMessage(text, type) {
-    elements.collectionMessage.textContent = text;
-    elements.collectionMessage.className = text ? `alert alert-${type}` : 'alert d-none';
+    console.error(error);
   }
 
   function escapeHtml(value) {

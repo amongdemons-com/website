@@ -252,6 +252,8 @@ function captureEnemyHandFlowSources() {
 }
 
 function requestRecruitContinue() {
+  if (state.isRecruitContinuePending) return;
+
   if (hasPendingBuffChoices(state.run)) {
     setMessage('Choose a Demonic Pact before continuing.', 'warning');
     return;
@@ -262,7 +264,7 @@ function requestRecruitContinue() {
     return;
   }
 
-  confirmRecruitReward();
+  runRecruitContinue();
 }
 
 function shouldConfirmShortTeamContinue() {
@@ -272,10 +274,22 @@ function shouldConfirmShortTeamContinue() {
 }
 
 async function continueShortTeam() {
-  await withBusy(elements.confirmShortTeamBtn, async () => {
-    getModal(elements.shortTeamModal).hide();
+  if (state.isRecruitContinuePending) return;
+
+  getModal(elements.shortTeamModal).hide();
+  await runRecruitContinue();
+}
+
+async function runRecruitContinue() {
+  state.isRecruitContinuePending = true;
+  renderRun();
+
+  try {
     await confirmRecruitReward();
-  });
+  } finally {
+    state.isRecruitContinuePending = false;
+    renderRun();
+  }
 }
 
 async function confirmRecruitReward() {

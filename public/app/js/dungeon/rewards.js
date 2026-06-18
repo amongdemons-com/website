@@ -34,7 +34,7 @@ function openCashoutModal() {
   if (!canExtractRun()) return;
 
   const subtitle = document.getElementById('cashoutModalSubtitle');
-  if (subtitle) subtitle.textContent = 'Choose what leaves the dungeon with you.';
+  if (subtitle) subtitle.textContent = 'Choose your reward';
   renderCashoutModal();
   getModal(elements.cashoutModal).show();
 }
@@ -63,15 +63,16 @@ function renderCashoutModal() {
       </div>
       <div class="cashout-extract-copy">
         <div class="cashout-demon-summary">
+          <span class="cashout-demon-eyebrow">${demon ? 'Selected demon' : 'No demon selected'}</span>
           <h3 class="cashout-demon-name-line">${demon ? `
             <span class="cashout-rarity-label" style="--rarity-color: ${demonRarityColor}">${demonRarityLabel}</span>
             <span>${demonName}</span>
-          ` : 'No Demon'}</h3>
+          ` : 'Run rewards only'}</h3>
           <p>${demon
-            ? 'Will be added to your collection.'
-            : 'Extract now to claim run rewards only.'}</p>
+            ? 'Added to your collection after extraction.'
+            : 'No demon will be extracted.'}</p>
         </div>
-        <div class="cashout-section-title pt-3">
+        <div class="cashout-section-title">
           <span>Run Rewards</span>
         </div>
         <div class="cashout-reward-chips" aria-label="Dungeon rewards">

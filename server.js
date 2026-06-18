@@ -28,7 +28,6 @@ const noindexPaths = new Set([
   '/app/register.html',
   '/app/camp.html',
   '/app/collection.html',
-  '/app/api-test.html',
   '/app/privacy.html',
   '/app/terms.html'
 ]);

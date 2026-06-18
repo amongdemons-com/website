@@ -19,6 +19,7 @@ const getRewardCandidateByKey = (...args) => dungeonActions.getRewardCandidateBy
 const getRewardCandidateFromPayload = (...args) => dungeonActions.getRewardCandidateFromPayload(...args);
 const getRewardCandidates = (...args) => dungeonActions.getRewardCandidates(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
+const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
 const init = (...args) => dungeonActions.init(...args);
 const markCollectionReinforcementStagedInteracted = (...args) => dungeonActions.markCollectionReinforcementStagedInteracted(...args);
 const moveRewardSelectionToPoolLane = (...args) => dungeonActions.moveRewardSelectionToPoolLane(...args);
@@ -72,6 +73,10 @@ function bindNativeDragSource(card, options) {
   card.addEventListener('dragstart', (event) => {
     const payload = options.getPayload(card);
     if (!payload) return;
+    if (isPactChoiceBlockingDrag()) {
+      event.preventDefault();
+      return;
+    }
 
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', JSON.stringify(payload));
@@ -92,6 +97,7 @@ function bindNativeDropTarget(target, options) {
   target.dataset.nativeDropTargetBound = 'true';
 
   target.addEventListener('dragover', (event) => {
+    if (isPactChoiceBlockingDrag()) return;
     const payload = options.readPayload(event);
     if (!(options.canDragOver || options.canDrop)(payload, event, target)) return;
 
@@ -104,6 +110,10 @@ function bindNativeDropTarget(target, options) {
   target.addEventListener('drop', (event) => {
     const payload = options.readPayload(event);
     target.classList.remove('is-drag-over');
+    if (isPactChoiceBlockingDrag()) {
+      event.preventDefault();
+      return;
+    }
     if (!options.canDrop(payload, event, target)) return;
 
     event.preventDefault();
@@ -118,7 +128,7 @@ function clearDragOverTargets(selector) {
 }
 
 function bindFormationDragAndDrop() {
-  if (!state.run || state.run.awaitingRecruit) return;
+  if (!state.run || state.run.awaitingRecruit || isPactChoiceBlockingDrag()) return;
 
   document.querySelectorAll('#teamGrid .dungeon-demon-card[draggable="true"]').forEach((card) => {
     if (card.dataset.rewardId) return;
@@ -197,6 +207,7 @@ function getDraftDropZone(element) {
 
 function canDropRecruitPayloadOnLane(payload, lane, position = null) {
   if (!payload) return false;
+  if (isPactChoiceBlockingDrag()) return false;
   const zone = getDraftDropZone(lane);
 
   if (zone === 'reward') return canDropOnRewardBox(payload);
@@ -271,6 +282,7 @@ function applyRecruitPayloadToLane(payload, lane, position, event = null, insert
 
 function canDropRecruitPayloadOnCard(payload, card) {
   if (!payload || !card) return false;
+  if (isPactChoiceBlockingDrag()) return false;
   const zone = getDraftDropZone(card);
 
   if (zone === 'reward') return canDropOnRewardBox(payload);
@@ -327,7 +339,7 @@ function applyHandFormationTargetDrop(context, lane, event) {
 }
 
 function bindRecruitDragAndDrop() {
-  if (!state.run?.awaitingRecruit || !state.isRecruiting) return;
+  if (!state.run?.awaitingRecruit || !state.isRecruiting || isPactChoiceBlockingDrag()) return;
   ensureRecruitDraft();
 
   document.querySelectorAll('#dungeonHandGrid .dungeon-demon-card[data-instance-id]').forEach((card) => {
@@ -353,7 +365,7 @@ function bindRecruitDragAndDrop() {
 }
 
 function bindRewardDragAndDrop() {
-  if (!canExtractRun()) return;
+  if (isPactChoiceBlockingDrag() || !canExtractRun()) return;
 
   document.querySelectorAll('#dungeonRewardGrid .dungeon-demon-card[data-reward-candidate-key]').forEach((card) => {
     bindNativeDragSource(card, {
@@ -593,6 +605,7 @@ function suppressSyntheticClickAfterDrag(point) {
 function getPointerDragPayload(card) {
   const instanceId = card.dataset.instanceId;
   if (!instanceId) return null;
+  if (isPactChoiceBlockingDrag()) return null;
 
   if (card.closest('#dungeonRewardGrid') && state.selectedRewardDemonKey) {
     if (!canExtractRun()) return null;
@@ -669,6 +682,8 @@ function setPointerDropTarget(drag, target) {
 }
 
 function applyPointerDrop(payload, target) {
+  if (isPactChoiceBlockingDrag()) return;
+
   if (!target) {
     if (payload?.type === 'reward-selection') {
       removeRewardSelection();
@@ -778,8 +793,13 @@ function canMoveTeamDemonToLane(instanceId, lane) {
 function canDropFormationOnLane(instanceId, lane) {
   const demon = findDraftDemon(state.run?.team || [], instanceId);
   if (!demon || !lane) return false;
+  if (isPactChoiceBlockingDrag()) return false;
   if (isDemonInFormationLane(state.run?.team || [], instanceId, lane)) return true;
   return canAddDemonToFormationLane(state.run?.team || [], lane);
+}
+
+function isPactChoiceBlockingDrag() {
+  return Boolean(state.isPactRevealPending || hasPendingBuffChoices(state.run));
 }
 
 function canAddDemonToFormationLane(collection, lane) {

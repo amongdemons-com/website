@@ -2252,10 +2252,43 @@ body.dungeon-page .navbar {
     padding: 1rem;
 }
 
+.short-team-dialog {
+    max-width: min(92vw, 38rem);
+}
+
+#shortTeamModal .modal-title,
+#teamChoiceModal.is-collection-reinforcement-modal .modal-title {
+    color: var(--ad-text);
+    font-size: 1.28rem;
+    font-weight: 850;
+    line-height: 1.08;
+    text-shadow: none;
+}
+
+@media (max-width: 767.98px) {
+    #shortTeamModal .modal-title,
+    #teamChoiceModal.is-collection-reinforcement-modal .modal-title {
+        font-size: 1.18rem;
+    }
+}
+
 .short-team-help {
     display: grid;
-    gap: 0.75rem;
+    gap: 0.58rem;
     color: var(--ad-text, #f2f7ff);
+}
+
+.short-team-help-image {
+    display: block;
+    justify-self: center;
+    width: min(100%, 34rem);
+    height: auto;
+    max-height: min(44vh, 24rem);
+    border: 1px solid rgba(161,212,201,0.18);
+    border-radius: 6px;
+    background: rgba(3,9,11,0.72);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.035), 0 18px 42px rgba(0,0,0,0.34);
+    object-fit: contain;
 }
 
 .short-team-warning {
@@ -2267,14 +2300,26 @@ body.dungeon-page .navbar {
 }
 
 .short-team-copy {
+    justify-self: center;
+    max-width: 34rem;
     margin: 0;
-    color: rgba(220,232,229,0.86);
-    font-size: 0.95rem;
-    line-height: 1.4;
+    color: rgba(220,232,229,0.88);
+    font-size: 0.88rem;
+    font-weight: 750;
+    line-height: 1.32;
+    text-align: center;
 }
 
 .demon-detail-modal .modal-dialog {
     max-width: min(96vw, 1040px);
+}
+
+.demon-detail-modal {
+    z-index: 1125;
+}
+
+body:has(#demonDetailModal.show) .modal-backdrop {
+    z-index: 1120;
 }
 
 .demon-detail-modal .modal-content {
@@ -2499,7 +2544,7 @@ body.dungeon-page .navbar {
 
 .demon-detail-actions:has(.collection-training-action-cost) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(8.5rem, 0.42fr);
+    grid-template-columns: minmax(0, 1fr) minmax(5.75rem, 6.35rem);
     align-items: stretch;
     justify-items: stretch;
     gap: 0.6rem;
@@ -2522,8 +2567,37 @@ body.dungeon-page .navbar {
 .demon-detail-actions:has(.collection-training-action-cost) .btn {
     width: 100%;
     height: 100%;
-    min-width: 6.8rem;
+    min-width: 5.75rem;
     min-height: 2.45rem;
+}
+
+.demon-detail-actions:has(.collection-training-action-cost) .collection-train-action {
+    flex-direction: column;
+    gap: 0.28rem;
+    line-height: 1.05;
+    white-space: normal;
+}
+
+.collection-train-action .ad-icon,
+.collection-train-action-icon {
+    width: 1.18rem;
+    height: 1.18rem;
+    margin-right: 0;
+    color: currentColor;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.42));
+}
+
+.collection-train-action span {
+    overflow-wrap: anywhere;
+}
+
+.collection-train-loading-dot {
+    width: 0.58rem;
+    height: 0.58rem;
+    border: 2px solid rgba(245,255,255,0.34);
+    border-top-color: #f5ffff;
+    border-radius: 50%;
+    animation: dungeon-loading-spin 0.78s linear infinite;
 }
 
 .demon-detail-actions:has(.collection-training-action-cost) .collection-training-action-cost {
@@ -3441,10 +3515,11 @@ body.dungeon-page .navbar {
     }
 
     #cashoutModal .modal-footer {
-        padding: 0.55rem 0.65rem;
+        padding: 0.5rem 0.6rem;
     }
 
     #cashoutModal .modal-footer .btn {
+        min-height: 2rem;
         padding: 0.38rem 0.55rem;
         font-size: 0.78rem;
     }
@@ -3987,6 +4062,25 @@ body.dungeon-page .navbar {
     border-top: 1px solid rgba(255,255,255,0.1);
 }
 
+.fight-log-continue-btn {
+    min-width: 8.35rem;
+}
+
+.fight-log-continue-btn.is-loading {
+    cursor: wait;
+    opacity: 0.9;
+}
+
+.dungeon-action-spinner {
+    width: 0.92rem;
+    height: 0.92rem;
+    flex: 0 0 auto;
+    border: 2px solid rgba(5,16,17,0.34);
+    border-top-color: #051011;
+    border-radius: 50%;
+    animation: dungeon-loading-spin 0.78s linear infinite;
+}
+
 .dungeon-phase-panel {
     min-height: 0;
     padding: 1rem 0.75rem;
@@ -4087,51 +4181,43 @@ body.dungeon-page .navbar {
 }
 
 .cashout-modal-content {
-    border: 1px solid rgba(232,199,106,0.46);
+    border: 1px solid rgba(161,212,201,0.18);
     border-radius: 8px;
     background:
-        linear-gradient(180deg, rgba(16,32,39,0.96), rgba(4,13,17,0.98)),
+        linear-gradient(180deg, rgba(12,26,31,0.96), rgba(4,13,17,0.98)),
         var(--ad-surface);
     box-shadow:
-        0 24px 80px rgba(0,0,0,0.66),
+        0 22px 68px rgba(0,0,0,0.62),
         inset 0 0 0 1px rgba(255,255,255,0.04);
     overflow: hidden;
 }
 
 #cashoutModal .modal-header {
     position: relative;
-    justify-content: center;
-    border-bottom: 1px solid rgba(232,199,106,0.26);
-    background:
-        linear-gradient(90deg, transparent, rgba(232,199,106,0.08), transparent),
-        rgba(4,11,14,0.46);
-    padding: 1.35rem 4rem 1.2rem;
-    text-align: center;
+    justify-content: flex-start;
+    border-bottom: 1px solid rgba(161,212,201,0.12);
+    background: rgba(4,11,14,0.46);
+    padding: 1rem 4rem 0.9rem 1.25rem;
+    text-align: left;
 }
 
 #cashoutModal .modal-header::after {
-    content: "";
-    position: absolute;
-    right: 4.5rem;
-    bottom: -1px;
-    left: 4.5rem;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(232,199,106,0.7), transparent);
+    display: none;
 }
 
 #cashoutModal .modal-title {
-    color: #fffaf0;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(2rem, 4vw, 3.4rem);
-    font-weight: 800;
-    line-height: 1;
-    text-shadow: 0 2px 18px rgba(0,0,0,0.7);
+    color: var(--ad-text);
+    font-size: 1.28rem;
+    font-weight: 850;
+    line-height: 1.08;
+    text-shadow: none;
 }
 
 #cashoutModal .modal-header p {
-    margin-top: 0.55rem;
-    color: rgba(220,232,229,0.78) !important;
-    font-size: clamp(0.95rem, 1.8vw, 1.22rem);
+    margin-top: 0.24rem;
+    color: rgba(220,232,229,0.66) !important;
+    font-size: 0.82rem;
+    font-weight: 650;
 }
 
 #cashoutModal .btn-close {
@@ -4141,16 +4227,18 @@ body.dungeon-page .navbar {
 }
 
 #cashoutModal .modal-footer {
-    gap: 1rem;
-    border-top: 0;
-    background: transparent;
-    padding: 0.9rem 1.6rem 1.45rem;
+    gap: 0.55rem;
+    border-top: 1px solid rgba(161,212,201,0.1);
+    background: rgba(4,11,14,0.28);
+    padding: 0.72rem 1.15rem 0.9rem;
 }
 
 #cashoutModal .modal-footer .btn {
-    min-width: 10rem;
-    padding: 0.72rem 1.2rem;
-    font-size: 1rem;
+    min-width: 7.75rem;
+    min-height: 2.35rem;
+    padding: 0.52rem 0.82rem;
+    font-size: 0.86rem;
+    font-weight: 800;
 }
 
 #cashoutModal .modal-footer .btn-warning {
@@ -4162,12 +4250,12 @@ body.dungeon-page .navbar {
 
 .cashout-summary {
     margin-top: 0;
-    border-bottom: 1px solid rgba(232,199,106,0.38);
+    border-bottom: 1px solid rgba(161,212,201,0.12);
     border-radius: 0px;
     background:
-        radial-gradient(circle at 16% 0%, rgba(111,214,189,0.13), transparent 32%),
+        radial-gradient(circle at 16% 0%, rgba(111,214,189,0.1), transparent 32%),
         rgba(3,12,16,0.48);
-    padding: 1.35rem;
+    padding: 1.15rem;
 }
 
 .cashout-summary-compact {
@@ -4209,12 +4297,12 @@ body.dungeon-page .navbar {
 .cashout-section-title {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     width: 100%;
-    color: #f3c55c;
-    font-size: 0.9rem;
+    color: rgba(232,199,106,0.84);
+    font-size: 0.72rem;
     font-weight: 900;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.08em;
     line-height: 1;
     text-transform: uppercase;
 }
@@ -4228,47 +4316,56 @@ body.dungeon-page .navbar {
 
 .cashout-extract-copy {
     display: grid;
-    gap: 1rem;
+    gap: 0.78rem;
     min-width: 0;
 }
 
 .cashout-demon-summary {
     display: grid;
-    gap: 0.65rem;
+    gap: 0.32rem;
+}
+
+.cashout-demon-eyebrow {
+    color: rgba(220,232,229,0.58);
+    font-size: 0.68rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
 }
 
 .cashout-demon-summary h3 {
     margin: 0;
-    color: #fffaf0;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(1.9rem, 4vw, 3rem);
+    color: var(--ad-text);
+    font-size: clamp(1.12rem, 2.3vw, 1.48rem);
     font-weight: 800;
-    line-height: 1;
+    line-height: 1.12;
 }
 
 .cashout-demon-name-line {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.7rem;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .cashout-rarity-label {
+    display: inline;
     color: var(--rarity-color, #D1D5D8);
     font: inherit;
-    font-size: 1em;
     font-weight: inherit;
     letter-spacing: 0;
-    line-height: 1;
+    line-height: inherit;
+    padding: 0;
     text-transform: none;
-    text-shadow: 0 2px 18px rgba(0,0,0,0.7);
+    text-shadow: none;
 }
 
 .cashout-demon-summary p {
     margin: 0;
-    color: rgba(220,232,229,0.86);
-    font-size: 1.05rem;
-    line-height: 1.4;
+    color: rgba(220,232,229,0.72);
+    font-size: 0.9rem;
+    line-height: 1.34;
 }
 
 .cashout-status-pill {
@@ -4296,26 +4393,18 @@ body.dungeon-page .navbar {
 .cashout-divider {
     position: relative;
     height: 1px;
-    margin: 0.2rem 0 0.05rem;
-    background: linear-gradient(90deg, transparent, rgba(232,199,106,0.34), transparent);
+    margin: 0.05rem 0 0;
+    background: rgba(161,212,201,0.12);
 }
 
 .cashout-divider::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0.7rem;
-    height: 0.7rem;
-    border: 1px solid rgba(232,199,106,0.62);
-    background: #061219;
-    transform: translate(-50%, -50%) rotate(45deg);
+    display: none;
 }
 
 .cashout-reward-chips {
     display: grid;
-    grid-template-columns: repeat(2, minmax(8rem, 12rem));
-    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(6.4rem, 8.6rem));
+    gap: 0.55rem;
     justify-content: flex-start;
 }
 
@@ -4323,34 +4412,33 @@ body.dungeon-page .navbar {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.55rem;
-    min-height: 3.25rem;
-    border: 1px solid rgba(232,199,106,0.36);
+    gap: 0.42rem;
+    min-height: 2.45rem;
+    border: 1px solid rgba(232,199,106,0.24);
     border-radius: 6px;
     background: rgba(6,14,17,0.58);
     color: #fffaf0;
-    font-size: 1.05rem;
+    font-size: 0.88rem;
     font-weight: 800;
     line-height: 1;
-    padding: 0.7rem 1rem;
+    padding: 0.52rem 0.7rem;
 }
 
 .cashout-reward-chips > .soul-amount {
     border-color: rgba(85,255,255,0.42);
     background: rgba(6,22,24,0.74);
     color: var(--ad-soul, #55FFFF);
-    color: white;
 }
 
 .cashout-reward-chips .ad-icon {
-    width: 1.3rem;
-    height: 1.3rem;
+    width: 1.05rem;
+    height: 1.05rem;
     color: #f3c55c;
 }
 
 .cashout-reward-chips .soul-icon {
-    width: 1.45rem;
-    height: 1.45rem;
+    width: 1.12rem;
+    height: 1.12rem;
 }
 
 .cashout-extract-note {
@@ -5301,6 +5389,13 @@ a:hover {
 .bg-dark,
 .navbar.bg-dark {
     background: rgba(6,13,16,0.92) !important;
+}
+
+body:not(.dungeon-page) > .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    backdrop-filter: blur(12px);
 }
 
 .navbar,
@@ -6462,7 +6557,7 @@ body.rankings-page {
 .rankings-hero {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.52fr);
+    grid-template-columns: minmax(0, 1fr) max-content;
     align-items: end;
     gap: 1rem;
     overflow: hidden;
@@ -6519,7 +6614,10 @@ body.rankings-page {
 
 .rankings-stats {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(7.2rem, max-content));
+    justify-self: end;
+    width: max-content;
+    max-width: 100%;
     gap: 0.55rem;
 }
 
@@ -6832,7 +6930,8 @@ body.rankings-page {
     }
 
     .rankings-stats {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(7rem, max-content));
+        justify-self: start;
     }
 
     .rankings-stat {
@@ -8547,18 +8646,32 @@ body.collection-page {
     min-width: 0;
 }
 
+.demonic-pact-reroll-cluster {
+    display: grid;
+    grid-template-columns: minmax(0, 16.8rem) auto;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0.82rem;
+    width: min(100%, 22.5rem);
+    min-width: 0;
+}
+
 .demonic-pact-reroll-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.48rem;
-    min-width: min(100%, 15rem);
+    gap: 0.72rem;
+    width: 100%;
+    min-width: 0;
     min-height: 2.85rem;
-    border-color: rgba(232,199,106,0.46);
+    border: 1px solid rgba(232,199,106,0.52);
+    border-radius: 6px;
     background:
-        linear-gradient(180deg, rgba(232,199,106,0.13), rgba(232,199,106,0.05)),
+        linear-gradient(135deg, rgba(232,199,106,0.14), transparent 38%),
+        linear-gradient(180deg, rgba(232,199,106,0.11), rgba(232,199,106,0.035)),
         rgba(3,9,11,0.64);
     color: #fff4c2;
+    font-size: 1.05rem;
     font-weight: 900;
     letter-spacing: 0;
     text-transform: uppercase;
@@ -8583,11 +8696,28 @@ body.collection-page {
     opacity: 0.62;
 }
 
+.demonic-pact-reroll-btn .ad-icon {
+    margin-right: 0;
+}
+
 .demonic-pact-reroll-cost {
-    min-height: 1.55rem;
-    border-color: rgba(85,255,255,0.2);
-    background: rgba(85,255,255,0.08);
-    padding: 0.22rem 0.38rem;
+    min-width: 4rem;
+    min-height: 2.85rem;
+    border-color: rgba(85,255,255,0.26);
+    background:
+        linear-gradient(180deg, rgba(85,255,255,0.1), rgba(85,255,255,0.03)),
+        rgba(5,18,21,0.78);
+    padding: 0.38rem 0.72rem;
+    font-size: 0.96rem;
+}
+
+.demonic-pact-reroll-cost .soul-icon {
+    width: 1.05em;
+    height: 1.05em;
+}
+
+.demonic-pact-reroll-cluster.is-disabled .demonic-pact-reroll-cost {
+    opacity: 0.62;
 }
 
 .demonic-pact-overlay.is-recasting-out .demonic-pact-card {
@@ -9000,11 +9130,11 @@ body.collection-page {
 
 @media (max-width: 767.98px) {
     #cashoutModal .modal-header {
-        padding: 1rem 3rem 0.9rem;
+        padding: 0.9rem 3rem 0.78rem 1rem;
     }
 
     #cashoutModal .modal-title {
-        font-size: 2rem;
+        font-size: 1.18rem;
     }
 
     #cashoutModal .modal-header p {
@@ -9012,13 +9142,15 @@ body.collection-page {
     }
 
     #cashoutModal .modal-footer {
-        padding: 0.3rem 0.8rem 0.9rem;
+        gap: 0.45rem;
+        padding: 0.55rem 0.8rem 0.72rem;
     }
 
     #cashoutModal .modal-footer .btn {
         min-width: 0;
-        padding: 0.5rem 0.65rem;
-        font-size: 0.84rem;
+        min-height: 2.1rem;
+        padding: 0.42rem 0.62rem;
+        font-size: 0.8rem;
     }
 
     .cashout-summary {
@@ -9045,7 +9177,7 @@ body.collection-page {
     }
 
     .cashout-demon-summary h3 {
-        font-size: 1.8rem;
+        font-size: 1.18rem;
     }
 
     .cashout-demon-summary p {
@@ -9057,7 +9189,7 @@ body.collection-page {
     }
 
     .cashout-reward-chips > span {
-        min-height: 2.8rem;
+        min-height: 2.45rem;
         font-size: 0.86rem;
         padding: 0.55rem 0.5rem;
     }

@@ -29,6 +29,10 @@ async function openCollectionReinforcementModal() {
     await ensureCollectionLoaded();
     markCollectionReinforcementPlaceholderInteracted();
     renderCollectionReinforcementModal('');
+    elements.teamChoiceModal.classList.add('is-collection-reinforcement-modal');
+    elements.teamChoiceModal.addEventListener('hidden.bs.modal', () => {
+      elements.teamChoiceModal.classList.remove('is-collection-reinforcement-modal');
+    }, { once: true });
     getModal(elements.teamChoiceModal).show();
   } catch (error) {
     showError(error);

@@ -85,22 +85,24 @@ function renderDemonicPactActions() {
     : `Recast costs ${cost} Souls.`;
 
   return `
-    <button
-      class="btn btn-outline-warning demonic-pact-reroll-btn"
-      id="demonicPactRerollBtn"
-      type="button"
-      ${canAfford ? '' : 'disabled'}
-      title="${escapeHtml(title)}"
-      aria-label="${escapeHtml(title)}"
-    >
-      ${renderIcon('replay')}
-      <span>Recast</span>
-      ${renderSoulAmount(String(cost), {
+    <div class="demonic-pact-reroll-cluster ${canAfford ? '' : 'is-disabled'}">
+      <button
+        class="btn demonic-pact-reroll-btn"
+        id="demonicPactRerollBtn"
+        type="button"
+        ${canAfford ? '' : 'disabled'}
+        title="${escapeHtml(title)}"
+        aria-label="${escapeHtml(title)}"
+      >
+        ${renderIcon('replay', { size: 18, className: 'demonic-pact-reroll-icon' })}
+        <span>Recast</span>
+      </button>
+      ${renderSoulAmount(`-${cost}`, {
         className: 'soul-chip demonic-pact-reroll-cost',
-        ariaLabel: `${cost} Souls`,
+        ariaLabel: `Costs ${cost} Souls`,
         showLabel: false
       })}
-    </button>
+    </div>
   `;
 }
 

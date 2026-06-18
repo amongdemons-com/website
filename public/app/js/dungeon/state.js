@@ -28,6 +28,7 @@ export const state = {
   collectionDemons: null,
   collectionReinforcementPlaceholderInteracted: false,
   collectionReinforcementStagedInteracted: true,
+  isRecruitContinuePending: false,
   combatLog: [],
   combatDemons: new Map(),
   combatPlayback: null,
