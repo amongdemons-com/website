@@ -330,7 +330,10 @@ function escapeTooltipAttribute(value) {
 function updateDungeonJoiner() {
   if (!elements.dungeonJoiner) return;
   elements.dungeonJoiner.classList.remove('is-recruiting');
-  elements.dungeonJoiner.innerHTML = '<span>VS</span>';
+  elements.dungeonJoiner.innerHTML = `
+    <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
+  `;
+  elements.dungeonCenterActions = document.getElementById('dungeonCenterActions');
 }
 
 function showCombatPanel() {
@@ -477,6 +480,7 @@ function renderEndNotice() {
 
 function renderFightLogActions() {
   if (state.isLoading) {
+    renderDungeonCenterActions(false);
     setElementHtml(elements.fightLogActions, `
       <span class="dungeon-loading-status" aria-live="polite">
         <span class="dungeon-loading-dot" aria-hidden="true"></span>
@@ -499,6 +503,8 @@ function renderFightLogActions() {
   const hasPendingPacts = hasPendingBuffChoices(state.run);
   const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
   const continuePending = Boolean(state.isRecruitContinuePending);
+  const isFighting = Boolean(state.isBattleAnimating);
+  renderDungeonCenterActions(canChooseRecruit || continuePending || isFighting, continuePending, isFighting);
 
   const actionsChanged = setElementHtml(elements.fightLogActions, `
     ${canShowSpeedControl ? `${renderBattlePlaybackControls()}${renderBattleSpeedControl()}` : ''}
@@ -510,19 +516,6 @@ function renderFightLogActions() {
     ${canViewLog ? `
       <button class="btn btn-outline-light btn-sm btn-icon-only" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log">
         ${renderIcon('log')}
-      </button>
-    ` : ''}
-    ${canChooseRecruit ? `
-      <button
-        class="btn btn-success btn-sm fight-log-continue-btn ${continuePending ? 'is-loading' : ''}"
-        id="fightLogContinueDungeonBtn"
-        type="button"
-        ${continuePending ? 'disabled aria-busy="true"' : ''}
-      >
-        ${continuePending
-          ? '<span class="dungeon-action-spinner" aria-hidden="true"></span>'
-          : renderButtonMeleeIcon()}
-        <span>${continuePending ? 'Preparing fight' : 'Continue'}</span>
       </button>
     ` : ''}
     ${canStart ? `
@@ -548,6 +541,36 @@ function renderFightLogActions() {
   bindClick(document.getElementById('fightLogReplayBtn'), replayFight);
   bindClick(document.getElementById('fightLogToggleBtn'), toggleFightLogPanel);
   bindPathButtons();
+}
+
+function renderDungeonCenterActions(canFight = false, isPending = false, isFighting = false) {
+  const mode = isFighting ? 'fighting' : isPending ? 'preparing' : 'ready';
+  const isDisabled = mode !== 'ready';
+  const label = mode === 'fighting' ? 'Fighting' : mode === 'preparing' ? 'Preparing' : 'Fight';
+  const title = mode === 'fighting'
+    ? 'Fight in progress'
+    : mode === 'preparing'
+      ? 'Preparing the next fight'
+      : 'Start the next fight';
+
+  const changed = setElementHtml(elements.dungeonCenterActions, canFight ? `
+    <div class="dungeon-center-action-stack">
+      <span class="dungeon-fight-mark" aria-hidden="true">${renderButtonMeleeIcon()}</span>
+      <button
+        class="btn btn-warning dungeon-fight-btn ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
+        id="dungeonFightBtn"
+        type="button"
+        title="${title}"
+        aria-label="${title}"
+        ${isDisabled ? 'disabled aria-busy="true"' : ''}
+      >
+        ${mode === 'preparing' ? '<span class="dungeon-action-spinner" aria-hidden="true"></span>' : ''}
+        <span>${label}</span>
+      </button>
+    </div>
+  ` : '');
+
+  if (changed) bindPathButtons();
 }
 
 function renderBattlePlaybackControls() {
@@ -612,7 +635,11 @@ function renderBattleSpeedControl() {
 }
 
 function bindPathButtons() {
-  bindClick(document.getElementById('fightLogContinueDungeonBtn'), (event) => requestRecruitContinue(event.currentTarget));
+  const button = document.getElementById('dungeonFightBtn');
+  if (!button || button.dataset.dungeonFightBound === 'true') return;
+
+  button.dataset.dungeonFightBound = 'true';
+  bindClick(button, (event) => requestRecruitContinue(event.currentTarget));
 }
 
 export {
@@ -636,6 +663,7 @@ export {
   renderDungeonRewardStrip,
   renderEndNotice,
   renderFightLogActions,
+  renderDungeonCenterActions,
   renderBattlePlaybackControls,
   renderBattleSpeedControl,
   bindPathButtons

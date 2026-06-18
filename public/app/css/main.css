@@ -2584,7 +2584,6 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     height: 1.18rem;
     margin-right: 0;
     color: currentColor;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.42));
 }
 
 .collection-train-action span {
@@ -2770,7 +2769,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     background: rgba(255,255,255,0.18);
 }
 
-.vs-divider span {
+.vs-divider > span {
     flex: 0 0 auto;
 }
 
@@ -4060,15 +4059,6 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     margin-top: 0.85rem;
     padding-top: 0.75rem;
     border-top: 1px solid rgba(255,255,255,0.1);
-}
-
-.fight-log-continue-btn {
-    min-width: 8.35rem;
-}
-
-.fight-log-continue-btn.is-loading {
-    cursor: wait;
-    opacity: 0.9;
 }
 
 .dungeon-action-spinner {
@@ -8312,7 +8302,9 @@ body.collection-page {
     position: relative;
     align-self: center;
     display: grid;
+    grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
     place-items: center;
+    gap: clamp(0.58rem, 1.1vw, 0.9rem);
     width: clamp(3.7rem, 5.6vw, 5.4rem);
     min-height: clamp(11rem, 38vh, 24rem);
     margin: 1.55rem 0 0;
@@ -8324,17 +8316,68 @@ body.collection-page {
 
 .dungeon-vs::before,
 .dungeon-vs::after {
-    width: 1px;
-    min-height: clamp(3rem, 12vh, 6rem);
-    background: linear-gradient(transparent, rgba(232,199,106,0.42), transparent);
+    width: 2px;
+    min-height: clamp(4.35rem, 15vh, 8.4rem);
+    background: linear-gradient(transparent, rgba(232,199,106,0.66), transparent);
 }
 
-.dungeon-vs span {
+.dungeon-center-actions {
+    position: relative;
+    z-index: 2;
     display: grid;
     place-items: center;
-    width: clamp(3.25rem, 5vw, 4.75rem);
-    aspect-ratio: 1 / 1;
-    border-radius: 50%;
+    width: max-content;
+    max-width: 100%;
+    min-height: 3.05rem;
+}
+
+.dungeon-center-actions:empty {
+    display: none;
+}
+
+.dungeon-center-action-stack {
+    display: grid;
+    justify-items: center;
+    gap: 0.52rem;
+}
+
+.dungeon-fight-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #f3dc93;
+    filter: drop-shadow(0 0 10px rgba(232,199,106,0.28));
+}
+
+.dungeon-fight-mark .button-melee-icon,
+.dungeon-fight-mark .ad-icon {
+    width: clamp(2.15rem, 3.2vw, 2.85rem);
+    height: clamp(2.15rem, 3.2vw, 2.85rem);
+    margin-right: 0;
+}
+
+.dungeon-fight-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.36rem;
+    min-width: clamp(5.3rem, 6vw, 6.05rem);
+    min-height: 2.15rem;
+    padding: 0.45rem 0.78rem;
+    font-size: 0.84rem;
+    line-height: 1;
+}
+
+.dungeon-fight-btn:disabled,
+.dungeon-fight-btn.is-loading {
+    cursor: wait;
+}
+
+.dungeon-fight-btn .dungeon-action-spinner {
+    width: 0.92rem;
+    height: 0.92rem;
+    border-color: rgba(5,16,17,0.28);
+    border-top-color: #051011;
 }
 
 .dungeon-hand-bar {
@@ -9214,8 +9257,36 @@ body.collection-page {
         font-size: 1.2rem;
     }
 
-    .dungeon-vs span {
-        width: 2.45rem;
+    .dungeon-vs::before,
+    .dungeon-vs::after {
+        width: 2px;
+        min-height: clamp(3.35rem, 12vh, 5.8rem);
+    }
+
+    .dungeon-center-actions {
+        min-height: 4.3rem;
+    }
+
+    .dungeon-center-action-stack {
+        gap: 0.38rem;
+    }
+
+    .dungeon-fight-mark .button-melee-icon,
+    .dungeon-fight-mark .ad-icon {
+        width: 1.82rem;
+        height: 1.82rem;
+    }
+
+    .dungeon-fight-btn {
+        min-width: 3.95rem;
+        min-height: 2.05rem;
+        padding: 0.35rem 0.52rem;
+        font-size: 0.7rem;
+    }
+
+    .dungeon-fight-btn .dungeon-action-spinner {
+        width: 0.82rem;
+        height: 0.82rem;
     }
 }
 
@@ -9283,15 +9354,39 @@ body.collection-page {
         min-height: 8rem;
         margin-top: 1rem;
         font-size: 0.58rem;
-    }
-
-    .dungeon-vs span {
-        width: 1.15rem;
+        gap: 0.28rem;
     }
 
     .dungeon-vs::before,
     .dungeon-vs::after {
-        min-height: 1.55rem;
+        width: 1px;
+        min-height: 2.35rem;
+    }
+
+    .dungeon-center-actions {
+        min-height: 3.12rem;
+    }
+
+    .dungeon-center-action-stack {
+        gap: 0.26rem;
+    }
+
+    .dungeon-fight-mark .button-melee-icon,
+    .dungeon-fight-mark .ad-icon {
+        width: 1.28rem;
+        height: 1.28rem;
+    }
+
+    .dungeon-fight-btn {
+        min-width: 2.9rem;
+        min-height: 1.72rem;
+        padding: 0.24rem 0.34rem;
+        font-size: 0.54rem;
+    }
+
+    .dungeon-fight-btn .dungeon-action-spinner {
+        width: 0.62rem;
+        height: 0.62rem;
     }
 
     .dungeon-hand-cards {
