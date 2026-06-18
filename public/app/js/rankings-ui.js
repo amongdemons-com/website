@@ -87,7 +87,7 @@
         <td class="rank-position-cell" data-label="Rank">
           <span class="rank-position">
             <span class="rank-position-icon">${renderRankIcon(topRankIcon)}</span>
-            <span class="rank-position-number">#${rank}</span>
+            <span class="rank-position-number">${rank}</span>
           </span>
         </td>
         <td class="rank-hunter-cell" data-label="Hunter">

@@ -70,9 +70,9 @@
     <main class="container rankings-shell my-4">
       <section class="rankings-hero" aria-labelledby="rankingsTitle">
         <div class="rankings-hero-copy">
-          <span class="rankings-kicker">Dungeon leaderboard</span>
+          <span class="rankings-kicker">Among Demons</span>
           <h1 id="rankingsTitle">Rankings</h1>
-          <p>Compare hunters by deepest floor, account level, and held Souls.</p>
+          <p>Compare hunters by dungeon progress, account level, and Souls.</p>
         </div>
         <div class="rankings-stats" aria-label="Leaderboard summary">
           <div class="rankings-stat">
@@ -96,7 +96,7 @@
         <div class="rankings-panel-head">
           <div>
             <h2>Leaderboard</h2>
-            <p>Top 100 hunters across the current database.</p>
+            <p>Top 100 hunters across the server.</p>
           </div>
           <nav class="rank-sort-tabs" aria-label="Ranking sort">
             <a href="/rankings" class="rank-sort-link" data-sort="floor">Floor</a>
@@ -104,14 +104,14 @@
             <a href="/rankings/souls" class="rank-sort-link" data-sort="souls"><span class="rank-sort-label">Souls</span></a>
           </nav>
         </div>
-        <div class="table-responsive">
+        <div>
           <table class="table table-dark table-hover align-middle mb-0 rank-table">
             <caption class="visually-hidden">Dungeon leaderboard</caption>
             <thead>
               <tr>
                 <th scope="col">#</th>
                 <th scope="col">Hunter</th>
-                <th scope="col">Highest Floor</th>
+                <th scope="col">Top Floor</th>
                 <th scope="col">Level</th>
                 <th scope="col">Souls</th>
               </tr>

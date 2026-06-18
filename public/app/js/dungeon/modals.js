@@ -47,8 +47,8 @@ function renderCollectionReinforcementModal(query = '') {
     ].some((value) => String(value || '').toLowerCase().includes(normalizedQuery)))
     .sort(compareCollectionReinforcementDemons);
 
-  elements.teamChoiceModalTitle.textContent = 'Add from collection';
-  elements.teamChoiceModalSubtitle.textContent = `Choose a collection demon to add to your hand${limit > 1 ? ', then add another if you want' : ''}.`;
+  elements.teamChoiceModalTitle.textContent = 'Demon Collection';
+  elements.teamChoiceModalSubtitle.textContent = `Add a card to your hand.`;
   elements.teamChoiceModalBody.innerHTML = `
     <div class="collection-reinforcement-toolbar">
       <input class="form-control form-control-sm" id="collectionReinforcementSearch" type="search" value="${escapeHtml(query)}" placeholder="Search collection">

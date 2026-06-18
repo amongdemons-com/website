@@ -168,11 +168,9 @@ function renderRewardPayout(earned, canExtract = false) {
         <strong>${escapeHtml(String(xp))}</strong>
         <span>XP</span>
       </div>
-      <div class="dungeon-reward-payout-item dungeon-reward-payout-souls">
-        ${renderSoulAmount(String(souls), {
-          className: 'soul-chip dungeon-reward-payout-soul-amount',
-          ariaLabel: `${souls} Souls`
-        })}
+      <div class="dungeon-reward-payout-item">
+        <strong>${escapeHtml(String(souls))}</strong>
+        <span>Souls</span>
       </div>
       <button class="btn btn-warning dungeon-reward-extract-btn" id="getRewardBtn" type="button" ${canExtract ? '' : 'disabled'}>
         ${renderIcon('flag')}

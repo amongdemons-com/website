@@ -41,7 +41,9 @@ body.dungeon-page {
 body.dungeon-page .navbar {
     display: none;
 }
-
+.seo-home-page .seo-demon-card-meta {
+    display: none;
+}
 .dungeon-main {
     display: grid;
     width: 100%;
@@ -2200,7 +2202,7 @@ body.dungeon-page .navbar {
 }
 
 .choice-card-grid .dungeon-choice-card {
-    flex: 0 1 8rem;
+    flex: 0 1 23%;
 }
 
 .dungeon-end-rewards > .soul-amount {
@@ -2461,7 +2463,7 @@ body.dungeon-page .navbar {
 .demon-detail-extra {
     align-self: stretch;
     padding-bottom: 1rem;
-    margin-top: 0;
+    margin-top: auto;
 }
 
 .demon-detail-actions {
@@ -2471,7 +2473,7 @@ body.dungeon-page .navbar {
     align-items: center;
     justify-content: flex-end;
     gap: 0.6rem;
-    margin-top: 0;
+    margin-top: auto;
     padding-top: 1rem;
     padding-bottom: 1rem;
     border-top: 1px solid rgba(255,255,255,0.12);
@@ -4337,6 +4339,7 @@ body.dungeon-page .navbar {
     border-color: rgba(85,255,255,0.42);
     background: rgba(6,22,24,0.74);
     color: var(--ad-soul, #55FFFF);
+    color: white;
 }
 
 .cashout-reward-chips .ad-icon {
@@ -5357,10 +5360,6 @@ a:hover {
 
 .nav-balance {
     padding: 0.38rem 0.58rem;
-    border-color: rgba(85,255,255,0.28);
-    background:
-        linear-gradient(180deg, rgba(85,255,255,0.1), rgba(85,255,255,0.025)),
-        rgba(7,18,22,0.82);
 }
 
 .nav-balance .soul-amount {
@@ -5380,6 +5379,7 @@ a:hover {
 
 .nav-balance .soul-amount-label {
     color: rgba(175,255,255,0.78);
+    display: none;
 }
 
 .nav-player {
@@ -7639,6 +7639,9 @@ body.collection-page {
         linear-gradient(135deg, rgba(250,197,28,0.12), rgba(85,255,255,0.05)),
         rgba(23,17,7,0.66);
 }
+.is-maxed .collection-training-stat-list{
+    display: none;
+}
 
 .collection-training-panel-head {
     display: flex;
@@ -7660,6 +7663,10 @@ body.collection-page {
     gap: 0.35rem;
     color: #fac51c;
     white-space: nowrap;
+    display: none;
+}
+.is-maxed .collection-training-panel-head strong {
+    display: inline-flex;
 }
 
 .collection-training-cost {
@@ -7688,7 +7695,7 @@ body.collection-page {
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
-    min-width: min(100%, 11rem);
+    width: 100%;
 }
 
 .collection-training-cost-label {
@@ -7701,6 +7708,7 @@ body.collection-page {
     font-size: 0.95rem;
     letter-spacing: 0;
     text-transform: none;
+    padding-right: 0.2em;
 }
 
 .collection-training-action-souls {
@@ -7713,10 +7721,16 @@ body.collection-page {
 .collection-training-action-souls.soul-chip {
     min-height: 2.05rem;
     padding: 0.32rem 0.5rem;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    flex-direction: row-reverse;
+    padding-right: 0;
 }
 
 .collection-training-action-souls .soul-amount-label {
     font-size: 0.68em;
+    display: none;
 }
 
 .collection-training-stat-list {
@@ -8221,14 +8235,7 @@ body.collection-page {
     place-items: center;
     width: clamp(3.25rem, 5vw, 4.75rem);
     aspect-ratio: 1 / 1;
-    border: 1px solid rgba(232,199,106,0.42);
     border-radius: 50%;
-    background:
-        radial-gradient(circle, rgba(232,199,106,0.18), rgba(10,24,27,0.62) 58%, rgba(0,0,0,0.32));
-    box-shadow:
-        inset 0 0 18px rgba(232,199,106,0.12),
-        0 0 34px rgba(232,199,106,0.18),
-        0 0 70px rgba(111,214,189,0.1);
 }
 
 .dungeon-hand-bar {
@@ -8244,7 +8251,7 @@ body.collection-page {
 }
 
 .dungeon-bottom-panel {
-    --dungeon-hand-card-width: clamp(5.65rem, 7.7vw, 7.35rem);
+    --dungeon-hand-card-width: clamp(7.65rem, 9.7vw, 9.35rem);
     --dungeon-reward-card-width: var(--dungeon-hand-card-width);
     grid-template-columns: minmax(0, 1fr) minmax(15rem, calc(var(--dungeon-reward-card-width) + 9.25rem));
 }

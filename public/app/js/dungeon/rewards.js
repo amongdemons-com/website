@@ -76,7 +76,7 @@ function renderCashoutModal() {
         </div>
         <div class="cashout-reward-chips" aria-label="Dungeon rewards">
           <span>${renderIcon('stars')}${earned.xp || 0} XP</span>
-          ${renderSoulAmount(earned.souls || 0, { className: 'soul-chip cashout-soul-amount' })}
+          <span class="soul-amount">${renderIcon('souls')}${earned.souls || 0}</span>
         </div>
         <div class="cashout-divider" aria-hidden="true"></div>
       </div>
