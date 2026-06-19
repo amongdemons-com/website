@@ -26,6 +26,7 @@ router.use(require('./auth/register'));
 router.use(require('./auth/login'));
 router.use(require('./auth/oauth'));
 router.use(require('./auth/me'));
+router.use(require('./account/profile'));
 router.use(require('./account/progression'));
 router.use(require('./demons/list'));
 router.use(require('./demons/show'));

@@ -29,6 +29,7 @@ function cleanPlayer(row) {
     xp: row.xp,
     souls: row.souls,
     highestFloor: row.highest_floor || 0,
+    profileDemonId: row.profile_demon_id ? Number(row.profile_demon_id) : null,
     unlocks: JSON.parse(row.unlocks || '[]')
   };
 }

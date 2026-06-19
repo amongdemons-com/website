@@ -5,10 +5,14 @@
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const session = window.AmongDemons.getSession();
+  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
   const state = {
     player: session.player || null,
     progression: null,
-    run: null
+    run: null,
+    collection: [],
+    collectionLoaded: false,
+    profilePickerOpen: false
   };
   const ACCOUNT_LEVEL_BASE_XP = 250;
   const ACCOUNT_LEVEL_EXPONENT = 1.65;
@@ -24,6 +28,7 @@
 
     cacheElements();
     bindDisabledLinks();
+    bindProfilePicker();
     await loadCamp();
   }
 
@@ -31,6 +36,7 @@
     [
       'navPlayerName',
       'navPlayerLevel',
+      'navProfileImage',
       'campPlayerName',
       'playerHudName',
       'playerTitle',
@@ -54,7 +60,13 @@
       'runEarnedLabel',
       'objectiveList',
       'primaryDungeonMeta',
-      'dungeonActionEyebrow'
+      'dungeonActionEyebrow',
+      'profileDemonButton',
+      'profileDemonImage',
+      'profileDemonPicker',
+      'profileDemonPickerClose',
+      'profileDemonPickerStatus',
+      'profileDemonGrid'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -68,24 +80,166 @@
     });
   }
 
+  function bindProfilePicker() {
+    if (elements.profileDemonButton?.dataset.profilePickerBound === 'true') return;
+
+    elements.profileDemonButton?.addEventListener('click', openProfilePicker);
+    elements.profileDemonButton?.setAttribute('data-profile-picker-bound', 'true');
+
+    elements.profileDemonGrid?.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : event.target.parentElement;
+      const button = target?.closest('[data-profile-demon-id]');
+      if (!button) return;
+      selectProfileDemon(button.dataset.profileDemonId, button);
+    });
+
+    document.querySelectorAll('[data-profile-picker-close]').forEach((button) => {
+      button.addEventListener('click', closeProfilePicker);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && state.profilePickerOpen) {
+        closeProfilePicker();
+      }
+    });
+  }
+
+  function openProfilePicker() {
+    if (!elements.profileDemonPicker) return;
+
+    state.profilePickerOpen = true;
+    renderProfilePicker();
+    elements.profileDemonPicker.hidden = false;
+    document.body.classList.add('is-profile-demon-picker-open');
+    window.requestAnimationFrame(() => {
+      elements.profileDemonPicker.classList.add('is-open');
+      elements.profileDemonPickerClose?.focus();
+    });
+  }
+
+  function closeProfilePicker() {
+    if (!elements.profileDemonPicker) return;
+
+    state.profilePickerOpen = false;
+    elements.profileDemonPicker.classList.remove('is-open');
+    document.body.classList.remove('is-profile-demon-picker-open');
+    elements.profileDemonPicker.hidden = true;
+    elements.profileDemonButton?.focus();
+  }
+
+  function renderProfilePicker() {
+    const demons = state.collection || [];
+    const selectedId = Number(state.player?.profileDemonId) || 0;
+
+    if (!elements.profileDemonGrid) return;
+
+    if (!state.collectionLoaded) {
+      setText(elements.profileDemonPickerStatus, 'Loading collection demons...');
+      setHtml(elements.profileDemonGrid, `
+        <div class="profile-demon-empty">
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="" width="88" height="88" loading="lazy">
+          <span>Loading collection</span>
+        </div>
+      `);
+      return;
+    }
+
+    if (!demons.length) {
+      setText(elements.profileDemonPickerStatus, 'Collect a demon in the dungeon before choosing a camp portrait.');
+      setHtml(elements.profileDemonGrid, `
+        <div class="profile-demon-empty">
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="" width="88" height="88" loading="lazy">
+          <span>No collection demons yet</span>
+        </div>
+      `);
+      return;
+    }
+
+    setText(elements.profileDemonPickerStatus, 'Pick one collected demon for your camp portrait.');
+    setHtml(elements.profileDemonGrid, demons.map((demon) => renderProfileDemonOption(demon, selectedId)).join(''));
+    replaceStaticIcons();
+  }
+
+  function renderProfileDemonOption(demon, selectedId) {
+    const id = Number(demon.id);
+    const isSelected = id === selectedId;
+    const name = demon.species || 'Demon';
+    const rarity = capitalize(demon.rarity || 'common');
+    const imageUrl = getDemonImageUrl(demon);
+
+    return `
+      <button class="profile-demon-option ${isSelected ? 'is-selected' : ''}" type="button" data-profile-demon-id="${escapeAttribute(id)}" aria-pressed="${isSelected ? 'true' : 'false'}">
+        <span class="profile-demon-option-art">
+          <img src="${escapeAttribute(imageUrl)}" alt="${escapeAttribute(`${rarity} ${name}`)}" width="96" height="96" loading="lazy" decoding="async">
+        </span>
+        <span class="profile-demon-option-copy">
+          <strong>${escapeHtml(name)}</strong>
+          <small>${escapeHtml(rarity)}</small>
+        </span>
+        ${isSelected ? `<span class="profile-demon-selected-mark">${renderIcon('check')}</span>` : ''}
+      </button>
+    `;
+  }
+
+  async function selectProfileDemon(profileDemonId, button) {
+    const demonId = Number(profileDemonId);
+    if (!Number.isInteger(demonId) || demonId <= 0) return;
+    if (Number(state.player?.profileDemonId) === demonId) {
+      closeProfilePicker();
+      return;
+    }
+
+    setProfilePickerBusy(button, true);
+
+    try {
+      const payload = await api('/api/account/profile', {
+        method: 'PATCH',
+        body: { profileDemonId: demonId }
+      });
+      state.player = payload.player;
+      syncSessionPlayer(payload.player);
+      syncProfileImages(payload.profileDemon || getCollectionDemon(demonId));
+      renderProfilePicker();
+      closeProfilePicker();
+    } catch (error) {
+      showError(error);
+    } finally {
+      setProfilePickerBusy(button, false);
+    }
+  }
+
+  function setProfilePickerBusy(button, busy) {
+    if (!button) return;
+    button.disabled = busy;
+    button.classList.toggle('is-busy', busy);
+  }
+
   async function loadCamp() {
     try {
-      const [me, progression, run] = await Promise.all([
+      const [me, progression, run, collection] = await Promise.all([
         api('/api/auth/me'),
         api('/api/account/progression'),
-        loadCurrentRun()
+        loadCurrentRun(),
+        loadCollection()
       ]);
 
       state.player = me.player;
       state.progression = progression;
       state.run = run;
+      state.collection = collection.demons || [];
+      state.collectionLoaded = true;
 
       renderPlayer();
       renderRun();
       renderObjectives();
+      if (state.profilePickerOpen) renderProfilePicker();
     } catch (error) {
       handleAuthError(error);
     }
+  }
+
+  async function loadCollection() {
+    return api('/api/demons');
   }
 
   async function loadCurrentRun() {
@@ -112,24 +266,17 @@
     setText(elements.welcomeText, player.username
       ? 'Rest, plan, and push deeper.'
       : 'Rest, plan, and push deeper.');
-    setText(elements.playerTitle, getPlayerTitle(level, bestFloor));
+    setText(elements.playerTitle, 'Demon Hunter');
 
     renderLevelProgress(progression, player);
     setText(elements.floorStat, formatNumber(bestFloor));
     updateNavAccount(player, { souls });
+    syncProfileImages(getSelectedProfileDemon());
     setHtml(elements.soulsStat, renderSoulAmount(formatNumber(souls), {
       showLabel: false,
       className: 'stat-soul-amount',
       ariaLabel: `${formatNumber(souls)} Souls`
     }));
-  }
-
-  function getPlayerTitle(level, bestFloor) {
-    if (bestFloor >= 30) return 'Deepgate Warden';
-    if (level >= 20) return 'Abyss Marshal';
-    if (bestFloor >= 12) return 'Gatebreaker';
-    if (level >= 8) return 'Demonbound Hunter';
-    return 'Ashen Hunter';
   }
 
   function renderLevelProgress(progression, player) {
@@ -405,6 +552,47 @@
     return Number.isFinite(souls) && souls > 0 ? souls : 1;
   }
 
+  function getSelectedProfileDemon() {
+    const selectedId = Number(state.player?.profileDemonId) || 0;
+    return selectedId ? getCollectionDemon(selectedId) : null;
+  }
+
+  function getCollectionDemon(demonId) {
+    return (state.collection || []).find((demon) => Number(demon.id) === Number(demonId)) || null;
+  }
+
+  function syncProfileImages(demon) {
+    const imageUrl = getDemonImageUrl(demon);
+    const imageAlt = demon
+      ? `${capitalize(demon.rarity || 'common')} ${demon.species || 'Demon'} profile demon`
+      : 'Default profile demon';
+
+    [elements.profileDemonImage, elements.navProfileImage].forEach((image) => {
+      if (!image) return;
+      image.src = imageUrl;
+      image.alt = imageAlt;
+    });
+  }
+
+  function getDemonImageUrl(demon) {
+    return demon?.imageUrl || demon?.image_url || DEFAULT_PROFILE_IMAGE_URL;
+  }
+
+  function syncSessionPlayer(player) {
+    if (!player) return;
+
+    const currentSession = window.AmongDemons.getSession();
+    window.AmongDemons.setSession({
+      ...currentSession,
+      player
+    });
+  }
+
+  function replaceStaticIcons() {
+    const replacer = window.AmongDemons?.ui?.replaceStaticIcons;
+    if (typeof replacer === 'function') replacer();
+  }
+
   function handleAuthError(error) {
     if (error.status === 401) {
       window.AmongDemons.clearSession();
@@ -461,6 +649,12 @@
 
   function escapeAttribute(value) {
     return escapeHtml(value);
+  }
+
+  function capitalize(value) {
+    if (!value) return '';
+    const text = String(value);
+    return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
   function onReady(callback) {
