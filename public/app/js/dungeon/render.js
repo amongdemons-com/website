@@ -61,7 +61,6 @@ function renderRun() {
   if (elements.runLoading) elements.runLoading.classList.toggle('d-none', !state.isLoading);
   elements.runEmpty.classList.toggle('d-none', state.isLoading || hasRun);
   elements.runPanel.classList.toggle('d-none', state.isLoading || !hasRun);
-  elements.dungeonTitle.innerHTML = renderDungeonTitle(run);
   renderDungeonRewardStrip();
   showCombatPanel();
 
@@ -148,22 +147,6 @@ function renderRun() {
   renderFightLogActions();
   syncActionButtons();
   playPendingHandFlowAnimation(isHandStrategy);
-}
-
-function renderDungeonTitle(run) {
-  const floor = run ? Math.max(1, Number(run.currentFloor) || 1) : 1;
-
-  return `
-    <span class="dungeon-title-brand">
-      <span class="dungeon-header-brand" aria-hidden="true">${renderIcon('swords')}</span>
-      <span class="dungeon-title-copy">
-        <span class="dungeon-title-text">Dungeon</span>
-        ${run ? `<span class="dungeon-floor-title">
-          <span class="dungeon-floor-label">Floor ${floor}</span>
-        </span>` : ''}
-      </span>
-    </span>
-  `;
 }
 
 function renderDungeonEndScreen() {
@@ -324,9 +307,11 @@ function escapeTooltipAttribute(value) {
 
 function updateDungeonJoiner() {
   if (!elements.dungeonJoiner) return;
+  const floor = state.run ? Math.max(1, Number(state.run.currentFloor) || 1) : null;
   elements.dungeonJoiner.classList.remove('is-recruiting');
   elements.dungeonJoiner.innerHTML = `
     <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
+    ${floor ? `<span class="dungeon-floor-marker" aria-label="Current floor ${floor}"><span>Floor</span><strong>${floor}</strong></span>` : ''}
   `;
   elements.dungeonCenterActions = document.getElementById('dungeonCenterActions');
 }
@@ -641,7 +626,6 @@ export {
   renderPlayer,
   setDungeonLoading,
   renderRun,
-  renderDungeonTitle,
   renderDungeonEndScreen,
   bindDungeonEmptyButtons,
   renderFightLog,

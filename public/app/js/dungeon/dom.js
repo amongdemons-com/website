@@ -14,7 +14,6 @@ const syncCompressedFormationLanes = (...args) => dungeonActions.syncCompressedF
 function cacheElements() {
   [
     'navPlayerName',
-    'dungeonTitle',
     'dungeonRewardStrip',
     'runLoading',
     'runEmpty',
