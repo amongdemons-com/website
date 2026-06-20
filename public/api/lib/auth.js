@@ -30,6 +30,7 @@ function cleanPlayer(row) {
     souls: row.souls,
     highestFloor: row.highest_floor || 0,
     profileDemonId: row.profile_demon_id ? Number(row.profile_demon_id) : null,
+    profileDemonImageUrl: row.profile_demon_image_url || null,
     unlocks: JSON.parse(row.unlocks || '[]')
   };
 }
@@ -43,9 +44,12 @@ async function requireAuth(req, res, next) {
   }
 
   const [rows] = await db.query(
-    `SELECT p.*
+    `SELECT p.*, pd.image_url AS profile_demon_image_url
      FROM player_sessions s
      INNER JOIN players p ON p.id = s.player_id
+     LEFT JOIN player_demons pd
+       ON pd.id = p.profile_demon_id
+      AND pd.player_id = p.id
      WHERE s.token = ?
        AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
      LIMIT 1`,

@@ -88,14 +88,20 @@
     const accountElement = options.accountElement || root.querySelector('[data-nav-account]');
     const authElement = options.authElement || root.querySelector('[data-nav-auth-actions]');
     const nameElement = options.nameElement || root.querySelector('[data-nav-player-name]') || root.getElementById('navPlayerName');
+    const levelElement = options.levelElement || root.querySelector('[data-nav-player-level]') || root.getElementById('navPlayerLevel');
+    const profileImageElement = options.profileImageElement || root.querySelector('[data-nav-profile-image]') || root.getElementById('navProfileImage');
     const soulElement = options.soulElement || root.querySelector('[data-nav-souls]') || root.getElementById('navSoulBalance');
     const username = player && player.username ? player.username : 'Hunter';
+    const level = Math.max(1, Number(player?.level) || 1);
+    const profileImageUrl = options.profileImageUrl || player?.profileDemonImageUrl || '';
     const souls = options.souls ?? player?.souls ?? '-';
     const formattedSouls = formatNumber(souls);
 
     if (authElement) authElement.classList.add('d-none');
     if (accountElement) accountElement.classList.remove('d-none');
     if (nameElement) nameElement.textContent = username;
+    if (levelElement) levelElement.textContent = `Level ${formatNumber(level)}`;
+    if (profileImageElement && profileImageUrl) profileImageElement.src = profileImageUrl;
     if (soulElement) {
       soulElement.innerHTML = renderSoulAmount(formattedSouls, {
         className: 'nav-soul-amount',

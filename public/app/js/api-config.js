@@ -75,7 +75,10 @@
   }
 
   function isCapacitorRuntime() {
-    return Boolean(window.Capacitor) || ['capacitor:', 'ionic:'].includes(window.location.protocol);
+    return Boolean(window.Capacitor?.isNativePlatform?.())
+      || Boolean(window.Capacitor)
+      || Boolean(window.CapacitorHttpAndroidInterface)
+      || ['capacitor:', 'ionic:'].includes(window.location.protocol);
   }
 
   function isElectronRuntime() {

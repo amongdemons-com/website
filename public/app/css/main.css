@@ -3087,11 +3087,6 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     display: none !important;
 }
 
-#runPanel.has-hand {
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 0.45rem;
-}
-
 .dungeon-bottom-panel {
     --dungeon-hand-card-width: clamp(5.65rem, 7.7vw, 7.35rem);
     --dungeon-reward-card-width: var(--dungeon-hand-card-width);
@@ -3934,10 +3929,6 @@ body:has(#demonDetailModal.show) .modal-backdrop {
 
     .dungeon-demon-card {
         flex-basis: 100%;
-    }
-
-    #runPanel.has-hand {
-        gap: 0.35rem;
     }
 
     .dungeon-bottom-panel {
@@ -7584,7 +7575,6 @@ body.camp-page::before {
     pointer-events: none;
 }
 
-body.camp-page > .camp-game-nav,
 body.camp-page > .camp-lobby {
     position: relative;
     z-index: 1;
@@ -7598,218 +7588,6 @@ body.camp-page > .camp-lobby {
 .camp-page .camp-hero-stat-label,
 .camp-page .soul-amount-label {
     letter-spacing: 0;
-}
-
-.camp-page > .camp-game-nav {
-    position: relative;
-    top: auto;
-    min-height: var(--camp-nav-height);
-    border-bottom-color: rgba(232,199,106,0.24) !important;
-    background:
-        linear-gradient(180deg, rgba(12,20,25,0.96), rgba(4,9,12,0.88)),
-        rgba(4,9,12,0.92) !important;
-    box-shadow:
-        inset 0 -1px 0 rgba(255,255,255,0.05),
-        0 14px 34px rgba(0,0,0,0.36);
-    backdrop-filter: blur(14px);
-}
-
-.camp-game-nav .container-fluid {
-    max-width: none;
-    min-height: var(--camp-nav-height);
-    gap: 1rem;
-    padding-inline: 1.15rem;
-}
-
-.camp-game-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.68rem;
-    min-width: 0;
-    margin: 0;
-    color: #fff8dc !important;
-    text-decoration: none;
-    text-shadow: 0 0 18px rgba(255,110,47,0.18);
-}
-
-.camp-game-brand .logo-nav {
-    flex: 0 0 auto;
-    border: 1px solid rgba(232,199,106,0.34);
-    border-radius: 8px;
-    background: rgba(0,0,0,0.26);
-    box-shadow:
-        0 0 20px rgba(255,110,47,0.16),
-        inset 0 0 0 1px rgba(255,255,255,0.08);
-}
-
-.camp-brand-copy {
-    display: grid;
-    gap: 0.08rem;
-    min-width: 0;
-    line-height: 1;
-}
-
-.camp-brand-name {
-    color: #fff6d7;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 1.08rem;
-    font-weight: 900;
-    white-space: nowrap;
-}
-
-.camp-brand-mode {
-    color: rgba(232,199,106,0.78);
-    font-size: 0.72rem;
-    font-weight: 900;
-    text-transform: uppercase;
-}
-
-#campGameNav {
-    gap: 1rem;
-    min-width: 0;
-}
-
-.camp-game-tabs {
-    align-items: center;
-    gap: 0.28rem;
-    min-width: 0;
-}
-
-.camp-page .game-nav-link {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.38rem;
-    min-height: 2.55rem;
-    border: 1px solid rgba(161,212,201,0.12);
-    border-radius: 6px;
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)),
-        rgba(2,8,11,0.46);
-    color: rgba(220,232,229,0.76) !important;
-    font-size: 0.82rem;
-    font-weight: 900;
-    line-height: 1;
-    padding: 0.56rem 0.72rem;
-    text-transform: uppercase;
-    transition:
-        transform 150ms ease,
-        border-color 150ms ease,
-        background 150ms ease,
-        color 150ms ease,
-        box-shadow 150ms ease;
-}
-
-.camp-page .game-nav-link .ad-icon {
-    width: 1rem;
-    height: 1rem;
-    margin: 0;
-}
-
-.camp-page .game-nav-link::after {
-    content: "";
-    position: absolute;
-    left: 0.55rem;
-    right: 0.55rem;
-    bottom: 0.28rem;
-    height: 2px;
-    border-radius: 999px;
-    background: transparent;
-    box-shadow: none;
-    transition: background 150ms ease, box-shadow 150ms ease;
-}
-
-.camp-page .game-nav-link:hover,
-.camp-page .game-nav-link:focus-visible {
-    border-color: rgba(232,199,106,0.34);
-    background:
-        linear-gradient(180deg, rgba(232,199,106,0.12), rgba(255,110,47,0.045)),
-        rgba(4,11,14,0.72);
-    color: #fff6d7 !important;
-    transform: translateY(-1px);
-    text-decoration: none;
-}
-
-.camp-page .game-nav-link.active,
-.camp-page .game-nav-link.active:hover,
-.camp-page .game-nav-link.active:focus-visible {
-    border-color: rgba(255,154,69,0.68);
-    background:
-        radial-gradient(circle at 50% 0%, rgba(255,110,47,0.24), transparent 70%),
-        linear-gradient(180deg, rgba(232,199,106,0.16), rgba(255,110,47,0.08)),
-        rgba(14,8,5,0.78);
-    color: #fff7dc !important;
-    box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.06),
-        0 0 18px rgba(255,110,47,0.22);
-}
-
-.camp-page .game-nav-link.active::after {
-    background: var(--camp-ember);
-    box-shadow: 0 0 12px rgba(255,110,47,0.62);
-}
-
-.camp-page .game-nav-link.is-locked {
-    opacity: 0.52;
-    cursor: not-allowed;
-}
-
-.camp-page .game-nav-link.is-locked:hover,
-.camp-page .game-nav-link.is-locked:focus-visible {
-    transform: none;
-}
-
-.camp-page .nav-account {
-    flex: 0 0 auto;
-    gap: 0.46rem;
-}
-
-.camp-page .nav-balance,
-.camp-page .nav-player,
-.camp-page .nav-logout-btn {
-    min-height: 2.45rem;
-    border-color: rgba(232,199,106,0.2);
-    border-radius: 6px;
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012)),
-        rgba(3,9,11,0.62);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.05),
-        0 9px 22px rgba(0,0,0,0.26);
-}
-
-.camp-page .nav-balance {
-    padding: 0.46rem 0.68rem;
-}
-
-.camp-page .nav-player {
-    max-width: 12rem;
-    color: rgba(220,232,229,0.86);
-    font-weight: 900;
-}
-
-.camp-page .nav-player .ad-icon {
-    color: var(--ad-gold);
-}
-
-.camp-page .nav-logout-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    width: auto;
-    height: auto;
-    min-width: 0;
-    padding: 0.45rem 0.66rem;
-    color: #ffaea7;
-    font-size: 0.8rem;
-    font-weight: 900;
-    text-transform: uppercase;
-}
-
-.camp-page .nav-logout-btn .ad-icon {
-    margin: 0;
 }
 
 .camp-lobby {
@@ -8632,13 +8410,6 @@ body.camp-page > .camp-lobby {
 }
 
 @media (max-width: 1399.98px) {
-    .camp-game-nav .container-fluid {
-        padding-inline: 0.8rem;
-    }
-
-    .camp-page .game-nav-link {
-        padding-inline: 0.56rem;
-    }
 
     .camp-lobby-grid {
         grid-template-columns: minmax(16rem, 21vw) minmax(0, 1fr) minmax(17rem, 23vw);
@@ -8661,11 +8432,6 @@ body.camp-page > .camp-lobby {
         min-height: 100dvh;
         overflow-x: hidden;
         overflow-y: auto;
-    }
-
-    .camp-page > .camp-game-nav {
-        position: sticky;
-        top: 0;
     }
 
     .camp-lobby {
@@ -8712,36 +8478,6 @@ body.camp-page > .camp-lobby {
 }
 
 @media (max-width: 991.98px) {
-    #campGameNav {
-        align-items: stretch;
-        padding-top: 0.75rem;
-    }
-
-    .camp-game-tabs {
-        align-items: stretch;
-        gap: 0.38rem;
-    }
-
-    .camp-page .game-nav-link {
-        justify-content: flex-start;
-        width: 100%;
-    }
-
-    .camp-page .nav-account {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        width: 100%;
-    }
-
-    .camp-page .nav-balance {
-        grid-column: 1 / -1;
-        justify-content: center;
-    }
-
-    .camp-page .nav-player,
-    .camp-page .nav-logout-btn {
-        width: 100%;
-    }
 }
 
 @media (max-width: 840px) {
@@ -8823,7 +8559,6 @@ body.camp-page > .camp-lobby {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .camp-page .game-nav-link,
     .camp-page .play-objective,
     .camp-action-card,
     .camp-page .camp-xp-progress-bar,
@@ -8860,175 +8595,6 @@ body.camp-page::before {
         linear-gradient(180deg, rgba(5,10,12,0.08), rgba(5,10,12,0.22) 36%, rgba(5,10,12,0.78)),
         radial-gradient(ellipse at 50% 62%, transparent 0 20%, rgba(2,7,9,0.52) 72%),
         linear-gradient(90deg, rgba(2,7,9,0.46), transparent 24%, transparent 76%, rgba(2,7,9,0.5));
-}
-
-.camp-page > .camp-game-nav {
-    min-height: var(--camp-nav-height);
-    border-bottom-color: rgba(161,212,201,0.16) !important;
-    background:
-        linear-gradient(180deg, rgba(6,13,16,0.96), rgba(6,13,16,0.82)),
-        rgba(6,13,16,0.9) !important;
-    box-shadow:
-        inset 0 -1px 0 rgba(232,199,106,0.08),
-        0 16px 38px rgba(0,0,0,0.46);
-}
-
-.camp-game-nav .container-fluid {
-    min-height: var(--camp-nav-height);
-    gap: 1.1rem;
-    padding-inline: 1.25rem;
-}
-
-.camp-game-brand {
-    gap: 0.62rem;
-    min-width: 12rem;
-}
-
-.camp-game-brand .logo-nav {
-    width: 3.25rem !important;
-    height: 3.25rem !important;
-    border: 0;
-    border-radius: 0;
-    background: transparent !important;
-    box-shadow: none;
-    filter:
-        drop-shadow(0 0 14px rgba(231,138,85,0.28))
-        drop-shadow(0 0 18px rgba(111,214,189,0.1));
-}
-
-.camp-brand-name {
-    font-size: 1.1rem;
-    line-height: 0.95;
-}
-
-.camp-brand-mode {
-    display: none;
-}
-
-#campGameNav {
-    justify-content: space-between;
-}
-
-.camp-game-tabs {
-    align-self: stretch;
-    gap: 0;
-    margin-inline: auto;
-}
-
-.camp-game-tabs .nav-item {
-    display: flex;
-    align-items: stretch;
-    border-left: 1px solid rgba(161,212,201,0.08);
-}
-
-.camp-game-tabs .nav-item:last-child {
-    border-right: 1px solid rgba(161,212,201,0.08);
-}
-
-.camp-page .game-nav-link {
-    min-width: 7.2rem;
-    min-height: var(--camp-nav-height);
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    color: rgba(220,232,229,0.74) !important;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 0.84rem;
-    padding: 0.6rem 1rem;
-}
-
-.camp-page .game-nav-link .ad-icon {
-    color: rgba(111,214,189,0.78);
-}
-
-.camp-page .game-nav-link::after {
-    left: 1.2rem;
-    right: 1.2rem;
-    bottom: 0;
-    height: 1px;
-}
-
-.camp-page .game-nav-link::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: -0.19rem;
-    width: 0.42rem;
-    height: 0.42rem;
-    border: 1px solid transparent;
-    background: transparent;
-    transform: translateX(-50%) rotate(45deg);
-}
-
-.camp-page .game-nav-link:hover,
-.camp-page .game-nav-link:focus-visible {
-    background:
-        linear-gradient(180deg, rgba(111,214,189,0.08), rgba(231,138,85,0.04)),
-        transparent;
-    color: #f8fbf9 !important;
-    transform: none;
-}
-
-.camp-page .game-nav-link.active,
-.camp-page .game-nav-link.active:hover,
-.camp-page .game-nav-link.active:focus-visible {
-    border: 0;
-    background:
-        radial-gradient(ellipse at 50% 100%, rgba(231,138,85,0.22), transparent 60%),
-        linear-gradient(180deg, rgba(111,214,189,0.1), rgba(232,199,106,0.04));
-    color: #f3dc93 !important;
-    box-shadow: inset 0 -1px 0 rgba(232,199,106,0.34);
-}
-
-.camp-page .game-nav-link.active::after {
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--camp-ember), var(--camp-ember-hot), transparent);
-    box-shadow: 0 0 16px rgba(231,138,85,0.7);
-}
-
-.camp-page .game-nav-link.active::before {
-    border-color: rgba(232,199,106,0.72);
-    background: var(--camp-ember-hot);
-    box-shadow: 0 0 13px rgba(231,138,85,0.72);
-}
-
-.camp-page .nav-account {
-    align-items: center;
-    gap: 0.52rem;
-}
-
-.camp-page .nav-balance,
-.camp-page .nav-player,
-.camp-page .nav-settings-link,
-.camp-page .nav-logout-btn {
-    height: 3.05rem;
-    min-height: 3.05rem;
-    border: 1px solid rgba(161,212,201,0.18);
-    border-radius: 6px;
-    background:
-        linear-gradient(180deg, rgba(111,214,189,0.035), rgba(255,255,255,0.01)),
-        rgba(5,13,16,0.62);
-    box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.035),
-        0 8px 20px rgba(0,0,0,0.18);
-}
-
-.camp-page .nav-balance {
-    padding: 0.48rem 0.78rem;
-}
-
-.camp-page .nav-balance .soul-amount-label {
-    display: block;
-    color: var(--ad-muted, #9fb6b2);
-}
-
-.camp-page .nav-player {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.58rem;
-    max-width: 11rem;
-    min-width: 9.6rem;
-    padding: 0.3rem 0.62rem 0.3rem 0.36rem;
 }
 
 .nav-player-avatar {
@@ -9075,36 +8641,6 @@ body.camp-page::before {
     color: rgba(220,232,229,0.68);
     font-size: 0.68rem;
     font-weight: 800;
-}
-
-.camp-page .nav-settings-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 3.05rem;
-    flex: 0 0 3.05rem;
-    color: rgba(220,232,229,0.78);
-    font-size: 0.78rem;
-    font-weight: 900;
-    padding: 0;
-    text-decoration: none;
-    text-transform: uppercase;
-}
-
-.camp-page .nav-settings-link:hover,
-.camp-page .nav-settings-link:focus-visible {
-    border-color: rgba(111,214,189,0.34);
-    color: #f8fbf9;
-}
-
-.camp-page .nav-settings-link .ad-icon,
-.camp-page .nav-logout-btn .ad-icon {
-    margin: 0;
-}
-
-.camp-page .nav-logout-btn {
-    width: 3.05rem;
-    padding: 0;
 }
 
 .camp-lobby {
@@ -9993,71 +9529,9 @@ body.camp-page::before {
 }
 
 @media (max-width: 1399.98px) {
-    .camp-game-nav .container-fluid {
-        gap: 0.55rem;
-        padding-inline: 0.65rem;
-    }
-
-    .camp-game-brand {
-        gap: 0.45rem;
-        min-width: 10.5rem;
-    }
-
-    .camp-game-brand .logo-nav {
-        width: 2.75rem !important;
-        height: 2.75rem !important;
-    }
-
-    .camp-brand-name {
-        font-size: 1rem;
-    }
-
-    .camp-page .game-nav-link {
-        min-width: 0;
-        gap: 0.34rem;
-        padding-inline: 0.48rem;
-        font-size: 0.68rem;
-    }
-
-    .camp-page .game-nav-link .ad-icon {
-        width: 0.96rem;
-        height: 0.96rem;
-    }
-
-    .camp-page .nav-account {
-        gap: 0.35rem;
-    }
-
-    .camp-page .nav-balance,
-    .camp-page .nav-player,
-    .camp-page .nav-settings-link,
-    .camp-page .nav-logout-btn {
-        height: 2.72rem;
-        min-height: 2.72rem;
-    }
-
-    .camp-page .nav-balance {
-        padding: 0.34rem 0.46rem;
-    }
-
-    .camp-page .nav-player {
-        min-width: 8.1rem;
-        max-width: 8.8rem;
-        gap: 0.4rem;
-        padding-right: 0.48rem;
-    }
 
     .nav-player-avatar {
         width: 2rem;
-    }
-
-    .camp-page .nav-settings-link {
-        width: 2.72rem;
-        flex-basis: 2.72rem;
-    }
-
-    .camp-page .nav-logout-btn {
-        width: 2.72rem;
     }
 
     .camp-lobby {
@@ -10234,18 +9708,6 @@ body.camp-page::before {
 }
 
 @media (max-width: 1199.98px) {
-    .camp-game-tabs .nav-item,
-    .camp-game-tabs .nav-item:last-child {
-        border: 0;
-    }
-
-    .camp-page .game-nav-link {
-        min-height: 2.65rem;
-        min-width: 0;
-        border: 1px solid rgba(161,212,201,0.12);
-        border-radius: 6px;
-        background: rgba(4,10,13,0.36);
-    }
 
     .camp-lobby-grid {
         grid-template-columns: minmax(18rem, 0.85fr) minmax(0, 1.15fr);
@@ -12263,10 +11725,6 @@ body.collection-page {
         line-height: 1;
     }
 
-    #runPanel.has-hand {
-        gap: 0.25rem;
-    }
-
     .dungeon-bottom-panel {
         --dungeon-hand-card-width: clamp(3.55rem, 16vw, 5rem);
         --dungeon-reward-card-width: var(--dungeon-hand-card-width);
@@ -12401,4 +11859,541 @@ body.collection-page {
     }
 }
 
+/* Shared compact game navigation and dungeon command dock */
+:root {
+    --game-nav-height: 3.6rem;
+}
 
+body .game-shell-nav {
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    min-height: var(--game-nav-height);
+    border-bottom-color: rgba(161,212,201,0.16) !important;
+    background:
+        linear-gradient(180deg, rgba(6,13,16,0.97), rgba(4,10,13,0.91)),
+        rgba(6,13,16,0.94) !important;
+    box-shadow:
+        inset 0 -1px 0 rgba(232,199,106,0.1),
+        0 12px 30px rgba(0,0,0,0.38);
+    backdrop-filter: blur(14px);
+    padding-block: 0;
+}
+
+body .game-shell-nav .container-fluid {
+    min-height: var(--game-nav-height);
+    gap: 0.65rem;
+    padding-inline: 0.8rem;
+}
+
+.game-shell-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.48rem;
+    min-width: 9.5rem;
+    margin: 0;
+    color: #fff6d7 !important;
+    text-decoration: none;
+}
+
+.game-shell-brand .logo-nav {
+    width: 2.45rem !important;
+    height: 2.45rem !important;
+    flex: 0 0 2.45rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent !important;
+    object-fit: contain;
+    box-shadow: none;
+    filter:
+        drop-shadow(0 0 11px rgba(231,138,85,0.28))
+        drop-shadow(0 0 15px rgba(111,214,189,0.09));
+}
+
+.game-shell-brand-copy {
+    display: grid;
+    min-width: 0;
+    line-height: 1;
+}
+
+.game-shell-brand-name {
+    color: #fff6d7;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.94rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+body .game-shell-nav .navbar-collapse {
+    min-width: 0;
+    gap: 0.55rem;
+}
+
+.game-shell-tabs {
+    align-self: stretch;
+    align-items: stretch;
+    min-width: 0;
+    margin-inline: auto;
+}
+
+.game-shell-tabs .nav-item {
+    display: flex;
+    align-items: stretch;
+    border-left: 1px solid rgba(161,212,201,0.07);
+}
+
+.game-shell-tabs .nav-item:last-child {
+    border-right: 1px solid rgba(161,212,201,0.07);
+}
+
+body .game-shell-nav .game-nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: var(--game-nav-height);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(220,232,229,0.72) !important;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.68rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.4rem 0.55rem;
+    text-transform: uppercase;
+    transition: background 150ms ease, color 150ms ease;
+}
+
+body .game-shell-nav .game-nav-link .ad-icon {
+    width: 0.92rem;
+    height: 0.92rem;
+    margin: 0;
+    color: rgba(111,214,189,0.76);
+}
+
+body .game-shell-nav .game-nav-link::after {
+    content: "";
+    position: absolute;
+    right: 0.7rem;
+    bottom: 0;
+    left: 0.7rem;
+    height: 1px;
+    background: transparent;
+}
+
+body .game-shell-nav .game-nav-link:hover,
+body .game-shell-nav .game-nav-link:focus-visible {
+    background: linear-gradient(180deg, rgba(111,214,189,0.08), rgba(231,138,85,0.04));
+    color: #f8fbf9 !important;
+}
+
+body .game-shell-nav .game-nav-link.active,
+body .game-shell-nav .game-nav-link.active:hover,
+body .game-shell-nav .game-nav-link.active:focus-visible {
+    background:
+        radial-gradient(ellipse at 50% 100%, rgba(231,138,85,0.2), transparent 68%),
+        linear-gradient(180deg, rgba(111,214,189,0.08), rgba(232,199,106,0.04));
+    color: #f3dc93 !important;
+    box-shadow: inset 0 -1px 0 rgba(232,199,106,0.25);
+}
+
+body .game-shell-nav .game-nav-link.active::after {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #e78a55, #f1b35f, transparent);
+    box-shadow: 0 0 12px rgba(231,138,85,0.62);
+}
+
+body .game-shell-nav .game-nav-link.is-locked {
+    color: rgba(220,232,229,0.38) !important;
+    cursor: not-allowed;
+}
+
+body .game-shell-nav .nav-account,
+body .game-shell-nav .nav-auth-actions {
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 0;
+}
+
+body .game-shell-nav .nav-balance,
+body .game-shell-nav .nav-player,
+body .game-shell-nav .nav-settings-link,
+body .game-shell-nav .nav-logout-btn,
+body .game-shell-nav .game-shell-auth-actions .btn {
+    height: 2.42rem;
+    min-height: 2.42rem;
+    border: 1px solid rgba(161,212,201,0.18);
+    border-radius: 6px;
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.035), rgba(255,255,255,0.01)),
+        rgba(5,13,16,0.68);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.03),
+        0 7px 18px rgba(0,0,0,0.16);
+}
+
+body .game-shell-nav .nav-balance {
+    padding: 0.3rem 0.52rem;
+}
+
+body .game-shell-nav .nav-balance .soul-amount-label {
+    display: none;
+}
+
+body .game-shell-nav .nav-player {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.42rem;
+    width: 8.6rem;
+    min-width: 8.6rem;
+    padding: 0.22rem 0.48rem 0.22rem 0.26rem;
+}
+
+body .game-shell-nav .nav-player-avatar {
+    width: 1.86rem;
+}
+
+body .game-shell-nav .nav-player-copy {
+    gap: 0.08rem;
+}
+
+body .game-shell-nav .nav-player-copy span {
+    font-size: 0.72rem;
+}
+
+body .game-shell-nav .nav-player-copy small {
+    font-size: 0.58rem;
+}
+
+body .game-shell-nav .nav-settings-link,
+body .game-shell-nav .nav-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.42rem;
+    min-width: 2.42rem;
+    flex: 0 0 2.42rem;
+    padding: 0;
+    text-decoration: none;
+}
+
+body .game-shell-nav .nav-settings-link {
+    color: rgba(220,232,229,0.76);
+}
+
+body .game-shell-nav .nav-settings-link:hover,
+body .game-shell-nav .nav-settings-link:focus-visible {
+    border-color: rgba(111,214,189,0.4);
+    color: #f8fbf9;
+}
+
+body .game-shell-nav .nav-settings-link .ad-icon,
+body .game-shell-nav .nav-logout-btn .ad-icon {
+    width: 0.96rem;
+    height: 0.96rem;
+    margin: 0;
+}
+
+body .game-shell-nav .game-shell-auth-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.72rem;
+}
+
+body .game-shell-nav .game-shell-auth-actions .btn-primary {
+    border-color: rgba(231,138,85,0.72);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.16), transparent),
+        #d97845;
+    color: #140906;
+}
+
+body .game-shell-nav .game-shell-auth-actions .btn-primary:hover,
+body .game-shell-nav .game-shell-auth-actions .btn-primary:focus-visible {
+    border-color: #f1b35f;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.2), transparent),
+        #e78a55;
+    color: #100604;
+}
+
+.game-shell-toggle {
+    width: 2.42rem;
+    height: 2.42rem;
+    border-color: rgba(161,212,201,0.2);
+    border-radius: 6px;
+    padding: 0.38rem;
+}
+
+body.camp-page {
+    --camp-nav-height: var(--game-nav-height);
+}
+
+body.dungeon-page {
+    grid-template-rows: auto minmax(0, 1fr);
+}
+
+body.dungeon-page > .game-shell-nav {
+    position: relative;
+    display: flex;
+}
+
+body.dungeon-page .dungeon-main {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+}
+
+body.dungeon-page .dungeon-battle-card {
+    position: absolute;
+    inset: 0;
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    max-height: 100%;
+}
+
+body.dungeon-page .dungeon-battle-card:has(.dungeon-reward-strip:not(:empty)) {
+    grid-template-rows: auto minmax(0, 1fr);
+}
+
+body.dungeon-page .dungeon-battle-body {
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    gap: 0.32rem;
+    padding: 0.35rem;
+}
+
+body.dungeon-page .dungeon-tab-content {
+    height: auto;
+}
+
+body.dungeon-page #runPanel {
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
+}
+
+body.dungeon-page .dungeon-control-bar {
+    display: grid;
+    grid-template-columns: minmax(7rem, 1fr) auto minmax(7rem, 1fr);
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 3.05rem;
+    border: 1px solid rgba(161,212,201,0.16);
+    border-radius: 6px;
+    background:
+        linear-gradient(90deg, rgba(111,214,189,0.055), transparent 38%, rgba(232,199,106,0.045)),
+        rgba(4,11,14,0.78);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.025),
+        0 8px 22px rgba(0,0,0,0.22);
+    padding: 0.34rem 0.7rem;
+}
+
+body.dungeon-page #dungeonTitle {
+    justify-self: start;
+}
+
+body.dungeon-page .dungeon-header-brand {
+    display: inline-grid;
+    place-items: center;
+}
+
+body.dungeon-page .dungeon-header-brand .ad-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+body.dungeon-page .dungeon-control-bar .fight-log-actions.dungeon-battle-actions {
+    display: flex;
+    align-items: center;
+    justify-self: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0.2rem;
+    min-width: 0;
+    margin: 0;
+    border: 1px solid rgba(161,212,201,0.18);
+    border-radius: 6px;
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.045), rgba(232,199,106,0.025)),
+        rgba(3,9,11,0.64);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.025), 0 7px 18px rgba(0,0,0,0.2);
+    padding: 0.14rem;
+}
+
+body.dungeon-page .dungeon-control-bar .fight-log-actions.dungeon-battle-actions:empty {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+}
+
+body.dungeon-page .dungeon-control-bar .battle-playback-control,
+body.dungeon-page .dungeon-control-bar .battle-speed-control {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.dungeon-control-trailing {
+    min-width: 0;
+}
+
+@media (max-width: 1399.98px) and (min-width: 1200px) {
+    .game-shell-brand {
+        min-width: 8.5rem;
+        gap: 0.36rem;
+    }
+
+    .game-shell-brand .logo-nav {
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        flex-basis: 2.25rem;
+    }
+
+    .game-shell-brand-name {
+        font-size: 0.84rem;
+    }
+
+    body .game-shell-nav .game-nav-link {
+        gap: 0.22rem;
+        padding-inline: 0.36rem;
+        font-size: 0.61rem;
+    }
+
+    body .game-shell-nav .nav-player {
+        width: 7.7rem;
+        min-width: 7.7rem;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    body .game-shell-nav .navbar-collapse {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        max-height: calc(100vh - var(--game-nav-height));
+        max-height: calc(100dvh - var(--game-nav-height));
+        overflow-y: auto;
+        border-bottom: 1px solid rgba(161,212,201,0.2);
+        background:
+            linear-gradient(180deg, rgba(6,13,16,0.98), rgba(4,10,13,0.97)),
+            #061013;
+        box-shadow: 0 20px 42px rgba(0,0,0,0.5);
+        padding: 0.6rem;
+    }
+
+    .game-shell-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.28rem;
+        width: 100%;
+        margin: 0;
+    }
+
+    .game-shell-tabs .nav-item,
+    .game-shell-tabs .nav-item:last-child {
+        border: 0;
+    }
+
+    body .game-shell-nav .game-nav-link {
+        width: 100%;
+        min-height: 2.35rem;
+        border: 1px solid rgba(161,212,201,0.1);
+        border-radius: 4px;
+    }
+
+    body .game-shell-nav .nav-account,
+    body .game-shell-nav .nav-auth-actions {
+        justify-content: flex-end;
+        width: 100%;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(161,212,201,0.12);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .game-shell-brand {
+        min-width: 0;
+    }
+
+    body.dungeon-page .dungeon-control-bar {
+        grid-template-columns: minmax(4.8rem, auto) minmax(0, 1fr);
+        gap: 0.3rem;
+        padding-inline: 0.4rem;
+    }
+
+    body.dungeon-page .dungeon-control-bar .fight-log-actions.dungeon-battle-actions {
+        justify-self: end;
+    }
+
+    body.dungeon-page .dungeon-control-bar .btn-sm {
+        display: inline-flex;
+        align-items: center;
+        min-height: 1.7rem;
+        padding: 0.2rem 0.32rem;
+        font-size: 0.62rem;
+        line-height: 1;
+    }
+
+    body.dungeon-page .dungeon-control-bar .btn .ad-icon {
+        width: 0.76rem;
+        height: 0.76rem;
+        margin: 0;
+    }
+
+    .dungeon-control-trailing {
+        display: none;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .game-shell-brand-name {
+        font-size: 0.84rem;
+    }
+
+    .game-shell-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body .game-shell-nav .nav-account {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+
+    body .game-shell-nav .nav-balance {
+        grid-column: auto;
+        justify-content: center;
+    }
+
+    body .game-shell-nav .nav-player {
+        width: auto;
+        min-width: 0;
+    }
+
+    body.dungeon-page .dungeon-control-bar {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        gap: 0.18rem;
+        min-height: 4.7rem;
+        padding-block: 0.26rem;
+    }
+
+    body.dungeon-page #dungeonTitle {
+        justify-self: center;
+    }
+
+    body.dungeon-page .dungeon-control-bar .fight-log-actions.dungeon-battle-actions {
+        justify-self: center;
+        max-width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body .game-shell-nav .game-nav-link {
+        transition: none;
+    }
+}

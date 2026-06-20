@@ -6,7 +6,42 @@
   onReady(init);
 
   function init() {
+    markCurrentGameNav();
+    bindDisabledLinks();
     initAccountNav();
+  }
+
+  function markCurrentGameNav() {
+    const pathname = window.location.pathname.replace(/\/$/, '') || '/';
+    const section = pathname === '/camp'
+      ? 'camp'
+      : pathname.startsWith('/dungeon')
+        ? 'dungeon'
+        : pathname.startsWith('/demons')
+          ? 'demons'
+          : pathname.startsWith('/collection')
+            ? 'collection'
+            : pathname.startsWith('/rank')
+              ? 'rankings'
+              : '';
+
+    document.querySelectorAll('[data-game-route]').forEach((link) => {
+      const isActive = Boolean(section && link.dataset.gameRoute === section);
+      link.classList.toggle('active', isActive);
+      if (isActive) {
+        link.setAttribute('aria-current', 'page');
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+  }
+
+  function bindDisabledLinks() {
+    document.querySelectorAll('[data-disabled-link]').forEach((link) => {
+      if (link.dataset.disabledLinkBound === 'true') return;
+      link.dataset.disabledLinkBound = 'true';
+      link.addEventListener('click', (event) => event.preventDefault());
+    });
   }
 
   function initAccountNav() {

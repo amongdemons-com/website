@@ -46,7 +46,7 @@ const stepCombatPlayback = (...args) => dungeonActions.stepCombatPlayback(...arg
 
 function renderPlayer() {
   const player = state.player || {};
-  elements.navPlayerName.textContent = player.username || '';
+  window.AmongDemons.ui?.updateNavAccount?.(player);
 }
 
 function setDungeonLoading(isLoading) {
@@ -77,7 +77,6 @@ function renderRun() {
 
   if (!run) {
     if (laneResizeObserver) laneResizeObserver.disconnect();
-    elements.runPanel?.classList.remove('has-hand');
     elements.runPanel?.querySelector('.dungeon-arena')?.classList.remove('is-hand-strategy');
     elements.dungeonBottomPanel?.classList.add('d-none');
     elements.dungeonHandBar?.classList.add('d-none');
@@ -117,7 +116,6 @@ function renderRun() {
     hasPendingPacts ? 'pacts' : 'ready'
   ].join(':');
 
-  elements.runPanel?.classList.toggle('has-hand', showHand);
   elements.dungeonBottomPanel?.classList.toggle('d-none', !showHand);
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
   setElementHtml(elements.teamGrid, renderDemonCards(team, {
@@ -157,10 +155,7 @@ function renderDungeonTitle(run) {
 
   return `
     <span class="dungeon-title-brand">
-      <a class="dungeon-header-brand" href="/camp" aria-label="Back to camp">
-        ${renderIcon('back')}
-        <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" width="32" height="32" loading="eager">
-      </a>
+      <span class="dungeon-header-brand" aria-hidden="true">${renderIcon('swords')}</span>
       <span class="dungeon-title-copy">
         <span class="dungeon-title-text">Dungeon</span>
         ${run ? `<span class="dungeon-floor-title">
