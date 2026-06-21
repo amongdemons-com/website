@@ -55,7 +55,6 @@
       'runActionLabel',
       'runStatus',
       'runFloor',
-      'runSummary',
       'runTeam',
       'runTeamLabel',
       'runEnemy',
@@ -367,7 +366,6 @@
       setText(elements.runStatus, 'Ready');
       setClassName(elements.runStatus, 'play-status-chip is-ready');
       setText(elements.runFloor, '0');
-      setText(elements.runSummary, 'No active run. Draft a team and start climbing.');
       setText(elements.runTeam, '-');
       setText(elements.runTeamLabel, 'Team');
       setText(elements.runEnemy, '-');
@@ -386,7 +384,7 @@
     const runSummary = getRunSummary(run);
 
     setText(elements.runActionLabel, isDefeated ? 'Resolve Run' : 'Dungeon');
-    setText(elements.dungeonActionEyebrow, isDefeated ? 'Run Defeated' : (isRecruiting ? 'Victory Pause' : 'Enter'));
+    setText(elements.dungeonActionEyebrow, isDefeated ? 'Run Defeated' : (isRecruiting ? 'Continue' : 'Enter'));
     setText(elements.primaryDungeonMeta, runSummary);
     setText(elements.playerSubtitle, isDefeated
       ? 'The last breach collapsed. Resolve it before the next climb.'
@@ -394,7 +392,6 @@
     setText(elements.runStatus, isDefeated ? 'Defeated' : (isRecruiting ? 'Recruit' : 'Active'));
     setClassName(elements.runStatus, `play-status-chip ${isDefeated ? 'is-danger' : (isRecruiting ? 'is-choice' : 'is-active')}`);
     setText(elements.runFloor, formatNumber(currentFloor));
-    setText(elements.runSummary, runSummary);
     setText(elements.runTeam, Number.isFinite(teamLimit)
       ? `${formatNumber(teamCount)}/${formatNumber(teamLimit)}`
       : formatNumber(teamCount));
@@ -585,10 +582,10 @@
   }
 
   function getRunSummary(run) {
-    if (run.status === 'defeated') return 'The run is defeated. Resolve it in the dungeon.';
-    if (run.awaitingRecruit) return 'Victory pause. Choose a recruit, skip, or extract rewards.';
-    if ((run.enemies || []).length) return 'Formation locked. Finish the active battle.';
-    return 'Run is open. Continue from the dungeon table.';
+    var tfloor = Number(run.currentFloor) || 0;
+    if (tfloor <=1)
+      return 'Descend into the depths and face the unknown.';
+    return 'Floor ' + tfloor + ': the darkness grows heavier.';
   }
 
   function getTeamCount(run) {

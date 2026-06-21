@@ -7744,6 +7744,7 @@ body.camp-page > .camp-lobby {
     font-size: 0.78rem;
     font-weight: 700;
     line-height: 1.25;
+    display: none;
 }
 
 .camp-level-block {
@@ -8720,6 +8721,7 @@ body.camp-page::before {
 
 .camp-player-panel {
     justify-content: start;
+    margin-bottom: auto;
 }
 
 .camp-player-card {
