@@ -30,6 +30,7 @@
     }
 
     cacheElements();
+    startDailySoulAnimation();
     bindDisabledLinks();
     bindProfilePicker();
     bindQuestControls();
@@ -123,6 +124,92 @@
     elements.dailyRewardButton?.addEventListener('click', () => {
       claimCampfireCache(elements.dailyRewardButton);
     });
+  }
+
+  function startDailySoulAnimation() {
+    const canvas = document.getElementById('dailySoulCanvas');
+    if (!canvas || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const soulImg = new Image();
+    soulImg.src = '/assets/soul.svg';
+
+    const W = 120;
+    const H = 140;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    function spawnSoul() {
+      return {
+        x: 60 + (Math.random() - 0.5) * 34,
+        y: 126 + Math.random() * 5,
+        life: Math.random(),
+        speed: 0.00055 + Math.random() * 0.00025,
+        size: 19 + Math.random() * 14,
+        drift: 2 + Math.random() * 4,
+        phase: Math.random() * Math.PI * 2,
+        opacity: 0.085 + Math.random() * 0.075,
+        visibleFrom: 0.05 + Math.random() * 0.14,
+        visibleFor: 0.36 + Math.random() * 0.12,
+        grow: Math.random() > 0.5
+      };
+    }
+
+    const souls = Array.from({ length: 10 }, spawnSoul);
+
+    function drawSoul(soul) {
+      soul.life += soul.speed;
+
+      if (soul.life >= 1) {
+        Object.assign(soul, spawnSoul());
+        soul.life = 0;
+      }
+
+      const start = soul.visibleFrom;
+      const end = start + soul.visibleFor;
+      if (soul.life < start || soul.life > end) return;
+
+      const local = (soul.life - start) / soul.visibleFor;
+
+      const x = soul.x + Math.sin(local * Math.PI * 2 + soul.phase) * soul.drift;
+      const y = soul.y - local * 106;
+
+      const fadeIn = Math.min(1, local / 0.18);
+      const fadeOut = local < 0.78 ? 1 : (1 - local) / 0.22;
+      const alpha = soul.opacity * fadeIn * fadeOut;
+
+      const scale = soul.grow
+        ? 0.82 + local * 0.38
+        : 1.12 - local * 0.26;
+
+      const size = soul.size * scale;
+
+      ctx.save();
+
+      ctx.globalAlpha = alpha * 0.45;
+      ctx.shadowColor = 'rgba(120,255,245,0.75)';
+      ctx.shadowBlur = 18;
+      ctx.drawImage(soulImg, x - size / 2, y - size / 2, size, size);
+
+      ctx.globalAlpha = alpha;
+      ctx.shadowBlur = 0;
+      ctx.drawImage(soulImg, x - size / 2, y - size / 2, size, size);
+
+      ctx.restore();
+    }
+
+    function animateSouls() {
+      ctx.clearRect(0, 0, W, H);
+      souls.forEach(drawSoul);
+      window.requestAnimationFrame(animateSouls);
+    }
+
+    soulImg.onload = animateSouls;
   }
 
   function openProfilePicker() {

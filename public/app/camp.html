@@ -93,7 +93,7 @@
                 <small id="navPlayerLevel" data-nav-player-level>Level -</small>
               </span>
             </a>
-            <a class="nav-settings-link" href="#settings" aria-disabled="true" data-disabled-link title="Settings" aria-label="Settings">
+            <a class="nav-settings-link" href="/settings" title="Settings" aria-label="Settings">
               <i data-lucide="settings"></i>
             </a>
             <button class="btn nav-logout-btn" id="logoutBtn" type="button" title="Logout">
@@ -186,13 +186,12 @@
           </header>
           <div class="play-objective-list" id="objectiveList" aria-live="polite"></div>
           <section class="camp-daily-reward" aria-label="Daily reward">
-            <div class="camp-daily-glow" aria-hidden="true"></div>
-            <div class="camp-chest-mark" aria-hidden="true">
-              <i data-lucide="gift"></i>
+            <div class="daily-soul-art">
+              <canvas id="dailySoulCanvas"></canvas>
             </div>
             <div class="camp-chest-copy">
               <span class="camp-hero-stat-label">Daily Reward</span>
-              <strong id="dailyRewardTitle">Campfire Cache</strong>
+              <strong id="dailyRewardTitle">Campfire Souls</strong>
               <span class="camp-daily-value" id="dailyRewardValue"></span>
               <small id="dailyRewardStatus">Loading reward...</small>
             </div>

@@ -13,6 +13,7 @@
     '/rank': 'rankings.html',
     '/rankings': 'rankings.html',
     '/register': 'register.html',
+    '/settings': 'settings.html',
     '/terms': 'terms.html'
   };
 

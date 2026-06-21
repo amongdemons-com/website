@@ -23,9 +23,11 @@ let catalogPromise;
 const noindexPaths = new Set([
   '/login',
   '/register',
+  '/settings',
   '/camp',
   '/app/login.html',
   '/app/register.html',
+  '/app/settings.html',
   '/app/camp.html',
   '/app/collection.html',
   '/app/privacy.html',
@@ -103,6 +105,10 @@ app.get(['/register', '/register/'], (req, res) => {
 
 app.get(['/login', '/login/'], (req, res) => {
   res.sendFile(path.join(appDir, 'login.html'));
+});
+
+app.get(['/settings', '/settings/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'settings.html'));
 });
 
 app.get(['/privacy', '/privacy/'], (req, res) => {
