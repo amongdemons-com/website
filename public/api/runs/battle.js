@@ -5,10 +5,11 @@ const { simulateFight } = require('../lib/combat');
 const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
-const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, hasPendingBuffChoices, serializeRunBuffState, shouldOfferRunBuffChoices } = require('../lib/run-buffs');
+const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, getTemporaryTeamSizeBonus, hasPendingBuffChoices, serializeRunBuffState, shouldOfferRunBuffChoices } = require('../lib/run-buffs');
 const { assignFormationSlots, resetRunDemon } = require('../lib/run-demons');
-const { COLLECTION_REINFORCEMENT_FLOOR } = require('../lib/dungeon-rules');
+const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { createDiscardSoulRewardFields, ensureRunEarned } = require('../lib/run-rewards');
+const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
 
 const router = express.Router();
 
@@ -31,6 +32,13 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Choose a Demonic Pact before the next battle.' });
   }
 
+  const teamSizeAtBattleStart = (run.state.team || []).length;
+  const teamLimitAtBattleStart = getDungeonTeamLimit(run.floor) + getTemporaryTeamSizeBonus(run);
+  const isUndermannedAttempt = qualifiesForTrialOfTheFew({
+    floor: run.floor,
+    teamSize: teamSizeAtBattleStart,
+    teamLimit: teamLimitAtBattleStart
+  });
   const rng = createRng(run.seed + run.floor);
   const demonTypes = await getDemonTypes();
   applyRunBuffStatModifiers(run);
@@ -83,6 +91,12 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   }
 
   await saveRun(run);
+  if (result.winner === 'player') {
+    await recordDailyQuestProgress(req.player.id, {
+      dungeonWins: 1,
+      undermannedWins: isUndermannedAttempt ? 1 : 0
+    });
+  }
 
   res.json({
     winner: result.winner,

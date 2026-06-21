@@ -10,9 +10,12 @@
     player: session.player || null,
     progression: null,
     run: null,
+    questData: null,
     collection: [],
     collectionLoaded: false,
-    profilePickerOpen: false
+    profilePickerOpen: false,
+    questClaimPending: false,
+    dailyRewardPending: false
   };
   const ACCOUNT_LEVEL_BASE_XP = 250;
   const ACCOUNT_LEVEL_EXPONENT = 1.65;
@@ -29,6 +32,7 @@
     cacheElements();
     bindDisabledLinks();
     bindProfilePicker();
+    bindQuestControls();
     await loadCamp();
   }
 
@@ -59,6 +63,11 @@
       'runEarned',
       'runEarnedLabel',
       'objectiveList',
+      'questResetChip',
+      'dailyRewardTitle',
+      'dailyRewardValue',
+      'dailyRewardStatus',
+      'dailyRewardButton',
       'primaryDungeonMeta',
       'dungeonActionEyebrow',
       'profileDemonButton',
@@ -101,6 +110,19 @@
       if (event.key === 'Escape' && state.profilePickerOpen) {
         closeProfilePicker();
       }
+    });
+  }
+
+  function bindQuestControls() {
+    elements.objectiveList?.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const button = target?.closest('[data-quest-claim]');
+      if (!button) return;
+      claimQuestReward(button.dataset.questClaim, button);
+    });
+
+    elements.dailyRewardButton?.addEventListener('click', () => {
+      claimCampfireCache(elements.dailyRewardButton);
     });
   }
 
@@ -216,22 +238,25 @@
 
   async function loadCamp() {
     try {
-      const [me, progression, run, collection] = await Promise.all([
+      const [me, progression, run, collection, questData] = await Promise.all([
         api('/api/auth/me'),
         api('/api/account/progression'),
         loadCurrentRun(),
-        loadCollection()
+        loadCollection(),
+        api('/api/account/quests')
       ]);
 
       state.player = me.player;
       state.progression = progression;
       state.run = run;
+      state.questData = questData;
       state.collection = collection.demons || [];
       state.collectionLoaded = true;
 
       renderPlayer();
       renderRun();
       renderObjectives();
+      renderDailyReward();
       if (state.profilePickerOpen) renderProfilePicker();
     } catch (error) {
       handleAuthError(error);
@@ -381,48 +406,7 @@
   }
 
   function renderObjectives() {
-    const run = state.run;
-    const progression = state.progression || {};
-    const payout = run ? getExtractPayout(run) : { xp: 0, souls: 0 };
-    const bestFloor = Number(progression.highestFloor) || 0;
-    const currentFloor = Number(run?.currentFloor ?? 0);
-    const reachedFloor = Math.max(bestFloor, currentFloor);
-    const fightProgress = clamp(currentFloor || 0, 0, 3);
-    const extractProgress = payout.souls > 0 ? 1 : 0;
-    const floorTarget = Math.max(10, reachedFloor + 1);
-    const objectives = [
-      {
-        icon: 'swords',
-        title: 'Win 3 dungeon fights',
-        meta: run?.awaitingRecruit ? 'Victory pause active.' : 'Clear battles before extracting.',
-        current: fightProgress,
-        target: 3,
-        unit: 'plain',
-        reward: { type: 'souls', value: 15 },
-        href: '/dungeon'
-      },
-      {
-        icon: 'skull',
-        title: 'Extract 2 demons',
-        meta: payout.souls > 0 ? 'A cache is ready at extraction.' : 'Win fights to reveal extraction value.',
-        current: extractProgress,
-        target: 2,
-        unit: 'plain',
-        reward: { type: 'xp', value: 20 },
-        href: '/dungeon'
-      },
-      {
-        icon: 'flag',
-        title: `Reach floor ${formatNumber(floorTarget)}`,
-        meta: bestFloor > 0 ? `Best clear: floor ${formatNumber(bestFloor)}.` : 'Your first clear sets the record.',
-        current: reachedFloor,
-        target: floorTarget,
-        unit: 'plain',
-        reward: { type: 'souls', value: 25 },
-        href: '/dungeon'
-      }
-    ];
-
+    const objectives = state.questData?.quests || [];
     setHtml(elements.objectiveList, objectives.map(renderObjective).join(''));
   }
 
@@ -431,8 +415,22 @@
     const current = clamp(Number(objective.current) || 0, 0, target);
     const percent = Math.round((current / target) * 100);
 
+    const tag = objective.claimable ? 'button' : (objective.claimed ? 'div' : 'a');
+    const attributes = objective.claimable
+      ? `type="button" data-quest-claim="${escapeAttribute(objective.id)}"`
+      : (objective.claimed ? '' : `href="${escapeAttribute(objective.href || '/dungeon')}"`);
+    const stateClass = objective.claimed
+      ? 'is-claimed'
+      : (objective.claimable ? 'is-claimable' : (objective.completed ? 'is-complete' : ''));
+    const rewardLabel = objective.claimed ? 'Claimed' : (objective.claimable ? 'Claim' : 'Reward');
+    const rewardMarkup = objective.claimed
+      ? renderIcon('check')
+      : renderQuestReward(objective.reward);
+    const requirements = renderQuestRequirements(objective.requirements);
+    const requirementsClass = requirements ? 'has-requirements' : '';
+
     return `
-      <a class="play-objective" href="${escapeAttribute(objective.href || '/dungeon')}">
+      <${tag} class="play-objective ${stateClass} ${requirementsClass}" ${attributes}>
         <span class="play-objective-icon">${renderIcon(objective.icon)}</span>
         <span class="play-objective-body">
           <strong>${escapeHtml(objective.title)}</strong>
@@ -444,11 +442,27 @@
             <span>${escapeHtml(formatQuestValue(current, objective.unit))} / ${escapeHtml(formatQuestValue(target, objective.unit))}</span>
           </span>
         </span>
+        ${requirements}
         <span class="quest-reward">
-          <small>Reward</small>
-          <strong>${renderQuestReward(objective.reward)}</strong>
+          <small>${escapeHtml(rewardLabel)}</small>
+          <strong>${rewardMarkup}</strong>
         </span>
-      </a>
+      </${tag}>
+    `;
+  }
+
+  function renderQuestRequirements(requirements) {
+    if (!Array.isArray(requirements) || !requirements.length) return '';
+
+    return `
+      <span class="quest-requirements" aria-label="Quest requirements">
+        ${requirements.map((requirement) => `
+          <span class="quest-requirement">
+            ${renderIcon(requirement.icon)}
+            <span>${escapeHtml(requirement.label)}</span>
+          </span>
+        `).join('')}
+      </span>
     `;
   }
 
@@ -469,6 +483,105 @@
     }
 
     return escapeHtml(reward.value || '-');
+  }
+
+  function renderDailyReward() {
+    const dailyReward = state.questData?.dailyReward || {};
+    const period = state.questData?.period || {};
+    const claimed = Boolean(dailyReward.claimed);
+    const claimable = Boolean(dailyReward.claimable) && !claimed;
+
+    setText(elements.dailyRewardTitle, dailyReward.title || 'Campfire Cache');
+    setHtml(elements.dailyRewardValue, renderQuestReward(dailyReward.reward));
+    setText(elements.dailyRewardStatus, claimed
+      ? 'Claimed until reset.'
+      : 'Ready once today.');
+    setText(elements.questResetChip, formatResetCountdown(period.resetsAt));
+
+    if (elements.questResetChip && period.resetsAt) {
+      elements.questResetChip.title = `Resets ${new Date(period.resetsAt).toLocaleString()}`;
+    }
+    if (elements.dailyRewardButton) {
+      elements.dailyRewardButton.disabled = !claimable || state.dailyRewardPending;
+      elements.dailyRewardButton.textContent = claimed ? 'Claimed' : (state.dailyRewardPending ? 'Claiming...' : 'Claim');
+      elements.dailyRewardButton.classList.toggle('is-claimed', claimed);
+      elements.dailyRewardButton.classList.toggle('is-busy', state.dailyRewardPending);
+    }
+  }
+
+  async function claimQuestReward(questId, button) {
+    if (!questId || state.questClaimPending) return;
+
+    state.questClaimPending = true;
+    button.disabled = true;
+    button.classList.add('is-busy');
+
+    try {
+      const payload = await api(`/api/account/quests/${encodeURIComponent(questId)}/claim`, {
+        method: 'POST'
+      });
+      applyQuestPayload(payload);
+      setMessage('Quest reward claimed.', 'success');
+    } catch (error) {
+      showError(error);
+    } finally {
+      state.questClaimPending = false;
+      renderObjectives();
+    }
+  }
+
+  async function claimCampfireCache(button) {
+    if (state.dailyRewardPending || !state.questData?.dailyReward?.claimable) return;
+
+    state.dailyRewardPending = true;
+    renderDailyReward();
+    button?.classList.add('is-busy');
+
+    try {
+      const payload = await api('/api/account/daily-reward/claim', { method: 'POST' });
+      applyQuestPayload(payload);
+      setMessage('Campfire Cache claimed.', 'success');
+    } catch (error) {
+      showError(error);
+    } finally {
+      state.dailyRewardPending = false;
+      renderDailyReward();
+    }
+  }
+
+  function applyQuestPayload(payload) {
+    state.questData = {
+      period: payload.period,
+      quests: payload.quests || [],
+      dailyReward: payload.dailyReward || null
+    };
+
+    if (payload.progression) {
+      state.progression = {
+        ...(state.progression || {}),
+        ...payload.progression,
+        levelProgress: null
+      };
+      state.player = {
+        ...(state.player || {}),
+        ...payload.progression
+      };
+      syncSessionPlayer(state.player);
+      renderPlayer();
+    }
+
+    renderObjectives();
+    renderDailyReward();
+  }
+
+  function formatResetCountdown(resetsAt) {
+    const resetTime = new Date(resetsAt).getTime();
+    if (!Number.isFinite(resetTime)) return 'Daily';
+
+    const minutes = Math.max(0, Math.ceil((resetTime - Date.now()) / 60000));
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return hours > 0 ? `${hours}h ${remainingMinutes}m` : `${remainingMinutes}m`;
   }
 
   function getRunSummary(run) {

@@ -230,6 +230,25 @@ async function initializeSchema() {
   await normalizeUtf8Column('runs', 'playerId', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
   await normalizeUtf8Column('runs', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
   await addIndexIfMissing('runs', 'idx_runs_player_id', 'INDEX idx_runs_player_id (player_id)');
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_daily_quests (
+      player_id VARCHAR(255) NOT NULL,
+      quest_date DATE NOT NULL,
+      dungeon_wins INT UNSIGNED NOT NULL DEFAULT 0,
+      demons_extracted INT UNSIGNED NOT NULL DEFAULT 0,
+      undermanned_wins INT UNSIGNED NOT NULL DEFAULT 0,
+      highest_floor INT UNSIGNED NOT NULL DEFAULT 0,
+      claimed_quests LONGTEXT NOT NULL,
+      daily_reward_claimed TINYINT(1) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, quest_date),
+      INDEX idx_player_daily_quests_date (quest_date)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column('player_daily_quests', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addColumnIfMissing('player_daily_quests', 'undermanned_wins', '`undermanned_wins` INT UNSIGNED NOT NULL DEFAULT 0');
   await backfillHighestFloors();
 }
 

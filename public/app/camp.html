@@ -208,7 +208,7 @@
               <i data-lucide="scroll-text"></i>
               <span>Quests</span>
             </span>
-            <span class="camp-reset-chip">Daily</span>
+            <span class="camp-reset-chip" id="questResetChip">Daily</span>
           </header>
           <div class="play-objective-list" id="objectiveList" aria-live="polite"></div>
           <section class="camp-daily-reward" aria-label="Daily reward">
@@ -218,10 +218,11 @@
             </div>
             <div class="camp-chest-copy">
               <span class="camp-hero-stat-label">Daily Reward</span>
-              <strong>Campfire Cache</strong>
-              <small>Ready to claim</small>
+              <strong id="dailyRewardTitle">Campfire Cache</strong>
+              <span class="camp-daily-value" id="dailyRewardValue"></span>
+              <small id="dailyRewardStatus">Loading reward...</small>
             </div>
-            <button class="camp-chest-button" type="button" disabled>Claim</button>
+            <button class="camp-chest-button" id="dailyRewardButton" type="button" disabled>Claim</button>
           </section>
         </aside>
       </section>

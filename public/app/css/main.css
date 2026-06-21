@@ -9143,13 +9143,55 @@ body.camp-page::before {
 .camp-page .play-objective {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
+    width: 100%;
     min-height: 5rem;
     border-color: rgba(161,212,201,0.14);
     border-radius: 6px;
     background:
         linear-gradient(90deg, rgba(111,214,189,0.055), rgba(231,138,85,0.035)),
         rgba(4,10,13,0.46);
+    color: var(--ad-text);
+    font: inherit;
     padding: 0.78rem;
+    text-align: left;
+}
+
+.camp-page button.play-objective {
+    cursor: pointer;
+}
+
+.camp-page .play-objective.is-claimable {
+    border-color: rgba(232,199,106,0.48);
+    background:
+        linear-gradient(90deg, rgba(232,199,106,0.12), rgba(231,138,85,0.08)),
+        rgba(4,10,13,0.58);
+    box-shadow:
+        0 0 18px rgba(232,199,106,0.1),
+        inset 0 0 20px rgba(231,138,85,0.035);
+}
+
+.camp-page .play-objective.is-claimable .quest-reward small,
+.camp-page .play-objective.is-claimable .quest-reward strong {
+    color: #f3dc93 !important;
+}
+
+.camp-page .play-objective.is-claimed {
+    border-color: rgba(111,214,189,0.22);
+    background: rgba(4,10,13,0.38);
+    opacity: 0.68;
+}
+
+.camp-page .play-objective.is-claimed:hover {
+    border-color: rgba(111,214,189,0.22);
+    background: rgba(4,10,13,0.38);
+    box-shadow: none;
+    transform: none;
+}
+
+.camp-page .play-objective.is-busy {
+    cursor: wait;
+    opacity: 0.62;
+    pointer-events: none;
 }
 
 .camp-page .play-objective-icon {
@@ -9174,6 +9216,35 @@ body.camp-page::before {
     display: none;
 }
 
+.quest-requirements {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.28rem;
+}
+
+.quest-requirement {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+    min-height: 1.3rem;
+    border: 1px solid rgba(232,199,106,0.2);
+    border-radius: 3px;
+    background: rgba(232,199,106,0.06);
+    padding: 0.18rem 0.34rem;
+    color: rgba(243,220,147,0.86);
+    font-size: 0.61rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.quest-requirement .ad-icon {
+    width: 0.76rem;
+    height: 0.76rem;
+    flex: 0 0 auto;
+}
+
 .quest-progress-meta {
     justify-content: end;
     color: rgba(220,232,229,0.66);
@@ -9187,6 +9258,7 @@ body.camp-page::before {
 }
 
 .quest-reward small {
+    display: block !important;
     color: rgba(220,232,229,0.58);
     font-size: 0.6rem;
     font-weight: 900;
@@ -9206,6 +9278,22 @@ body.camp-page::before {
     width: 1rem;
     height: 1rem;
     margin: 0;
+}
+
+.camp-daily-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.24rem;
+    width: max-content;
+    color: var(--ad-soul, #8fefff);
+    font-size: 0.88rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.camp-daily-value .ad-icon {
+    width: 0.92rem;
+    height: 0.92rem;
 }
 
 .quest-xp-mark {
@@ -9290,6 +9378,36 @@ body.camp-page::before {
     box-shadow:
         0 0 18px rgba(232,199,106,0.14),
         0 0 16px rgba(111,214,189,0.12);
+    cursor: pointer;
+    transition:
+        border-color 150ms ease,
+        background 150ms ease,
+        box-shadow 150ms ease,
+        color 150ms ease,
+        transform 150ms ease;
+}
+
+.camp-chest-button:not(:disabled):hover,
+.camp-chest-button:not(:disabled):focus-visible {
+    border-color: rgba(232,199,106,0.8);
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.24), rgba(231,138,85,0.24)),
+        rgba(4,10,13,0.72);
+    color: #fff3bd;
+    box-shadow:
+        0 0 24px rgba(232,199,106,0.2),
+        0 0 20px rgba(231,138,85,0.12);
+    transform: translateY(-1px);
+}
+
+.camp-chest-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.52;
+}
+
+.camp-chest-button.is-claimed {
+    border-color: rgba(111,214,189,0.24);
+    color: rgba(220,232,229,0.62);
 }
 
 .camp-bottom-reserve {
@@ -9571,6 +9689,19 @@ body.camp-page::before {
     }
 }
 
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    .camp-page .play-objective:not(.has-requirements) {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        min-height: 4.7rem;
+    }
+
+    .camp-page .play-objective:not(.has-requirements) .quest-reward {
+        grid-column: 3;
+        align-self: center;
+        justify-self: end;
+    }
+}
+
 @media (max-height: 820px) and (min-width: 1200px) {
     .camp-lobby {
         grid-template-rows: minmax(0, 1fr) minmax(3.55rem, 6.6vh);
@@ -9741,6 +9872,43 @@ body.camp-page::before {
     .camp-stage-runes {
         display: none;
     }
+}
+
+.camp-page .play-objective.has-requirements {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 7.25rem;
+    row-gap: 0.5rem;
+}
+
+.camp-page .play-objective.has-requirements .play-objective-icon {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.camp-page .play-objective.has-requirements .play-objective-body {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.camp-page .play-objective.has-requirements .quest-reward {
+    position: static;
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    justify-self: end;
+}
+
+.camp-page .play-objective.has-requirements .quest-requirements {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+}
+
+.camp-page .play-objective.has-requirements .quest-progress-meta {
+    justify-content: end;
+    padding-right: 0;
 }
 
 body.collection-page {
