@@ -7056,7 +7056,7 @@ body.camp-page {
         linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.76)),
         radial-gradient(circle at 26% 16%, rgba(111,214,189,0.13), transparent 24rem),
         radial-gradient(circle at 78% 20%, rgba(232,199,106,0.1), transparent 22rem),
-        url("/app/images/assets/background/amongdemons_home.png") center top / cover fixed no-repeat,
+        url("/app/images/assets/background/amongdemons_campfire.png") center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
@@ -7557,7 +7557,7 @@ body.camp-page {
         radial-gradient(circle at 18% 20%, rgba(111,214,189,0.1), transparent 22rem),
         radial-gradient(circle at 86% 12%, rgba(232,199,106,0.08), transparent 20rem),
         linear-gradient(rgba(2,6,9,0.42), rgba(2,6,9,0.82)),
-        url("/app/images/assets/background/amongdemons_home.png") center / cover no-repeat,
+        url("/app/images/assets/background/amongdemons_campfire.png") center / cover no-repeat,
         #04090d;
     color: var(--ad-text);
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -7941,7 +7941,7 @@ body.camp-page > .camp-lobby {
     inset: 0;
     background:
         linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.62)),
-        url("/app/images/assets/background/amongdemons_home.png") center / cover no-repeat;
+        url("/app/images/assets/background/amongdemons_campfire.png") center / cover no-repeat;
     opacity: 0.48;
     transform: scale(1.03);
 }
@@ -8580,21 +8580,21 @@ body.camp-page {
     --camp-magic: var(--ad-teal, #6fd6bd);
     --camp-shadow: 0 28px 68px rgba(0,0,0,0.46);
     background:
-        radial-gradient(circle at 49% 66%, rgba(231,138,85,0.32), transparent 11rem),
-        radial-gradient(circle at 63% 34%, rgba(232,199,106,0.11), transparent 14rem),
-        radial-gradient(circle at 18% 10%, rgba(111,214,189,0.13), transparent 28rem),
-        radial-gradient(circle at 82% 14%, rgba(156,122,200,0.08), transparent 24rem),
-        linear-gradient(90deg, rgba(5,10,12,0.88), rgba(5,10,12,0.18) 36%, rgba(5,10,12,0.2) 65%, rgba(5,10,12,0.88)),
-        linear-gradient(180deg, rgba(5,10,12,0.2), rgba(5,10,12,0.84)),
-        url("/app/images/assets/background/amongdemons_home.png") center / cover no-repeat,
+        radial-gradient(circle at 49% 66%, rgba(231,138,85,0.1), transparent 11rem),
+        radial-gradient(circle at 63% 34%, rgba(232,199,106,0.06), transparent 14rem),
+        radial-gradient(circle at 18% 10%, rgba(111,214,189,0.08), transparent 28rem),
+        radial-gradient(circle at 82% 14%, rgba(156,122,200,0.05), transparent 24rem),
+        linear-gradient(90deg, rgba(5,10,12,0.68), rgba(5,10,12,0.08) 36%, rgba(5,10,12,0.12) 65%, rgba(5,10,12,0.7)),
+        linear-gradient(180deg, rgba(5,10,12,0.08), rgba(5,10,12,0.5)),
+        url("/app/images/assets/background/amongdemons_campfire.png") center / cover no-repeat,
         var(--ad-bg, #071013);
 }
 
 body.camp-page::before {
     background:
-        linear-gradient(180deg, rgba(5,10,12,0.08), rgba(5,10,12,0.22) 36%, rgba(5,10,12,0.78)),
-        radial-gradient(ellipse at 50% 62%, transparent 0 20%, rgba(2,7,9,0.52) 72%),
-        linear-gradient(90deg, rgba(2,7,9,0.46), transparent 24%, transparent 76%, rgba(2,7,9,0.5));
+        linear-gradient(180deg, rgba(5,10,12,0.02), rgba(5,10,12,0.1) 36%, rgba(5,10,12,0.48)),
+        radial-gradient(ellipse at 50% 62%, transparent 0 25%, rgba(2,7,9,0.28) 78%),
+        linear-gradient(90deg, rgba(2,7,9,0.28), transparent 24%, transparent 76%, rgba(2,7,9,0.3));
 }
 
 .nav-player-avatar {
@@ -9003,6 +9003,7 @@ body.camp-page::before {
     height: 24%;
     background: radial-gradient(ellipse at center, rgba(231,138,85,0.44), rgba(232,199,106,0.12) 44%, transparent 76%);
     filter: blur(10px);
+    opacity: 0;
 }
 
 .camp-scene-depth {
