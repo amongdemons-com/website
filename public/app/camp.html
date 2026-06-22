@@ -23,7 +23,7 @@
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_campfire.png">
     <meta name="twitter:image:alt" content="Among Demons campfire artwork">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/app/css/main.css?v=20260620-shared-nav-v2" rel="stylesheet">
+    <link href="/app/css/main.css?v=20260622-level-points-v4" rel="stylesheet">
   </head>
   <body class="camp-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -147,6 +147,15 @@
               <dd class="camp-hero-stat-value" id="floorStat">-</dd>
             </div>
           </dl>
+
+          <a class="camp-skill-tree-link" id="campSkillTreeLink" href="/skill-tree">
+            <span class="camp-skill-tree-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
+            <span class="camp-skill-tree-copy">
+              <strong>Skill Tree</strong>
+              <small id="campSkillTreeMeta">Loading level points...</small>
+            </span>
+            <i data-lucide="arrow-right"></i>
+          </a>
         </aside>
 
         <section class="camp-center-stage" aria-labelledby="campPlayerName">
@@ -200,18 +209,6 @@
         </aside>
       </section>
 
-      <section class="camp-bottom-reserve" aria-label="Reserved camp systems">
-        <div class="camp-reserve-frame">
-          <span class="camp-reserve-label">Camp Systems</span>
-          <div class="camp-reserve-slots" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      </section>
     </main>
 
     <div class="profile-demon-picker" id="profileDemonPicker" role="dialog" aria-modal="true" aria-labelledby="profileDemonPickerTitle" hidden>
@@ -237,6 +234,6 @@
     <script src="/app/js/api-config.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
-    <script src="/app/js/camp-ui.js"></script>
+    <script src="/app/js/camp-ui.js?v=20260622-level-points-v4"></script>
   </body>
 </html>

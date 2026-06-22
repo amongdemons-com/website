@@ -125,6 +125,29 @@ function resetRunDemon(demon, instanceId) {
   return next;
 }
 
+function mergeBattleTeamForRun(sourceTeam, battleTeam) {
+  const battleById = new Map((battleTeam || []).map((demon) => [demon.instanceId, demon]));
+
+  return (sourceTeam || []).map((demon) => {
+    const battleDemon = battleById.get(demon.instanceId);
+    if (!battleDemon) return { ...demon };
+
+    const maxHp = Math.max(1, Number(demon.maxHp) || Number(demon.hp) || 1);
+    const battleMaxHp = Math.max(1, Number(battleDemon.maxHp) || maxHp);
+    const battleHpRatio = Math.max(0, Math.min(1, (Number(battleDemon.hp) || 0) / battleMaxHp));
+
+    return {
+      ...demon,
+      maxHp,
+      hp: Math.max(battleDemon.hp > 0 ? 1 : 0, Math.min(maxHp, Math.round(maxHp * battleHpRatio))),
+      attackMeter: Number(battleDemon.attackMeter) || 0,
+      statusEffects: {
+        poison: (battleDemon.statusEffects?.poison || []).map((poison) => ({ ...poison }))
+      }
+    };
+  });
+}
+
 function getPositiveStat(...values) {
   for (const value of values) {
     const number = Number(value);
@@ -193,6 +216,7 @@ module.exports = {
   enrichDemonPreferredPositions,
   enrichRunPreferredPositions,
   getFormationSlotPosition,
+  mergeBattleTeamForRun,
   normalizeFormationSlot,
   normalizePosition,
   resetRunDemon

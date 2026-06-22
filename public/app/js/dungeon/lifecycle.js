@@ -44,7 +44,10 @@ const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelecti
 async function refreshAll() {
   setDungeonLoading(true);
   try {
-    const me = await api('/api/auth/me');
+    const [me] = await Promise.all([
+      api('/api/auth/me'),
+      loadAccountStatPoints()
+    ]);
     state.player = me.player;
     renderPlayer();
 
@@ -61,6 +64,11 @@ async function refreshAll() {
     setDungeonLoading(false);
     handleAuthError(error);
   }
+}
+
+async function loadAccountStatPoints() {
+  state.statPoints = await api('/api/account/stat-points');
+  return state.statPoints;
 }
 
 async function loadSavedRun() {
@@ -165,7 +173,7 @@ async function loadRun(runId) {
   } catch (error) {
     clearCurrentRun();
     state.run = null;
-    await loadStartOptions();
+    await Promise.all([loadStartOptions(), loadAccountStatPoints()]);
     renderRun();
     throw error;
   }
@@ -383,7 +391,7 @@ async function finishRun(message, summary = {}) {
       type: summary.defeated ? 'warning' : 'success'
     };
     getModal(elements.teamChoiceModal).hide();
-    await loadStartOptions();
+    await Promise.all([loadStartOptions(), loadAccountStatPoints()]);
     renderRun();
   } catch (error) {
     showError(error);
@@ -492,6 +500,7 @@ function isCurrentFloorBattle(run) {
 export {
   init,
   refreshAll,
+  loadAccountStatPoints,
   loadSavedRun,
   loadCurrentRun,
   loadStartOptions,

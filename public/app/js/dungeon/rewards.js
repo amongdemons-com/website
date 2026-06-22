@@ -22,6 +22,7 @@ const getLaneDropDraftIndex = (...args) => dungeonActions.getLaneDropDraftIndex(
 const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
 const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
 const loadStartOptions = (...args) => dungeonActions.loadStartOptions(...args);
+const loadAccountStatPoints = (...args) => dungeonActions.loadAccountStatPoints(...args);
 const normalizeFormationRow = (...args) => dungeonActions.normalizeFormationRow(...args);
 const refreshRecruitDraftOrder = (...args) => dungeonActions.refreshRecruitDraftOrder(...args);
 const refreshRecruitDraftPoolOrder = (...args) => dungeonActions.refreshRecruitDraftPoolOrder(...args);
@@ -615,7 +616,7 @@ async function finishCashout(result, options = {}) {
     type: 'success'
   };
   getModal(elements.cashoutModal).hide();
-  await loadStartOptions();
+  await Promise.all([loadStartOptions(), loadAccountStatPoints()]);
   renderRun();
 }
 

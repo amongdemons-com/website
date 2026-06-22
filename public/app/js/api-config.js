@@ -14,6 +14,7 @@
     '/rankings': 'rankings.html',
     '/register': 'register.html',
     '/settings': 'settings.html',
+    '/skill-tree': 'skill-tree.html',
     '/terms': 'terms.html'
   };
 

@@ -11,6 +11,7 @@
     progression: null,
     run: null,
     questData: null,
+    statPoints: null,
     collection: [],
     collectionLoaded: false,
     profilePickerOpen: false,
@@ -75,7 +76,9 @@
       'profileDemonPicker',
       'profileDemonPickerClose',
       'profileDemonPickerStatus',
-      'profileDemonGrid'
+      'profileDemonGrid',
+      'campSkillTreeLink',
+      'campSkillTreeMeta'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -324,18 +327,20 @@
 
   async function loadCamp() {
     try {
-      const [me, progression, run, collection, questData] = await Promise.all([
+      const [me, progression, run, collection, questData, statPoints] = await Promise.all([
         api('/api/auth/me'),
         api('/api/account/progression'),
         loadCurrentRun(),
         loadCollection(),
-        api('/api/account/quests')
+        api('/api/account/quests'),
+        api('/api/account/stat-points')
       ]);
 
       state.player = me.player;
       state.progression = progression;
       state.run = run;
       state.questData = questData;
+      state.statPoints = statPoints;
       state.collection = collection.demons || [];
       state.collectionLoaded = true;
 
@@ -343,6 +348,7 @@
       renderRun();
       renderObjectives();
       renderDailyReward();
+      renderSkillTreeLink();
       if (state.profilePickerOpen) renderProfilePicker();
     } catch (error) {
       handleAuthError(error);
@@ -408,6 +414,18 @@
         progressTrack.setAttribute('aria-label', `${percent}% progress to level ${formatNumber(level + 1)}`);
       }
     }
+  }
+
+  function renderSkillTreeLink() {
+    const summary = state.statPoints;
+    const unspent = Math.max(0, Number(summary?.unspentPoints) || 0);
+
+    elements.campSkillTreeLink?.classList.toggle('has-unspent-points', unspent > 0);
+    setText(elements.campSkillTreeMeta, !summary
+      ? 'Loading level points...'
+      : unspent > 0
+        ? `${formatNumber(unspent)} unspent point${unspent === 1 ? '' : 's'}`
+        : 'Review your upgrades');
   }
 
   function getLevelProgress(progression, level, xp) {

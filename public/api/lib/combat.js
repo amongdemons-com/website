@@ -214,7 +214,7 @@ function applyPoisonTick(team, tick, context, targetSide) {
         targetPosition: normalizePosition(target.position),
         targeting: 'poison',
         effect: 'poison',
-        dmg: damage,
+        dmg: damageResult.damage,
         shieldDamage: damageResult.shieldDamage,
         targetShield: target.shield || 0,
         targetHp: target.hp,
@@ -271,7 +271,7 @@ function applyDamage({
     targeting,
     hitIndex,
     hitCount,
-    dmg: modifiedDamage,
+    dmg: damageResult.damage,
     shieldDamage: damageResult.shieldDamage,
     targetShield: target.shield || 0,
     targetHp: target.hp
@@ -308,7 +308,7 @@ function applyDamage({
       targetPosition: normalizePosition(attacker.position),
       targeting: 'retaliate',
       effect: 'retaliate',
-      dmg: retaliationDamage,
+      dmg: retaliationResult.damage,
       shieldDamage: retaliationResult.shieldDamage,
       targetShield: attacker.shield || 0,
       targetHp: attacker.hp
@@ -331,6 +331,7 @@ function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {
   const healingResult = applyHealingModifiers({
     healer,
     healerSide,
+    target,
     healing: Math.max(1, Number(healer.atk) || 1),
     buffs: context.buffs
   });
@@ -416,7 +417,7 @@ function applyPoison({ tick, attacker, attackerSide, enemies, demonTypes, combat
 function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
   const demonTypes = options.demonTypes || {};
   const buffs = normalizeRunBuffState(options.buffs || options.runBuffs || {});
-  const players = applyPreBattleBuffs(cloneTeam(playerTeam), buffs);
+  const players = applyPreBattleBuffs(cloneTeam(playerTeam), buffs, options.accountBonuses);
   const enemies = cloneTeam(enemyTeam);
   const battleState = {
     lastBreathUsed: false
@@ -559,7 +560,11 @@ function getTeamStateKey(team) {
 }
 
 function dealDamage(target, damage) {
-  const amount = Math.max(0, Number(damage) || 0);
+  const incomingAmount = Math.max(0, Number(damage) || 0);
+  const damageReduction = Math.max(0, Math.min(0.3, Number(target.battleBuffs?.damageReduction) || 0));
+  const amount = incomingAmount > 0
+    ? Math.max(1, Math.round(incomingAmount * (1 - damageReduction)))
+    : 0;
   const shield = Math.max(0, Number(target.shield) || 0);
   const shieldDamage = Math.min(shield, amount);
   const hpDamage = amount - shieldDamage;
@@ -572,6 +577,7 @@ function dealDamage(target, damage) {
   }
 
   return {
+    damage: amount,
     shieldDamage,
     hpDamage
   };

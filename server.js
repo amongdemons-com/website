@@ -24,10 +24,12 @@ const noindexPaths = new Set([
   '/login',
   '/register',
   '/settings',
+  '/skill-tree',
   '/camp',
   '/app/login.html',
   '/app/register.html',
   '/app/settings.html',
+  '/app/skill-tree.html',
   '/app/camp.html',
   '/app/collection.html',
   '/app/privacy.html',
@@ -109,6 +111,10 @@ app.get(['/login', '/login/'], (req, res) => {
 
 app.get(['/settings', '/settings/'], (req, res) => {
   res.sendFile(path.join(appDir, 'settings.html'));
+});
+
+app.get(['/skill-tree', '/skill-tree/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'skill-tree.html'));
 });
 
 app.get(['/privacy', '/privacy/'], (req, res) => {

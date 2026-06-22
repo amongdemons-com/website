@@ -27,25 +27,26 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
   if (!isVisible) {
     setElementHtml(elements.dungeonHandGrid, '');
     elements.dungeonHandGrid.classList.remove('is-pacts-tab');
-    elements.dungeonHandBar.classList.remove('has-pacts', 'is-pacts-tab-active');
-    updateHandTabs('hand', 0);
+    elements.dungeonHandBar.classList.remove('has-pacts', 'is-pacts-tab-active', 'has-level-power-prompt');
+    updateHandTabs('hand', 0, false);
     return;
   }
 
-  const activePacts = getActiveBuffs();
-  const hasPacts = activePacts.length > 0;
-  if (!hasPacts || !['hand', 'pacts'].includes(state.activeHandTab)) {
+  const activeBuffs = getHandBuffs();
+  const hasLevelPowerPrompt = activeBuffs.some((buff) => buff.id === 'account-level-power-available');
+  if (!['hand', 'pacts'].includes(state.activeHandTab)) {
     state.activeHandTab = 'hand';
   }
 
-  const activeTab = hasPacts && state.activeHandTab === 'pacts' ? 'pacts' : 'hand';
+  const activeTab = state.activeHandTab === 'pacts' ? 'pacts' : 'hand';
 
-  elements.dungeonHandBar.classList.toggle('has-pacts', hasPacts);
+  elements.dungeonHandBar.classList.add('has-pacts');
   elements.dungeonHandBar.classList.toggle('is-pacts-tab-active', activeTab === 'pacts');
+  elements.dungeonHandBar.classList.toggle('has-level-power-prompt', hasLevelPowerPrompt);
   elements.dungeonHandGrid.classList.toggle('is-pacts-tab', activeTab === 'pacts');
-  updateHandTabs(activeTab, activePacts.length);
+  updateHandTabs(activeTab, activeBuffs.length, hasLevelPowerPrompt);
   if (activeTab === 'pacts') {
-    setElementHtml(elements.dungeonHandGrid, renderHandPactTags(activePacts));
+    setElementHtml(elements.dungeonHandGrid, renderHandPactTags(activeBuffs));
   } else {
     const handRenderKey = [
       'hand',
@@ -60,7 +61,7 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
   bindHandTabs();
 }
 
-function updateHandTabs(activeTab = 'hand', pactCount = 0) {
+function updateHandTabs(activeTab = 'hand', buffCount = 0, hasLevelPowerPrompt = false) {
   const handTab = elements.dungeonHandBar?.querySelector('[data-dungeon-hand-tab="hand"]');
   const pactsTab = elements.dungeonHandBar?.querySelector('[data-dungeon-hand-tab="pacts"]');
 
@@ -70,10 +71,12 @@ function updateHandTabs(activeTab = 'hand', pactCount = 0) {
   }
 
   if (pactsTab) {
-    pactsTab.classList.toggle('d-none', pactCount <= 0);
+    pactsTab.classList.remove('d-none');
     pactsTab.classList.toggle('active', activeTab === 'pacts');
+    pactsTab.classList.toggle('is-level-power-attention', hasLevelPowerPrompt);
     pactsTab.setAttribute('aria-selected', activeTab === 'pacts' ? 'true' : 'false');
-    pactsTab.disabled = pactCount <= 0;
+    pactsTab.disabled = false;
+    pactsTab.setAttribute('aria-label', buffCount > 0 ? `Buffs, ${buffCount} active` : 'Buffs, none active');
   }
 }
 
@@ -86,21 +89,80 @@ function bindHandTabs() {
     if (!button || !elements.dungeonHandBar?.contains(button)) return;
 
     const nextTab = button.dataset.dungeonHandTab === 'pacts' ? 'pacts' : 'hand';
-    if (nextTab === 'pacts' && !getActiveBuffs().length) return;
-
     state.activeHandTab = nextTab;
     renderRun();
   });
 }
 
-function renderHandPactTags(activePacts) {
-  if (!activePacts.length) {
-    return '<div class="dungeon-hand-pacts-empty">No Demonic Pacts sealed.</div>';
+function getHandBuffs() {
+  const levelPowerBuff = createLevelPowerBuff(state.statPoints);
+  const levelPowerPrompt = createLevelPowerPrompt(state.statPoints);
+  return [
+    ...(levelPowerBuff ? [levelPowerBuff] : []),
+    ...(levelPowerPrompt ? [levelPowerPrompt] : []),
+    ...getActiveBuffs()
+  ];
+}
+
+function createLevelPowerBuff(statPoints) {
+  if (!statPoints || Number(statPoints.spentPoints) <= 0) return null;
+
+  const bonuses = statPoints.bonuses || {};
+  const bonusRows = [
+    [bonuses.maxHpPercent, 'HP'],
+    [bonuses.attackPercent, 'ATK'],
+    [bonuses.speedPercent, 'Speed'],
+    [bonuses.damageReductionPercent, 'damage reduction'],
+    [bonuses.healingReceivedPercent, 'healing received']
+  ]
+    .filter(([value]) => Number(value) > 0)
+    .map(([value, label]) => `+${formatLevelPowerBonus(value)}% ${label}`);
+
+  return {
+    id: 'account-level-power',
+    name: 'Level Power',
+    description: bonusRows.join(', '),
+    tooltip: ['Level Power', ...bonusRows].join('\n'),
+    rarity: 'account',
+    icon: 'sparkles',
+    tags: ['Permanent', 'Account']
+  };
+}
+
+function createLevelPowerPrompt(statPoints) {
+  const unspentPoints = Math.max(0, Number(statPoints?.unspentPoints) || 0);
+  if (!statPoints || unspentPoints <= 0) return null;
+
+  return {
+    id: 'account-level-power-available',
+    name: 'Level Points Available',
+    description: `You have ${unspentPoints} skill point${unspentPoints === 1 ? '' : 's'} available.`,
+    tooltip: [
+      'Level Points Available',
+      `${unspentPoints} skill point${unspentPoints === 1 ? '' : 's'} unspent`,
+      'Open Skill Tree to allocate them.'
+    ].join('\n'),
+    rarity: 'account-available',
+    icon: 'plus',
+    href: '/skill-tree',
+    attention: true,
+    tags: ['Skill Tree']
+  };
+}
+
+function formatLevelPowerBonus(value) {
+  const number = Number(value) || 0;
+  return Number.isInteger(number) ? String(number) : number.toFixed(1).replace(/\.0$/, '');
+}
+
+function renderHandPactTags(activeBuffs) {
+  if (!activeBuffs.length) {
+    return '<div class="dungeon-hand-pacts-empty">No active buffs.</div>';
   }
 
   return `
-    <div class="dungeon-hand-pacts" aria-label="Selected Demonic Pacts">
-      ${activePacts.map(renderActivePactIcon).join('')}
+    <div class="dungeon-hand-pacts" aria-label="Active dungeon buffs">
+      ${activeBuffs.map(renderActivePactIcon).join('')}
     </div>
   `;
 }
@@ -357,6 +419,9 @@ function markHandFlowLanded(target) {
 
 export {
   renderHandBar,
+  getHandBuffs,
+  createLevelPowerBuff,
+  createLevelPowerPrompt,
   updateHandTabs,
   bindHandTabs,
   renderHandPactTags,

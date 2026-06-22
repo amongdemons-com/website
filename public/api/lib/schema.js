@@ -114,6 +114,20 @@ async function initializeSchema() {
   await addIndexIfMissing('players', 'idx_players_rank_floor', 'INDEX idx_players_rank_floor (highest_floor, level, xp, souls)');
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS player_stat_points (
+      player_id VARCHAR(255) NOT NULL PRIMARY KEY,
+      vitality INT UNSIGNED NOT NULL DEFAULT 0,
+      power INT UNSIGNED NOT NULL DEFAULT 0,
+      haste INT UNSIGNED NOT NULL DEFAULT 0,
+      fortitude INT UNSIGNED NOT NULL DEFAULT 0,
+      recovery INT UNSIGNED NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column('player_stat_points', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS player_oauth_accounts (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
       player_id VARCHAR(255) NOT NULL,

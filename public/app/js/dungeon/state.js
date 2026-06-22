@@ -4,6 +4,7 @@ const session = window.AmongDemons.getSession();
 
 export const state = {
   player: session.player || null,
+  statPoints: null,
   run: null,
   startOptions: null,
   selectedRecruitRewardId: null,

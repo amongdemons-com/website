@@ -110,18 +110,25 @@ function shouldOfferRunBuffChoices(runOrFloor) {
   return floor > 0 && floor % PACT_CHOICE_FLOOR_INTERVAL === 0;
 }
 
-function applyPreBattleBuffs(team, buffs) {
+function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
   const state = normalizeRunBuffState(buffs);
   const statsAlreadyApplied = (team || []).some((demon) => demon.runBuffStatsApplied);
   const maxHpMult = statsAlreadyApplied ? 1 : getEffectMultiplier(state, 'max_hp_mult');
   const speedMult = statsAlreadyApplied ? 1 : getEffectMultiplier(state, 'speed_mult');
+  const accountMaxHpMult = 1 + getBonusFraction(accountBonuses.maxHpPercent);
+  const accountAttackMult = 1 + getBonusFraction(accountBonuses.attackPercent);
+  const accountSpeedMult = 1 + getBonusFraction(accountBonuses.speedPercent);
+  const accountDamageReduction = clamp(getBonusFraction(accountBonuses.damageReductionPercent), 0, 0.3);
+  const accountHealingReceivedMult = 1 + getBonusFraction(accountBonuses.healingReceivedPercent);
 
   return (team || []).map((demon) => {
     const next = {
       ...demon,
       battleBuffs: {
         ...(demon.battleBuffs || {}),
-        directDamageMult: positiveNumber(demon.battleBuffs?.directDamageMult, 1)
+        directDamageMult: positiveNumber(demon.battleBuffs?.directDamageMult, 1),
+        damageReduction: accountDamageReduction,
+        healingReceivedMult: accountHealingReceivedMult
       }
     };
 
@@ -134,6 +141,21 @@ function applyPreBattleBuffs(team, buffs) {
 
     if (speedMult !== 1) {
       next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * speedMult));
+    }
+
+    if (accountMaxHpMult !== 1) {
+      const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
+      const hpRatio = clamp((Number(next.hp) || baseMaxHp) / baseMaxHp, 0, 1);
+      next.maxHp = Math.max(1, Math.round(baseMaxHp * accountMaxHpMult));
+      next.hp = Math.max(next.hp > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
+    }
+
+    if (accountAttackMult !== 1) {
+      next.atk = Math.max(1, Math.round((Number(next.atk) || 1) * accountAttackMult));
+    }
+
+    if (accountSpeedMult !== 1) {
+      next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * accountSpeedMult));
     }
 
     return next;
@@ -224,7 +246,11 @@ function applyHealingModifiers(context) {
   }
 
   return {
-    healing: roundHealing(healing * getEffectMultiplier(state, 'healing_mult')),
+    healing: roundHealing(
+      healing *
+      getEffectMultiplier(state, 'healing_mult') *
+      positiveNumber(context.target?.battleBuffs?.healingReceivedMult, 1)
+    ),
     overhealToShield: hasEffect(state, 'overheal_to_shield')
   };
 }
@@ -395,7 +421,7 @@ function applyChainExplosion(context, state) {
       targetPosition: normalizePosition(target.position),
       targeting: 'death_splash',
       effect: 'chain_explosion',
-      dmg: splashDamage,
+      dmg: damageResult.damage,
       shieldDamage: damageResult.shieldDamage,
       targetShield: target.shield || 0,
       targetHp: target.hp
@@ -500,6 +526,11 @@ function roundHealing(value) {
 function positiveNumber(value, fallback = 1) {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+function getBonusFraction(value) {
+  const percent = Number(value);
+  return Number.isFinite(percent) && percent > 0 ? percent / 100 : 0;
 }
 
 function isTargetBelowHalfHp(target) {

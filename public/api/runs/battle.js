@@ -6,10 +6,11 @@ const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, getTemporaryTeamSizeBonus, hasPendingBuffChoices, serializeRunBuffState, shouldOfferRunBuffChoices } = require('../lib/run-buffs');
-const { assignFormationSlots, resetRunDemon } = require('../lib/run-demons');
+const { assignFormationSlots, mergeBattleTeamForRun, resetRunDemon } = require('../lib/run-demons');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { createDiscardSoulRewardFields, ensureRunEarned } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
+const { getPlayerStatPointSummary } = require('../lib/account-stat-points');
 
 const router = express.Router();
 
@@ -41,12 +42,14 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   });
   const rng = createRng(run.seed + run.floor);
   const demonTypes = await getDemonTypes();
+  const statPoints = await getPlayerStatPointSummary(req.player);
   applyRunBuffStatModifiers(run);
   run.state.team = assignFormationSlots(run.state.team || [], 'player');
   run.state.enemies = assignFormationSlots(run.state.enemies || [], 'enemy');
   const result = simulateFight(rng, run.state.team, run.state.enemies, {
     demonTypes,
-    buffs: run.state.buffs
+    buffs: run.state.buffs,
+    accountBonuses: statPoints.bonuses
   });
   run.state.team = mergeBattleTeamForRun(run.state.team, result.playerTeam);
   run.state.enemies = result.enemyTeam;
@@ -111,26 +114,6 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 
 function cloneForBattleReplay(team) {
   return (team || []).map((demon) => ({ ...demon }));
-}
-
-function mergeBattleTeamForRun(sourceTeam, battleTeam) {
-  const battleById = new Map((battleTeam || []).map((demon) => [demon.instanceId, demon]));
-
-  return (sourceTeam || []).map((demon) => {
-    const battleDemon = battleById.get(demon.instanceId);
-    if (!battleDemon) return { ...demon };
-
-    const maxHp = Math.max(1, Number(demon.maxHp) || Number(demon.hp) || 1);
-    return {
-      ...demon,
-      maxHp,
-      hp: Math.max(0, Math.min(maxHp, Number(battleDemon.hp) || 0)),
-      attackMeter: Number(battleDemon.attackMeter) || 0,
-      statusEffects: {
-        poison: (battleDemon.statusEffects?.poison || []).map((poison) => ({ ...poison }))
-      }
-    };
-  });
 }
 
 function createBuffChoiceRng(run) {

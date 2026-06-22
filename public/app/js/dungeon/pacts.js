@@ -59,21 +59,31 @@ function renderDemonicPactCard(buff) {
 
 function renderActivePactIcon(buff) {
   const rarity = String(buff.rarity || 'common').toLowerCase();
-  const tooltip = `${buff.name || buff.id}: ${buff.description || ''}`;
+  const tooltip = buff.tooltip || `${buff.name || buff.id}: ${buff.description || ''}`;
+  const escapedTooltip = escapeTooltipAttribute(tooltip);
+  const tagName = buff.href ? 'a' : 'button';
+  const linkAttributes = buff.href
+    ? `href="${escapeHtml(buff.href)}"`
+    : 'type="button"';
+  const attentionClass = buff.attention ? 'is-level-power-attention' : '';
 
   return `
-    <button
-      class="active-pact-chip is-${escapeHtml(rarity)}"
-      type="button"
+    <${tagName}
+      class="active-pact-chip is-${escapeHtml(rarity)} ${attentionClass}"
+      ${linkAttributes}
       data-active-pact-id="${escapeHtml(buff.id)}"
-      data-tooltip="${escapeHtml(tooltip)}"
-      aria-label="${escapeHtml(tooltip)}"
+      data-tooltip="${escapedTooltip}"
+      aria-label="${escapedTooltip}"
     >
       <span class="active-pact-chip-icon" aria-hidden="true">
         ${renderIcon(buff.icon || 'sparkles', { size: 28, strokeWidth: 1.9 })}
       </span>
-    </button>
+    </${tagName}>
   `;
+}
+
+function escapeTooltipAttribute(value) {
+  return escapeHtml(value).replace(/\n/g, '&#10;');
 }
 
 function renderDemonicPactActions() {
