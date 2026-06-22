@@ -77,6 +77,7 @@ function applyCombatStep(step, index = -1, options = {}) {
   });
 
   updateTeamHp();
+  syncCombatHpCards();
   if (!animate) return;
 
   setActiveLogRow(index);
@@ -282,6 +283,12 @@ function clamp(value, min, max) {
 function updateTeamHp() {
   if (!state.run) return;
   state.run.hp = (state.run.team || []).reduce((sum, demon) => sum + Math.max(0, Number(demon.hp) || 0), 0);
+}
+
+function syncCombatHpCards() {
+  [...(state.run?.team || []), ...(state.run?.enemies || [])].forEach((demon) => {
+    updateTargetCard(demon.instanceId, demon.hp);
+  });
 }
 
 function setActiveLogRow(index) {
@@ -713,8 +720,9 @@ function isTypeTwoAttack(instanceId) {
 }
 
 function findDemonCard(instanceId) {
-  return Array.from(document.querySelectorAll('.dungeon-demon-card'))
-    .find((item) => item.dataset.instanceId === instanceId);
+  const selector = `.dungeon-demon-card[data-instance-id="${cssEscape(String(instanceId))}"]`;
+  return document.querySelector(`#teamGrid ${selector}, #enemyGrid ${selector}`)
+    || document.querySelector(selector);
 }
 
 function playTemporaryCardClass(card, className, duration) {
@@ -900,6 +908,7 @@ export {
   resumeCombatPlayback,
   stepCombatPlayback,
   updateTeamHp,
+  syncCombatHpCards,
   setActiveLogRow,
   animateAttackerCard,
   drawCombatAnimation,

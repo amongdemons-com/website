@@ -1,5 +1,13 @@
 const DISCARD_SOUL_VALUE = 1;
 
+function getBattleXpReward(floor, winner = 'player') {
+  const normalizedFloor = Math.max(1, Math.floor(Number(floor) || 1));
+  const victoryXp = 10 + normalizedFloor * 5;
+
+  if (winner === 'player') return victoryXp;
+  return Math.max(1, Math.floor(victoryXp / 2));
+}
+
 function ensureRunEarned(run) {
   run.state = run.state || {};
   run.state.earned = {
@@ -41,6 +49,14 @@ function getEarnedWithPendingDiscardedSouls(run, options = {}) {
   return {
     xp: earned.xp,
     souls: earned.souls + getPendingDiscardSoulValue(run, options)
+  };
+}
+
+function getDefeatPayout(run) {
+  const earned = ensureRunEarned(run);
+  return {
+    xp: Math.max(0, Math.floor(Number(earned.xp) || 0)),
+    souls: 0
   };
 }
 
@@ -98,6 +114,8 @@ module.exports = {
   createDiscardSoulRewardFields,
   clearPendingRewardSoul,
   ensureRunEarned,
+  getBattleXpReward,
+  getDefeatPayout,
   getEarnedWithPendingDiscardedSouls,
   getPendingDiscardSoulValue,
   settleDiscardedSoulRewards

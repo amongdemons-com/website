@@ -8,7 +8,7 @@
     <meta name="description" content="Allocate powerful account upgrades for your demons in Among Demons.">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/app/css/main.css?v=20260622-level-points-v4" rel="stylesheet">
+    <link href="/app/css/main.css?v=20260622-skill-tree-v3" rel="stylesheet">
   </head>
   <body class="skill-tree-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -50,9 +50,9 @@
       <section class="skill-tree-panel" aria-labelledby="skillTreeAllocationHeading">
         <header>
           <div>
-            <span class="skill-tree-kicker">Upgrades</span>
-            <h1 id="skillTreeAllocationHeading">Level Points</h1>
-            <p>Buff your demons with powerful upgrades.</p>
+            <span class="skill-tree-kicker"><i data-lucide="git-branch"></i>Demonic Ascension</span>
+            <h1 id="skillTreeAllocationHeading">Choose Your Path</h1>
+            <p>Shape every demon you command. Focus a path to awaken its keystone bonus.</p>
           </div>
           <span class="skill-tree-status" id="skillTreeStatus" role="status" aria-live="polite">Loading level points...</span>
         </header>
@@ -64,47 +64,131 @@
           <span id="skillTreeUnspentCard"><small>Unspent</small><strong id="skillTreeUnspent">-</strong></span>
         </section>
 
-        <div class="skill-tree-allocation-grid" id="skillTreeGrid">
-          <article class="skill-tree-stat" data-stat-point-key="vitality" style="--stat-accent: #d96d70">
-            <span class="skill-tree-stat-icon"><i data-lucide="heart"></i></span>
-            <div class="skill-tree-stat-copy"><h3>Vitality</h3><p>Increases maximum HP for your demons.</p><strong data-stat-bonus>+0% max HP</strong></div>
-            <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Vitality point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Vitality point">+</button></div>
-          </article>
-          <article class="skill-tree-stat" data-stat-point-key="power" style="--stat-accent: #e78a55">
-            <span class="skill-tree-stat-icon"><i data-lucide="swords"></i></span>
-            <div class="skill-tree-stat-copy"><h3>Power</h3><p>Increases attack, including attack-based abilities.</p><strong data-stat-bonus>+0% attack</strong></div>
-            <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Power point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Power point">+</button></div>
-          </article>
-          <article class="skill-tree-stat" data-stat-point-key="haste" style="--stat-accent: #e8c76a">
-            <span class="skill-tree-stat-icon"><i data-lucide="zap"></i></span>
-            <div class="skill-tree-stat-copy"><h3>Haste</h3><p>Increases attack-meter speed.</p><strong data-stat-bonus>+0% speed</strong></div>
-            <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Haste point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Haste point">+</button></div>
-          </article>
-          <article class="skill-tree-stat" data-stat-point-key="fortitude" style="--stat-accent: #6fd6bd">
-            <span class="skill-tree-stat-icon"><i data-lucide="shield"></i></span>
-            <div class="skill-tree-stat-copy"><h3>Fortitude</h3><p>Reduces incoming damage, capped at 30%.</p><strong data-stat-bonus>+0% damage reduction</strong></div>
-            <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Fortitude point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Fortitude point">+</button></div>
-          </article>
-          <article class="skill-tree-stat" data-stat-point-key="recovery" style="--stat-accent: #8fefff">
-            <span class="skill-tree-stat-icon"><i data-lucide="plus"></i></span>
-            <div class="skill-tree-stat-copy"><h3>Recovery</h3><p>Increases healing received by your demons.</p><strong data-stat-bonus>+0% healing received</strong></div>
-            <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Recovery point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Recovery point">+</button></div>
-          </article>
+        <div class="skill-tree-map" id="skillTreeGrid">
+          <p class="skill-tree-rule"><i data-lucide="split"></i>Every path is independent. Invest in any stat in any order.</p>
+
+          <div class="skill-tree-origin" aria-label="Demonic core">
+            <span class="skill-tree-origin-icon"><i data-lucide="circle-dot"></i></span>
+            <span><small>Demonic Core</small><strong><span id="skillTreeCoreUnspent">-</span> points ready</strong></span>
+          </div>
+
+          <div class="skill-tree-branches">
+            <section class="skill-branch" data-skill-path="ravager" style="--branch-accent: #e78a55" aria-labelledby="ravagerPathHeading">
+              <header class="skill-branch-header">
+                <span class="skill-branch-emblem"><i data-lucide="flame"></i></span>
+                <span><small>Path of Ruin</small><h2 id="ravagerPathHeading">Ravager</h2></span>
+                <strong data-path-progress>0 / 5</strong>
+              </header>
+              <div class="skill-branch-nodes">
+                <article class="skill-tree-stat" data-stat-point-key="power">
+                  <span class="skill-tree-stat-icon"><i data-lucide="swords"></i><b data-stat-rank>0</b></span>
+                  <div class="skill-tree-stat-copy"><small>Offense</small><h3>Power</h3><p>Increase attack and attack-based abilities.</p><strong data-stat-bonus>+0% attack</strong></div>
+                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Power point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Power point">+</button></div>
+                </article>
+                <article class="skill-path-keystone" data-path-keystone>
+                  <span><i data-lucide="skull"></i></span>
+                  <div><small>Keystone &middot; 5 Power</small><h3>Relentless</h3><p>Gain an additional <strong>+5% attack</strong>.</p></div>
+                  <b data-keystone-state>Locked</b>
+                </article>
+              </div>
+            </section>
+
+            <section class="skill-branch" data-skill-path="tempest" style="--branch-accent: #e8c76a" aria-labelledby="tempestPathHeading">
+              <header class="skill-branch-header">
+                <span class="skill-branch-emblem"><i data-lucide="wind"></i></span>
+                <span><small>Path of Momentum</small><h2 id="tempestPathHeading">Tempest</h2></span>
+                <strong data-path-progress>0 / 5</strong>
+              </header>
+              <div class="skill-branch-nodes">
+                <article class="skill-tree-stat" data-stat-point-key="haste">
+                  <span class="skill-tree-stat-icon"><i data-lucide="zap"></i><b data-stat-rank>0</b></span>
+                  <div class="skill-tree-stat-copy"><small>Momentum</small><h3>Haste</h3><p>Fill the attack meter faster.</p><strong data-stat-bonus>+0% speed</strong></div>
+                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Haste point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Haste point">+</button></div>
+                </article>
+                <article class="skill-path-keystone" data-path-keystone>
+                  <span><i data-lucide="gauge"></i></span>
+                  <div><small>Keystone &middot; 5 Haste</small><h3>Quickening</h3><p>Gain an additional <strong>+3% speed</strong>.</p></div>
+                  <b data-keystone-state>Locked</b>
+                </article>
+              </div>
+            </section>
+
+            <section class="skill-branch" data-skill-path="colossus" style="--branch-accent: #d96d70" aria-labelledby="colossusPathHeading">
+              <header class="skill-branch-header">
+                <span class="skill-branch-emblem"><i data-lucide="heart"></i></span>
+                <span><small>Path of Endurance</small><h2 id="colossusPathHeading">Colossus</h2></span>
+                <strong data-path-progress>0 / 5</strong>
+              </header>
+              <div class="skill-branch-nodes">
+                <article class="skill-tree-stat" data-stat-point-key="vitality">
+                  <span class="skill-tree-stat-icon"><i data-lucide="heart"></i><b data-stat-rank>0</b></span>
+                  <div class="skill-tree-stat-copy"><small>Endurance</small><h3>Vitality</h3><p>Increase maximum HP for your demons.</p><strong data-stat-bonus>+0% max HP</strong></div>
+                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Vitality point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Vitality point">+</button></div>
+                </article>
+                <article class="skill-path-keystone" data-path-keystone>
+                  <span><i data-lucide="castle"></i></span>
+                  <div><small>Keystone &middot; 5 Vitality</small><h3>Unyielding</h3><p>Gain an additional <strong>+5% max HP</strong>.</p></div>
+                  <b data-keystone-state>Locked</b>
+                </article>
+              </div>
+            </section>
+
+            <section class="skill-branch" data-skill-path="aegis" style="--branch-accent: #6fd6bd" aria-labelledby="aegisPathHeading">
+              <header class="skill-branch-header">
+                <span class="skill-branch-emblem"><i data-lucide="shield-check"></i></span>
+                <span><small>Path of Resolve</small><h2 id="aegisPathHeading">Aegis</h2></span>
+                <strong data-path-progress>0 / 5</strong>
+              </header>
+              <div class="skill-branch-nodes">
+                <article class="skill-tree-stat" data-stat-point-key="fortitude">
+                  <span class="skill-tree-stat-icon"><i data-lucide="shield"></i><b data-stat-rank>0</b></span>
+                  <div class="skill-tree-stat-copy"><small>Defense</small><h3>Fortitude</h3><p>Reduce incoming damage, capped at 30%.</p><strong data-stat-bonus>+0% damage reduction</strong></div>
+                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Fortitude point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Fortitude point">+</button></div>
+                </article>
+                <article class="skill-path-keystone" data-path-keystone>
+                  <span><i data-lucide="shield-plus"></i></span>
+                  <div><small>Keystone &middot; 5 Fortitude</small><h3>Iron Pact</h3><p>Gain <strong>+5% damage reduction</strong>, within the 30% cap.</p></div>
+                  <b data-keystone-state>Locked</b>
+                </article>
+              </div>
+            </section>
+
+            <section class="skill-branch" data-skill-path="soulbinder" style="--branch-accent: #8fefff" aria-labelledby="soulbinderPathHeading">
+              <header class="skill-branch-header">
+                <span class="skill-branch-emblem"><i data-lucide="sparkles"></i></span>
+                <span><small>Path of Essence</small><h2 id="soulbinderPathHeading">Soulbinder</h2></span>
+                <strong data-path-progress>0 / 5</strong>
+              </header>
+              <div class="skill-branch-nodes">
+                <article class="skill-tree-stat" data-stat-point-key="recovery">
+                  <span class="skill-tree-stat-icon"><i data-lucide="heart-pulse"></i><b data-stat-rank>0</b></span>
+                  <div class="skill-tree-stat-copy"><small>Restoration</small><h3>Recovery</h3><p>Increase healing received by your demons.</p><strong data-stat-bonus>+0% healing received</strong></div>
+                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Recovery point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Recovery point">+</button></div>
+                </article>
+                <article class="skill-path-keystone" data-path-keystone>
+                  <span><i data-lucide="gem"></i></span>
+                  <div><small>Keystone &middot; 5 Recovery</small><h3>Soulwell</h3><p>Gain an additional <strong>+8% healing received</strong>.</p></div>
+                  <b data-keystone-state>Locked</b>
+                </article>
+              </div>
+            </section>
+          </div>
         </div>
 
         <footer class="skill-tree-actions">
+          <p><i data-lucide="info"></i>Keystones activate when this build is saved.</p>
           <button type="button" class="skill-tree-reset" id="skillTreeResetButton">Reset for Free</button>
-          <button type="button" class="skill-tree-save" id="skillTreeSaveButton">Save Allocations</button>
+          <button type="button" class="skill-tree-save" id="skillTreeSaveButton">Save Build</button>
         </footer>
       </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/vendor/lucide/lucide.min.js"></script>
-    <script src="/app/js/icons.js"></script>
+    <script src="/app/js/icons.js?v=20260622-alerts-v1"></script>
     <script src="/app/js/api-config.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
-    <script src="/app/js/skill-tree-ui.js?v=20260622-level-points-v4"></script>
+    <script src="/app/js/skill-tree-ui.js?v=20260622-skill-tree-v3"></script>
   </body>
 </html>

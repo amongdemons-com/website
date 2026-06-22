@@ -40,7 +40,7 @@ const QUEST_DEFINITIONS = Object.freeze([
 
 const DAILY_REWARD = Object.freeze({
   id: 'campfire-cache',
-  title: 'Campfire Cache',
+  title: 'Lost Souls',
   reward: Object.freeze({ type: 'souls', value: 10 })
 });
 

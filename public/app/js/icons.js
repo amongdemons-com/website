@@ -34,6 +34,7 @@
     trash: 'Trash2'
   };
   const SOUL_ICON_PATH = '/app/images/assets/soul.svg';
+  const alertTimers = new WeakMap();
 
   function renderIcon(name, options = {}) {
     if (isSoulIcon(name)) return renderImageIcon(SOUL_ICON_PATH, 'soul', options);
@@ -167,6 +168,84 @@
     return ['attack', 'hp', 'melee'].includes(String(name || '').toLowerCase());
   }
 
+  function initializeGameAlerts() {
+    document.querySelectorAll('.alert[role="alert"]').forEach(bindGameAlert);
+
+    if (!document.body || typeof MutationObserver !== 'function') return;
+    const observer = new MutationObserver((mutations) => {
+      const alerts = new Set();
+
+      mutations.forEach((mutation) => {
+        if (mutation.target instanceof Element) {
+          const alert = mutation.target.matches?.('.alert[role="alert"]')
+            ? mutation.target
+            : mutation.target.closest?.('.alert[role="alert"]');
+          if (alert) alerts.add(alert);
+        }
+
+        mutation.addedNodes.forEach((node) => {
+          if (!(node instanceof Element)) return;
+          if (node.matches('.alert[role="alert"]')) alerts.add(node);
+          node.querySelectorAll?.('.alert[role="alert"]').forEach((alert) => alerts.add(alert));
+        });
+      });
+
+      alerts.forEach(bindGameAlert);
+    });
+
+    observer.observe(document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class'],
+      childList: true,
+      characterData: true
+    });
+  }
+
+  function bindGameAlert(alert) {
+    if (!alert.classList.contains('game-toast-alert')) {
+      alert.classList.add('game-toast-alert');
+    }
+
+    if (alert.dataset.gameAlertBound !== 'true') {
+      alert.dataset.gameAlertBound = 'true';
+      alert.tabIndex = 0;
+      alert.title = 'Dismiss notification';
+      alert.addEventListener('click', () => dismissGameAlert(alert));
+      alert.addEventListener('keydown', (event) => {
+        if (!['Enter', ' ', 'Escape'].includes(event.key)) return;
+        event.preventDefault();
+        dismissGameAlert(alert);
+      });
+    }
+
+    scheduleGameAlertDismissal(alert);
+  }
+
+  function scheduleGameAlertDismissal(alert) {
+    const currentTimer = alertTimers.get(alert);
+    if (currentTimer) window.clearTimeout(currentTimer);
+    alertTimers.delete(alert);
+
+    if (alert.classList.contains('d-none') || !alert.textContent.trim()) return;
+
+    const delay = alert.classList.contains('alert-danger') ? 8000 : 5500;
+    const timer = window.setTimeout(() => dismissGameAlert(alert), delay);
+    alertTimers.set(alert, timer);
+  }
+
+  function dismissGameAlert(alert) {
+    const currentTimer = alertTimers.get(alert);
+    if (currentTimer) window.clearTimeout(currentTimer);
+    alertTimers.delete(alert);
+    alert.classList.add('d-none');
+  }
+
+  function initializeUi() {
+    replaceStaticIcons();
+    initializeGameAlerts();
+  }
+
   function isPoisonIcon(name) {
     return String(name || '').toLowerCase() === 'poison';
   }
@@ -218,10 +297,11 @@
   ui.updateNavAccount = updateNavAccount;
   ui.clearNavAccount = clearNavAccount;
   ui.replaceStaticIcons = replaceStaticIcons;
+  ui.dismissGameAlert = dismissGameAlert;
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', replaceStaticIcons);
+    document.addEventListener('DOMContentLoaded', initializeUi);
   } else {
-    replaceStaticIcons();
+    initializeUi();
   }
 })();

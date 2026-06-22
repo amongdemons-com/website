@@ -13122,7 +13122,7 @@ body.skill-tree-page {
 .skill-tree-main {
     display: grid;
     gap: 1rem;
-    width: min(72rem, calc(100% - 2rem));
+    width: min(100rem, calc(100% - 2rem));
     margin: 0 auto;
     padding: clamp(1rem, 3vw, 2.4rem) 0 2.5rem;
 }
@@ -13256,96 +13256,405 @@ body.skill-tree-page {
     font-weight: 900;
 }
 
-.skill-tree-allocation-grid {
+.skill-tree-map {
+    position: relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border: 1px solid rgba(161,212,201,0.12);
+    border-radius: 6px;
+    background:
+        radial-gradient(circle at 50% 0, rgba(232,199,106,0.1), transparent 20rem),
+        linear-gradient(rgba(111,214,189,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(111,214,189,0.025) 1px, transparent 1px),
+        rgba(2,8,10,0.68);
+    background-size: auto, 2.4rem 2.4rem, 2.4rem 2.4rem, auto;
+    padding: 1rem;
+}
+
+.skill-tree-rule {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto 0.8rem;
+    border: 1px solid rgba(161,212,201,0.16);
+    border-radius: 999px;
+    background: rgba(4,10,13,0.7);
+    color: rgba(220,232,229,0.68);
+    padding: 0.32rem 0.7rem;
+    font-size: 0.64rem;
+}
+
+.skill-tree-rule .ad-icon {
+    width: 0.88rem;
+    height: 0.88rem;
+    margin: 0;
+    color: #f3dc93;
+}
+
+.skill-tree-origin {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    width: max-content;
+    margin: 0 auto;
+    border: 1px solid rgba(232,199,106,0.48);
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(232,199,106,0.14), rgba(5,12,14,0.96));
+    box-shadow: 0 0 30px rgba(232,199,106,0.08);
+    padding: 0.55rem 1rem 0.55rem 0.55rem;
+}
+
+.skill-tree-origin::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 1px;
+    height: 2.25rem;
+    background: linear-gradient(rgba(232,199,106,0.72), rgba(161,212,201,0.32));
+}
+
+.skill-tree-origin-icon {
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 50%;
+    background: rgba(232,199,106,0.14);
+    color: #f3dc93;
+}
+
+.skill-tree-origin-icon .ad-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+}
+
+.skill-tree-origin > span:last-child {
+    display: grid;
+    gap: 0.05rem;
+}
+
+.skill-tree-origin small {
+    color: rgba(220,232,229,0.5);
+    font-size: 0.58rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.skill-tree-origin strong {
+    color: #fff3bd;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.88rem;
+}
+
+.skill-tree-branches {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.58rem;
+    gap: clamp(0.65rem, 1.5vw, 1.2rem);
+    padding-top: 2.25rem;
+}
+
+.skill-tree-branches::before {
+    content: "";
+    position: absolute;
+    top: 2.25rem;
+    right: 10%;
+    left: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(231,138,85,0.62), rgba(232,199,106,0.58), rgba(217,109,112,0.58), rgba(111,214,189,0.58), rgba(143,239,255,0.58));
+}
+
+.skill-branch {
+    position: relative;
+    min-width: 0;
+    padding-top: 1.15rem;
+}
+
+.skill-branch::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 1.15rem;
+    background: color-mix(in srgb, var(--branch-accent) 60%, transparent);
+}
+
+.skill-branch-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 4.2rem;
+    border: 1px solid color-mix(in srgb, var(--branch-accent) 34%, transparent);
+    border-radius: 5px;
+    background:
+        radial-gradient(circle at 12% 50%, color-mix(in srgb, var(--branch-accent) 12%, transparent), transparent 6rem),
+        rgba(6,14,16,0.94);
+    padding: 0.65rem 0.7rem;
+}
+
+.skill-branch-emblem {
+    display: grid;
+    place-items: center;
+    width: 2.45rem;
+    height: 2.45rem;
+    border: 1px solid color-mix(in srgb, var(--branch-accent) 44%, transparent);
+    border-radius: 50%;
+    color: var(--branch-accent);
+}
+
+.skill-branch-emblem .ad-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+}
+
+.skill-branch-header small,
+.skill-tree-stat-copy small,
+.skill-path-keystone small,
+.skill-path-echo small {
+    display: block;
+    color: color-mix(in srgb, var(--branch-accent) 76%, rgba(220,232,229,0.54));
+    font-size: 0.54rem;
+    font-weight: 900;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+}
+
+.skill-branch-header h2 {
+    margin: 0.06rem 0 0;
+    color: #f8fbf9;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.05rem;
+}
+
+.skill-branch-header > strong {
+    border: 1px solid color-mix(in srgb, var(--branch-accent) 28%, transparent);
+    border-radius: 999px;
+    color: var(--branch-accent);
+    padding: 0.24rem 0.45rem;
+    font-size: 0.62rem;
+    white-space: nowrap;
+}
+
+.skill-branch-nodes {
+    display: grid;
+    gap: 1.45rem;
+    padding: 1.45rem 0.25rem 0;
+}
+
+.skill-branch-nodes > article {
+    position: relative;
+}
+
+.skill-branch-nodes > article::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    width: 1px;
+    height: 1.45rem;
+    background: color-mix(in srgb, var(--branch-accent) 44%, transparent);
 }
 
 .skill-tree-stat {
-    position: relative;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    justify-items: center;
-    gap: 0.72rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem 0.7rem;
     min-width: 0;
-    min-height: 14.5rem;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--stat-accent) 36%, transparent);
-    border-radius: 6px;
-    background:
-        radial-gradient(circle at 50% 8%, color-mix(in srgb, var(--stat-accent) 13%, transparent), transparent 6rem),
-        linear-gradient(180deg, rgba(12,24,25,0.82), rgba(3,9,11,0.76));
-    padding: 0.9rem 0.7rem;
-    text-align: center;
+    border: 1px solid rgba(161,212,201,0.15);
+    border-radius: 7px 7px 18px 7px;
+    background: linear-gradient(135deg, rgba(12,24,25,0.94), rgba(3,9,11,0.92));
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.018);
+    padding: 0.72rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.skill-tree-stat::after {
-    content: "";
-    position: absolute;
-    right: 15%;
-    bottom: 0;
-    left: 15%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--stat-accent), transparent);
-    opacity: 0.52;
+.skill-tree-stat.is-invested {
+    border-color: color-mix(in srgb, var(--branch-accent) 52%, transparent);
+    background:
+        radial-gradient(circle at 12% 30%, color-mix(in srgb, var(--branch-accent) 13%, transparent), transparent 7rem),
+        linear-gradient(135deg, rgba(12,24,25,0.96), rgba(3,9,11,0.94));
+    box-shadow: 0 0 22px color-mix(in srgb, var(--branch-accent) 8%, transparent);
+}
+
+.skill-tree-stat:focus-within {
+    border-color: color-mix(in srgb, var(--branch-accent) 72%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--branch-accent) 12%, transparent);
 }
 
 .skill-tree-stat-icon {
+    position: relative;
     display: grid;
     place-items: center;
-    width: 3.1rem;
-    aspect-ratio: 1;
-    border: 1px solid color-mix(in srgb, var(--stat-accent) 48%, transparent);
+    width: 3.15rem;
+    height: 3.15rem;
+    border: 1px solid color-mix(in srgb, var(--branch-accent) 46%, transparent);
     border-radius: 50%;
-    background: color-mix(in srgb, var(--stat-accent) 9%, rgba(4,10,13,0.8));
-    color: var(--stat-accent);
-    box-shadow: 0 0 22px color-mix(in srgb, var(--stat-accent) 12%, transparent);
+    background: color-mix(in srgb, var(--branch-accent) 7%, rgba(4,10,13,0.92));
+    color: var(--branch-accent);
+}
+
+.is-invested .skill-tree-stat-icon {
+    background: color-mix(in srgb, var(--branch-accent) 14%, rgba(4,10,13,0.9));
+    box-shadow: 0 0 18px color-mix(in srgb, var(--branch-accent) 12%, transparent);
 }
 
 .skill-tree-stat-icon .ad-icon {
-    width: 1.45rem;
-    height: 1.45rem;
+    width: 1.35rem;
+    height: 1.35rem;
     margin: 0;
+}
+
+.skill-tree-stat-icon b {
+    position: absolute;
+    right: -0.24rem;
+    bottom: -0.18rem;
+    display: grid;
+    place-items: center;
+    min-width: 1.18rem;
+    height: 1.18rem;
+    border: 1px solid color-mix(in srgb, var(--branch-accent) 52%, transparent);
+    border-radius: 50%;
+    background: #071013;
+    color: #f8fbf9;
+    font-size: 0.56rem;
 }
 
 .skill-tree-stat-copy {
     display: grid;
-    align-content: start;
-    gap: 0.38rem;
+    min-width: 0;
 }
 
-.skill-tree-stat-copy h3 {
-    margin: 0;
+.skill-tree-stat-copy h3,
+.skill-path-keystone h3 {
+    margin: 0.08rem 0 0;
     color: #f8fbf9;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 1rem;
+    font-size: 0.95rem;
 }
 
-.skill-tree-stat-copy p {
-    margin: 0;
-    color: rgba(220,232,229,0.58);
-    font-size: 0.66rem;
+.skill-tree-stat-copy p,
+.skill-path-keystone p {
+    margin: 0.18rem 0 0;
+    color: rgba(220,232,229,0.54);
+    font-size: 0.62rem;
     line-height: 1.35;
 }
 
-.skill-tree-stat-copy strong {
-    color: var(--stat-accent);
-    font-size: 0.7rem;
+.skill-tree-stat-copy strong,
+.skill-path-keystone p strong {
+    color: var(--branch-accent);
+    font-size: 0.64rem;
 }
 
 .skill-tree-stat .level-point-controls {
-    grid-template-columns: 2rem minmax(2.15rem, auto) 2rem;
+    grid-column: 1 / -1;
+    grid-template-columns: 2rem minmax(2.15rem, 1fr) 2rem;
 }
 
 .skill-tree-stat .level-point-controls button {
     width: 2rem;
-    height: 2rem;
+    height: 1.9rem;
 }
 
 .skill-tree-stat .level-point-controls output {
     min-width: 2.15rem;
-    font-size: 0.86rem;
+    font-size: 0.78rem;
+}
+
+.skill-path-echo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 4.25rem;
+    border: 1px dashed color-mix(in srgb, var(--branch-accent) 20%, transparent);
+    border-radius: 50%;
+    opacity: 0.55;
+    padding: 0.6rem 0.8rem;
+}
+
+.skill-path-echo > span {
+    color: var(--branch-accent);
+}
+
+.skill-path-echo .ad-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+}
+
+.skill-path-echo strong {
+    color: rgba(220,232,229,0.58);
+    font-size: 0.62rem;
+}
+
+.skill-path-keystone {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 5rem;
+    border: 1px solid rgba(161,212,201,0.13);
+    border-radius: 26px 7px 7px 26px;
+    background: rgba(3,9,11,0.82);
+    filter: saturate(0.35);
+    opacity: 0.6;
+    padding: 0.65rem 0.7rem;
+    transition: filter 180ms ease, opacity 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.skill-path-keystone > span {
+    display: grid;
+    place-items: center;
+    width: 3.3rem;
+    height: 3.3rem;
+    border: 1px solid color-mix(in srgb, var(--branch-accent) 35%, transparent);
+    border-radius: 50%;
+    color: var(--branch-accent);
+}
+
+.skill-path-keystone .ad-icon {
+    width: 1.4rem;
+    height: 1.4rem;
+    margin: 0;
+}
+
+.skill-path-keystone > b {
+    grid-column: 1 / -1;
+    justify-self: end;
+    border: 1px solid rgba(220,232,229,0.18);
+    border-radius: 999px;
+    color: rgba(220,232,229,0.48);
+    padding: 0.2rem 0.4rem;
+    font-size: 0.52rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.skill-path-keystone.is-unlocked {
+    border-color: color-mix(in srgb, var(--branch-accent) 64%, transparent);
+    background:
+        radial-gradient(circle at 10% 50%, color-mix(in srgb, var(--branch-accent) 18%, transparent), transparent 7rem),
+        rgba(5,13,15,0.94);
+    box-shadow: 0 0 26px color-mix(in srgb, var(--branch-accent) 11%, transparent);
+    filter: none;
+    opacity: 1;
+}
+
+.skill-path-keystone.is-unlocked > b {
+    border-color: color-mix(in srgb, var(--branch-accent) 42%, transparent);
+    color: var(--branch-accent);
 }
 
 .skill-tree-actions {
@@ -13414,8 +13723,26 @@ body.skill-tree-page {
         grid-row: 2;
     }
 
-    .skill-tree-allocation-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .skill-tree-map {
+        padding: 0.8rem;
+    }
+
+    .skill-tree-branches {
+        min-width: 70rem;
+    }
+
+    .skill-branch-nodes {
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    .skill-path-keystone {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .skill-path-keystone > b {
+        grid-column: 1 / -1;
+        justify-self: end;
     }
 }
 
@@ -13445,17 +13772,40 @@ body.skill-tree-page {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .skill-tree-allocation-grid {
+    .skill-tree-branches {
         grid-template-columns: minmax(0, 1fr);
+        gap: 0.85rem;
+        min-width: 0;
+        padding-top: 1.3rem;
     }
 
-    .skill-tree-stat {
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        grid-template-rows: auto;
-        align-items: center;
-        justify-items: start;
-        min-height: 0;
-        text-align: left;
+    .skill-tree-branches::before {
+        display: none;
+    }
+
+    .skill-tree-origin::after {
+        height: 1.3rem;
+    }
+
+    .skill-branch {
+        padding-top: 0;
+    }
+
+    .skill-branch::before {
+        display: none;
+    }
+
+    .skill-branch-nodes {
+        gap: 1rem;
+        padding-top: 1rem;
+    }
+
+    .skill-branch-nodes > article::before {
+        height: 1rem;
+    }
+
+    .skill-path-echo {
+        border-radius: 6px;
     }
 
     .skill-tree-actions p {
@@ -13474,6 +13824,31 @@ body.skill-tree-page {
 
     .skill-tree-stat {
         grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .skill-tree-map {
+        margin-right: -0.35rem;
+        margin-left: -0.35rem;
+        padding: 0.55rem;
+    }
+
+    .skill-tree-origin {
+        padding-right: 0.75rem;
+    }
+
+    .skill-branch-header {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .skill-branch-header > strong {
+        grid-column: 1 / -1;
+        justify-self: stretch;
+        text-align: center;
+    }
+
+    .skill-path-keystone {
+        grid-template-columns: auto minmax(0, 1fr);
+        border-radius: 22px 7px 7px 22px;
     }
 
     .skill-tree-stat .level-point-controls {
@@ -13518,10 +13893,11 @@ body.skill-tree-page {
 }
 
 .camp-skill-tree-link.has-unspent-points {
-    border-color: rgba(232,199,106,0.5);
+    border-color: rgba(141,231,255,0.62);
     background:
-        radial-gradient(circle at 12% 50%, rgba(232,199,106,0.13), transparent 4rem),
+        radial-gradient(circle at 12% 50%, rgba(141,231,255,0.16), transparent 4rem),
         rgba(4,10,13,0.56);
+    animation: collection-reinforcement-pulse 1.25s ease-in-out infinite;
 }
 
 .camp-skill-tree-icon {
@@ -13564,11 +13940,104 @@ body.skill-tree-page {
 }
 
 .camp-skill-tree-link.has-unspent-points .camp-skill-tree-copy small {
-    color: #f3dc93;
+    color: #8de7ff;
 }
 
 @media (prefers-reduced-motion: reduce) {
     .camp-skill-tree-link {
         transition: none;
+    }
+
+    .camp-skill-tree-link.has-unspent-points {
+        animation: none;
+        border-color: rgba(141,231,255,0.72);
+        box-shadow: 0 0 0 2px rgba(141,231,255,0.18), 0 0 18px rgba(82,183,255,0.22);
+    }
+}
+
+/* Shared notifications float above every game surface and dismiss on interaction. */
+.alert.game-toast-alert[role="alert"] {
+    position: fixed !important;
+    top: clamp(0.75rem, 2.2vw, 1.25rem) !important;
+    right: clamp(0.75rem, 2.2vw, 1.25rem) !important;
+    bottom: auto !important;
+    left: auto !important;
+    z-index: 20000 !important;
+    width: min(28rem, calc(100vw - 1.5rem)) !important;
+    min-height: 3.4rem;
+    margin: 0 !important;
+    border: 1px solid rgba(111,214,189,0.42) !important;
+    border-left: 3px solid var(--ad-teal, #6fd6bd) !important;
+    border-radius: 4px !important;
+    background:
+        radial-gradient(circle at 8% 0%, rgba(111,214,189,0.14), transparent 9rem),
+        linear-gradient(145deg, rgba(8,20,23,0.98), rgba(3,8,11,0.98)) !important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.025),
+        0 0 24px rgba(50,151,155,0.18),
+        0 16px 42px rgba(0,0,0,0.56) !important;
+    color: rgba(236,246,243,0.94) !important;
+    padding: 0.85rem 2.65rem 0.85rem 1rem !important;
+    font-size: 0.8rem;
+    font-weight: 750;
+    line-height: 1.4;
+    cursor: pointer;
+    transform: none !important;
+    animation: game-alert-enter 180ms ease-out both;
+    isolation: isolate;
+}
+
+.alert.game-toast-alert[role="alert"]::after {
+    content: "\00d7";
+    position: absolute;
+    top: 50%;
+    right: 0.9rem;
+    color: rgba(220,232,229,0.56);
+    font: 700 1.35rem/1 Georgia, "Times New Roman", serif;
+    transform: translateY(-53%);
+}
+
+.alert.game-toast-alert.alert-success {
+    border-color: rgba(111,214,189,0.5) !important;
+    border-left-color: var(--ad-teal, #6fd6bd) !important;
+}
+
+.alert.game-toast-alert.alert-danger {
+    border-color: rgba(241,113,103,0.44) !important;
+    border-left-color: #f17167 !important;
+    background:
+        radial-gradient(circle at 8% 0%, rgba(191,49,48,0.17), transparent 9rem),
+        linear-gradient(145deg, rgba(25,11,13,0.98), rgba(7,7,10,0.98)) !important;
+    box-shadow: 0 0 24px rgba(191,49,48,0.16), 0 16px 42px rgba(0,0,0,0.56) !important;
+}
+
+.alert.game-toast-alert.alert-warning {
+    border-color: rgba(232,199,106,0.46) !important;
+    border-left-color: var(--ad-gold, #e8c76a) !important;
+}
+
+.alert.game-toast-alert:focus-visible {
+    outline: 2px solid rgba(141,231,255,0.82);
+    outline-offset: 3px;
+}
+
+@keyframes game-alert-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-0.6rem) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.settings-submit {
+    margin-left: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .alert.game-toast-alert[role="alert"] {
+        animation: none;
     }
 }

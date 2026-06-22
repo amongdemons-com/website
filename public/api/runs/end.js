@@ -3,6 +3,7 @@ const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
+const { getDefeatPayout } = require('../lib/run-rewards');
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.post('/runs/:id/end', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Extract between fights to end a live dungeon.' });
   }
 
-  const earned = { xp: 0, souls: 0 };
+  const earned = getDefeatPayout(run);
 
   const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [req.player.id]);
   const nextXp = playerRows[0].xp + earned.xp;

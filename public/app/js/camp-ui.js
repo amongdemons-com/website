@@ -593,7 +593,7 @@
     const claimed = Boolean(dailyReward.claimed);
     const claimable = Boolean(dailyReward.claimable) && !claimed;
 
-    setText(elements.dailyRewardTitle, dailyReward.title || 'Campfire Cache');
+    setText(elements.dailyRewardTitle, dailyReward.title || 'Lost Souls');
     setHtml(elements.dailyRewardValue, renderQuestReward(dailyReward.reward));
     setText(elements.dailyRewardStatus, claimed
       ? 'Claimed until reset.'
@@ -642,7 +642,7 @@
     try {
       const payload = await api('/api/account/daily-reward/claim', { method: 'POST' });
       applyQuestPayload(payload);
-      setMessage('Campfire Cache claimed.', 'success');
+      setMessage('Lost Souls claimed.', 'success');
     } catch (error) {
       showError(error);
     } finally {

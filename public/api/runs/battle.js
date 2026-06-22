@@ -8,7 +8,7 @@ const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, getTemporaryTeamSizeBonus, hasPendingBuffChoices, serializeRunBuffState, shouldOfferRunBuffChoices } = require('../lib/run-buffs');
 const { assignFormationSlots, mergeBattleTeamForRun, resetRunDemon } = require('../lib/run-demons');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
-const { createDiscardSoulRewardFields, ensureRunEarned } = require('../lib/run-rewards');
+const { createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
 const { getPlayerStatPointSummary } = require('../lib/account-stat-points');
 
@@ -72,7 +72,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     const floorRewards = createDefeatedDemonRewards(run);
     rewards = floorRewards;
     run.rewards.push(...floorRewards);
-    ensureRunEarned(run).xp += 10 + run.floor * 5;
+    ensureRunEarned(run).xp += getBattleXpReward(run.floor, result.winner);
 
     clearPoisonEffects(run.state.team);
     clearPoisonEffects(run.state.enemies);
@@ -89,7 +89,9 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     );
   } else {
     run.status = 'defeated';
-    run.state.earned = { xp: 0, souls: 0 };
+    const earned = ensureRunEarned(run);
+    earned.xp += getBattleXpReward(run.floor, result.winner);
+    earned.souls = 0;
     delete run.state.extractChoice;
   }
 

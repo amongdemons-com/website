@@ -9,6 +9,13 @@
     fortitude: { perPoint: 2, cap: 30, label: 'damage reduction' },
     recovery: { perPoint: 3, label: 'healing received' }
   };
+  const PATH_DEFINITIONS = {
+    ravager: { keys: ['power'], threshold: 5 },
+    tempest: { keys: ['haste'], threshold: 5 },
+    colossus: { keys: ['vitality'], threshold: 5 },
+    aegis: { keys: ['fortitude'], threshold: 5 },
+    soulbinder: { keys: ['recovery'], threshold: 5 }
+  };
   const STAT_KEYS = Object.keys(STAT_DEFINITIONS);
   const state = {
     summary: null,
@@ -50,6 +57,7 @@
       'skillTreeTotal',
       'skillTreeSpent',
       'skillTreeUnspent',
+      'skillTreeCoreUnspent',
       'skillTreeUnspentCard',
       'skillTreeStatus',
       'skillTreeSaveButton',
@@ -102,6 +110,7 @@
     setText(elements.skillTreeTotal, ready ? formatNumber(total) : '-');
     setText(elements.skillTreeSpent, ready ? formatNumber(spent) : '-');
     setText(elements.skillTreeUnspent, ready ? formatNumber(Math.max(0, unspent)) : '-');
+    setText(elements.skillTreeCoreUnspent, ready ? formatNumber(Math.max(0, unspent)) : '-');
     elements.skillTreeUnspentCard?.classList.toggle('has-unspent-points', valid && unspent > 0);
     setText(elements.skillTreeStatus, !ready
       ? 'Loading level points...'
@@ -117,19 +126,41 @@
       const value = ready ? Math.max(0, Number(state.draft[key]) || 0) : 0;
       const bonus = Math.min(definition.cap || Infinity, value * definition.perPoint);
       const output = card.querySelector('output');
+      const rank = card.querySelector('[data-stat-rank]');
       const bonusOutput = card.querySelector('[data-stat-bonus]');
       const decrease = card.querySelector('[data-stat-point-action="decrease"]');
       const increase = card.querySelector('[data-stat-point-action="increase"]');
 
       setText(output, formatNumber(value));
+      setText(rank, formatNumber(value));
       setText(bonusOutput, `+${formatNumber(bonus)}% ${definition.label}`);
+      card.classList.toggle('is-invested', value > 0);
       if (decrease) decrease.disabled = !ready || state.busy || value <= 0;
       if (increase) increase.disabled = !ready || state.busy || !valid || unspent <= 0;
     });
 
+    elements.skillTreeGrid?.querySelectorAll('[data-skill-path]').forEach((path) => {
+      const definition = PATH_DEFINITIONS[path.dataset.skillPath];
+      if (!definition) return;
+
+      const points = ready
+        ? definition.keys.reduce((sum, key) => sum + (Number(state.draft[key]) || 0), 0)
+        : 0;
+      const unlocked = ready && points >= definition.threshold;
+      const progress = path.querySelector('[data-path-progress]');
+      const keystone = path.querySelector('[data-path-keystone]');
+      const keystoneState = path.querySelector('[data-keystone-state]');
+
+      setText(progress, `${formatNumber(Math.min(points, definition.threshold))} / ${definition.threshold}`);
+      progress?.setAttribute('aria-label', `${formatNumber(points)} points invested; ${definition.threshold} required`);
+      path.classList.toggle('is-awakened', unlocked);
+      keystone?.classList.toggle('is-unlocked', unlocked);
+      setText(keystoneState, unlocked ? 'Awakened' : 'Locked');
+    });
+
     if (elements.skillTreeSaveButton) {
       elements.skillTreeSaveButton.disabled = !valid || !dirty || state.busy;
-      elements.skillTreeSaveButton.textContent = state.busy ? 'Saving...' : 'Save Allocations';
+      elements.skillTreeSaveButton.textContent = state.busy ? 'Saving...' : 'Save Build';
     }
     if (elements.skillTreeResetButton) {
       elements.skillTreeResetButton.disabled = !ready || state.busy || Number(state.summary.spentPoints) <= 0;

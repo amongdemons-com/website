@@ -17,6 +17,14 @@ const ZERO_ALLOCATIONS = Object.freeze({
   recovery: 0
 });
 
+const PATH_DEFINITIONS = Object.freeze({
+  ravager: Object.freeze({ keys: Object.freeze(['power']), threshold: 5, bonusKey: 'attackPercent', bonus: 5 }),
+  tempest: Object.freeze({ keys: Object.freeze(['haste']), threshold: 5, bonusKey: 'speedPercent', bonus: 3 }),
+  colossus: Object.freeze({ keys: Object.freeze(['vitality']), threshold: 5, bonusKey: 'maxHpPercent', bonus: 5 }),
+  aegis: Object.freeze({ keys: Object.freeze(['fortitude']), threshold: 5, bonusKey: 'damageReductionPercent', bonus: 5 }),
+  soulbinder: Object.freeze({ keys: Object.freeze(['recovery']), threshold: 5, bonusKey: 'healingReceivedPercent', bonus: 8 })
+});
+
 function getAccountLevel(player = {}) {
   return getNextAccountLevel(player.level, player.xp);
 }
@@ -64,14 +72,32 @@ function validateAllocationInput(source, totalPoints) {
 
 function calculateStatBonuses(source = {}) {
   const allocations = normalizeStoredAllocations(source);
+  const paths = calculatePathBonuses(allocations);
 
   return {
-    maxHpPercent: roundPercent(allocations.vitality * 3),
-    attackPercent: roundPercent(allocations.power * 3),
-    speedPercent: roundPercent(allocations.haste * 1.5),
-    damageReductionPercent: roundPercent(Math.min(30, allocations.fortitude * 2)),
-    healingReceivedPercent: roundPercent(allocations.recovery * 3)
+    maxHpPercent: roundPercent(allocations.vitality * 3 + paths.colossus.bonus),
+    attackPercent: roundPercent(allocations.power * 3 + paths.ravager.bonus),
+    speedPercent: roundPercent(allocations.haste * 1.5 + paths.tempest.bonus),
+    damageReductionPercent: roundPercent(Math.min(30, allocations.fortitude * 2 + paths.aegis.bonus)),
+    healingReceivedPercent: roundPercent(allocations.recovery * 3 + paths.soulbinder.bonus)
   };
+}
+
+function calculatePathBonuses(source = {}) {
+  const allocations = normalizeStoredAllocations(source);
+
+  return Object.entries(PATH_DEFINITIONS).reduce((paths, [key, definition]) => {
+    const points = definition.keys.reduce((sum, statKey) => sum + allocations[statKey], 0);
+    const unlocked = points >= definition.threshold;
+    paths[key] = {
+      points,
+      threshold: definition.threshold,
+      unlocked,
+      bonusKey: definition.bonusKey,
+      bonus: unlocked ? definition.bonus : 0
+    };
+    return paths;
+  }, {});
 }
 
 function createStatPointSummary(player, source = {}) {
@@ -86,7 +112,8 @@ function createStatPointSummary(player, source = {}) {
     spentPoints,
     unspentPoints: Math.max(0, totalPoints - spentPoints),
     allocations,
-    bonuses: calculateStatBonuses(allocations)
+    bonuses: calculateStatBonuses(allocations),
+    paths: calculatePathBonuses(allocations)
   };
 }
 
@@ -154,7 +181,9 @@ function throwStatPointError(message) {
 
 module.exports = {
   STAT_KEYS,
+  PATH_DEFINITIONS,
   ZERO_ALLOCATIONS,
+  calculatePathBonuses,
   calculateStatBonuses,
   createStatPointSummary,
   getPlayerStatPointSummary,
