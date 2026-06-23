@@ -1,11 +1,9 @@
 :root {
-    --ascension-ink: #05090a;
-    --ascension-panel: rgba(5, 11, 13, 0.92);
+    --ascension-panel: rgba(5, 11, 13, 0.94);
     --ascension-gold: #d9b96f;
     --ascension-gold-bright: #ffe5a0;
-    --ascension-line: rgba(204, 181, 124, 0.24);
+    --ascension-line: rgba(204, 181, 124, 0.2);
     --ascension-text: #e8eeeb;
-    --ascension-muted: rgba(220, 232, 229, 0.58);
 }
 
 body.skill-tree-page {
@@ -20,18 +18,20 @@ body.skill-tree-page {
 
 .ascension-shell {
     width: 100%;
-    padding: clamp(0.35rem, 0.8vw, 0.7rem) clamp(0.35rem, 0.8vw, 0.7rem) 1rem;
+    padding: clamp(0.3rem, 0.7vw, 0.65rem);
 }
 
 .ascension-shell > .alert {
-    width: min(100%, 100rem);
-    margin: 0 auto 0.65rem;
+    width: 100%;
+    margin: 0 0 0.55rem;
 }
 
 .ascension-screen {
     position: relative;
-    width: min(100%, 100rem);
-    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: calc(100dvh - 4.7rem);
     overflow: hidden;
     border: 1px solid rgba(204, 181, 124, 0.24);
     border-radius: 5px;
@@ -43,9 +43,9 @@ body.skill-tree-page {
 .ascension-screen::after {
     content: "";
     position: absolute;
-    z-index: 4;
-    width: 4.5rem;
-    height: 4.5rem;
+    z-index: 10;
+    width: 3.8rem;
+    height: 3.8rem;
     pointer-events: none;
     border-color: rgba(217, 185, 111, 0.34);
 }
@@ -64,57 +64,11 @@ body.skill-tree-page {
     border-bottom: 1px solid;
 }
 
-.ascension-ledger {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(5.1rem, 1fr));
-    gap: 0.35rem;
-}
-
-.ascension-ledger > span {
-    display: grid;
-    place-items: center;
-    min-height: 3.35rem;
-    border: 1px solid rgba(204, 181, 124, 0.14);
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(217, 185, 111, 0.07), transparent 70%);
-}
-
-.ascension-ledger small {
-    color: rgba(220, 232, 229, 0.46);
-    font-size: 0.5rem;
-    font-weight: 900;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-}
-
-.ascension-ledger strong {
-    color: #f5ead0;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 1.1rem;
-    line-height: 0.9;
-}
-
-.ascension-ledger .has-unspent-points {
-    border-color: rgba(255, 218, 127, 0.64);
-    background: radial-gradient(circle, rgba(255, 218, 127, 0.16), transparent 68%);
-    box-shadow: 0 0 18px rgba(255, 205, 94, 0.08);
-}
-
-.ascension-ledger .has-unspent-points strong {
-    color: var(--ascension-gold-bright);
-}
-
-.ascension-status {
-    grid-column: 1 / -1;
-    justify-self: end;
-    color: #d8c28b;
-    font-size: 0.62rem;
-    font-weight: 800;
-}
-
 .ascension-viewport {
     position: relative;
-    overflow: auto hidden;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
     outline: none;
     scrollbar-color: rgba(217, 185, 111, 0.42) rgba(2, 7, 8, 0.8);
     scrollbar-width: thin;
@@ -126,17 +80,18 @@ body.skill-tree-page {
 
 .ascension-map {
     position: relative;
-    min-width: 68rem;
-    height: clamp(38rem, calc(100vh - 8.8rem), 55rem);
+    min-width: 75rem;
+    min-height: 42rem;
+    height: calc(100dvh - 9.5rem);
     isolation: isolate;
     overflow: hidden;
     background:
-        radial-gradient(circle at 50% 50%, rgba(217, 185, 111, 0.085), transparent 7rem),
-        radial-gradient(circle at 16% 27%, rgba(111, 214, 189, 0.045), transparent 16rem),
-        radial-gradient(circle at 83% 72%, rgba(231, 138, 85, 0.045), transparent 17rem),
-        radial-gradient(circle, rgba(228, 222, 194, 0.12) 0 1px, transparent 1.5px) 0 0 / 4.8rem 4.8rem,
-        radial-gradient(circle, rgba(228, 222, 194, 0.07) 0 1px, transparent 1.4px) 1.7rem 2.2rem / 6.3rem 6.3rem,
-        linear-gradient(180deg, rgba(2, 7, 9, 0.86), rgba(2, 6, 8, 0.96));
+        radial-gradient(circle at 50% 50%, rgba(217, 185, 111, 0.09), transparent 8.5rem),
+        radial-gradient(circle at 20% 50%, rgba(217, 109, 112, 0.055), transparent 24rem),
+        radial-gradient(circle at 80% 50%, rgba(232, 199, 106, 0.05), transparent 24rem),
+        radial-gradient(circle, rgba(228, 222, 194, 0.11) 0 1px, transparent 1.5px) 0 0 / 4.8rem 4.8rem,
+        radial-gradient(circle, rgba(228, 222, 194, 0.06) 0 1px, transparent 1.4px) 1.7rem 2.2rem / 6.3rem 6.3rem,
+        linear-gradient(180deg, rgba(2, 7, 9, 0.86), rgba(2, 6, 8, 0.97));
 }
 
 .ascension-map::before {
@@ -146,8 +101,8 @@ body.skill-tree-page {
     z-index: -1;
     pointer-events: none;
     background:
-        repeating-conic-gradient(from 11deg at 50% 50%, transparent 0 17deg, rgba(217, 185, 111, 0.018) 17deg 18deg),
-        radial-gradient(circle at 50% 50%, transparent 0 30%, rgba(0, 0, 0, 0.14) 65%, rgba(0, 0, 0, 0.58) 100%);
+        linear-gradient(90deg, transparent 49.94%, rgba(217, 185, 111, 0.035) 50%, transparent 50.06%),
+        radial-gradient(circle at 50% 50%, transparent 0 18%, rgba(0, 0, 0, 0.08) 64%, rgba(0, 0, 0, 0.56) 100%);
 }
 
 .ascension-connections {
@@ -159,52 +114,17 @@ body.skill-tree-page {
     pointer-events: none;
 }
 
-.ascension-orbit {
-    fill: none;
-    stroke: rgba(204, 181, 124, 0.12);
-    stroke-width: 1;
-    stroke-dasharray: 3 10;
-    vector-effect: non-scaling-stroke;
-}
-
-.ascension-orbit-two {
-    stroke: rgba(111, 214, 189, 0.08);
-    stroke-dasharray: 2 13;
-}
-
-.ascension-orbit-three {
-    stroke: rgba(204, 181, 124, 0.07);
-    stroke-dasharray: 1 16;
-}
-
-.ascension-connection path {
+.ascension-connection {
     fill: none;
     stroke: var(--ascension-line);
     stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
     transition: stroke 180ms ease, filter 180ms ease;
 }
 
-.ascension-connection circle {
-    fill: #091012;
-    stroke: rgba(204, 181, 124, 0.42);
-    stroke-width: 1.2;
-    vector-effect: non-scaling-stroke;
-    transition: fill 180ms ease, stroke 180ms ease;
-}
-
-.ascension-connection.is-invested .ascension-connection-inner,
-.ascension-connection.is-awakened .ascension-connection-outer {
-    stroke: color-mix(in srgb, var(--path-color) 72%, rgba(217, 185, 111, 0.42));
-    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--path-color) 24%, transparent));
-}
-
-.ascension-connection.is-invested circle.ascension-connection-inner,
-.ascension-connection.is-awakened circle.ascension-connection-outer {
-    fill: var(--path-color);
-    stroke: #f5e7c5;
+.ascension-connection.is-active {
+    stroke: rgba(255, 218, 127, 0.74);
+    filter: drop-shadow(0 0 4px rgba(255, 205, 94, 0.35));
 }
 
 .ascension-core {
@@ -217,11 +137,10 @@ body.skill-tree-page {
     width: 8.6rem;
     height: 8.6rem;
     transform: translate(-50%, -50%);
-    border: 1px solid rgba(217, 185, 111, 0.52);
+    border: 1px solid rgba(217, 185, 111, 0.54);
     border-radius: 50%;
-    background:
-        radial-gradient(circle, rgba(217, 185, 111, 0.18), rgba(6, 14, 15, 0.95) 58%, rgba(2, 7, 8, 0.98) 70%);
-    box-shadow: 0 0 0 0.55rem rgba(6, 13, 14, 0.76), 0 0 0 0.62rem rgba(217, 185, 111, 0.18), 0 0 42px rgba(217, 185, 111, 0.14);
+    background: radial-gradient(circle, rgba(217, 185, 111, 0.2), rgba(6, 14, 15, 0.96) 58%, rgba(2, 7, 8, 0.99) 70%);
+    box-shadow: 0 0 0 0.52rem rgba(6, 13, 14, 0.78), 0 0 0 0.6rem rgba(217, 185, 111, 0.18), 0 0 42px rgba(217, 185, 111, 0.15);
     text-align: center;
 }
 
@@ -234,7 +153,7 @@ body.skill-tree-page {
 }
 
 .ascension-core::before {
-    inset: -1.2rem;
+    inset: -1.15rem;
     border-style: dashed;
 }
 
@@ -277,245 +196,134 @@ body.skill-tree-page {
     font-size: 0.55rem;
 }
 
-.ascension-path {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    pointer-events: none;
-}
-
 .ascension-node {
     position: absolute;
+    top: var(--node-y);
+    left: var(--node-x);
     z-index: 4;
-    width: 5.6rem;
-    height: 5.6rem;
-    min-width: 0;
+    width: 5.4rem;
+    height: 5.4rem;
     transform: translate(-50%, -50%);
     color: var(--ascension-text);
-    pointer-events: auto;
+    cursor: pointer;
     text-align: center;
 }
 
-.ascension-stat-node {
-    top: var(--stat-y);
-    left: var(--stat-x);
-    cursor: pointer;
-}
-
-.ascension-stat-node.is-disabled {
+.ascension-node.is-locked {
     cursor: not-allowed;
-    opacity: 0.62;
+    opacity: 0.34;
+    filter: grayscale(0.72);
 }
 
-.ascension-stat-node.is-maxed {
+.ascension-node.is-disabled {
+    cursor: not-allowed;
+    opacity: 0.68;
+}
+
+.ascension-node.is-maxed {
     cursor: default;
-}
-
-.ascension-keystone-node {
-    top: var(--key-y);
-    left: var(--key-x);
-    opacity: 0.62;
-    filter: saturate(0.28);
-    transition: opacity 180ms ease, filter 180ms ease;
 }
 
 .ascension-node-orb {
     position: relative;
     display: grid;
     place-items: center;
-    width: 4.8rem;
-    height: 4.8rem;
+    width: 4.7rem;
+    height: 4.7rem;
     margin: 0 auto;
-    border: 1px solid color-mix(in srgb, var(--path-accent) 52%, rgba(217, 185, 111, 0.32));
+    border: 1px solid color-mix(in srgb, var(--path-accent) 55%, rgba(217, 185, 111, 0.32));
     border-radius: 50%;
     background:
-        radial-gradient(circle, color-mix(in srgb, var(--path-accent) 14%, transparent), transparent 58%),
-        linear-gradient(145deg, rgba(13, 25, 25, 0.98), rgba(3, 8, 10, 0.98));
+        radial-gradient(circle, color-mix(in srgb, var(--path-accent) 15%, transparent), transparent 58%),
+        linear-gradient(145deg, rgba(13, 25, 25, 0.98), rgba(3, 8, 10, 0.99));
     color: color-mix(in srgb, var(--path-accent) 82%, #f5e7c5);
-    box-shadow: 0 0 0 0.3rem rgba(4, 10, 11, 0.92), 0 0 0 0.36rem rgba(217, 185, 111, 0.12);
+    box-shadow: 0 0 0 0.28rem rgba(4, 10, 11, 0.94), 0 0 0 0.34rem rgba(217, 185, 111, 0.12);
     transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.ascension-node-orb::before,
-.ascension-node-orb::after {
+.ascension-node-orb::before {
     content: "";
     position: absolute;
+    inset: 0.35rem;
+    border: 1px dashed color-mix(in srgb, var(--path-accent) 26%, transparent);
     border-radius: 50%;
     pointer-events: none;
 }
 
-.ascension-node-orb::before {
-    inset: 0.34rem;
-    border: 1px dashed color-mix(in srgb, var(--path-accent) 24%, transparent);
-}
-
-.ascension-node-orb::after {
-    inset: -0.68rem;
-    border: 1px solid color-mix(in srgb, var(--path-accent) 10%, transparent);
-}
-
 .ascension-node-orb .ad-icon {
-    width: 1.65rem;
-    height: 1.65rem;
+    width: 1.55rem;
+    height: 1.55rem;
     margin: 0;
 }
 
-.ascension-stat-node.is-invested .ascension-node-orb,
-.ascension-node:focus-within .ascension-node-orb {
-    border-color: color-mix(in srgb, var(--path-accent) 82%, #e7d19a);
-    box-shadow: 0 0 0 0.3rem rgba(4, 10, 11, 0.92), 0 0 0 0.36rem color-mix(in srgb, var(--path-accent) 32%, transparent), 0 0 24px color-mix(in srgb, var(--path-accent) 22%, transparent);
+.ascension-branch-node .ascension-node-orb {
+    width: 4.35rem;
+    height: 4.35rem;
 }
 
-.ascension-node:hover .ascension-node-orb {
+.ascension-mastery-node .ascension-node-orb {
+    width: 4.05rem;
+    height: 4.05rem;
+    border-width: 2px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--path-accent) 12%, transparent), transparent 58%), #060c0e;
+}
+
+.ascension-node.is-invested .ascension-node-orb,
+.ascension-node:focus-visible .ascension-node-orb {
+    border-color: color-mix(in srgb, var(--path-accent) 84%, #e7d19a);
+    box-shadow: 0 0 0 0.28rem rgba(4, 10, 11, 0.94), 0 0 0 0.36rem color-mix(in srgb, var(--path-accent) 34%, transparent), 0 0 24px color-mix(in srgb, var(--path-accent) 24%, transparent);
+    outline: none;
+}
+
+.ascension-node.is-complete .ascension-node-orb,
+.ascension-mastery-node.is-invested .ascension-node-orb {
+    border-color: color-mix(in srgb, var(--path-accent) 88%, #fff0c6);
+    box-shadow: 0 0 0 0.28rem rgba(4, 10, 11, 0.94), 0 0 0 0.38rem color-mix(in srgb, var(--path-accent) 40%, transparent), 0 0 30px color-mix(in srgb, var(--path-accent) 34%, transparent);
+}
+
+.ascension-node:not(.is-locked, .is-disabled, .is-maxed):hover .ascension-node-orb {
     transform: translateY(-2px);
-}
-
-.ascension-stat-node.is-disabled:hover .ascension-node-orb,
-.ascension-stat-node.is-maxed:hover .ascension-node-orb {
-    transform: none;
 }
 
 .ascension-node-copy {
     position: absolute;
-    top: calc(100% + 0.72rem);
+    top: calc(100% + 0.55rem);
     left: 50%;
     display: grid;
     justify-items: center;
-    gap: 0.04rem;
-    width: 11.5rem;
+    gap: 0.08rem;
+    width: 10.8rem;
     transform: translateX(-50%);
     text-shadow: 0 2px 7px #000;
 }
 
-.ascension-path-lower .ascension-node-copy {
+.ascension-copy-above .ascension-node-copy {
     top: auto;
-    bottom: calc(100% + 0.58rem);
+    bottom: calc(100% + 0.45rem);
 }
 
-.ascension-path-top .ascension-keystone-node .ascension-node-copy {
-    top: 50%;
-    bottom: auto;
-    left: calc(100% + 0.8rem);
-    justify-items: start;
-    transform: translateY(-50%);
-    text-align: left;
-}
-
-.ascension-node-copy small {
-    color: color-mix(in srgb, var(--path-accent) 80%, #dfcfaa);
-    font-size: 0.5rem;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-}
-
-.ascension-node-copy h2,
-.ascension-node-copy h3 {
-    margin: 0.03rem 0;
+.ascension-node-copy h2 {
+    margin: 0;
     color: #f7f0df;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
 }
 
-.ascension-node-copy > strong,
-.ascension-node-copy p strong {
+.ascension-node-copy > strong {
     color: var(--path-accent);
-    font-size: 0.62rem;
-}
-
-.ascension-node-copy p {
-    margin: 0.06rem 0 0;
-    color: rgba(220, 232, 229, 0.5);
-    font-size: 0.55rem;
+    font-size: 0.61rem;
     line-height: 1.25;
 }
 
-.ascension-node-copy > b {
+.ascension-node-progress {
     margin-top: 0.16rem;
-    border: 1px solid rgba(220, 232, 229, 0.17);
-    border-radius: 999px;
-    color: rgba(220, 232, 229, 0.46);
-    padding: 0.14rem 0.38rem;
-    font-size: 0.48rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-}
-
-.ascension-keystone-node .ascension-node-orb {
-    width: 4.05rem;
-    height: 4.05rem;
-    border-width: 2px;
-    background:
-        radial-gradient(circle, color-mix(in srgb, var(--path-accent) 11%, transparent), transparent 58%),
-        #060c0e;
-}
-
-.ascension-keystone-node {
-    width: 5rem;
-    height: 5rem;
-}
-
-.ascension-keystone-node .ascension-node-orb .ad-icon {
-    width: 1.35rem;
-    height: 1.35rem;
-}
-
-.ascension-keystone-node.is-unlocked {
-    opacity: 1;
-    filter: none;
-}
-
-.ascension-keystone-node.is-unlocked .ascension-node-orb {
-    border-color: color-mix(in srgb, var(--path-accent) 86%, #fff0c6);
-    box-shadow: 0 0 0 0.3rem rgba(4, 10, 11, 0.92), 0 0 0 0.38rem color-mix(in srgb, var(--path-accent) 38%, transparent), 0 0 30px color-mix(in srgb, var(--path-accent) 32%, transparent);
-}
-
-.ascension-keystone-node.is-unlocked .ascension-node-copy > b {
-    border-color: color-mix(in srgb, var(--path-accent) 48%, transparent);
-    color: var(--path-accent);
-}
-
-.ascension-path-progress {
-    position: absolute;
-    top: var(--stat-y);
-    left: var(--stat-x);
-    z-index: 7;
-    min-width: 2.35rem;
-    transform: translate(2.8rem, -3rem);
-    border: 1px solid color-mix(in srgb, var(--path-accent) 38%, transparent);
-    border-radius: 999px;
-    background: rgba(3, 9, 10, 0.94);
-    color: var(--path-accent);
-    padding: 0.18rem 0.36rem;
-    font-size: 0.53rem;
-    font-weight: 900;
-    text-align: center;
-}
-
-.ascension-map-hint {
-    position: absolute;
-    bottom: 0.75rem;
-    left: 50%;
-    z-index: 8;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.32rem;
-    transform: translateX(-50%);
-    margin: 0;
-    border: 1px solid rgba(204, 181, 124, 0.14);
-    border-radius: 999px;
-    background: rgba(3, 8, 10, 0.76);
-    color: rgba(220, 232, 229, 0.5);
-    padding: 0.28rem 0.58rem;
+    border-top: 1px solid color-mix(in srgb, var(--path-accent) 38%, transparent);
+    color: rgba(245, 240, 223, 0.86);
+    padding: 0.15rem 0.3rem 0;
     font-size: 0.56rem;
-    white-space: nowrap;
-}
-
-.ascension-map-hint .ad-icon {
-    width: 0.78rem;
-    height: 0.78rem;
-    margin: 0;
+    font-weight: 900;
+    letter-spacing: 0.04em;
 }
 
 .ascension-actions {
@@ -528,27 +336,52 @@ body.skill-tree-page {
     gap: 0.5rem;
     min-height: 3.75rem;
     border-top: 1px solid rgba(204, 181, 124, 0.18);
-    background: rgba(3, 8, 10, 0.94);
+    background: rgba(3, 8, 10, 0.96);
     padding: 0.6rem clamp(1rem, 2vw, 1.65rem);
 }
 
-.ascension-actions .ascension-ledger {
+.ascension-ledger {
+    display: grid;
     grid-template-columns: repeat(4, minmax(3.5rem, 4.2rem));
+    gap: 0.35rem;
     margin-right: auto;
 }
 
-.ascension-actions .ascension-ledger > span {
+.ascension-ledger > span {
+    display: grid;
+    place-items: center;
     min-height: 2.45rem;
+    border: 1px solid rgba(204, 181, 124, 0.14);
     border-radius: 3px;
+    background: radial-gradient(circle, rgba(217, 185, 111, 0.07), transparent 70%);
 }
 
-.ascension-actions .ascension-ledger strong {
+.ascension-ledger small {
+    color: rgba(220, 232, 229, 0.46);
+    font-size: 0.5rem;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.ascension-ledger strong {
+    color: #f5ead0;
+    font-family: Georgia, "Times New Roman", serif;
     font-size: 0.92rem;
+    line-height: 0.9;
 }
 
-.ascension-actions .ascension-status {
-    grid-column: auto;
-    justify-self: auto;
+.ascension-ledger .has-unspent-points {
+    border-color: rgba(255, 218, 127, 0.64);
+    background: radial-gradient(circle, rgba(255, 218, 127, 0.16), transparent 68%);
+    box-shadow: 0 0 18px rgba(255, 205, 94, 0.08);
+}
+
+.ascension-ledger .has-unspent-points strong {
+    color: var(--ascension-gold-bright);
+}
+
+.ascension-status {
     color: #d8c28b;
     font-size: 0.58rem;
     font-weight: 800;
@@ -586,29 +419,13 @@ body.skill-tree-page {
     opacity: 0.32;
 }
 
-@media (max-width: 991.98px) {
-    .ascension-ledger {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-
 @media (max-width: 767.98px) {
     .ascension-shell {
-        padding-right: 0.45rem;
-        padding-left: 0.45rem;
-    }
-
-    .ascension-ledger {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .ascension-ledger > span {
-        min-height: 2.85rem;
-        border-radius: 4px;
+        padding: 0.35rem;
     }
 
     .ascension-map {
-        height: max(38rem, calc(100vh - 12rem));
+        height: 42rem;
     }
 
     .ascension-actions {
@@ -617,11 +434,7 @@ body.skill-tree-page {
         padding: 0.7rem 0.85rem;
     }
 
-    .ascension-actions > span {
-        margin-right: 0;
-    }
-
-    .ascension-actions .ascension-ledger {
+    .ascension-ledger {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         width: 100%;
         margin-right: 0;
@@ -629,8 +442,7 @@ body.skill-tree-page {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    .ascension-ledger .has-unspent-points,
-    .ascension-core:has(strong:not(:empty)) {
+    .ascension-ledger .has-unspent-points {
         animation: ascension-pulse 2.4s ease-in-out infinite;
     }
 }

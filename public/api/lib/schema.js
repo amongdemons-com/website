@@ -12,6 +12,13 @@ async function addColumnIfMissing(tableName, columnName, definition) {
   }
 }
 
+async function dropColumnIfPresent(tableName, columnName) {
+  const columns = await getColumns(tableName);
+  if (columns.has(columnName)) {
+    await db.query(`ALTER TABLE \`${tableName}\` DROP COLUMN \`${columnName}\``);
+  }
+}
+
 async function normalizeUtf8Column(tableName, columnName, definition) {
   const columns = await getColumns(tableName);
   if (!columns.has(columnName)) return;
@@ -116,15 +123,46 @@ async function initializeSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_stat_points (
       player_id VARCHAR(255) NOT NULL PRIMARY KEY,
-      vitality INT UNSIGNED NOT NULL DEFAULT 0,
-      power INT UNSIGNED NOT NULL DEFAULT 0,
-      haste INT UNSIGNED NOT NULL DEFAULT 0,
-      fortitude INT UNSIGNED NOT NULL DEFAULT 0,
-      recovery INT UNSIGNED NOT NULL DEFAULT 0,
+      health_flat INT UNSIGNED NOT NULL DEFAULT 0,
+      health_percent INT UNSIGNED NOT NULL DEFAULT 0,
+      health_mastery INT UNSIGNED NOT NULL DEFAULT 0,
+      healing_percent INT UNSIGNED NOT NULL DEFAULT 0,
+      healing_mastery INT UNSIGNED NOT NULL DEFAULT 0,
+      thorns_percent INT UNSIGNED NOT NULL DEFAULT 0,
+      thorns_mastery INT UNSIGNED NOT NULL DEFAULT 0,
+      speed_flat INT UNSIGNED NOT NULL DEFAULT 0,
+      speed_percent INT UNSIGNED NOT NULL DEFAULT 0,
+      speed_mastery INT UNSIGNED NOT NULL DEFAULT 0,
+      attack_percent INT UNSIGNED NOT NULL DEFAULT 0,
+      attack_mastery INT UNSIGNED NOT NULL DEFAULT 0,
+      aoe_percent INT UNSIGNED NOT NULL DEFAULT 0,
+      aoe_mastery INT UNSIGNED NOT NULL DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+  const skillTreeColumns = [
+    'health_flat',
+    'health_percent',
+    'health_mastery',
+    'healing_percent',
+    'healing_mastery',
+    'thorns_percent',
+    'thorns_mastery',
+    'speed_flat',
+    'speed_percent',
+    'speed_mastery',
+    'attack_percent',
+    'attack_mastery',
+    'aoe_percent',
+    'aoe_mastery'
+  ];
+  for (const column of skillTreeColumns) {
+    await addColumnIfMissing('player_stat_points', column, `\`${column}\` INT UNSIGNED NOT NULL DEFAULT 0`);
+  }
+  for (const legacyColumn of ['vitality', 'power', 'haste', 'fortitude', 'recovery']) {
+    await dropColumnIfPresent('player_stat_points', legacyColumn);
+  }
   await normalizeUtf8Column('player_stat_points', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
 
   await db.query(`

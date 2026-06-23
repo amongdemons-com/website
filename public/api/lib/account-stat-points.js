@@ -1,44 +1,52 @@
 const db = require('./db');
 const { getNextAccountLevel } = require('./progression');
 
-const STAT_KEYS = Object.freeze([
-  'vitality',
-  'power',
-  'haste',
-  'fortitude',
-  'recovery'
-]);
-const MAX_STAT_POINTS = 5;
-
-const ZERO_ALLOCATIONS = Object.freeze({
-  vitality: 0,
-  power: 0,
-  haste: 0,
-  fortitude: 0,
-  recovery: 0
+const NODE_DEFINITIONS = Object.freeze({
+  health_flat: Object.freeze({ label: 'Max Health', cap: 5, requires: [] }),
+  health_percent: Object.freeze({ label: 'Max Health %', cap: 5, requires: [['health_flat', 5]] }),
+  health_mastery: Object.freeze({ label: 'Endless Health', cap: Infinity, requires: [['health_percent', 5]] }),
+  healing_percent: Object.freeze({ label: 'Healing %', cap: 5, requires: [['health_flat', 5]] }),
+  healing_mastery: Object.freeze({ label: 'Endless Healing', cap: Infinity, requires: [['healing_percent', 5]] }),
+  thorns_percent: Object.freeze({ label: 'Thorns %', cap: 5, requires: [['health_flat', 5]] }),
+  thorns_mastery: Object.freeze({ label: 'Endless Thorns', cap: Infinity, requires: [['thorns_percent', 5]] }),
+  speed_flat: Object.freeze({ label: 'Speed', cap: 5, requires: [] }),
+  speed_percent: Object.freeze({ label: 'Speed %', cap: 5, requires: [['speed_flat', 5]] }),
+  speed_mastery: Object.freeze({ label: 'Endless Speed', cap: Infinity, requires: [['speed_percent', 5]] }),
+  attack_percent: Object.freeze({ label: 'Attack Damage %', cap: 5, requires: [['speed_flat', 5]] }),
+  attack_mastery: Object.freeze({ label: 'Endless Attack', cap: Infinity, requires: [['attack_percent', 5]] }),
+  aoe_percent: Object.freeze({ label: 'AOE Damage %', cap: 5, requires: [['speed_flat', 5]] }),
+  aoe_mastery: Object.freeze({ label: 'Endless AOE', cap: Infinity, requires: [['aoe_percent', 5]] })
 });
 
-const PATH_DEFINITIONS = Object.freeze({
-  ravager: Object.freeze({ keys: Object.freeze(['power']), threshold: 5, bonusKey: 'attackPercent', bonus: 5 }),
-  tempest: Object.freeze({ keys: Object.freeze(['haste']), threshold: 5, bonusKey: 'speedPercent', bonus: 3 }),
-  colossus: Object.freeze({ keys: Object.freeze(['vitality']), threshold: 5, bonusKey: 'maxHpPercent', bonus: 5 }),
-  aegis: Object.freeze({ keys: Object.freeze(['fortitude']), threshold: 5, bonusKey: 'damageReductionPercent', bonus: 5 }),
-  soulbinder: Object.freeze({ keys: Object.freeze(['recovery']), threshold: 5, bonusKey: 'healingReceivedPercent', bonus: 8 })
-});
+const STAT_KEYS = Object.freeze(Object.keys(NODE_DEFINITIONS));
+const ZERO_ALLOCATIONS = Object.freeze(STAT_KEYS.reduce((allocations, key) => {
+  allocations[key] = 0;
+  return allocations;
+}, {}));
 
 function getAccountLevel(player = {}) {
   return getNextAccountLevel(player.level, player.xp);
 }
 
 function getTotalStatPoints(level) {
-  return Math.min(STAT_KEYS.length * MAX_STAT_POINTS, Math.max(0, Math.floor(Number(level) || 1) - 1));
+  return Math.max(0, Math.floor(Number(level) || 1) - 1);
 }
 
 function normalizeStoredAllocations(source = {}) {
-  return STAT_KEYS.reduce((allocations, key) => {
-    allocations[key] = Math.min(MAX_STAT_POINTS, Math.max(0, Math.floor(Number(source[key]) || 0)));
-    return allocations;
+  const allocations = STAT_KEYS.reduce((normalized, key) => {
+    const definition = NODE_DEFINITIONS[key];
+    const value = Math.max(0, Math.floor(Number(source[key]) || 0));
+    normalized[key] = Number.isFinite(definition.cap) ? Math.min(value, definition.cap) : value;
+    return normalized;
   }, {});
+
+  STAT_KEYS.forEach((key) => {
+    if (!requirementsMet(allocations, NODE_DEFINITIONS[key].requires)) {
+      allocations[key] = 0;
+    }
+  });
+
+  return allocations;
 }
 
 function validateAllocationInput(source, totalPoints) {
@@ -57,10 +65,22 @@ function validateAllocationInput(source, totalPoints) {
     if (!Object.prototype.hasOwnProperty.call(source, key)) return;
 
     const value = Number(source[key]);
-    if (!Number.isSafeInteger(value) || value < 0 || value > MAX_STAT_POINTS) {
-      throwStatPointError(`${capitalize(key)} points must be an integer from 0 to ${MAX_STAT_POINTS}.`);
+    const definition = NODE_DEFINITIONS[key];
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throwStatPointError(`${definition.label} points must be a non-negative integer.`);
+    }
+    if (Number.isFinite(definition.cap) && value > definition.cap) {
+      throwStatPointError(`${definition.label} can have at most ${definition.cap} points.`);
     }
     allocations[key] = value;
+  });
+
+  STAT_KEYS.forEach((key) => {
+    const definition = NODE_DEFINITIONS[key];
+    if (allocations[key] > 0 && !requirementsMet(allocations, definition.requires)) {
+      const [requiredKey, requiredRank] = definition.requires[0];
+      throwStatPointError(`${definition.label} requires ${NODE_DEFINITIONS[requiredKey].label} ${requiredRank}/${requiredRank}.`);
+    }
   });
 
   const spentPoints = getSpentPoints(allocations);
@@ -73,32 +93,44 @@ function validateAllocationInput(source, totalPoints) {
 
 function calculateStatBonuses(source = {}) {
   const allocations = normalizeStoredAllocations(source);
-  const paths = calculatePathBonuses(allocations);
 
   return {
-    maxHpPercent: roundPercent(allocations.vitality * 3 + paths.colossus.bonus),
-    attackPercent: roundPercent(allocations.power * 3 + paths.ravager.bonus),
-    speedPercent: roundPercent(allocations.haste * 1.5 + paths.tempest.bonus),
-    damageReductionPercent: roundPercent(Math.min(30, allocations.fortitude * 2 + paths.aegis.bonus)),
-    healingReceivedPercent: roundPercent(allocations.recovery * 3 + paths.soulbinder.bonus)
+    maxHpFlat: (allocations.health_flat * 5) + (allocations.health_mastery * 5),
+    maxHpPercent: roundPercent(allocations.health_percent * 3),
+    healingFlat: allocations.healing_mastery,
+    healingPercent: roundPercent(allocations.healing_percent * 3),
+    thornsFlat: allocations.thorns_mastery,
+    thornsPercent: roundPercent(allocations.thorns_percent * 5),
+    speedFlat: allocations.speed_flat + allocations.speed_mastery,
+    speedPercent: roundPercent(allocations.speed_percent * 2),
+    attackFlat: allocations.attack_mastery,
+    attackPercent: roundPercent(allocations.attack_percent * 3),
+    aoeDamageFlat: allocations.aoe_mastery,
+    aoeDamagePercent: roundPercent(allocations.aoe_percent * 2)
   };
 }
 
-function calculatePathBonuses(source = {}) {
+function calculatePathProgress(source = {}) {
   const allocations = normalizeStoredAllocations(source);
 
-  return Object.entries(PATH_DEFINITIONS).reduce((paths, [key, definition]) => {
-    const points = definition.keys.reduce((sum, statKey) => sum + allocations[statKey], 0);
-    const unlocked = points >= definition.threshold;
-    paths[key] = {
-      points,
-      threshold: definition.threshold,
-      unlocked,
-      bonusKey: definition.bonusKey,
-      bonus: unlocked ? definition.bonus : 0
-    };
-    return paths;
-  }, {});
+  return {
+    health: {
+      root: allocations.health_flat,
+      branches: {
+        maxHealth: { node: allocations.health_percent, mastery: allocations.health_mastery },
+        healing: { node: allocations.healing_percent, mastery: allocations.healing_mastery },
+        thorns: { node: allocations.thorns_percent, mastery: allocations.thorns_mastery }
+      }
+    },
+    offense: {
+      root: allocations.speed_flat,
+      branches: {
+        speed: { node: allocations.speed_percent, mastery: allocations.speed_mastery },
+        attack: { node: allocations.attack_percent, mastery: allocations.attack_mastery },
+        aoe: { node: allocations.aoe_percent, mastery: allocations.aoe_mastery }
+      }
+    }
+  };
 }
 
 function createStatPointSummary(player, source = {}) {
@@ -114,13 +146,13 @@ function createStatPointSummary(player, source = {}) {
     unspentPoints: Math.max(0, totalPoints - spentPoints),
     allocations,
     bonuses: calculateStatBonuses(allocations),
-    paths: calculatePathBonuses(allocations)
+    paths: calculatePathProgress(allocations)
   };
 }
 
 async function getPlayerStatPointSummary(player) {
   const [rows] = await db.query(
-    `SELECT vitality, power, haste, fortitude, recovery
+    `SELECT ${STAT_KEYS.join(', ')}
      FROM player_stat_points
      WHERE player_id = ?
      LIMIT 1`,
@@ -133,25 +165,17 @@ async function getPlayerStatPointSummary(player) {
 async function savePlayerStatAllocations(player, source) {
   const level = getAccountLevel(player);
   const allocations = validateAllocationInput(source, getTotalStatPoints(level));
+  const columns = STAT_KEYS.join(', ');
+  const placeholders = STAT_KEYS.map(() => '?').join(', ');
+  const updates = STAT_KEYS.map((key) => `${key} = VALUES(${key})`).join(',\n       ');
 
   await db.query(
     `INSERT INTO player_stat_points
-       (player_id, vitality, power, haste, fortitude, recovery)
-     VALUES (?, ?, ?, ?, ?, ?)
+       (player_id, ${columns})
+     VALUES (?, ${placeholders})
      ON DUPLICATE KEY UPDATE
-       vitality = VALUES(vitality),
-       power = VALUES(power),
-       haste = VALUES(haste),
-       fortitude = VALUES(fortitude),
-       recovery = VALUES(recovery)`,
-    [
-      player.id,
-      allocations.vitality,
-      allocations.power,
-      allocations.haste,
-      allocations.fortitude,
-      allocations.recovery
-    ]
+       ${updates}`,
+    [player.id, ...STAT_KEYS.map((key) => allocations[key])]
   );
 
   return createStatPointSummary(player, allocations);
@@ -159,6 +183,10 @@ async function savePlayerStatAllocations(player, source) {
 
 async function resetPlayerStatAllocations(player) {
   return savePlayerStatAllocations(player, ZERO_ALLOCATIONS);
+}
+
+function requirementsMet(allocations, requirements = []) {
+  return requirements.every(([key, rank]) => Number(allocations[key]) >= rank);
 }
 
 function getSpentPoints(allocations) {
@@ -169,11 +197,6 @@ function roundPercent(value) {
   return Math.round((Number(value) || 0) * 10) / 10;
 }
 
-function capitalize(value) {
-  const text = String(value || '');
-  return text ? `${text[0].toUpperCase()}${text.slice(1)}` : text;
-}
-
 function throwStatPointError(message) {
   const error = new Error(message);
   error.status = 400;
@@ -181,11 +204,10 @@ function throwStatPointError(message) {
 }
 
 module.exports = {
+  NODE_DEFINITIONS,
   STAT_KEYS,
-  MAX_STAT_POINTS,
-  PATH_DEFINITIONS,
   ZERO_ALLOCATIONS,
-  calculatePathBonuses,
+  calculatePathProgress,
   calculateStatBonuses,
   createStatPointSummary,
   getPlayerStatPointSummary,

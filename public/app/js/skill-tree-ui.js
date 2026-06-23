@@ -2,22 +2,23 @@
   'use strict';
 
   const api = window.AmongDemons.api;
-  const STAT_DEFINITIONS = {
-    vitality: { perPoint: 3, label: 'max HP' },
-    power: { perPoint: 3, label: 'attack' },
-    haste: { perPoint: 1.5, label: 'speed' },
-    fortitude: { perPoint: 2, cap: 30, label: 'damage reduction' },
-    recovery: { perPoint: 3, label: 'healing received' }
+  const NODE_DEFINITIONS = {
+    health_flat: { label: 'Max Health', cap: 5, requires: [] },
+    health_percent: { label: 'Greater Health', cap: 5, requires: [['health_flat', 5]] },
+    health_mastery: { label: 'Endless Health', cap: Infinity, requires: [['health_percent', 5]] },
+    healing_percent: { label: 'Healing', cap: 5, requires: [['health_flat', 5]] },
+    healing_mastery: { label: 'Endless Healing', cap: Infinity, requires: [['healing_percent', 5]] },
+    thorns_percent: { label: 'Thorns', cap: 5, requires: [['health_flat', 5]] },
+    thorns_mastery: { label: 'Endless Thorns', cap: Infinity, requires: [['thorns_percent', 5]] },
+    speed_flat: { label: 'Speed', cap: 5, requires: [] },
+    speed_percent: { label: 'Momentum', cap: 5, requires: [['speed_flat', 5]] },
+    speed_mastery: { label: 'Endless Speed', cap: Infinity, requires: [['speed_percent', 5]] },
+    attack_percent: { label: 'Brutal Force', cap: 5, requires: [['speed_flat', 5]] },
+    attack_mastery: { label: 'Endless Force', cap: Infinity, requires: [['attack_percent', 5]] },
+    aoe_percent: { label: 'Wide Ruin', cap: 5, requires: [['speed_flat', 5]] },
+    aoe_mastery: { label: 'Endless Ruin', cap: Infinity, requires: [['aoe_percent', 5]] }
   };
-  const MAX_STAT_POINTS = 5;
-  const PATH_DEFINITIONS = {
-    ravager: { keys: ['power'], threshold: 5 },
-    tempest: { keys: ['haste'], threshold: 5 },
-    colossus: { keys: ['vitality'], threshold: 5 },
-    aegis: { keys: ['fortitude'], threshold: 5 },
-    soulbinder: { keys: ['recovery'], threshold: 5 }
-  };
-  const STAT_KEYS = Object.keys(STAT_DEFINITIONS);
+  const STAT_KEYS = Object.keys(NODE_DEFINITIONS);
   const state = {
     summary: null,
     draft: null,
@@ -42,8 +43,7 @@
         api('/api/auth/me'),
         api('/api/account/stat-points')
       ]);
-      state.summary = summary;
-      state.draft = { ...summary.allocations };
+      applySummary(summary);
       window.AmongDemons.ui?.updateNavAccount?.(me.player);
       render();
     } catch (error) {
@@ -78,21 +78,18 @@
     elements.skillTreeGrid?.addEventListener('click', (event) => {
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
       const node = target?.closest('[data-stat-point-key]');
-      const key = node?.dataset.statPointKey;
-      if (!node || !STAT_KEYS.includes(key) || state.busy) return;
-
-      updateDraft(key);
+      if (!node || state.busy) return;
+      updateDraft(node.dataset.statPointKey);
     });
 
     elements.skillTreeGrid?.addEventListener('keydown', (event) => {
       if (!['Enter', ' '].includes(event.key)) return;
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
       const node = target?.closest('[data-stat-point-key]');
-      const key = node?.dataset.statPointKey;
-      if (!node || !STAT_KEYS.includes(key) || state.busy) return;
+      if (!node || state.busy) return;
 
       event.preventDefault();
-      updateDraft(key);
+      updateDraft(node.dataset.statPointKey);
     });
 
     elements.skillTreeSaveButton?.addEventListener('click', save);
@@ -100,14 +97,13 @@
   }
 
   function updateDraft(key) {
-    if (!state.summary || !state.draft) return;
+    const definition = NODE_DEFINITIONS[key];
+    if (!definition || !state.summary || !state.draft || !canInvest(key)) return;
 
-    const value = Math.max(0, Number(state.draft[key]) || 0);
-    const spent = getSpent(state.draft);
-    const total = Math.max(0, Number(state.summary.totalPoints) || 0);
-    if (spent >= total || value >= MAX_STAT_POINTS) return;
-
-    state.draft = { ...state.draft, [key]: value + 1 };
+    state.draft = {
+      ...state.draft,
+      [key]: Math.max(0, Number(state.draft[key]) || 0) + 1
+    };
     render();
   }
 
@@ -116,7 +112,7 @@
     const total = ready ? Math.max(0, Number(state.summary.totalPoints) || 0) : 0;
     const spent = ready ? getSpent(state.draft) : 0;
     const unspent = total - spent;
-    const valid = ready && STAT_KEYS.every((key) => Number.isInteger(Number(state.draft[key])) && Number(state.draft[key]) >= 0 && Number(state.draft[key]) <= MAX_STAT_POINTS) && unspent >= 0;
+    const valid = ready && isDraftValid(state.draft) && unspent >= 0;
     const dirty = ready && STAT_KEYS.some((key) => Number(state.draft[key]) !== Number(state.summary.allocations?.[key] || 0));
 
     setText(elements.skillTreeLevel, ready ? formatNumber(state.summary.level) : '-');
@@ -128,47 +124,39 @@
     setText(elements.skillTreeStatus, !ready
       ? 'Loading level points...'
       : !valid
-        ? `Allocations exceed your earned points by ${formatNumber(Math.abs(unspent))}.`
+        ? 'This allocation is no longer valid.'
         : unspent > 0
           ? `${formatNumber(unspent)} point${unspent === 1 ? '' : 's'} available.`
           : 'All earned points allocated.');
 
-    elements.skillTreeGrid?.querySelectorAll('[data-stat-point-key]').forEach((card) => {
-      const key = card.dataset.statPointKey;
-      const definition = STAT_DEFINITIONS[key];
-      const value = ready ? Math.max(0, Number(state.draft[key]) || 0) : 0;
-      const bonus = Math.min(definition.cap || Infinity, value * definition.perPoint);
-      const bonusOutput = card.querySelector('[data-stat-bonus]');
-      const canInvest = ready && !state.busy && valid && unspent > 0 && value < MAX_STAT_POINTS;
-
-      setText(bonusOutput, `+${formatNumber(bonus)}% ${definition.label}`);
-      card.classList.toggle('is-invested', value > 0);
-      card.classList.toggle('is-disabled', ready && !canInvest && value < MAX_STAT_POINTS);
-      card.classList.toggle('is-maxed', value >= MAX_STAT_POINTS);
-      card.setAttribute('aria-disabled', String(!canInvest));
-      card.setAttribute('aria-label', `${capitalize(key)}: ${formatNumber(value)} of ${MAX_STAT_POINTS} points. ${canInvest ? 'Activate to invest one point.' : value >= MAX_STAT_POINTS ? 'Maximum reached.' : 'No points available.'}`);
-    });
-
-    elements.skillTreeGrid?.querySelectorAll('[data-skill-path]').forEach((path) => {
-      const definition = PATH_DEFINITIONS[path.dataset.skillPath];
+    elements.skillTreeGrid?.querySelectorAll('[data-stat-point-key]').forEach((node) => {
+      const key = node.dataset.statPointKey;
+      const definition = NODE_DEFINITIONS[key];
       if (!definition) return;
 
-      const points = ready
-        ? definition.keys.reduce((sum, key) => sum + (Number(state.draft[key]) || 0), 0)
-        : 0;
-      const unlocked = ready && points >= definition.threshold;
-      const progress = path.querySelector('[data-path-progress]');
-      const keystone = path.querySelector('[data-path-keystone]');
-      const keystoneState = path.querySelector('[data-keystone-state]');
-      const connection = elements.skillTreeGrid?.querySelector(`[data-path-connection="${path.dataset.skillPath}"]`);
+      const rank = ready ? Math.max(0, Number(state.draft[key]) || 0) : 0;
+      const unlocked = ready && requirementsMet(state.draft, definition.requires);
+      const complete = Number.isFinite(definition.cap) && rank >= definition.cap;
+      const investable = valid && !state.busy && canInvest(key);
 
-      setText(progress, `${formatNumber(Math.min(points, definition.threshold))} / ${definition.threshold}`);
-      progress?.setAttribute('aria-label', `${formatNumber(points)} points invested; ${definition.threshold} required`);
-      path.classList.toggle('is-awakened', unlocked);
-      keystone?.classList.toggle('is-unlocked', unlocked);
-      connection?.classList.toggle('is-invested', points > 0);
-      connection?.classList.toggle('is-awakened', unlocked);
-      setText(keystoneState, unlocked ? 'Awakened' : 'Locked');
+      setText(node.querySelector('[data-node-progress]'), Number.isFinite(definition.cap)
+        ? `${formatNumber(rank)} / ${definition.cap}`
+        : `${formatNumber(rank)} ∞`);
+      node.classList.toggle('is-locked', !unlocked);
+      node.classList.toggle('is-invested', rank > 0);
+      node.classList.toggle('is-complete', complete);
+      node.classList.toggle('is-maxed', complete);
+      node.classList.toggle('is-disabled', unlocked && !investable && !complete);
+      node.setAttribute('aria-disabled', String(!investable));
+      node.setAttribute('aria-label', `${definition.label}: ${formatNumber(rank)}${Number.isFinite(definition.cap) ? ` of ${definition.cap}` : ' points'}. ${investable ? 'Activate to invest one point.' : complete ? 'Complete.' : !unlocked ? 'Locked.' : 'No points available.'}`);
+      node.tabIndex = unlocked ? 0 : -1;
+    });
+
+    elements.skillTreeGrid?.querySelectorAll('[data-unlock-key]').forEach((line) => {
+      const key = line.dataset.unlockKey;
+      const requiredRank = Math.max(1, Number(line.dataset.unlockRank) || 1);
+      const rank = ready ? Math.max(0, Number(state.draft[key]) || 0) : 0;
+      line.classList.toggle('is-active', rank >= requiredRank);
     });
 
     if (ready && !state.viewportCenterScheduled) {
@@ -185,18 +173,41 @@
     }
   }
 
+  function canInvest(key) {
+    const definition = NODE_DEFINITIONS[key];
+    if (!definition || !state.summary || !state.draft) return false;
+
+    const rank = Math.max(0, Number(state.draft[key]) || 0);
+    const unspent = Math.max(0, Number(state.summary.totalPoints) || 0) - getSpent(state.draft);
+    return unspent > 0 && rank < definition.cap && requirementsMet(state.draft, definition.requires);
+  }
+
+  function isDraftValid(allocations) {
+    return STAT_KEYS.every((key) => {
+      const definition = NODE_DEFINITIONS[key];
+      const rank = Number(allocations[key]);
+      return Number.isSafeInteger(rank) &&
+        rank >= 0 &&
+        rank <= definition.cap &&
+        (rank === 0 || requirementsMet(allocations, definition.requires));
+    });
+  }
+
+  function requirementsMet(allocations, requirements = []) {
+    return requirements.every(([key, rank]) => Number(allocations?.[key]) >= rank);
+  }
+
   async function save() {
     if (!state.summary || !state.draft || state.busy) return;
     state.busy = true;
     render();
 
     try {
-      const summary = await api('/api/account/stat-points', {
+      applySummary(await api('/api/account/stat-points', {
         method: 'POST',
         body: { allocations: state.draft }
-      });
-      applySummary(summary);
-      setMessage('Constellation sealed. Your ascension bonuses are active.', 'success');
+      }));
+      setMessage('Constellation sealed. Your skill bonuses are active.', 'success');
     } catch (error) {
       handleError(error);
     } finally {
@@ -230,7 +241,10 @@
 
   function applySummary(summary) {
     state.summary = summary;
-    state.draft = { ...summary.allocations };
+    state.draft = STAT_KEYS.reduce((allocations, key) => {
+      allocations[key] = Math.max(0, Number(summary.allocations?.[key]) || 0);
+      return allocations;
+    }, {});
   }
 
   function getSpent(allocations) {
@@ -274,11 +288,6 @@
   function formatNumber(value) {
     const number = Number(value);
     return Number.isFinite(number) ? number.toLocaleString() : String(value ?? '-');
-  }
-
-  function capitalize(value) {
-    const text = String(value || '');
-    return text ? `${text[0].toUpperCase()}${text.slice(1)}` : text;
   }
 
   function onReady(callback) {

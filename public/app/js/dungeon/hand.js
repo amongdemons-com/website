@@ -108,15 +108,27 @@ function createLevelPowerBuff(statPoints) {
   if (!statPoints || Number(statPoints.spentPoints) <= 0) return null;
 
   const bonuses = statPoints.bonuses || {};
-  const bonusRows = [
-    [bonuses.maxHpPercent, 'HP'],
-    [bonuses.attackPercent, 'ATK'],
+  const flatRows = [
+    [bonuses.maxHpFlat, 'max HP'],
+    [bonuses.attackFlat, 'attack damage'],
+    [bonuses.speedFlat, 'Speed'],
+    [bonuses.healingFlat, 'healing'],
+    [bonuses.thornsFlat, 'thorns damage'],
+    [bonuses.aoeDamageFlat, 'AOE damage']
+  ]
+    .filter(([value]) => Number(value) > 0)
+    .map(([value, label]) => `+${formatLevelPowerBonus(value)} ${label}`);
+  const percentRows = [
+    [bonuses.maxHpPercent, 'max HP'],
+    [bonuses.attackPercent, 'attack damage'],
     [bonuses.speedPercent, 'Speed'],
-    [bonuses.damageReductionPercent, 'damage reduction'],
-    [bonuses.healingReceivedPercent, 'healing received']
+    [bonuses.healingPercent, 'healing'],
+    [bonuses.thornsPercent, 'thorns'],
+    [bonuses.aoeDamagePercent, 'AOE damage']
   ]
     .filter(([value]) => Number(value) > 0)
     .map(([value, label]) => `+${formatLevelPowerBonus(value)}% ${label}`);
+  const bonusRows = [...flatRows, ...percentRows];
 
   return {
     id: 'account-level-power',

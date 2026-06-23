@@ -285,6 +285,16 @@ function applyDamage({
     cause: damageKind
   });
 
+  applyThornsDamage({
+    tick,
+    defender: target,
+    attacker,
+    attackerSide,
+    receivedDamage: damageResult.damage,
+    combatLog,
+    context
+  });
+
   const targetAbility = getAbility(target, demonTypes);
   if (target.hp > 0 && targetAbility.kind === 'retaliate' && attacker.hp > 0) {
     const retaliationDamage = applyDamageModifiers({
@@ -321,7 +331,57 @@ function applyDamage({
       targetSide: attackerSide,
       cause: 'retaliation'
     });
+
+    applyThornsDamage({
+      tick,
+      defender: attacker,
+      attacker: target,
+      attackerSide: targetSide,
+      receivedDamage: retaliationResult.damage,
+      combatLog,
+      context
+    });
   }
+}
+
+function applyThornsDamage({
+  tick,
+  defender,
+  attacker,
+  attackerSide,
+  receivedDamage,
+  combatLog,
+  context
+}) {
+  if (!defender || !attacker || attacker.hp <= 0 || receivedDamage <= 0) return;
+
+  const thornsPercent = Math.max(0, Number(defender.battleBuffs?.thornsPercent) || 0);
+  const thornsFlat = Math.max(0, Number(defender.battleBuffs?.thornsFlat) || 0);
+  const thornsDamage = Math.max(0, Math.round(receivedDamage * (thornsPercent / 100)) + thornsFlat);
+  if (thornsDamage <= 0) return;
+
+  const damageResult = dealDamage(attacker, thornsDamage);
+  combatLog.push({
+    tick,
+    attacker: defender.instanceId,
+    attackerPosition: normalizePosition(defender.position),
+    target: attacker.instanceId,
+    targetPosition: normalizePosition(attacker.position),
+    targeting: 'thorns',
+    effect: 'thorns',
+    dmg: damageResult.damage,
+    shieldDamage: damageResult.shieldDamage,
+    targetShield: attacker.shield || 0,
+    targetHp: attacker.hp
+  });
+
+  handleDeathBuffTriggers({
+    ...context,
+    tick,
+    target: attacker,
+    targetSide: attackerSide,
+    cause: 'thorns'
+  });
 }
 
 function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {
@@ -561,10 +621,7 @@ function getTeamStateKey(team) {
 
 function dealDamage(target, damage) {
   const incomingAmount = Math.max(0, Number(damage) || 0);
-  const damageReduction = Math.max(0, Math.min(0.3, Number(target.battleBuffs?.damageReduction) || 0));
-  const amount = incomingAmount > 0
-    ? Math.max(1, Math.round(incomingAmount * (1 - damageReduction)))
-    : 0;
+  const amount = incomingAmount > 0 ? Math.max(1, Math.round(incomingAmount)) : 0;
   const shield = Math.max(0, Number(target.shield) || 0);
   const shieldDamage = Math.min(shield, amount);
   const hpDamage = amount - shieldDamage;

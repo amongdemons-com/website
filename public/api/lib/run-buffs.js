@@ -118,8 +118,15 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
   const accountMaxHpMult = 1 + getBonusFraction(accountBonuses.maxHpPercent);
   const accountAttackMult = 1 + getBonusFraction(accountBonuses.attackPercent);
   const accountSpeedMult = 1 + getBonusFraction(accountBonuses.speedPercent);
-  const accountDamageReduction = clamp(getBonusFraction(accountBonuses.damageReductionPercent), 0, 0.3);
-  const accountHealingReceivedMult = 1 + getBonusFraction(accountBonuses.healingReceivedPercent);
+  const accountMaxHpFlat = Math.max(0, Number(accountBonuses.maxHpFlat) || 0);
+  const accountAttackFlat = Math.max(0, Number(accountBonuses.attackFlat) || 0);
+  const accountSpeedFlat = Math.max(0, Number(accountBonuses.speedFlat) || 0);
+  const accountHealingMult = 1 + getBonusFraction(accountBonuses.healingPercent);
+  const accountHealingFlat = Math.max(0, Number(accountBonuses.healingFlat) || 0);
+  const accountThornsPercent = Math.max(0, Number(accountBonuses.thornsPercent) || 0);
+  const accountThornsFlat = Math.max(0, Number(accountBonuses.thornsFlat) || 0);
+  const accountAoeDamageMult = 1 + getBonusFraction(accountBonuses.aoeDamagePercent);
+  const accountAoeDamageFlat = Math.max(0, Number(accountBonuses.aoeDamageFlat) || 0);
 
   return (team || []).map((demon) => {
     const next = {
@@ -127,8 +134,12 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
       battleBuffs: {
         ...(demon.battleBuffs || {}),
         directDamageMult: positiveNumber(demon.battleBuffs?.directDamageMult, 1),
-        damageReduction: accountDamageReduction,
-        healingReceivedMult: accountHealingReceivedMult
+        healingMult: accountHealingMult,
+        healingFlat: accountHealingFlat,
+        thornsPercent: accountThornsPercent,
+        thornsFlat: accountThornsFlat,
+        aoeDamageMult: accountAoeDamageMult,
+        aoeDamageFlat: accountAoeDamageFlat
       }
     };
 
@@ -141,6 +152,21 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
 
     if (speedMult !== 1) {
       next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * speedMult));
+    }
+
+    if (accountMaxHpFlat > 0) {
+      const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
+      const hpRatio = clamp((Number(next.hp) || baseMaxHp) / baseMaxHp, 0, 1);
+      next.maxHp = Math.max(1, Math.round(baseMaxHp + accountMaxHpFlat));
+      next.hp = Math.max(next.hp > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
+    }
+
+    if (accountAttackFlat > 0) {
+      next.atk = Math.max(1, Math.round((Number(next.atk) || 1) + accountAttackFlat));
+    }
+
+    if (accountSpeedFlat > 0) {
+      next.speed = Math.max(1, Math.round((Number(next.speed) || 1) + accountSpeedFlat));
     }
 
     if (accountMaxHpMult !== 1) {
@@ -228,11 +254,14 @@ function applyDamageModifiers(context) {
     multiplier *= getEffectMultiplier(state, 'direct_damage_vs_poisoned_mult');
   }
 
+  let flatDamage = 0;
   if (context.isAoe) {
     multiplier *= getEffectMultiplier(state, 'aoe_damage_mult');
+    multiplier *= positiveNumber(context.attacker?.battleBuffs?.aoeDamageMult, 1);
+    flatDamage = Math.max(0, Number(context.attacker?.battleBuffs?.aoeDamageFlat) || 0);
   }
 
-  return roundDamage(damage * multiplier);
+  return roundDamage((damage * multiplier) + flatDamage);
 }
 
 function applyHealingModifiers(context) {
@@ -249,7 +278,8 @@ function applyHealingModifiers(context) {
     healing: roundHealing(
       healing *
       getEffectMultiplier(state, 'healing_mult') *
-      positiveNumber(context.target?.battleBuffs?.healingReceivedMult, 1)
+      positiveNumber(context.healer?.battleBuffs?.healingMult, 1) +
+      Math.max(0, Number(context.healer?.battleBuffs?.healingFlat) || 0)
     ),
     overhealToShield: hasEffect(state, 'overheal_to_shield')
   };

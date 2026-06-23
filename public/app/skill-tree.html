@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Skill Tree | Among Demons</title>
-    <meta name="description" content="Allocate powerful account upgrades for your demons in Among Demons.">
+    <meta name="description" content="Allocate permanent account upgrades for your demons in Among Demons.">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css?v=20260622-skill-tree-v3" rel="stylesheet">
-    <link href="/app/css/skill-tree.css?v=20260623-constellation-v2" rel="stylesheet">
+    <link href="/app/css/skill-tree.css?v=20260623-branches-v4" rel="stylesheet">
   </head>
   <body class="skill-tree-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -51,98 +51,96 @@
       <section class="ascension-screen" aria-labelledby="skillTreeAllocationHeading">
         <h1 class="visually-hidden" id="skillTreeAllocationHeading">Demonic Ascension</h1>
 
-        <div class="ascension-viewport" id="skillTreeViewport" tabindex="0" aria-label="Scrollable ascension constellation">
+        <div class="ascension-viewport" id="skillTreeViewport" tabindex="0" aria-label="Scrollable skill tree">
           <div class="ascension-map" id="skillTreeGrid">
-            <svg class="ascension-connections" viewBox="0 0 1200 700" preserveAspectRatio="none" aria-hidden="true">
-              <circle class="ascension-orbit ascension-orbit-one" cx="600" cy="350" r="108"></circle>
-              <circle class="ascension-orbit ascension-orbit-two" cx="600" cy="350" r="205"></circle>
-              <circle class="ascension-orbit ascension-orbit-three" cx="600" cy="350" r="292"></circle>
+            <svg class="ascension-connections" viewBox="0 0 1200 720" preserveAspectRatio="none" aria-hidden="true">
+              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="1" d="M600 360 L440 360"></path>
+              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="5" d="M440 360 L280 130"></path>
+              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="5" d="M440 360 L280 360"></path>
+              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="5" d="M440 360 L280 590"></path>
+              <path class="ascension-connection" data-unlock-key="health_percent" data-unlock-rank="5" d="M280 130 L100 130"></path>
+              <path class="ascension-connection" data-unlock-key="healing_percent" data-unlock-rank="5" d="M280 360 L100 360"></path>
+              <path class="ascension-connection" data-unlock-key="thorns_percent" data-unlock-rank="5" d="M280 590 L100 590"></path>
 
-              <g class="ascension-connection" data-path-connection="colossus" style="--path-color:#d96d70">
-                <path class="ascension-connection-inner" d="M600 350 L600 154"></path><path class="ascension-connection-outer" d="M600 154 L600 55"></path><circle class="ascension-connection-inner" cx="600" cy="260" r="4"></circle><circle class="ascension-connection-outer" cx="600" cy="105" r="3"></circle>
-              </g>
-              <g class="ascension-connection" data-path-connection="ravager" style="--path-color:#e78a55">
-                <path class="ascension-connection-inner" d="M600 350 L890 235"></path><path class="ascension-connection-outer" d="M890 235 L1080 108"></path><circle class="ascension-connection-inner" cx="704" cy="309" r="4"></circle><circle class="ascension-connection-inner" cx="792" cy="274" r="3"></circle><circle class="ascension-connection-outer" cx="988" cy="170" r="4"></circle>
-              </g>
-              <g class="ascension-connection" data-path-connection="tempest" style="--path-color:#e8c76a">
-                <path class="ascension-connection-inner" d="M600 350 L840 490"></path><path class="ascension-connection-outer" d="M840 490 L1050 624"></path><circle class="ascension-connection-inner" cx="690" cy="403" r="4"></circle><circle class="ascension-connection-inner" cx="758" cy="442" r="3"></circle><circle class="ascension-connection-outer" cx="952" cy="562" r="4"></circle>
-              </g>
-              <g class="ascension-connection" data-path-connection="soulbinder" style="--path-color:#8fefff">
-                <path class="ascension-connection-inner" d="M600 350 L360 490"></path><path class="ascension-connection-outer" d="M360 490 L150 624"></path><circle class="ascension-connection-inner" cx="510" cy="403" r="4"></circle><circle class="ascension-connection-inner" cx="442" cy="442" r="3"></circle><circle class="ascension-connection-outer" cx="248" cy="562" r="4"></circle>
-              </g>
-              <g class="ascension-connection" data-path-connection="aegis" style="--path-color:#6fd6bd">
-                <path class="ascension-connection-inner" d="M600 350 L310 235"></path><path class="ascension-connection-outer" d="M310 235 L120 108"></path><circle class="ascension-connection-inner" cx="496" cy="309" r="4"></circle><circle class="ascension-connection-inner" cx="408" cy="274" r="3"></circle><circle class="ascension-connection-outer" cx="212" cy="170" r="4"></circle>
-              </g>
+              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="1" d="M600 360 L760 360"></path>
+              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 360 L920 130"></path>
+              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 360 L920 360"></path>
+              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 360 L920 590"></path>
+              <path class="ascension-connection" data-unlock-key="speed_percent" data-unlock-rank="5" d="M920 130 L1100 130"></path>
+              <path class="ascension-connection" data-unlock-key="attack_percent" data-unlock-rank="5" d="M920 360 L1100 360"></path>
+              <path class="ascension-connection" data-unlock-key="aoe_percent" data-unlock-rank="5" d="M920 590 L1100 590"></path>
             </svg>
 
-            <div class="ascension-core" aria-label="Demonic core">
+            <div class="ascension-core" aria-label="Skill tree origin">
               <span class="ascension-core-glyph"><i data-lucide="circle-dot"></i></span>
               <small>Begin Here</small>
               <strong id="skillTreeCoreUnspent">-</strong>
               <span>points ready</span>
             </div>
 
-            <section class="ascension-path ascension-path-top" data-skill-path="colossus" style="--path-accent:#d96d70;--stat-x:50%;--stat-y:22%;--key-x:50%;--key-y:8%" aria-labelledby="colossusPathHeading">
-              <article class="ascension-node ascension-stat-node" data-stat-point-key="vitality" role="button" tabindex="0" aria-label="Invest one point in Vitality">
-                <div class="ascension-node-orb"><i data-lucide="heart"></i></div>
-                <div class="ascension-node-copy"><small>Colossus Path</small><h2 id="colossusPathHeading">Vitality</h2><strong data-stat-bonus>+0% max HP</strong><p>Maximum health for every demon.</p></div>
-              </article>
-              <article class="ascension-node ascension-keystone-node" data-path-keystone>
-                <div class="ascension-node-orb"><i data-lucide="castle"></i></div>
-                <div class="ascension-node-copy"><small>Keystone &middot; 5 Vitality</small><h3>Unyielding</h3><p>Additional <strong>+5% max HP</strong></p><b data-keystone-state>Locked</b></div>
-              </article>
-              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
-            </section>
+            <article class="ascension-node ascension-root-node" data-stat-point-key="health_flat" style="--node-x:36.667%;--node-y:50%;--path-accent:#d96d70" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="heart"></i></div>
+              <div class="ascension-node-copy"><h2>Max Health</h2><strong>+5 max health per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+            </article>
 
-            <section class="ascension-path" data-skill-path="ravager" style="--path-accent:#e78a55;--stat-x:74%;--stat-y:34%;--key-x:90%;--key-y:16%" aria-labelledby="ravagerPathHeading">
-              <article class="ascension-node ascension-stat-node" data-stat-point-key="power" role="button" tabindex="0" aria-label="Invest one point in Power">
-                <div class="ascension-node-orb"><i data-lucide="swords"></i></div>
-                <div class="ascension-node-copy"><small>Ravager Path</small><h2 id="ravagerPathHeading">Power</h2><strong data-stat-bonus>+0% attack</strong><p>Attack and attack-based abilities.</p></div>
-              </article>
-              <article class="ascension-node ascension-keystone-node" data-path-keystone>
-                <div class="ascension-node-orb"><i data-lucide="skull"></i></div>
-                <div class="ascension-node-copy"><small>Keystone &middot; 5 Power</small><h3>Relentless</h3><p>Additional <strong>+5% attack</strong></p><b data-keystone-state>Locked</b></div>
-              </article>
-              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
-            </section>
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="health_percent" style="--node-x:23.333%;--node-y:18.056%;--path-accent:#df7779" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="heart-pulse"></i></div>
+              <div class="ascension-node-copy"><h2>Greater Health</h2><strong>+3% max health per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+            </article>
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="health_mastery" style="--node-x:8.333%;--node-y:18.056%;--path-accent:#df7779" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
+              <div class="ascension-node-copy"><h2>Endless Health</h2><strong>+5 max health per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+            </article>
 
-            <section class="ascension-path ascension-path-lower" data-skill-path="tempest" style="--path-accent:#e8c76a;--stat-x:70%;--stat-y:70%;--key-x:87.5%;--key-y:89%" aria-labelledby="tempestPathHeading">
-              <article class="ascension-node ascension-stat-node" data-stat-point-key="haste" role="button" tabindex="0" aria-label="Invest one point in Haste">
-                <div class="ascension-node-orb"><i data-lucide="zap"></i></div>
-                <div class="ascension-node-copy"><small>Tempest Path</small><h2 id="tempestPathHeading">Haste</h2><strong data-stat-bonus>+0% speed</strong><p>Faster attack-meter gain.</p></div>
-              </article>
-              <article class="ascension-node ascension-keystone-node" data-path-keystone>
-                <div class="ascension-node-orb"><i data-lucide="gauge"></i></div>
-                <div class="ascension-node-copy"><small>Keystone &middot; 5 Haste</small><h3>Quickening</h3><p>Additional <strong>+3% speed</strong></p><b data-keystone-state>Locked</b></div>
-              </article>
-              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
-            </section>
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="healing_percent" style="--node-x:23.333%;--node-y:50%;--path-accent:#8fefff" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="sparkles"></i></div>
+              <div class="ascension-node-copy"><h2>Healing</h2><strong>+3% healing per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+            </article>
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="healing_mastery" style="--node-x:8.333%;--node-y:50%;--path-accent:#8fefff" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
+              <div class="ascension-node-copy"><h2>Endless Healing</h2><strong>+1 healing per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+            </article>
 
-            <section class="ascension-path ascension-path-lower" data-skill-path="soulbinder" style="--path-accent:#8fefff;--stat-x:30%;--stat-y:70%;--key-x:12.5%;--key-y:89%" aria-labelledby="soulbinderPathHeading">
-              <article class="ascension-node ascension-stat-node" data-stat-point-key="recovery" role="button" tabindex="0" aria-label="Invest one point in Recovery">
-                <div class="ascension-node-orb"><i data-lucide="heart-pulse"></i></div>
-                <div class="ascension-node-copy"><small>Soulbinder Path</small><h2 id="soulbinderPathHeading">Recovery</h2><strong data-stat-bonus>+0% healing received</strong><p>Stronger healing for every demon.</p></div>
-              </article>
-              <article class="ascension-node ascension-keystone-node" data-path-keystone>
-                <div class="ascension-node-orb"><i data-lucide="gem"></i></div>
-                <div class="ascension-node-copy"><small>Keystone &middot; 5 Recovery</small><h3>Soulwell</h3><p>Additional <strong>+8% healing</strong></p><b data-keystone-state>Locked</b></div>
-              </article>
-              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
-            </section>
+            <article class="ascension-node ascension-branch-node ascension-copy-above" data-stat-point-key="thorns_percent" style="--node-x:23.333%;--node-y:81.944%;--path-accent:#a991e8" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="badge-alert"></i></div>
+              <div class="ascension-node-copy"><h2>Thorns</h2><strong>+5% thorns per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+            </article>
+            <article class="ascension-node ascension-mastery-node ascension-copy-above" data-stat-point-key="thorns_mastery" style="--node-x:8.333%;--node-y:81.944%;--path-accent:#a991e8" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
+              <div class="ascension-node-copy"><h2>Endless Thorns</h2><strong>+1 thorns damage per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+            </article>
 
-            <section class="ascension-path" data-skill-path="aegis" style="--path-accent:#6fd6bd;--stat-x:26%;--stat-y:34%;--key-x:10%;--key-y:16%" aria-labelledby="aegisPathHeading">
-              <article class="ascension-node ascension-stat-node" data-stat-point-key="fortitude" role="button" tabindex="0" aria-label="Invest one point in Fortitude">
-                <div class="ascension-node-orb"><i data-lucide="shield"></i></div>
-                <div class="ascension-node-copy"><small>Aegis Path</small><h2 id="aegisPathHeading">Fortitude</h2><strong data-stat-bonus>+0% damage reduction</strong><p>Incoming damage reduction, capped at 30%.</p></div>
-              </article>
-              <article class="ascension-node ascension-keystone-node" data-path-keystone>
-                <div class="ascension-node-orb"><i data-lucide="shield-plus"></i></div>
-                <div class="ascension-node-copy"><small>Keystone &middot; 5 Fortitude</small><h3>Iron Pact</h3><p><strong>+5% reduction</strong> within the cap</p><b data-keystone-state>Locked</b></div>
-              </article>
-              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
-            </section>
+            <article class="ascension-node ascension-root-node" data-stat-point-key="speed_flat" style="--node-x:63.333%;--node-y:50%;--path-accent:#e8c76a" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="zap"></i></div>
+              <div class="ascension-node-copy"><h2>Speed</h2><strong>+1 speed per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+            </article>
 
-            <p class="ascension-map-hint"><i data-lucide="move"></i>All five paths are independent. Scroll to explore.</p>
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="speed_percent" style="--node-x:76.667%;--node-y:18.056%;--path-accent:#e8c76a" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="gauge"></i></div>
+              <div class="ascension-node-copy"><h2>Momentum</h2><strong>+2% speed per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+            </article>
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="speed_mastery" style="--node-x:91.667%;--node-y:18.056%;--path-accent:#e8c76a" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
+              <div class="ascension-node-copy"><h2>Endless Speed</h2><strong>+1 speed per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+            </article>
+
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="attack_percent" style="--node-x:76.667%;--node-y:50%;--path-accent:#e78a55" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="swords"></i></div>
+              <div class="ascension-node-copy"><h2>Brutal Force</h2><strong>+3% attack damage per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+            </article>
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="attack_mastery" style="--node-x:91.667%;--node-y:50%;--path-accent:#e78a55" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
+              <div class="ascension-node-copy"><h2>Endless Force</h2><strong>+1 attack damage per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+            </article>
+
+            <article class="ascension-node ascension-branch-node ascension-copy-above" data-stat-point-key="aoe_percent" style="--node-x:76.667%;--node-y:81.944%;--path-accent:#6fd6bd" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="scan"></i></div>
+              <div class="ascension-node-copy"><h2>Wide Ruin</h2><strong>+2% AOE damage per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+            </article>
+            <article class="ascension-node ascension-mastery-node ascension-copy-above" data-stat-point-key="aoe_mastery" style="--node-x:91.667%;--node-y:81.944%;--path-accent:#6fd6bd" role="button" tabindex="0">
+              <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
+              <div class="ascension-node-copy"><h2>Endless Ruin</h2><strong>+1 AOE damage per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+            </article>
           </div>
         </div>
 
@@ -166,6 +164,6 @@
     <script src="/app/js/api-config.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
-    <script src="/app/js/skill-tree-ui.js?v=20260623-constellation-v2"></script>
+    <script src="/app/js/skill-tree-ui.js?v=20260623-branches-v4"></script>
   </body>
 </html>

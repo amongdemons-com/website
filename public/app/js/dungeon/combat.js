@@ -774,7 +774,7 @@ function groupCombatLog(combatLog) {
       previous?.isAoe &&
       previous.tick === entry.tick &&
       previous.attacker === entry.attacker;
-    const isSameRetaliation = entry.effect === 'retaliate' &&
+    const isSameCounterattack = (entry.effect === 'retaliate' || entry.effect === 'thorns') &&
       previous &&
       previous.tick === entry.tick &&
       previous.entries.some((previousEntry) => previousEntry.attacker === entry.target && previousEntry.target === entry.attacker);
@@ -783,7 +783,7 @@ function groupCombatLog(combatLog) {
       previous.tick === entry.tick &&
       previous.entries.every((previousEntry) => previousEntry.target === entry.target);
 
-    if (isSameAoe || isSameRetaliation || isSamePoisonBurst) {
+    if (isSameAoe || isSameCounterattack || isSamePoisonBurst) {
       previous.entries.push(entry);
       continue;
     }
@@ -817,6 +817,7 @@ function getFightLogActionText(step) {
   if (entry.effect === 'shared_pain') return `Surviving allies gained direct damage`;
   if (entry.effect === 'chain_explosion') return `${attacker} exploded into ${target}`;
   if (entry.effect === 'retaliate') return `${attacker} retaliated against ${target}`;
+  if (entry.effect === 'thorns') return `${attacker} reflected damage to ${target}`;
   if (entry.targeting === 'chaotic') return `${attacker} chaotically struck ${target}`;
   if (entry.targeting === 'cleave') return `${attacker} cleaved ${step.entries.length} demons`;
   if (step.isAoe) return `${attacker} splashed ${step.entries.length} enemies`;
@@ -831,6 +832,7 @@ function getFightLogVerb(entry) {
   if (entry.effect === 'shared_pain') return 'empowered';
   if (entry.effect === 'chain_explosion') return 'exploded into';
   if (entry.effect === 'retaliate') return 'retaliated against';
+  if (entry.effect === 'thorns') return 'reflected damage to';
   if (entry.targeting === 'chaotic') return 'chaotically struck';
   if (entry.targeting === 'cleave') return 'cleaved';
   return entry.targeting === 'all' ? 'splashed' : 'hit';
@@ -838,7 +840,7 @@ function getFightLogVerb(entry) {
 
 function getFightLogAmountText(step) {
   const entry = step.entries[0];
-  const retaliationEntry = step.entries.find((item) => item.effect === 'retaliate');
+  const counterEntry = step.entries.find((item) => item.effect === 'retaliate' || item.effect === 'thorns');
   if (entry.effect === 'poison_apply') return 'poison';
   if (entry.effect === 'poison') {
     return `${getPoisonBurstDamage(step)} poison`;
@@ -847,7 +849,12 @@ function getFightLogAmountText(step) {
   if (entry.effect === 'last_breath') return '1 hp';
   if (entry.effect === 'shared_pain') return '+25% dmg';
   if (entry.effect === 'chain_explosion') return `${entry.dmg || 0} splash`;
-  if (retaliationEntry) return `${entry.dmg} dmg, ${retaliationEntry.dmg} thorns`;
+  if (entry.effect === 'thorns') return `${entry.dmg || 0} thorns`;
+  if (entry.effect === 'retaliate') return `${entry.dmg || 0} retaliation`;
+  if (counterEntry) {
+    const label = counterEntry.effect === 'thorns' ? 'thorns' : 'retaliation';
+    return `${entry.dmg} dmg, ${counterEntry.dmg} ${label}`;
+  }
   if (entry.targeting === 'cleave') return `${step.entries.length} x ${entry.dmg} cleave`;
   if (step.isAoe) return `${step.entries.length} x ${entry.dmg} dmg`;
   return `${entry.dmg} dmg`;
