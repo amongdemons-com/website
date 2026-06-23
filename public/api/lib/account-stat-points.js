@@ -8,6 +8,7 @@ const STAT_KEYS = Object.freeze([
   'fortitude',
   'recovery'
 ]);
+const MAX_STAT_POINTS = 5;
 
 const ZERO_ALLOCATIONS = Object.freeze({
   vitality: 0,
@@ -30,12 +31,12 @@ function getAccountLevel(player = {}) {
 }
 
 function getTotalStatPoints(level) {
-  return Math.max(0, Math.floor(Number(level) || 1) - 1);
+  return Math.min(STAT_KEYS.length * MAX_STAT_POINTS, Math.max(0, Math.floor(Number(level) || 1) - 1));
 }
 
 function normalizeStoredAllocations(source = {}) {
   return STAT_KEYS.reduce((allocations, key) => {
-    allocations[key] = Math.max(0, Math.floor(Number(source[key]) || 0));
+    allocations[key] = Math.min(MAX_STAT_POINTS, Math.max(0, Math.floor(Number(source[key]) || 0)));
     return allocations;
   }, {});
 }
@@ -56,8 +57,8 @@ function validateAllocationInput(source, totalPoints) {
     if (!Object.prototype.hasOwnProperty.call(source, key)) return;
 
     const value = Number(source[key]);
-    if (!Number.isSafeInteger(value) || value < 0) {
-      throwStatPointError(`${capitalize(key)} points must be a non-negative integer.`);
+    if (!Number.isSafeInteger(value) || value < 0 || value > MAX_STAT_POINTS) {
+      throwStatPointError(`${capitalize(key)} points must be an integer from 0 to ${MAX_STAT_POINTS}.`);
     }
     allocations[key] = value;
   });
@@ -181,6 +182,7 @@ function throwStatPointError(message) {
 
 module.exports = {
   STAT_KEYS,
+  MAX_STAT_POINTS,
   PATH_DEFINITIONS,
   ZERO_ALLOCATIONS,
   calculatePathBonuses,

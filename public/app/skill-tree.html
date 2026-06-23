@@ -9,6 +9,7 @@
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css?v=20260622-skill-tree-v3" rel="stylesheet">
+    <link href="/app/css/skill-tree.css?v=20260623-constellation-v2" rel="stylesheet">
   </head>
   <body class="skill-tree-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -44,141 +45,117 @@
       </div>
     </nav>
 
-    <main class="skill-tree-main">
+    <main class="ascension-shell">
       <div class="alert d-none" id="appMessage" role="alert"></div>
 
-      <section class="skill-tree-panel" aria-labelledby="skillTreeAllocationHeading">
-        <header>
-          <div>
-            <span class="skill-tree-kicker"><i data-lucide="git-branch"></i>Demonic Ascension</span>
-            <h1 id="skillTreeAllocationHeading">Choose Your Path</h1>
-            <p>Shape every demon you command. Focus a path to awaken its keystone bonus.</p>
-          </div>
-          <span class="skill-tree-status" id="skillTreeStatus" role="status" aria-live="polite">Loading level points...</span>
-        </header>
+      <section class="ascension-screen" aria-labelledby="skillTreeAllocationHeading">
+        <h1 class="visually-hidden" id="skillTreeAllocationHeading">Demonic Ascension</h1>
 
-        <section class="skill-tree-summary" aria-label="Level point totals">
-          <span><small>Account Level</small><strong id="skillTreeLevel">-</strong></span>
-          <span><small>Total Points</small><strong id="skillTreeTotal">-</strong></span>
-          <span><small>Spent</small><strong id="skillTreeSpent">-</strong></span>
-          <span id="skillTreeUnspentCard"><small>Unspent</small><strong id="skillTreeUnspent">-</strong></span>
-        </section>
+        <div class="ascension-viewport" id="skillTreeViewport" tabindex="0" aria-label="Scrollable ascension constellation">
+          <div class="ascension-map" id="skillTreeGrid">
+            <svg class="ascension-connections" viewBox="0 0 1200 700" preserveAspectRatio="none" aria-hidden="true">
+              <circle class="ascension-orbit ascension-orbit-one" cx="600" cy="350" r="108"></circle>
+              <circle class="ascension-orbit ascension-orbit-two" cx="600" cy="350" r="205"></circle>
+              <circle class="ascension-orbit ascension-orbit-three" cx="600" cy="350" r="292"></circle>
 
-        <div class="skill-tree-map" id="skillTreeGrid">
-          <p class="skill-tree-rule"><i data-lucide="split"></i>Every path is independent. Invest in any stat in any order.</p>
+              <g class="ascension-connection" data-path-connection="colossus" style="--path-color:#d96d70">
+                <path class="ascension-connection-inner" d="M600 350 L600 154"></path><path class="ascension-connection-outer" d="M600 154 L600 55"></path><circle class="ascension-connection-inner" cx="600" cy="260" r="4"></circle><circle class="ascension-connection-outer" cx="600" cy="105" r="3"></circle>
+              </g>
+              <g class="ascension-connection" data-path-connection="ravager" style="--path-color:#e78a55">
+                <path class="ascension-connection-inner" d="M600 350 L890 235"></path><path class="ascension-connection-outer" d="M890 235 L1080 108"></path><circle class="ascension-connection-inner" cx="704" cy="309" r="4"></circle><circle class="ascension-connection-inner" cx="792" cy="274" r="3"></circle><circle class="ascension-connection-outer" cx="988" cy="170" r="4"></circle>
+              </g>
+              <g class="ascension-connection" data-path-connection="tempest" style="--path-color:#e8c76a">
+                <path class="ascension-connection-inner" d="M600 350 L840 490"></path><path class="ascension-connection-outer" d="M840 490 L1050 624"></path><circle class="ascension-connection-inner" cx="690" cy="403" r="4"></circle><circle class="ascension-connection-inner" cx="758" cy="442" r="3"></circle><circle class="ascension-connection-outer" cx="952" cy="562" r="4"></circle>
+              </g>
+              <g class="ascension-connection" data-path-connection="soulbinder" style="--path-color:#8fefff">
+                <path class="ascension-connection-inner" d="M600 350 L360 490"></path><path class="ascension-connection-outer" d="M360 490 L150 624"></path><circle class="ascension-connection-inner" cx="510" cy="403" r="4"></circle><circle class="ascension-connection-inner" cx="442" cy="442" r="3"></circle><circle class="ascension-connection-outer" cx="248" cy="562" r="4"></circle>
+              </g>
+              <g class="ascension-connection" data-path-connection="aegis" style="--path-color:#6fd6bd">
+                <path class="ascension-connection-inner" d="M600 350 L310 235"></path><path class="ascension-connection-outer" d="M310 235 L120 108"></path><circle class="ascension-connection-inner" cx="496" cy="309" r="4"></circle><circle class="ascension-connection-inner" cx="408" cy="274" r="3"></circle><circle class="ascension-connection-outer" cx="212" cy="170" r="4"></circle>
+              </g>
+            </svg>
 
-          <div class="skill-tree-origin" aria-label="Demonic core">
-            <span class="skill-tree-origin-icon"><i data-lucide="circle-dot"></i></span>
-            <span><small>Demonic Core</small><strong><span id="skillTreeCoreUnspent">-</span> points ready</strong></span>
-          </div>
+            <div class="ascension-core" aria-label="Demonic core">
+              <span class="ascension-core-glyph"><i data-lucide="circle-dot"></i></span>
+              <small>Begin Here</small>
+              <strong id="skillTreeCoreUnspent">-</strong>
+              <span>points ready</span>
+            </div>
 
-          <div class="skill-tree-branches">
-            <section class="skill-branch" data-skill-path="ravager" style="--branch-accent: #e78a55" aria-labelledby="ravagerPathHeading">
-              <header class="skill-branch-header">
-                <span class="skill-branch-emblem"><i data-lucide="flame"></i></span>
-                <span><small>Path of Ruin</small><h2 id="ravagerPathHeading">Ravager</h2></span>
-                <strong data-path-progress>0 / 5</strong>
-              </header>
-              <div class="skill-branch-nodes">
-                <article class="skill-tree-stat" data-stat-point-key="power">
-                  <span class="skill-tree-stat-icon"><i data-lucide="swords"></i><b data-stat-rank>0</b></span>
-                  <div class="skill-tree-stat-copy"><small>Offense</small><h3>Power</h3><p>Increase attack and attack-based abilities.</p><strong data-stat-bonus>+0% attack</strong></div>
-                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Power point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Power point">+</button></div>
-                </article>
-                <article class="skill-path-keystone" data-path-keystone>
-                  <span><i data-lucide="skull"></i></span>
-                  <div><small>Keystone &middot; 5 Power</small><h3>Relentless</h3><p>Gain an additional <strong>+5% attack</strong>.</p></div>
-                  <b data-keystone-state>Locked</b>
-                </article>
-              </div>
+            <section class="ascension-path ascension-path-top" data-skill-path="colossus" style="--path-accent:#d96d70;--stat-x:50%;--stat-y:22%;--key-x:50%;--key-y:8%" aria-labelledby="colossusPathHeading">
+              <article class="ascension-node ascension-stat-node" data-stat-point-key="vitality" role="button" tabindex="0" aria-label="Invest one point in Vitality">
+                <div class="ascension-node-orb"><i data-lucide="heart"></i></div>
+                <div class="ascension-node-copy"><small>Colossus Path</small><h2 id="colossusPathHeading">Vitality</h2><strong data-stat-bonus>+0% max HP</strong><p>Maximum health for every demon.</p></div>
+              </article>
+              <article class="ascension-node ascension-keystone-node" data-path-keystone>
+                <div class="ascension-node-orb"><i data-lucide="castle"></i></div>
+                <div class="ascension-node-copy"><small>Keystone &middot; 5 Vitality</small><h3>Unyielding</h3><p>Additional <strong>+5% max HP</strong></p><b data-keystone-state>Locked</b></div>
+              </article>
+              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
             </section>
 
-            <section class="skill-branch" data-skill-path="tempest" style="--branch-accent: #e8c76a" aria-labelledby="tempestPathHeading">
-              <header class="skill-branch-header">
-                <span class="skill-branch-emblem"><i data-lucide="wind"></i></span>
-                <span><small>Path of Momentum</small><h2 id="tempestPathHeading">Tempest</h2></span>
-                <strong data-path-progress>0 / 5</strong>
-              </header>
-              <div class="skill-branch-nodes">
-                <article class="skill-tree-stat" data-stat-point-key="haste">
-                  <span class="skill-tree-stat-icon"><i data-lucide="zap"></i><b data-stat-rank>0</b></span>
-                  <div class="skill-tree-stat-copy"><small>Momentum</small><h3>Haste</h3><p>Fill the attack meter faster.</p><strong data-stat-bonus>+0% speed</strong></div>
-                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Haste point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Haste point">+</button></div>
-                </article>
-                <article class="skill-path-keystone" data-path-keystone>
-                  <span><i data-lucide="gauge"></i></span>
-                  <div><small>Keystone &middot; 5 Haste</small><h3>Quickening</h3><p>Gain an additional <strong>+3% speed</strong>.</p></div>
-                  <b data-keystone-state>Locked</b>
-                </article>
-              </div>
+            <section class="ascension-path" data-skill-path="ravager" style="--path-accent:#e78a55;--stat-x:74%;--stat-y:34%;--key-x:90%;--key-y:16%" aria-labelledby="ravagerPathHeading">
+              <article class="ascension-node ascension-stat-node" data-stat-point-key="power" role="button" tabindex="0" aria-label="Invest one point in Power">
+                <div class="ascension-node-orb"><i data-lucide="swords"></i></div>
+                <div class="ascension-node-copy"><small>Ravager Path</small><h2 id="ravagerPathHeading">Power</h2><strong data-stat-bonus>+0% attack</strong><p>Attack and attack-based abilities.</p></div>
+              </article>
+              <article class="ascension-node ascension-keystone-node" data-path-keystone>
+                <div class="ascension-node-orb"><i data-lucide="skull"></i></div>
+                <div class="ascension-node-copy"><small>Keystone &middot; 5 Power</small><h3>Relentless</h3><p>Additional <strong>+5% attack</strong></p><b data-keystone-state>Locked</b></div>
+              </article>
+              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
             </section>
 
-            <section class="skill-branch" data-skill-path="colossus" style="--branch-accent: #d96d70" aria-labelledby="colossusPathHeading">
-              <header class="skill-branch-header">
-                <span class="skill-branch-emblem"><i data-lucide="heart"></i></span>
-                <span><small>Path of Endurance</small><h2 id="colossusPathHeading">Colossus</h2></span>
-                <strong data-path-progress>0 / 5</strong>
-              </header>
-              <div class="skill-branch-nodes">
-                <article class="skill-tree-stat" data-stat-point-key="vitality">
-                  <span class="skill-tree-stat-icon"><i data-lucide="heart"></i><b data-stat-rank>0</b></span>
-                  <div class="skill-tree-stat-copy"><small>Endurance</small><h3>Vitality</h3><p>Increase maximum HP for your demons.</p><strong data-stat-bonus>+0% max HP</strong></div>
-                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Vitality point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Vitality point">+</button></div>
-                </article>
-                <article class="skill-path-keystone" data-path-keystone>
-                  <span><i data-lucide="castle"></i></span>
-                  <div><small>Keystone &middot; 5 Vitality</small><h3>Unyielding</h3><p>Gain an additional <strong>+5% max HP</strong>.</p></div>
-                  <b data-keystone-state>Locked</b>
-                </article>
-              </div>
+            <section class="ascension-path ascension-path-lower" data-skill-path="tempest" style="--path-accent:#e8c76a;--stat-x:70%;--stat-y:70%;--key-x:87.5%;--key-y:89%" aria-labelledby="tempestPathHeading">
+              <article class="ascension-node ascension-stat-node" data-stat-point-key="haste" role="button" tabindex="0" aria-label="Invest one point in Haste">
+                <div class="ascension-node-orb"><i data-lucide="zap"></i></div>
+                <div class="ascension-node-copy"><small>Tempest Path</small><h2 id="tempestPathHeading">Haste</h2><strong data-stat-bonus>+0% speed</strong><p>Faster attack-meter gain.</p></div>
+              </article>
+              <article class="ascension-node ascension-keystone-node" data-path-keystone>
+                <div class="ascension-node-orb"><i data-lucide="gauge"></i></div>
+                <div class="ascension-node-copy"><small>Keystone &middot; 5 Haste</small><h3>Quickening</h3><p>Additional <strong>+3% speed</strong></p><b data-keystone-state>Locked</b></div>
+              </article>
+              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
             </section>
 
-            <section class="skill-branch" data-skill-path="aegis" style="--branch-accent: #6fd6bd" aria-labelledby="aegisPathHeading">
-              <header class="skill-branch-header">
-                <span class="skill-branch-emblem"><i data-lucide="shield-check"></i></span>
-                <span><small>Path of Resolve</small><h2 id="aegisPathHeading">Aegis</h2></span>
-                <strong data-path-progress>0 / 5</strong>
-              </header>
-              <div class="skill-branch-nodes">
-                <article class="skill-tree-stat" data-stat-point-key="fortitude">
-                  <span class="skill-tree-stat-icon"><i data-lucide="shield"></i><b data-stat-rank>0</b></span>
-                  <div class="skill-tree-stat-copy"><small>Defense</small><h3>Fortitude</h3><p>Reduce incoming damage, capped at 30%.</p><strong data-stat-bonus>+0% damage reduction</strong></div>
-                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Fortitude point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Fortitude point">+</button></div>
-                </article>
-                <article class="skill-path-keystone" data-path-keystone>
-                  <span><i data-lucide="shield-plus"></i></span>
-                  <div><small>Keystone &middot; 5 Fortitude</small><h3>Iron Pact</h3><p>Gain <strong>+5% damage reduction</strong>, within the 30% cap.</p></div>
-                  <b data-keystone-state>Locked</b>
-                </article>
-              </div>
+            <section class="ascension-path ascension-path-lower" data-skill-path="soulbinder" style="--path-accent:#8fefff;--stat-x:30%;--stat-y:70%;--key-x:12.5%;--key-y:89%" aria-labelledby="soulbinderPathHeading">
+              <article class="ascension-node ascension-stat-node" data-stat-point-key="recovery" role="button" tabindex="0" aria-label="Invest one point in Recovery">
+                <div class="ascension-node-orb"><i data-lucide="heart-pulse"></i></div>
+                <div class="ascension-node-copy"><small>Soulbinder Path</small><h2 id="soulbinderPathHeading">Recovery</h2><strong data-stat-bonus>+0% healing received</strong><p>Stronger healing for every demon.</p></div>
+              </article>
+              <article class="ascension-node ascension-keystone-node" data-path-keystone>
+                <div class="ascension-node-orb"><i data-lucide="gem"></i></div>
+                <div class="ascension-node-copy"><small>Keystone &middot; 5 Recovery</small><h3>Soulwell</h3><p>Additional <strong>+8% healing</strong></p><b data-keystone-state>Locked</b></div>
+              </article>
+              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
             </section>
 
-            <section class="skill-branch" data-skill-path="soulbinder" style="--branch-accent: #8fefff" aria-labelledby="soulbinderPathHeading">
-              <header class="skill-branch-header">
-                <span class="skill-branch-emblem"><i data-lucide="sparkles"></i></span>
-                <span><small>Path of Essence</small><h2 id="soulbinderPathHeading">Soulbinder</h2></span>
-                <strong data-path-progress>0 / 5</strong>
-              </header>
-              <div class="skill-branch-nodes">
-                <article class="skill-tree-stat" data-stat-point-key="recovery">
-                  <span class="skill-tree-stat-icon"><i data-lucide="heart-pulse"></i><b data-stat-rank>0</b></span>
-                  <div class="skill-tree-stat-copy"><small>Restoration</small><h3>Recovery</h3><p>Increase healing received by your demons.</p><strong data-stat-bonus>+0% healing received</strong></div>
-                  <div class="level-point-controls"><button type="button" data-stat-point-action="decrease" aria-label="Remove one Recovery point">&minus;</button><output>0</output><button type="button" data-stat-point-action="increase" aria-label="Add one Recovery point">+</button></div>
-                </article>
-                <article class="skill-path-keystone" data-path-keystone>
-                  <span><i data-lucide="gem"></i></span>
-                  <div><small>Keystone &middot; 5 Recovery</small><h3>Soulwell</h3><p>Gain an additional <strong>+8% healing received</strong>.</p></div>
-                  <b data-keystone-state>Locked</b>
-                </article>
-              </div>
+            <section class="ascension-path" data-skill-path="aegis" style="--path-accent:#6fd6bd;--stat-x:26%;--stat-y:34%;--key-x:10%;--key-y:16%" aria-labelledby="aegisPathHeading">
+              <article class="ascension-node ascension-stat-node" data-stat-point-key="fortitude" role="button" tabindex="0" aria-label="Invest one point in Fortitude">
+                <div class="ascension-node-orb"><i data-lucide="shield"></i></div>
+                <div class="ascension-node-copy"><small>Aegis Path</small><h2 id="aegisPathHeading">Fortitude</h2><strong data-stat-bonus>+0% damage reduction</strong><p>Incoming damage reduction, capped at 30%.</p></div>
+              </article>
+              <article class="ascension-node ascension-keystone-node" data-path-keystone>
+                <div class="ascension-node-orb"><i data-lucide="shield-plus"></i></div>
+                <div class="ascension-node-copy"><small>Keystone &middot; 5 Fortitude</small><h3>Iron Pact</h3><p><strong>+5% reduction</strong> within the cap</p><b data-keystone-state>Locked</b></div>
+              </article>
+              <span class="ascension-path-progress" data-path-progress>0 / 5</span>
             </section>
+
+            <p class="ascension-map-hint"><i data-lucide="move"></i>All five paths are independent. Scroll to explore.</p>
           </div>
         </div>
 
-        <footer class="skill-tree-actions">
-          <p><i data-lucide="info"></i>Keystones activate when this build is saved.</p>
-          <button type="button" class="skill-tree-reset" id="skillTreeResetButton">Reset for Free</button>
-          <button type="button" class="skill-tree-save" id="skillTreeSaveButton">Save Build</button>
+        <footer class="ascension-actions">
+          <div class="ascension-ledger" aria-label="Level point totals">
+            <span><small>Level</small><strong id="skillTreeLevel">-</strong></span>
+            <span><small>Earned</small><strong id="skillTreeTotal">-</strong></span>
+            <span><small>Bound</small><strong id="skillTreeSpent">-</strong></span>
+            <span id="skillTreeUnspentCard"><small>Available</small><strong id="skillTreeUnspent">-</strong></span>
+          </div>
+          <span class="ascension-status" id="skillTreeStatus" role="status" aria-live="polite">Loading level points...</span>
+          <button type="button" class="ascension-reset" id="skillTreeResetButton">Unbind All</button>
+          <button type="button" class="ascension-save" id="skillTreeSaveButton">Seal Constellation</button>
         </footer>
       </section>
     </main>
@@ -189,6 +166,6 @@
     <script src="/app/js/api-config.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
-    <script src="/app/js/skill-tree-ui.js?v=20260622-skill-tree-v3"></script>
+    <script src="/app/js/skill-tree-ui.js?v=20260623-constellation-v2"></script>
   </body>
 </html>

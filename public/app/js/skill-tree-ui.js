@@ -9,6 +9,7 @@
     fortitude: { perPoint: 2, cap: 30, label: 'damage reduction' },
     recovery: { perPoint: 3, label: 'healing received' }
   };
+  const MAX_STAT_POINTS = 5;
   const PATH_DEFINITIONS = {
     ravager: { keys: ['power'], threshold: 5 },
     tempest: { keys: ['haste'], threshold: 5 },
@@ -20,7 +21,8 @@
   const state = {
     summary: null,
     draft: null,
-    busy: false
+    busy: false,
+    viewportCenterScheduled: false
   };
   const elements = {};
 
@@ -53,6 +55,7 @@
     [
       'appMessage',
       'skillTreeGrid',
+      'skillTreeViewport',
       'skillTreeLevel',
       'skillTreeTotal',
       'skillTreeSpent',
@@ -74,27 +77,37 @@
 
     elements.skillTreeGrid?.addEventListener('click', (event) => {
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
-      const button = target?.closest('[data-stat-point-action]');
-      const key = button?.closest('[data-stat-point-key]')?.dataset.statPointKey;
-      if (!button || !STAT_KEYS.includes(key) || state.busy) return;
+      const node = target?.closest('[data-stat-point-key]');
+      const key = node?.dataset.statPointKey;
+      if (!node || !STAT_KEYS.includes(key) || state.busy) return;
 
-      updateDraft(key, button.dataset.statPointAction === 'increase' ? 1 : -1);
+      updateDraft(key);
+    });
+
+    elements.skillTreeGrid?.addEventListener('keydown', (event) => {
+      if (!['Enter', ' '].includes(event.key)) return;
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const node = target?.closest('[data-stat-point-key]');
+      const key = node?.dataset.statPointKey;
+      if (!node || !STAT_KEYS.includes(key) || state.busy) return;
+
+      event.preventDefault();
+      updateDraft(key);
     });
 
     elements.skillTreeSaveButton?.addEventListener('click', save);
     elements.skillTreeResetButton?.addEventListener('click', reset);
   }
 
-  function updateDraft(key, direction) {
+  function updateDraft(key) {
     if (!state.summary || !state.draft) return;
 
     const value = Math.max(0, Number(state.draft[key]) || 0);
     const spent = getSpent(state.draft);
     const total = Math.max(0, Number(state.summary.totalPoints) || 0);
-    if (direction > 0 && spent >= total) return;
-    if (direction < 0 && value <= 0) return;
+    if (spent >= total || value >= MAX_STAT_POINTS) return;
 
-    state.draft = { ...state.draft, [key]: value + direction };
+    state.draft = { ...state.draft, [key]: value + 1 };
     render();
   }
 
@@ -103,7 +116,7 @@
     const total = ready ? Math.max(0, Number(state.summary.totalPoints) || 0) : 0;
     const spent = ready ? getSpent(state.draft) : 0;
     const unspent = total - spent;
-    const valid = ready && STAT_KEYS.every((key) => Number.isInteger(Number(state.draft[key])) && Number(state.draft[key]) >= 0) && unspent >= 0;
+    const valid = ready && STAT_KEYS.every((key) => Number.isInteger(Number(state.draft[key])) && Number(state.draft[key]) >= 0 && Number(state.draft[key]) <= MAX_STAT_POINTS) && unspent >= 0;
     const dirty = ready && STAT_KEYS.some((key) => Number(state.draft[key]) !== Number(state.summary.allocations?.[key] || 0));
 
     setText(elements.skillTreeLevel, ready ? formatNumber(state.summary.level) : '-');
@@ -125,18 +138,15 @@
       const definition = STAT_DEFINITIONS[key];
       const value = ready ? Math.max(0, Number(state.draft[key]) || 0) : 0;
       const bonus = Math.min(definition.cap || Infinity, value * definition.perPoint);
-      const output = card.querySelector('output');
-      const rank = card.querySelector('[data-stat-rank]');
       const bonusOutput = card.querySelector('[data-stat-bonus]');
-      const decrease = card.querySelector('[data-stat-point-action="decrease"]');
-      const increase = card.querySelector('[data-stat-point-action="increase"]');
+      const canInvest = ready && !state.busy && valid && unspent > 0 && value < MAX_STAT_POINTS;
 
-      setText(output, formatNumber(value));
-      setText(rank, formatNumber(value));
       setText(bonusOutput, `+${formatNumber(bonus)}% ${definition.label}`);
       card.classList.toggle('is-invested', value > 0);
-      if (decrease) decrease.disabled = !ready || state.busy || value <= 0;
-      if (increase) increase.disabled = !ready || state.busy || !valid || unspent <= 0;
+      card.classList.toggle('is-disabled', ready && !canInvest && value < MAX_STAT_POINTS);
+      card.classList.toggle('is-maxed', value >= MAX_STAT_POINTS);
+      card.setAttribute('aria-disabled', String(!canInvest));
+      card.setAttribute('aria-label', `${capitalize(key)}: ${formatNumber(value)} of ${MAX_STAT_POINTS} points. ${canInvest ? 'Activate to invest one point.' : value >= MAX_STAT_POINTS ? 'Maximum reached.' : 'No points available.'}`);
     });
 
     elements.skillTreeGrid?.querySelectorAll('[data-skill-path]').forEach((path) => {
@@ -150,20 +160,28 @@
       const progress = path.querySelector('[data-path-progress]');
       const keystone = path.querySelector('[data-path-keystone]');
       const keystoneState = path.querySelector('[data-keystone-state]');
+      const connection = elements.skillTreeGrid?.querySelector(`[data-path-connection="${path.dataset.skillPath}"]`);
 
       setText(progress, `${formatNumber(Math.min(points, definition.threshold))} / ${definition.threshold}`);
       progress?.setAttribute('aria-label', `${formatNumber(points)} points invested; ${definition.threshold} required`);
       path.classList.toggle('is-awakened', unlocked);
       keystone?.classList.toggle('is-unlocked', unlocked);
+      connection?.classList.toggle('is-invested', points > 0);
+      connection?.classList.toggle('is-awakened', unlocked);
       setText(keystoneState, unlocked ? 'Awakened' : 'Locked');
     });
 
+    if (ready && !state.viewportCenterScheduled) {
+      state.viewportCenterScheduled = true;
+      scheduleConstellationCenter();
+    }
+
     if (elements.skillTreeSaveButton) {
       elements.skillTreeSaveButton.disabled = !valid || !dirty || state.busy;
-      elements.skillTreeSaveButton.textContent = state.busy ? 'Saving...' : 'Save Build';
+      elements.skillTreeSaveButton.textContent = state.busy ? 'Sealing...' : 'Seal Constellation';
     }
     if (elements.skillTreeResetButton) {
-      elements.skillTreeResetButton.disabled = !ready || state.busy || Number(state.summary.spentPoints) <= 0;
+      elements.skillTreeResetButton.disabled = !ready || state.busy || getSpent(state.draft) <= 0;
     }
   }
 
@@ -178,7 +196,7 @@
         body: { allocations: state.draft }
       });
       applySummary(summary);
-      setMessage('Level points saved. Your upgrades are active.', 'success');
+      setMessage('Constellation sealed. Your ascension bonuses are active.', 'success');
     } catch (error) {
       handleError(error);
     } finally {
@@ -189,12 +207,19 @@
 
   async function reset() {
     if (!state.summary || state.busy) return;
+    if (getSpent(state.summary.allocations) <= 0) {
+      state.draft = { ...state.summary.allocations };
+      setMessage('Draft constellation cleared.', 'info');
+      render();
+      return;
+    }
+
     state.busy = true;
     render();
 
     try {
       applySummary(await api('/api/account/stat-points/reset', { method: 'POST' }));
-      setMessage('All level point allocations were reset for free.', 'success');
+      setMessage('All constellation bindings were released for free.', 'success');
     } catch (error) {
       handleError(error);
     } finally {
@@ -231,9 +256,29 @@
     if (element) element.textContent = value;
   }
 
+  function centerConstellation() {
+    const viewport = elements.skillTreeViewport;
+    if (!viewport || viewport.scrollWidth <= viewport.clientWidth) return;
+    viewport.scrollLeft = Math.max(0, (viewport.scrollWidth - viewport.clientWidth) / 2);
+  }
+
+  function scheduleConstellationCenter() {
+    const centerAfterLayout = () => window.setTimeout(centerConstellation, 0);
+    if (document.readyState === 'complete') {
+      centerAfterLayout();
+    } else {
+      window.addEventListener('load', centerAfterLayout, { once: true });
+    }
+  }
+
   function formatNumber(value) {
     const number = Number(value);
     return Number.isFinite(number) ? number.toLocaleString() : String(value ?? '-');
+  }
+
+  function capitalize(value) {
+    const text = String(value || '');
+    return text ? `${text[0].toUpperCase()}${text.slice(1)}` : text;
   }
 
   function onReady(callback) {
