@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "dotenv": "^17.4.2",
-    "express": "^4.18.2",
+    "express": "^4.22.2",
     "lucide": "^1.16.0",
     "mysql2": "^3.22.3"
   },
