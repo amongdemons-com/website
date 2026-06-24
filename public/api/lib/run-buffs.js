@@ -131,6 +131,7 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
   return (team || []).map((demon) => {
     const next = {
       ...demon,
+      accountStatsApplied: true,
       battleBuffs: {
         ...(demon.battleBuffs || {}),
         directDamageMult: positiveNumber(demon.battleBuffs?.directDamageMult, 1),

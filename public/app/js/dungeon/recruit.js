@@ -164,6 +164,57 @@ function applyRunBuffStatPreviewToDemon(demon = {}) {
   };
 }
 
+function applyAccountStatBonusPreviewToDemon(demon = {}) {
+  const bonuses = state.statPoints?.bonuses;
+  // Battle replay snapshots already have account bonuses baked in server-side; never double-apply.
+  if (!demon || !bonuses || demon.accountStatsApplied) return { ...demon };
+
+  const maxHpFlat = Math.max(0, Number(bonuses.maxHpFlat) || 0);
+  const maxHpMult = 1 + getAccountBonusFraction(bonuses.maxHpPercent);
+  const attackFlat = Math.max(0, Number(bonuses.attackFlat) || 0);
+  const attackMult = 1 + getAccountBonusFraction(bonuses.attackPercent);
+  const speedFlat = Math.max(0, Number(bonuses.speedFlat) || 0);
+  const speedMult = 1 + getAccountBonusFraction(bonuses.speedPercent);
+
+  const hasHpBonus = maxHpFlat > 0 || maxHpMult !== 1;
+  const hasAttackBonus = attackFlat > 0 || attackMult !== 1;
+  const hasSpeedBonus = speedFlat > 0 || speedMult !== 1;
+  if (!hasHpBonus && !hasAttackBonus && !hasSpeedBonus) return { ...demon };
+
+  const next = { ...demon };
+
+  // Mirror server applyPreBattleBuffs account math: flat is added first, then percent multiplies.
+  if (hasHpBonus) {
+    const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
+    const hpRatio = Math.max(0, Math.min(1, (Number(next.hp) || baseMaxHp) / baseMaxHp));
+    const boostedMaxHp = Math.max(1, Math.round((baseMaxHp + maxHpFlat) * maxHpMult));
+    next.maxHp = boostedMaxHp;
+    next.hp = Math.max((Number(demon.hp) || 0) > 0 ? 1 : 0, Math.min(boostedMaxHp, Math.round(boostedMaxHp * hpRatio)));
+  }
+
+  if (hasAttackBonus) {
+    const baseAtk = Math.max(0, Number(next.atk) || 0);
+    if (baseAtk > 0) {
+      const boostedAtk = Math.max(1, Math.round((baseAtk + attackFlat) * attackMult));
+      const baseEffective = Number(next.effectiveAtk) > 0 ? Number(next.effectiveAtk) : baseAtk;
+      next.atk = boostedAtk;
+      next.effectiveAtk = Math.max(1, Math.round(baseEffective * (boostedAtk / baseAtk)));
+    }
+  }
+
+  if (hasSpeedBonus) {
+    const baseSpeed = Math.max(1, Number(next.speed) || 1);
+    next.speed = Math.max(1, Math.round((baseSpeed + speedFlat) * speedMult));
+  }
+
+  return next;
+}
+
+function getAccountBonusFraction(value) {
+  const percent = Number(value);
+  return Number.isFinite(percent) && percent > 0 ? percent / 100 : 0;
+}
+
 function getCollectionStatPreviewDemon(demon = {}) {
   const maxHp = Number(demon.runBaseMaxHp);
   const atk = Number(demon.runBaseAtk);
@@ -354,6 +405,7 @@ export {
   getDraftRecruitPayload,
   getRewardExtractionChoicePayload,
   applyRunBuffStatPreviewToDemon,
+  applyAccountStatBonusPreviewToDemon,
   getCollectionStatPreviewDemon,
   getDraftPayloadSource,
   getSelectedCollectionReinforcement,

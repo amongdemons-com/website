@@ -14,6 +14,7 @@ const getCollectionReinforcementLimit = (...args) => dungeonActions.getCollectio
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
+const applyAccountStatBonusPreviewToDemon = (...args) => dungeonActions.applyAccountStatBonusPreviewToDemon(...args);
 const getSelectedCollectionReinforcements = (...args) => dungeonActions.getSelectedCollectionReinforcements(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
 const markCollectionReinforcementPlaceholderInteracted = (...args) => dungeonActions.markCollectionReinforcementPlaceholderInteracted(...args);
@@ -220,8 +221,8 @@ function getDemonForDetailCard(card) {
 
   return [
     selectedReward?.demon,
-    ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []),
-    ...(state.isRecruiting ? getRecruitPreviewHand() : state.battleHandPreview || []),
+    ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []).map(applyAccountStatBonusPreviewToDemon),
+    ...(state.isRecruiting ? getRecruitPreviewHand() : state.battleHandPreview || []).map(applyAccountStatBonusPreviewToDemon),
     ...(state.isRecruiting ? getRecruitPreviewEnemyTeam() : state.run?.enemies || [])
   ].filter(Boolean).find((demon) => demon.instanceId === instanceId) || null;
 }

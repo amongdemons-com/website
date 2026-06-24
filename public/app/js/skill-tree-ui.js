@@ -56,7 +56,6 @@
       'appMessage',
       'skillTreeGrid',
       'skillTreeViewport',
-      'skillTreeLevel',
       'skillTreeTotal',
       'skillTreeSpent',
       'skillTreeUnspent',
@@ -92,6 +91,16 @@
       updateDraft(node.dataset.statPointKey);
     });
 
+    elements.skillTreeGrid?.addEventListener('contextmenu', (event) => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const node = target?.closest('[data-stat-point-key]');
+      if (!node) return;
+
+      event.preventDefault();
+      if (state.busy) return;
+      decrementDraft(node.dataset.statPointKey);
+    });
+
     elements.skillTreeSaveButton?.addEventListener('click', save);
     elements.skillTreeResetButton?.addEventListener('click', reset);
   }
@@ -107,6 +116,23 @@
     render();
   }
 
+  function decrementDraft(key) {
+    const definition = NODE_DEFINITIONS[key];
+    if (!definition || !state.summary || !state.draft) return;
+
+    const current = Math.max(0, Number(state.draft[key]) || 0);
+    // Only unsaved points can be removed here; sealed points are refunded through Reset.
+    const floor = Math.max(0, Number(state.summary.allocations?.[key]) || 0);
+    if (current <= floor) return;
+
+    const next = { ...state.draft, [key]: current - 1 };
+    // Skip removals that would strand a dependent node below its requirement.
+    if (!isDraftValid(next)) return;
+
+    state.draft = next;
+    render();
+  }
+
   function render() {
     const ready = Boolean(state.summary && state.draft);
     const total = ready ? Math.max(0, Number(state.summary.totalPoints) || 0) : 0;
@@ -115,7 +141,6 @@
     const valid = ready && isDraftValid(state.draft) && unspent >= 0;
     const dirty = ready && STAT_KEYS.some((key) => Number(state.draft[key]) !== Number(state.summary.allocations?.[key] || 0));
 
-    setText(elements.skillTreeLevel, ready ? formatNumber(state.summary.level) : '-');
     setText(elements.skillTreeTotal, ready ? formatNumber(total) : '-');
     setText(elements.skillTreeSpent, ready ? formatNumber(spent) : '-');
     setText(elements.skillTreeUnspent, ready ? formatNumber(Math.max(0, unspent)) : '-');
@@ -166,7 +191,7 @@
 
     if (elements.skillTreeSaveButton) {
       elements.skillTreeSaveButton.disabled = !valid || !dirty || state.busy;
-      elements.skillTreeSaveButton.textContent = state.busy ? 'Sealing...' : 'Seal Constellation';
+      elements.skillTreeSaveButton.textContent = state.busy ? 'Saving...' : 'Save';
     }
     if (elements.skillTreeResetButton) {
       elements.skillTreeResetButton.disabled = !ready || state.busy || getSpent(state.draft) <= 0;

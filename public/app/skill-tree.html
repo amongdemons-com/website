@@ -9,7 +9,7 @@
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css?v=20260622-skill-tree-v3" rel="stylesheet">
-    <link href="/app/css/skill-tree.css?v=20260623-branches-v4" rel="stylesheet">
+    <link href="/app/css/skill-tree.css?v=20260624-nodes-v7" rel="stylesheet">
   </head>
   <body class="skill-tree-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -72,88 +72,100 @@
             </svg>
 
             <div class="ascension-core" aria-label="Skill tree origin">
-              <span class="ascension-core-glyph"><i data-lucide="circle-dot"></i></span>
               <small>Begin Here</small>
               <strong id="skillTreeCoreUnspent">-</strong>
-              <span>points ready</span>
+              <span>points</span>
             </div>
 
             <article class="ascension-node ascension-root-node" data-stat-point-key="health_flat" style="--node-x:36.667%;--node-y:50%;--path-accent:#d96d70" role="button" tabindex="0">
+              <strong class="ascension-node-label">+5 health</strong>
               <div class="ascension-node-orb"><i data-lucide="heart"></i></div>
-              <div class="ascension-node-copy"><h2>Max Health</h2><strong>+5 max health per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
 
             <article class="ascension-node ascension-branch-node" data-stat-point-key="health_percent" style="--node-x:23.333%;--node-y:18.056%;--path-accent:#df7779" role="button" tabindex="0">
+              <strong class="ascension-node-label">+3% health</strong>
               <div class="ascension-node-orb"><i data-lucide="heart-pulse"></i></div>
-              <div class="ascension-node-copy"><h2>Greater Health</h2><strong>+3% max health per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
             <article class="ascension-node ascension-mastery-node" data-stat-point-key="health_mastery" style="--node-x:8.333%;--node-y:18.056%;--path-accent:#df7779" role="button" tabindex="0">
+              <strong class="ascension-node-label">+5 health</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
-              <div class="ascension-node-copy"><h2>Endless Health</h2><strong>+5 max health per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
 
             <article class="ascension-node ascension-branch-node" data-stat-point-key="healing_percent" style="--node-x:23.333%;--node-y:50%;--path-accent:#8fefff" role="button" tabindex="0">
+              <strong class="ascension-node-label">+3% healing</strong>
               <div class="ascension-node-orb"><i data-lucide="sparkles"></i></div>
-              <div class="ascension-node-copy"><h2>Healing</h2><strong>+3% healing per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
             <article class="ascension-node ascension-mastery-node" data-stat-point-key="healing_mastery" style="--node-x:8.333%;--node-y:50%;--path-accent:#8fefff" role="button" tabindex="0">
+              <strong class="ascension-node-label">+1 healing</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
-              <div class="ascension-node-copy"><h2>Endless Healing</h2><strong>+1 healing per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
 
-            <article class="ascension-node ascension-branch-node ascension-copy-above" data-stat-point-key="thorns_percent" style="--node-x:23.333%;--node-y:81.944%;--path-accent:#a991e8" role="button" tabindex="0">
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="thorns_percent" style="--node-x:23.333%;--node-y:81.944%;--path-accent:#a991e8" role="button" tabindex="0">
+              <strong class="ascension-node-label">+5% thorns</strong>
               <div class="ascension-node-orb"><i data-lucide="badge-alert"></i></div>
-              <div class="ascension-node-copy"><h2>Thorns</h2><strong>+5% thorns per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
-            <article class="ascension-node ascension-mastery-node ascension-copy-above" data-stat-point-key="thorns_mastery" style="--node-x:8.333%;--node-y:81.944%;--path-accent:#a991e8" role="button" tabindex="0">
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="thorns_mastery" style="--node-x:8.333%;--node-y:81.944%;--path-accent:#a991e8" role="button" tabindex="0">
+              <strong class="ascension-node-label">+1 thorns</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
-              <div class="ascension-node-copy"><h2>Endless Thorns</h2><strong>+1 thorns damage per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
 
             <article class="ascension-node ascension-root-node" data-stat-point-key="speed_flat" style="--node-x:63.333%;--node-y:50%;--path-accent:#e8c76a" role="button" tabindex="0">
+              <strong class="ascension-node-label">+1 speed</strong>
               <div class="ascension-node-orb"><i data-lucide="zap"></i></div>
-              <div class="ascension-node-copy"><h2>Speed</h2><strong>+1 speed per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
 
             <article class="ascension-node ascension-branch-node" data-stat-point-key="speed_percent" style="--node-x:76.667%;--node-y:18.056%;--path-accent:#e8c76a" role="button" tabindex="0">
+              <strong class="ascension-node-label">+2% speed</strong>
               <div class="ascension-node-orb"><i data-lucide="gauge"></i></div>
-              <div class="ascension-node-copy"><h2>Momentum</h2><strong>+2% speed per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
             <article class="ascension-node ascension-mastery-node" data-stat-point-key="speed_mastery" style="--node-x:91.667%;--node-y:18.056%;--path-accent:#e8c76a" role="button" tabindex="0">
+              <strong class="ascension-node-label">+1 speed</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
-              <div class="ascension-node-copy"><h2>Endless Speed</h2><strong>+1 speed per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
 
             <article class="ascension-node ascension-branch-node" data-stat-point-key="attack_percent" style="--node-x:76.667%;--node-y:50%;--path-accent:#e78a55" role="button" tabindex="0">
+              <strong class="ascension-node-label">+3% damage</strong>
               <div class="ascension-node-orb"><i data-lucide="swords"></i></div>
-              <div class="ascension-node-copy"><h2>Brutal Force</h2><strong>+3% attack damage per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
             <article class="ascension-node ascension-mastery-node" data-stat-point-key="attack_mastery" style="--node-x:91.667%;--node-y:50%;--path-accent:#e78a55" role="button" tabindex="0">
+              <strong class="ascension-node-label">+1 damage</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
-              <div class="ascension-node-copy"><h2>Endless Force</h2><strong>+1 attack damage per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
 
-            <article class="ascension-node ascension-branch-node ascension-copy-above" data-stat-point-key="aoe_percent" style="--node-x:76.667%;--node-y:81.944%;--path-accent:#6fd6bd" role="button" tabindex="0">
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="aoe_percent" style="--node-x:76.667%;--node-y:81.944%;--path-accent:#6fd6bd" role="button" tabindex="0">
+              <strong class="ascension-node-label">+2% AOE</strong>
               <div class="ascension-node-orb"><i data-lucide="scan"></i></div>
-              <div class="ascension-node-copy"><h2>Wide Ruin</h2><strong>+2% AOE damage per point</strong><span class="ascension-node-progress" data-node-progress>0 / 5</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
-            <article class="ascension-node ascension-mastery-node ascension-copy-above" data-stat-point-key="aoe_mastery" style="--node-x:91.667%;--node-y:81.944%;--path-accent:#6fd6bd" role="button" tabindex="0">
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="aoe_mastery" style="--node-x:91.667%;--node-y:81.944%;--path-accent:#6fd6bd" role="button" tabindex="0">
+              <strong class="ascension-node-label">+1 AOE</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
-              <div class="ascension-node-copy"><h2>Endless Ruin</h2><strong>+1 AOE damage per point</strong><span class="ascension-node-progress" data-node-progress>0 ∞</span></div>
+              <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
           </div>
         </div>
 
         <footer class="ascension-actions">
           <div class="ascension-ledger" aria-label="Level point totals">
-            <span><small>Level</small><strong id="skillTreeLevel">-</strong></span>
             <span><small>Earned</small><strong id="skillTreeTotal">-</strong></span>
             <span><small>Bound</small><strong id="skillTreeSpent">-</strong></span>
             <span id="skillTreeUnspentCard"><small>Available</small><strong id="skillTreeUnspent">-</strong></span>
           </div>
           <span class="ascension-status" id="skillTreeStatus" role="status" aria-live="polite">Loading level points...</span>
-          <button type="button" class="ascension-reset" id="skillTreeResetButton">Unbind All</button>
-          <button type="button" class="ascension-save" id="skillTreeSaveButton">Seal Constellation</button>
+          <button type="button" class="ascension-reset" id="skillTreeResetButton">Reset</button>
+          <button type="button" class="ascension-save" id="skillTreeSaveButton">Save</button>
         </footer>
       </section>
     </main>
@@ -164,6 +176,6 @@
     <script src="/app/js/api-config.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
-    <script src="/app/js/skill-tree-ui.js?v=20260623-branches-v4"></script>
+    <script src="/app/js/skill-tree-ui.js?v=20260624-nodes-v7"></script>
   </body>
 </html>
