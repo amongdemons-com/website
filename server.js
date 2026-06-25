@@ -25,11 +25,13 @@ const noindexPaths = new Set([
   '/register',
   '/settings',
   '/skill-tree',
+  '/world',
   '/camp',
   '/app/login.html',
   '/app/register.html',
   '/app/settings.html',
   '/app/skill-tree.html',
+  '/app/world.html',
   '/app/camp.html',
   '/app/collection.html',
   '/app/privacy.html',
@@ -69,6 +71,7 @@ app.get('/app/images/demons/:imageName', async (req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules', 'lucide', 'dist', 'umd')));
+app.use('/vendor/pixi', express.static(path.join(__dirname, 'node_modules', 'pixi.js', 'dist')));
 
 app.get(['/demons/type', '/demons/type/', '/demons/type/:page'], (req, res) => {
   return res.redirect(301, '/demons');
@@ -94,6 +97,10 @@ app.get(['/demons/:slug', '/demons/:slug/'], async (req, res, next) => {
 
 app.get(['/camp', '/camp/'], (req, res) => {
   res.sendFile(path.join(appDir, 'camp.html'));
+});
+
+app.get(['/world', '/world/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'world.html'));
 });
 
 // === Dungeon Route: GET /dungeon/

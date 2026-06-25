@@ -231,6 +231,21 @@ async function initializeSchema() {
   await normalizeUtf8Column('player_sessions', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS player_world_positions (
+      player_id VARCHAR(255) NOT NULL PRIMARY KEY,
+      x INT NOT NULL DEFAULT 0,
+      y INT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_player_world_positions_xy (x, y)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await addColumnIfMissing('player_world_positions', 'x', '`x` INT NOT NULL DEFAULT 0');
+  await addColumnIfMissing('player_world_positions', 'y', '`y` INT NOT NULL DEFAULT 0');
+  await addColumnIfMissing('player_world_positions', 'updated_at', '`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+  await normalizeUtf8Column('player_world_positions', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addIndexIfMissing('player_world_positions', 'idx_player_world_positions_xy', 'INDEX idx_player_world_positions_xy (x, y)');
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS player_demons (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
       player_id VARCHAR(255) NOT NULL,

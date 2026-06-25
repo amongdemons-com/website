@@ -14274,3 +14274,613 @@ body.skill-tree-page {
         animation: none;
     }
 }
+
+/* Hunter world prototype */
+body.world-page {
+    --world-panel-bg: rgba(5,13,16,0.78);
+    --world-panel-border: rgba(161,212,201,0.2);
+    display: block;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 18% 8%, rgba(111,214,189,0.12), transparent 24rem),
+        radial-gradient(circle at 86% 12%, rgba(156,122,200,0.1), transparent 22rem),
+        linear-gradient(rgba(4,9,12,0.68), rgba(4,9,12,0.86)),
+        url("/app/images/assets/background/amongdemons_dungeon.png") center / cover no-repeat,
+        var(--ad-bg, #071013);
+    color: var(--ad-text, #eef8f5);
+    overscroll-behavior: none;
+}
+
+body.world-page > .game-shell-nav {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 30;
+    background:
+        linear-gradient(180deg, rgba(4,10,13,0.92), rgba(4,10,13,0.62)),
+        rgba(4,10,13,0.62) !important;
+    backdrop-filter: blur(12px);
+}
+
+body.world-page > .alert {
+    position: fixed;
+    top: calc(var(--game-nav-height, 3.6rem) + 0.72rem);
+    left: 50%;
+    z-index: 1100;
+    width: min(38rem, calc(100% - 2rem));
+    margin: 0;
+    transform: translateX(-50%);
+}
+
+.world-shell {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+}
+
+.world-map-panel,
+.world-side-panel {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid var(--world-panel-border);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.045), transparent 28%),
+        radial-gradient(circle at 50% 0%, rgba(232,199,106,0.06), transparent 42%),
+        rgba(4,10,13,0.72);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.025),
+        0 24px 62px rgba(0,0,0,0.42);
+}
+
+.world-map-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border: 0;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(111,214,189,0.05), transparent 34rem),
+        linear-gradient(135deg, rgba(3,8,11,0.92), rgba(8,15,18,0.86));
+    box-shadow: none;
+}
+
+.world-side-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border: 1px solid rgba(232,199,106,0.08);
+    pointer-events: none;
+}
+
+.world-canvas-host {
+    position: absolute;
+    inset: 0;
+    outline: 0;
+    touch-action: none;
+    cursor: grab;
+}
+
+.world-canvas-host:active {
+    cursor: grabbing;
+}
+
+.world-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.world-map-status {
+    position: absolute;
+    left: 0.85rem;
+    bottom: 0.75rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    max-width: calc(100% - 1.5rem);
+}
+
+.world-map-status span,
+.world-position-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.36rem;
+    min-height: 2rem;
+    border: 1px solid rgba(161,212,201,0.2);
+    border-radius: 6px;
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.08), rgba(255,255,255,0.015)),
+        rgba(3,8,11,0.76);
+    color: rgba(220,232,229,0.86);
+    padding: 0.32rem 0.58rem;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.34);
+}
+
+.world-position-button {
+    border-color: rgba(232,199,106,0.28);
+    font: inherit;
+    cursor: pointer;
+}
+
+.world-position-button:hover,
+.world-position-button:focus-visible {
+    border-color: rgba(232,199,106,0.62);
+    color: #fff3bd;
+    outline: 0;
+}
+
+.world-map-status .ad-icon {
+    width: 0.92rem;
+    height: 0.92rem;
+    margin: 0;
+    color: var(--ad-gold, #e8c76a);
+}
+
+.world-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    background: rgba(3,8,11,0.88);
+    color: rgba(220,232,229,0.74);
+    font-size: 0.82rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.world-side-panel {
+    position: fixed;
+    top: calc(var(--game-nav-height, 3.6rem) + 0.85rem);
+    right: 0.85rem;
+    bottom: 0.85rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.72rem;
+    width: min(23rem, calc(100vw - 1.7rem));
+    overflow: hidden auto;
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.06), transparent 32%),
+        rgba(3,8,11,0.72);
+    padding: 0.9rem;
+    backdrop-filter: blur(14px);
+}
+
+.world-panel-header {
+    display: grid;
+    gap: 0.32rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(161,212,201,0.12);
+}
+
+.world-panel-header h1 {
+    margin: 0;
+    color: #fff6d7;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.55rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.world-panel-block {
+    display: grid;
+    gap: 0.55rem;
+    border: 1px solid rgba(161,212,201,0.13);
+    border-radius: 6px;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.025), transparent),
+        rgba(3,8,11,0.38);
+    padding: 0.68rem;
+}
+
+.world-block-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+}
+
+.world-block-heading h2 {
+    margin: 0;
+    color: rgba(220,232,229,0.92);
+    font-size: 0.78rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.world-icon-button {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid rgba(161,212,201,0.2);
+    border-radius: 6px;
+    background: rgba(5,13,16,0.7);
+    color: rgba(220,232,229,0.78);
+}
+
+.world-icon-button:hover,
+.world-icon-button:focus-visible {
+    border-color: rgba(232,199,106,0.48);
+    color: #fff3bd;
+    outline: 0;
+}
+
+.world-icon-button .ad-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+    margin: 0;
+}
+
+.world-panel-link {
+    color: var(--ad-teal, #6fd6bd);
+    font-size: 0.68rem;
+    font-weight: 900;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.world-panel-link:hover,
+.world-panel-link:focus-visible {
+    color: #fff3bd;
+    text-decoration: none;
+}
+
+.world-coordinate-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.world-coordinate-grid div {
+    display: grid;
+    gap: 0.12rem;
+    border: 1px solid rgba(161,212,201,0.11);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.16);
+    padding: 0.52rem;
+}
+
+.world-coordinate-grid dt {
+    color: rgba(220,232,229,0.52);
+    font-size: 0.62rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.world-coordinate-grid dd {
+    margin: 0;
+    color: var(--ad-gold, #e8c76a);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.28rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.world-empty-text {
+    margin: 0;
+    color: rgba(220,232,229,0.56);
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.world-team-summary,
+.world-encounter-list,
+.world-event-panel {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.world-team-count {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: rgba(220,232,229,0.7);
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.world-team-count strong {
+    color: var(--ad-soul, #55ffff);
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.world-team-list {
+    display: grid;
+    gap: 0.38rem;
+}
+
+.world-team-member,
+.world-encounter-player {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.48rem;
+    min-width: 0;
+    border: 1px solid rgba(161,212,201,0.1);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.16);
+    padding: 0.46rem;
+}
+
+.world-team-member {
+    grid-template-columns: auto minmax(0, 1fr);
+}
+
+.world-team-rarity,
+.world-encounter-mark {
+    display: block;
+    width: 0.8rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--ad-teal, #6fd6bd);
+    box-shadow: 0 0 13px rgba(111,214,189,0.22);
+}
+
+.world-rarity-uncommon {
+    background: var(--ad-green, #80d697);
+}
+
+.world-rarity-rare {
+    background: #2c82c9;
+}
+
+.world-rarity-epic {
+    background: var(--ad-violet, #9c7ac8);
+}
+
+.world-rarity-legendary,
+.world-rarity-mythic {
+    background: var(--ad-gold, #e8c76a);
+}
+
+.world-team-member span:last-child,
+.world-encounter-copy {
+    display: grid;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.world-team-member strong,
+.world-encounter-copy strong,
+.world-event-card strong {
+    overflow: hidden;
+    color: #f8fbf9;
+    font-size: 0.78rem;
+    font-weight: 900;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-team-member small,
+.world-encounter-copy small {
+    overflow: hidden;
+    color: rgba(220,232,229,0.54);
+    font-size: 0.64rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-encounter-player .btn {
+    min-height: 2rem;
+    padding: 0.26rem 0.5rem;
+    font-size: 0.66rem;
+}
+
+.world-event-card {
+    display: grid;
+    gap: 0.42rem;
+    border-left: 3px solid var(--event-accent, var(--ad-gold, #e8c76a));
+    border-radius: 6px;
+    background: rgba(0,0,0,0.18);
+    padding: 0.58rem;
+}
+
+.world-event-boss {
+    --event-accent: var(--ad-danger, #e4685e);
+}
+
+.world-event-soul-cache {
+    --event-accent: var(--ad-soul, #55ffff);
+}
+
+.world-event-dungeon-portal {
+    --event-accent: var(--ad-violet, #9c7ac8);
+}
+
+.world-event-type {
+    color: var(--event-accent);
+    font-size: 0.62rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.world-event-card p {
+    margin: 0;
+    color: rgba(220,232,229,0.6);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.world-event-card .btn {
+    justify-self: start;
+    min-height: 2rem;
+    font-size: 0.68rem;
+}
+
+.world-travel-panel {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.world-route-summary {
+    display: grid;
+    gap: 0.18rem;
+    border: 1px solid rgba(111,214,189,0.16);
+    border-radius: 6px;
+    background: rgba(111,214,189,0.055);
+    padding: 0.52rem;
+}
+
+.world-route-summary strong {
+    color: #f8fbf9;
+    font-size: 0.78rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.world-route-summary small {
+    color: rgba(220,232,229,0.58);
+    font-size: 0.66rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.world-travel-log {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.world-travel-log-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid rgba(161,212,201,0.1);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.14);
+    padding: 0.42rem;
+}
+
+.world-travel-log-item > span {
+    width: 0.56rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--ad-teal, #6fd6bd);
+    opacity: 0.8;
+}
+
+.world-travel-log-item.is-ambush > span {
+    background: var(--ad-danger, #e4685e);
+    box-shadow: 0 0 12px rgba(228,104,94,0.28);
+}
+
+.world-travel-log-item strong {
+    color: rgba(220,232,229,0.86);
+    font-size: 0.68rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.world-travel-log-item small {
+    color: rgba(220,232,229,0.5);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.world-action-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.42rem;
+    margin-top: auto;
+}
+
+.world-action-row .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.34rem;
+    min-width: 0;
+    min-height: 2.35rem;
+    padding-inline: 0.45rem;
+    font-size: 0.68rem;
+}
+
+.world-action-row .btn .ad-icon {
+    width: 0.88rem;
+    height: 0.88rem;
+    margin: 0;
+}
+
+@media (max-width: 1199.98px) {
+    .world-side-panel {
+        width: min(20rem, calc(100vw - 1.3rem));
+        padding: 0.7rem;
+    }
+}
+
+@media (max-width: 899.98px) {
+    body.world-page {
+        overflow: hidden;
+    }
+
+    .world-side-panel {
+        top: auto;
+        right: 0.65rem;
+        bottom: 0.65rem;
+        left: 0.65rem;
+        width: auto;
+        max-height: 38vh;
+        overflow: hidden auto;
+    }
+
+    .world-map-status {
+        top: calc(var(--game-nav-height, 3.6rem) + 0.65rem);
+        bottom: auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .world-map-status {
+        left: 0.5rem;
+        gap: 0.3rem;
+    }
+
+    .world-map-status span,
+    .world-position-button {
+        min-height: 1.85rem;
+        padding-inline: 0.46rem;
+        font-size: 0.66rem;
+    }
+
+    .world-encounter-player {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .world-encounter-player .btn {
+        grid-column: 1 / -1;
+        justify-self: stretch;
+    }
+}

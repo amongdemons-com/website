@@ -15,15 +15,17 @@
     const pathname = window.location.pathname.replace(/\/$/, '') || '/';
     const section = pathname === '/camp'
       ? 'camp'
-      : pathname.startsWith('/dungeon')
-        ? 'dungeon'
-        : pathname.startsWith('/demons')
-          ? 'demons'
-          : pathname.startsWith('/collection')
-            ? 'collection'
-            : pathname.startsWith('/rank')
-              ? 'rankings'
-              : '';
+      : pathname.startsWith('/world')
+        ? 'world'
+        : pathname.startsWith('/dungeon')
+          ? 'dungeon'
+          : pathname.startsWith('/demons')
+            ? 'demons'
+            : pathname.startsWith('/collection')
+              ? 'collection'
+              : pathname.startsWith('/rank')
+                ? 'rankings'
+                : '';
 
     document.querySelectorAll('[data-game-route]').forEach((link) => {
       const isActive = Boolean(section && link.dataset.gameRoute === section);

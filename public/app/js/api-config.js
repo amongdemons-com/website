@@ -15,7 +15,8 @@
     '/register': 'register.html',
     '/settings': 'settings.html',
     '/skill-tree': 'skill-tree.html',
-    '/terms': 'terms.html'
+    '/terms': 'terms.html',
+    '/world': 'world.html'
   };
 
   function getApiBaseUrl() {
