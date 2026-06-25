@@ -2,6 +2,9 @@
   'use strict';
 
   const api = window.AmongDemons.api;
+  // Keep in sync with the battle-feel keys in js/dungeon/config.js.
+  const BATTLE_SCREEN_SHAKE_KEY = 'amongdemons-battle-screen-shake';
+  const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
   const elements = {};
   let currentUsername = '';
 
@@ -15,6 +18,7 @@
 
     cacheElements();
     elements.form.addEventListener('submit', saveUsername);
+    initBattleToggles();
 
     try {
       const payload = await api('/api/auth/me');
@@ -37,6 +41,36 @@
     elements.message = document.getElementById('settingsMessage');
     elements.submit = document.getElementById('saveUsernameButton');
     elements.submitLabel = document.getElementById('saveUsernameLabel');
+    elements.screenShake = document.getElementById('settingsScreenShake');
+    elements.cardShake = document.getElementById('settingsCardShake');
+  }
+
+  function initBattleToggles() {
+    bindPreferenceToggle(elements.screenShake, BATTLE_SCREEN_SHAKE_KEY);
+    bindPreferenceToggle(elements.cardShake, BATTLE_CARD_SHAKE_KEY);
+  }
+
+  function bindPreferenceToggle(toggle, key) {
+    if (!toggle) return;
+
+    toggle.checked = isPreferenceEnabled(key);
+    toggle.addEventListener('change', () => setPreferenceEnabled(key, toggle.checked));
+  }
+
+  function isPreferenceEnabled(key) {
+    try {
+      return localStorage.getItem(key) !== '0';
+    } catch (error) {
+      return true;
+    }
+  }
+
+  function setPreferenceEnabled(key, enabled) {
+    try {
+      localStorage.setItem(key, enabled ? '1' : '0');
+    } catch (error) {
+      /* localStorage unavailable; preference simply won't persist. */
+    }
   }
 
   async function saveUsername(event) {

@@ -2176,6 +2176,96 @@ body.dungeon-page .navbar {
     filter: grayscale(0.25);
 }
 
+/* Light hit reaction for the target card on impact. */
+.dungeon-demon-card.is-hit {
+    animation: demon-hit-flinch var(--battle-duration-240, 240ms) ease;
+    will-change: transform, filter;
+}
+
+/* Stronger "death feel": a flash + sink before the card settles into its dimmed state. */
+.dungeon-demon-card.is-dying {
+    animation: demon-death-fall var(--battle-duration-620, 620ms) cubic-bezier(0.3, 0.1, 0.2, 1) both;
+    z-index: 2;
+}
+
+/* Soft, periodic toxic pulse — deliberately gentler than a normal hit. */
+.dungeon-demon-card.is-poison-tick {
+    animation: demon-poison-tick var(--battle-duration-520, 520ms) ease-in-out;
+}
+
+/* Impact particle burst, anchored on the target card centre. */
+.combat-impact-burst {
+    position: fixed;
+    z-index: 1083;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.combat-impact-core {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, var(--combat-color, #FAC51C) 42%, transparent 72%);
+    filter: drop-shadow(0 0 8px var(--combat-shadow, rgba(250,197,28,0.85)));
+    transform: translate(-50%, -50%) scale(0.2);
+    animation: combat-impact-pop var(--fx-duration, 380ms) ease-out forwards;
+}
+
+.combat-impact-burst.is-heavy .combat-impact-core {
+    width: 2.3rem;
+    height: 2.3rem;
+}
+
+.combat-impact-particle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0.32rem;
+    height: 0.6rem;
+    border-radius: 999px;
+    background: linear-gradient(var(--combat-color, #FAC51C), transparent);
+    filter: drop-shadow(0 0 4px var(--combat-shadow, rgba(250,197,28,0.8)));
+    transform: translate(-50%, -50%) rotate(var(--p-angle, 0deg));
+    animation: combat-impact-particle var(--fx-duration, 380ms) ease-out forwards;
+}
+
+.combat-impact-burst.is-heavy .combat-impact-particle {
+    width: 0.4rem;
+    height: 0.82rem;
+}
+
+/* AOE hits get an extra expanding ring so multi-target splashes read clearly. */
+.combat-impact-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2.4rem;
+    height: 2.4rem;
+    border: 2px solid var(--combat-color, #FAC51C);
+    border-radius: 50%;
+    opacity: 0;
+    filter: drop-shadow(0 0 6px var(--combat-shadow, rgba(250,197,28,0.7)));
+    transform: translate(-50%, -50%) scale(0.3);
+    animation: combat-impact-ring var(--fx-duration, 380ms) ease-out forwards;
+}
+
+/* Heavy-hit camera shake on the arena only. */
+.dungeon-arena.is-combat-screenshake {
+    animation: combat-screenshake var(--battle-duration-360, 360ms) ease-in-out;
+}
+
+.is-combat-paused .dungeon-arena.is-combat-screenshake,
+.is-combat-paused .dungeon-demon-card.is-hit,
+.is-combat-paused .dungeon-demon-card.is-dying,
+.is-combat-paused .dungeon-demon-card.is-poison-tick,
+.is-combat-paused .combat-impact-burst * {
+    animation-play-state: paused !important;
+}
+
 .reward-image {
     width: 76px;
     height: 76px;
@@ -4630,13 +4720,118 @@ body:has(#demonDetailModal.show) .modal-backdrop {
 
 @keyframes demon-attack-hop {
     0% {
+        transform: translate(0, 0) scale(1);
         filter: brightness(1);
     }
-    35% {
-        filter: brightness(1.12);
+    38% {
+        transform: translate(var(--lunge-x, 0px), var(--lunge-y, 0px)) scale(1.05);
+        filter: brightness(1.18);
     }
     100% {
+        transform: translate(0, 0) scale(1);
         filter: brightness(1);
+    }
+}
+
+@keyframes demon-hit-flinch {
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+        filter: brightness(1);
+    }
+    28% {
+        transform: scale(0.95);
+        filter: brightness(1.5) saturate(1.2);
+    }
+    60% {
+        transform: scale(1.01);
+    }
+}
+
+@keyframes demon-death-fall {
+    0% {
+        transform: translateY(0) scale(1) rotate(0deg);
+        filter: brightness(1.9) saturate(0.4);
+    }
+    18% {
+        transform: translateY(-0.18rem) scale(1.04);
+        filter: brightness(2.1) saturate(0.2);
+    }
+    100% {
+        transform: translateY(0.5rem) scale(0.92) rotate(-3deg);
+        filter: brightness(0.55) grayscale(0.85);
+    }
+}
+
+@keyframes demon-poison-tick {
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+    30% {
+        filter: brightness(1.16) hue-rotate(-12deg) saturate(1.3);
+    }
+}
+
+@keyframes combat-impact-pop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.2);
+    }
+    30% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.15);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.7);
+    }
+}
+
+@keyframes combat-impact-particle {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(var(--p-angle, 0deg)) translateY(0) scale(0.6);
+    }
+    24% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(var(--p-angle, 0deg)) translateY(calc(-1 * var(--p-dist, 16px))) scale(0.35);
+    }
+}
+
+@keyframes combat-impact-ring {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3);
+    }
+    35% {
+        opacity: 0.85;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2.4);
+    }
+}
+
+@keyframes combat-screenshake {
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+    20% {
+        transform: translate(-0.22rem, 0.16rem);
+    }
+    40% {
+        transform: translate(0.24rem, -0.14rem);
+    }
+    60% {
+        transform: translate(-0.16rem, -0.12rem);
+    }
+    80% {
+        transform: translate(0.12rem, 0.1rem);
     }
 }
 
@@ -5224,8 +5419,17 @@ body:has(#demonDetailModal.show) .modal-backdrop {
         animation: none;
     }
 
-    .dungeon-demon-card.is-shaking {
+    .dungeon-demon-card.is-shaking,
+    .dungeon-demon-card.is-hit,
+    .dungeon-demon-card.is-poison-tick,
+    .dungeon-arena.is-combat-screenshake {
         animation: none;
+    }
+
+    .dungeon-demon-card.is-dying {
+        animation: none;
+        opacity: 0.58;
+        filter: grayscale(0.75);
     }
 
     .dungeon-demon-card.is-swap-confirmed {
@@ -7600,11 +7804,11 @@ body.camp-page > .camp-lobby {
     padding: 1rem 1.1rem 1.05rem;
 }
 
-.camp-lobby > .alert {
+body.camp-page > .alert {
     position: fixed;
     top: calc(var(--game-nav-height, 3.6rem) + 0.72rem);
     left: 50%;
-    z-index: 1080;
+    z-index: 1100;
     width: min(38rem, calc(100% - 2rem));
     margin: 0;
     transform: translateX(-50%);
@@ -12685,6 +12889,35 @@ body.settings-page .game-shell-nav .nav-settings-link {
 .settings-field .form-text {
     color: var(--ad-faint);
     font-size: 0.74rem;
+}
+
+.settings-toggle {
+    margin: 0;
+    padding-top: 0.15rem;
+}
+
+.settings-toggle .form-check-input {
+    cursor: pointer;
+    background-color: rgba(3,9,11,0.72);
+    border-color: rgba(161,212,201,0.3);
+}
+
+.settings-toggle .form-check-input:checked {
+    background-color: var(--ad-teal, #6fd6bd);
+    border-color: var(--ad-teal, #6fd6bd);
+}
+
+.settings-toggle .form-check-input:focus {
+    border-color: rgba(111,214,189,0.7);
+    box-shadow: 0 0 0 0.2rem rgba(111,214,189,0.12);
+}
+
+.settings-toggle .form-check-label {
+    margin: 0;
+    color: rgba(232,244,241,0.92);
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
 }
 
 .settings-form-footer {

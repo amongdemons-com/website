@@ -1,7 +1,7 @@
 import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
-import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
+import { RUN_KEY, BATTLE_SPEED_KEY, BATTLE_SCREEN_SHAKE_KEY, BATTLE_CARD_SHAKE_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
@@ -77,14 +77,32 @@ function applyCombatStep(step, index = -1, options = {}) {
   });
 
   updateTeamHp();
-  syncCombatHpCards();
-  if (!animate) return;
+  if (!animate) {
+    syncCombatHpCards();
+    return;
+  }
 
+  // Animate path: HP/number/impact reactions are deferred to "impact time" so the
+  // card update feels synced to the projectile landing rather than the step start.
   setActiveLogRow(index);
-  if (step.primaryEffect !== 'poison') animateAttackerCard(step.attacker, step.primaryEffect);
   const attackerSide = getDemonSide(step.attacker);
+  const isAoe = Boolean(step.isAoe) || (step.entries || []).length > 1;
+  if (step.primaryEffect !== 'poison') {
+    animateAttackerCard(step.attacker, step.primaryEffect, step.entries[0]?.target);
+  }
   step.entries.forEach((entry, entryIndex) => {
-    if (entry.effect === 'poison') {
+    animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe);
+  });
+}
+
+// Routes a single combat-log entry to the right visual treatment. Damage/heal/poison
+// reactions (HP bar, floating number, impact burst, card shake) are scheduled at the
+// attack's impact moment via scheduleImpact so they line up with the travelling effect.
+function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe) {
+  const reduced = prefersReducedMotion();
+
+  if (entry.effect === 'poison') {
+    scheduleImpact(160, () => {
       if (entryIndex === 0) {
         showFloatingDamage(entry.target, getPoisonBurstDamage(step), 'poison', entry.attacker, entry.effect, {
           burstCount: step.entries.length
@@ -92,39 +110,64 @@ function applyCombatStep(step, index = -1, options = {}) {
       }
       updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
       syncPoisonStatus(entry.target, entry.poisonStacks);
-      return;
-    }
+      poisonTickCard(entry.target);
+    });
+    return;
+  }
 
-    if (entry.effect === 'heal') {
-      drawHealEffect(entry.attacker, entry.target);
+  if (entry.effect === 'heal') {
+    if (!reduced) drawHealEffect(entry.attacker, entry.target);
+    scheduleImpact(200, () => {
       updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing });
       showFloatingDamage(entry.target, entry.healing, 'heal', entry.attacker, entry.effect);
-      return;
-    }
+      healTargetCard(entry.target);
+    });
+    return;
+  }
 
-    if (entry.effect === 'last_breath') {
+  if (entry.effect === 'last_breath') {
+    scheduleImpact(160, () => {
       updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
       showFloatingDamage(entry.target, 1, 'heal', entry.attacker, entry.effect);
-      return;
-    }
+      healTargetCard(entry.target);
+    });
+    return;
+  }
 
-    if (entry.effect === 'shared_pain') {
-      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
-      return;
-    }
+  if (entry.effect === 'shared_pain') {
+    updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+    return;
+  }
 
-    if (entry.effect === 'poison_apply') {
-      drawAttackZap(step.attacker, entry.target, { effect: entry.effect, poison: true, bubbles: 15, variant: 'poison-flame' });
+  if (entry.effect === 'poison_apply') {
+    if (!reduced) drawAttackZap(step.attacker, entry.target, { effect: entry.effect, poison: true, bubbles: 15, variant: 'poison-flame' });
+    scheduleImpact(220, () => {
       syncPoisonStatus(entry.target, entry.poisonStacks || 1);
       updateTargetCard(entry.target, entry.targetHp, attackerSide);
-      return;
-    }
+      spawnImpactBurst(entry.target, { attackerId: entry.attacker, effect: entry.effect, variant: 'poison' });
+      poisonTickCard(entry.target);
+    });
+    return;
+  }
 
-    drawCombatAnimation(entry);
+  const profile = getAttackProfile(entry);
+  if (!reduced) profile.draw();
+  const impactDelay = profile.travel + (isAoe ? entryIndex * 70 : 0);
+  scheduleImpact(impactDelay, () => {
+    updateTargetCard(entry.target, entry.targetHp, attackerSide);
     if (Number(entry.dmg) > 0) {
       showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
     }
-    updateTargetCard(entry.target, entry.targetHp, attackerSide);
+    spawnImpactBurst(entry.target, {
+      attackerId: entry.attacker,
+      effect: entry.effect,
+      heavy: profile.heavy,
+      variant: profile.key,
+      aoe: isAoe
+    });
+    hitTargetCard(entry.target, profile.heavy);
+    if (profile.screenShake) triggerScreenShake();
+    maybePlayDeath(entry.target, entry.targetHp);
   });
 }
 
@@ -260,9 +303,11 @@ function getCurrentBattleDemonMap() {
 }
 
 function clearCombatTransientElements() {
+  cancelPendingImpacts();
   document.querySelectorAll([
     '.attack-zap',
     '.chaos-lightning',
+    '.combat-impact-burst',
     '.dark-spike',
     '.fireball-shot',
     '.floating-combat-number',
@@ -270,10 +315,15 @@ function clearCombatTransientElements() {
     '.sword-swing',
     '.thorn-burst'
   ].join(',')).forEach((element) => element.remove());
+  document.querySelector('.dungeon-arena')?.classList.remove('is-combat-screenshake');
 }
 
 function setCombatPlaybackPausedClass(isPaused) {
-  document.documentElement.classList.toggle('is-combat-paused', Boolean(isPaused));
+  const paused = Boolean(isPaused);
+  document.documentElement.classList.toggle('is-combat-paused', paused);
+  // Keep deferred impacts in lockstep with the visual freeze.
+  if (paused) pauseImpactTimers();
+  else resumeImpactTimers();
 }
 
 function clamp(value, min, max) {
@@ -297,39 +347,274 @@ function setActiveLogRow(index) {
   });
 }
 
-function animateAttackerCard(instanceId, effect) {
+function animateAttackerCard(instanceId, effect, targetId) {
   const card = findDemonCard(instanceId);
   if (!card) return;
 
   applyCombatTheme(card, getCombatTheme(instanceId, effect));
   card.classList.toggle('is-player-attack', getDemonSide(instanceId) === 'player');
   card.classList.toggle('is-enemy-attack', getDemonSide(instanceId) === 'enemy');
+  setAttackerLunge(card, targetId);
   playTemporaryCardClass(card, 'is-attacking', 320);
 }
 
-function drawCombatAnimation(entry) {
-  const typeId = Number(getCombatDemon(entry.attacker)?.typeId);
-
-  if (entry.targeting === 'chaotic') {
-    drawChaoticLightning(entry.attacker, entry.target);
+// Nudges the attacking card a few pixels toward its target so the swing reads as physical.
+// The CSS hop animation consumes --lunge-x / --lunge-y; reduced motion zeroes them out.
+function setAttackerLunge(card, targetId) {
+  if (prefersReducedMotion() || !targetId) {
+    card.style.setProperty('--lunge-x', '0px');
+    card.style.setProperty('--lunge-y', '0px');
     return;
   }
 
-  const typeAnimation = {
-    2: () => drawDarkSpike(entry.attacker, entry.target),
-    4: () => drawFireball(entry.attacker, entry.target, { effect: entry.effect }),
-    5: () => drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'heavy', duration: 520 }),
-    6: () => drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'assassin', duration: 240 }),
-    7: () => drawSwordSwing(entry.attacker, entry.target),
-    8: () => drawThornBurst(entry.attacker, entry.target),
-    9: () => {
-      drawAttackZap(entry.attacker, entry.target, { effect: entry.effect, variant: 'crushing', duration: 960 });
-      shakeTargetCard(entry.target);
-    }
-  }[typeId];
+  const targetCard = findDemonCard(targetId);
+  if (!targetCard) {
+    card.style.setProperty('--lunge-x', '0px');
+    card.style.setProperty('--lunge-y', '0px');
+    return;
+  }
 
-  if (typeAnimation) typeAnimation();
-  else drawAttackZap(entry.attacker, entry.target, { effect: entry.effect });
+  const attackerRect = card.getBoundingClientRect();
+  const targetRect = targetCard.getBoundingClientRect();
+  const dx = (targetRect.left + targetRect.width / 2) - (attackerRect.left + attackerRect.width / 2);
+  const dy = (targetRect.top + targetRect.height / 2) - (attackerRect.top + attackerRect.height / 2);
+  const length = Math.hypot(dx, dy) || 1;
+  const reach = Math.min(18, length * 0.26);
+  card.style.setProperty('--lunge-x', `${(dx / length * reach).toFixed(1)}px`);
+  card.style.setProperty('--lunge-y', `${(dy / length * reach).toFixed(1)}px`);
+}
+
+// Single source of truth for how each demon archetype attacks: which projectile/effect
+// to draw, how long it travels before impact, and whether the hit is "heavy" (bigger burst
+// + card shake) or should kick a screen micro-shake. Keeping this in one registry avoids
+// the duplicated per-type animation branches the old code had.
+function getAttackProfile(entry) {
+  const { attacker, target, effect } = entry;
+
+  if (entry.targeting === 'chaotic') {
+    return {
+      key: 'chaotic',
+      travel: 150,
+      heavy: true,
+      screenShake: false,
+      draw: () => drawChaoticLightning(attacker, target)
+    };
+  }
+
+  const typeId = Number(getCombatDemon(attacker)?.typeId);
+  const profiles = {
+    2: {
+      key: 'dark',
+      travel: 200,
+      heavy: false,
+      draw: () => drawDarkSpike(attacker, target)
+    },
+    4: {
+      key: 'fire',
+      travel: 380,
+      heavy: true,
+      screenShake: false,
+      draw: () => drawFireball(attacker, target, { effect })
+    },
+    5: {
+      key: 'sniper',
+      travel: 360,
+      heavy: true,
+      draw: () => drawAttackZap(attacker, target, { effect, variant: 'heavy', duration: 520 })
+    },
+    6: {
+      key: 'assassin',
+      travel: 120,
+      heavy: false,
+      draw: () => drawAttackZap(attacker, target, { effect, variant: 'assassin', duration: 240 })
+    },
+    7: {
+      key: 'melee',
+      travel: 170,
+      heavy: false,
+      draw: () => drawSwordSwing(attacker, target)
+    },
+    8: {
+      key: 'thorn',
+      travel: 210,
+      heavy: false,
+      draw: () => drawThornBurst(attacker, target)
+    },
+    9: {
+      key: 'crushing',
+      travel: 620,
+      heavy: true,
+      screenShake: true,
+      draw: () => drawAttackZap(attacker, target, { effect, variant: 'crushing', duration: 960 })
+    }
+  };
+
+  return profiles[typeId] || {
+    key: 'melee',
+    travel: 150,
+    heavy: false,
+    draw: () => drawAttackZap(attacker, target, { effect })
+  };
+}
+
+// Preserved public helper: draws only the travelling effect for an entry (no impact reactions).
+function drawCombatAnimation(entry) {
+  getAttackProfile(entry).draw();
+}
+
+function prefersReducedMotion() {
+  return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+// Pause-aware, cancelable impact scheduler. Each scheduled impact runs on a setTimeout, but:
+//  - it freezes/thaws together with the visual pause (driven by setCombatPlaybackPausedClass),
+//    so a paused battle doesn't apply HP while the projectile is frozen mid-flight;
+//  - it is cancelled by clearCombatTransientElements() when a playback frame is rebuilt
+//    (step-back / scrub), so stale impacts never land after the board is re-derived.
+// Reduced motion and zero delays fire synchronously.
+const pendingImpacts = new Set();
+
+function combatNow() {
+  return window.performance?.now?.() ?? Date.now();
+}
+
+function scheduleImpact(baseMs, fn) {
+  const delay = scaleCombatDuration(baseMs);
+  if (prefersReducedMotion() || delay <= 0) {
+    fn();
+    return;
+  }
+
+  const record = { fn, remaining: delay, startedAt: 0, handle: null };
+  record.run = () => {
+    record.handle = null;
+    pendingImpacts.delete(record);
+    record.fn();
+  };
+  pendingImpacts.add(record);
+  if (!isCombatVisuallyPaused()) startImpactTimer(record);
+}
+
+function startImpactTimer(record) {
+  record.startedAt = combatNow();
+  record.handle = window.setTimeout(record.run, record.remaining);
+}
+
+function isCombatVisuallyPaused() {
+  return document.documentElement.classList.contains('is-combat-paused');
+}
+
+function pauseImpactTimers() {
+  pendingImpacts.forEach((record) => {
+    if (record.handle == null) return;
+    window.clearTimeout(record.handle);
+    record.handle = null;
+    record.remaining = Math.max(0, record.remaining - (combatNow() - record.startedAt));
+  });
+}
+
+function resumeImpactTimers() {
+  pendingImpacts.forEach((record) => {
+    if (record.handle == null) startImpactTimer(record);
+  });
+}
+
+function cancelPendingImpacts() {
+  pendingImpacts.forEach((record) => {
+    if (record.handle != null) window.clearTimeout(record.handle);
+  });
+  pendingImpacts.clear();
+}
+
+// Small burst of impact particles placed exactly on the target card centre.
+function spawnImpactBurst(targetId, options = {}) {
+  if (prefersReducedMotion()) return;
+  const card = findDemonCard(targetId);
+  if (!card) return;
+
+  const rect = card.getBoundingClientRect();
+  const burst = createCombatElement([
+    'combat-impact-burst',
+    options.heavy ? 'is-heavy' : '',
+    options.aoe ? 'is-aoe' : '',
+    `is-${options.variant || 'melee'}`
+  ].filter(Boolean).join(' '), options.attackerId, options.effect);
+  burst.style.left = `${(rect.left + rect.width / 2).toFixed(1)}px`;
+  burst.style.top = `${(rect.top + rect.height / 2).toFixed(1)}px`;
+
+  const duration = options.heavy ? 520 : 380;
+  burst.style.setProperty('--fx-duration', `${scaleCombatDuration(duration)}ms`);
+  const count = options.heavy ? 9 : 6;
+  const spread = options.heavy ? 26 : 17;
+  const particles = Array.from({ length: count }, (_, index) => {
+    const angle = (360 / count) * index + (index % 2 ? 14 : -10);
+    const distance = spread + (index % 3) * 5;
+    return `<span class="combat-impact-particle" style="--p-angle:${angle.toFixed(0)}deg;--p-dist:${distance}px;animation-delay:${scaleCombatDuration(index * 6)}ms"></span>`;
+  }).join('');
+  burst.innerHTML = `<span class="combat-impact-core"></span>${options.aoe ? '<span class="combat-impact-ring"></span>' : ''}${particles}`;
+  appendTemporaryElement(burst, duration);
+}
+
+// User preferences (set from /settings). Each stays on unless explicitly disabled.
+function isPreferenceEnabled(key) {
+  try {
+    return localStorage.getItem(key) !== '0';
+  } catch (error) {
+    return true;
+  }
+}
+
+function isCardShakeEnabled() {
+  return isPreferenceEnabled(BATTLE_CARD_SHAKE_KEY);
+}
+
+function isScreenShakeEnabled() {
+  return isPreferenceEnabled(BATTLE_SCREEN_SHAKE_KEY);
+}
+
+function hitTargetCard(targetId, heavy) {
+  if (prefersReducedMotion()) return;
+  const card = findDemonCard(targetId);
+  if (!card) return;
+  // Heavy hits use the positional card shake; when card shake is disabled, fall back to the
+  // lighter flinch so the impact still reads without the card rattling.
+  const shakeAllowed = isCardShakeEnabled();
+  playTemporaryCardClass(card, heavy && shakeAllowed ? 'is-shaking' : 'is-hit', heavy && shakeAllowed ? 360 : 240);
+}
+
+function poisonTickCard(targetId) {
+  if (prefersReducedMotion()) return;
+  const card = findDemonCard(targetId);
+  if (!card) return;
+  playTemporaryCardClass(card, 'is-poison-tick', 520);
+}
+
+function healTargetCard(targetId) {
+  if (prefersReducedMotion()) return;
+  const card = findDemonCard(targetId);
+  if (!card) return;
+  playTemporaryCardClass(card, 'is-healed', 520);
+}
+
+let lastScreenShakeAt = 0;
+
+// Heavy-hit only: a brief camera shake on the arena. Throttled so a multi-target heavy
+// AOE doesn't stack into a violent rattle.
+function triggerScreenShake() {
+  if (prefersReducedMotion() || !isScreenShakeEnabled()) return;
+  const now = (window.performance?.now?.() ?? Date.now());
+  if (now - lastScreenShakeAt < 140) return;
+  lastScreenShakeAt = now;
+  const arena = document.querySelector('.dungeon-arena');
+  if (!arena) return;
+  playTemporaryCardClass(arena, 'is-combat-screenshake', 360);
+}
+
+function maybePlayDeath(targetId, hp) {
+  if (Number(hp) > 0 || prefersReducedMotion()) return;
+  const card = findDemonCard(targetId);
+  if (!card || card.classList.contains('is-dying')) return;
+  playTemporaryCardClass(card, 'is-dying', 620);
 }
 
 function drawAttackZap(attackerId, targetId, options = {}) {
@@ -666,16 +951,22 @@ function getAttackGeometry(attacker, target) {
   };
 }
 
+// Step pacing is derived from the same attack profiles that drive impact timing, plus a
+// short hold so the floating number/burst can register before the next step begins.
 function getCombatStepDelay(step) {
+  const entries = step.entries || [];
+  const isAoe = Boolean(step.isAoe) || entries.length > 1;
+  const IMPACT_HOLD = 240;
+
   return Math.max(
-    320,
-    ...(step.entries || []).map((entry) => {
-      const typeId = Number(getCombatDemon(entry.attacker)?.typeId);
-      if (entry.effect === 'heal') return 500;
-      if (typeId === 4) return 520;
-      if (typeId === 5 || typeId === 8) return 520;
-      if (typeId === 9) return 960;
-      return 320;
+    340,
+    ...entries.map((entry, index) => {
+      if (entry.effect === 'heal' || entry.effect === 'last_breath') return 500;
+      if (entry.effect === 'poison') return 380;
+      if (entry.effect === 'poison_apply') return 460;
+      if (entry.effect === 'shared_pain') return 320;
+      const stagger = isAoe ? index * 70 : 0;
+      return getAttackProfile(entry).travel + stagger + IMPACT_HOLD;
     })
   );
 }
@@ -918,6 +1209,18 @@ export {
   syncCombatHpCards,
   setActiveLogRow,
   animateAttackerCard,
+  animateCombatEntry,
+  getAttackProfile,
+  prefersReducedMotion,
+  scheduleImpact,
+  spawnImpactBurst,
+  isCardShakeEnabled,
+  isScreenShakeEnabled,
+  hitTargetCard,
+  poisonTickCard,
+  healTargetCard,
+  triggerScreenShake,
+  maybePlayDeath,
   drawCombatAnimation,
   drawAttackZap,
   drawFireball,

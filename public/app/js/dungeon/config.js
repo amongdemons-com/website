@@ -1,5 +1,9 @@
 export const RUN_KEY = 'amongdemons-current-run';
 export const BATTLE_SPEED_KEY = 'amongdemons-battle-speed';
+// Client-side battle-feel preferences toggled from /settings. Each is on unless explicitly
+// disabled. Screen shake is Chu Perk (juggernaut) only; card shake covers all heavy hits.
+export const BATTLE_SCREEN_SHAKE_KEY = 'amongdemons-battle-screen-shake';
+export const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
 export const MAX_DUNGEON_TEAM_SIZE = 6;
 export const FORMATION_GRID_COLUMNS = 3;
 export const FORMATION_GRID_SIZE = 9;

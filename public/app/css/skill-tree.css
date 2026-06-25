@@ -139,7 +139,9 @@ body.skill-tree-page {
     transform: translate(-50%, -50%);
     border: 1px solid rgba(217, 185, 111, 0.54);
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(217, 185, 111, 0.2), rgba(6, 14, 15, 0.96) 58%, rgba(2, 7, 8, 0.99) 70%);
+    background:
+        radial-gradient(circle, rgba(217, 185, 111, 0.2), rgba(6, 14, 15, 0.96) 58%, rgba(2, 7, 8, 0.99) 70%),
+        #050b0d;
     box-shadow: 0 0 0 0.52rem rgba(6, 13, 14, 0.78), 0 0 0 0.6rem rgba(217, 185, 111, 0.18), 0 0 42px rgba(217, 185, 111, 0.15);
     text-align: center;
 }
@@ -222,9 +224,15 @@ body.skill-tree-page {
     opacity: 0.42;
 }
 
+/* Fade unaffordable nodes without going translucent, so the connection line stays hidden behind the orb. */
 .ascension-node.is-disabled {
     cursor: not-allowed;
-    opacity: 0.68;
+    filter: grayscale(0.4) brightness(0.78);
+}
+
+.ascension-node.is-disabled .ascension-node-label,
+.ascension-node.is-disabled .ascension-node-progress {
+    opacity: 0.6;
 }
 
 .ascension-node.is-maxed {
@@ -242,7 +250,7 @@ body.skill-tree-page {
     border-radius: 50%;
     background:
         radial-gradient(circle, color-mix(in srgb, var(--path-accent) 15%, transparent), transparent 58%),
-        linear-gradient(145deg, rgba(13, 25, 25, 0.98), rgba(3, 8, 10, 0.99));
+        linear-gradient(145deg, rgb(13, 25, 25), rgb(3, 8, 10));
     color: color-mix(in srgb, var(--path-accent) 82%, #f5e7c5);
     box-shadow: 0 0 0 0.28rem rgba(4, 10, 11, 0.94), 0 0 0 0.34rem rgba(217, 185, 111, 0.12);
     transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
