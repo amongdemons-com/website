@@ -5,7 +5,7 @@
   const appUrl = window.AmongDemons.appUrl || ((value) => value);
   const renderSoulAmount = window.AmongDemons.ui?.renderSoulAmount || ((value) => escapeHtml(value));
   const TILE_SIZE = 64;
-  const WORLD_RADIUS = 16;
+  const WORLD_RADIUS = 50;
   const DISCOVERY_RADIUS = 4;
   const MIN_ZOOM = 0.55;
   const MAX_ZOOM = 2.15;
@@ -31,7 +31,9 @@
     selection: 0xd7b765,
     validMove: 0x6f8faa,
     fog: 0x050604,
-    fogEdge: 0x2a3028
+    fogEdge: 0x2a3028,
+    road: 0x191d16,
+    roadGlow: 0x2b2a20
   };
   const FALLBACK_BLOCKED_TILES = [
     { x: 1, y: 1, type: 'basalt' },
@@ -54,13 +56,28 @@
     'soul-cache': BOARD_COLORS.soulNode,
     'dungeon-portal': BOARD_COLORS.portalGlow
   };
+  const RARITY_COLORS = {
+    common: '#D1D5D8',
+    uncommon: '#41A85F',
+    rare: '#2C82C9',
+    epic: '#9365B8',
+    legendary: '#FAC51C',
+    mythic: '#E25041'
+  };
 
   const state = {
     app: null,
     viewport: null,
-    tileLayer: null,
+    groundLayer: null,
+    gridLayer: null,
+    fogLayer: null,
+    roadLayer: null,
+    hoverLayer: null,
+    hoverTile: null,
     pathLayer: null,
+    pathPulse: null,
     markerLayer: null,
+    encounterLayer: null,
     hunterLayer: null,
     hunterFrame: null,
     hunterAvatar: null,
@@ -71,11 +88,20 @@
     position: { x: 0, y: 0 },
     bounds: { min: -WORLD_RADIUS, max: WORLD_RADIUS },
     events: [],
+    roads: [],
+    roadKeys: new Set(),
+    encounters: [],
+    encounterTextures: new Map(),
+    tileTextures: new Map(),
+    terrainBuilt: false,
+    selectedEncounter: null,
     player: null,
     playersAt: [],
     activeTeam: null,
     currentEvent: null,
+    currentEncounter: null,
     blockedTiles: FALLBACK_BLOCKED_TILES,
+    blockedMap: new Map(),
     selectedPath: [],
     selectedTarget: null,
     travelLog: [],
@@ -123,6 +149,7 @@
       'worldPositionChip',
       'worldZoomChip',
       'worldTargetTooltip',
+      'worldEncounterTooltip',
       'worldTeamSummary',
       'worldEncounterList',
       'worldEventPanel',
@@ -175,9 +202,15 @@
 
     state.app = app;
     state.viewport = new Pixi.Container();
-    state.tileLayer = new Pixi.Graphics();
+    state.groundLayer = new Pixi.Container(); // static terrain + obstacles
+    state.gridLayer = new Pixi.Graphics();    // faint static grid
+    state.fogLayer = new Pixi.Graphics();     // fog + active tile (dynamic)
+    state.roadLayer = new Pixi.Container();    // static roads, kept above fog
+    state.hoverLayer = new Pixi.Graphics();    // hovered-tile hint (dynamic)
     state.pathLayer = new Pixi.Graphics();
+    state.pathPulse = new Pixi.Graphics();     // animated destination ring
     state.markerLayer = new Pixi.Container();
+    state.encounterLayer = new Pixi.Container();
     state.hunterLayer = new Pixi.Container();
     state.hunterFrame = new Pixi.Graphics();
     state.hunterAvatar = new Pixi.Sprite(Pixi.Texture.EMPTY);
@@ -187,12 +220,20 @@
     state.hunterLayer.addChild(state.hunterFrame);
     state.hunterLayer.addChild(state.hunterAvatar);
 
-    state.viewport.addChild(state.tileLayer);
+    state.viewport.addChild(state.groundLayer);
+    state.viewport.addChild(state.gridLayer);
+    state.viewport.addChild(state.fogLayer);
+    state.viewport.addChild(state.roadLayer);
+    state.viewport.addChild(state.hoverLayer);
     state.viewport.addChild(state.pathLayer);
+    state.viewport.addChild(state.pathPulse);
     state.viewport.addChild(state.markerLayer);
+    state.viewport.addChild(state.encounterLayer);
     state.viewport.addChild(state.hunterLayer);
     state.viewport.addChild(state.effectLayer);
     app.stage.addChild(state.viewport);
+
+    app.ticker.add(updatePathPulse);
 
     bindCanvasInput(canvas);
     bindResize();
@@ -226,14 +267,21 @@
     state.position = normalizePosition(payload.position);
     state.bounds = payload.bounds || state.bounds;
     state.events = Array.isArray(payload.events) ? payload.events : [];
+    state.roads = Array.isArray(payload.roads) ? payload.roads : [];
+    state.roadKeys = new Set(state.roads.map((tile) => getTileKey(tile)));
+    state.encounters = Array.isArray(payload.encounters) ? payload.encounters : [];
     state.player = payload.player || state.player;
     state.blockedTiles = Array.isArray(payload.blockedTiles) ? payload.blockedTiles : FALLBACK_BLOCKED_TILES;
+    state.blockedMap = new Map(state.blockedTiles.map((tile) => [getTileKey(tile), tile]));
     state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
     state.activeTeam = payload.activeTeam || null;
     state.currentEvent = payload.currentEvent || getEventAt(state.position);
+    state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
     await loadHunterAvatar();
+    await loadEncounterTextures();
 
     addDiscoveredAround(state.position);
+    buildBoard();
     renderWorld();
     renderPanels();
 
@@ -262,6 +310,7 @@
     }
 
     if (state.selectedTarget && positionsEqual(target, state.selectedTarget) && state.selectedPath.length > 1) {
+      hideEncounterTooltip();
       travelSelectedPath();
       return;
     }
@@ -271,6 +320,13 @@
       clearRoutePreview('blocked');
       setMessage('No passable route found.', 'warning');
       return;
+    }
+
+    const encounter = getEncounterAt(target);
+    if (encounter) {
+      showEncounterTooltip(encounter);
+    } else {
+      hideEncounterTooltip();
     }
 
     state.selectedTarget = target;
@@ -357,6 +413,7 @@
     state.selectedTarget = null;
     state.selectedPath = [];
     state.recentStepEvent = null;
+    hideEncounterTooltip();
     state.travelStatus = status;
     if (!options.keepLog && status !== 'arrived') {
       state.travelLog = [];
@@ -498,62 +555,282 @@
   }
 
   function renderWorld() {
-    drawTiles();
+    drawFog();
+    drawHover();
     drawPath();
     drawMarkers();
+    drawEncounterMarkers();
     drawStepEffect();
     updateCameraStatus();
   }
 
-  function drawTiles() {
-    const layer = state.tileLayer;
-    if (!layer) return;
+  // ===========================================================================
+  // Procedural tile rendering
+  //
+  // The static board (ground, obstacles, roads) is painted once into sprite
+  // layers built from a small cache of procedurally generated, seeded textures
+  // (deterministic per x,y so the world is stable across reloads). Fog of war,
+  // the active tile and the path preview stay on light dynamic layers.
+  // ===========================================================================
 
+  // Calm, dark ruined-world palette. Terrain tones are near-identical so the
+  // ground reads as one quiet surface; everything else is built from a single
+  // ruined-stone family so the map stays cohesive.
+  const GROUND_TONES = [0x0e120d, 0x10140f, 0x0d110c];
+  const GROUND_PATCH = 0x141811; // barely-there mottling
+  const ROAD_DIRT = [0x1b1812, 0x201c15];
+  const ROAD_EDGE = 0x0a0806;
+  const ROAD_SHEEN = 0x2a261d; // faint worn centre
+  const STONE_BASE = [0x282520, 0x302c25, 0x211e19];
+  const STONE_DARK = 0x131009;
+  const STONE_LIGHT = 0x3b372e;
+  const OBSTACLE_KINDS = ['rocks', 'rubble', 'wall', 'pillar', 'masonry'];
+  const GRID_COLOR = 0x39423a;
+  const GROUND_VARIANTS = 6;
+  const ROAD_VARIANTS = 2;
+  const OBSTACLE_VARIANTS = 2;
+  const PROP_CHANCE = 0.05; // rare, subtle stone decals on open ground
+  const EMBER_CORE = 0xffd8a6;
+  const EMBER_GLOW = 0xd9742e;
+
+  // Deterministic 0..1 hash per (x, y, salt) — drives stable per-tile variation.
+  function hashTile(x, y, salt) {
+    let h = Math.imul((x | 0) + 0x9e37, 374761393) ^
+      Math.imul((y | 0) + 0x85eb, 668265263) ^
+      Math.imul((salt | 0) + 1, 2246822519);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  }
+
+  // Seeded RNG used while drawing a single texture variant (props scatter).
+  function seededRng(seed) {
+    let a = (seed >>> 0) || 1;
+    return function next() {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function getTileTexture(key, draw) {
+    if (state.tileTextures.has(key)) return state.tileTextures.get(key);
+    const Pixi = window.PIXI;
+    const g = new Pixi.Graphics();
+    draw(g);
+    const texture = state.app.renderer.generateTexture({
+      target: g,
+      frame: new Pixi.Rectangle(0, 0, TILE_SIZE, TILE_SIZE),
+      resolution: 2
+    });
+    g.destroy();
+    state.tileTextures.set(key, texture);
+    return texture;
+  }
+
+  function makeTileSprite(texture, x, y) {
+    const sprite = new window.PIXI.Sprite(texture);
+    sprite.anchor.set(0.5);
+    const center = tileCenter({ x, y });
+    sprite.position.set(center.x, center.y);
+    return sprite;
+  }
+
+  // --- texture detail helpers -------------------------------------------------
+
+  // Faked soft shadow: stacked translucent ellipses (no blur filter needed).
+  function softShadow(g, cx, cy, rx, ry) {
+    for (let i = 4; i >= 1; i -= 1) {
+      g.ellipse(cx, cy, rx * (i / 4), ry * (i / 4)).fill({ color: 0x000000, alpha: 0.12 });
+    }
+  }
+
+  // --- texture builders -------------------------------------------------------
+
+  function groundTexture(variant) {
+    return getTileTexture(`ground:${variant}`, (g) => {
+      const rng = seededRng(variant * 911 + 7);
+      g.rect(0, 0, TILE_SIZE, TILE_SIZE).fill({ color: GROUND_TONES[variant % GROUND_TONES.length] });
+      // A couple of very soft, low-contrast patches — enough to break up flat
+      // repetition without any visible square noise. Terrain stays in back.
+      for (let i = 0; i < 2; i += 1) {
+        g.ellipse(rng() * TILE_SIZE, rng() * TILE_SIZE, 12 + rng() * 18, 10 + rng() * 16)
+          .fill({ color: GROUND_PATCH, alpha: 0.05 });
+      }
+    });
+  }
+
+  // Rare, subtle stone decals (a few small pebbles) for open ground.
+  function propTexture(variant) {
+    return getTileTexture(`prop:${variant}`, (g) => {
+      const rng = seededRng(variant * 521 + 29);
+      const count = 2 + Math.floor(rng() * 2);
+      for (let i = 0; i < count; i += 1) {
+        const cx = 22 + rng() * 20;
+        const cy = 26 + rng() * 16;
+        const r = 1.6 + rng() * 1.8;
+        g.ellipse(cx, cy + 1.5, r * 1.2, r * 0.6).fill({ color: 0x000000, alpha: 0.18 });
+        g.ellipse(cx, cy, r, r * 0.8).fill({ color: STONE_BASE[i % STONE_BASE.length], alpha: 0.85 });
+      }
+    });
+  }
+
+  // Road piece keyed by its 4-bit neighbour mask (N=1, E=2, S=4, W=8) so dirt
+  // reaches toward connected sides and tiles read as one continuous path.
+  // Clean worn dirt/stone path keyed by its neighbour mask (N=1, E=2, S=4, W=8)
+  // so dirt reaches connected sides and tiles merge into one continuous road.
+  function roadTexture(mask, variant) {
+    return getTileTexture(`road:${mask}:${variant}`, (g) => {
+      const rng = seededRng(mask * 733 + variant * 197 + 11);
+      const w = 30;
+      const inset = (TILE_SIZE - w) / 2;
+      const half = TILE_SIZE / 2;
+      const dirt = ROAD_DIRT[variant % ROAD_DIRT.length];
+
+      const segs = [[inset, inset, w, w]];
+      if (mask & 1) segs.push([inset, 0, w, half]);
+      if (mask & 2) segs.push([half, inset, half, w]);
+      if (mask & 4) segs.push([inset, half, w, half]);
+      if (mask & 8) segs.push([0, inset, half, w]);
+
+      // Soft dark edge halo, then the dirt fill.
+      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx - 2, sy - 2, sw + 4, sh + 4).fill({ color: ROAD_EDGE, alpha: 0.4 }));
+      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx, sy, sw, sh).fill({ color: dirt, alpha: 1 }));
+
+      // Faint worn sheen down the centre of the path.
+      g.ellipse(half, half, 8, 8).fill({ color: ROAD_SHEEN, alpha: 0.16 });
+
+      // Worn darker edges along the path's length (off the connecting ends, so
+      // neighbouring road tiles still merge without a seam).
+      if ((mask & 1) || (mask & 4) || mask === 0) {
+        g.rect(inset, 0, 2, TILE_SIZE).fill({ color: ROAD_EDGE, alpha: 0.32 });
+        g.rect(inset + w - 2, 0, 2, TILE_SIZE).fill({ color: ROAD_EDGE, alpha: 0.32 });
+      }
+      if ((mask & 2) || (mask & 8) || mask === 0) {
+        g.rect(0, inset, TILE_SIZE, 2).fill({ color: ROAD_EDGE, alpha: 0.32 });
+        g.rect(0, inset + w - 2, TILE_SIZE, 2).fill({ color: ROAD_EDGE, alpha: 0.32 });
+      }
+
+      // Just a couple of small embedded stones — no speckle clutter.
+      for (let i = 0; i < 2; i += 1) {
+        g.ellipse(inset + 5 + rng() * (w - 10), inset + 5 + rng() * (w - 10), 1.6 + rng(), 1.3 + rng())
+          .fill({ color: 0x2c281f, alpha: 0.5 });
+      }
+    });
+  }
+
+  function obstacleTexture(kind, variant) {
+    return getTileTexture(`obs:${kind}:${variant}`, (g) => {
+      const rng = seededRng((OBSTACLE_KINDS.indexOf(kind) + 1) * 4099 + variant * 131 + 3);
+      softShadow(g, TILE_SIZE / 2, TILE_SIZE - 14, 24, 11);
+      drawObstacle(g, kind, rng);
+    });
+  }
+
+  // One cohesive ruined-stone family. Every kind uses the same dark stone
+  // palette and a baked shadow so blocked tiles read as solid and impassable
+  // while staying grounded in the map.
+  function drawObstacle(g, kind, rng) {
+    const tone = () => STONE_BASE[Math.floor(rng() * STONE_BASE.length)];
+
+    if (kind === 'rocks') {
+      for (let i = 0; i < 3; i += 1) {
+        const cx = 18 + rng() * 28;
+        const cy = 28 + rng() * 18;
+        const r = 9 + rng() * 7;
+        g.ellipse(cx, cy, r, r * 0.78).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1, alpha: 0.55 });
+        g.ellipse(cx - r * 0.25, cy - r * 0.3, r * 0.38, r * 0.24).fill({ color: STONE_LIGHT, alpha: 0.22 });
+      }
+    } else if (kind === 'rubble') {
+      for (let i = 0; i < 6; i += 1) {
+        const s = 5 + rng() * 7;
+        const cx = 12 + rng() * 40;
+        const cy = 30 + rng() * 18;
+        g.poly([cx, cy, cx + s, cy - s * 0.3, cx + s * 0.8, cy + s * 0.6, cx - s * 0.2, cy + s * 0.5])
+          .fill({ color: tone() }).stroke({ color: STONE_DARK, width: 0.8, alpha: 0.5 });
+      }
+    } else if (kind === 'wall') {
+      // Cracked wall — a tall block beside a broken-down stub.
+      g.rect(12, 22, 22, 32).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1.4, alpha: 0.8 });
+      g.rect(34, 34, 18, 20).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1.4, alpha: 0.8 });
+      g.rect(12, 22, 22, 3).fill({ color: STONE_LIGHT, alpha: 0.18 }); // top highlight
+      g.moveTo(22, 24).lineTo(19, 38).lineTo(24, 52).stroke({ color: STONE_DARK, width: 1.2, alpha: 0.6 }); // crack
+    } else if (kind === 'pillar') {
+      // Broken pillar on a footing.
+      g.rect(22, 16, 18, 34).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1.4, alpha: 0.8 });
+      g.rect(17, 48, 28, 7).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1.2, alpha: 0.7 });
+      g.rect(22, 16, 18, 3).fill({ color: STONE_LIGHT, alpha: 0.2 });
+      for (let i = 0; i < 3; i += 1) g.rect(22, 24 + i * 8, 18, 1.4).fill({ color: STONE_DARK, alpha: 0.45 });
+    } else { // masonry — a couple of collapsed brick courses
+      for (let r = 0; r < 3; r += 1) {
+        const yy = TILE_SIZE - 16 - r * 11;
+        const offset = (r % 2) * 8;
+        for (let bx = 0; bx < 3; bx += 1) {
+          if (r >= 1 && rng() < 0.35) continue; // missing/collapsed bricks
+          g.rect(8 + bx * 16 + offset, yy, 15, 9).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1, alpha: 0.6 });
+        }
+      }
+    }
+  }
+
+  // --- board assembly (runs once) ---------------------------------------------
+
+  function buildBoard() {
+    if (state.terrainBuilt || !state.groundLayer) return;
+    const Pixi = window.PIXI;
+    if (!Pixi?.Sprite) return;
+
+    const min = state.bounds.min ?? -WORLD_RADIUS;
+    const max = state.bounds.max ?? WORLD_RADIUS;
+
+    for (let y = min; y <= max; y += 1) {
+      for (let x = min; x <= max; x += 1) {
+        const ground = makeTileSprite(groundTexture(Math.floor(hashTile(x, y, 0) * GROUND_VARIANTS)), x, y);
+        ground.rotation = Math.floor(hashTile(x, y, 3) * 4) * (Math.PI / 2);
+        if (hashTile(x, y, 4) < 0.5) ground.scale.x = -1;
+        state.groundLayer.addChild(ground);
+
+        const blocked = getBlockedTile({ x, y });
+        if (blocked) {
+          const kind = OBSTACLE_KINDS[Math.floor(hashTile(x, y, 1) * OBSTACLE_KINDS.length)];
+          const obstacle = makeTileSprite(obstacleTexture(kind, Math.floor(hashTile(x, y, 2) * OBSTACLE_VARIANTS)), x, y);
+          if (hashTile(x, y, 5) < 0.5) obstacle.scale.x = -1;
+          state.groundLayer.addChild(obstacle);
+        } else if (!isRoadTile({ x, y }) && hashTile(x, y, 7) < PROP_CHANCE) {
+          // Rare, subtle stone decal on open ground.
+          const prop = makeTileSprite(propTexture(Math.floor(hashTile(x, y, 8) * 3)), x, y);
+          if (hashTile(x, y, 9) < 0.5) prop.scale.x = -1;
+          state.groundLayer.addChild(prop);
+        }
+      }
+    }
+
+    drawGrid();
+
+    state.roads.forEach((tile) => {
+      if (!isInBounds(tile)) return;
+      const mask =
+        (isRoadTile({ x: tile.x, y: tile.y - 1 }) ? 1 : 0) |
+        (isRoadTile({ x: tile.x + 1, y: tile.y }) ? 2 : 0) |
+        (isRoadTile({ x: tile.x, y: tile.y + 1 }) ? 4 : 0) |
+        (isRoadTile({ x: tile.x - 1, y: tile.y }) ? 8 : 0);
+      const variant = Math.floor(hashTile(tile.x, tile.y, 6) * ROAD_VARIANTS);
+      state.roadLayer.addChild(makeTileSprite(roadTexture(mask, variant), tile.x, tile.y));
+    });
+
+    state.terrainBuilt = true;
+  }
+
+  // Faint static grid — barely visible by default; emphasis for the active /
+  // hovered / path tiles is layered on top by the dynamic passes below.
+  function drawGrid() {
+    const layer = state.gridLayer;
+    if (!layer) return;
     layer.clear();
 
     const min = state.bounds.min ?? -WORLD_RADIUS;
     const max = state.bounds.max ?? WORLD_RADIUS;
-    for (let y = min; y <= max; y += 1) {
-      for (let x = min; x <= max; x += 1) {
-        const tileKey = getTileKey({ x, y });
-        const blockedTile = getBlockedTile({ x, y });
-        const blockedStyle = blockedTile ? getBlockedTileStyle(blockedTile) : null;
-        const tileEvent = getEventAt({ x, y });
-        const discovered = state.discoveredTiles.has(tileKey) || hasEventAt({ x, y });
-        const active = state.position.x === x && state.position.y === y;
-        const color = blockedTile
-          ? blockedStyle.fill
-          : active
-            ? BOARD_COLORS.active
-            : getBoardTileColor(x, y);
-
-        layer.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-          .fill({ color, alpha: blockedTile ? 1 : (discovered || active ? 0.96 : 0.9) });
-
-        if (blockedTile) {
-          drawBlockedTile(layer, x, y, blockedStyle);
-          continue;
-        }
-
-        if (tileEvent?.type === 'boss') {
-          layer.rect(x * TILE_SIZE + 6, y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12)
-            .fill({ color: BOARD_COLORS.dangerousGlow, alpha: 0.18 });
-        } else if (tileEvent?.type === 'soul-cache') {
-          layer.circle(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE * 0.34)
-            .fill({ color: BOARD_COLORS.soulNode, alpha: 0.18 });
-        } else if (tileEvent?.type === 'dungeon-portal') {
-          layer.circle(x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE * 0.42)
-            .fill({ color: BOARD_COLORS.portalGlow, alpha: 0.2 });
-        }
-
-        if (!discovered && !active) {
-          layer.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-            .fill({ color: BOARD_COLORS.fog, alpha: 0.66 });
-          layer.rect(x * TILE_SIZE + 1, y * TILE_SIZE + 1, TILE_SIZE - 2, TILE_SIZE - 2)
-            .stroke({ color: BOARD_COLORS.fogEdge, width: 1, alpha: 0.28 });
-        }
-      }
-    }
 
     for (let x = min; x <= max + 1; x += 1) {
       layer.moveTo(x * TILE_SIZE, min * TILE_SIZE).lineTo(x * TILE_SIZE, (max + 1) * TILE_SIZE);
@@ -561,34 +838,100 @@
     for (let y = min; y <= max + 1; y += 1) {
       layer.moveTo(min * TILE_SIZE, y * TILE_SIZE).lineTo((max + 1) * TILE_SIZE, y * TILE_SIZE);
     }
-    layer.stroke({ color: BOARD_COLORS.gridLine, width: 1, alpha: 0.35 });
+    layer.stroke({ color: GRID_COLOR, width: 1, alpha: 0.05 });
+  }
+
+  function cellOutline(layer, tile, color, alpha, width) {
+    const left = tile.x * TILE_SIZE;
+    const top = tile.y * TILE_SIZE;
+    layer.rect(left + 1, top + 1, TILE_SIZE - 2, TILE_SIZE - 2).stroke({ color, width, alpha });
+  }
+
+  // --- dynamic layers ---------------------------------------------------------
+
+  function drawFog() {
+    const layer = state.fogLayer;
+    if (!layer) return;
+    layer.clear();
+
+    const min = state.bounds.min ?? -WORLD_RADIUS;
+    const max = state.bounds.max ?? WORLD_RADIUS;
+
+    // Soft, light darkness — keeps undiscovered ground readable rather than hidden.
+    for (let y = min; y <= max; y += 1) {
+      for (let x = min; x <= max; x += 1) {
+        const active = state.position.x === x && state.position.y === y;
+        const discovered = state.discoveredTiles.has(getTileKey({ x, y })) || hasEventAt({ x, y });
+        if (!discovered && !active) {
+          layer.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE).fill({ color: BOARD_COLORS.fog, alpha: 0.4 });
+        }
+      }
+    }
+
+    // Event tile glows sit above fog (events are always considered discovered).
+    state.events.forEach((event) => {
+      const cx = event.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = event.y * TILE_SIZE + TILE_SIZE / 2;
+      if (event.type === 'boss') {
+        layer.rect(event.x * TILE_SIZE + 6, event.y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12).fill({ color: BOARD_COLORS.dangerousGlow, alpha: 0.16 });
+      } else if (event.type === 'soul-cache') {
+        layer.circle(cx, cy, TILE_SIZE * 0.32).fill({ color: BOARD_COLORS.soulNode, alpha: 0.16 });
+      } else if (event.type === 'dungeon-portal') {
+        layer.circle(cx, cy, TILE_SIZE * 0.4).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.18 });
+      }
+    });
+
+    // Active tile: a touch more grid emphasis (no heavy box).
+    cellOutline(layer, state.position, BOARD_COLORS.selection, 0.32, 1);
+  }
+
+  function drawHover() {
+    const layer = state.hoverLayer;
+    if (!layer) return;
+    layer.clear();
+    if (!state.hoverTile || state.moving) return;
+    if (positionsEqual(state.hoverTile, state.position)) return;
+    cellOutline(layer, state.hoverTile, GRID_COLOR, 0.5, 1);
   }
 
   function drawPath() {
     const layer = state.pathLayer;
     if (!layer) return;
-
     layer.clear();
 
     const path = state.selectedPath || [];
     if (path.length < 2) return;
 
+    // A soft ember trail rather than outlined boxes; the destination is a touch
+    // stronger so it reads as the target.
     path.forEach((tile, index) => {
-      const center = tileCenter(tile);
+      if (index === 0) return;
+      const c = tileCenter(tile);
       const isTarget = index === path.length - 1;
-      layer.rect(center.x - TILE_SIZE / 2 + 2, center.y - TILE_SIZE / 2 + 2, TILE_SIZE - 4, TILE_SIZE - 4)
-        .fill({ color: BOARD_COLORS.validMove, alpha: isTarget ? (state.moving ? 0.12 : 0.24) : (state.moving ? 0.08 : 0.14) })
-        .stroke({ color: BOARD_COLORS.validMove, width: isTarget ? 3 : 2, alpha: isTarget ? (state.moving ? 0.46 : 0.9) : (state.moving ? 0.32 : 0.66) });
+      if (isTarget) {
+        cellOutline(layer, tile, EMBER_GLOW, 0.4, 1.5);
+        return; // glow handled by the animated pulse
+      }
+      cellOutline(layer, tile, EMBER_GLOW, 0.08, 1);
+      layer.circle(c.x, c.y, 4).fill({ color: EMBER_GLOW, alpha: 0.12 });
+      layer.circle(c.x, c.y, 1.8).fill({ color: EMBER_CORE, alpha: 0.7 });
     });
   }
 
-  function drawBlockedTile(layer, x, y, style) {
-    const left = x * TILE_SIZE;
-    const top = y * TILE_SIZE;
+  // Animated destination marker — a pulsing ember ring (runs on the ticker).
+  function updatePathPulse() {
+    const layer = state.pathPulse;
+    if (!layer) return;
+    layer.clear();
 
-    layer.rect(left + 3, top + 3, TILE_SIZE - 6, TILE_SIZE - 6)
-      .fill({ color: style.inner, alpha: 0.88 })
-      .stroke({ color: style.edge, width: 4, alpha: 0.98 });
+    const path = state.selectedPath || [];
+    if (path.length < 2 || state.moving) return;
+
+    const c = tileCenter(path[path.length - 1]);
+    const phase = (performance.now() % 1600) / 1600;
+    layer.circle(c.x, c.y, 8 + phase * 10).stroke({ color: EMBER_GLOW, width: 1.5, alpha: 0.32 * (1 - phase) });
+    layer.circle(c.x, c.y, 6).fill({ color: EMBER_GLOW, alpha: 0.14 });
+    layer.circle(c.x, c.y, 2.6).fill({ color: EMBER_CORE, alpha: 0.9 });
   }
 
   function drawMarkers() {
@@ -621,6 +964,54 @@
 
       marker.position.set(position.x, position.y);
       layer.addChild(marker);
+    });
+  }
+
+  function drawEncounterMarkers() {
+    const layer = state.encounterLayer;
+    const Pixi = window.PIXI;
+    if (!layer || !Pixi?.Graphics) return;
+
+    layer.removeChildren().forEach((child) => child.destroy({ children: true }));
+
+    state.encounters.forEach((encounter) => {
+      // Honour fog-of-war: only reveal encounters on discovered tiles.
+      if (!state.discoveredTiles.has(getTileKey(encounter))) return;
+
+      const center = tileCenter(encounter);
+      const ringColor = rarityHex(encounter.keyDemon?.rarity);
+      const selected = state.selectedEncounter?.id === encounter.id;
+      const radius = 19;
+
+      const node = new Pixi.Container();
+      node.position.set(center.x, center.y);
+
+      // A grounded world node: a soft ground shadow, a faint rarity glow, and a
+      // single thin ring around the portrait — no UI-sticker rings or runes.
+      const base = new Pixi.Graphics();
+      base.ellipse(0, radius + 3, radius - 2, 5).fill({ color: 0x000000, alpha: 0.35 }); // shadow
+      base.circle(0, 0, radius + 4).fill({ color: ringColor, alpha: selected ? 0.18 : 0.09 }); // glow
+      base.circle(0, 0, radius + 1).fill({ color: 0x080c0e, alpha: 0.92 });
+      base.circle(0, 0, radius + 1).stroke({ color: ringColor, width: selected ? 2.5 : 1.5, alpha: selected ? 0.95 : 0.6 });
+      node.addChild(base);
+
+      const texture = state.encounterTextures.get(encounter.keyDemon?.imageUrl);
+      if (texture) {
+        const portrait = new Pixi.Sprite(texture);
+        portrait.anchor.set(0.5);
+        portrait.width = radius * 2;
+        portrait.height = radius * 2;
+
+        const mask = new Pixi.Graphics();
+        mask.circle(0, 0, radius).fill({ color: 0xffffff });
+        node.addChild(mask);
+        portrait.mask = mask;
+        node.addChild(portrait);
+      } else {
+        base.circle(0, 0, radius).fill({ color: ringColor, alpha: 0.25 });
+      }
+
+      layer.addChild(node);
     });
   }
 
@@ -837,6 +1228,8 @@
   }
 
   function onPointerMove(event) {
+    updateHover(event);
+
     const activePointer = state.activePointers.get(event.pointerId);
     if (!activePointer || !state.viewport) return;
 
@@ -871,6 +1264,31 @@
     pointer.lastY = event.clientY;
   }
 
+  // Track the hovered tile (mouse/pen only) to give the grid a subtle hint.
+  function updateHover(event) {
+    if (event.pointerType === 'touch' || state.activePointers.size > 0) {
+      if (state.hoverTile) {
+        state.hoverTile = null;
+        drawHover();
+      }
+      return;
+    }
+
+    const tile = screenToTile(event.clientX, event.clientY);
+    const next = tile && isInBounds(tile) ? tile : null;
+    if (!next && !state.hoverTile) return;
+    if (next && state.hoverTile && positionsEqual(next, state.hoverTile)) return;
+
+    state.hoverTile = next;
+    drawHover();
+  }
+
+  function clearHover() {
+    if (!state.hoverTile) return;
+    state.hoverTile = null;
+    drawHover();
+  }
+
   function onPointerUp(event) {
     const pointer = state.pointer;
     const wasClick = pointer && pointer.id === event.pointerId && !pointer.dragging && !state.gestureWasPinch;
@@ -901,6 +1319,7 @@
   }
 
   function onPointerLeave(event) {
+    clearHover();
     const pointer = state.pointer;
     if (pointer?.dragging || state.gestureWasPinch || state.activePointers.has(event.pointerId)) {
       clearPointer();
@@ -1097,20 +1516,28 @@
     return Boolean(getEventAt(position));
   }
 
+  function getEncounterAt(position) {
+    return state.encounters.find((encounter) => encounter.x === position.x && encounter.y === position.y) || null;
+  }
+
+  function rarityCss(rarity) {
+    return RARITY_COLORS[rarity] || RARITY_COLORS.common;
+  }
+
+  function rarityHex(rarity) {
+    return Number.parseInt(rarityCss(rarity).slice(1), 16);
+  }
+
   function getBlockedTile(position) {
-    return (state.blockedTiles || []).find((tile) => tile.x === position.x && tile.y === position.y) || null;
+    return state.blockedMap.get(getTileKey(position)) || null;
+  }
+
+  function isRoadTile(position) {
+    return state.roadKeys.has(getTileKey(position));
   }
 
   function isBlocked(position) {
     return Boolean(getBlockedTile(position));
-  }
-
-  function getBlockedTileStyle() {
-    return {
-      fill: BOARD_COLORS.obstacle,
-      inner: BOARD_COLORS.obstacleInner,
-      edge: BOARD_COLORS.obstacleEdge
-    };
   }
 
   function positionsEqual(a, b) {
@@ -1139,10 +1566,6 @@
 
   function getTileKey(position) {
     return `${position.x},${position.y}`;
-  }
-
-  function getBoardTileColor(x, y) {
-    return (x + y) % 2 === 0 ? BOARD_COLORS.tileNormal : BOARD_COLORS.tileNormalAlt;
   }
 
   function getEventLabel(type) {
@@ -1188,13 +1611,37 @@
     }
   }
 
+  async function loadEncounterTextures() {
+    const Pixi = window.PIXI;
+    if (!Pixi || !state.encounters.length) return;
+
+    const urls = Array.from(new Set(
+      state.encounters
+        .map((encounter) => encounter.keyDemon?.imageUrl)
+        .filter(Boolean)
+    ));
+
+    await Promise.all(urls.map(async (url) => {
+      if (state.encounterTextures.has(url)) return;
+      try {
+        const texture = Pixi.Assets ? await Pixi.Assets.load(url) : Pixi.Texture.from(url);
+        state.encounterTextures.set(url, texture);
+      } catch (error) {
+        state.encounterTextures.set(url, null);
+      }
+    }));
+  }
+
   function updateTargetTooltip() {
+    updateEncounterTooltip();
+
     const tooltip = elements.worldTargetTooltip;
     const target = state.selectedTarget;
     const path = state.selectedPath || [];
     if (!tooltip) return;
 
-    if (!target || path.length < 2 || state.moving || !state.viewport) {
+    // The encounter tooltip already labels the tile, so suppress the coord one.
+    if (!target || path.length < 2 || state.moving || !state.viewport || state.selectedEncounter) {
       tooltip.classList.add('d-none');
       return;
     }
@@ -1205,6 +1652,72 @@
     const y = state.viewport.y + center.y * scale;
 
     tooltip.textContent = formatCoords(target);
+    tooltip.style.left = `${Math.round(x)}px`;
+    tooltip.style.top = `${Math.round(y)}px`;
+    tooltip.classList.remove('d-none');
+  }
+
+  function showEncounterTooltip(encounter) {
+    state.selectedEncounter = encounter;
+    renderEncounterTooltip();
+    updateEncounterTooltip();
+  }
+
+  function hideEncounterTooltip() {
+    if (!state.selectedEncounter) return;
+    state.selectedEncounter = null;
+    elements.worldEncounterTooltip?.classList.add('d-none');
+  }
+
+  function renderEncounterTooltip() {
+    const tooltip = elements.worldEncounterTooltip;
+    const encounter = state.selectedEncounter;
+    if (!tooltip || !encounter) return;
+
+    const team = Array.isArray(encounter.team) ? encounter.team : [];
+    const difficulty = Math.max(1, Math.min(10, Number(encounter.difficulty) || 1));
+
+    // No stats here on purpose — the player learns the team's strength in combat.
+    const demons = team.map((member) => {
+      const url = member.imageUrl || '';
+      const color = rarityCss(member.rarity);
+      const elite = member.elite ? ' is-elite' : '';
+      return `
+        <span class="world-enc-demon${elite}" style="--rarity-color:${color}" title="${escapeAttribute(capitalize(member.rarity || 'common'))}">
+          <img src="${escapeAttribute(url)}" alt="" width="34" height="34" loading="lazy">
+        </span>
+      `;
+    }).join('');
+
+    const meter = Array.from({ length: 10 }, (item, index) => (
+      `<span class="world-enc-pip${index < difficulty ? ' is-on' : ''}"></span>`
+    )).join('');
+
+    tooltip.innerHTML = `
+      <div class="world-enc-demons">${demons}</div>
+      <div class="world-enc-difficulty">
+        <span class="world-enc-difficulty-label">Difficulty</span>
+        <span class="world-enc-meter">${meter}</span>
+        <span class="world-enc-difficulty-value">${difficulty}/10</span>
+      </div>
+    `;
+  }
+
+  function updateEncounterTooltip() {
+    const tooltip = elements.worldEncounterTooltip;
+    const encounter = state.selectedEncounter;
+    if (!tooltip) return;
+
+    if (!encounter || state.moving || !state.viewport) {
+      tooltip.classList.add('d-none');
+      return;
+    }
+
+    const center = tileCenter(encounter);
+    const scale = state.viewport.scale.x || 1;
+    const x = state.viewport.x + center.x * scale;
+    const y = state.viewport.y + (center.y - TILE_SIZE / 2) * scale;
+
     tooltip.style.left = `${Math.round(x)}px`;
     tooltip.style.top = `${Math.round(y)}px`;
     tooltip.classList.remove('d-none');
@@ -1256,6 +1769,11 @@
     state.cleanup.splice(0).forEach((cleanup) => cleanup());
     state.resizeObserver?.disconnect();
     state.resizeObserver = null;
+
+    state.app?.ticker?.remove(updatePathPulse);
+    state.tileTextures.forEach((texture) => texture?.destroy?.(true));
+    state.tileTextures.clear();
+    state.terrainBuilt = false;
 
     if (state.app) {
       state.app.destroy(true);

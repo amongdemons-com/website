@@ -2,57 +2,26 @@ const express = require('express');
 const db = require('./lib/db');
 const { requireAuth } = require('./lib/auth');
 const { getCurrentRunForPlayer } = require('./lib/runs');
+const worldMap = require('./data/map.json');
 
 const router = express.Router();
-const WORLD_MIN = -16;
-const WORLD_MAX = 16;
-const MAX_TRAVEL_STEPS = 128;
+const WORLD_MIN = worldMap.bounds?.min ?? -50;
+const WORLD_MAX = worldMap.bounds?.max ?? 50;
+const WORLD_SPAWN = worldMap.spawn || { x: 0, y: 0 };
+const MAX_TRAVEL_STEPS = 256;
 const CHALLENGE_COOLDOWN_MS = 30 * 1000;
 const challengeCooldowns = new Map();
 
-const WORLD_EVENTS = [
-  {
-    id: 'boss-ashen-gate',
-    type: 'boss',
-    title: 'Ashen Gate Warden',
-    description: 'A boss fight placeholder waits in the burned road.',
-    x: 3,
-    y: 2
-  },
-  {
-    id: 'cache-soulglass',
-    type: 'soul-cache',
-    title: 'Soul Cache',
-    description: 'A cracked cache hums with loose souls.',
-    x: -2,
-    y: 1
-  },
-  {
-    id: 'portal-low-crypt',
-    type: 'dungeon-portal',
-    title: 'Dungeon Portal',
-    description: 'A portal placeholder links back to the dungeon.',
-    x: 4,
-    y: -3
-  }
-];
-
-const WORLD_BLOCKS = [
-  { x: 1, y: 1, type: 'basalt' },
-  { x: 1, y: 2, type: 'basalt' },
-  { x: 1, y: 3, type: 'basalt' },
-  { x: 2, y: 3, type: 'basalt' },
-  { x: 3, y: 3, type: 'basalt' },
-  { x: -1, y: -2, type: 'bone-spur' },
-  { x: -2, y: -2, type: 'bone-spur' },
-  { x: -3, y: -2, type: 'bone-spur' },
-  { x: -5, y: 0, type: 'chasm' },
-  { x: -5, y: 1, type: 'chasm' },
-  { x: -5, y: 2, type: 'chasm' },
-  { x: 5, y: 1, type: 'ruin' },
-  { x: 6, y: 1, type: 'ruin' },
-  { x: 6, y: 0, type: 'ruin' }
-];
+// World elements (unpassable blocks + demon-team encounters) live in
+// data/map.json so the map can be regenerated without touching this route.
+const WORLD_BLOCKS = Array.isArray(worldMap.blocks) ? worldMap.blocks : [];
+const WORLD_ENCOUNTERS = Array.isArray(worldMap.encounters) ? worldMap.encounters : [];
+const WORLD_EVENTS = Array.isArray(worldMap.events) ? worldMap.events : [];
+const WORLD_ROADS = Array.isArray(worldMap.roads) ? worldMap.roads : [];
+const ROAD_TILES = new Set(WORLD_ROADS.map((tile) => `${tile.x},${tile.y}`));
+const BLOCKED_TILES = new Set(WORLD_BLOCKS.map((tile) => `${tile.x},${tile.y}`));
+const AMBUSH_CHANCE_OFF_ROAD = 7; // 1-in-N chance to be ambushed per step
+const AMBUSH_CHANCE_ON_ROAD = 34; // roads are patrolled — far safer to travel
 
 const MOCK_PLAYERS = [
   { id: 'mock-ember-duelist', username: 'Ember Duelist', level: 6, x: 2, y: -1 },
@@ -72,7 +41,10 @@ router.get('/world/state', requireAuth, async (req, res) => {
     bounds: { min: WORLD_MIN, max: WORLD_MAX },
     events: WORLD_EVENTS,
     blockedTiles: WORLD_BLOCKS,
+    roads: WORLD_ROADS,
+    encounters: WORLD_ENCOUNTERS,
     currentEvent: getEventAt(position.x, position.y),
+    currentEncounter: getEncounterAt(position.x, position.y),
     playersAt,
     activeTeam
   });
@@ -92,6 +64,7 @@ router.post('/world/move', requireAuth, async (req, res) => {
   res.json({
     position,
     currentEvent: getEventAt(position.x, position.y),
+    currentEncounter: getEncounterAt(position.x, position.y),
     playersAt,
     travelEvents
   });
@@ -144,12 +117,12 @@ async function getOrCreatePosition(playerId) {
     const position = normalizePosition(rows[0], { allowBlocked: true });
     if (!isBlocked(position.x, position.y)) return position;
 
-    const fallbackPosition = { x: 0, y: 0 };
+    const fallbackPosition = { ...WORLD_SPAWN };
     await savePosition(playerId, fallbackPosition);
     return fallbackPosition;
   }
 
-  const position = { x: 0, y: 0 };
+  const position = { ...WORLD_SPAWN };
   await savePosition(playerId, position);
   return position;
 }
@@ -221,6 +194,10 @@ function getEventAt(x, y) {
   return WORLD_EVENTS.find((event) => event.x === x && event.y === y) || null;
 }
 
+function getEncounterAt(x, y) {
+  return WORLD_ENCOUNTERS.find((encounter) => encounter.x === x && encounter.y === y) || null;
+}
+
 function normalizeTravelPath(value) {
   if (value === undefined) return [];
 
@@ -263,7 +240,8 @@ function validateTravelPath(currentPosition, requestedPosition, path) {
 }
 
 function resolveTravelStepEvent(position, stepIndex) {
-  const roll = (getTileNoise(position.x, position.y) + stepIndex * 17) % 9;
+  const ambushChance = isRoad(position.x, position.y) ? AMBUSH_CHANCE_ON_ROAD : AMBUSH_CHANCE_OFF_ROAD;
+  const roll = (getTileNoise(position.x, position.y) + stepIndex * 17) % ambushChance;
   return roll === 0
     ? { type: 'ambush', title: 'Ambush' }
     : { type: 'none', title: 'No Event' };
@@ -293,7 +271,11 @@ function areAdjacent(a, b) {
 }
 
 function isBlocked(x, y) {
-  return WORLD_BLOCKS.some((tile) => tile.x === x && tile.y === y);
+  return BLOCKED_TILES.has(`${x},${y}`);
+}
+
+function isRoad(x, y) {
+  return ROAD_TILES.has(`${x},${y}`);
 }
 
 function getTileNoise(x, y) {
