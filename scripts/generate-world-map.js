@@ -9,8 +9,9 @@
  *    and rarer the further out they sit.
  *  - Demon TYPE is zone-based — the map is split into angular wedges and each
  *    of the 11 types predominates in its own wedge, so areas feel themed.
- *  - Roads radiate from the center (spokes) and loop around it (rings). Travel
- *    along a road is much less likely to be ambushed (see world.js).
+ *  - Roads connect camps, lairs, shrines, and caches through meandering
+ *    orthogonal trails. Travel along a road is much less likely to be ambushed
+ *    (see world.js).
  *
  * Deterministic via a fixed seed so the map is stable across runs.
  * Usage: node scripts/generate-world-map.js
@@ -31,6 +32,7 @@ const RARITY_RANK = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'
 const FRONT_TYPE_IDS = [1, 5, 7, 8, 9];
 const BLOCK_TYPES = ['basalt', 'bone-spur', 'chasm', 'ruin'];
 const TYPE_COUNT = 11;
+const ZONE_START_RADIUS = 24;
 const ZONE_ROTATION = 0.045; // nudge wedge boundaries off the cardinal axes
 const PRIMARY_TYPE_CHANCE = 0.68; // odds a team member is the zone's signature type
 
@@ -95,13 +97,19 @@ function allowedRaritiesForMeter(meter) {
   return table[meter] || ['common'];
 }
 
-// Each demon type owns an angular wedge around the center, so a region reads
-// as "the juggernaut lands", "the poison marsh", etc.
+// Outer map bands are themed by angular demon wedges. The center stays neutral
+// so zones do not visibly start at spawn.
 function zoneTypeId(x, y) {
+  if (distanceFromCenter(x, y) < ZONE_START_RADIUS) return null;
   const angle = Math.atan2(y - SPAWN.y, x - SPAWN.x); // -PI..PI
   const normalized = (angle + Math.PI) / (2 * Math.PI); // 0..1
   const sector = Math.floor(((normalized + ZONE_ROTATION) % 1) * TYPE_COUNT) % TYPE_COUNT;
   return sector + 1;
+}
+
+function mixedTypeId(x, y) {
+  const noise = ((x * 73856093) ^ (y * 19349663) ^ 0xadefaced) >>> 0;
+  return (noise % TYPE_COUNT) + 1;
 }
 
 function teamSizeForFactor(t) {
@@ -144,7 +152,9 @@ function buildEncounter(id, x, y) {
   const rarities = allowedRaritiesForMeter(meter);
   const rarestAllowed = rarities[rarities.length - 1];
   const size = teamSizeForFactor(t);
-  const primaryType = zoneTypeId(x, y);
+  const zoneType = zoneTypeId(x, y);
+  const primaryType = zoneType || mixedTypeId(x, y);
+  const primaryTypeChance = zoneType ? PRIMARY_TYPE_CHANCE : 0.34;
 
   const members = [];
 
@@ -153,7 +163,7 @@ function buildEncounter(id, x, y) {
   members.push(buildMember(primaryType, rarestAllowed, `${id}-m1`, preferredPosition(primaryType)));
 
   for (let index = 1; index < size; index += 1) {
-    const typeId = rng() < PRIMARY_TYPE_CHANCE ? primaryType : randInt(1, TYPE_COUNT);
+    const typeId = rng() < primaryTypeChance ? primaryType : randInt(1, TYPE_COUNT);
     const rarity = pick(rarities);
     members.push(buildMember(typeId, rarity, `${id}-m${index + 1}`, preferredPosition(typeId)));
   }
@@ -178,7 +188,7 @@ function buildEncounter(id, x, y) {
     x,
     y,
     difficulty: meter,
-    zoneType: primaryType,
+    zoneType: zoneType || 0,
     keyDemon: {
       typeId: keyDemon.typeId,
       species: keyDemon.species,
@@ -189,37 +199,111 @@ function buildEncounter(id, x, y) {
   };
 }
 
-// Roads: an orthogonal network of straight avenues (a central cross plus two
-// offset spokes per axis) tied together by concentric square rings. Building it
-// only from axis-aligned segments guarantees roads never run diagonally; the
-// spacing keeps parallel roads apart, and a safety pass strips any 2x2 cluster
-// and drops anything not connected to the rest of the network.
-const ROAD_REACH = 47;
-const ROAD_SPOKES = [0, 18, -18]; // x/y offsets for the straight avenues
-const ROAD_RINGS = [12, 26, 40]; // square (Chebyshev) ring radii
+// Named landmarks give the road network and travel view anchors. Event actions
+// are still placeholders in world-ui, but these locations make the map legible.
+const LANDMARKS = [
+  {
+    x: 0,
+    y: 0,
+    type: 'landmark',
+    title: 'Hunter Camp',
+    description: 'A guarded fire at the center of the wilds.'
+  },
+  {
+    x: 10,
+    y: -5,
+    type: 'dungeon-portal',
+    title: 'Ash Gate',
+    description: 'A cracked gate humming with dungeon heat.'
+  },
+  {
+    x: -12,
+    y: 9,
+    type: 'soul-cache',
+    title: 'Moonwell Cache',
+    description: 'Cold light pools around a sealed cache.'
+  },
+  {
+    x: 27,
+    y: 16,
+    type: 'landmark',
+    title: 'Glass Shrine',
+    description: 'A splintered shrine marking the eastern flats.'
+  },
+  {
+    x: -31,
+    y: 22,
+    type: 'boss',
+    title: 'Bone Spire',
+    description: 'A tower of ribs where a champion waits.'
+  },
+  {
+    x: 35,
+    y: -31,
+    type: 'boss',
+    title: 'Cinder Keep',
+    description: 'A burnt fortress surrounded by red dust.'
+  },
+  {
+    x: -38,
+    y: -28,
+    type: 'landmark',
+    title: 'Witch Road Ruins',
+    description: 'Collapsed stones from an older road system.'
+  },
+  {
+    x: 43,
+    y: 5,
+    type: 'soul-cache',
+    title: 'Bright Hollow',
+    description: 'A soul-rich hollow watched by silent stones.'
+  },
+  {
+    x: -18,
+    y: -41,
+    type: 'dungeon-portal',
+    title: 'Sunken Door',
+    description: 'A half-buried threshold into deeper darkness.'
+  },
+  {
+    x: 4,
+    y: 39,
+    type: 'landmark',
+    title: 'Old Watch',
+    description: 'A broken lookout over the southern reaches.'
+  }
+];
+
+const ROAD_ROUTES = [
+  [SPAWN, { x: 7, y: -4 }, { x: 10, y: -5 }, { x: 20, y: -15 }, { x: 35, y: -31 }],
+  [SPAWN, { x: -7, y: -2 }, { x: -15, y: -17 }, { x: -18, y: -41 }],
+  [SPAWN, { x: -8, y: 6 }, { x: -12, y: 9 }, { x: -24, y: 18 }, { x: -31, y: 22 }],
+  [SPAWN, { x: 9, y: 5 }, { x: 21, y: 9 }, { x: 27, y: 16 }, { x: 43, y: 5 }],
+  [SPAWN, { x: 0, y: 12 }, { x: 4, y: 24 }, { x: 4, y: 39 }],
+  [{ x: -15, y: -17 }, { x: -28, y: -21 }, { x: -38, y: -28 }],
+  [{ x: -24, y: 18 }, { x: -12, y: 28 }, { x: 4, y: 39 }],
+  [{ x: 21, y: 9 }, { x: 29, y: -6 }, { x: 35, y: -31 }],
+  [{ x: -8, y: 6 }, { x: -19, y: -5 }, { x: -28, y: -21 }],
+  [{ x: 7, y: -4 }, { x: 20, y: 1 }, { x: 29, y: -6 }, { x: 43, y: 5 }]
+];
+
+const SIDE_TRAIL_COUNT = 36;
 
 function generateRoads(roadSet) {
   const tiles = new Set();
 
-  // Straight avenues — full-length vertical and horizontal lines.
-  ROAD_SPOKES.forEach((offset) => {
-    for (let i = -ROAD_REACH; i <= ROAD_REACH; i += 1) {
-      addRoadTile(tiles, offset, i); // vertical line x = offset
-      addRoadTile(tiles, i, offset); // horizontal line y = offset
+  // Meandering routes connect the named landmarks into a single road graph.
+  ROAD_ROUTES.forEach((route) => {
+    for (let index = 1; index < route.length; index += 1) {
+      carveRoadPath(tiles, route[index - 1], route[index]);
     }
   });
 
-  // Square rings loop the avenues together.
-  ROAD_RINGS.forEach((r) => {
-    for (let i = -r; i <= r; i += 1) {
-      addRoadTile(tiles, i, -r);
-      addRoadTile(tiles, i, r);
-      addRoadTile(tiles, -r, i);
-      addRoadTile(tiles, r, i);
-    }
-  });
+  // Short branches make the network feel explored rather than purely optimal.
+  addSideTrails(tiles);
 
-  stripRoadSquares(tiles); // never allow a 2x2 block of road
+  LANDMARKS.forEach((event) => addRoadTile(tiles, event.x, event.y));
+  stripRoadSquares(tiles, new Set(LANDMARKS.map((event) => tileKey(event.x, event.y))));
   keepConnectedRoads(tiles, tileKey(SPAWN.x, SPAWN.y));
 
   tiles.forEach((key) => roadSet.add(key));
@@ -229,27 +313,142 @@ function addRoadTile(tiles, x, y) {
   if (inBounds(x, y)) tiles.add(tileKey(x, y));
 }
 
-// Remove tiles until no 2x2 square is fully paved. Deterministic scan order.
-function stripRoadSquares(tiles) {
+function carveRoadPath(tiles, from, to) {
+  let current = { x: from.x, y: from.y };
+  const maxSteps = Math.abs(to.x - from.x) + Math.abs(to.y - from.y) + 90;
+  let driftDirection = pick([-1, 1]);
+  let driftBudget = 0;
+
+  addRoadTile(tiles, current.x, current.y);
+
+  for (let step = 0; step < maxSteps && !positionsEqual(current, to); step += 1) {
+    const dx = to.x - current.x;
+    const dy = to.y - current.y;
+    const horizontalBias = Math.abs(dx) / Math.max(1, Math.abs(dx) + Math.abs(dy));
+    let move;
+
+    if (driftBudget <= 0 && rng() < 0.16 && distanceBetween(current, to) > 8) {
+      driftBudget = randInt(2, 5);
+      driftDirection = pick([-1, 1]);
+    }
+
+    if (driftBudget > 0) {
+      const preferHorizontalDrift = Math.abs(dx) < Math.abs(dy);
+      move = preferHorizontalDrift
+        ? { x: driftDirection, y: 0 }
+        : { x: 0, y: driftDirection };
+      driftBudget -= 1;
+    } else if (rng() < horizontalBias) {
+      move = { x: Math.sign(dx), y: 0 };
+    } else {
+      move = { x: 0, y: Math.sign(dy) };
+    }
+
+    if (move.x === 0 && move.y === 0) {
+      move = Math.abs(dx) > Math.abs(dy)
+        ? { x: Math.sign(dx), y: 0 }
+        : { x: 0, y: Math.sign(dy) };
+    }
+
+    current = clampRoadStep({ x: current.x + move.x, y: current.y + move.y }, to);
+    addRoadTile(tiles, current.x, current.y);
+  }
+
+  while (!positionsEqual(current, to)) {
+    const dx = to.x - current.x;
+    const dy = to.y - current.y;
+    current = Math.abs(dx) >= Math.abs(dy)
+      ? { x: current.x + Math.sign(dx), y: current.y }
+      : { x: current.x, y: current.y + Math.sign(dy) };
+    addRoadTile(tiles, current.x, current.y);
+  }
+}
+
+function clampRoadStep(position, target) {
+  const margin = 2;
+  const x = Math.max(BOUNDS.min + margin, Math.min(BOUNDS.max - margin, position.x));
+  const y = Math.max(BOUNDS.min + margin, Math.min(BOUNDS.max - margin, position.y));
+
+  if (x === position.x && y === position.y) return position;
+
+  return Math.abs(target.x - x) >= Math.abs(target.y - y)
+    ? { x, y: position.y }
+    : { x: position.x, y };
+}
+
+function addSideTrails(tiles) {
+  for (let trail = 0; trail < SIDE_TRAIL_COUNT; trail += 1) {
+    const roadTiles = Array.from(tiles);
+    const startKey = pick(roadTiles);
+    const [startX, startY] = startKey.split(',').map(Number);
+    let x = startX;
+    let y = startY;
+    let dir = pick([
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 }
+    ]);
+    const length = randInt(5, 16);
+
+    for (let step = 0; step < length; step += 1) {
+      if (rng() < 0.24) {
+        dir = rng() < 0.5
+          ? { x: -dir.y, y: dir.x }
+          : { x: dir.y, y: -dir.x };
+      }
+
+      x += dir.x;
+      y += dir.y;
+      if (!inBounds(x, y) || distanceFromCenter(x, y) > MAX_DISTANCE * 0.94) break;
+      addRoadTile(tiles, x, y);
+    }
+  }
+}
+
+function positionsEqual(a, b) {
+  return Number(a?.x) === Number(b?.x) && Number(a?.y) === Number(b?.y);
+}
+
+function distanceBetween(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+// Remove paved 2x2 clumps where doing so does not break the road graph.
+function stripRoadSquares(tiles, protectedKeys = new Set()) {
   let changed = true;
   while (changed) {
     changed = false;
-    for (const key of tiles) {
+    for (const key of Array.from(tiles)) {
       const [x, y] = key.split(',').map(Number);
       const square = [tileKey(x, y), tileKey(x + 1, y), tileKey(x, y + 1), tileKey(x + 1, y + 1)];
       if (square.every((k) => tiles.has(k))) {
-        tiles.delete(square[3]);
+        const removable = square
+          .slice()
+          .reverse()
+          .find((candidate) => !protectedKeys.has(candidate) && canRemoveRoadTile(tiles, candidate));
+        if (!removable) continue;
+        tiles.delete(removable);
         changed = true;
+        break;
       }
     }
   }
 }
 
-// Keep only the 4-connected road component reachable from the start tile, so
-// every road links to the rest (no orphaned or diagonally-attached fragments).
-function keepConnectedRoads(tiles, startKey) {
-  if (!tiles.has(startKey)) return;
+function canRemoveRoadTile(tiles, key) {
+  const startKey = tileKey(SPAWN.x, SPAWN.y);
+  if (key === startKey || !tiles.has(startKey)) return false;
 
+  tiles.delete(key);
+  const seen = getConnectedRoadKeys(tiles, startKey);
+  const connected = seen.size === tiles.size;
+  tiles.add(key);
+
+  return connected;
+}
+
+function getConnectedRoadKeys(tiles, startKey) {
   const seen = new Set([startKey]);
   const queue = [startKey];
 
@@ -264,8 +463,30 @@ function keepConnectedRoads(tiles, startKey) {
     });
   }
 
+  return seen;
+}
+
+// Keep only the 4-connected road component reachable from the start tile, so
+// every road links to the rest (no orphaned or diagonally-attached fragments).
+function keepConnectedRoads(tiles, startKey) {
+  if (!tiles.has(startKey)) return;
+
+  const seen = getConnectedRoadKeys(tiles, startKey);
+
   for (const key of tiles) {
     if (!seen.has(key)) tiles.delete(key);
+  }
+}
+
+function validateConnectedRoads(roadSet) {
+  const startKey = tileKey(SPAWN.x, SPAWN.y);
+  if (!roadSet.has(startKey)) {
+    throw new Error('Road network must include the spawn tile.');
+  }
+
+  const connected = getConnectedRoadKeys(roadSet, startKey);
+  if (connected.size !== roadSet.size) {
+    throw new Error(`Road network has ${roadSet.size - connected.size} disconnected road tiles.`);
   }
 }
 
@@ -333,6 +554,7 @@ function placeBlock(blocks, occupied, roadSet, x, y, type) {
 
 function generateEncounters(occupied, roadSet) {
   const encounters = [];
+  const encounterTiles = new Set();
   let id = 1;
 
   for (let y = BOUNDS.min; y <= BOUNDS.max; y += 1) {
@@ -347,9 +569,10 @@ function generateEncounters(occupied, roadSet) {
       if (rng() > chance) continue;
 
       // Keep encounters from clumping onto adjacent tiles.
-      if (hasNeighborEncounter(occupied, x, y)) continue;
+      if (hasNearbyEncounter(encounterTiles, x, y)) continue;
 
       occupied.add(tileKey(x, y));
+      encounterTiles.add(tileKey(x, y));
       encounters.push(buildEncounter(`enc-${id}`, x, y));
       id += 1;
     }
@@ -358,15 +581,19 @@ function generateEncounters(occupied, roadSet) {
   return encounters;
 }
 
-function hasNeighborEncounter(occupied, x, y) {
+function hasNearbyEncounter(encounterTiles, x, y) {
   for (let dy = -1; dy <= 1; dy += 1) {
     for (let dx = -1; dx <= 1; dx += 1) {
       if (dx === 0 && dy === 0) continue;
-      if (occupied.has(`enc:${x + dx},${y + dy}`)) return true;
+      if (encounterTiles.has(tileKey(x + dx, y + dy))) return true;
     }
   }
-  occupied.add(`enc:${x},${y}`);
   return false;
+}
+
+function generateEvents(occupied) {
+  LANDMARKS.forEach((event) => occupied.add(tileKey(event.x, event.y)));
+  return LANDMARKS.map((event) => ({ ...event }));
 }
 
 function main() {
@@ -380,6 +607,8 @@ function main() {
 
   const roadSet = new Set();
   generateRoads(roadSet);
+  validateConnectedRoads(roadSet);
+  const events = generateEvents(occupied);
 
   const blocks = generateStructures(occupied, roadSet);
   generateBlockClusters(blocks, occupied, roadSet);
@@ -394,6 +623,7 @@ function main() {
     bounds: BOUNDS,
     spawn: SPAWN,
     roads,
+    events,
     blocks,
     encounters
   };
@@ -411,6 +641,7 @@ function main() {
 
   console.log(`Wrote ${OUTPUT_PATH}`);
   console.log(`  roads: ${roads.length}`);
+  console.log(`  events: ${events.length}`);
   console.log(`  blocks: ${blocks.length}`);
   console.log(`  encounters: ${encounters.length}`);
   console.log('  difficulty distribution:', difficultyCounts);

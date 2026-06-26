@@ -6,7 +6,9 @@
   const renderSoulAmount = window.AmongDemons.ui?.renderSoulAmount || ((value) => escapeHtml(value));
   const TILE_SIZE = 64;
   const WORLD_RADIUS = 50;
-  const DISCOVERY_RADIUS = 4;
+  const ZONE_START_RADIUS = 24;
+  const TYPE_COUNT = 11;
+  const ZONE_ROTATION = 0.045;
   const MIN_ZOOM = 0.55;
   const MAX_ZOOM = 2.15;
   const CLICK_THRESHOLD = 7;
@@ -30,10 +32,9 @@
     gridLine: 0x293028,
     selection: 0xd7b765,
     validMove: 0x6f8faa,
-    fog: 0x050604,
-    fogEdge: 0x2a3028,
     road: 0x191d16,
-    roadGlow: 0x2b2a20
+    roadGlow: 0x2b2a20,
+    landmark: 0x9fb3aa
   };
   const FALLBACK_BLOCKED_TILES = [
     { x: 1, y: 1, type: 'basalt' },
@@ -54,7 +55,8 @@
   const EVENT_COLORS = {
     boss: BOARD_COLORS.dangerousGlow,
     'soul-cache': BOARD_COLORS.soulNode,
-    'dungeon-portal': BOARD_COLORS.portalGlow
+    'dungeon-portal': BOARD_COLORS.portalGlow,
+    landmark: BOARD_COLORS.landmark
   };
   const RARITY_COLORS = {
     common: '#D1D5D8',
@@ -108,7 +110,6 @@
     travelStatus: 'idle',
     recentStepEvent: null,
     hunterRenderPosition: null,
-    discoveredTiles: new Set(),
     moving: false,
     challengeCooldowns: new Map(),
     initialCameraCentered: false,
@@ -204,8 +205,8 @@
     state.viewport = new Pixi.Container();
     state.groundLayer = new Pixi.Container(); // static terrain + obstacles
     state.gridLayer = new Pixi.Graphics();    // faint static grid
-    state.fogLayer = new Pixi.Graphics();     // fog + active tile (dynamic)
-    state.roadLayer = new Pixi.Container();    // static roads, kept above fog
+    state.fogLayer = new Pixi.Graphics();     // event glows + active tile (dynamic)
+    state.roadLayer = new Pixi.Container();    // static roads
     state.hoverLayer = new Pixi.Graphics();    // hovered-tile hint (dynamic)
     state.pathLayer = new Pixi.Graphics();
     state.pathPulse = new Pixi.Graphics();     // animated destination ring
@@ -280,7 +281,6 @@
     await loadHunterAvatar();
     await loadEncounterTextures();
 
-    addDiscoveredAround(state.position);
     buildBoard();
     renderWorld();
     renderPanels();
@@ -366,7 +366,6 @@
         };
         state.travelLog.unshift(state.recentStepEvent);
         state.currentEvent = getEventAt(step);
-        addDiscoveredAround(step);
         renderWorld();
         renderPanels();
         await delay(getStepDelay());
@@ -375,7 +374,6 @@
       state.position = normalizePosition(payload.position || state.position);
       state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
       state.currentEvent = payload.currentEvent || getEventAt(state.position);
-      addDiscoveredAround(state.position);
       clearRoutePreview('arrived', { keepLog: true });
       renderPanels();
     } catch (error) {
@@ -569,22 +567,173 @@
   //
   // The static board (ground, obstacles, roads) is painted once into sprite
   // layers built from a small cache of procedurally generated, seeded textures
-  // (deterministic per x,y so the world is stable across reloads). Fog of war,
+  // (deterministic per x,y so the world is stable across reloads). Event glows,
   // the active tile and the path preview stay on light dynamic layers.
   // ===========================================================================
 
   // Calm, dark ruined-world palette. Terrain tones are near-identical so the
   // ground reads as one quiet surface; everything else is built from a single
   // ruined-stone family so the map stays cohesive.
-  const GROUND_TONES = [0x0e120d, 0x10140f, 0x0d110c];
-  const GROUND_PATCH = 0x141811; // barely-there mottling
-  const ROAD_DIRT = [0x1b1812, 0x201c15];
-  const ROAD_EDGE = 0x0a0806;
-  const ROAD_SHEEN = 0x2a261d; // faint worn centre
-  const STONE_BASE = [0x282520, 0x302c25, 0x211e19];
-  const STONE_DARK = 0x131009;
-  const STONE_LIGHT = 0x3b372e;
-  const OBSTACLE_KINDS = ['rocks', 'rubble', 'wall', 'pillar', 'masonry'];
+  const DEFAULT_ZONE_PALETTE = {
+    ground: [0x0e120d, 0x10140f, 0x0d110c],
+    patch: 0x182018,
+    road: [0x171a14, 0x1b1d16],
+    roadEdge: 0x080a07,
+    roadSheen: 0x2b3024,
+    stone: [0x282520, 0x302c25, 0x211e19],
+    stoneDark: 0x131009,
+    stoneLight: 0x3b372e,
+    prop: 0x302c25,
+    fog: 0x050604,
+    accent: 0xe4685e
+  };
+  const ZONE_PALETTES = [
+    null,
+    {
+      ground: [0x10170f, 0x132012, 0x0c140d],
+      patch: 0x263820,
+      road: [0x1a1f15, 0x202719],
+      roadEdge: 0x080b07,
+      roadSheen: 0x304021,
+      stone: [0x293026, 0x333a2b, 0x1d241c],
+      stoneDark: 0x10160e,
+      stoneLight: 0x4a5638,
+      prop: 0x54733d,
+      fog: 0x061009,
+      accent: 0x80d697
+    },
+    {
+      ground: [0x0f1418, 0x101a20, 0x0b1116],
+      patch: 0x1c3139,
+      road: [0x171d20, 0x1a2327],
+      roadEdge: 0x070a0d,
+      roadSheen: 0x27414a,
+      stone: [0x273038, 0x303a42, 0x1b242b],
+      stoneDark: 0x0d1115,
+      stoneLight: 0x465964,
+      prop: 0x45606a,
+      fog: 0x050b10,
+      accent: 0x55ffff
+    },
+    {
+      ground: [0x101313, 0x151917, 0x0d1110],
+      patch: 0x283024,
+      road: [0x1b1c16, 0x202118],
+      roadEdge: 0x090907,
+      roadSheen: 0x3d3b24,
+      stone: [0x2f302b, 0x393a31, 0x22241f],
+      stoneDark: 0x10110e,
+      stoneLight: 0x595a47,
+      prop: 0x6d7149,
+      fog: 0x090d0b,
+      accent: 0xe8c76a
+    },
+    {
+      ground: [0x151113, 0x1b1418, 0x100d10],
+      patch: 0x2d1d25,
+      road: [0x1f171b, 0x241a1f],
+      roadEdge: 0x0c0709,
+      roadSheen: 0x462a35,
+      stone: [0x332933, 0x3d303e, 0x251f28],
+      stoneDark: 0x130e14,
+      stoneLight: 0x60465f,
+      prop: 0x6e4666,
+      fog: 0x0c070b,
+      accent: 0x9c7ac8
+    },
+    {
+      ground: [0x17120e, 0x1c1710, 0x120f0b],
+      patch: 0x3a2318,
+      road: [0x221a13, 0x271e16],
+      roadEdge: 0x0d0805,
+      roadSheen: 0x52321e,
+      stone: [0x342822, 0x402f25, 0x241d19],
+      stoneDark: 0x130d0a,
+      stoneLight: 0x634735,
+      prop: 0x7a5136,
+      fog: 0x0d0704,
+      accent: 0xe0793b
+    },
+    {
+      ground: [0x121418, 0x151822, 0x0e1016],
+      patch: 0x252c3e,
+      road: [0x191b24, 0x1e212b],
+      roadEdge: 0x080910,
+      roadSheen: 0x30385a,
+      stone: [0x292b38, 0x333546, 0x20212d],
+      stoneDark: 0x10111a,
+      stoneLight: 0x4e5270,
+      prop: 0x4a5580,
+      fog: 0x060711,
+      accent: 0x6f8faa
+    },
+    {
+      ground: [0x151515, 0x191a18, 0x101211],
+      patch: 0x2a2c25,
+      road: [0x1c1d18, 0x22231d],
+      roadEdge: 0x090a08,
+      roadSheen: 0x3b3d2d,
+      stone: [0x30302c, 0x3c3c34, 0x23231f],
+      stoneDark: 0x11110f,
+      stoneLight: 0x5c5b4e,
+      prop: 0x726f55,
+      fog: 0x090a08,
+      accent: 0x9fb3aa
+    },
+    {
+      ground: [0x0f1513, 0x111c19, 0x0b1211],
+      patch: 0x1c332d,
+      road: [0x171e1b, 0x1c2420],
+      roadEdge: 0x060a09,
+      roadSheen: 0x294e44,
+      stone: [0x25342f, 0x30403a, 0x1c2724],
+      stoneDark: 0x0d1411,
+      stoneLight: 0x45675d,
+      prop: 0x448875,
+      fog: 0x04100d,
+      accent: 0x6fd6bd
+    },
+    {
+      ground: [0x171111, 0x1e1414, 0x120d0d],
+      patch: 0x351b1b,
+      road: [0x211616, 0x271a18],
+      roadEdge: 0x0d0606,
+      roadSheen: 0x582523,
+      stone: [0x342524, 0x402b29, 0x251b1a],
+      stoneDark: 0x140b0b,
+      stoneLight: 0x66413d,
+      prop: 0x863c38,
+      fog: 0x0d0505,
+      accent: 0xe4685e
+    },
+    {
+      ground: [0x141216, 0x19151d, 0x100e13],
+      patch: 0x282037,
+      road: [0x1c1821, 0x211c29],
+      roadEdge: 0x09070d,
+      roadSheen: 0x3e315f,
+      stone: [0x302a3a, 0x3a3348, 0x241f2c],
+      stoneDark: 0x120f18,
+      stoneLight: 0x594d74,
+      prop: 0x66528c,
+      fog: 0x08060f,
+      accent: 0x9365b8
+    },
+    {
+      ground: [0x141510, 0x191b13, 0x10110d],
+      patch: 0x2a311d,
+      road: [0x1c1e17, 0x22241a],
+      roadEdge: 0x090a06,
+      roadSheen: 0x454b25,
+      stone: [0x303228, 0x3b3f2e, 0x22251c],
+      stoneDark: 0x11130d,
+      stoneLight: 0x5d643d,
+      prop: 0x7f8a3e,
+      fog: 0x090c06,
+      accent: 0xb8d45a
+    }
+  ];
+  const OBSTACLE_KINDS = ['brick-wall'];
   const GRID_COLOR = 0x39423a;
   const GROUND_VARIANTS = 6;
   const ROAD_VARIANTS = 2;
@@ -601,6 +750,18 @@
     h = Math.imul(h ^ (h >>> 13), 1274126177);
     h ^= h >>> 16;
     return (h >>> 0) / 4294967296;
+  }
+
+  function zoneTypeIdForTile(x, y) {
+    if (Math.hypot(x, y) < ZONE_START_RADIUS) return 0;
+    const angle = Math.atan2(y, x);
+    const normalized = (angle + Math.PI) / (2 * Math.PI);
+    const sector = Math.floor(((normalized + ZONE_ROTATION) % 1) * TYPE_COUNT) % TYPE_COUNT;
+    return sector + 1;
+  }
+
+  function zonePaletteForTile(x, y) {
+    return ZONE_PALETTES[zoneTypeIdForTile(x, y)] || DEFAULT_ZONE_PALETTE;
   }
 
   // Seeded RNG used while drawing a single texture variant (props scatter).
@@ -639,39 +800,34 @@
 
   // --- texture detail helpers -------------------------------------------------
 
-  // Faked soft shadow: stacked translucent ellipses (no blur filter needed).
-  function softShadow(g, cx, cy, rx, ry) {
-    for (let i = 4; i >= 1; i -= 1) {
-      g.ellipse(cx, cy, rx * (i / 4), ry * (i / 4)).fill({ color: 0x000000, alpha: 0.12 });
-    }
-  }
-
   // --- texture builders -------------------------------------------------------
 
-  function groundTexture(variant) {
-    return getTileTexture(`ground:${variant}`, (g) => {
+  function groundTexture(zone, variant) {
+    return getTileTexture(`ground:${zone}:${variant}`, (g) => {
       const rng = seededRng(variant * 911 + 7);
-      g.rect(0, 0, TILE_SIZE, TILE_SIZE).fill({ color: GROUND_TONES[variant % GROUND_TONES.length] });
+      const palette = ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE;
+      g.rect(0, 0, TILE_SIZE, TILE_SIZE).fill({ color: palette.ground[variant % palette.ground.length] });
       // A couple of very soft, low-contrast patches — enough to break up flat
       // repetition without any visible square noise. Terrain stays in back.
       for (let i = 0; i < 2; i += 1) {
         g.ellipse(rng() * TILE_SIZE, rng() * TILE_SIZE, 12 + rng() * 18, 10 + rng() * 16)
-          .fill({ color: GROUND_PATCH, alpha: 0.05 });
+          .fill({ color: palette.patch, alpha: 0.09 });
       }
     });
   }
 
   // Rare, subtle stone decals (a few small pebbles) for open ground.
-  function propTexture(variant) {
-    return getTileTexture(`prop:${variant}`, (g) => {
+  function propTexture(zone, variant) {
+    return getTileTexture(`prop:${zone}:${variant}`, (g) => {
       const rng = seededRng(variant * 521 + 29);
+      const palette = ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE;
       const count = 2 + Math.floor(rng() * 2);
       for (let i = 0; i < count; i += 1) {
         const cx = 22 + rng() * 20;
         const cy = 26 + rng() * 16;
         const r = 1.6 + rng() * 1.8;
         g.ellipse(cx, cy + 1.5, r * 1.2, r * 0.6).fill({ color: 0x000000, alpha: 0.18 });
-        g.ellipse(cx, cy, r, r * 0.8).fill({ color: STONE_BASE[i % STONE_BASE.length], alpha: 0.85 });
+        g.ellipse(cx, cy, r, r * 0.8).fill({ color: palette.prop, alpha: 0.85 });
       }
     });
   }
@@ -680,13 +836,14 @@
   // reaches toward connected sides and tiles read as one continuous path.
   // Clean worn dirt/stone path keyed by its neighbour mask (N=1, E=2, S=4, W=8)
   // so dirt reaches connected sides and tiles merge into one continuous road.
-  function roadTexture(mask, variant) {
-    return getTileTexture(`road:${mask}:${variant}`, (g) => {
+  function roadTexture(mask, variant, zone) {
+    return getTileTexture(`road:${zone}:${mask}:${variant}`, (g) => {
       const rng = seededRng(mask * 733 + variant * 197 + 11);
-      const w = 30;
+      const palette = ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE;
+      const w = 24;
       const inset = (TILE_SIZE - w) / 2;
       const half = TILE_SIZE / 2;
-      const dirt = ROAD_DIRT[variant % ROAD_DIRT.length];
+      const dirt = palette.road[variant % palette.road.length];
 
       const segs = [[inset, inset, w, w]];
       if (mask & 1) segs.push([inset, 0, w, half]);
@@ -695,52 +852,80 @@
       if (mask & 8) segs.push([0, inset, half, w]);
 
       // Soft dark edge halo, then the dirt fill.
-      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx - 2, sy - 2, sw + 4, sh + 4).fill({ color: ROAD_EDGE, alpha: 0.4 }));
-      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx, sy, sw, sh).fill({ color: dirt, alpha: 1 }));
+      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx - 2, sy - 2, sw + 4, sh + 4).fill({ color: palette.roadEdge, alpha: 0.34 }));
+      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx, sy, sw, sh).fill({ color: dirt, alpha: 0.92 }));
 
       // Faint worn sheen down the centre of the path.
-      g.ellipse(half, half, 8, 8).fill({ color: ROAD_SHEEN, alpha: 0.16 });
+      g.ellipse(half, half, 8, 8).fill({ color: palette.roadSheen, alpha: 0.18 });
 
       // Worn darker edges along the path's length (off the connecting ends, so
       // neighbouring road tiles still merge without a seam).
       if ((mask & 1) || (mask & 4) || mask === 0) {
-        g.rect(inset, 0, 2, TILE_SIZE).fill({ color: ROAD_EDGE, alpha: 0.32 });
-        g.rect(inset + w - 2, 0, 2, TILE_SIZE).fill({ color: ROAD_EDGE, alpha: 0.32 });
+        g.rect(inset, 0, 2, TILE_SIZE).fill({ color: palette.roadEdge, alpha: 0.28 });
+        g.rect(inset + w - 2, 0, 2, TILE_SIZE).fill({ color: palette.roadEdge, alpha: 0.28 });
       }
       if ((mask & 2) || (mask & 8) || mask === 0) {
-        g.rect(0, inset, TILE_SIZE, 2).fill({ color: ROAD_EDGE, alpha: 0.32 });
-        g.rect(0, inset + w - 2, TILE_SIZE, 2).fill({ color: ROAD_EDGE, alpha: 0.32 });
+        g.rect(0, inset, TILE_SIZE, 2).fill({ color: palette.roadEdge, alpha: 0.28 });
+        g.rect(0, inset + w - 2, TILE_SIZE, 2).fill({ color: palette.roadEdge, alpha: 0.28 });
       }
 
       // Just a couple of small embedded stones — no speckle clutter.
       for (let i = 0; i < 2; i += 1) {
         g.ellipse(inset + 5 + rng() * (w - 10), inset + 5 + rng() * (w - 10), 1.6 + rng(), 1.3 + rng())
-          .fill({ color: 0x2c281f, alpha: 0.5 });
+          .fill({ color: palette.stoneDark, alpha: 0.45 });
       }
     });
   }
 
-  function obstacleTexture(kind, variant) {
-    return getTileTexture(`obs:${kind}:${variant}`, (g) => {
+  function obstacleTexture(kind, variant, zone) {
+    return getTileTexture(`obs:${zone}:${kind}:${variant}`, (g) => {
       const rng = seededRng((OBSTACLE_KINDS.indexOf(kind) + 1) * 4099 + variant * 131 + 3);
-      softShadow(g, TILE_SIZE / 2, TILE_SIZE - 14, 24, 11);
-      drawObstacle(g, kind, rng);
+      const palette = ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE;
+      drawObstacle(g, kind, rng, palette);
     });
   }
 
-  // One cohesive ruined-stone family. Every kind uses the same dark stone
-  // palette and a baked shadow so blocked tiles read as solid and impassable
-  // while staying grounded in the map.
-  function drawObstacle(g, kind, rng) {
-    const tone = () => STONE_BASE[Math.floor(rng() * STONE_BASE.length)];
+  // Temporary full-square brick wall pattern for every blocked tile.
+  function drawObstacle(g, kind, rng, palette) {
+    void kind;
+    const mortar = palette.stoneDark;
+    const brickA = palette.stone[0] || 0x282520;
+    const brickB = palette.stone[1] || brickA;
+    const brickC = palette.stone[2] || brickA;
+    const brickHeight = 12;
+    const rowCount = Math.ceil(TILE_SIZE / brickHeight);
+
+    g.rect(0, 0, TILE_SIZE, TILE_SIZE).fill({ color: mortar, alpha: 0.96 });
+
+    for (let row = 0; row < rowCount; row += 1) {
+      const y = row * brickHeight + 1;
+      const offset = row % 2 === 0 ? 0 : -14;
+      for (let x = offset; x < TILE_SIZE; x += 28) {
+        const brickTone = [brickA, brickB, brickC][Math.floor(rng() * 3)];
+        const left = Math.max(1, x + 1);
+        const width = Math.min(27, TILE_SIZE - left - 1);
+        if (width <= 0) continue;
+        g.rect(left, y, width, brickHeight - 2)
+          .fill({ color: brickTone, alpha: 0.92 })
+          .stroke({ color: mortar, width: 1, alpha: 0.88 });
+      }
+    }
+
+    g.rect(0.5, 0.5, TILE_SIZE - 1, TILE_SIZE - 1)
+      .stroke({ color: mortar, width: 2, alpha: 0.92 });
+    g.rect(3, 3, TILE_SIZE - 6, 3).fill({ color: palette.stoneLight, alpha: 0.13 });
+    g.rect(3, TILE_SIZE - 6, TILE_SIZE - 6, 3).fill({ color: 0x000000, alpha: 0.18 });
+    return;
+
+    const tone = () => palette.stone[Math.floor(rng() * palette.stone.length)];
 
     if (kind === 'rocks') {
       for (let i = 0; i < 3; i += 1) {
         const cx = 18 + rng() * 28;
         const cy = 28 + rng() * 18;
         const r = 9 + rng() * 7;
-        g.ellipse(cx, cy, r, r * 0.78).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1, alpha: 0.55 });
-        g.ellipse(cx - r * 0.25, cy - r * 0.3, r * 0.38, r * 0.24).fill({ color: STONE_LIGHT, alpha: 0.22 });
+        g.ellipse(cx, cy, r, r * 0.78).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1, alpha: 0.55 });
+        g.ellipse(cx - r * 0.25, cy - r * 0.3, r * 0.38, r * 0.24).fill({ color: palette.stoneLight, alpha: 0.22 });
       }
     } else if (kind === 'rubble') {
       for (let i = 0; i < 6; i += 1) {
@@ -748,27 +933,27 @@
         const cx = 12 + rng() * 40;
         const cy = 30 + rng() * 18;
         g.poly([cx, cy, cx + s, cy - s * 0.3, cx + s * 0.8, cy + s * 0.6, cx - s * 0.2, cy + s * 0.5])
-          .fill({ color: tone() }).stroke({ color: STONE_DARK, width: 0.8, alpha: 0.5 });
+          .fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 0.8, alpha: 0.5 });
       }
     } else if (kind === 'wall') {
       // Cracked wall — a tall block beside a broken-down stub.
-      g.rect(12, 22, 22, 32).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1.4, alpha: 0.8 });
-      g.rect(34, 34, 18, 20).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1.4, alpha: 0.8 });
-      g.rect(12, 22, 22, 3).fill({ color: STONE_LIGHT, alpha: 0.18 }); // top highlight
-      g.moveTo(22, 24).lineTo(19, 38).lineTo(24, 52).stroke({ color: STONE_DARK, width: 1.2, alpha: 0.6 }); // crack
+      g.rect(12, 22, 22, 32).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1.4, alpha: 0.8 });
+      g.rect(34, 34, 18, 20).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1.4, alpha: 0.8 });
+      g.rect(12, 22, 22, 3).fill({ color: palette.stoneLight, alpha: 0.18 }); // top highlight
+      g.moveTo(22, 24).lineTo(19, 38).lineTo(24, 52).stroke({ color: palette.stoneDark, width: 1.2, alpha: 0.6 }); // crack
     } else if (kind === 'pillar') {
       // Broken pillar on a footing.
-      g.rect(22, 16, 18, 34).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1.4, alpha: 0.8 });
-      g.rect(17, 48, 28, 7).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1.2, alpha: 0.7 });
-      g.rect(22, 16, 18, 3).fill({ color: STONE_LIGHT, alpha: 0.2 });
-      for (let i = 0; i < 3; i += 1) g.rect(22, 24 + i * 8, 18, 1.4).fill({ color: STONE_DARK, alpha: 0.45 });
+      g.rect(22, 16, 18, 34).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1.4, alpha: 0.8 });
+      g.rect(17, 48, 28, 7).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1.2, alpha: 0.7 });
+      g.rect(22, 16, 18, 3).fill({ color: palette.stoneLight, alpha: 0.2 });
+      for (let i = 0; i < 3; i += 1) g.rect(22, 24 + i * 8, 18, 1.4).fill({ color: palette.stoneDark, alpha: 0.45 });
     } else { // masonry — a couple of collapsed brick courses
       for (let r = 0; r < 3; r += 1) {
         const yy = TILE_SIZE - 16 - r * 11;
         const offset = (r % 2) * 8;
         for (let bx = 0; bx < 3; bx += 1) {
           if (r >= 1 && rng() < 0.35) continue; // missing/collapsed bricks
-          g.rect(8 + bx * 16 + offset, yy, 15, 9).fill({ color: tone() }).stroke({ color: STONE_DARK, width: 1, alpha: 0.6 });
+          g.rect(8 + bx * 16 + offset, yy, 15, 9).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1, alpha: 0.6 });
         }
       }
     }
@@ -783,10 +968,10 @@
 
     const min = state.bounds.min ?? -WORLD_RADIUS;
     const max = state.bounds.max ?? WORLD_RADIUS;
-
     for (let y = min; y <= max; y += 1) {
       for (let x = min; x <= max; x += 1) {
-        const ground = makeTileSprite(groundTexture(Math.floor(hashTile(x, y, 0) * GROUND_VARIANTS)), x, y);
+        const zone = zoneTypeIdForTile(x, y);
+        const ground = makeTileSprite(groundTexture(zone, Math.floor(hashTile(x, y, 0) * GROUND_VARIANTS)), x, y);
         ground.rotation = Math.floor(hashTile(x, y, 3) * 4) * (Math.PI / 2);
         if (hashTile(x, y, 4) < 0.5) ground.scale.x = -1;
         state.groundLayer.addChild(ground);
@@ -794,12 +979,12 @@
         const blocked = getBlockedTile({ x, y });
         if (blocked) {
           const kind = OBSTACLE_KINDS[Math.floor(hashTile(x, y, 1) * OBSTACLE_KINDS.length)];
-          const obstacle = makeTileSprite(obstacleTexture(kind, Math.floor(hashTile(x, y, 2) * OBSTACLE_VARIANTS)), x, y);
+          const obstacle = makeTileSprite(obstacleTexture(kind, Math.floor(hashTile(x, y, 2) * OBSTACLE_VARIANTS), zone), x, y);
           if (hashTile(x, y, 5) < 0.5) obstacle.scale.x = -1;
           state.groundLayer.addChild(obstacle);
         } else if (!isRoadTile({ x, y }) && hashTile(x, y, 7) < PROP_CHANCE) {
           // Rare, subtle stone decal on open ground.
-          const prop = makeTileSprite(propTexture(Math.floor(hashTile(x, y, 8) * 3)), x, y);
+          const prop = makeTileSprite(propTexture(zone, Math.floor(hashTile(x, y, 8) * 3)), x, y);
           if (hashTile(x, y, 9) < 0.5) prop.scale.x = -1;
           state.groundLayer.addChild(prop);
         }
@@ -816,7 +1001,8 @@
         (isRoadTile({ x: tile.x, y: tile.y + 1 }) ? 4 : 0) |
         (isRoadTile({ x: tile.x - 1, y: tile.y }) ? 8 : 0);
       const variant = Math.floor(hashTile(tile.x, tile.y, 6) * ROAD_VARIANTS);
-      state.roadLayer.addChild(makeTileSprite(roadTexture(mask, variant), tile.x, tile.y));
+      const zone = zoneTypeIdForTile(tile.x, tile.y);
+      state.roadLayer.addChild(makeTileSprite(roadTexture(mask, variant, zone), tile.x, tile.y));
     });
 
     state.terrainBuilt = true;
@@ -854,21 +1040,8 @@
     if (!layer) return;
     layer.clear();
 
-    const min = state.bounds.min ?? -WORLD_RADIUS;
-    const max = state.bounds.max ?? WORLD_RADIUS;
 
-    // Soft, light darkness — keeps undiscovered ground readable rather than hidden.
-    for (let y = min; y <= max; y += 1) {
-      for (let x = min; x <= max; x += 1) {
-        const active = state.position.x === x && state.position.y === y;
-        const discovered = state.discoveredTiles.has(getTileKey({ x, y })) || hasEventAt({ x, y });
-        if (!discovered && !active) {
-          layer.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE).fill({ color: BOARD_COLORS.fog, alpha: 0.4 });
-        }
-      }
-    }
-
-    // Event tile glows sit above fog (events are always considered discovered).
+    // Event tile glows plus the active tile outline. No fog of war is drawn.
     state.events.forEach((event) => {
       const cx = event.x * TILE_SIZE + TILE_SIZE / 2;
       const cy = event.y * TILE_SIZE + TILE_SIZE / 2;
@@ -878,6 +1051,8 @@
         layer.circle(cx, cy, TILE_SIZE * 0.32).fill({ color: BOARD_COLORS.soulNode, alpha: 0.16 });
       } else if (event.type === 'dungeon-portal') {
         layer.circle(cx, cy, TILE_SIZE * 0.4).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.18 });
+      } else if (event.type === 'landmark') {
+        layer.circle(cx, cy, TILE_SIZE * 0.34).fill({ color: BOARD_COLORS.landmark, alpha: 0.12 });
       }
     });
 
@@ -957,6 +1132,10 @@
       } else if (event.type === 'dungeon-portal') {
         marker.circle(0, 0, 24).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.22 });
         marker.circle(0, 0, 15).fill({ color: BOARD_COLORS.portal, alpha: 0.9 }).stroke({ color, width: 3, alpha: 1 });
+      } else if (event.type === 'landmark') {
+        marker.rect(-12, -12, 24, 24).fill({ color: 0x111819, alpha: 0.9 }).stroke({ color, width: 2, alpha: 0.85 });
+        marker.moveTo(0, -17).lineTo(14, 0).lineTo(0, 17).lineTo(-14, 0).lineTo(0, -17)
+          .stroke({ color, width: 1.5, alpha: 0.72 });
       } else {
         marker.circle(0, 0, 16).fill({ color, alpha: 0.28 }).stroke({ color, width: 2, alpha: 0.9 });
         marker.circle(0, 0, 7).fill({ color: 0xbfeaf5, alpha: 0.88 });
@@ -975,13 +1154,10 @@
     layer.removeChildren().forEach((child) => child.destroy({ children: true }));
 
     state.encounters.forEach((encounter) => {
-      // Honour fog-of-war: only reveal encounters on discovered tiles.
-      if (!state.discoveredTiles.has(getTileKey(encounter))) return;
-
       const center = tileCenter(encounter);
       const ringColor = rarityHex(encounter.keyDemon?.rarity);
       const selected = state.selectedEncounter?.id === encounter.id;
-      const radius = 19;
+      const radius = 22;
 
       const node = new Pixi.Container();
       node.position.set(center.x, center.y);
@@ -1497,17 +1673,6 @@
     };
   }
 
-  function addDiscoveredAround(position) {
-    for (let y = position.y - DISCOVERY_RADIUS; y <= position.y + DISCOVERY_RADIUS; y += 1) {
-      for (let x = position.x - DISCOVERY_RADIUS; x <= position.x + DISCOVERY_RADIUS; x += 1) {
-        if (!isInBounds({ x, y })) continue;
-        if (Math.hypot(x - position.x, y - position.y) <= DISCOVERY_RADIUS + 0.35) {
-          state.discoveredTiles.add(getTileKey({ x, y }));
-        }
-      }
-    }
-  }
-
   function getEventAt(position) {
     return state.events.find((event) => event.x === position.x && event.y === position.y) || null;
   }
@@ -1572,6 +1737,7 @@
     if (type === 'boss') return 'Boss Fight';
     if (type === 'soul-cache') return 'Soul Cache';
     if (type === 'dungeon-portal') return 'Dungeon Portal';
+    if (type === 'landmark') return 'Landmark';
     return 'Event';
   }
 

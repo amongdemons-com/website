@@ -14825,6 +14825,10 @@ body.world-page > .alert {
     --event-accent: var(--ad-violet, #9c7ac8);
 }
 
+.world-event-landmark {
+    --event-accent: #9fb3aa;
+}
+
 .world-event-type {
     color: var(--event-accent);
     font-size: 0.62rem;
