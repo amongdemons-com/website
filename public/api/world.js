@@ -6,6 +6,7 @@ const { getCurrentRunForPlayer } = require('./lib/runs');
 const router = express.Router();
 const WORLD_MIN = -16;
 const WORLD_MAX = 16;
+const MAX_TRAVEL_STEPS = 128;
 const CHALLENGE_COOLDOWN_MS = 30 * 1000;
 const challengeCooldowns = new Map();
 
@@ -66,6 +67,7 @@ router.get('/world/state', requireAuth, async (req, res) => {
   ]);
 
   res.json({
+    player: getWorldPlayer(req.player),
     position,
     bounds: { min: WORLD_MIN, max: WORLD_MAX },
     events: WORLD_EVENTS,
@@ -77,14 +79,21 @@ router.get('/world/state', requireAuth, async (req, res) => {
 });
 
 router.post('/world/move', requireAuth, async (req, res) => {
-  const position = normalizePosition(req.body);
+  const currentPosition = await getOrCreatePosition(req.player.id);
+  const position = normalizePosition(req.body?.position || req.body);
+  const path = normalizeTravelPath(req.body?.path);
+  const travelEvents = path.length
+    ? validateTravelPath(currentPosition, position, path)
+    : [];
+
   await savePosition(req.player.id, position);
 
   const playersAt = await getPlayersAt(position.x, position.y, req.player.id);
   res.json({
     position,
     currentEvent: getEventAt(position.x, position.y),
-    playersAt
+    playersAt,
+    travelEvents
   });
 });
 
@@ -199,8 +208,65 @@ async function getActiveTeamSummary(playerId) {
   };
 }
 
+function getWorldPlayer(player) {
+  return {
+    id: player.id,
+    username: player.username || 'Hunter',
+    level: Math.max(1, Number(player.level) || 1),
+    profileDemonImageUrl: player.profileDemonImageUrl || null
+  };
+}
+
 function getEventAt(x, y) {
   return WORLD_EVENTS.find((event) => event.x === x && event.y === y) || null;
+}
+
+function normalizeTravelPath(value) {
+  if (value === undefined) return [];
+
+  if (!Array.isArray(value)) {
+    throwWorldError('Travel path must be an array of coordinates.');
+  }
+
+  if (value.length > MAX_TRAVEL_STEPS + 1) {
+    throwWorldError(`Travel path cannot exceed ${MAX_TRAVEL_STEPS} steps.`);
+  }
+
+  return value.map((position, index) => normalizePosition(position, { allowBlocked: index === 0 }));
+}
+
+function validateTravelPath(currentPosition, requestedPosition, path) {
+  if (path.length < 2) {
+    throwWorldError('Travel path must include a start and destination.');
+  }
+
+  if (!positionsEqual(path[0], currentPosition)) {
+    throwWorldError('World position changed. Refresh the map and try again.', 409);
+  }
+
+  if (!positionsEqual(path[path.length - 1], requestedPosition)) {
+    throwWorldError('Travel path destination does not match requested position.');
+  }
+
+  path.slice(1).forEach((position, index) => {
+    const previous = path[index];
+    if (!areAdjacent(previous, position)) {
+      throwWorldError('Travel path must move one tile at a time.');
+    }
+  });
+
+  // TODO: Replace deterministic placeholder rolls with persisted world-event results.
+  return path.slice(1).map((position, index) => ({
+    ...resolveTravelStepEvent(position, index + 1),
+    position
+  }));
+}
+
+function resolveTravelStepEvent(position, stepIndex) {
+  const roll = (getTileNoise(position.x, position.y) + stepIndex * 17) % 9;
+  return roll === 0
+    ? { type: 'ambush', title: 'Ambush' }
+    : { type: 'none', title: 'No Event' };
 }
 
 function normalizePosition(value = {}, options = {}) {
@@ -208,33 +274,45 @@ function normalizePosition(value = {}, options = {}) {
   const y = normalizeCoordinate(value.y);
 
   if (x < WORLD_MIN || x > WORLD_MAX || y < WORLD_MIN || y > WORLD_MAX) {
-    const error = new Error(`World coordinates must be between ${WORLD_MIN} and ${WORLD_MAX}.`);
-    error.status = 400;
-    throw error;
+    throwWorldError(`World coordinates must be between ${WORLD_MIN} and ${WORLD_MAX}.`);
   }
 
   if (!options.allowBlocked && isBlocked(x, y)) {
-    const error = new Error('That world tile is blocked.');
-    error.status = 400;
-    throw error;
+    throwWorldError('That world tile is blocked.');
   }
 
   return { x, y };
+}
+
+function positionsEqual(a, b) {
+  return Number(a?.x) === Number(b?.x) && Number(a?.y) === Number(b?.y);
+}
+
+function areAdjacent(a, b) {
+  return Math.abs(Number(a.x) - Number(b.x)) + Math.abs(Number(a.y) - Number(b.y)) === 1;
 }
 
 function isBlocked(x, y) {
   return WORLD_BLOCKS.some((tile) => tile.x === x && tile.y === y);
 }
 
+function getTileNoise(x, y) {
+  return ((x * 73856093) ^ (y * 19349663)) >>> 0;
+}
+
 function normalizeCoordinate(value) {
   const number = Number(value);
   if (!Number.isInteger(number)) {
-    const error = new Error('World coordinates must be integers.');
-    error.status = 400;
-    throw error;
+    throwWorldError('World coordinates must be integers.');
   }
 
   return number;
+}
+
+function throwWorldError(message, status = 400) {
+  const error = new Error(message);
+  error.status = status;
+  throw error;
 }
 
 module.exports = router;

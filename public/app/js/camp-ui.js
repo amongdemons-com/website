@@ -465,7 +465,7 @@
 
     if (!run) {
       setText(elements.runActionLabel, 'Dungeon');
-      setText(elements.dungeonActionEyebrow, 'Enter');
+      setText(elements.dungeonActionEyebrow, 'Portal to');
       setText(elements.primaryDungeonMeta, 'Descend into the depths and face the unknown.');
       setText(elements.playerSubtitle, 'No active run. Camp reserves are standing by.');
       setText(elements.runStatus, 'Ready');
@@ -488,8 +488,8 @@
     const payout = getExtractPayout(run);
     const runSummary = getRunSummary(run);
 
-    setText(elements.runActionLabel, isDefeated ? 'Resolve Run' : 'Dungeon');
-    setText(elements.dungeonActionEyebrow, isDefeated ? 'Run Defeated' : (isRecruiting ? 'Continue' : 'Enter'));
+    setText(elements.runActionLabel, 'Dungeon');
+    setText(elements.dungeonActionEyebrow, 'Portal to');
     setText(elements.primaryDungeonMeta, runSummary);
     setText(elements.playerSubtitle, isDefeated
       ? 'The last breach collapsed. Resolve it before the next climb.'

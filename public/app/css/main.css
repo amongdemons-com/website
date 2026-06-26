@@ -8325,7 +8325,8 @@ body.camp-page > .alert {
     -webkit-line-clamp: 2;
 }
 
-.camp-action-dungeon {
+.camp-action-dungeon,
+.camp-action-world {
     border-color: rgba(255,154,69,0.48);
     background:
         radial-gradient(circle at 12% 18%, rgba(255,110,47,0.22), transparent 72%),
@@ -8337,7 +8338,8 @@ body.camp-page > .alert {
         inset 0 0 0 1px rgba(255,255,255,0.04);
 }
 
-.camp-action-dungeon .camp-action-body strong {
+.camp-action-dungeon .camp-action-body strong,
+.camp-action-world .camp-action-body strong {
     color: #ffe4aa;
 }
 
@@ -14435,6 +14437,31 @@ body.world-page > .alert {
     color: var(--ad-gold, #e8c76a);
 }
 
+.world-target-tooltip {
+    position: absolute;
+    z-index: 4;
+    width: max-content;
+    max-width: min(20rem, 54vw);
+    border: 1px solid rgba(232,199,106,0.34);
+    border-radius: 8px;
+    background: rgba(3,9,11,0.96);
+    color: #f4f8f7;
+    padding: 0.55rem 0.65rem;
+    box-shadow: 0 16px 34px rgba(0,0,0,0.42);
+    font-size: 0.74rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    text-transform: none;
+    white-space: pre-line;
+    transform: translate(-50%, -100%) translateY(-0.48rem);
+    pointer-events: none;
+}
+
+.world-target-tooltip::after {
+    display: none;
+}
+
 .world-loading {
     position: absolute;
     inset: 0;
@@ -14742,29 +14769,6 @@ body.world-page > .alert {
 .world-travel-panel {
     display: grid;
     gap: 0.5rem;
-}
-
-.world-route-summary {
-    display: grid;
-    gap: 0.18rem;
-    border: 1px solid rgba(111,214,189,0.16);
-    border-radius: 6px;
-    background: rgba(111,214,189,0.055);
-    padding: 0.52rem;
-}
-
-.world-route-summary strong {
-    color: #f8fbf9;
-    font-size: 0.78rem;
-    font-weight: 900;
-    line-height: 1;
-}
-
-.world-route-summary small {
-    color: rgba(220,232,229,0.58);
-    font-size: 0.66rem;
-    font-weight: 800;
-    line-height: 1.2;
 }
 
 .world-travel-log {

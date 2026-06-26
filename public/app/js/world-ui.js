@@ -11,21 +11,27 @@
   const MAX_ZOOM = 2.15;
   const CLICK_THRESHOLD = 7;
   const STEP_DURATION_MS = 180;
+  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
   const BOARD_COLORS = {
-    background: 0x0e0b14,
-    tileNormal: 0x2a2733,
-    tileNormalAlt: 0x252230,
-    wall: 0x171022,
-    wallEdge: 0x3a2150,
-    dangerous: 0x4a1d0e,
-    dangerousGlow: 0xff6a2a,
-    soulNode: 0x9fd8e6,
-    portal: 0x8e44ad,
-    portalGlow: 0xc471ed,
-    gridLine: 0x000000,
-    selection: 0xffe9a8,
-    validMove: 0x4fd1ff,
-    fog: 0x06040c
+    background: 0x070806,
+    tileNormal: 0x121814,
+    tileNormalAlt: 0x181e18,
+    active: 0x2a3025,
+    wall: 0x35281f,
+    wallEdge: 0x120d0a,
+    obstacle: 0x35281f,
+    obstacleInner: 0x241b16,
+    obstacleEdge: 0x120d0a,
+    dangerous: 0x4b1716,
+    dangerousGlow: 0xb65b3f,
+    soulNode: 0xc7b56f,
+    portal: 0x46324a,
+    portalGlow: 0x80638a,
+    gridLine: 0x293028,
+    selection: 0xd7b765,
+    validMove: 0x6f8faa,
+    fog: 0x050604,
+    fogEdge: 0x2a3028
   };
   const FALLBACK_BLOCKED_TILES = [
     { x: 1, y: 1, type: 'basalt' },
@@ -56,12 +62,16 @@
     pathLayer: null,
     markerLayer: null,
     hunterLayer: null,
+    hunterFrame: null,
+    hunterAvatar: null,
+    hunterAvatarTexture: null,
     effectLayer: null,
     resizeObserver: null,
     cleanup: [],
     position: { x: 0, y: 0 },
     bounds: { min: -WORLD_RADIUS, max: WORLD_RADIUS },
     events: [],
+    player: null,
     playersAt: [],
     activeTeam: null,
     currentEvent: null,
@@ -76,7 +86,10 @@
     moving: false,
     challengeCooldowns: new Map(),
     initialCameraCentered: false,
-    pointer: null
+    pointer: null,
+    activePointers: new Map(),
+    pinch: null,
+    gestureWasPinch: false
   };
 
   const elements = {};
@@ -109,6 +122,7 @@
       'worldPositionButton',
       'worldPositionChip',
       'worldZoomChip',
+      'worldTargetTooltip',
       'worldTeamSummary',
       'worldEncounterList',
       'worldEventPanel',
@@ -149,7 +163,7 @@
     await app.init({
       width: size.width,
       height: size.height,
-      background: '#0e0b14',
+      background: '#040a0d',
       antialias: true,
       autoDensity: true,
       resolution: Math.min(window.devicePixelRatio || 1, 2)
@@ -164,8 +178,14 @@
     state.tileLayer = new Pixi.Graphics();
     state.pathLayer = new Pixi.Graphics();
     state.markerLayer = new Pixi.Container();
-    state.hunterLayer = new Pixi.Graphics();
+    state.hunterLayer = new Pixi.Container();
+    state.hunterFrame = new Pixi.Graphics();
+    state.hunterAvatar = new Pixi.Sprite(Pixi.Texture.EMPTY);
     state.effectLayer = new Pixi.Graphics();
+
+    state.hunterAvatar.anchor.set(0.5);
+    state.hunterLayer.addChild(state.hunterFrame);
+    state.hunterLayer.addChild(state.hunterAvatar);
 
     state.viewport.addChild(state.tileLayer);
     state.viewport.addChild(state.pathLayer);
@@ -206,10 +226,12 @@
     state.position = normalizePosition(payload.position);
     state.bounds = payload.bounds || state.bounds;
     state.events = Array.isArray(payload.events) ? payload.events : [];
+    state.player = payload.player || state.player;
     state.blockedTiles = Array.isArray(payload.blockedTiles) ? payload.blockedTiles : FALLBACK_BLOCKED_TILES;
     state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
     state.activeTeam = payload.activeTeam || null;
     state.currentEvent = payload.currentEvent || getEventAt(state.position);
+    await loadHunterAvatar();
 
     addDiscoveredAround(state.position);
     renderWorld();
@@ -218,39 +240,6 @@
     if (!state.initialCameraCentered) {
       centerOnHunter();
       state.initialCameraCentered = true;
-    }
-  }
-
-  async function commitHunterPosition(position, previousPosition) {
-    const nextPosition = normalizePosition(position);
-    if (!isInBounds(nextPosition)) return;
-
-    state.position = nextPosition;
-    state.currentEvent = getEventAt(nextPosition);
-    addDiscoveredAround(nextPosition);
-    renderWorld();
-    renderPanels();
-
-    try {
-      const payload = await api('/api/world/move', {
-        method: 'POST',
-        body: nextPosition
-      });
-
-      state.position = normalizePosition(payload.position || nextPosition);
-      state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
-      state.currentEvent = payload.currentEvent || getEventAt(state.position);
-      addDiscoveredAround(state.position);
-      renderWorld();
-      renderPanels();
-    } catch (error) {
-      if (previousPosition) {
-        state.position = previousPosition;
-        state.currentEvent = getEventAt(previousPosition);
-        renderWorld();
-        renderPanels();
-      }
-      handleAuthError(error);
     }
   }
 
@@ -296,7 +285,6 @@
     const path = (state.selectedPath || []).slice();
     if (state.moving || path.length < 2) return;
 
-    const previousPosition = state.position;
     state.moving = true;
     state.travelStatus = 'moving';
     state.travelLog = [];
@@ -305,6 +293,9 @@
     renderWorld();
 
     try {
+      const payload = await commitTravelPath(path);
+      const stepEvents = getTravelStepEvents(payload, path);
+
       for (let index = 1; index < path.length; index += 1) {
         const step = path[index];
         state.selectedPath = path.slice(index - 1);
@@ -312,7 +303,7 @@
         await animateHunterStep(step);
 
         state.selectedPath = path.slice(index);
-        const stepEvent = resolveStepEvent(step, index);
+        const stepEvent = stepEvents[index - 1] || { type: 'none', title: 'No Event', position: step };
         state.recentStepEvent = {
           ...stepEvent,
           position: step
@@ -325,14 +316,41 @@
         await delay(getStepDelay());
       }
 
-      const finalPosition = state.position;
+      state.position = normalizePosition(payload.position || state.position);
+      state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
+      state.currentEvent = payload.currentEvent || getEventAt(state.position);
+      addDiscoveredAround(state.position);
       clearRoutePreview('arrived', { keepLog: true });
-      await commitHunterPosition(finalPosition, previousPosition);
+      renderPanels();
+    } catch (error) {
+      if (error.status !== 401) {
+        clearRoutePreview('idle');
+      }
+      handleAuthError(error);
     } finally {
       state.moving = false;
       renderWorld();
       renderPanels();
     }
+  }
+
+  function commitTravelPath(path) {
+    return api('/api/world/move', {
+      method: 'POST',
+      body: {
+        position: path[path.length - 1],
+        path
+      }
+    });
+  }
+
+  function getTravelStepEvents(payload, path) {
+    const events = Array.isArray(payload?.travelEvents) ? payload.travelEvents : [];
+    return path.slice(1).map((step, index) => ({
+      type: events[index]?.type || 'none',
+      title: events[index]?.title || 'No Event',
+      position: normalizePosition(events[index]?.position || step)
+    }));
   }
 
   function clearRoutePreview(status = 'idle', options = {}) {
@@ -430,14 +448,6 @@
     });
   }
 
-  function resolveStepEvent(position, stepIndex) {
-    // TODO: Replace this deterministic placeholder with server-side travel events.
-    const roll = (getTileNoise(position.x, position.y) + stepIndex * 17) % 9;
-    return roll === 0
-      ? { type: 'ambush', title: 'Ambush' }
-      : { type: 'none', title: 'No Event' };
-  }
-
   async function challengePlayer(targetPlayerId, button) {
     if (!targetPlayerId) return;
 
@@ -507,21 +517,21 @@
       for (let x = min; x <= max; x += 1) {
         const tileKey = getTileKey({ x, y });
         const blockedTile = getBlockedTile({ x, y });
+        const blockedStyle = blockedTile ? getBlockedTileStyle(blockedTile) : null;
         const tileEvent = getEventAt({ x, y });
         const discovered = state.discoveredTiles.has(tileKey) || hasEventAt({ x, y });
         const active = state.position.x === x && state.position.y === y;
         const color = blockedTile
-          ? BOARD_COLORS.wall
+          ? blockedStyle.fill
           : active
-            ? 0x343142
+            ? BOARD_COLORS.active
             : getBoardTileColor(x, y);
 
         layer.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
           .fill({ color, alpha: blockedTile ? 1 : (discovered || active ? 0.96 : 0.9) });
 
         if (blockedTile) {
-          layer.rect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4)
-            .stroke({ color: BOARD_COLORS.wallEdge, width: 3, alpha: 0.8 });
+          drawBlockedTile(layer, x, y, blockedStyle);
           continue;
         }
 
@@ -538,7 +548,9 @@
 
         if (!discovered && !active) {
           layer.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-            .fill({ color: BOARD_COLORS.fog, alpha: 0.36 });
+            .fill({ color: BOARD_COLORS.fog, alpha: 0.66 });
+          layer.rect(x * TILE_SIZE + 1, y * TILE_SIZE + 1, TILE_SIZE - 2, TILE_SIZE - 2)
+            .stroke({ color: BOARD_COLORS.fogEdge, width: 1, alpha: 0.28 });
         }
       }
     }
@@ -561,23 +573,22 @@
     const path = state.selectedPath || [];
     if (path.length < 2) return;
 
-    const pathAlpha = state.moving ? 0.26 : 0.42;
-    const centers = path.map(tileCenter);
-    layer.moveTo(centers[0].x, centers[0].y);
-    centers.slice(1).forEach((point) => layer.lineTo(point.x, point.y));
-    layer.stroke({ color: BOARD_COLORS.validMove, width: 4, alpha: pathAlpha });
-
-    path.slice(1, -1).forEach((tile) => {
+    path.forEach((tile, index) => {
       const center = tileCenter(tile);
+      const isTarget = index === path.length - 1;
       layer.rect(center.x - TILE_SIZE / 2 + 2, center.y - TILE_SIZE / 2 + 2, TILE_SIZE - 4, TILE_SIZE - 4)
-        .fill({ color: BOARD_COLORS.validMove, alpha: state.moving ? 0.08 : 0.14 })
-        .stroke({ color: BOARD_COLORS.validMove, width: 2, alpha: state.moving ? 0.32 : 0.66 });
+        .fill({ color: BOARD_COLORS.validMove, alpha: isTarget ? (state.moving ? 0.12 : 0.24) : (state.moving ? 0.08 : 0.14) })
+        .stroke({ color: BOARD_COLORS.validMove, width: isTarget ? 3 : 2, alpha: isTarget ? (state.moving ? 0.46 : 0.9) : (state.moving ? 0.32 : 0.66) });
     });
+  }
 
-    const target = tileCenter(path[path.length - 1]);
-    layer.rect(target.x - 18, target.y - 18, 36, 36)
-      .stroke({ color: BOARD_COLORS.selection, width: 3, alpha: state.moving ? 0.32 : 0.86 });
-    layer.circle(target.x, target.y, 5).fill({ color: BOARD_COLORS.selection, alpha: state.moving ? 0.28 : 0.76 });
+  function drawBlockedTile(layer, x, y, style) {
+    const left = x * TILE_SIZE;
+    const top = y * TILE_SIZE;
+
+    layer.rect(left + 3, top + 3, TILE_SIZE - 6, TILE_SIZE - 6)
+      .fill({ color: style.inner, alpha: 0.88 })
+      .stroke({ color: style.edge, width: 4, alpha: 0.98 });
   }
 
   function drawMarkers() {
@@ -615,18 +626,33 @@
 
   function drawHunter() {
     const layer = state.hunterLayer;
-    if (!layer) return;
+    const frame = state.hunterFrame;
+    const avatar = state.hunterAvatar;
+    if (!layer || !frame) return;
 
     const center = tileCenter(state.hunterRenderPosition || state.position);
-    layer.clear();
-    layer.circle(center.x, center.y, 19)
-      .fill({ color: 0x050b0e, alpha: 0.96 })
-      .stroke({ color: 0xf1b35f, width: 3, alpha: 0.95 });
-    layer.circle(center.x, center.y, 9)
-      .fill({ color: 0x6fd6bd, alpha: 0.95 })
-      .stroke({ color: 0xf8fbf9, width: 1, alpha: 0.64 });
-    layer.circle(center.x, center.y, 27)
-      .stroke({ color: 0xe78a55, width: 1, alpha: 0.34 });
+    const hasAvatar = Boolean(avatar && state.hunterAvatarTexture);
+
+    frame.clear();
+
+    if (hasAvatar) {
+      frame.rect(center.x - 20, center.y - 20, 40, 40)
+        .fill({ color: 0x050b0e, alpha: 0.96 })
+        .stroke({ color: BOARD_COLORS.selection, width: 2, alpha: 0.92 });
+      avatar.texture = state.hunterAvatarTexture;
+      avatar.visible = true;
+      avatar.position.set(center.x, center.y);
+      avatar.width = 34;
+      avatar.height = 34;
+    } else {
+      if (avatar) avatar.visible = false;
+      frame.rect(center.x - 20, center.y - 20, 40, 40)
+        .fill({ color: 0x050b0e, alpha: 0.96 })
+        .stroke({ color: BOARD_COLORS.selection, width: 2, alpha: 0.92 });
+      frame.circle(center.x, center.y, 9)
+        .fill({ color: 0x6fd6bd, alpha: 0.95 })
+        .stroke({ color: 0xf8fbf9, width: 1, alpha: 0.64 });
+    }
   }
 
   function drawStepEffect() {
@@ -745,18 +771,12 @@
     if (!elements.worldTravelPanel) return;
 
     const logs = state.travelLog || [];
-    const target = state.selectedTarget;
-    const pathLength = Math.max(0, (state.selectedPath || []).length - 1);
-    const statusLabel = getTravelStatusLabel();
-    const routeMeta = target && pathLength
-      ? `<div class="world-route-summary"><strong>${escapeHtml(statusLabel)}</strong><small>${formatCoords(target)} / ${formatNumber(pathLength)} steps</small></div>`
-      : `<p class="world-empty-text">${escapeHtml(statusLabel)}</p>`;
+    if (!logs.length) {
+      elements.worldTravelPanel.innerHTML = '<p class="world-empty-text">No travel yet.</p>';
+      return;
+    }
 
-    const logMarkup = logs.length
-      ? `<div class="world-travel-log">${logs.slice(0, 5).map(renderTravelLogItem).join('')}</div>`
-      : '';
-
-    elements.worldTravelPanel.innerHTML = `${routeMeta}${logMarkup}`;
+    elements.worldTravelPanel.innerHTML = `<div class="world-travel-log">${logs.slice(0, 5).map(renderTravelLogItem).join('')}</div>`;
   }
 
   function renderTravelLogItem(entry) {
@@ -770,14 +790,6 @@
         <small>${formatCoords(entry.position)}</small>
       </article>
     `;
-  }
-
-  function getTravelStatusLabel() {
-    if (state.travelStatus === 'preview') return 'Route Preview';
-    if (state.travelStatus === 'moving') return 'Traveling';
-    if (state.travelStatus === 'arrived') return 'Arrived';
-    if (state.travelStatus === 'blocked') return 'Blocked';
-    return 'No travel yet.';
   }
 
   function getEventAction(event) {
@@ -797,23 +809,48 @@
   }
 
   function onPointerDown(event) {
-    if (event.button !== 0) return;
+    if (event.button !== 0 && event.pointerType !== 'touch') return;
 
     const canvas = event.currentTarget;
     canvas.setPointerCapture?.(event.pointerId);
-    state.pointer = {
+    const pointer = {
       id: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
+      clientX: event.clientX,
+      clientY: event.clientY,
       lastX: event.clientX,
       lastY: event.clientY,
       dragging: false
     };
+
+    state.activePointers.set(event.pointerId, pointer);
+
+    if (state.activePointers.size >= 2) {
+      state.pointer = null;
+      state.gestureWasPinch = true;
+      state.pinch = getPinchState();
+      return;
+    }
+
+    state.pointer = pointer;
   }
 
   function onPointerMove(event) {
+    const activePointer = state.activePointers.get(event.pointerId);
+    if (!activePointer || !state.viewport) return;
+
+    activePointer.clientX = event.clientX;
+    activePointer.clientY = event.clientY;
+
+    if (state.activePointers.size >= 2) {
+      event.preventDefault();
+      updatePinchZoom();
+      return;
+    }
+
     const pointer = state.pointer;
-    if (!pointer || pointer.id !== event.pointerId || !state.viewport) return;
+    if (!pointer || pointer.id !== event.pointerId) return;
 
     const dx = event.clientX - pointer.lastX;
     const dy = event.clientY - pointer.lastY;
@@ -836,15 +873,28 @@
 
   function onPointerUp(event) {
     const pointer = state.pointer;
-    if (!pointer || pointer.id !== event.pointerId) return;
+    const wasClick = pointer && pointer.id === event.pointerId && !pointer.dragging && !state.gestureWasPinch;
 
     event.currentTarget.releasePointerCapture?.(event.pointerId);
+    state.activePointers.delete(event.pointerId);
 
-    if (!pointer.dragging) {
+    if (wasClick) {
       const tile = screenToTile(event.clientX, event.clientY);
       if (tile && isInBounds(tile)) {
         handleMapTileClick(tile);
       }
+    }
+
+    if (state.activePointers.size >= 2) {
+      state.pointer = null;
+      state.pinch = getPinchState();
+      return;
+    }
+
+    if (state.activePointers.size === 1) {
+      state.pinch = null;
+      state.pointer = getRemainingPointer({ dragging: true });
+      return;
     }
 
     clearPointer();
@@ -852,13 +902,72 @@
 
   function onPointerLeave(event) {
     const pointer = state.pointer;
-    if (pointer?.dragging) {
+    if (pointer?.dragging || state.gestureWasPinch || state.activePointers.has(event.pointerId)) {
       clearPointer();
     }
   }
 
   function clearPointer() {
     state.pointer = null;
+    state.activePointers.clear();
+    state.pinch = null;
+    state.gestureWasPinch = false;
+  }
+
+  function getRemainingPointer(options = {}) {
+    const pointer = Array.from(state.activePointers.values())[0] || null;
+    if (!pointer) return null;
+
+    return {
+      ...pointer,
+      startX: pointer.clientX,
+      startY: pointer.clientY,
+      lastX: pointer.clientX,
+      lastY: pointer.clientY,
+      dragging: Boolean(options.dragging)
+    };
+  }
+
+  function getPinchState() {
+    const pinch = getPinchMetrics();
+    if (!pinch || !state.viewport) return null;
+
+    const scale = state.viewport.scale.x || 1;
+    return {
+      distance: pinch.distance,
+      scale,
+      worldCenter: {
+        x: (pinch.center.x - state.viewport.x) / scale,
+        y: (pinch.center.y - state.viewport.y) / scale
+      }
+    };
+  }
+
+  function updatePinchZoom() {
+    const pinch = getPinchMetrics();
+    if (!pinch || !state.pinch || !state.viewport) return;
+
+    const ratio = pinch.distance / Math.max(1, state.pinch.distance);
+    const nextScale = clamp(state.pinch.scale * ratio, MIN_ZOOM, MAX_ZOOM);
+
+    state.viewport.scale.set(nextScale);
+    state.viewport.x = pinch.center.x - state.pinch.worldCenter.x * nextScale;
+    state.viewport.y = pinch.center.y - state.pinch.worldCenter.y * nextScale;
+    updateCameraStatus();
+  }
+
+  function getPinchMetrics() {
+    const points = Array.from(state.activePointers.values()).slice(0, 2).map((pointer) => getCanvasPoint(pointer.clientX, pointer.clientY));
+    if (points.length < 2) return null;
+
+    const [a, b] = points;
+    return {
+      distance: Math.hypot(a.x - b.x, a.y - b.y),
+      center: {
+        x: (a.x + b.x) / 2,
+        y: (a.y + b.y) / 2
+      }
+    };
   }
 
   function onWheel(event) {
@@ -866,21 +975,25 @@
 
     event.preventDefault();
 
-    const canvas = state.app?.canvas || state.app?.view;
-    const rect = canvas.getBoundingClientRect();
-    const screenX = event.clientX - rect.left;
-    const screenY = event.clientY - rect.top;
     const oldScale = state.viewport.scale.x || 1;
     const nextScale = clamp(oldScale * (event.deltaY > 0 ? 0.9 : 1.1), MIN_ZOOM, MAX_ZOOM);
 
     if (nextScale === oldScale) return;
 
-    const worldX = (screenX - state.viewport.x) / oldScale;
-    const worldY = (screenY - state.viewport.y) / oldScale;
+    zoomAtClientPoint(event.clientX, event.clientY, nextScale);
+  }
+
+  function zoomAtClientPoint(clientX, clientY, nextScale) {
+    if (!state.viewport) return;
+
+    const screenPoint = getCanvasPoint(clientX, clientY);
+    const oldScale = state.viewport.scale.x || 1;
+    const worldX = (screenPoint.x - state.viewport.x) / oldScale;
+    const worldY = (screenPoint.y - state.viewport.y) / oldScale;
 
     state.viewport.scale.set(nextScale);
-    state.viewport.x = screenX - worldX * nextScale;
-    state.viewport.y = screenY - worldY * nextScale;
+    state.viewport.x = screenPoint.x - worldX * nextScale;
+    state.viewport.y = screenPoint.y - worldY * nextScale;
     updateCameraStatus();
   }
 
@@ -893,6 +1006,7 @@
     if (!state.initialCameraCentered) {
       centerOnHunter();
     }
+    updateCameraStatus();
   }
 
   function setZoom(value, options = {}) {
@@ -941,17 +1055,26 @@
   }
 
   function screenToTile(clientX, clientY) {
-    const canvas = state.app?.canvas || state.app?.view;
-    if (!canvas || !state.viewport) return null;
+    if (!state.viewport) return null;
 
-    const rect = canvas.getBoundingClientRect();
+    const point = getCanvasPoint(clientX, clientY);
     const scale = state.viewport.scale.x || 1;
-    const worldX = (clientX - rect.left - state.viewport.x) / scale;
-    const worldY = (clientY - rect.top - state.viewport.y) / scale;
+    const worldX = (point.x - state.viewport.x) / scale;
+    const worldY = (point.y - state.viewport.y) / scale;
 
     return {
       x: Math.floor(worldX / TILE_SIZE),
       y: Math.floor(worldY / TILE_SIZE)
+    };
+  }
+
+  function getCanvasPoint(clientX, clientY) {
+    const canvas = state.app?.canvas || state.app?.view;
+    const rect = canvas?.getBoundingClientRect?.();
+
+    return {
+      x: clientX - (rect?.left || 0),
+      y: clientY - (rect?.top || 0)
     };
   }
 
@@ -980,6 +1103,14 @@
 
   function isBlocked(position) {
     return Boolean(getBlockedTile(position));
+  }
+
+  function getBlockedTileStyle() {
+    return {
+      fill: BOARD_COLORS.obstacle,
+      inner: BOARD_COLORS.obstacleInner,
+      edge: BOARD_COLORS.obstacleEdge
+    };
   }
 
   function positionsEqual(a, b) {
@@ -1014,10 +1145,6 @@
     return (x + y) % 2 === 0 ? BOARD_COLORS.tileNormal : BOARD_COLORS.tileNormalAlt;
   }
 
-  function getTileNoise(x, y) {
-    return ((x * 73856093) ^ (y * 19349663)) >>> 0;
-  }
-
   function getEventLabel(type) {
     if (type === 'boss') return 'Boss Fight';
     if (type === 'soul-cache') return 'Soul Cache';
@@ -1043,6 +1170,44 @@
   function updateCameraStatus() {
     const scale = state.viewport?.scale.x || 1;
     setText(elements.worldZoomChip, `${Math.round(scale * 100)}%`);
+    updateTargetTooltip();
+  }
+
+  async function loadHunterAvatar() {
+    const Pixi = window.PIXI;
+    if (!Pixi) return;
+
+    const imageUrl = state.player?.profileDemonImageUrl || DEFAULT_PROFILE_IMAGE_URL;
+
+    try {
+      state.hunterAvatarTexture = Pixi.Assets
+        ? await Pixi.Assets.load(imageUrl)
+        : Pixi.Texture.from(imageUrl);
+    } catch (error) {
+      state.hunterAvatarTexture = null;
+    }
+  }
+
+  function updateTargetTooltip() {
+    const tooltip = elements.worldTargetTooltip;
+    const target = state.selectedTarget;
+    const path = state.selectedPath || [];
+    if (!tooltip) return;
+
+    if (!target || path.length < 2 || state.moving || !state.viewport) {
+      tooltip.classList.add('d-none');
+      return;
+    }
+
+    const center = tileCenter(target);
+    const scale = state.viewport.scale.x || 1;
+    const x = state.viewport.x + center.x * scale;
+    const y = state.viewport.y + center.y * scale;
+
+    tooltip.textContent = formatCoords(target);
+    tooltip.style.left = `${Math.round(x)}px`;
+    tooltip.style.top = `${Math.round(y)}px`;
+    tooltip.classList.remove('d-none');
   }
 
   function hideLoading() {

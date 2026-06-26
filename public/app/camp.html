@@ -23,7 +23,7 @@
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_campfire.png">
     <meta name="twitter:image:alt" content="Among Demons campfire artwork">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/app/css/main.css?v=20260623-camp-alert-v2" rel="stylesheet">
+    <link href="/app/css/main.css?v=20260626-world-map-v5" rel="stylesheet">
   </head>
   <body class="camp-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -39,6 +39,7 @@
         </button>
         <div class="collapse navbar-collapse" id="campNavCollapse">
           <ul class="navbar-nav game-shell-tabs me-auto">
+            <li class="nav-item"><a class="nav-link game-nav-link" href="/world" data-game-route="world"><i data-lucide="map"></i><span>World</span></a></li>
             <li class="nav-item">
               <a class="nav-link game-nav-link active" href="/camp" data-game-route="camp" aria-current="page">
                 <i data-lucide="tent"></i>
@@ -49,12 +50,6 @@
               <a class="nav-link game-nav-link" href="/dungeon" data-game-route="dungeon">
                 <i data-lucide="swords"></i>
                 <span>Dungeon</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link game-nav-link is-locked" href="#pvp" data-game-route="pvp" aria-disabled="true" data-disabled-link>
-                <i data-lucide="shield"></i>
-                <span>PVP</span>
               </a>
             </li>
             <li class="nav-item">
@@ -167,21 +162,21 @@
                 <i data-lucide="swords"></i>
               </span>
               <span class="camp-action-body">
-                <span class="camp-action-kicker" id="dungeonActionEyebrow">Enter</span>
+                <span class="camp-action-kicker" id="dungeonActionEyebrow">Portal to</span>
                 <strong id="runActionLabel">Dungeon</strong>
                 <small id="primaryDungeonMeta">Loading current run...</small>
               </span>
             </a>
-            <button class="camp-action-card camp-action-pvp is-disabled" type="button" disabled>
+            <a class="camp-action-card camp-action-world" href="/world" id="primaryWorldBtn">
               <span class="camp-action-icon" aria-hidden="true">
-                <i data-lucide="shield"></i>
+                <i data-lucide="map"></i>
               </span>
               <span class="camp-action-body">
-                <span class="camp-action-kicker">Enter</span>
-                <strong>PVP</strong>
-                <small>Coming soon</small>
+                <span class="camp-action-kicker">Explore</span>
+                <strong>World</strong>
+                <small>Hunter map</small>
               </span>
-            </button>
+            </a>
           </div>
         </section>
 
