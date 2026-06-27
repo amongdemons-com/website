@@ -70,6 +70,7 @@
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || currentHp || 1);
     const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
+    const showHpBar = hasHp && !options.hideHpBar;
 
     if (!hasHp && !hasAtk && !hasSpeed) return '';
 
@@ -80,11 +81,13 @@
           ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(demon.speed)}</span>` : ''}
         </div>
       ` : ''}
-      ${hasHp ? `
+      ${showHpBar ? `
         <div class="combat-hp-bar" aria-label="HP ${currentHp} of ${maxHp}">
           <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${hpPercent}%"></div>
         </div>
-        <div class="combat-hp-meta"><span class="combat-current-hp js-demon-hp">${currentHp}</span>${renderIcon('hp')}</div>
+      ` : ''}
+      ${hasHp ? `
+        <div class="combat-hp-meta${showHpBar ? '' : ' is-separated'}"><span class="combat-current-hp js-demon-hp">${currentHp}</span>${renderIcon('hp')}</div>
       ` : ''}
     `;
   }
@@ -100,7 +103,6 @@
     const attackValue = hasNumber(demon.effectiveAtk) ? demon.effectiveAtk : demon.atk;
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || Number(demon.hp) || 1);
-    const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
 
     detailsModalElement.querySelector('.modal-content').style.setProperty('--rarity-color', getRarityColor(demon.rarity));
     detailsModalElement.querySelector('.modal-body').innerHTML = `
@@ -122,12 +124,6 @@
             ${hasNumber(demon.speed) && !isRetaliateDemon(demon) ? renderDetailStat(renderSpeedIcon(), 'Speed', demon.speed) : ''}
             ${hasNumber(demon.hp) || hasNumber(demon.maxHp) ? renderDetailStat(renderIcon('hp'), 'HP', `${currentHp} / ${maxHp}`) : ''}
           </div>
-
-          ${hasNumber(demon.hp) || hasNumber(demon.maxHp) ? `
-            <div class="demon-detail-hp" aria-label="HP ${currentHp} of ${maxHp}">
-              <div class="demon-detail-hp-fill" style="width: ${hpPercent}%"></div>
-            </div>
-          ` : ''}
 
           ${renderDetailMeta(demon)}
 

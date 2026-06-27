@@ -192,6 +192,9 @@
         ${renderSharedDemonCard(withTypeName(demon), {
           className: 'collection-demon-card',
           overlayHtml: renderTrainingCardBadge(demon),
+          statsOptions: {
+            hideHpBar: true
+          },
           attributes: {
             'data-demon-id': demon.id,
             role: 'button',
@@ -631,18 +634,6 @@
       setModalDetailStat(targetModal, key, formatTrainingStatValue(stat));
     });
 
-    const hpStat = training.stats.hp;
-    if (hpStat) {
-      const percent = getTrainingStatPercent(hpStat);
-      const hpBar = targetModal.querySelector('.demon-detail-hp');
-      if (hpBar) {
-        const current = Number(hpStat.current) || 0;
-        const max = Math.max(current, Number(hpStat.max) || current || 1);
-        hpBar.setAttribute('aria-label', `HP ${current} of ${max}`);
-      }
-      const hpFill = targetModal.querySelector('.demon-detail-hp-fill');
-      if (hpFill) hpFill.style.width = `${percent}%`;
-    }
   }
 
   function syncModalTrainingAction(demon) {
@@ -740,12 +731,6 @@
       });
 
     return chips.length ? chips.join('') : '<span>Trained</span>';
-  }
-
-  function getTrainingStatPercent(stat) {
-    const current = Number(stat.current) || 0;
-    const max = Math.max(current, Number(stat.max) || current || 1);
-    return Math.max(0, Math.min(100, Math.round((current / max) * 100)));
   }
 
   function formatChance(value) {

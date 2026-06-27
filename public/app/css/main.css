@@ -1504,6 +1504,12 @@ body.dungeon-page .navbar {
     line-height: 1;
 }
 
+.combat-hp-meta.is-separated {
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid rgba(161,212,201,0.16);
+}
+
 .combat-hp-meta .ad-icon {
     color: #7d858d;
     width: 0.76rem;
@@ -2521,19 +2527,6 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     height: 1rem;
 }
 
-.demon-detail-hp {
-    height: 2.55rem;
-    margin: 0 1.25rem 1rem;
-    border-radius: 6px;
-    background: rgba(207,226,220,0.18);
-    overflow: hidden;
-}
-
-.demon-detail-hp-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #1f9657, #62cfa9);
-}
-
 .demon-detail-meta {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2699,11 +2692,6 @@ body:has(#demonDetailModal.show) .modal-backdrop {
         gap: 0.56rem 1.05rem;
         padding-top: 0.55rem;
         padding-bottom: 0.55rem;
-    }
-
-    .demon-detail-modal:has(.collection-training-panel) .demon-detail-hp {
-        height: 1.55rem;
-        margin-bottom: 0.68rem;
     }
 
     .demon-detail-modal:has(.collection-training-panel) .demon-detail-meta {
@@ -3174,6 +3162,12 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     gap: 0.42rem;
     min-width: 0;
     min-height: 0;
+}
+
+@media (min-width: 768px) {
+    #dungeonBottomPanel {
+        margin-top: 0.35rem;
+    }
 }
 
 .dungeon-bottom-panel.d-none {
