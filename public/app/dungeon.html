@@ -116,9 +116,6 @@
                 <div id="fightLog" class="fight-log text-muted">Battle actions will appear here.</div>
               </div>
             </div>
-            <section class="dungeon-control-bar" aria-label="Combat controls">
-              <div class="fight-log-actions dungeon-battle-actions" id="fightLogActions"></div>
-            </section>
             <div id="dungeonBottomPanel" class="dungeon-bottom-panel d-none">
               <section id="dungeonHandBar" class="dungeon-hand-bar d-none" aria-label="Demon hand">
                 <div class="dungeon-hand-tabs" role="tablist" aria-label="Hand panel">
@@ -126,10 +123,13 @@
                   <button class="dungeon-hand-tab d-none" type="button" data-dungeon-hand-tab="pacts" role="tab" aria-selected="false" aria-controls="dungeonHandGrid">Buffs</button>
                 </div>
                 <div id="dungeonHandGrid" class="dungeon-hand-grid"></div>
+                <div id="dungeonBottomControls" class="dungeon-bottom-controls" role="group" aria-label="Battle controls"></div>
               </section>
+              <section id="dungeonReplayLogBox" class="dungeon-replaylog-box" role="group" aria-label="Fight review"></section>
               <section id="dungeonRewardBox" class="dungeon-hand-bar dungeon-reward-box d-none" aria-label="Extraction reward">
                 <div id="dungeonRewardGrid" class="dungeon-reward-grid"></div>
               </section>
+              <section id="dungeonMobileFightBox" class="dungeon-mobile-fight-box" role="group" aria-label="Mobile fight action"></section>
             </div>
           </div>
         </div>

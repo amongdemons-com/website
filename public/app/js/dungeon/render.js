@@ -85,7 +85,7 @@ function renderRun() {
     renderTeamSideTitle();
     renderEnemySideTitle();
     updateDungeonJoiner();
-    elements.runEmpty.innerHTML = state.endSummary ? renderDungeonEndScreen() : renderEmptyText('Preparing dungeon...');
+    elements.runEmpty.innerHTML = state.endSummary ? renderDungeonEndScreen() : renderDungeonStartPrompt();
     bindDungeonEmptyButtons();
     renderFightLog();
     renderFightLogActions();
@@ -190,6 +190,17 @@ function renderDungeonEndScreen() {
         </button>
       </div>
     </div>
+  `;
+}
+
+function renderDungeonStartPrompt() {
+  return `
+    <img src="/app/images/demons/1.png" alt="Boof Nitza demon preparing for a dungeon run" width="1024" height="1024" loading="lazy" decoding="async">
+    <p class="mb-0 text-muted">Ready to descend into the dungeon?</p>
+    <button class="btn btn-primary dungeon-start-prompt-btn" id="startNewDungeonBtn" type="button">
+      ${renderIcon('play')}
+      Start Dungeon
+    </button>
   `;
 }
 
@@ -459,15 +470,35 @@ function renderEndNotice() {
   return `<div class="${className}">${state.endNotice.html || escapeHtml(state.endNotice.text)}</div>`;
 }
 
+// The battle playback + speed controls render into #dungeonBottomControls, which
+// overlays the (empty during battle) hand grid — replacing the old "Fighting"
+// placeholder. The dedicated control bar has been removed.
+function renderBattleControlsOverlay(html) {
+  if (!elements.dungeonBottomControls) return false;
+  return setElementHtml(elements.dungeonBottomControls, html);
+}
+
+// Replay + fight-log buttons live in their own box between the hand bar and the
+// reward box (replay on top, log on bottom). The buttons are always present and
+// just toggle disabled so the box keeps a stable size across run states.
+function renderReplayLogBox(canReplay, canViewLog) {
+  if (!elements.dungeonReplayLogBox) return false;
+  return setElementHtml(elements.dungeonReplayLogBox, `
+    <button class="btn btn-warning btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight" ${canReplay ? '' : 'disabled'}>
+      ${renderIcon('replay')}
+    </button>
+    <button class="btn btn-outline-light btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log" ${canViewLog ? '' : 'disabled'}>
+      ${renderIcon('log')}
+    </button>
+  `);
+}
+
 function renderFightLogActions() {
   if (state.isLoading) {
-    renderDungeonCenterActions(false);
-    setElementHtml(elements.fightLogActions, `
-      <span class="dungeon-loading-status" aria-live="polite">
-        <span class="dungeon-loading-dot" aria-hidden="true"></span>
-        Loading
-      </span>
-    `);
+    renderDungeonCenterActions();
+    renderDungeonMobileFightBox();
+    renderBattleControlsOverlay('');
+    renderReplayLogBox(false, false);
     return;
   }
 
@@ -480,34 +511,31 @@ function renderFightLogActions() {
   );
   const hasCurrentFightLog = Boolean(isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
   const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
-  const canViewLog = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
+  const canViewLog = canReplay;
   const hasPendingPacts = hasPendingBuffChoices(state.run);
   const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
   const continuePending = Boolean(state.isRecruitContinuePending);
   const isFighting = Boolean(state.isBattleAnimating);
-  renderDungeonCenterActions(canChooseRecruit || continuePending || isFighting, continuePending, isFighting);
 
-  const actionsChanged = setElementHtml(elements.fightLogActions, `
-    ${canShowSpeedControl ? `${renderBattlePlaybackControls()}${renderBattleSpeedControl()}` : ''}
-    ${canReplay ? `
-      <button class="btn btn-warning btn-sm btn-icon-only" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
-        ${renderIcon('replay')}
-      </button>
-    ` : ''}
-    ${canViewLog ? `
-      <button class="btn btn-outline-light btn-sm btn-icon-only" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log">
-        ${renderIcon('log')}
-      </button>
-    ` : ''}
-    ${canStart ? `
-    <button class="btn btn-primary btn-sm" id="fightLogStartBtn" type="button">
-      ${renderIcon('play')}
-      ${isDefeated ? 'Start New Dungeon' : 'Start Dungeon'}
-    </button>
-    ` : ''}
-  `);
+  // The "Start (New) Dungeon" button shows in the center when a run object still
+  // exists but is over (e.g. right after a defeat). The no-run start prompt is
+  // handled by the empty state (see renderDungeonStartPrompt).
+  const actionOptions = {
+    canFight: canChooseRecruit || continuePending || isFighting,
+    isPending: continuePending,
+    isFighting,
+    canStart: canStart && Boolean(state.run),
+    isDefeated
+  };
 
-  if (!actionsChanged) return;
+  renderDungeonCenterActions(actionOptions);
+  const mobileFightChanged = renderDungeonMobileFightBox(actionOptions);
+
+  const battleControlsHtml = canShowSpeedControl ? `${renderBattlePlaybackControls()}${renderBattleSpeedControl()}` : '';
+  const overlayChanged = renderBattleControlsOverlay(battleControlsHtml);
+  const boxChanged = renderReplayLogBox(canReplay, canViewLog);
+
+  if (!overlayChanged && !boxChanged && !mobileFightChanged) return;
 
   bindClicks('[data-battle-speed]', (button) => setBattleSpeed(Number(button.dataset.battleSpeed)));
   bindClick(document.getElementById('battlePlaybackToggleBtn'), () => {
@@ -518,13 +546,28 @@ function renderFightLogActions() {
     }
   });
   bindClicks('[data-battle-step]', (button) => stepCombatPlayback(Number(button.dataset.battleStep)));
-  bindClick(document.getElementById('fightLogStartBtn'), isDefeated ? startNewDungeonAfterDefeat : startRun);
   bindClick(document.getElementById('fightLogReplayBtn'), replayFight);
   bindClick(document.getElementById('fightLogToggleBtn'), toggleFightLogPanel);
-  bindPathButtons();
 }
 
-function renderDungeonCenterActions(canFight = false, isPending = false, isFighting = false) {
+function renderDungeonCenterActions(options = {}) {
+  const { canFight = false, isPending = false, isFighting = false, canStart = false, isDefeated = false } = options;
+
+  if (canStart) {
+    const startChanged = setElementHtml(elements.dungeonCenterActions, `
+      <div class="dungeon-center-action-stack">
+        <button class="btn btn-primary dungeon-fight-btn dungeon-center-start-btn" id="dungeonCenterStartBtn" type="button" title="${isDefeated ? 'Start a new dungeon' : 'Start the dungeon'}">
+          ${renderIcon('play')}
+          <span>${isDefeated ? 'New Dungeon' : 'Start Dungeon'}</span>
+        </button>
+      </div>
+    `);
+    if (startChanged) {
+      bindClick(document.getElementById('dungeonCenterStartBtn'), isDefeated ? startNewDungeonAfterDefeat : startRun);
+    }
+    return;
+  }
+
   const mode = isFighting ? 'fighting' : isPending ? 'preparing' : 'ready';
   const isDisabled = mode !== 'ready';
   const label = mode === 'fighting' ? 'Fighting' : mode === 'preparing' ? 'Preparing' : 'Fight';
@@ -552,6 +595,37 @@ function renderDungeonCenterActions(canFight = false, isPending = false, isFight
   ` : '');
 
   if (changed) bindPathButtons();
+}
+
+function renderDungeonMobileFightBox(options = {}) {
+  if (!elements.dungeonMobileFightBox) return false;
+
+  const { canFight = false, isPending = false, isFighting = false } = options;
+  const mode = isFighting ? 'fighting' : isPending ? 'preparing' : 'ready';
+  const isDisabled = mode !== 'ready';
+  const label = mode === 'fighting' ? 'Fighting' : mode === 'preparing' ? 'Preparing' : 'Fight';
+  const title = mode === 'fighting'
+    ? 'Fight in progress'
+    : mode === 'preparing'
+      ? 'Preparing the next fight'
+      : 'Start the next fight';
+
+  const changed = setElementHtml(elements.dungeonMobileFightBox, canFight ? `
+    <button
+      class="btn btn-warning dungeon-fight-btn dungeon-mobile-fight-btn ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
+      id="dungeonMobileFightBtn"
+      type="button"
+      title="${title}"
+      aria-label="${title}"
+      ${isDisabled ? 'disabled aria-busy="true"' : ''}
+    >
+      ${mode === 'preparing' ? '<span class="dungeon-action-spinner" aria-hidden="true"></span>' : renderButtonMeleeIcon()}
+      <span class="visually-hidden">${label}</span>
+    </button>
+  ` : '');
+
+  if (changed) bindPathButtons();
+  return changed;
 }
 
 function renderBattlePlaybackControls() {
@@ -616,11 +690,12 @@ function renderBattleSpeedControl() {
 }
 
 function bindPathButtons() {
-  const button = document.getElementById('dungeonFightBtn');
-  if (!button || button.dataset.dungeonFightBound === 'true') return;
+  [document.getElementById('dungeonFightBtn'), document.getElementById('dungeonMobileFightBtn')].forEach((button) => {
+    if (!button || button.dataset.dungeonFightBound === 'true') return;
 
-  button.dataset.dungeonFightBound = 'true';
-  bindClick(button, (event) => requestRecruitContinue(event.currentTarget));
+    button.dataset.dungeonFightBound = 'true';
+    bindClick(button, (event) => requestRecruitContinue(event.currentTarget));
+  });
 }
 
 export {
@@ -644,6 +719,7 @@ export {
   renderEndNotice,
   renderFightLogActions,
   renderDungeonCenterActions,
+  renderDungeonMobileFightBox,
   renderBattlePlaybackControls,
   renderBattleSpeedControl,
   bindPathButtons

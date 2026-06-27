@@ -27,6 +27,8 @@ function renderDemonCards(demons, options = {}) {
 
 function renderFormationSlot(demon, cellIndex, options, side) {
   const position = getFormationSlotPosition(cellIndex, side);
+  const lane = getFormationSlotLane(cellIndex, side);
+  const laneClass = FORMATION_LANE_CLASSES[lane] || '';
   const slotNumber = cellIndex + 1;
   const sideLabel = options.side === 'enemy' ? 'Enemy' : 'Your team';
   const placeholder = shouldShowCollectionReinforcementPlaceholders(options)
@@ -37,7 +39,7 @@ function renderFormationSlot(demon, cellIndex, options, side) {
     : (placeholder || renderEmptyFormationSlot(position, slotNumber));
 
   return `
-    <div class="formation-slot formation-lane formation-slot-${position} ${demon ? 'has-demon' : 'is-empty'}" data-formation-position="${position}" data-formation-row="${cellIndex}" data-formation-slot="${cellIndex}" role="listitem" aria-label="${escapeHtml(`${sideLabel} slot ${slotNumber}`)}">
+    <div class="formation-slot formation-lane formation-slot-${position} ${laneClass} ${demon ? 'has-demon' : 'is-empty'}" data-formation-position="${position}" data-formation-lane="${lane}" data-formation-row="${cellIndex}" data-formation-slot="${cellIndex}" role="listitem" aria-label="${escapeHtml(`${sideLabel} slot ${slotNumber}`)}">
       <div class="formation-lane-cards formation-slot-cards" data-formation-drop="${position}" data-formation-row="${cellIndex}">
         ${slotContent}
       </div>
@@ -97,6 +99,25 @@ function getFormationSlotPosition(cellIndex, side = 'player') {
   const column = normalizeFormationRow(cellIndex) % FORMATION_GRID_COLUMNS;
   const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
   return column === frontColumn ? 'front' : 'back';
+}
+
+// Visual-only lane label (front / mid / back) used for responsive styling hooks.
+// Targeting/combat logic only ever cares about the binary front/back position above;
+// this just describes which depth column a slot lives in so CSS can re-orient the
+// formation for mobile portrait without touching any logical slot IDs.
+const FORMATION_LANE_CLASSES = {
+  front: 'frontline',
+  mid: 'middleline',
+  back: 'backline'
+};
+
+function getFormationSlotLane(cellIndex, side = 'player') {
+  const column = normalizeFormationRow(cellIndex) % FORMATION_GRID_COLUMNS;
+  const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
+  const backColumn = side === 'enemy' ? FORMATION_GRID_COLUMNS - 1 : 0;
+  if (column === frontColumn) return 'front';
+  if (column === backColumn) return 'back';
+  return 'mid';
 }
 
 function getFormationSlotOrder(side = 'player', position = null) {
@@ -278,6 +299,7 @@ export {
   getFormationGridAssignments,
   getNextOpenFormationCell,
   getFormationSlotPosition,
+  getFormationSlotLane,
   getFormationSlotOrder,
   getDemonsForFormationRow,
   renderEmptyFormationSlot,

@@ -19,6 +19,7 @@ const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
 const renderActivePactIcon = (...args) => dungeonActions.renderActivePactIcon(...args);
 const shouldShowCollectionReinforcementHandPlaceholder = (...args) => dungeonActions.shouldShowCollectionReinforcementHandPlaceholder(...args);
 let handTabEventsBound = false;
+let handScrollEventsBound = false;
 
 function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit') {
   if (!elements.dungeonHandBar || !elements.dungeonHandGrid) return;
@@ -27,7 +28,7 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
   if (!isVisible) {
     setElementHtml(elements.dungeonHandGrid, '');
     elements.dungeonHandGrid.classList.remove('is-pacts-tab');
-    elements.dungeonHandBar.classList.remove('has-pacts', 'is-pacts-tab-active', 'has-level-power-prompt');
+    elements.dungeonHandBar.classList.remove('has-pacts', 'is-pacts-tab-active', 'has-level-power-prompt', 'is-battle-controls-mode');
     updateHandTabs('hand', 0, false);
     return;
   }
@@ -43,6 +44,7 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
   elements.dungeonHandBar.classList.add('has-pacts');
   elements.dungeonHandBar.classList.toggle('is-pacts-tab-active', activeTab === 'pacts');
   elements.dungeonHandBar.classList.toggle('has-level-power-prompt', hasLevelPowerPrompt);
+  elements.dungeonHandBar.classList.toggle('is-battle-controls-mode', mode === 'battle');
   elements.dungeonHandGrid.classList.toggle('is-pacts-tab', activeTab === 'pacts');
   updateHandTabs(activeTab, activeBuffs.length, hasLevelPowerPrompt);
   if (activeTab === 'pacts') {
@@ -59,6 +61,7 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
     });
   }
   bindHandTabs();
+  bindHandScrollButtons();
 }
 
 function updateHandTabs(activeTab = 'hand', buffCount = 0, hasLevelPowerPrompt = false) {
@@ -92,6 +95,38 @@ function bindHandTabs() {
     state.activeHandTab = nextTab;
     renderRun();
   });
+}
+
+function bindHandScrollButtons() {
+  if (handScrollEventsBound) return;
+  handScrollEventsBound = true;
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest?.('[data-hand-scroll]');
+    if (!button || !elements.dungeonHandBar?.contains(button)) return;
+
+    const shell = button.closest('.dungeon-hand-scroll-shell');
+    const viewport = shell?.querySelector('[data-hand-scroll-viewport]');
+    if (!viewport) return;
+
+    const direction = Number(button.dataset.handScroll) || 0;
+    const amount = getHandScrollAmount(viewport);
+    viewport.scrollBy({
+      left: direction * amount,
+      behavior: 'smooth'
+    });
+  });
+}
+
+function getHandScrollAmount(viewport) {
+  const card = viewport.querySelector('.dungeon-demon-card, .collection-reinforcement-placeholder, .dungeon-hand-empty, .active-pact-chip');
+  const lane = viewport.querySelector('.dungeon-hand-cards, .dungeon-hand-pacts');
+  const laneStyles = lane ? window.getComputedStyle(lane) : null;
+  const columnGap = parseFloat(laneStyles?.columnGap || '');
+  const fallbackGap = parseFloat(laneStyles?.gap || '');
+  const gap = Number.isFinite(columnGap) ? columnGap : (Number.isFinite(fallbackGap) ? fallbackGap : 0);
+  const cardWidth = card?.getBoundingClientRect().width || 0;
+  return Math.max(cardWidth + gap, viewport.clientWidth * 0.72, 1);
 }
 
 function getHandBuffs() {
@@ -173,8 +208,18 @@ function renderHandPactTags(activeBuffs) {
   }
 
   return `
-    <div class="dungeon-hand-pacts" aria-label="Active dungeon buffs">
-      ${activeBuffs.map(renderActivePactIcon).join('')}
+    <div class="dungeon-hand-scroll-shell dungeon-hand-pacts-shell">
+      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="-1" aria-label="Scroll buffs left" title="Scroll buffs left">
+        ${renderIcon('back')}
+      </button>
+      <div class="dungeon-hand-scroll-viewport" data-hand-scroll-viewport>
+        <div class="dungeon-hand-pacts" aria-label="Active dungeon buffs">
+          ${activeBuffs.map(renderActivePactIcon).join('')}
+        </div>
+      </div>
+      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="1" aria-label="Scroll buffs right" title="Scroll buffs right">
+        ${renderIcon('chevron-right')}
+      </button>
     </div>
   `;
 }
@@ -190,15 +235,28 @@ function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
   })).join('');
 
   return `
-    <div class="dungeon-hand-cards formation-lane-cards ${modeClass}" data-formation-drop="hand" data-hand-count="${demons.length}">
-      ${placeholder}${cardHtml || (placeholder ? '' : renderEmptyHand(mode))}
+    <div class="dungeon-hand-scroll-shell">
+      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="-1" aria-label="Scroll hand left" title="Scroll hand left">
+        ${renderIcon('back')}
+      </button>
+      <div class="dungeon-hand-scroll-viewport" data-hand-scroll-viewport>
+        <div class="dungeon-hand-cards formation-lane-cards ${modeClass}" data-formation-drop="hand" data-hand-count="${demons.length}">
+          ${placeholder}${cardHtml || (placeholder ? '' : renderEmptyHand(mode))}
+        </div>
+      </div>
+      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="1" aria-label="Scroll hand right" title="Scroll hand right">
+        ${renderIcon('chevron-right')}
+      </button>
     </div>
   `;
 }
 
 function renderEmptyHand(mode = 'recruit') {
+  // During battle the hand grid is intentionally left empty: the battle
+  // controls (playback + speed) are rendered into #dungeonBottomControls, which
+  // overlays this area (see renderFightLogActions / main.css .dungeon-bottom-controls).
   if (mode === 'battle') {
-    return '<div class="formation-empty dungeon-hand-empty dungeon-hand-battle-placeholder"><span>Fighting</span></div>';
+    return '';
   }
 
   return '<div class="formation-empty dungeon-hand-empty"><span>Empty</span></div>';
