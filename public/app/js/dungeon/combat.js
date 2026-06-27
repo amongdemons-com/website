@@ -90,15 +90,45 @@ function applyCombatStep(step, index = -1, options = {}) {
   if (step.primaryEffect !== 'poison') {
     animateAttackerCard(step.attacker, step.primaryEffect, step.entries[0]?.target);
   }
+
+  // Fire (type 4): instead of one fireball per target, lob a single fireball at the centre
+  // of the whole target group; it detonates in a red nova on arrival. Per-entry impact
+  // reactions (HP/floating numbers/burst) still run, lined up just after the detonation.
+  const fireGroup = getFireGroupPlan(step);
+  if (fireGroup) drawGroupFireball(step.attacker, fireGroup.targetIds, { effect: step.primaryEffect, travel: fireGroup.travel });
+
   step.entries.forEach((entry, entryIndex) => {
-    animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe);
+    animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGroup);
   });
+}
+
+// Damage effects that route through the standard projectile branch (everything that isn't a
+// status/heal special-case). Used to decide which entries the grouped fire shot covers.
+const NON_DAMAGE_EFFECTS = new Set(['poison', 'heal', 'last_breath', 'shared_pain', 'poison_apply']);
+
+function isGroupedFireEntry(entry) {
+  return !NON_DAMAGE_EFFECTS.has(entry.effect);
+}
+
+// Returns the grouped-fire plan for a step, or null when the step shouldn't use it
+// (reduced motion, chaotic targeting, non-fire attacker, or no damage entries).
+function getFireGroupPlan(step) {
+  if (prefersReducedMotion()) return null;
+  if (step.targeting === 'chaotic') return null;
+  if (Number(getCombatDemon(step.attacker)?.typeId) !== 4) return null;
+  const damageEntries = (step.entries || []).filter(isGroupedFireEntry);
+  if (!damageEntries.length) return null;
+  return {
+    targetIds: damageEntries.map((entry) => entry.target),
+    travel: getAttackProfile(damageEntries[0]).travel,
+    lead: 90
+  };
 }
 
 // Routes a single combat-log entry to the right visual treatment. Damage/heal/poison
 // reactions (HP bar, floating number, impact burst, card shake) are scheduled at the
 // attack's impact moment via scheduleImpact so they line up with the travelling effect.
-function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe) {
+function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGroup = null) {
   const reduced = prefersReducedMotion();
 
   if (entry.effect === 'poison') {
@@ -151,8 +181,13 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe) {
   }
 
   const profile = getAttackProfile(entry);
-  if (!reduced) profile.draw();
-  const impactDelay = profile.travel + (isAoe ? entryIndex * 70 : 0);
+  // Grouped fire draws one shared fireball in applyCombatStep, so skip the per-entry
+  // projectile and hold the impact reactions until just after the nova detonates.
+  const grouped = fireGroup && isGroupedFireEntry(entry);
+  if (!reduced && !grouped) profile.draw();
+  const impactDelay = grouped
+    ? fireGroup.travel + fireGroup.lead + entryIndex * 50
+    : profile.travel + (isAoe ? entryIndex * 70 : 0);
   scheduleImpact(impactDelay, () => {
     updateTargetCard(entry.target, entry.targetHp, attackerSide);
     if (Number(entry.dmg) > 0) {
@@ -310,6 +345,7 @@ function clearCombatTransientElements() {
     '.combat-impact-burst',
     '.dark-spike',
     '.fireball-shot',
+    '.fire-nova',
     '.floating-combat-number',
     '.heal-effect',
     '.sword-swing',
@@ -722,6 +758,98 @@ function drawFireball(attackerId, targetId, options = {}) {
       <circle class="fireball-impact" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="${impactRadius.toFixed(1)}" />
   `);
   appendTemporaryElement(fireball, 620);
+}
+
+// Fire (type 4) group attack: a single fireball arcs from the attacker to the centre of the
+// whole target group and detonates in a red nova when it lands. The travelling projectile
+// reuses the regular fireball visuals (sized up a touch); the nova is scheduled at impact
+// time via scheduleImpact so it stays in lockstep with combat pause/scrub.
+function drawGroupFireball(attackerId, targetIds, options = {}) {
+  const attacker = findDemonCard(attackerId);
+  const targetCards = (targetIds || []).map(findDemonCard).filter(Boolean);
+  if (prefersReducedMotion() || !attacker || !targetCards.length) return;
+
+  const attackerRect = attacker.getBoundingClientRect();
+  const startX = attackerRect.left + attackerRect.width / 2;
+  const startY = attackerRect.top + attackerRect.height / 2;
+
+  const centers = targetCards.map((card) => {
+    const rect = card.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, half: Math.max(rect.width, rect.height) / 2 };
+  });
+  const endX = centers.reduce((sum, c) => sum + c.x, 0) / centers.length;
+  const endY = centers.reduce((sum, c) => sum + c.y, 0) / centers.length;
+  const angle = Math.atan2(endY - startY, endX - startX);
+
+  const attackerDemon = getCombatDemon(attackerId);
+  const isBackLineAttack = attackerDemon && getDemonPosition(attackerDemon) === 'back';
+  const startOffset = Math.min(attackerRect.width * (isBackLineAttack ? 0.28 : 0.42), 46);
+  const x1 = startX + Math.cos(angle) * startOffset;
+  const y1 = startY + Math.sin(angle) * startOffset;
+  const x2 = endX;
+  const y2 = endY;
+  const distance = Math.max(1, Math.hypot(x2 - x1, y2 - y1));
+  const normalX = -(y2 - y1) / distance;
+  const normalY = (x2 - x1) / distance;
+
+  // Nova reaches far enough to engulf every target card around the group centre.
+  const reach = clamp(
+    Math.max(...centers.map((c) => Math.hypot(c.x - endX, c.y - endY) + c.half)) + 8,
+    44,
+    220
+  );
+
+  const emberCount = 9;
+  const emberHtml = Array.from({ length: emberCount }, (_, index) => {
+    const t = 0.12 + (index / Math.max(1, emberCount - 1)) * 0.72;
+    const drift = ((index % 2) ? -1 : 1) * (4 + (index % 3) * 2);
+    const x = x1 + (x2 - x1) * t + normalX * drift;
+    const y = y1 + (y2 - y1) * t + normalY * drift;
+    const radius = 1.8 + (index % 3) * 0.8;
+    return `<circle class="fireball-ember" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${radius.toFixed(1)}" style="animation-delay: ${scaleCombatDuration(70 + index * 28).toFixed(0)}ms" />`;
+  }).join('');
+
+  const fireball = createCombatElement([
+    'fireball-shot',
+    getDemonSide(attackerId) === 'player' ? 'is-player-attack' : 'is-enemy-attack',
+    isBackLineAttack ? 'is-back-attack' : ''
+  ].filter(Boolean).join(' '), attackerId, options.effect);
+  fireball.innerHTML = renderViewportSvg(`
+      ${emberHtml}
+      <g class="fireball-projectile" style="--fireball-start-x: ${x1.toFixed(1)}px; --fireball-start-y: ${y1.toFixed(1)}px; --fireball-end-x: ${x2.toFixed(1)}px; --fireball-end-y: ${y2.toFixed(1)}px;">
+        <circle class="fireball-core" cx="0" cy="0" r="11" />
+      </g>
+  `);
+  appendTemporaryElement(fireball, 620);
+
+  const travel = Number(options.travel) || 380;
+  scheduleImpact(travel, () => drawFireNova(endX, endY, reach, attackerId, options.effect));
+}
+
+// Expanding red shockwave detonation, centred on the fire group. Drawn when the shared
+// fireball lands, immediately before the per-target floating numbers register.
+function drawFireNova(centerX, centerY, reach, attackerId, effect) {
+  if (prefersReducedMotion()) return;
+  const radius = Math.max(20, Number(reach) || 60);
+  const nova = createCombatElement('fire-nova', attackerId, effect);
+  // Hollow-centred bloom: the inner part is transparent so the middle doesn't read as a solid
+  // red disc, the colour only builds toward the outer edge of the shockwave.
+  const gradientId = `fire-nova-grad-${Math.random().toString(36).slice(2, 8)}`;
+  nova.innerHTML = renderViewportSvg(`
+      <defs>
+        <radialGradient id="${gradientId}" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" style="stop-color: var(--combat-color, #E25041); stop-opacity: 0" />
+          <stop offset="52%" style="stop-color: var(--combat-color, #E25041); stop-opacity: 0" />
+          <stop offset="82%" style="stop-color: var(--combat-color, #E25041); stop-opacity: 0.62" />
+          <stop offset="100%" style="stop-color: var(--combat-color, #E25041); stop-opacity: 0" />
+        </radialGradient>
+      </defs>
+      <circle class="fire-nova-flash" cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" r="${(radius * 0.72).toFixed(1)}" style="fill: url(#${gradientId})" />
+      <circle class="fire-nova-ring fire-nova-ring-hot" cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" r="${(radius * 0.62).toFixed(1)}" />
+      <circle class="fire-nova-ring" cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" r="${radius.toFixed(1)}" />
+      <circle class="fire-nova-ring fire-nova-ring-delayed" cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" r="${radius.toFixed(1)}" />
+  `);
+  appendTemporaryElement(nova, 620);
 }
 
 function updateTargetCard(instanceId, hp, attackerSide = 'unknown', options = {}) {
@@ -1224,6 +1352,8 @@ export {
   drawCombatAnimation,
   drawAttackZap,
   drawFireball,
+  drawGroupFireball,
+  drawFireNova,
   updateTargetCard,
   syncPoisonStatus,
   showFloatingDamage,
