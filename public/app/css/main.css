@@ -15255,6 +15255,18 @@ body.world-page > .alert {
     backdrop-filter: blur(14px);
 }
 
+.world-side-toggle {
+    display: none;
+}
+
+.world-side-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.72rem;
+    min-width: 0;
+    min-height: 0;
+}
+
 .world-panel-block {
     display: grid;
     gap: 0.55rem;
@@ -15550,6 +15562,10 @@ body.world-page > .alert {
         width: min(20rem, calc(100vw - 1.3rem));
         padding: 0.7rem;
     }
+
+    .world-side-content {
+        gap: 0.62rem;
+    }
 }
 
 @media (max-width: 899.98px) {
@@ -15570,6 +15586,80 @@ body.world-page > .alert {
     .world-map-status {
         top: calc(var(--game-nav-height, 3.6rem) + 0.65rem);
         bottom: auto;
+    }
+}
+
+@media (max-width: 899.98px) and (orientation: portrait) {
+    .world-side-panel {
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: auto;
+        max-height: min(72vh, calc(100dvh - var(--game-nav-height, 3.6rem) - 0.85rem));
+        border-right: 0;
+        border-bottom: 0;
+        border-left: 0;
+        border-radius: 12px 12px 0 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .world-side-toggle {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        width: 100%;
+        min-height: 3rem;
+        border: 0;
+        border-bottom: 1px solid rgba(161,212,201,0.16);
+        background:
+            linear-gradient(180deg, rgba(111,214,189,0.1), rgba(255,255,255,0.02)),
+            rgba(3,8,11,0.9);
+        color: rgba(232,199,106,0.92);
+        padding: 0.72rem 0.95rem;
+        font-size: 0.72rem;
+        font-weight: 900;
+        line-height: 1;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .world-side-toggle:hover,
+    .world-side-toggle:focus-visible {
+        color: #fff3bd;
+        outline: 0;
+    }
+
+    .world-side-toggle .ad-icon {
+        width: 0.92rem;
+        height: 0.92rem;
+        margin: 0;
+        transition: transform 180ms ease;
+    }
+
+    .world-side-content {
+        max-height: calc(min(72vh, calc(100dvh - var(--game-nav-height, 3.6rem) - 0.85rem)) - 3rem);
+        overflow: hidden auto;
+        padding: 0.7rem 0.7rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .world-side-panel.is-collapsed {
+        max-height: calc(3rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .world-side-panel.is-collapsed .world-side-toggle {
+        padding-bottom: calc(0.72rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .world-side-panel.is-collapsed .world-side-content {
+        display: none;
+    }
+
+    .world-side-panel:not(.is-collapsed) .world-side-toggle .ad-icon {
+        transform: rotate(180deg);
     }
 }
 

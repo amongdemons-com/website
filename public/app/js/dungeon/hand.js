@@ -186,7 +186,8 @@ function createLevelPowerBuff(statPoints) {
     [bonuses.speedFlat, 'Speed'],
     [bonuses.healingFlat, 'healing'],
     [bonuses.thornsFlat, 'thorns damage'],
-    [bonuses.aoeDamageFlat, 'AOE damage']
+    [bonuses.aoeDamageFlat, 'AOE damage'],
+    [bonuses.poisonDamageFlat, 'poison damage']
   ]
     .filter(([value]) => Number(value) > 0)
     .map(([value, label]) => `+${formatLevelPowerBonus(value)} ${label}`);
@@ -196,7 +197,8 @@ function createLevelPowerBuff(statPoints) {
     [bonuses.speedPercent, 'Speed'],
     [bonuses.healingPercent, 'healing'],
     [bonuses.thornsPercent, 'thorns'],
-    [bonuses.aoeDamagePercent, 'AOE damage']
+    [bonuses.aoeDamagePercent, 'AOE damage'],
+    [bonuses.poisonDamagePercent, 'poison damage']
   ]
     .filter(([value]) => Number(value) > 0)
     .map(([value, label]) => `+${formatLevelPowerBonus(value)}% ${label}`);

@@ -1,3 +1,5 @@
+import { COMBAT_THEMES } from './dungeon/config.js';
+
 (function() {
   'use strict';
 
@@ -14,6 +16,7 @@
   const ROAD_MOVE_COST = AVERAGE_TERRAIN_COST - 1;
   const CLICK_THRESHOLD = 7;
   const STEP_DURATION_MS = 180;
+  const WORLD_SIDE_PANEL_QUERY = '(max-width: 899.98px) and (orientation: portrait)';
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
   const BOARD_COLORS = {
     background: 0x070806,
@@ -117,7 +120,9 @@
     pointer: null,
     activePointers: new Map(),
     pinch: null,
-    gestureWasPinch: false
+    gestureWasPinch: false,
+    sidePanelMedia: null,
+    sidePanelExpanded: false
   };
 
   const elements = {};
@@ -155,7 +160,9 @@
       'worldTeamSummary',
       'worldEncounterHeading',
       'worldEncounterList',
-      'worldTravelPanel'
+      'worldTravelPanel',
+      'worldSidePanel',
+      'worldSideToggle'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -163,6 +170,7 @@
 
   function bindDomControls() {
     elements.worldPositionButton?.addEventListener('click', () => resetCameraOnHunter());
+    bindWorldSidePanel();
 
     elements.worldEncounterList?.addEventListener('click', (event) => {
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
@@ -171,6 +179,34 @@
       challengePlayer(button.dataset.challengePlayer, button);
     });
 
+  }
+
+  function bindWorldSidePanel() {
+    if (!elements.worldSidePanel || !elements.worldSideToggle) return;
+
+    elements.worldSideToggle.addEventListener('click', () => {
+      state.sidePanelExpanded = !state.sidePanelExpanded;
+      syncWorldSidePanel();
+    });
+
+    if (typeof window.matchMedia === 'function') {
+      state.sidePanelMedia = window.matchMedia(WORLD_SIDE_PANEL_QUERY);
+      state.sidePanelMedia.addEventListener?.('change', syncWorldSidePanel);
+      state.cleanup.push(() => state.sidePanelMedia?.removeEventListener?.('change', syncWorldSidePanel));
+    }
+
+    syncWorldSidePanel();
+  }
+
+  function syncWorldSidePanel() {
+    const panel = elements.worldSidePanel;
+    const toggle = elements.worldSideToggle;
+    if (!panel || !toggle) return;
+
+    const sheetMode = Boolean(state.sidePanelMedia?.matches);
+    panel.classList.toggle('is-sheet-mode', sheetMode);
+    panel.classList.toggle('is-collapsed', sheetMode && !state.sidePanelExpanded);
+    toggle.setAttribute('aria-expanded', String(!panel.classList.contains('is-collapsed')));
   }
 
   async function initPixi() {
@@ -579,166 +615,25 @@
   // ground reads as one quiet surface; everything else is built from a single
   // ruined-stone family so the map stays cohesive.
   const DEFAULT_ZONE_PALETTE = {
-    ground: [0x0e120d, 0x10140f, 0x0d110c],
-    patch: 0x182018,
-    road: [0x171a14, 0x1b1d16],
-    roadEdge: 0x080a07,
-    roadSheen: 0x2b3024,
-    stone: [0x282520, 0x302c25, 0x211e19],
-    stoneDark: 0x131009,
-    stoneLight: 0x3b372e,
-    prop: 0x302c25,
-    fog: 0x050604,
+    ground: [0x121711, 0x151a13, 0x10150f],
+    patch: 0x20291f,
+    road: [0x261f14, 0x2d2618],
+    roadEdge: 0x0d0a06,
+    roadSheen: 0x4a3d22,
+    stone: [0x302c25, 0x39342b, 0x28241e],
+    stoneDark: 0x18130d,
+    stoneLight: 0x4a4335,
+    prop: 0x3b3529,
+    fog: 0x070806,
     accent: 0xe4685e
   };
-  const ZONE_PALETTES = [
-    null,
-    {
-      ground: [0x10170f, 0x132012, 0x0c140d],
-      patch: 0x263820,
-      road: [0x1a1f15, 0x202719],
-      roadEdge: 0x080b07,
-      roadSheen: 0x304021,
-      stone: [0x293026, 0x333a2b, 0x1d241c],
-      stoneDark: 0x10160e,
-      stoneLight: 0x4a5638,
-      prop: 0x54733d,
-      fog: 0x061009,
-      accent: 0x80d697
-    },
-    {
-      ground: [0x0f1418, 0x101a20, 0x0b1116],
-      patch: 0x1c3139,
-      road: [0x171d20, 0x1a2327],
-      roadEdge: 0x070a0d,
-      roadSheen: 0x27414a,
-      stone: [0x273038, 0x303a42, 0x1b242b],
-      stoneDark: 0x0d1115,
-      stoneLight: 0x465964,
-      prop: 0x45606a,
-      fog: 0x050b10,
-      accent: 0x55ffff
-    },
-    {
-      ground: [0x101313, 0x151917, 0x0d1110],
-      patch: 0x283024,
-      road: [0x1b1c16, 0x202118],
-      roadEdge: 0x090907,
-      roadSheen: 0x3d3b24,
-      stone: [0x2f302b, 0x393a31, 0x22241f],
-      stoneDark: 0x10110e,
-      stoneLight: 0x595a47,
-      prop: 0x6d7149,
-      fog: 0x090d0b,
-      accent: 0xe8c76a
-    },
-    {
-      ground: [0x151113, 0x1b1418, 0x100d10],
-      patch: 0x2d1d25,
-      road: [0x1f171b, 0x241a1f],
-      roadEdge: 0x0c0709,
-      roadSheen: 0x462a35,
-      stone: [0x332933, 0x3d303e, 0x251f28],
-      stoneDark: 0x130e14,
-      stoneLight: 0x60465f,
-      prop: 0x6e4666,
-      fog: 0x0c070b,
-      accent: 0x9c7ac8
-    },
-    {
-      ground: [0x17120e, 0x1c1710, 0x120f0b],
-      patch: 0x3a2318,
-      road: [0x221a13, 0x271e16],
-      roadEdge: 0x0d0805,
-      roadSheen: 0x52321e,
-      stone: [0x342822, 0x402f25, 0x241d19],
-      stoneDark: 0x130d0a,
-      stoneLight: 0x634735,
-      prop: 0x7a5136,
-      fog: 0x0d0704,
-      accent: 0xe0793b
-    },
-    {
-      ground: [0x121418, 0x151822, 0x0e1016],
-      patch: 0x252c3e,
-      road: [0x191b24, 0x1e212b],
-      roadEdge: 0x080910,
-      roadSheen: 0x30385a,
-      stone: [0x292b38, 0x333546, 0x20212d],
-      stoneDark: 0x10111a,
-      stoneLight: 0x4e5270,
-      prop: 0x4a5580,
-      fog: 0x060711,
-      accent: 0x6f8faa
-    },
-    {
-      ground: [0x151515, 0x191a18, 0x101211],
-      patch: 0x2a2c25,
-      road: [0x1c1d18, 0x22231d],
-      roadEdge: 0x090a08,
-      roadSheen: 0x3b3d2d,
-      stone: [0x30302c, 0x3c3c34, 0x23231f],
-      stoneDark: 0x11110f,
-      stoneLight: 0x5c5b4e,
-      prop: 0x726f55,
-      fog: 0x090a08,
-      accent: 0x9fb3aa
-    },
-    {
-      ground: [0x0f1513, 0x111c19, 0x0b1211],
-      patch: 0x1c332d,
-      road: [0x171e1b, 0x1c2420],
-      roadEdge: 0x060a09,
-      roadSheen: 0x294e44,
-      stone: [0x25342f, 0x30403a, 0x1c2724],
-      stoneDark: 0x0d1411,
-      stoneLight: 0x45675d,
-      prop: 0x448875,
-      fog: 0x04100d,
-      accent: 0x6fd6bd
-    },
-    {
-      ground: [0x171111, 0x1e1414, 0x120d0d],
-      patch: 0x351b1b,
-      road: [0x211616, 0x271a18],
-      roadEdge: 0x0d0606,
-      roadSheen: 0x582523,
-      stone: [0x342524, 0x402b29, 0x251b1a],
-      stoneDark: 0x140b0b,
-      stoneLight: 0x66413d,
-      prop: 0x863c38,
-      fog: 0x0d0505,
-      accent: 0xe4685e
-    },
-    {
-      ground: [0x141216, 0x19151d, 0x100e13],
-      patch: 0x282037,
-      road: [0x1c1821, 0x211c29],
-      roadEdge: 0x09070d,
-      roadSheen: 0x3e315f,
-      stone: [0x302a3a, 0x3a3348, 0x241f2c],
-      stoneDark: 0x120f18,
-      stoneLight: 0x594d74,
-      prop: 0x66528c,
-      fog: 0x08060f,
-      accent: 0x9365b8
-    },
-    {
-      ground: [0x141510, 0x191b13, 0x10110d],
-      patch: 0x2a311d,
-      road: [0x1c1e17, 0x22241a],
-      roadEdge: 0x090a06,
-      roadSheen: 0x454b25,
-      stone: [0x303228, 0x3b3f2e, 0x22251c],
-      stoneDark: 0x11130d,
-      stoneLight: 0x5d643d,
-      prop: 0x7f8a3e,
-      fog: 0x090c06,
-      accent: 0xb8d45a
-    }
-  ];
-  [ZONE_PALETTES[1], ZONE_PALETTES[3]] = [ZONE_PALETTES[3], ZONE_PALETTES[1]];
-  [ZONE_PALETTES[4], ZONE_PALETTES[9]] = [ZONE_PALETTES[9], ZONE_PALETTES[4]];
+  const ZONE_COLOR_VARIANTS = {
+    5: '#D8D0C4',
+    9: '#A9B7C8'
+  };
+  const ZONE_PALETTES = Array.from({ length: TYPE_COUNT + 1 }, (item, typeId) => (
+    typeId === 0 ? null : createZonePalette(typeId)
+  ));
   const OBSTACLE_KINDS = ['brick-wall'];
   const GRID_COLOR = 0x39423a;
   const GROUND_VARIANTS = 6;
@@ -747,6 +642,68 @@
   const PROP_CHANCE = 0.05; // rare, subtle stone decals on open ground
   const EMBER_CORE = 0xffd8a6;
   const EMBER_GLOW = 0xd9742e;
+
+  function createZonePalette(typeId) {
+    const accent = zoneAccentForType(typeId);
+    const accentRgb = colorNumberToRgb(accent);
+
+    return {
+      ground: [
+        tintBaseColor(DEFAULT_ZONE_PALETTE.ground[0], accentRgb, 0.08),
+        tintBaseColor(DEFAULT_ZONE_PALETTE.ground[1], accentRgb, 0.1),
+        tintBaseColor(DEFAULT_ZONE_PALETTE.ground[2], accentRgb, 0.07)
+      ],
+      patch: tintBaseColor(DEFAULT_ZONE_PALETTE.patch, accentRgb, 0.14),
+      road: [
+        tintBaseColor(DEFAULT_ZONE_PALETTE.road[0], accentRgb, 0.06),
+        tintBaseColor(DEFAULT_ZONE_PALETTE.road[1], accentRgb, 0.08)
+      ],
+      roadEdge: tintBaseColor(DEFAULT_ZONE_PALETTE.roadEdge, accentRgb, 0.03),
+      roadSheen: tintBaseColor(DEFAULT_ZONE_PALETTE.roadSheen, accentRgb, 0.13),
+      stone: [
+        tintBaseColor(DEFAULT_ZONE_PALETTE.stone[0], accentRgb, 0.08),
+        tintBaseColor(DEFAULT_ZONE_PALETTE.stone[1], accentRgb, 0.1),
+        tintBaseColor(DEFAULT_ZONE_PALETTE.stone[2], accentRgb, 0.07)
+      ],
+      stoneDark: tintBaseColor(DEFAULT_ZONE_PALETTE.stoneDark, accentRgb, 0.04),
+      stoneLight: tintBaseColor(DEFAULT_ZONE_PALETTE.stoneLight, accentRgb, 0.14),
+      prop: tintBaseColor(DEFAULT_ZONE_PALETTE.prop, accentRgb, 0.28),
+      fog: tintBaseColor(DEFAULT_ZONE_PALETTE.fog, accentRgb, 0.03),
+      accent
+    };
+  }
+
+  function zoneAccentForType(typeId) {
+    const color = ZONE_COLOR_VARIANTS[typeId] || COMBAT_THEMES[typeId]?.color || COMBAT_THEMES.default.color;
+    return hexToColorNumber(color);
+  }
+
+  function tintBaseColor(baseColor, accentRgb, amount) {
+    return rgbToColorNumber(mixRgb(colorNumberToRgb(baseColor), accentRgb, amount));
+  }
+
+  function mixRgb(from, to, amount) {
+    const ratio = clamp(amount, 0, 1);
+    return from.map((channel, index) => Math.round(channel + (to[index] - channel) * ratio));
+  }
+
+  function hexToColorNumber(value) {
+    const normalized = String(value || '').trim().replace(/^#/, '');
+    const parsed = Number.parseInt(normalized, 16);
+    return Number.isFinite(parsed) ? parsed : 0xffffff;
+  }
+
+  function colorNumberToRgb(color) {
+    return [
+      (color >> 16) & 255,
+      (color >> 8) & 255,
+      color & 255
+    ];
+  }
+
+  function rgbToColorNumber(rgb) {
+    return ((rgb[0] & 255) << 16) | ((rgb[1] & 255) << 8) | (rgb[2] & 255);
+  }
 
   // Deterministic 0..1 hash per (x, y, salt) — drives stable per-tile variation.
   function hashTile(x, y, salt) {

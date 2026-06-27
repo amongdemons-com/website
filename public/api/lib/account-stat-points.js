@@ -15,7 +15,10 @@ const NODE_DEFINITIONS = Object.freeze({
   attack_percent: Object.freeze({ label: 'Attack Damage %', cap: 5, requires: [['speed_flat', 5]] }),
   attack_mastery: Object.freeze({ label: 'Endless Attack', cap: Infinity, requires: [['attack_percent', 5]] }),
   aoe_percent: Object.freeze({ label: 'AOE Damage %', cap: 5, requires: [['speed_flat', 5]] }),
-  aoe_mastery: Object.freeze({ label: 'Endless AOE', cap: Infinity, requires: [['aoe_percent', 5]] })
+  aoe_mastery: Object.freeze({ label: 'Endless AOE', cap: Infinity, requires: [['aoe_percent', 5]] }),
+  poison_flat: Object.freeze({ label: 'Poison Damage', cap: 5, requires: [] }),
+  poison_percent: Object.freeze({ label: 'Poison Damage %', cap: 5, requires: [['poison_flat', 5]] }),
+  poison_mastery: Object.freeze({ label: 'Endless Poison', cap: Infinity, requires: [['poison_percent', 5]] })
 });
 
 const STAT_KEYS = Object.freeze(Object.keys(NODE_DEFINITIONS));
@@ -106,7 +109,9 @@ function calculateStatBonuses(source = {}) {
     attackFlat: allocations.attack_mastery,
     attackPercent: roundPercent(allocations.attack_percent * 3),
     aoeDamageFlat: allocations.aoe_mastery,
-    aoeDamagePercent: roundPercent(allocations.aoe_percent * 2)
+    aoeDamagePercent: roundPercent(allocations.aoe_percent * 2),
+    poisonDamageFlat: allocations.poison_flat + allocations.poison_mastery,
+    poisonDamagePercent: roundPercent(allocations.poison_percent * 3)
   };
 }
 
@@ -128,6 +133,12 @@ function calculatePathProgress(source = {}) {
         speed: { node: allocations.speed_percent, mastery: allocations.speed_mastery },
         attack: { node: allocations.attack_percent, mastery: allocations.attack_mastery },
         aoe: { node: allocations.aoe_percent, mastery: allocations.aoe_mastery }
+      }
+    },
+    poison: {
+      root: allocations.poison_flat,
+      branches: {
+        poison: { node: allocations.poison_percent, mastery: allocations.poison_mastery }
       }
     }
   };

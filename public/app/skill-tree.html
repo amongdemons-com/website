@@ -9,7 +9,7 @@
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/main.css?v=20260622-skill-tree-v3" rel="stylesheet">
-    <link href="/app/css/skill-tree.css?v=20260624-nodes-v8" rel="stylesheet">
+    <link href="/app/css/skill-tree.css?v=20260627-poison-v1" rel="stylesheet">
   </head>
   <body class="skill-tree-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -53,22 +53,26 @@
 
         <div class="ascension-viewport" id="skillTreeViewport" tabindex="0" aria-label="Scrollable skill tree">
           <div class="ascension-map" id="skillTreeGrid">
-            <svg class="ascension-connections" viewBox="0 0 1200 720" preserveAspectRatio="none" aria-hidden="true">
-              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="1" d="M600 360 L440 360"></path>
-              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="5" d="M440 360 L280 130"></path>
-              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="5" d="M440 360 L280 360"></path>
-              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="5" d="M440 360 L280 590"></path>
-              <path class="ascension-connection" data-unlock-key="health_percent" data-unlock-rank="5" d="M280 130 L100 130"></path>
-              <path class="ascension-connection" data-unlock-key="healing_percent" data-unlock-rank="5" d="M280 360 L100 360"></path>
-              <path class="ascension-connection" data-unlock-key="thorns_percent" data-unlock-rank="5" d="M280 590 L100 590"></path>
+            <svg class="ascension-connections" viewBox="0 0 1200 960" preserveAspectRatio="none" aria-hidden="true">
+              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="1" d="M600 480 L440 560"></path>
+              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="5" d="M440 560 L280 330"></path>
+              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="5" d="M440 560 L280 560"></path>
+              <path class="ascension-connection" data-unlock-key="health_flat" data-unlock-rank="5" d="M440 560 L280 790"></path>
+              <path class="ascension-connection" data-unlock-key="health_percent" data-unlock-rank="5" d="M280 330 L100 330"></path>
+              <path class="ascension-connection" data-unlock-key="healing_percent" data-unlock-rank="5" d="M280 560 L100 560"></path>
+              <path class="ascension-connection" data-unlock-key="thorns_percent" data-unlock-rank="5" d="M280 790 L100 790"></path>
 
-              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="1" d="M600 360 L760 360"></path>
-              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 360 L920 130"></path>
-              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 360 L920 360"></path>
-              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 360 L920 590"></path>
-              <path class="ascension-connection" data-unlock-key="speed_percent" data-unlock-rank="5" d="M920 130 L1100 130"></path>
-              <path class="ascension-connection" data-unlock-key="attack_percent" data-unlock-rank="5" d="M920 360 L1100 360"></path>
-              <path class="ascension-connection" data-unlock-key="aoe_percent" data-unlock-rank="5" d="M920 590 L1100 590"></path>
+              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="1" d="M600 480 L760 480"></path>
+              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 480 L920 250"></path>
+              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 480 L920 480"></path>
+              <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 480 L920 710"></path>
+              <path class="ascension-connection" data-unlock-key="speed_percent" data-unlock-rank="5" d="M920 250 L1100 250"></path>
+              <path class="ascension-connection" data-unlock-key="attack_percent" data-unlock-rank="5" d="M920 480 L1100 480"></path>
+              <path class="ascension-connection" data-unlock-key="aoe_percent" data-unlock-rank="5" d="M920 710 L1100 710"></path>
+
+              <path class="ascension-connection" data-unlock-key="poison_flat" data-unlock-rank="1" d="M600 480 L420 220"></path>
+              <path class="ascension-connection" data-unlock-key="poison_flat" data-unlock-rank="5" d="M420 220 L780 220"></path>
+              <path class="ascension-connection" data-unlock-key="poison_percent" data-unlock-rank="5" d="M780 220 L600 100"></path>
             </svg>
 
             <div class="ascension-core" aria-label="Skill tree origin">
@@ -77,40 +81,40 @@
               <span>points</span>
             </div>
 
-            <article class="ascension-node ascension-root-node" data-stat-point-key="health_flat" style="--node-x:36.667%;--node-y:50%;--path-accent:#d96d70" role="button" tabindex="0">
+            <article class="ascension-node ascension-root-node" data-stat-point-key="health_flat" style="--node-x:36.667%;--node-y:58.333%;--path-accent:#d96d70" role="button" tabindex="0">
               <strong class="ascension-node-label">+5 health</strong>
               <div class="ascension-node-orb"><i data-lucide="heart"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
 
-            <article class="ascension-node ascension-branch-node" data-stat-point-key="health_percent" style="--node-x:23.333%;--node-y:18.056%;--path-accent:#df7779" role="button" tabindex="0">
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="health_percent" style="--node-x:23.333%;--node-y:34.375%;--path-accent:#df7779" role="button" tabindex="0">
               <strong class="ascension-node-label">+3% health</strong>
               <div class="ascension-node-orb"><i data-lucide="heart-pulse"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
-            <article class="ascension-node ascension-mastery-node" data-stat-point-key="health_mastery" style="--node-x:8.333%;--node-y:18.056%;--path-accent:#df7779" role="button" tabindex="0">
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="health_mastery" style="--node-x:8.333%;--node-y:34.375%;--path-accent:#df7779" role="button" tabindex="0">
               <strong class="ascension-node-label">+5 health</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
 
-            <article class="ascension-node ascension-branch-node" data-stat-point-key="healing_percent" style="--node-x:23.333%;--node-y:50%;--path-accent:#8fefff" role="button" tabindex="0">
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="healing_percent" style="--node-x:23.333%;--node-y:58.333%;--path-accent:#8fefff" role="button" tabindex="0">
               <strong class="ascension-node-label">+3% healing</strong>
               <div class="ascension-node-orb"><i data-lucide="sparkles"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
-            <article class="ascension-node ascension-mastery-node" data-stat-point-key="healing_mastery" style="--node-x:8.333%;--node-y:50%;--path-accent:#8fefff" role="button" tabindex="0">
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="healing_mastery" style="--node-x:8.333%;--node-y:58.333%;--path-accent:#8fefff" role="button" tabindex="0">
               <strong class="ascension-node-label">+1 healing</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
 
-            <article class="ascension-node ascension-branch-node" data-stat-point-key="thorns_percent" style="--node-x:23.333%;--node-y:81.944%;--path-accent:#a991e8" role="button" tabindex="0">
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="thorns_percent" style="--node-x:23.333%;--node-y:82.292%;--path-accent:#a991e8" role="button" tabindex="0">
               <strong class="ascension-node-label">+5% thorns</strong>
               <div class="ascension-node-orb"><i data-lucide="badge-alert"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
-            <article class="ascension-node ascension-mastery-node" data-stat-point-key="thorns_mastery" style="--node-x:8.333%;--node-y:81.944%;--path-accent:#a991e8" role="button" tabindex="0">
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="thorns_mastery" style="--node-x:8.333%;--node-y:82.292%;--path-accent:#a991e8" role="button" tabindex="0">
               <strong class="ascension-node-label">+1 thorns</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ∞</span>
@@ -122,12 +126,12 @@
               <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
 
-            <article class="ascension-node ascension-branch-node" data-stat-point-key="speed_percent" style="--node-x:76.667%;--node-y:18.056%;--path-accent:#e8c76a" role="button" tabindex="0">
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="speed_percent" style="--node-x:76.667%;--node-y:26.042%;--path-accent:#e8c76a" role="button" tabindex="0">
               <strong class="ascension-node-label">+2% speed</strong>
               <div class="ascension-node-orb"><i data-lucide="gauge"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
-            <article class="ascension-node ascension-mastery-node" data-stat-point-key="speed_mastery" style="--node-x:91.667%;--node-y:18.056%;--path-accent:#e8c76a" role="button" tabindex="0">
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="speed_mastery" style="--node-x:91.667%;--node-y:26.042%;--path-accent:#e8c76a" role="button" tabindex="0">
               <strong class="ascension-node-label">+1 speed</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ∞</span>
@@ -144,13 +148,29 @@
               <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
 
-            <article class="ascension-node ascension-branch-node" data-stat-point-key="aoe_percent" style="--node-x:76.667%;--node-y:81.944%;--path-accent:#6fd6bd" role="button" tabindex="0">
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="aoe_percent" style="--node-x:76.667%;--node-y:73.958%;--path-accent:#6fd6bd" role="button" tabindex="0">
               <strong class="ascension-node-label">+2% AOE</strong>
               <div class="ascension-node-orb"><i data-lucide="scan"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
-            <article class="ascension-node ascension-mastery-node" data-stat-point-key="aoe_mastery" style="--node-x:91.667%;--node-y:81.944%;--path-accent:#6fd6bd" role="button" tabindex="0">
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="aoe_mastery" style="--node-x:91.667%;--node-y:73.958%;--path-accent:#6fd6bd" role="button" tabindex="0">
               <strong class="ascension-node-label">+1 AOE</strong>
+              <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
+              <span class="ascension-node-progress" data-node-progress>0 ∞</span>
+            </article>
+
+            <article class="ascension-node ascension-root-node" data-stat-point-key="poison_flat" style="--node-x:35%;--node-y:22.917%;--path-accent:#7de06a" role="button" tabindex="0">
+              <strong class="ascension-node-label">+1 poison damage</strong>
+              <div class="ascension-node-orb"><i data-lucide="flask-conical"></i></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
+            </article>
+            <article class="ascension-node ascension-branch-node" data-stat-point-key="poison_percent" style="--node-x:65%;--node-y:22.917%;--path-accent:#7de06a" role="button" tabindex="0">
+              <strong class="ascension-node-label">+3% poison damage</strong>
+              <div class="ascension-node-orb"><i data-lucide="flask-conical"></i></div>
+              <span class="ascension-node-progress" data-node-progress>0 / 5</span>
+            </article>
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="poison_mastery" style="--node-x:50%;--node-y:10.417%;--path-accent:#7de06a" role="button" tabindex="0">
+              <strong class="ascension-node-label">+1 poison damage</strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ∞</span>
             </article>
@@ -170,6 +190,6 @@
     <script src="/app/js/api-config.js"></script>
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
-    <script src="/app/js/skill-tree-ui.js?v=20260624-nodes-v7"></script>
+    <script src="/app/js/skill-tree-ui.js?v=20260627-poison-v1"></script>
   </body>
 </html>

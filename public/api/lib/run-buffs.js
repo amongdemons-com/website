@@ -127,6 +127,8 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
   const accountThornsFlat = Math.max(0, Number(accountBonuses.thornsFlat) || 0);
   const accountAoeDamageMult = 1 + getBonusFraction(accountBonuses.aoeDamagePercent);
   const accountAoeDamageFlat = Math.max(0, Number(accountBonuses.aoeDamageFlat) || 0);
+  const accountPoisonDamageMult = 1 + getBonusFraction(accountBonuses.poisonDamagePercent);
+  const accountPoisonDamageFlat = Math.max(0, Number(accountBonuses.poisonDamageFlat) || 0);
 
   return (team || []).map((demon) => {
     const next = {
@@ -140,7 +142,9 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
         thornsPercent: accountThornsPercent,
         thornsFlat: accountThornsFlat,
         aoeDamageMult: accountAoeDamageMult,
-        aoeDamageFlat: accountAoeDamageFlat
+        aoeDamageFlat: accountAoeDamageFlat,
+        poisonDamageMult: accountPoisonDamageMult,
+        poisonDamageFlat: accountPoisonDamageFlat
       }
     };
 
@@ -300,7 +304,12 @@ function applyPoisonModifiers(context) {
   }
 
   return {
-    damage: roundDamage(damage * getEffectMultiplier(state, 'poison_tick_damage_mult')),
+    damage: roundDamage(
+      damage *
+      getEffectMultiplier(state, 'poison_tick_damage_mult') *
+      positiveNumber(context.attacker?.battleBuffs?.poisonDamageMult, 1) +
+      Math.max(0, Number(context.attacker?.battleBuffs?.poisonDamageFlat) || 0)
+    ),
     durationTicks: Math.max(1, Math.round(durationTicks * getEffectMultiplier(state, 'poison_duration_mult')))
   };
 }

@@ -16,7 +16,10 @@
     attack_percent: { label: 'Brutal Force', cap: 5, requires: [['speed_flat', 5]] },
     attack_mastery: { label: 'Endless Force', cap: Infinity, requires: [['attack_percent', 5]] },
     aoe_percent: { label: 'Wide Ruin', cap: 5, requires: [['speed_flat', 5]] },
-    aoe_mastery: { label: 'Endless Ruin', cap: Infinity, requires: [['aoe_percent', 5]] }
+    aoe_mastery: { label: 'Endless Ruin', cap: Infinity, requires: [['aoe_percent', 5]] },
+    poison_flat: { label: 'Poison Damage', cap: 5, requires: [] },
+    poison_percent: { label: 'Virulent Poison', cap: 5, requires: [['poison_flat', 5]] },
+    poison_mastery: { label: 'Endless Poison', cap: Infinity, requires: [['poison_percent', 5]] }
   };
   const STAT_KEYS = Object.keys(NODE_DEFINITIONS);
   const state = {

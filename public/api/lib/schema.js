@@ -137,6 +137,9 @@ async function initializeSchema() {
       attack_mastery INT UNSIGNED NOT NULL DEFAULT 0,
       aoe_percent INT UNSIGNED NOT NULL DEFAULT 0,
       aoe_mastery INT UNSIGNED NOT NULL DEFAULT 0,
+      poison_flat INT UNSIGNED NOT NULL DEFAULT 0,
+      poison_percent INT UNSIGNED NOT NULL DEFAULT 0,
+      poison_mastery INT UNSIGNED NOT NULL DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -155,7 +158,10 @@ async function initializeSchema() {
     'attack_percent',
     'attack_mastery',
     'aoe_percent',
-    'aoe_mastery'
+    'aoe_mastery',
+    'poison_flat',
+    'poison_percent',
+    'poison_mastery'
   ];
   for (const column of skillTreeColumns) {
     await addColumnIfMissing('player_stat_points', column, `\`${column}\` INT UNSIGNED NOT NULL DEFAULT 0`);

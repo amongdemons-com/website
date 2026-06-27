@@ -84,7 +84,7 @@ body.skill-tree-page {
     position: relative;
     flex: 1 0 auto;
     min-width: 75rem;
-    min-height: 42rem;
+    min-height: 56rem;
     isolation: isolate;
     overflow: hidden;
     background:
@@ -386,7 +386,7 @@ body.skill-tree-page {
     }
 
     .ascension-map {
-        height: 42rem;
+        height: 56rem;
     }
 
 }
