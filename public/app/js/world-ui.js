@@ -3,7 +3,6 @@
 
   const api = window.AmongDemons.api;
   const appUrl = window.AmongDemons.appUrl || ((value) => value);
-  const renderSoulAmount = window.AmongDemons.ui?.renderSoulAmount || ((value) => escapeHtml(value));
   const TILE_SIZE = 64;
   const WORLD_RADIUS = 50;
   const ZONE_START_RADIUS = 24;
@@ -11,6 +10,8 @@
   const ZONE_ROTATION = 0.045;
   const MIN_ZOOM = 0.55;
   const MAX_ZOOM = 2.15;
+  const AVERAGE_TERRAIN_COST = 2;
+  const ROAD_MOVE_COST = AVERAGE_TERRAIN_COST - 1;
   const CLICK_THRESHOLD = 7;
   const STEP_DURATION_MS = 180;
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
@@ -152,8 +153,8 @@
       'worldTargetTooltip',
       'worldEncounterTooltip',
       'worldTeamSummary',
+      'worldEncounterHeading',
       'worldEncounterList',
-      'worldEventPanel',
       'worldTravelPanel'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
@@ -161,7 +162,7 @@
   }
 
   function bindDomControls() {
-    elements.worldPositionButton?.addEventListener('click', () => centerOnHunter());
+    elements.worldPositionButton?.addEventListener('click', () => resetCameraOnHunter());
 
     elements.worldEncounterList?.addEventListener('click', (event) => {
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
@@ -170,12 +171,6 @@
       challengePlayer(button.dataset.challengePlayer, button);
     });
 
-    elements.worldEventPanel?.addEventListener('click', (event) => {
-      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
-      const button = target?.closest('[data-world-event-action]');
-      if (!button) return;
-      handleEventAction(button.dataset.worldEventAction);
-    });
   }
 
   async function initPixi() {
@@ -305,7 +300,6 @@
 
     if (isBlocked(target)) {
       clearRoutePreview('blocked');
-      setMessage('That tile is blocked.', 'warning');
       return;
     }
 
@@ -322,6 +316,11 @@
       return;
     }
 
+    state.selectedTarget = target;
+    state.selectedPath = path;
+    state.travelStatus = 'preview';
+    state.recentStepEvent = null;
+
     const encounter = getEncounterAt(target);
     if (encounter) {
       showEncounterTooltip(encounter);
@@ -329,10 +328,6 @@
       hideEncounterTooltip();
     }
 
-    state.selectedTarget = target;
-    state.selectedPath = path;
-    state.travelStatus = 'preview';
-    state.recentStepEvent = null;
     renderWorld();
     renderTravelPanel();
   }
@@ -423,12 +418,19 @@
   function findPath(start, target) {
     const origin = normalizePosition(start);
     const destination = normalizePosition(target);
-    const queue = [origin];
-    const visited = new Set([getTileKey(origin)]);
+    const queue = [{ position: origin, cost: 0 }];
+    const visited = new Set();
+    const costs = new Map([[getTileKey(origin), 0]]);
     const cameFrom = new Map();
 
-    for (let index = 0; index < queue.length; index += 1) {
-      const current = queue[index];
+    while (queue.length) {
+      const bestIndex = getLowestCostQueueIndex(queue);
+      const currentEntry = queue.splice(bestIndex, 1)[0];
+      const current = currentEntry.position;
+      const currentKey = getTileKey(current);
+      if (visited.has(currentKey)) continue;
+      visited.add(currentKey);
+
       if (positionsEqual(current, destination)) {
         return rebuildPath(cameFrom, current);
       }
@@ -437,13 +439,34 @@
         const key = getTileKey(neighbor);
         if (visited.has(key) || !isInBounds(neighbor) || isBlocked(neighbor)) return;
 
-        visited.add(key);
+        const nextCost = currentEntry.cost + tileMoveCost(neighbor);
+        if (nextCost >= (costs.get(key) ?? Number.POSITIVE_INFINITY)) return;
+
+        costs.set(key, nextCost);
         cameFrom.set(key, current);
-        queue.push(neighbor);
+        queue.push({ position: neighbor, cost: nextCost });
       });
     }
 
     return [];
+  }
+
+  function getLowestCostQueueIndex(queue) {
+    let bestIndex = 0;
+    let bestCost = queue[0]?.cost ?? 0;
+
+    for (let index = 1; index < queue.length; index += 1) {
+      if (queue[index].cost < bestCost) {
+        bestCost = queue[index].cost;
+        bestIndex = index;
+      }
+    }
+
+    return bestIndex;
+  }
+
+  function tileMoveCost(position) {
+    return isRoadTile(position) ? ROAD_MOVE_COST : AVERAGE_TERRAIN_COST;
   }
 
   function rebuildPath(cameFrom, current) {
@@ -530,25 +553,6 @@
     } finally {
       setButtonBusy(button, false);
       renderEncounterPanel();
-    }
-  }
-
-  function handleEventAction(action) {
-    const event = state.currentEvent;
-    if (!event) return;
-
-    if (action === 'dungeon-portal') {
-      window.location.href = appUrl('/dungeon');
-      return;
-    }
-
-    if (action === 'boss') {
-      setMessage('Boss fight placeholder ready for future combat integration.', 'warning');
-      return;
-    }
-
-    if (action === 'soul-cache') {
-      setMessage('Soul cache placeholder ready for future reward integration.', 'success');
     }
   }
 
@@ -733,6 +737,8 @@
       accent: 0xb8d45a
     }
   ];
+  [ZONE_PALETTES[1], ZONE_PALETTES[3]] = [ZONE_PALETTES[3], ZONE_PALETTES[1]];
+  [ZONE_PALETTES[4], ZONE_PALETTES[9]] = [ZONE_PALETTES[9], ZONE_PALETTES[4]];
   const OBSTACLE_KINDS = ['brick-wall'];
   const GRID_COLOR = 0x39423a;
   const GROUND_VARIANTS = 6;
@@ -1243,7 +1249,6 @@
     renderPositionPanel();
     renderTeamSummary();
     renderEncounterPanel();
-    renderEventPanel();
     renderTravelPanel();
   }
 
@@ -1264,31 +1269,12 @@
       return;
     }
 
-    elements.worldTeamSummary.innerHTML = `
-      <div class="world-team-count"><strong>${formatNumber(team.count || members.length)}</strong><span>Hunters' demons</span></div>
-      <div class="world-team-list">
-        ${members.map(renderTeamMember).join('')}
-      </div>
-    `;
-  }
-
-  function renderTeamMember(member) {
-    const species = member.species || 'Demon';
-    const rarity = member.rarity || 'common';
-
-    return `
-      <article class="world-team-member">
-        <span class="world-team-rarity world-rarity-${escapeAttribute(rarity)}"></span>
-        <span>
-          <strong>${escapeHtml(species)}</strong>
-          <small>${escapeHtml(capitalize(rarity))} / ${formatNumber(member.hp)} HP / ${formatNumber(member.atk)} ATK</small>
-        </span>
-      </article>
-    `;
+    elements.worldTeamSummary.innerHTML = `<div class="world-team-demons">${members.map(renderDemonPortrait).join('')}</div>`;
   }
 
   function renderEncounterPanel() {
     if (!elements.worldEncounterList) return;
+    setText(elements.worldEncounterHeading, `Hunters in area ${formatCoords(state.position)}`);
 
     const players = state.playersAt || [];
     if (!players.length) {
@@ -1306,7 +1292,7 @@
           <span class="world-encounter-mark" aria-hidden="true"></span>
           <span class="world-encounter-copy">
             <strong>${escapeHtml(player.username || 'Unknown Hunter')}</strong>
-            <small>Level ${formatNumber(player.level || 1)} / ${formatCoords(player)}</small>
+            <small>Level ${formatNumber(player.level || 1)}</small>
           </span>
           <button class="btn btn-outline-light btn-sm" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
         </article>
@@ -1314,23 +1300,16 @@
     }).join('');
   }
 
-  function renderEventPanel() {
-    const event = state.currentEvent;
-    if (!elements.worldEventPanel) return;
+  function renderDemonPortrait(member) {
+    const url = member.imageUrl || DEFAULT_PROFILE_IMAGE_URL;
+    const rarity = member.rarity || 'common';
+    const species = member.species || 'Demon';
+    const color = rarityCss(rarity);
 
-    if (!event) {
-      elements.worldEventPanel.innerHTML = '<p class="world-empty-text">No event on this tile.</p>';
-      return;
-    }
-
-    const action = getEventAction(event);
-    elements.worldEventPanel.innerHTML = `
-      <article class="world-event-card world-event-${escapeAttribute(event.type)}">
-        <span class="world-event-type">${escapeHtml(getEventLabel(event.type))}</span>
-        <strong>${escapeHtml(event.title || 'World Event')}</strong>
-        <p>${escapeHtml(event.description || '')}</p>
-        ${action}
-      </article>
+    return `
+      <span class="world-enc-demon" style="--rarity-color:${color}" title="${escapeAttribute(`${capitalize(rarity)} ${species}`)}">
+        <img src="${escapeAttribute(url)}" alt="" width="34" height="34" loading="lazy">
+      </span>
     `;
   }
 
@@ -1357,22 +1336,6 @@
         <small>${formatCoords(entry.position)}</small>
       </article>
     `;
-  }
-
-  function getEventAction(event) {
-    if (event.type === 'dungeon-portal') {
-      return `<button class="btn btn-warning btn-sm" type="button" data-world-event-action="dungeon-portal">Dungeon</button>`;
-    }
-
-    if (event.type === 'boss') {
-      return `<button class="btn btn-outline-light btn-sm" type="button" data-world-event-action="boss">Boss Fight</button>`;
-    }
-
-    if (event.type === 'soul-cache') {
-      return `<button class="btn btn-primary btn-sm" type="button" data-world-event-action="soul-cache">${renderSoulAmount('Open', { showLabel: false })}</button>`;
-    }
-
-    return '';
   }
 
   function onPointerDown(event) {
@@ -1624,6 +1587,11 @@
     centerOnWorldPoint(tileCenter(state.position));
   }
 
+  function resetCameraOnHunter() {
+    setZoom(1);
+    centerOnHunter();
+  }
+
   function centerOnWorldPoint(point) {
     const app = state.app;
     if (!app || !state.viewport) return;
@@ -1806,7 +1774,6 @@
     const path = state.selectedPath || [];
     if (!tooltip) return;
 
-    // The encounter tooltip already labels the tile, so suppress the coord one.
     if (!target || path.length < 2 || state.moving || !state.viewport || state.selectedEncounter) {
       tooltip.classList.add('d-none');
       return;
@@ -1817,10 +1784,28 @@
     const x = state.viewport.x + center.x * scale;
     const y = state.viewport.y + center.y * scale;
 
-    tooltip.textContent = formatCoords(target);
+    tooltip.innerHTML = renderTargetTooltipContent(target, path);
     tooltip.style.left = `${Math.round(x)}px`;
     tooltip.style.top = `${Math.round(y)}px`;
     tooltip.classList.remove('d-none');
+  }
+
+  function renderTargetTooltipContent(target, path) {
+    const event = getEventAt(target);
+    const meta = escapeHtml(formatTravelMeta(target, getPathStepCount(path)));
+    const header = `
+      <strong class="world-tooltip-title">Move to</strong>
+      <span class="world-tooltip-meta">${meta}</span>
+    `;
+
+    if (!event) return header;
+
+    return `
+      ${header}
+      <span class="world-target-event-type">${escapeHtml(getEventLabel(event.type))}</span>
+      <span class="world-target-event-title">${escapeHtml(event.title || 'World Event')}</span>
+      ${event.description ? `<span class="world-target-event-copy">${escapeHtml(event.description)}</span>` : ''}
+    `;
   }
 
   function showEncounterTooltip(encounter) {
@@ -1842,29 +1827,22 @@
 
     const team = Array.isArray(encounter.team) ? encounter.team : [];
     const difficulty = Math.max(1, Math.min(10, Number(encounter.difficulty) || 1));
+    const stepCount = getPathStepCount(state.selectedPath || []);
 
-    // No stats here on purpose — the player learns the team's strength in combat.
-    const demons = team.map((member) => {
-      const url = member.imageUrl || '';
-      const color = rarityCss(member.rarity);
-      const elite = member.elite ? ' is-elite' : '';
-      return `
-        <span class="world-enc-demon${elite}" style="--rarity-color:${color}" title="${escapeAttribute(capitalize(member.rarity || 'common'))}">
-          <img src="${escapeAttribute(url)}" alt="" width="34" height="34" loading="lazy">
-        </span>
-      `;
-    }).join('');
+    const demons = team.map(renderDemonPortrait).join('');
 
+    const meterTone = difficulty <= 3 ? 'easy' : (difficulty >= 8 ? 'hard' : 'medium');
     const meter = Array.from({ length: 10 }, (item, index) => (
       `<span class="world-enc-pip${index < difficulty ? ' is-on' : ''}"></span>`
     )).join('');
 
     tooltip.innerHTML = `
-      <div class="world-enc-demons">${demons}</div>
-      <div class="world-enc-difficulty">
-        <span class="world-enc-difficulty-label">Difficulty</span>
-        <span class="world-enc-meter">${meter}</span>
-        <span class="world-enc-difficulty-value">${difficulty}/10</span>
+      <strong class="world-tooltip-title">Demon Patrol</strong>
+      <span class="world-tooltip-meta">${escapeHtml(formatTravelMeta(encounter, stepCount))}</span>
+      ${demons ? `<div class="world-enc-demons">${demons}</div>` : ''}
+      <div class="world-enc-difficulty is-${meterTone}">
+        <span class="world-enc-difficulty-label">Threat</span>
+        <span class="world-enc-meter" aria-label="Threat ${difficulty} of 10">${meter}</span>
       </div>
     `;
   }
@@ -1954,6 +1932,19 @@
 
   function formatCoords(position) {
     return `${formatNumber(position.x)}, ${formatNumber(position.y)}`;
+  }
+
+  function formatTravelMeta(position, stepCount) {
+    return `${formatCoords(position)} · ${formatStepCount(stepCount)}`;
+  }
+
+  function getPathStepCount(path) {
+    return Math.max(0, (Array.isArray(path) ? path.length : 0) - 1);
+  }
+
+  function formatStepCount(stepCount) {
+    const count = Math.max(0, Math.trunc(Number(stepCount) || 0));
+    return `${formatNumber(count)} ${count === 1 ? 'step' : 'steps'}`;
   }
 
   function formatNumber(value) {

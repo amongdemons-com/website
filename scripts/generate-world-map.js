@@ -5,8 +5,9 @@
  * built from roads, unpassable blocks/structures, and demon-team encounters.
  *
  * Layout rules:
- *  - Difficulty scales with distance from the center (0, 0): teams get larger
- *    and rarer the further out they sit.
+ *  - Distance from the center (0, 0) controls team size and rarity bands.
+ *    Displayed difficulty is computed from final team size, rarity, and type
+ *    weights.
  *  - Demon TYPE is zone-based — the map is split into angular wedges and each
  *    of the 11 types predominates in its own wedge, so areas feel themed.
  *  - Roads connect camps, lairs, shrines, and caches through meandering
@@ -29,15 +30,27 @@ const SAFE_RADIUS = 3; // no blocks/encounters this close to spawn
 const MAX_DISTANCE = Math.hypot(50, 50); // farthest corner from center
 
 const RARITY_RANK = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+const RARITY_DIFFICULTY_SCORE = {
+  common: 1,
+  uncommon: 1.25,
+  rare: 1.6,
+  epic: 2.1,
+  legendary: 2.8,
+  mythic: 3.7
+};
 const FRONT_TYPE_IDS = [1, 5, 7, 8, 9];
 const BLOCK_TYPES = ['basalt', 'bone-spur', 'chasm', 'ruin'];
 const TYPE_COUNT = 11;
 const ZONE_START_RADIUS = 24;
 const ZONE_ROTATION = 0.045; // nudge wedge boundaries off the cardinal axes
 const PRIMARY_TYPE_CHANCE = 0.68; // odds a team member is the zone's signature type
+const SUPPORT_ONLY_ROLES = new Set(['healer', 'counter_tank']);
 
 const demonTypes = require(path.join(DATA_DIR, 'demon-types.json'));
 const demonAssets = require(path.join(DATA_DIR, 'demons.json'));
+const TYPE_WEIGHTS = demonAssets.map((asset) => Number(asset.typeWeight)).filter(Number.isFinite);
+const MIN_TYPE_WEIGHT = Math.min(...TYPE_WEIGHTS);
+const MAX_TYPE_WEIGHT = Math.max(...TYPE_WEIGHTS);
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -128,6 +141,38 @@ function preferredPosition(typeId) {
   return FRONT_TYPE_IDS.includes(typeId) ? 'front' : 'back';
 }
 
+function roleForType(typeId) {
+  return demonTypes[String(typeId)]?.role || 'melee';
+}
+
+function typeWeight(typeId) {
+  const asset = demonAssets.find((entry) => entry.type === typeId);
+  return Number(asset?.typeWeight) || MAX_TYPE_WEIGHT;
+}
+
+function typeDifficultyMultiplier(typeId) {
+  const range = Math.max(1, MAX_TYPE_WEIGHT - MIN_TYPE_WEIGHT);
+  const rarityBySpawnWeight = (MAX_TYPE_WEIGHT - typeWeight(typeId)) / range;
+  return 1 + rarityBySpawnWeight * 1.25;
+}
+
+function weightedTypeId(options = {}) {
+  const excludedRoles = options.excludedRoles || new Set();
+  const excludedTypes = options.excludedTypes || new Set();
+  const candidates = Array.from({ length: TYPE_COUNT }, (item, index) => index + 1)
+    .filter((typeId) => !excludedTypes.has(typeId) && !excludedRoles.has(roleForType(typeId)));
+  const fallback = candidates.length ? candidates : Array.from({ length: TYPE_COUNT }, (item, index) => index + 1);
+  const total = fallback.reduce((sum, typeId) => sum + typeWeight(typeId), 0);
+  let roll = rng() * total;
+
+  for (const typeId of fallback) {
+    roll -= typeWeight(typeId);
+    if (roll <= 0) return typeId;
+  }
+
+  return fallback[fallback.length - 1];
+}
+
 function buildMember(typeId, rarity, instanceId, position) {
   const asset = assetFor(typeId, rarity);
   const type = demonTypes[String(typeId)] || {};
@@ -146,32 +191,104 @@ function rarityRank(rarity) {
   return RARITY_RANK.indexOf(rarity);
 }
 
-function buildEncounter(id, x, y) {
+function memberDifficultyScore(member) {
+  const rarityScore = RARITY_DIFFICULTY_SCORE[member.rarity] || RARITY_DIFFICULTY_SCORE.common;
+  return rarityScore * typeDifficultyMultiplier(member.typeId);
+}
+
+function teamDifficulty(members) {
+  const minScore = RARITY_DIFFICULTY_SCORE.common * typeDifficultyMultiplier(1);
+  const maxScore = 6 * RARITY_DIFFICULTY_SCORE.mythic * typeDifficultyMultiplier(11);
+  const score = members.reduce((sum, member) => sum + memberDifficultyScore(member), 0);
+  const normalized = Math.max(0, Math.min(1, (score - minScore) / (maxScore - minScore)));
+  return Math.max(1, Math.min(10, Math.round(1 + normalized * 9)));
+}
+
+function teamKey(members) {
+  return members
+    .map((member) => `${member.typeId}:${member.rarity}`)
+    .sort()
+    .join('|');
+}
+
+function ensureFrontLine(members) {
+  if (!members.some((member) => member.position === 'front')) {
+    members[0].position = 'front';
+  }
+}
+
+function diversifySupportOnlyTeam(members, id, rarities) {
+  if (!members.length) return;
+  if (!members.every((member) => SUPPORT_ONLY_ROLES.has(member.role))) return;
+
+  const typeId = weightedTypeId({ excludedRoles: SUPPORT_ONLY_ROLES });
+  const rarity = pick(rarities);
+  const replacement = buildMember(typeId, rarity, `${id}-m${Math.max(2, members.length)}`, preferredPosition(typeId));
+
+  if (members.length === 1) {
+    members.push(replacement);
+  } else {
+    members[members.length - 1] = {
+      ...replacement,
+      instanceId: `${id}-m${members.length}`
+    };
+  }
+}
+
+function normalizeTeam(members, id, rarities) {
+  diversifySupportOnlyTeam(members, id, rarities);
+  ensureFrontLine(members);
+}
+
+function buildTeamMembers(id, size, primaryType, primaryTypeChance, rarities, rarestAllowed) {
+  const members = [
+    buildMember(primaryType, rarestAllowed, `${id}-m1`, preferredPosition(primaryType))
+  ];
+
+  for (let index = 1; index < size; index += 1) {
+    const typeId = rng() < primaryTypeChance ? primaryType : weightedTypeId();
+    const rarity = pick(rarities);
+    members.push(buildMember(typeId, rarity, `${id}-m${index + 1}`, preferredPosition(typeId)));
+  }
+
+  return members;
+}
+
+function makeUniqueTeam(members, id, idNumber, rarities, usedTeamKeys) {
+  for (let attempt = 0; attempt < 700; attempt += 1) {
+    normalizeTeam(members, id, rarities);
+    const key = teamKey(members);
+    if (!usedTeamKeys.has(key)) {
+      usedTeamKeys.add(key);
+      return members;
+    }
+
+    const nextType = ((idNumber + attempt) % TYPE_COUNT) + 1;
+    const nextRarity = rarities[Math.floor(attempt / TYPE_COUNT) % rarities.length];
+    if (members.length < 6 && attempt % 5 === 0) {
+      members.push(buildMember(nextType, nextRarity, `${id}-m${members.length + 1}`, preferredPosition(nextType)));
+    } else {
+      const index = attempt % members.length;
+      members[index] = buildMember(nextType, nextRarity, `${id}-m${index + 1}`, preferredPosition(nextType));
+    }
+  }
+
+  throw new Error(`Could not create a unique enemy team for ${id}.`);
+}
+
+function buildEncounter(id, x, y, usedTeamKeys) {
   const t = difficultyFactor(x, y);
-  const meter = difficultyMeter(t);
-  const rarities = allowedRaritiesForMeter(meter);
+  const distanceMeter = difficultyMeter(t);
+  const rarities = allowedRaritiesForMeter(distanceMeter);
   const rarestAllowed = rarities[rarities.length - 1];
   const size = teamSizeForFactor(t);
   const zoneType = zoneTypeId(x, y);
   const primaryType = zoneType || mixedTypeId(x, y);
   const primaryTypeChance = zoneType ? PRIMARY_TYPE_CHANCE : 0.34;
+  const idNumber = Number(id.match(/\d+/)?.[0]) || 1;
 
-  const members = [];
-
-  // The signature demon: zone type at the area's top rarity. It drives the map
-  // portrait so the wedge's identity is readable at a glance.
-  members.push(buildMember(primaryType, rarestAllowed, `${id}-m1`, preferredPosition(primaryType)));
-
-  for (let index = 1; index < size; index += 1) {
-    const typeId = rng() < primaryTypeChance ? primaryType : randInt(1, TYPE_COUNT);
-    const rarity = pick(rarities);
-    members.push(buildMember(typeId, rarity, `${id}-m${index + 1}`, preferredPosition(typeId)));
-  }
-
-  // Guarantee at least one front-line demon so formations read sensibly.
-  if (!members.some((member) => member.position === 'front')) {
-    members[0].position = 'front';
-  }
+  let members = buildTeamMembers(id, size, primaryType, primaryTypeChance, rarities, rarestAllowed);
+  members = makeUniqueTeam(members, id, idNumber, rarities, usedTeamKeys);
 
   // Key demon: highest rarity, prefer the zone's signature type, then type id.
   const keyDemon = members
@@ -187,7 +304,7 @@ function buildEncounter(id, x, y) {
     id,
     x,
     y,
-    difficulty: meter,
+    difficulty: teamDifficulty(members),
     zoneType: zoneType || 0,
     keyDemon: {
       typeId: keyDemon.typeId,
@@ -555,6 +672,7 @@ function placeBlock(blocks, occupied, roadSet, x, y, type) {
 function generateEncounters(occupied, roadSet) {
   const encounters = [];
   const encounterTiles = new Set();
+  const usedTeamKeys = new Set();
   let id = 1;
 
   for (let y = BOUNDS.min; y <= BOUNDS.max; y += 1) {
@@ -573,12 +691,29 @@ function generateEncounters(occupied, roadSet) {
 
       occupied.add(tileKey(x, y));
       encounterTiles.add(tileKey(x, y));
-      encounters.push(buildEncounter(`enc-${id}`, x, y));
+      encounters.push(buildEncounter(`enc-${id}`, x, y, usedTeamKeys));
       id += 1;
     }
   }
 
+  validateEncounterTeams(encounters);
   return encounters;
+}
+
+function validateEncounterTeams(encounters) {
+  const keys = new Map();
+
+  encounters.forEach((encounter) => {
+    const key = teamKey(encounter.team);
+    if (keys.has(key)) {
+      throw new Error(`Duplicate enemy team composition: ${keys.get(key)} and ${encounter.id}`);
+    }
+    keys.set(key, encounter.id);
+
+    if (encounter.team.every((member) => SUPPORT_ONLY_ROLES.has(member.role))) {
+      throw new Error(`Support-only enemy team generated: ${encounter.id}`);
+    }
+  });
 }
 
 function hasNearbyEncounter(encounterTiles, x, y) {
