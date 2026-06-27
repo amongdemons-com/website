@@ -27,9 +27,9 @@ const normalizeFormationRow = (...args) => dungeonActions.normalizeFormationRow(
 const refreshRecruitDraftOrder = (...args) => dungeonActions.refreshRecruitDraftOrder(...args);
 const refreshRecruitDraftPoolOrder = (...args) => dungeonActions.refreshRecruitDraftPoolOrder(...args);
 const removeDraftDemon = (...args) => dungeonActions.removeDraftDemon(...args);
-const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
 const syncRecruitDraftSelection = (...args) => dungeonActions.syncRecruitDraftSelection(...args);
+const CASHOUT_FALLBACK_IMAGE_URL = '/app/images/amongdemons_logo_250x250.png';
 
 function openCashoutModal() {
   if (!canExtractRun()) return;
@@ -52,11 +52,7 @@ function renderCashoutModal() {
   elements.cashoutModalBody.innerHTML = `
     <div class="cashout-summary cashout-extract-summary">
       <div class="cashout-selected-reward">
-        ${demon ? renderDungeonDemonCard(demon, {
-          className: 'cashout-demon-card',
-          suppressCollectionMissingTag: true,
-          attributes: { 'data-instance-id': demon.instanceId || `extract-${candidate.key}` }
-        }) : `
+        ${demon ? renderCashoutDemonPreview(demon, candidate) : `
           <div class="dungeon-reward-empty">
             <span>No demon selected</span>
           </div>
@@ -89,6 +85,34 @@ function renderCashoutModal() {
     </div>
   `;
   elements.cashoutConfirmBtn.disabled = false;
+}
+
+function renderCashoutDemonPreview(demon, candidate) {
+  const imageUrl = demon.imageUrl || demon.image_url || CASHOUT_FALLBACK_IMAGE_URL;
+  const rarity = capitalize(demon.rarity || 'common');
+  const name = demon.species || demon.name || 'Demon';
+  const instanceId = demon.instanceId || `extract-${candidate?.key || 'demon'}`;
+  return `
+    <div
+      class="dungeon-demon-card cashout-demon-card cashout-demon-preview"
+      style="--rarity-color: ${escapeHtml(getRarityColor(String(demon.rarity || 'common').toLowerCase()))}"
+      data-instance-id="${escapeHtml(instanceId)}"
+      aria-label="${escapeHtml(`${rarity} ${name}`)}"
+    >
+      <img
+        class="cashout-demon-preview-img"
+        src="${escapeHtml(imageUrl)}"
+        alt="${escapeHtml(`${rarity} ${name}`)}"
+        width="1024"
+        height="1024"
+        loading="eager"
+        decoding="async"
+        draggable="false"
+        onerror="this.onerror=null;this.src='${CASHOUT_FALLBACK_IMAGE_URL}';"
+      >
+      <span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>
+    </div>
+  `;
 }
 
 function getRewardCandidates() {

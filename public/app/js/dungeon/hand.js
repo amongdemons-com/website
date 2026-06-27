@@ -20,6 +20,8 @@ const renderActivePactIcon = (...args) => dungeonActions.renderActivePactIcon(..
 const shouldShowCollectionReinforcementHandPlaceholder = (...args) => dungeonActions.shouldShowCollectionReinforcementHandPlaceholder(...args);
 let handTabEventsBound = false;
 let handScrollEventsBound = false;
+let handScrollResizeEventsBound = false;
+let handScrollSyncFrame = 0;
 
 function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit') {
   if (!elements.dungeonHandBar || !elements.dungeonHandGrid) return;
@@ -62,6 +64,7 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
   }
   bindHandTabs();
   bindHandScrollButtons();
+  scheduleHandScrollControlsSync();
 }
 
 function updateHandTabs(activeTab = 'hand', buffCount = 0, hasLevelPowerPrompt = false) {
@@ -114,6 +117,40 @@ function bindHandScrollButtons() {
     viewport.scrollBy({
       left: direction * amount,
       behavior: 'smooth'
+    });
+  });
+
+  if (!handScrollResizeEventsBound) {
+    handScrollResizeEventsBound = true;
+    window.addEventListener('resize', scheduleHandScrollControlsSync);
+  }
+}
+
+function scheduleHandScrollControlsSync() {
+  if (handScrollSyncFrame) window.cancelAnimationFrame(handScrollSyncFrame);
+  handScrollSyncFrame = window.requestAnimationFrame(() => {
+    handScrollSyncFrame = 0;
+    syncHandScrollControls();
+  });
+}
+
+function syncHandScrollControls() {
+  elements.dungeonHandGrid?.querySelectorAll('.dungeon-hand-scroll-shell').forEach((shell) => {
+    const viewport = shell.querySelector('[data-hand-scroll-viewport]');
+    const buttons = Array.from(shell.querySelectorAll('[data-hand-scroll]'));
+    if (!viewport || !buttons.length) return;
+
+    shell.classList.remove('has-scroll-overflow');
+    buttons.forEach((button) => {
+      button.hidden = true;
+      button.disabled = true;
+    });
+
+    const hasOverflow = viewport.scrollWidth > viewport.clientWidth + 1;
+    shell.classList.toggle('has-scroll-overflow', hasOverflow);
+    buttons.forEach((button) => {
+      button.hidden = !hasOverflow;
+      button.disabled = !hasOverflow;
     });
   });
 }
@@ -209,7 +246,7 @@ function renderHandPactTags(activeBuffs) {
 
   return `
     <div class="dungeon-hand-scroll-shell dungeon-hand-pacts-shell">
-      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="-1" aria-label="Scroll buffs left" title="Scroll buffs left">
+      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="-1" aria-label="Scroll buffs left" title="Scroll buffs left" hidden disabled>
         ${renderIcon('back')}
       </button>
       <div class="dungeon-hand-scroll-viewport" data-hand-scroll-viewport>
@@ -217,7 +254,7 @@ function renderHandPactTags(activeBuffs) {
           ${activeBuffs.map(renderActivePactIcon).join('')}
         </div>
       </div>
-      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="1" aria-label="Scroll buffs right" title="Scroll buffs right">
+      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="1" aria-label="Scroll buffs right" title="Scroll buffs right" hidden disabled>
         ${renderIcon('chevron-right')}
       </button>
     </div>
@@ -236,7 +273,7 @@ function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
 
   return `
     <div class="dungeon-hand-scroll-shell">
-      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="-1" aria-label="Scroll hand left" title="Scroll hand left">
+      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="-1" aria-label="Scroll hand left" title="Scroll hand left" hidden disabled>
         ${renderIcon('back')}
       </button>
       <div class="dungeon-hand-scroll-viewport" data-hand-scroll-viewport>
@@ -244,7 +281,7 @@ function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
           ${placeholder}${cardHtml || (placeholder ? '' : renderEmptyHand(mode))}
         </div>
       </div>
-      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="1" aria-label="Scroll hand right" title="Scroll hand right">
+      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="1" aria-label="Scroll hand right" title="Scroll hand right" hidden disabled>
         ${renderIcon('chevron-right')}
       </button>
     </div>

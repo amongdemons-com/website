@@ -505,9 +505,10 @@ function renderFightLogActions() {
   const isDefeated = state.run?.status === 'defeated';
   const canStart = !state.endSummary && (!state.run || isDefeated || state.run.status === 'ended');
   const canShowSpeedControl = Boolean(
-    state.run?.status === 'active' &&
+    state.run &&
     !state.isResultAnimating &&
-    state.isBattleAnimating
+    state.isBattleAnimating &&
+    state.combatPlayback
   );
   const hasCurrentFightLog = Boolean(isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
   const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
