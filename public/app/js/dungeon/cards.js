@@ -153,12 +153,8 @@ function shouldShowCollectionReinforcementHandPlaceholder() {
 function renderCollectionReinforcementPlaceholder(position) {
   const attentionClass = state.collectionReinforcementPlaceholderInteracted ? '' : 'is-collection-reinforcement-attention';
   return `
-    <button class="dungeon-demon-card collection-reinforcement-placeholder ${attentionClass}" type="button" data-collection-reinforcement-position="${position}" aria-label="Add from collection">
-      <div class="collection-reinforcement-placeholder-icon">${renderIcon('collection')}</div>
-      <div class="collection-reinforcement-placeholder-copy">
-        <span>Add from</span>
-        <small>Collection</small>
-      </div>
+    <button class="dungeon-demon-card collection-reinforcement-placeholder ${attentionClass}" type="button" data-collection-reinforcement-position="${position}" aria-label="Add from collection" title="Add from collection">
+      <div class="collection-reinforcement-placeholder-icon">${renderIcon('plus', { size: 48, strokeWidth: 2.75 })}</div>
     </button>
   `;
 }

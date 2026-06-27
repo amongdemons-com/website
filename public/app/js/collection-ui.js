@@ -381,10 +381,10 @@
 
   function openCollectionDemonDetails(demon) {
     openDemonDetailsModal(withTypeName(demon), {
-      detailHtml: renderTrainingDetail(demon),
       actionsLeadHtml: renderTrainingActionCost(demon),
       actions: getDemonDetailsActions(demon)
     });
+    applyModalTrainingStats(demon);
   }
 
   function renderTrainingCardBadge(demon) {
@@ -399,29 +399,6 @@
     return `
       <div class="collection-training-badge" aria-label="Training costs ${escapeHtml(formatNumber(cost))} Souls">
         <span>Train</span>
-      </div>
-    `;
-  }
-
-  function renderTrainingDetail(demon) {
-    if (demon.isMissing) return '';
-
-    const training = demon.training || {};
-    if (!training.stats) return '';
-
-    const cost = Number(training.cost);
-    const chanceLabel = formatChance(training.successChance);
-    return `
-      <div class="collection-training-panel ${training.maxed ? 'is-maxed' : ''}" aria-live="polite">
-        <div class="collection-training-panel-head">
-          <span>${training.maxed ? 'Stats' : 'Training'}</span>
-          ${training.maxed || !Number.isFinite(cost) || cost <= 0
-            ? `<strong>${renderIcon('stars')}Max</strong>`
-            : (chanceLabel ? `<strong>${escapeHtml(chanceLabel)} success</strong>` : '')}
-        </div>
-        <div class="collection-training-stat-list">
-          ${TRAINING_STATS.map(([key, label, icon]) => renderTrainingStat(training.stats[key], key, label, icon)).join('')}
-        </div>
       </div>
     `;
   }
@@ -455,24 +432,10 @@
     `;
   }
 
-  function renderTrainingStat(stat, key, label, icon) {
-    if (!stat) return '';
-
+  function formatTrainingStatValue(stat) {
     const current = Number(stat.current) || 0;
     const max = Math.max(current, Number(stat.max) || current || 1);
-    const percent = Math.max(0, Math.min(100, Math.round((current / max) * 100)));
-
-    return `
-      <div class="collection-training-stat ${stat.maxed ? 'is-maxed' : ''}" data-training-stat="${escapeHtml(key)}">
-        <div class="collection-training-stat-line">
-          <span>${renderIcon(icon)}${escapeHtml(label)}</span>
-          <strong class="collection-training-stat-value">${escapeHtml(current)} / ${escapeHtml(max)}</strong>
-        </div>
-        <div class="collection-training-stat-track" aria-hidden="true">
-          <span class="collection-training-stat-fill" style="width: ${percent}%"></span>
-        </div>
-      </div>
-    `;
+    return stat.maxed ? `${max}` : `${current} / ${max}`;
   }
 
   async function trainDemon(demonId, button) {
@@ -647,22 +610,7 @@
   function syncModalTrainingStats(demon) {
     const modal = document.getElementById('demonDetailModal');
     if (!modal?.classList.contains('show')) return;
-
-    const currentHp = Math.max(0, Number(demon.hp) || 0);
-    const maxHp = Math.max(currentHp, Number(demon.maxHp) || currentHp || 1);
-    const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
-
-    setModalDetailStat(modal, 'atk', demon.atk);
-    setModalDetailStat(modal, 'speed', demon.speed);
-    setModalDetailStat(modal, 'hp', `${currentHp} / ${maxHp}`);
-
-    const hpBar = modal.querySelector('.demon-detail-hp');
-    if (hpBar) hpBar.setAttribute('aria-label', `HP ${currentHp} of ${maxHp}`);
-
-    const hpFill = modal.querySelector('.demon-detail-hp-fill');
-    if (hpFill) hpFill.style.width = `${hpPercent}%`;
-
-    syncModalTrainingPanel(demon);
+    applyModalTrainingStats(demon, modal);
   }
 
   function setModalDetailStat(modal, statKey, value) {
@@ -670,41 +618,31 @@
     if (statValue) statValue.textContent = value;
   }
 
-  function syncModalTrainingPanel(demon) {
-    const modal = document.getElementById('demonDetailModal');
-    const panel = modal?.querySelector('.collection-training-panel');
-    if (!panel) return;
+  function applyModalTrainingStats(demon, modal) {
+    const targetModal = modal || document.getElementById('demonDetailModal');
+    if (!targetModal) return;
 
     const training = demon.training || {};
-    const cost = Number(training.cost);
-    const showMaxed = training.maxed || !Number.isFinite(cost) || cost <= 0;
-    panel.classList.toggle('is-maxed', showMaxed);
-
-    const head = panel.querySelector('.collection-training-panel-head');
-    if (head) {
-      const chanceLabel = formatChance(training.successChance);
-      head.innerHTML = `
-        <span>${showMaxed ? 'Stats' : 'Training'}</span>
-        ${showMaxed ? `<strong>${renderIcon('stars')}Maxed out</strong>` : (chanceLabel ? `<strong>${escapeHtml(chanceLabel)} success</strong>` : '')}
-      `;
-    }
+    if (!training.stats) return;
 
     TRAINING_STATS.forEach(([key]) => {
-      const stat = training.stats?.[key];
-      const row = panel.querySelector(`[data-training-stat="${key}"]`);
-      if (!stat || !row) return;
-
-      const current = Number(stat.current) || 0;
-      const max = Math.max(current, Number(stat.max) || current || 1);
-      const percent = getTrainingStatPercent(stat);
-      row.classList.toggle('is-maxed', Boolean(stat.maxed));
-
-      const value = row.querySelector('.collection-training-stat-value');
-      if (value) value.textContent = `${current} / ${max}`;
-
-      const fill = row.querySelector('.collection-training-stat-fill');
-      if (fill) fill.style.width = `${percent}%`;
+      const stat = training.stats[key];
+      if (!stat) return;
+      setModalDetailStat(targetModal, key, formatTrainingStatValue(stat));
     });
+
+    const hpStat = training.stats.hp;
+    if (hpStat) {
+      const percent = getTrainingStatPercent(hpStat);
+      const hpBar = targetModal.querySelector('.demon-detail-hp');
+      if (hpBar) {
+        const current = Number(hpStat.current) || 0;
+        const max = Math.max(current, Number(hpStat.max) || current || 1);
+        hpBar.setAttribute('aria-label', `HP ${current} of ${max}`);
+      }
+      const hpFill = targetModal.querySelector('.demon-detail-hp-fill');
+      if (hpFill) hpFill.style.width = `${percent}%`;
+    }
   }
 
   function syncModalTrainingAction(demon) {

@@ -577,11 +577,11 @@
 
   function renderQuestReward(reward = {}) {
     if (reward.type === 'souls') {
-      return `${renderIcon('soul')} ${escapeHtml(formatNumber(reward.value))}`;
+      return `${renderIcon('soul')} <span class="quest-reward-amount quest-reward-souls">${escapeHtml(formatNumber(reward.value))}</span>`;
     }
 
     if (reward.type === 'xp') {
-      return `<span class="quest-xp-mark">XP</span> ${escapeHtml(formatNumber(reward.value))}`;
+      return `<span class="quest-xp-mark">XP</span> <span class="quest-reward-amount quest-reward-xp">${escapeHtml(formatNumber(reward.value))}</span>`;
     }
 
     return escapeHtml(reward.value || '-');

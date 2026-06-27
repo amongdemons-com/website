@@ -1355,30 +1355,15 @@ body.dungeon-page .navbar {
     cursor: pointer;
 }
 
+.collection-reinforcement-placeholder-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .collection-reinforcement-placeholder-icon .ad-icon {
-    width: 1.6rem;
-    height: 1.6rem;
-}
-
-.collection-reinforcement-placeholder-copy {
-    display: grid;
-    gap: 0.14rem;
-    text-align: center;
-    line-height: 1;
-}
-
-.collection-reinforcement-placeholder-copy span {
-    font-size: 0.74rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.collection-reinforcement-placeholder-copy small {
-    color: rgba(141,231,255,0.72);
-    font-size: 0.64rem;
-    font-weight: 800;
-    text-transform: uppercase;
+    width: 3rem;
+    height: 3rem;
 }
 
 .dungeon-demon-card.is-recruit-draggable {
@@ -7075,6 +7060,11 @@ body.rankings-page {
     color: var(--ad-soul);
 }
 
+.rank-metric-souls .soul-amount-value,
+.rank-metric-souls .soul-amount-label {
+    color: #fff;
+}
+
 .rank-metric-souls .soul-icon {
     width: 1.08em;
     height: 1.08em;
@@ -8057,6 +8047,11 @@ body.camp-page > .alert {
     max-width: 100%;
     color: var(--ad-soul);
     font-size: inherit;
+}
+
+.camp-page .stat-soul-amount .soul-amount-value,
+.camp-page .stat-soul-amount .soul-amount-label {
+    color: #fff;
 }
 
 .camp-run-intel {
@@ -9467,6 +9462,14 @@ body.camp-page::before {
     width: 1rem;
     height: 1rem;
     margin: 0;
+}
+
+.quest-reward-souls {
+    color: #fff !important;
+}
+
+.quest-reward-xp {
+    color: var(--ad-gold, #e8c76a) !important;
 }
 
 .camp-daily-value {
