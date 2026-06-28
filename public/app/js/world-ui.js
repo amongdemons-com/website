@@ -17,6 +17,9 @@ import { COMBAT_THEMES } from './dungeon/config.js';
   const ROAD_MOVE_COST = AVERAGE_TERRAIN_COST - 1;
   const CLICK_THRESHOLD = 7;
   const STEP_DURATION_MS = 180;
+  // Kept in sync with world-combat.js so the live hunt readout matches the server payout.
+  const HUNT_DEFAULT_RESPAWN_SECONDS = 300;
+  const HUNT_REWARD_CYCLE_CAP = 288;
   const WORLD_SIDE_PANEL_QUERY = '(max-width: 899.98px) and (orientation: portrait)';
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
   const BOARD_COLORS = {
@@ -113,6 +116,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     currentEncounter: null,
     hunt: null,
     huntBusy: false,
+    huntTicker: null,
     boundShrine: null,
     bindingShrine: false,
     blockedTiles: FALLBACK_BLOCKED_TILES,
@@ -166,6 +170,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       'worldZoomChip',
       'worldTargetTooltip',
       'worldEncounterTooltip',
+      'worldHuntTooltip',
       'worldTeamSummary',
       'worldShrinePanel',
       'worldEncounterHeading',
@@ -273,6 +278,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     state.hoverLayer = new Pixi.Graphics();    // hovered-tile hint (dynamic)
     state.pathLayer = new Pixi.Graphics();
     state.pathPulse = new Pixi.Graphics();     // animated destination ring
+    state.shrineGlow = new Pixi.Graphics();    // animated soul smoke around forsaken shrines
     state.markerLayer = new Pixi.Container();
     state.encounterLayer = new Pixi.Container();
     state.hunterLayer = new Pixi.Container();
@@ -291,6 +297,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     state.viewport.addChild(state.hoverLayer);
     state.viewport.addChild(state.pathLayer);
     state.viewport.addChild(state.pathPulse);
+    state.viewport.addChild(state.shrineGlow);
     state.viewport.addChild(state.markerLayer);
     state.viewport.addChild(state.encounterLayer);
     state.viewport.addChild(state.hunterLayer);
@@ -298,6 +305,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     app.stage.addChild(state.viewport);
 
     app.ticker.add(updatePathPulse);
+    app.ticker.add(updateShrineGlow);
 
     bindCanvasInput(canvas);
     bindResize();
@@ -368,6 +376,12 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       return;
     }
 
+    if (isHuntActive()) {
+      clearRoutePreview();
+      setMessage('Stop hunting before you travel.', 'warning');
+      return;
+    }
+
     if (isBlocked(target)) {
       clearRoutePreview('blocked');
       return;
@@ -405,6 +419,11 @@ import { COMBAT_THEMES } from './dungeon/config.js';
   async function travelSelectedPath() {
     const path = (state.selectedPath || []).slice();
     if (state.moving || path.length < 2) return;
+    if (isHuntActive()) {
+      clearRoutePreview();
+      setMessage('Stop hunting before you travel.', 'warning');
+      return;
+    }
 
     state.moving = true;
     state.travelStatus = 'moving';
@@ -417,6 +436,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       const payload = await commitTravelPath(path);
       const stepEvents = getTravelStepEvents(payload, path);
 
+      let lostAmbush = false;
       for (let index = 1; index < path.length; index += 1) {
         const step = path[index];
         state.selectedPath = path.slice(index - 1);
@@ -435,14 +455,25 @@ import { COMBAT_THEMES } from './dungeon/config.js';
         renderWorld();
         renderPanels();
         await delay(getStepDelay());
+
+        // A lost ambush drags the hunter back to their Anchored Shrine (or spawn),
+        // so stop the march here and resolve the defeat instead of finishing the path.
+        if (stepEvent.type === 'ambush' && stepEvent.battle?.winner === 'enemy') {
+          lostAmbush = true;
+          break;
+        }
       }
 
-      state.position = normalizePosition(payload.position || state.position);
-      state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
-      state.currentEvent = payload.currentEvent || getEventAt(state.position);
-      state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
-      clearRoutePreview('arrived', { keepLog: true });
-      renderPanels();
+      if (lostAmbush) {
+        await resolveAmbushDefeat();
+      } else {
+        state.position = normalizePosition(payload.position || state.position);
+        state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
+        state.currentEvent = payload.currentEvent || getEventAt(state.position);
+        state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
+        clearRoutePreview('arrived', { keepLog: true });
+        renderPanels();
+      }
     } catch (error) {
       if (error.status !== 401) {
         clearRoutePreview('idle');
@@ -473,6 +504,26 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       position: normalizePosition(events[index]?.position || step),
       battle: events[index]?.battle || null
     }));
+  }
+
+  async function resolveAmbushDefeat() {
+    const recovery = await api('/api/world/ambush-defeat', { method: 'POST' });
+    const returnPosition = normalizePosition(recovery.position || state.position);
+
+    state.boundShrine = normalizeShrine(recovery.boundShrine);
+    state.position = returnPosition;
+    state.hunterRenderPosition = null;
+    state.playersAt = Array.isArray(recovery.playersAt) ? recovery.playersAt : [];
+    state.currentEvent = recovery.currentEvent || getEventAt(returnPosition);
+    state.currentEncounter = recovery.currentEncounter || getEncounterAt(returnPosition);
+
+    clearRoutePreview('arrived', { keepLog: true });
+    centerOnHunter();
+    setMessage(
+      recovery.message || 'You were defeated and dragged back to your Anchored Shrine.',
+      'danger'
+    );
+    renderPanels();
   }
 
   function clearRoutePreview(status = 'idle', options = {}) {
@@ -669,6 +720,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       state.huntBusy = false;
       setButtonBusy(button, false);
       renderEncounterPanel();
+      syncHuntTicker();
     }
   }
 
@@ -691,6 +743,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       state.huntBusy = false;
       setButtonBusy(button, false);
       renderEncounterPanel();
+      syncHuntTicker();
     }
   }
 
@@ -1143,10 +1196,8 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       } else if (event.type === 'soul-cache') {
         layer.circle(cx, cy, TILE_SIZE * 0.32).fill({ color: BOARD_COLORS.soulNode, alpha: 0.16 });
       } else if (event.type === 'forsaken_shrine') {
-        layer.circle(cx, cy, TILE_SIZE * 0.36).fill({ color: BOARD_COLORS.shrineGlow, alpha: isBoundShrine(event) ? 0.24 : 0.13 });
-        if (isBoundShrine(event)) {
-          layer.circle(cx, cy, TILE_SIZE * 0.42).stroke({ color: BOARD_COLORS.shrineSoul, width: 2, alpha: 0.52 });
-        }
+        // Soul-glow is drawn entirely by updateShrineGlow (above the roads), so the
+        // smoke isn't clipped by road tiles. Nothing to draw on the fog layer here.
       } else if (event.type === 'dungeon-portal') {
         layer.circle(cx, cy, TILE_SIZE * 0.4).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.18 });
       } else if (event.type === 'landmark') {
@@ -1207,6 +1258,43 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     layer.circle(c.x, c.y, 2.6).fill({ color: EMBER_CORE, alpha: 0.9 });
   }
 
+  // Animated soul glow for forsaken shrines — a gently breathing blue halo with a
+  // few drifting "smoke" wisps that rise and fade in a loop (runs on the ticker).
+  function updateShrineGlow() {
+    const layer = state.shrineGlow;
+    if (!layer) return;
+    layer.clear();
+
+    const shrines = (state.events || []).filter((event) => event.type === 'forsaken_shrine');
+    if (!shrines.length) return;
+
+    const now = performance.now();
+    const soul = BOARD_COLORS.shrineSoul;
+    const WISPS = 3;
+
+    shrines.forEach((event) => {
+      const c = tileCenter(event);
+      const bound = isBoundShrine(event);
+      const base = bound ? 0.26 : 0.16;
+      const phase = (event.x * 13 + event.y * 7);
+
+      // Steady (non-pulsing) soul halo, drawn here so it sits above the roads.
+      layer.circle(c.x, c.y - 2, TILE_SIZE * 0.36).fill({ color: soul, alpha: bound ? 0.16 : 0.1 });
+
+      // Rising wisps of soul-smoke: born at the shrine, drift up, expand, fade.
+      for (let i = 0; i < WISPS; i += 1) {
+        const seed = phase + i * 37;
+        const life = ((now / 3200) + i / WISPS + seed * 0.013) % 1;
+        const rise = life * 30;
+        const drift = Math.sin(life * Math.PI * 2 + seed) * 5;
+        const radius = 3.5 + life * 8;
+        const alpha = Math.sin(life * Math.PI) * base * 0.7;
+        if (alpha <= 0) continue;
+        layer.circle(c.x + drift, c.y - 6 - rise, radius).fill({ color: soul, alpha });
+      }
+    });
+  }
+
   function drawMarkers() {
     drawEventMarkers();
     drawHunter();
@@ -1232,16 +1320,13 @@ import { COMBAT_THEMES } from './dungeon/config.js';
         marker.circle(0, 0, 15).fill({ color: BOARD_COLORS.portal, alpha: 0.9 }).stroke({ color, width: 3, alpha: 1 });
       } else if (event.type === 'forsaken_shrine') {
         const bound = isBoundShrine(event);
-        marker.ellipse(0, 19, 18, 5).fill({ color: 0x000000, alpha: 0.38 });
-        marker.circle(0, 0, bound ? 27 : 23).fill({ color: BOARD_COLORS.shrineGlow, alpha: bound ? 0.2 : 0.12 });
-        marker.rect(-14, 11, 28, 8).fill({ color: 0x170c0d, alpha: 0.96 }).stroke({ color, width: 1.4, alpha: 0.82 });
-        marker.rect(-9, -18, 18, 30).fill({ color: BOARD_COLORS.shrine, alpha: 0.96 }).stroke({ color, width: bound ? 2.4 : 1.7, alpha: 0.95 });
-        marker.rect(-5, -23, 10, 7).fill({ color: 0x1f1012, alpha: 0.96 }).stroke({ color, width: 1.2, alpha: 0.82 });
-        marker.circle(0, -4, 5.5).fill({ color: BOARD_COLORS.shrineSoul, alpha: 0.78 });
-        marker.circle(0, -4, 9).stroke({ color: BOARD_COLORS.shrineSoul, width: 1.2, alpha: bound ? 0.74 : 0.38 });
-        if (bound) {
-          marker.circle(0, 0, 29).stroke({ color: BOARD_COLORS.shrineSoul, width: 2, alpha: 0.86 });
-        }
+        const soul = BOARD_COLORS.shrineSoul;
+        // Same silhouette as the Old Watch landmark — a dark hollow box with an
+        // inscribed star — just outlined in soul-blue. The floating smoke
+        // (updateShrineGlow) supplies the glow, so no rings or core here.
+        marker.rect(-12, -12, 24, 24).fill({ color: 0x111819, alpha: 0.9 }).stroke({ color: soul, width: bound ? 2.4 : 1.8, alpha: bound ? 0.95 : 0.78 });
+        marker.moveTo(0, -17).lineTo(14, 0).lineTo(0, 17).lineTo(-14, 0).lineTo(0, -17)
+          .stroke({ color: soul, width: 1.5, alpha: bound ? 0.85 : 0.62 });
       } else if (event.type === 'landmark') {
         marker.rect(-12, -12, 24, 24).fill({ color: 0x111819, alpha: 0.9 }).stroke({ color, width: 2, alpha: 0.85 });
         marker.moveTo(0, -17).lineTo(14, 0).lineTo(0, 17).lineTo(-14, 0).lineTo(0, -17)
@@ -1355,6 +1440,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     renderShrinePanel();
     renderEncounterPanel();
     renderTravelPanel();
+    syncHuntTicker();
   }
 
   function renderPositionPanel() {
@@ -1395,7 +1481,15 @@ import { COMBAT_THEMES } from './dungeon/config.js';
         </article>
       `);
     } else {
-      parts.push('<p class="world-empty-text">No Anchored Shrine.</p>');
+      parts.push(`
+        <article class="world-shrine-status">
+          <span class="world-shrine-mark" aria-hidden="true"></span>
+          <span class="world-shrine-copy">
+            <strong>Respawn Point</strong>
+            <small>Default · ${escapeHtml(formatCoords({ x: 0, y: 0 }))}</small>
+          </span>
+        </article>
+      `);
     }
 
     if (currentShrine) {
@@ -1475,7 +1569,31 @@ import { COMBAT_THEMES } from './dungeon/config.js';
         </span>
         ${action}
       </article>
+      ${renderHuntRewards(encounter, active)}
     `;
+  }
+
+  function renderHuntRewards(encounter, active) {
+    const rate = computeHuntRate(encounter);
+    const progress = active ? computeHuntProgress() : null;
+
+    const expected = `
+      <div class="world-hunt-stat">
+        <span class="world-hunt-stat-label">Per kill</span>
+        <span class="world-hunt-stat-value">+${formatNumber(rate.xpPerCycle)} XP · +${formatNumber(rate.soulsPerCycle)} Souls</span>
+        <span class="world-hunt-stat-note">one kill every ${formatDuration(rate.respawnSeconds)}</span>
+      </div>
+    `;
+
+    const accrued = progress ? `
+      <div class="world-hunt-stat is-accrued">
+        <span class="world-hunt-stat-label">Accumulated</span>
+        <span class="world-hunt-stat-value">+${formatNumber(progress.accruedXp)} XP · +${formatNumber(progress.accruedSouls)} Souls</span>
+        <span class="world-hunt-stat-note">${formatNumber(progress.cycles)} ${progress.cycles === 1 ? 'kill' : 'kills'}${progress.capped ? ' · cap reached' : ''}</span>
+      </div>
+    ` : '';
+
+    return `<div class="world-hunt-rewards">${expected}${accrued}</div>`;
   }
 
   function renderDemonPortrait(member) {
@@ -1917,6 +2035,75 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     return String(state.hunt?.active?.encounterId || '') === String(encounterId || '');
   }
 
+  function isHuntActive() {
+    return Boolean(state.hunt?.active);
+  }
+
+  function getEncounterById(encounterId) {
+    const id = String(encounterId || '');
+    if (!id) return null;
+    return (state.encounters || []).find((encounter) => String(encounter.id) === id) || null;
+  }
+
+  function getActiveHuntEncounter() {
+    const active = state.hunt?.active;
+    if (!active) return null;
+    return getEncounterById(active.encounterId) || state.currentEncounter || null;
+  }
+
+  // Expected payout per respawn cycle for an encounter, derived from its threat
+  // the same way getEnemyRespawnSeconds()/calculateHuntRewards() do server-side.
+  function computeHuntRate(encounter) {
+    const difficulty = Math.max(1, Number(encounter?.difficulty) || 1);
+    const explicit = Number(encounter?.enemyRespawnSeconds || encounter?.respawnSeconds);
+    const respawnSeconds = Number.isFinite(explicit) && explicit > 0
+      ? Math.floor(explicit)
+      : HUNT_DEFAULT_RESPAWN_SECONDS + Math.max(0, difficulty - 1) * 60;
+
+    return {
+      difficulty,
+      respawnSeconds,
+      xpPerCycle: 5 + difficulty * 2,
+      soulsPerCycle: Math.max(1, Math.ceil(difficulty / 2))
+    };
+  }
+
+  // Mirrors calculateHuntRewards() on the server: each respawn cycle yields one
+  // win against the snapshotted patrol, capped at HUNT_REWARD_CYCLE_CAP cycles.
+  function computeHuntProgress(active = state.hunt?.active, now = Date.now()) {
+    if (!active) return null;
+
+    const startedAt = Date.parse(active.startedAt || '');
+    const respawnSeconds = Math.max(1, Number(active.enemyRespawnSeconds) || HUNT_DEFAULT_RESPAWN_SECONDS);
+    const encounter = getActiveHuntEncounter();
+    const difficulty = Math.max(1, Number(encounter?.difficulty) || 1);
+
+    const elapsedSeconds = Number.isFinite(startedAt)
+      ? Math.max(0, Math.floor((now - startedAt) / 1000))
+      : 0;
+    const cyclesRaw = Math.floor(elapsedSeconds / respawnSeconds);
+    const cycles = Math.min(HUNT_REWARD_CYCLE_CAP, cyclesRaw);
+    const capped = cyclesRaw >= HUNT_REWARD_CYCLE_CAP;
+
+    const xpPerCycle = 5 + difficulty * 2;
+    const soulsPerCycle = Math.max(1, Math.ceil(difficulty / 2));
+    const secondsIntoCycle = elapsedSeconds % respawnSeconds;
+    const secondsToNext = capped ? 0 : respawnSeconds - secondsIntoCycle;
+
+    return {
+      elapsedSeconds,
+      respawnSeconds,
+      difficulty,
+      cycles,
+      capped,
+      xpPerCycle,
+      soulsPerCycle,
+      accruedXp: cycles * xpPerCycle,
+      accruedSouls: cycles * soulsPerCycle,
+      secondsToNext
+    };
+  }
+
   function getTileKey(position) {
     return `${position.x},${position.y}`;
   }
@@ -1949,6 +2136,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     const scale = state.viewport?.scale.x || 1;
     setText(elements.worldZoomChip, `${Math.round(scale * 100)}%`);
     updateTargetTooltip();
+    updateHuntTooltip();
   }
 
   async function loadHunterAvatar() {
@@ -2088,6 +2276,85 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     tooltip.classList.remove('d-none');
   }
 
+  // ===========================================================================
+  // Passive hunt readout — a ticking timer pinned to the hunter tile plus the
+  // accumulated/expected rewards mirrored into the sidebar encounter panel.
+  // ===========================================================================
+
+  function syncHuntTicker() {
+    if (isHuntActive()) {
+      updateHuntTooltip();
+      if (!state.huntTicker) {
+        state.huntTicker = window.setInterval(onHuntTick, 1000);
+        state.cleanup.push(stopHuntTicker);
+      }
+    } else {
+      stopHuntTicker();
+      elements.worldHuntTooltip?.classList.add('d-none');
+    }
+  }
+
+  function stopHuntTicker() {
+    if (state.huntTicker) {
+      window.clearInterval(state.huntTicker);
+      state.huntTicker = null;
+    }
+  }
+
+  function onHuntTick() {
+    if (!isHuntActive()) {
+      syncHuntTicker();
+      return;
+    }
+    updateHuntTooltip();
+    renderEncounterPanel();
+  }
+
+  function updateHuntTooltip() {
+    const tooltip = elements.worldHuntTooltip;
+    if (!tooltip) return;
+
+    const progress = computeHuntProgress();
+    if (!progress || state.moving || !state.viewport) {
+      tooltip.classList.add('d-none');
+      return;
+    }
+
+    tooltip.innerHTML = renderHuntTooltipContent(progress);
+
+    const center = tileCenter(state.hunterRenderPosition || state.position);
+    const scale = state.viewport.scale.x || 1;
+    const x = state.viewport.x + center.x * scale;
+    const y = state.viewport.y + (center.y - TILE_SIZE / 2) * scale;
+
+    tooltip.style.left = `${Math.round(x)}px`;
+    tooltip.style.top = `${Math.round(y)}px`;
+    tooltip.classList.remove('d-none');
+  }
+
+  function renderHuntTooltipContent(progress) {
+    const next = progress.capped
+      ? 'Reward cap reached'
+      : `Next kill in ${formatDuration(progress.secondsToNext)}`;
+
+    return `
+      <strong class="world-tooltip-title">Hunting</strong>
+      <span class="world-hunt-timer">${formatDuration(progress.elapsedSeconds)}</span>
+      <span class="world-hunt-next">${escapeHtml(next)}</span>
+    `;
+  }
+
+  function formatDuration(totalSeconds) {
+    const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    const pad = (value) => String(value).padStart(2, '0');
+    return hours > 0
+      ? `${hours}:${pad(minutes)}:${pad(secs)}`
+      : `${pad(minutes)}:${pad(secs)}`;
+  }
+
   function hideLoading() {
     elements.worldLoading?.classList.add('d-none');
   }
@@ -2136,6 +2403,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     state.resizeObserver = null;
 
     state.app?.ticker?.remove(updatePathPulse);
+    state.app?.ticker?.remove(updateShrineGlow);
     state.tileTextures.forEach((texture) => texture?.destroy?.(true));
     state.tileTextures.clear();
     state.terrainBuilt = false;
