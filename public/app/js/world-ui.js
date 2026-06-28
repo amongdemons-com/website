@@ -1027,8 +1027,150 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     return getTileTexture(`obs:${zone}:${kind}:${variant}`, (g) => {
       const rng = seededRng((OBSTACLE_KINDS.indexOf(kind) + 1) * 4099 + variant * 131 + 3);
       const palette = ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE;
+      if (zone === 8) {
+        drawTreeObstacle(g, rng, palette);
+        return;
+      }
+      if (zone === 3) {
+        drawPoisonPuddle(g, rng, palette);
+        return;
+      }
       drawObstacle(g, kind, rng, palette);
     });
+  }
+
+  // Top-down cluster of dark leaves used to mask blocked tiles in the demon
+  // type 8 zone. The tile stays blocked in pathing logic; this only changes how
+  // it's drawn.
+  function drawTreeObstacle(g, rng, palette) {
+    const cx = TILE_SIZE / 2 + (rng() - 0.5) * 4;
+    const cy = TILE_SIZE / 2 + (rng() - 0.5) * 4;
+    const radius = TILE_SIZE * 0.46;
+
+    // Deep, desaturated greens tinted by the zone accent — dark and brooding.
+    const accentRgb = colorNumberToRgb(palette.accent);
+    const leafDeep = tintBaseColor(0x0c1207, accentRgb, 0.12);
+    const leafDark = tintBaseColor(0x14200d, accentRgb, 0.16);
+    const leafMid = tintBaseColor(0x1f3214, accentRgb, 0.2);
+    const leafEdge = tintBaseColor(0x35501f, accentRgb, 0.24); // faint rim light
+
+    // A single pointed leaf (almond shape) from base (ox,oy) toward `angle`.
+    const leaf = (ox, oy, angle, length, width, color, alpha) => {
+      const ca = Math.cos(angle);
+      const sa = Math.sin(angle);
+      const tipX = ox + ca * length;
+      const tipY = oy + sa * length;
+      const mx = ox + ca * length * 0.5;
+      const my = oy + sa * length * 0.5;
+      const px = -sa * width;
+      const py = ca * width;
+      g.moveTo(ox, oy)
+        .quadraticCurveTo(mx + px, my + py, tipX, tipY)
+        .quadraticCurveTo(mx - px, my - py, ox, oy)
+        .fill({ color, alpha });
+    };
+
+    // Soft cast shadow pooled under the cluster.
+    g.ellipse(cx + 3, cy + 4, radius * 0.85, radius * 0.72)
+      .fill({ color: 0x000000, alpha: 0.32 });
+
+    // Dark underlayer of leaves fanning out in every direction.
+    const under = 9 + Math.floor(rng() * 3);
+    for (let i = 0; i < under; i += 1) {
+      const angle = (i / under) * Math.PI * 2 + (rng() - 0.5) * 0.5;
+      const len = radius * (0.85 + rng() * 0.5);
+      leaf(cx, cy, angle, len, radius * (0.2 + rng() * 0.08), leafDeep, 0.95);
+    }
+
+    // Mid-tone leaves clustered tighter, giving the canopy its body.
+    const mid = 8 + Math.floor(rng() * 3);
+    for (let i = 0; i < mid; i += 1) {
+      const angle = rng() * Math.PI * 2;
+      const dist = radius * (0.1 + rng() * 0.4);
+      const ox = cx + Math.cos(angle) * dist;
+      const oy = cy + Math.sin(angle) * dist;
+      const len = radius * (0.55 + rng() * 0.4);
+      const tone = rng() < 0.5 ? leafDark : leafMid;
+      leaf(ox, oy, rng() * Math.PI * 2, len, radius * (0.18 + rng() * 0.08), tone, 0.95);
+    }
+
+    // A few lighter leaves catching the light near the top of the pile.
+    const top = 4 + Math.floor(rng() * 3);
+    for (let i = 0; i < top; i += 1) {
+      const angle = rng() * Math.PI * 2;
+      const dist = radius * (0.05 + rng() * 0.3);
+      const ox = cx - 2 + Math.cos(angle) * dist;
+      const oy = cy - 2 + Math.sin(angle) * dist;
+      const len = radius * (0.4 + rng() * 0.3);
+      leaf(ox, oy, rng() * Math.PI * 2, len, radius * (0.16 + rng() * 0.06), leafEdge, 0.55);
+    }
+  }
+
+  // Top-down toxic puddle used to mask blocked tiles in the demon type 3 zone.
+  // The tile stays blocked in pathing logic; this only changes how it's drawn.
+  function drawPoisonPuddle(g, rng, palette) {
+    const cx = TILE_SIZE / 2 + (rng() - 0.5) * 4;
+    const cy = TILE_SIZE / 2 + (rng() - 0.5) * 4;
+    const radius = TILE_SIZE * 0.46;
+
+    // Sickly green ooze tones tinted by the zone accent.
+    const accentRgb = colorNumberToRgb(palette.accent);
+    const oozeBorder = tintBaseColor(0x081209, accentRgb, 0.28); // dark wet edge
+    const oozeBody = tintBaseColor(0x1d3a22, accentRgb, 0.55);
+    const oozeDeep = tintBaseColor(0x102414, accentRgb, 0.45);
+    const oozeGlow = tintBaseColor(0x39663a, accentRgb, 0.7); // bright toxic sheen
+
+    // A single irregular puddle outline. Summing a few sine harmonics at
+    // different frequencies (rather than one) gives organic bumps and concave
+    // bays instead of a regular polygon; the curve is then smoothed below.
+    const lobes = 16;
+    const h = [
+      { freq: 2, amp: 0.16 + rng() * 0.1, phase: rng() * Math.PI * 2 },
+      { freq: 3, amp: 0.12 + rng() * 0.08, phase: rng() * Math.PI * 2 },
+      { freq: 5, amp: 0.07 + rng() * 0.06, phase: rng() * Math.PI * 2 }
+    ];
+    const pts = [];
+    for (let i = 0; i < lobes; i += 1) {
+      const a = (i / lobes) * Math.PI * 2;
+      let raw = 0;
+      for (const { freq, amp, phase } of h) raw += amp * Math.sin(a * freq + phase);
+      // Asymmetric: shallow outward bulges (stay inside the tile) but deep
+      // inward bays, which is what gives a puddle its lobed, irregular outline.
+      const factor = 1 + (raw > 0 ? raw * 0.5 : raw * 0.95);
+      const r = radius * factor;
+      pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r * 0.95 });
+    }
+
+    // Trace a smooth closed curve that passes through the midpoint of each edge,
+    // using the raw vertices as quadratic control points — rounds off the shape.
+    const mid = (p, q) => ({ x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 });
+    const start = mid(pts[lobes - 1], pts[0]);
+    g.moveTo(start.x, start.y);
+    for (let i = 0; i < lobes; i += 1) {
+      const cur = pts[i];
+      const m = mid(cur, pts[(i + 1) % lobes]);
+      g.quadraticCurveTo(cur.x, cur.y, m.x, m.y);
+    }
+    g.closePath()
+      .fill({ color: oozeBody })
+      .stroke({ color: oozeBorder, width: 3, alpha: 0.95 });
+
+    // One glossy highlight toward the upper-left (light source).
+    g.ellipse(cx - radius * 0.22, cy - radius * 0.24, radius * 0.3, radius * 0.16)
+      .fill({ color: oozeGlow, alpha: 0.4 });
+
+    // Bubbles of toxic gas rising in the ooze — bright rims, dark mouths.
+    const bubbles = 3 + Math.floor(rng() * 3);
+    for (let i = 0; i < bubbles; i += 1) {
+      const a = rng() * Math.PI * 2;
+      const dist = radius * (0.1 + rng() * 0.5);
+      const bx = cx + Math.cos(a) * dist;
+      const by = cy + Math.sin(a) * dist * 0.9;
+      const r = radius * (0.07 + rng() * 0.08);
+      g.circle(bx, by, r).fill({ color: oozeDeep, alpha: 0.9 })
+        .stroke({ color: oozeGlow, width: 1.4, alpha: 0.7 });
+      g.circle(bx - r * 0.3, by - r * 0.3, r * 0.32).fill({ color: oozeGlow, alpha: 0.7 });
+    }
   }
 
   // Temporary full-square brick wall pattern for every blocked tile.
