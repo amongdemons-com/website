@@ -316,8 +316,8 @@ function buildEncounter(id, x, y, usedTeamKeys) {
   };
 }
 
-// Named landmarks give the road network and travel view anchors. Event actions
-// are still placeholders in world-ui, but these locations make the map legible.
+// Named landmarks give the road network and travel view anchors. Forsaken
+// Shrines are active world objects; the rest are visual anchors for now.
 const LANDMARKS = [
   {
     x: 0,
@@ -343,9 +343,16 @@ const LANDMARKS = [
   {
     x: 27,
     y: 16,
-    type: 'landmark',
-    title: 'Glass Shrine',
-    description: 'A splintered shrine marking the eastern flats.'
+    type: 'forsaken_shrine',
+    title: 'Forsaken Shrine',
+    description: 'A splintered altar where hunters can anchor their souls.'
+  },
+  {
+    x: -15,
+    y: -17,
+    type: 'forsaken_shrine',
+    title: 'Forsaken Shrine',
+    description: 'A blackened roadside shrine half-swallowed by old ash.'
   },
   {
     x: -31,

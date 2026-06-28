@@ -2,6 +2,14 @@ const express = require('express');
 const db = require('./lib/db');
 const { requireAuth } = require('./lib/auth');
 const { getCurrentRunForPlayer } = require('./lib/runs');
+const {
+  ANCHOR_SUCCESS_MESSAGE,
+  getAmbushDefeatReturn,
+  getBoundShrine,
+  getShrineAt,
+  getWorldShrines,
+  saveBoundShrine
+} = require('./lib/world-shrines');
 const worldMap = require('./data/map.json');
 
 const router = express.Router();
@@ -12,7 +20,7 @@ const MAX_TRAVEL_STEPS = 256;
 const CHALLENGE_COOLDOWN_MS = 30 * 1000;
 const challengeCooldowns = new Map();
 
-// World elements (unpassable blocks + demon-team encounters) live in
+// World elements (events/objects, unpassable blocks, and demon-team encounters) live in
 // data/map.json so the map can be regenerated without touching this route.
 const WORLD_BLOCKS = Array.isArray(worldMap.blocks) ? worldMap.blocks : [];
 const WORLD_ENCOUNTERS = Array.isArray(worldMap.encounters) ? worldMap.encounters : [];
@@ -30,9 +38,10 @@ const MOCK_PLAYERS = [
 
 router.get('/world/state', requireAuth, async (req, res) => {
   const position = await getOrCreatePosition(req.player.id);
-  const [playersAt, activeTeam] = await Promise.all([
+  const [playersAt, activeTeam, boundShrine] = await Promise.all([
     getPlayersAt(position.x, position.y, req.player.id),
-    getActiveTeamSummary(req.player.id)
+    getActiveTeamSummary(req.player.id),
+    getBoundShrine(req.player.id)
   ]);
 
   res.json({
@@ -43,10 +52,41 @@ router.get('/world/state', requireAuth, async (req, res) => {
     blockedTiles: WORLD_BLOCKS,
     roads: WORLD_ROADS,
     encounters: WORLD_ENCOUNTERS,
+    shrines: getWorldShrines(),
+    boundShrine,
     currentEvent: getEventAt(position.x, position.y),
     currentEncounter: getEncounterAt(position.x, position.y),
     playersAt,
     activeTeam
+  });
+});
+
+router.get('/world/shrine', requireAuth, async (req, res) => {
+  const position = await getOrCreatePosition(req.player.id);
+
+  res.json({
+    position,
+    currentShrine: getShrineAt(position.x, position.y),
+    boundShrine: await getBoundShrine(req.player.id)
+  });
+});
+
+router.post('/world/shrine/bind', requireAuth, async (req, res) => {
+  const position = await getOrCreatePosition(req.player.id);
+  const shrine = getShrineAt(position.x, position.y);
+
+  if (!shrine) {
+    return res.status(409).json({ error: 'Stand on a Forsaken Shrine to anchor your soul.' });
+  }
+
+  const boundShrine = await saveBoundShrine(req.player.id, shrine);
+
+  res.json({
+    ok: true,
+    position,
+    currentShrine: shrine,
+    boundShrine,
+    message: ANCHOR_SUCCESS_MESSAGE
   });
 });
 
@@ -67,6 +107,19 @@ router.post('/world/move', requireAuth, async (req, res) => {
     currentEncounter: getEncounterAt(position.x, position.y),
     playersAt,
     travelEvents
+  });
+});
+
+router.post('/world/ambush-defeat', requireAuth, async (req, res) => {
+  const result = getAmbushDefeatReturn(await getBoundShrine(req.player.id));
+
+  await savePosition(req.player.id, result.position);
+
+  res.json({
+    ...result,
+    currentEvent: getEventAt(result.position.x, result.position.y),
+    currentEncounter: getEncounterAt(result.position.x, result.position.y),
+    playersAt: await getPlayersAt(result.position.x, result.position.y, req.player.id)
   });
 });
 

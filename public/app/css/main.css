@@ -15848,6 +15848,115 @@ body.world-page > .alert {
     font-weight: 700;
 }
 
+.world-shrine-panel {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.world-shrine-status,
+.world-shrine-action {
+    display: grid;
+    align-items: center;
+    gap: 0.48rem;
+    min-width: 0;
+    border: 1px solid rgba(161,212,201,0.12);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.16);
+    padding: 0.5rem;
+}
+
+.world-shrine-status {
+    grid-template-columns: auto minmax(0, 1fr);
+}
+
+.world-shrine-status.is-bound {
+    border-color: rgba(232,199,106,0.34);
+    background:
+        radial-gradient(circle at 10% 50%, rgba(141,231,255,0.11), transparent 4rem),
+        linear-gradient(180deg, rgba(232,199,106,0.07), rgba(0,0,0,0.06)),
+        rgba(0,0,0,0.18);
+}
+
+.world-shrine-mark {
+    position: relative;
+    display: block;
+    width: 1rem;
+    height: 1.45rem;
+    border: 1px solid rgba(232,199,106,0.74);
+    border-radius: 2px 2px 6px 6px;
+    background: linear-gradient(180deg, #3b1618, #16090a);
+    box-shadow: 0 0 15px rgba(232,199,106,0.16);
+}
+
+.world-shrine-mark::after {
+    content: "";
+    position: absolute;
+    top: 0.42rem;
+    left: 50%;
+    width: 0.34rem;
+    height: 0.34rem;
+    border-radius: 50%;
+    background: #8de7ff;
+    box-shadow: 0 0 10px rgba(141,231,255,0.52);
+    transform: translateX(-50%);
+}
+
+.world-shrine-copy,
+.world-shrine-action-copy {
+    display: grid;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.world-shrine-copy strong,
+.world-shrine-action-copy strong {
+    overflow: hidden;
+    color: #fff3bd;
+    font-size: 0.78rem;
+    font-weight: 900;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-shrine-copy small,
+.world-shrine-action-copy small {
+    color: rgba(220,232,229,0.58);
+    font-size: 0.64rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.world-shrine-action {
+    grid-template-columns: minmax(0, 1fr) auto;
+    border-color: rgba(232,199,106,0.28);
+    background:
+        linear-gradient(180deg, rgba(232,199,106,0.08), rgba(231,138,85,0.045)),
+        rgba(0,0,0,0.18);
+}
+
+.world-shrine-action .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.34rem;
+    min-width: 7.8rem;
+    min-height: 2.1rem;
+    border-radius: 5px;
+    color: #170b09;
+    font-size: 0.66rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.world-shrine-action .btn .ad-icon {
+    width: 0.86rem;
+    height: 0.86rem;
+    margin: 0;
+}
+
 .world-team-summary,
 .world-encounter-list {
     display: grid;
@@ -16154,6 +16263,14 @@ body.world-page > .alert {
 
     .world-encounter-player {
         grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .world-shrine-action {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .world-shrine-action .btn {
+        justify-self: stretch;
     }
 
     .world-encounter-player .btn {

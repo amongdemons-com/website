@@ -184,6 +184,16 @@ All API routes are mounted under `/api`.
 | `GET` | `/demons/:id` | Return one owned permanent demon |
 | `POST` | `/demons/:id/train` | Spend Souls to train one owned permanent demon server-side |
 
+### World Exploration
+
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/world/state` | Return world map state, player position, visible objects, and the active Anchored Shrine |
+| `GET` | `/world/shrine` | Return the player's current bound Forsaken Shrine and whether they are standing on one |
+| `POST` | `/world/shrine/bind` | Bind the player's soul to the Forsaken Shrine under their current server-side position |
+| `POST` | `/world/ambush-defeat` | Move the player to their Anchored Shrine after ambush defeat, or to spawn if none is bound |
+| `POST` | `/world/move` | Move along a validated world path and return travel events |
+
 ### Dungeon Runs
 
 | Method | Route | Description |
@@ -308,6 +318,8 @@ The API initializes required tables on first API use. `public/api/lib/schema.js`
 | `players` | Account credentials, level, XP, Souls, unlocks |
 | `player_sessions` | Bearer/session tokens and expiration support |
 | `player_demons` | Permanent owned demon collection |
+| `player_world_positions` | Current server-side world map coordinates |
+| `player_bound_world_shrines` | Active Forsaken Shrine return coordinates |
 | `runs` | Dungeon state, rewards, combat history, and status |
 
 Run state and rewards are stored as JSON text in the `runs` table.
@@ -347,6 +359,7 @@ Run state and rewards are stored as JSON text in the `runs` table.
 | `public/api/lib/run-serialization.js` | Serialized run response shape, previews, pacts, team limits, and enemy Terror previews |
 | `public/api/lib/runs.js` | Run loading, serialization, and persistence helpers |
 | `public/api/lib/schema.js` | Database initialization and additive schema checks |
+| `public/api/lib/world-shrines.js` | Forsaken Shrine lookup, bound shrine persistence, and ambush defeat return rules |
 
 ## Development Checks
 

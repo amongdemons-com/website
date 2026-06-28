@@ -3194,9 +3194,16 @@
     {
       "x": 27,
       "y": 16,
-      "type": "landmark",
-      "title": "Glass Shrine",
-      "description": "A splintered shrine marking the eastern flats."
+      "type": "forsaken_shrine",
+      "title": "Forsaken Shrine",
+      "description": "A splintered altar where hunters can anchor their souls."
+    },
+    {
+      "x": -15,
+      "y": -17,
+      "type": "forsaken_shrine",
+      "title": "Forsaken Shrine",
+      "description": "A blackened roadside shrine half-swallowed by old ash."
     },
     {
       "x": -31,

@@ -5,6 +5,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
 
   const api = window.AmongDemons.api;
   const appUrl = window.AmongDemons.appUrl || ((value) => value);
+  const renderIcon = window.AmongDemons?.ui?.renderIcon || (() => '');
   const TILE_SIZE = 64;
   const WORLD_RADIUS = 50;
   const ZONE_START_RADIUS = 24;
@@ -31,6 +32,9 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     dangerous: 0x4b1716,
     dangerousGlow: 0xb65b3f,
     soulNode: 0xc7b56f,
+    shrine: 0x3b1618,
+    shrineGlow: 0xe8c76a,
+    shrineSoul: 0x8de7ff,
     portal: 0x46324a,
     portalGlow: 0x80638a,
     gridLine: 0x293028,
@@ -59,6 +63,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
   const EVENT_COLORS = {
     boss: BOARD_COLORS.dangerousGlow,
     'soul-cache': BOARD_COLORS.soulNode,
+    forsaken_shrine: BOARD_COLORS.shrineGlow,
     'dungeon-portal': BOARD_COLORS.portalGlow,
     landmark: BOARD_COLORS.landmark
   };
@@ -106,6 +111,8 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     activeTeam: null,
     currentEvent: null,
     currentEncounter: null,
+    boundShrine: null,
+    bindingShrine: false,
     blockedTiles: FALLBACK_BLOCKED_TILES,
     blockedMap: new Map(),
     selectedPath: [],
@@ -158,6 +165,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       'worldTargetTooltip',
       'worldEncounterTooltip',
       'worldTeamSummary',
+      'worldShrinePanel',
       'worldEncounterHeading',
       'worldEncounterList',
       'worldTravelPanel',
@@ -179,6 +187,12 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       challengePlayer(button.dataset.challengePlayer, button);
     });
 
+    elements.worldShrinePanel?.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const button = target?.closest('[data-anchor-soul]');
+      if (!button) return;
+      anchorSoul(button);
+    });
   }
 
   function bindWorldSidePanel() {
@@ -307,6 +321,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     state.blockedMap = new Map(state.blockedTiles.map((tile) => [getTileKey(tile), tile]));
     state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
     state.activeTeam = payload.activeTeam || null;
+    state.boundShrine = normalizeShrine(payload.boundShrine);
     state.currentEvent = payload.currentEvent || getEventAt(state.position);
     state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
     await loadHunterAvatar();
@@ -589,6 +604,34 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     } finally {
       setButtonBusy(button, false);
       renderEncounterPanel();
+    }
+  }
+
+  async function anchorSoul(button) {
+    if (state.bindingShrine || state.moving) return;
+
+    state.bindingShrine = true;
+    setButtonBusy(button, true);
+
+    try {
+      const payload = await api('/api/world/shrine/bind', {
+        method: 'POST',
+        body: {}
+      });
+
+      state.boundShrine = normalizeShrine(payload.boundShrine);
+      state.currentEvent = payload.currentShrine || getEventAt(state.position);
+      setMessage(
+        payload.message || 'Soul anchored. You will return to this Forsaken Shrine if defeated while traveling.',
+        'success'
+      );
+      renderWorld();
+    } catch (error) {
+      handleAuthError(error);
+    } finally {
+      state.bindingShrine = false;
+      setButtonBusy(button, false);
+      renderPanels();
     }
   }
 
@@ -1012,6 +1055,11 @@ import { COMBAT_THEMES } from './dungeon/config.js';
         layer.rect(event.x * TILE_SIZE + 6, event.y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12).fill({ color: BOARD_COLORS.dangerousGlow, alpha: 0.16 });
       } else if (event.type === 'soul-cache') {
         layer.circle(cx, cy, TILE_SIZE * 0.32).fill({ color: BOARD_COLORS.soulNode, alpha: 0.16 });
+      } else if (event.type === 'forsaken_shrine') {
+        layer.circle(cx, cy, TILE_SIZE * 0.36).fill({ color: BOARD_COLORS.shrineGlow, alpha: isBoundShrine(event) ? 0.24 : 0.13 });
+        if (isBoundShrine(event)) {
+          layer.circle(cx, cy, TILE_SIZE * 0.42).stroke({ color: BOARD_COLORS.shrineSoul, width: 2, alpha: 0.52 });
+        }
       } else if (event.type === 'dungeon-portal') {
         layer.circle(cx, cy, TILE_SIZE * 0.4).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.18 });
       } else if (event.type === 'landmark') {
@@ -1095,6 +1143,18 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       } else if (event.type === 'dungeon-portal') {
         marker.circle(0, 0, 24).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.22 });
         marker.circle(0, 0, 15).fill({ color: BOARD_COLORS.portal, alpha: 0.9 }).stroke({ color, width: 3, alpha: 1 });
+      } else if (event.type === 'forsaken_shrine') {
+        const bound = isBoundShrine(event);
+        marker.ellipse(0, 19, 18, 5).fill({ color: 0x000000, alpha: 0.38 });
+        marker.circle(0, 0, bound ? 27 : 23).fill({ color: BOARD_COLORS.shrineGlow, alpha: bound ? 0.2 : 0.12 });
+        marker.rect(-14, 11, 28, 8).fill({ color: 0x170c0d, alpha: 0.96 }).stroke({ color, width: 1.4, alpha: 0.82 });
+        marker.rect(-9, -18, 18, 30).fill({ color: BOARD_COLORS.shrine, alpha: 0.96 }).stroke({ color, width: bound ? 2.4 : 1.7, alpha: 0.95 });
+        marker.rect(-5, -23, 10, 7).fill({ color: 0x1f1012, alpha: 0.96 }).stroke({ color, width: 1.2, alpha: 0.82 });
+        marker.circle(0, -4, 5.5).fill({ color: BOARD_COLORS.shrineSoul, alpha: 0.78 });
+        marker.circle(0, -4, 9).stroke({ color: BOARD_COLORS.shrineSoul, width: 1.2, alpha: bound ? 0.74 : 0.38 });
+        if (bound) {
+          marker.circle(0, 0, 29).stroke({ color: BOARD_COLORS.shrineSoul, width: 2, alpha: 0.86 });
+        }
       } else if (event.type === 'landmark') {
         marker.rect(-12, -12, 24, 24).fill({ color: 0x111819, alpha: 0.9 }).stroke({ color, width: 2, alpha: 0.85 });
         marker.moveTo(0, -17).lineTo(14, 0).lineTo(0, 17).lineTo(-14, 0).lineTo(0, -17)
@@ -1205,6 +1265,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
   function renderPanels() {
     renderPositionPanel();
     renderTeamSummary();
+    renderShrinePanel();
     renderEncounterPanel();
     renderTravelPanel();
   }
@@ -1227,6 +1288,46 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     }
 
     elements.worldTeamSummary.innerHTML = `<div class="world-team-demons">${members.map(renderDemonPortrait).join('')}</div>`;
+  }
+
+  function renderShrinePanel() {
+    if (!elements.worldShrinePanel) return;
+
+    const currentShrine = state.moving ? null : getShrineAt(state.position);
+    const boundShrine = state.boundShrine;
+    const parts = [];
+
+    if (boundShrine) {
+      parts.push(`
+        <article class="world-shrine-status is-bound">
+          <span class="world-shrine-mark" aria-hidden="true"></span>
+          <span class="world-shrine-copy">
+            <strong>${escapeHtml(boundShrine.title || 'Forsaken Shrine')}</strong>
+            <small>${escapeHtml(formatCoords(boundShrine))}</small>
+          </span>
+        </article>
+      `);
+    } else {
+      parts.push('<p class="world-empty-text">No Anchored Shrine.</p>');
+    }
+
+    if (currentShrine) {
+      const isCurrentAnchor = boundShrine && positionsEqual(currentShrine, boundShrine);
+      parts.push(`
+        <article class="world-shrine-action ${isCurrentAnchor ? 'is-current-anchor' : ''}">
+          <div class="world-shrine-action-copy">
+            <strong>${escapeHtml(currentShrine.title || 'Forsaken Shrine')}</strong>
+            <small>Anchor your soul to this place.</small>
+          </div>
+          <button class="btn btn-warning btn-sm" type="button" data-anchor-soul ${state.bindingShrine ? 'disabled' : ''}>
+            ${renderIcon('anchor')}
+            <span>Anchor Soul</span>
+          </button>
+        </article>
+      `);
+    }
+
+    elements.worldShrinePanel.innerHTML = parts.join('');
   }
 
   function renderEncounterPanel() {
@@ -1606,6 +1707,14 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     return Boolean(getEventAt(position));
   }
 
+  function getShrineAt(position) {
+    return state.events.find((event) => event.type === 'forsaken_shrine' && event.x === position.x && event.y === position.y) || null;
+  }
+
+  function isBoundShrine(event) {
+    return Boolean(event?.type === 'forsaken_shrine' && state.boundShrine && positionsEqual(event, state.boundShrine));
+  }
+
   function getEncounterAt(position) {
     return state.encounters.find((encounter) => encounter.x === position.x && encounter.y === position.y) || null;
   }
@@ -1654,6 +1763,18 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     };
   }
 
+  function normalizeShrine(shrine) {
+    if (!shrine || shrine.type !== 'forsaken_shrine') return null;
+    const position = normalizePosition(shrine);
+
+    return {
+      ...shrine,
+      ...position,
+      type: 'forsaken_shrine',
+      title: shrine.title || 'Forsaken Shrine'
+    };
+  }
+
   function getTileKey(position) {
     return `${position.x},${position.y}`;
   }
@@ -1661,6 +1782,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
   function getEventLabel(type) {
     if (type === 'boss') return 'Boss Fight';
     if (type === 'soul-cache') return 'Soul Cache';
+    if (type === 'forsaken_shrine') return 'Forsaken Shrine';
     if (type === 'dungeon-portal') return 'Dungeon Portal';
     if (type === 'landmark') return 'Landmark';
     return 'Event';
