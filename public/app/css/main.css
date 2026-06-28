@@ -16268,10 +16268,60 @@ body.world-page > .alert {
 }
 
 .world-battle-modal .dungeon-reward-strip,
+.world-battle-modal .dungeon-replaylog-box,
 .world-battle-modal .dungeon-reward-box,
 .world-battle-modal .dungeon-mobile-fight-box,
 .world-battle-modal .dungeon-floor-marker {
     display: none !important;
+}
+
+.world-battle-modal .dungeon-bottom-panel {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.world-battle-modal #dungeonHandBar {
+    grid-column: 1 / -1;
+}
+
+.world-battle-modal .dungeon-hand-cards.is-world-battle-result {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+.world-dungeon-result {
+    display: grid;
+    justify-items: center;
+    gap: 0.42rem;
+    min-width: min(18rem, 100%);
+}
+
+.world-dungeon-result strong {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.1rem, 2.6vw, 1.8rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.82);
+}
+
+.world-dungeon-result.is-victory strong {
+    color: #86e8b2;
+    text-shadow: 0 0 18px rgba(134,232,178,0.42), 0 2px 12px rgba(0,0,0,0.82);
+}
+
+.world-dungeon-result.is-defeat strong {
+    color: #ff7770;
+    text-shadow: 0 0 18px rgba(255,119,112,0.42), 0 2px 12px rgba(0,0,0,0.82);
+}
+
+.world-dungeon-result-continue {
+    min-width: 8rem;
+    min-height: 2rem;
+    padding: 0.42rem 0.9rem;
+    line-height: 1;
 }
 
 .world-battle-close {

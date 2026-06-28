@@ -189,7 +189,14 @@ router.post('/world/hunting/stop', requireAuth, async (req, res) => {
 
     if (!huntRows.length) {
       await connection.rollback();
-      return res.status(404).json({ error: 'No active hunt is running.' });
+      committed = true;
+      return res.json({
+        ok: true,
+        alreadyStopped: true,
+        rewards: createEmptyHuntRewards(),
+        player: cleanPlayer(req.player),
+        hunt: await getHuntState(req.player.id)
+      });
     }
 
     const snapshot = parseHuntSnapshot(huntRows[0].snapshot);
@@ -431,6 +438,16 @@ function parseHuntSnapshot(value) {
   } catch (error) {
     return {};
   }
+}
+
+function createEmptyHuntRewards() {
+  return {
+    elapsedSeconds: 0,
+    cycles: 0,
+    wins: 0,
+    xp: 0,
+    souls: 0
+  };
 }
 
 function getWorldPlayer(player) {

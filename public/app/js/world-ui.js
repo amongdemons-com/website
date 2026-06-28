@@ -34,6 +34,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   // Kept in sync with world-combat.js so the live hunt readout matches the server payout.
   const HUNT_DEFAULT_RESPAWN_SECONDS = 300;
   const HUNT_REWARD_CYCLE_CAP = 288;
+  const HUNT_STATUS_REFRESH_MS = 15000;
   const WORLD_SIDE_PANEL_QUERY = '(max-width: 899.98px) and (orientation: portrait)';
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
   const BOARD_COLORS = {
@@ -131,6 +132,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     hunt: null,
     huntBusy: false,
     huntTicker: null,
+    huntStatusRefreshAt: 0,
     boundShrine: null,
     bindingShrine: false,
     blockedTiles: FALLBACK_BLOCKED_TILES,
@@ -379,7 +381,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.blockedMap = new Map(state.blockedTiles.map((tile) => [getTileKey(tile), tile]));
     state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
     state.activeTeam = payload.activeTeam || null;
-    state.hunt = normalizeHunt(payload.hunt);
+    setHuntState(payload.hunt);
     state.boundShrine = normalizeShrine(payload.boundShrine);
     state.currentEvent = payload.currentEvent || getEventAt(state.position);
     state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
@@ -396,7 +398,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
   }
 
-  function handleMapTileClick(tile) {
+  async function handleMapTileClick(tile) {
     if (state.moving) return;
 
     const target = normalizePosition(tile);
@@ -408,11 +410,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       return;
     }
 
-    if (isHuntActive()) {
-      clearRoutePreview();
-      setMessage('Stop hunting before you travel.', 'warning');
-      return;
-    }
+    if (await shouldBlockTravelForHunt()) return;
 
     if (isBlocked(target)) {
       clearRoutePreview('blocked');
@@ -451,11 +449,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   async function travelSelectedPath() {
     const path = (state.selectedPath || []).slice();
     if (state.moving || path.length < 2) return;
-    if (isHuntActive()) {
-      clearRoutePreview();
-      setMessage('Stop hunting before you travel.', 'warning');
-      return;
-    }
+    if (await shouldBlockTravelForHunt()) return;
 
     state.moving = true;
     state.travelStatus = 'moving';
@@ -521,6 +515,24 @@ import * as dungeonUtils from './dungeon/utils.js';
       renderWorld();
       renderPanels();
     }
+  }
+
+  async function shouldBlockTravelForHunt() {
+    if (!isHuntActive()) return false;
+
+    try {
+      await refreshHuntStatus({ force: true });
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+      }
+    }
+
+    if (!isHuntActive()) return false;
+
+    clearRoutePreview();
+    setMessage('Stop hunting before you travel.', 'warning');
+    return true;
   }
 
   function commitTravelPath(path) {
@@ -727,7 +739,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         method: 'POST',
         body: { encounterId }
       });
-      state.hunt = normalizeHunt(payload.hunt);
+      setHuntState(payload.hunt);
       const won = payload.battle?.winner === 'player';
       if (shouldShowWorldBattleReplay(payload.battle)) {
         await showWorldBattleReplay(payload.battle, getWorldBattleMeta('try_hunt', payload.battle));
@@ -752,7 +764,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         method: 'POST',
         body: { encounterId }
       });
-      state.hunt = normalizeHunt(payload.hunt);
+      setHuntState(payload.hunt);
       setMessage('Hunting started. Current skill buffs were snapshotted.', 'success');
     } catch (error) {
       handleAuthError(error);
@@ -771,14 +783,31 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     try {
       const payload = await api('/api/world/hunting/stop', { method: 'POST' });
-      state.hunt = normalizeHunt(payload.hunt);
+      setHuntState(payload.hunt);
       if (payload.player) {
         window.AmongDemons.ui?.updateNavAccount?.(payload.player);
       }
       const rewards = payload.rewards || {};
-      setMessage(`Hunting stopped. Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.`, 'success');
+      setMessage(
+        payload.alreadyStopped
+          ? 'Hunting already stopped.'
+          : `Hunting stopped. Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.`,
+        'success'
+      );
     } catch (error) {
-      handleAuthError(error);
+      if (error.status === 404) {
+        try {
+          await refreshHuntStatus({ force: true, render: false });
+        } catch (refreshError) {
+          setHuntState({
+            unlockedEncounterIds: state.hunt?.unlockedEncounterIds || [],
+            active: null
+          });
+        }
+        setMessage('Hunting already stopped.', 'success');
+      } else {
+        handleAuthError(error);
+      }
     } finally {
       state.huntBusy = false;
       setButtonBusy(button, false);
@@ -1705,6 +1734,10 @@ import * as dungeonUtils from './dungeon/utils.js';
       parts.push(renderCurrentEncounter(encounter));
     }
 
+    if (state.hunt?.active && !isActiveHuntFor(encounter?.id)) {
+      parts.push(renderActiveHuntSummary());
+    }
+
     if (!players.length) {
       parts.push('<p class="world-empty-text">No hunters on this tile.</p>');
       elements.worldEncounterList.innerHTML = parts.join('');
@@ -1752,6 +1785,29 @@ import * as dungeonUtils from './dungeon/utils.js';
         ${action}
       </article>
       ${renderHuntRewards(encounter, active)}
+    `;
+  }
+
+  function renderActiveHuntSummary() {
+    const encounter = getActiveHuntEncounter();
+    const progress = computeHuntProgress();
+    const title = encounter?.title || 'Demon Patrol';
+    const meta = [
+      'Hunting',
+      encounter ? formatCoords(encounter) : null,
+      progress ? `${formatDuration(progress.elapsedSeconds)} elapsed` : null
+    ].filter(Boolean).join(' - ');
+
+    return `
+      <article class="world-encounter-player">
+        <span class="world-encounter-mark" aria-hidden="true"></span>
+        <span class="world-encounter-copy">
+          <strong>${escapeHtml(title)}</strong>
+          <small>${escapeHtml(meta)}</small>
+        </span>
+        <button class="btn btn-warning btn-sm" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>Stop Hunting</button>
+      </article>
+      ${encounter ? renderHuntRewards(encounter, true) : ''}
     `;
   }
 
@@ -2762,6 +2818,10 @@ import * as dungeonUtils from './dungeon/utils.js';
       if (state.worldBattleReplayToken === token && resultType) {
         await dungeonRender.showBattleResultOverlay(resultType);
       }
+      if (state.worldBattleReplayToken === token) {
+        renderWorldDungeonBattleResultDock(battle);
+        renderWorldDungeonBattleCenterIcon();
+      }
     } catch (error) {
       console.error('World battle replay failed', error);
       setMessage(getWorldBattleFallbackMessage(battle, meta), battle.winner === 'player' ? 'success' : 'warning');
@@ -2813,6 +2873,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     dungeonRender.setBattlePanel('combat');
     dungeonCombat.applyBattleSpeed();
     dungeonRender.renderRun();
+    renderWorldDungeonBattleCenterIcon();
   }
 
   function createWorldDungeonBattleRun(battle = {}, meta = {}) {
@@ -2914,6 +2975,43 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (battle.winner === 'player') return 'victory';
     if (battle.winner === 'enemy') return 'defeat';
     return null;
+  }
+
+  function renderWorldDungeonBattleResultDock(battle = {}) {
+    const handCards = elements.worldBattleModal?.querySelector('.dungeon-hand-cards');
+    if (!handCards) return;
+
+    const won = battle.winner === 'player';
+    const lost = battle.winner === 'enemy';
+    const label = won ? 'VICTORY' : lost ? 'DEFEAT' : 'BATTLE ENDED';
+    const tone = won ? 'is-victory' : lost ? 'is-defeat' : 'is-neutral';
+
+    handCards.classList.add('is-world-battle-result');
+    handCards.innerHTML = `
+      <div class="world-dungeon-result ${tone}" role="status" aria-live="polite">
+        <strong>${escapeHtml(label)}</strong>
+        <button class="btn btn-glass-gold world-dungeon-result-continue" type="button">
+          Continue
+        </button>
+      </div>
+    `;
+    handCards.querySelector('.world-dungeon-result-continue')?.addEventListener('click', closeWorldBattleModal, { once: true });
+  }
+
+  function renderWorldDungeonBattleCenterIcon() {
+    const centerActions = elements.worldBattleModal?.querySelector('#dungeonCenterActions');
+    if (!centerActions || dungeonState.isBattleAnimating) return;
+    centerActions.innerHTML = `
+      <span class="dungeon-fight-mark world-dungeon-center-mark" aria-hidden="true">
+        ${dungeonCards.renderButtonMeleeIcon()}
+      </span>
+    `;
+  }
+
+  function closeWorldBattleModal() {
+    const modalElement = elements.worldBattleModal;
+    if (!modalElement) return;
+    window.bootstrap?.Modal.getOrCreateInstance(modalElement)?.hide();
   }
 
   function clearWorldDungeonBattleTransientElements() {
@@ -3313,10 +3411,47 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function normalizeHunt(hunt) {
+    const active = hunt?.active?.encounterId
+      ? {
+        ...hunt.active,
+        encounterId: String(hunt.active.encounterId)
+      }
+      : null;
+
     return {
       unlockedEncounterIds: Array.isArray(hunt?.unlockedEncounterIds) ? hunt.unlockedEncounterIds.map(String) : [],
-      active: hunt?.active || null
+      active
     };
+  }
+
+  function setHuntState(hunt) {
+    state.hunt = normalizeHunt(hunt);
+    state.huntStatusRefreshAt = Date.now();
+    return state.hunt;
+  }
+
+  async function refreshHuntStatus(options = {}) {
+    const force = Boolean(options.force);
+    const now = Date.now();
+    if (!force && state.huntStatusRefreshAt && now - state.huntStatusRefreshAt < HUNT_STATUS_REFRESH_MS) {
+      return state.hunt;
+    }
+
+    state.huntStatusRefreshAt = now;
+
+    try {
+      setHuntState(await api('/api/world/hunting/status'));
+    } catch (error) {
+      state.huntStatusRefreshAt = 0;
+      throw error;
+    }
+
+    if (options.render !== false) {
+      renderEncounterPanel();
+      syncHuntTicker();
+    }
+
+    return state.hunt;
   }
 
   function isEncounterUnlocked(encounterId) {
@@ -3340,7 +3475,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   function getActiveHuntEncounter() {
     const active = state.hunt?.active;
     if (!active) return null;
-    return getEncounterById(active.encounterId) || state.currentEncounter || null;
+    return getEncounterById(active.encounterId)
+      || (isActiveHuntFor(state.currentEncounter?.id) ? state.currentEncounter : null);
   }
 
   // Expected payout per respawn cycle for an encounter, derived from its threat
@@ -3575,6 +3711,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function syncHuntTicker() {
     if (isHuntActive()) {
+      void refreshHuntStatus().catch(() => {});
       updateHuntTooltip();
       if (!state.huntTicker) {
         state.huntTicker = window.setInterval(onHuntTick, 1000);
@@ -3598,6 +3735,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       syncHuntTicker();
       return;
     }
+    void refreshHuntStatus().catch(() => {});
     updateHuntTooltip();
     renderEncounterPanel();
   }
