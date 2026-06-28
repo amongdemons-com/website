@@ -16186,7 +16186,7 @@ body.world-page > .alert {
     padding: 0.42rem;
 }
 
-.world-travel-log-item > span {
+.world-travel-log-mark {
     width: 0.56rem;
     aspect-ratio: 1;
     border-radius: 50%;
@@ -16194,25 +16194,105 @@ body.world-page > .alert {
     opacity: 0.8;
 }
 
-.world-travel-log-item.is-ambush > span {
+.world-travel-log-item.is-ambush > .world-travel-log-mark {
     background: var(--ad-danger, #e4685e);
     box-shadow: 0 0 12px rgba(228,104,94,0.28);
 }
 
-.world-travel-log-item strong {
+.world-travel-log-copy {
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
+}
+
+.world-travel-log-copy strong {
+    overflow: hidden;
     color: rgba(220,232,229,0.86);
     font-size: 0.68rem;
     font-weight: 900;
     line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.world-travel-log-item small {
+.world-travel-log-copy small {
+    overflow: hidden;
     color: rgba(220,232,229,0.5);
     font-size: 0.62rem;
     font-weight: 800;
     line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
+.world-travel-replay-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.22rem;
+    min-width: 0;
+    min-height: 1.85rem;
+    padding: 0.22rem 0.38rem;
+    border-color: rgba(232,199,106,0.32);
+    color: rgba(255,244,194,0.88);
+    font-size: 0.62rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.world-travel-replay-btn .ad-icon {
+    width: 0.78rem;
+    height: 0.78rem;
+}
+
+.world-battle-modal .modal-dialog,
+.world-battle-modal .modal-content,
+.world-battle-modal .modal-body {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    border: 0;
+    background: transparent;
+}
+
+.world-battle-modal .modal-body {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    padding: 0;
+}
+
+.world-battle-modal .dungeon-layout {
+    height: 100%;
+}
+
+.world-battle-modal .dungeon-reward-strip,
+.world-battle-modal .dungeon-reward-box,
+.world-battle-modal .dungeon-mobile-fight-box,
+.world-battle-modal .dungeon-floor-marker {
+    display: none !important;
+}
+
+.world-battle-close {
+    position: fixed;
+    top: 0.85rem;
+    right: 0.85rem;
+    z-index: 2605;
+    width: 2.1rem;
+    height: 2.1rem;
+    border: 1px solid rgba(232,199,106,0.32);
+    border-radius: 6px;
+    background-color: rgba(7,18,20,0.74);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.32);
+    filter: invert(1) grayscale(100%) brightness(1.35);
+    opacity: 0.82;
+}
+
+.world-battle-close:hover,
+.world-battle-close:focus-visible {
+    opacity: 1;
+}
 .world-action-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -16235,6 +16315,13 @@ body.world-page > .alert {
     width: 0.88rem;
     height: 0.88rem;
     margin: 0;
+}
+
+
+@media (max-width: 575.98px) {
+    .world-travel-replay-btn span {
+        display: none;
+    }
 }
 
 @media (max-width: 1199.98px) {

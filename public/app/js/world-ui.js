@@ -1,4 +1,18 @@
 import { COMBAT_THEMES } from './dungeon/config.js';
+import { registerDungeonActions } from './dungeon/registry.js';
+import { state as dungeonState, elements as dungeonElements } from './dungeon/state.js';
+import * as dungeonDom from './dungeon/dom.js';
+import * as dungeonLifecycle from './dungeon/lifecycle.js';
+import * as dungeonRender from './dungeon/render.js';
+import * as dungeonCombat from './dungeon/combat.js?v=20260627-fire-nova-v3';
+import * as dungeonRewards from './dungeon/rewards.js';
+import * as dungeonPacts from './dungeon/pacts.js';
+import * as dungeonHand from './dungeon/hand.js';
+import * as dungeonRecruit from './dungeon/recruit.js';
+import * as dungeonModals from './dungeon/modals.js';
+import * as dungeonDragDrop from './dungeon/drag-drop.js';
+import * as dungeonCards from './dungeon/cards.js';
+import * as dungeonUtils from './dungeon/utils.js';
 
 (function() {
   'use strict';
@@ -135,7 +149,10 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     pinch: null,
     gestureWasPinch: false,
     sidePanelMedia: null,
-    sidePanelExpanded: false
+    sidePanelExpanded: false,
+    activeWorldBattle: null,
+    activeWorldBattleMeta: null,
+    worldBattleReplayToken: 0
   };
 
   const elements = {};
@@ -177,7 +194,8 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       'worldEncounterList',
       'worldTravelPanel',
       'worldSidePanel',
-      'worldSideToggle'
+      'worldSideToggle',
+      'worldBattleModal'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -208,6 +226,20 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       if (stopHuntingButton) {
         stopHunting(stopHuntingButton);
       }
+    });
+
+    elements.worldTravelPanel?.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const replayButton = target?.closest('[data-view-world-battle]');
+      if (!replayButton) return;
+      const entry = state.travelLog[Number(replayButton.dataset.viewWorldBattle)];
+      if (entry?.battle) {
+        showWorldBattleReplay(entry.battle, getWorldBattleMeta('ambush', entry.battle));
+      }
+    });
+
+    elements.worldBattleModal?.addEventListener('hidden.bs.modal', () => {
+      cancelWorldBattleReplay();
     });
 
     elements.worldShrinePanel?.addEventListener('click', (event) => {
@@ -454,6 +486,11 @@ import { COMBAT_THEMES } from './dungeon/config.js';
         state.currentEncounter = getEncounterAt(step);
         renderWorld();
         renderPanels();
+        if (shouldShowWorldBattleReplay(stepEvent.battle)) {
+          await showWorldBattleReplay(stepEvent.battle, getWorldBattleMeta('ambush', stepEvent.battle));
+        } else if (stepEvent.type === 'ambush' && stepEvent.battle?.error) {
+          setMessage(stepEvent.battle.error, 'warning');
+        }
         await delay(getStepDelay());
 
         // A lost ambush drags the hunter back to their Anchored Shrine (or spawn),
@@ -692,6 +729,9 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       });
       state.hunt = normalizeHunt(payload.hunt);
       const won = payload.battle?.winner === 'player';
+      if (shouldShowWorldBattleReplay(payload.battle)) {
+        await showWorldBattleReplay(payload.battle, getWorldBattleMeta('try_hunt', payload.battle));
+      }
       setMessage(won ? 'Hunting unlocked for this patrol.' : 'Try Hunt failed. Hunting remains locked.', won ? 'success' : 'warning');
     } catch (error) {
       handleAuthError(error);
@@ -1760,12 +1800,13 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       return;
     }
 
-    elements.worldTravelPanel.innerHTML = `<div class="world-travel-log">${logs.slice(0, 5).map(renderTravelLogItem).join('')}</div>`;
+    elements.worldTravelPanel.innerHTML = `<div class="world-travel-log">${logs.slice(0, 5).map((entry, index) => renderTravelLogItem(entry, index)).join('')}</div>`;
   }
 
-  function renderTravelLogItem(entry) {
+  function renderTravelLogItem(entry, index = 0) {
     const isAmbush = entry.type === 'ambush';
     const battleWinner = entry.battle?.winner;
+    const canReplay = isAmbush && shouldShowWorldBattleReplay(entry.battle);
     const title = isAmbush
       ? battleWinner === 'player'
         ? 'Ambush Won'
@@ -1776,11 +1817,1120 @@ import { COMBAT_THEMES } from './dungeon/config.js';
 
     return `
       <article class="world-travel-log-item ${isAmbush ? 'is-ambush' : ''}">
-        <span aria-hidden="true"></span>
-        <strong>${title}</strong>
-        <small>${formatCoords(entry.position)}</small>
+        <span class="world-travel-log-mark" aria-hidden="true"></span>
+        <span class="world-travel-log-copy">
+          <strong>${title}</strong>
+          <small>${formatCoords(entry.position)}</small>
+        </span>
+        ${canReplay ? `
+          <button class="btn btn-outline-light btn-sm world-travel-replay-btn" type="button" data-view-world-battle="${index}" title="Replay Ambush" aria-label="Replay Ambush">
+            ${renderIcon('replay')}
+            <span>Replay</span>
+          </button>
+        ` : ''}
       </article>
     `;
+  }
+
+  function shouldShowWorldBattleReplay(battle) {
+    return Boolean(battle && Array.isArray(battle.combatLog) && battle.combatLog.length);
+  }
+
+  function showWorldBattleReplay(battle, meta = {}) {
+    if (!battle) return Promise.resolve();
+
+    if (battle.error && !Array.isArray(battle.combatLog)) {
+      setMessage(battle.error, 'warning');
+      return Promise.resolve();
+    }
+
+    const modalElement = elements.worldBattleModal;
+    const modalApi = window.bootstrap?.Modal;
+    if (!modalElement || !modalApi) {
+      setMessage(getWorldBattleFallbackMessage(battle, meta), battle.winner === 'player' ? 'success' : 'warning');
+      return Promise.resolve();
+    }
+
+    state.activeWorldBattle = battle;
+    state.activeWorldBattleMeta = normalizeWorldBattleMeta(meta.type, battle, meta);
+    state.activeWorldBattleTeams = createWorldBattleReplayTeams(battle);
+    state.activeWorldBattleLogIndex = -1;
+    state.worldBattlePlayback = null;
+    state.worldBattleReplayPlaying = false;
+    state.worldBattleLogOpen = false;
+    state.worldBattleBuffsOpen = false;
+    renderWorldBattleReplay(battle);
+
+    const modal = modalApi.getOrCreateInstance(modalElement);
+    const playWhenVisible = () => {
+      playWorldBattleReplay(battle);
+    };
+
+    if (modalElement.classList.contains('show')) {
+      playWhenVisible();
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      modalElement.addEventListener('shown.bs.modal', playWhenVisible, { once: true });
+      modalElement.addEventListener('hidden.bs.modal', () => {
+        modalElement.removeEventListener('shown.bs.modal', playWhenVisible);
+        resolve();
+      }, { once: true });
+      modal.show();
+    });
+  }
+
+  function cancelWorldBattleReplay() {
+    state.worldBattleReplayToken += 1;
+    state.worldBattleReplayPlaying = false;
+    state.activeWorldBattle = null;
+    state.activeWorldBattleMeta = null;
+    state.activeWorldBattleTeams = null;
+    state.activeWorldBattleLogIndex = -1;
+    state.worldBattlePlayback = null;
+    state.worldBattleLogOpen = false;
+    state.worldBattleBuffsOpen = false;
+    setWorldBattlePausedClass(false);
+    clearWorldBattleTransientEffects();
+  }
+
+  async function playWorldBattleReplay(battle) {
+    const combatLog = Array.isArray(battle?.combatLog) ? battle.combatLog : [];
+    const token = state.worldBattleReplayToken + 1;
+    state.worldBattleReplayToken = token;
+    state.activeWorldBattle = battle;
+    state.activeWorldBattleTeams = createWorldBattleReplayTeams(battle);
+    state.activeWorldBattleLogIndex = -1;
+    state.worldBattleReplayPlaying = true;
+    state.worldBattlePlayback = {
+      totalSteps: combatLog.length,
+      isPaused: false,
+      stepDirection: 0,
+      waitResolve: null
+    };
+    setWorldBattlePausedClass(false);
+    renderWorldBattleReplay(battle);
+
+    await waitForWorldBattlePlaybackDelay(getWorldBattleReplayDelay() / 2);
+
+    while (state.activeWorldBattleLogIndex < combatLog.length - 1) {
+      if (state.worldBattleReplayToken !== token) return;
+      const command = await waitForWorldBattlePlaybackReady();
+      if (!command || state.worldBattleReplayToken !== token) return;
+      if (command === 'previous') {
+        renderWorldBattlePlaybackFrame(Math.max(0, state.activeWorldBattleLogIndex));
+        continue;
+      }
+
+      const index = state.activeWorldBattleLogIndex + 1;
+      state.activeWorldBattleLogIndex = index;
+      applyWorldBattleLogEntry(combatLog[index], state.activeWorldBattleTeams);
+      renderWorldBattleReplay(battle);
+      highlightWorldBattleLogEntry(combatLog[index], token);
+      await waitForWorldBattlePlaybackDelay(getWorldBattleReplayDelay(combatLog[index]));
+    }
+
+    if (state.worldBattleReplayToken !== token) return;
+    state.worldBattleReplayPlaying = false;
+    state.activeWorldBattleLogIndex = combatLog.length - 1;
+    state.worldBattlePlayback = {
+      totalSteps: combatLog.length,
+      isPaused: true,
+      stepDirection: 0,
+      waitResolve: null
+    };
+    setWorldBattlePausedClass(true);
+    renderWorldBattleReplay(battle);
+  }
+
+  function getWorldBattleReplayDelay() {
+    const baseDelay = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      ? WORLD_BATTLE_REPLAY_REDUCED_STEP_MS
+      : WORLD_BATTLE_REPLAY_STEP_MS;
+    return Math.max(25, baseDelay / (Number(state.worldBattleSpeed) || 1));
+  }
+
+  async function waitForWorldBattlePlaybackReady() {
+    while (state.worldBattlePlayback?.isPaused) {
+      setWorldBattlePausedClass(true);
+      const direction = Number(state.worldBattlePlayback.stepDirection) || 0;
+      state.worldBattlePlayback.stepDirection = 0;
+
+      if (direction < 0) return 'previous';
+      if (direction > 0) {
+        return state.activeWorldBattleLogIndex < (state.worldBattlePlayback.totalSteps - 1) ? 'next' : null;
+      }
+
+      await waitForWorldBattlePlaybackSignal();
+    }
+
+    setWorldBattlePausedClass(false);
+    return state.worldBattlePlayback ? 'play' : null;
+  }
+
+  function waitForWorldBattlePlaybackDelay(duration) {
+    const playback = state.worldBattlePlayback;
+    if (!playback) return delay(duration);
+
+    return new Promise((resolve) => {
+      const timer = window.setTimeout(finish, Math.max(0, Number(duration) || 0));
+
+      function finish() {
+        window.clearTimeout(timer);
+        if (playback.waitResolve === finish) playback.waitResolve = null;
+        resolve();
+      }
+
+      playback.waitResolve = finish;
+    });
+  }
+
+  function waitForWorldBattlePlaybackSignal() {
+    const playback = state.worldBattlePlayback;
+    if (!playback) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      playback.waitResolve = () => {
+        playback.waitResolve = null;
+        resolve();
+      };
+    });
+  }
+
+  function resolveWorldBattlePlaybackWait() {
+    const resolve = state.worldBattlePlayback?.waitResolve;
+    if (resolve) resolve();
+  }
+
+  function toggleWorldBattlePlayback() {
+    if (!state.activeWorldBattle) return;
+    if (!state.worldBattleReplayPlaying) {
+      playWorldBattleReplay(state.activeWorldBattle);
+      return;
+    }
+
+    state.worldBattlePlayback = state.worldBattlePlayback || { totalSteps: 0, isPaused: false, stepDirection: 0, waitResolve: null };
+    state.worldBattlePlayback.isPaused = !state.worldBattlePlayback.isPaused;
+    state.worldBattlePlayback.stepDirection = 0;
+    setWorldBattlePausedClass(state.worldBattlePlayback.isPaused);
+    resolveWorldBattlePlaybackWait();
+    renderWorldBattleControls();
+  }
+
+  function stepWorldBattlePlayback(direction) {
+    if (!state.activeWorldBattle) return;
+    const normalizedDirection = Number(direction) < 0 ? -1 : 1;
+
+    if (state.worldBattleReplayPlaying && state.worldBattlePlayback) {
+      state.worldBattlePlayback.isPaused = true;
+      state.worldBattlePlayback.stepDirection = normalizedDirection;
+      setWorldBattlePausedClass(true);
+      resolveWorldBattlePlaybackWait();
+      renderWorldBattleControls();
+      return;
+    }
+
+    const entries = Array.isArray(state.activeWorldBattle.combatLog) ? state.activeWorldBattle.combatLog : [];
+    const currentStepCount = Math.max(0, state.activeWorldBattleLogIndex + 1);
+    renderWorldBattlePlaybackFrame(clamp(currentStepCount + normalizedDirection, 0, entries.length));
+  }
+
+  function renderWorldBattlePlaybackFrame(stepCount) {
+    if (!state.activeWorldBattle) return;
+    const entries = Array.isArray(state.activeWorldBattle.combatLog) ? state.activeWorldBattle.combatLog : [];
+    const nextStepCount = clamp(Math.floor(Number(stepCount) || 0), 0, entries.length);
+
+    clearWorldBattleTransientEffects();
+    state.activeWorldBattleTeams = createWorldBattleReplayTeams(state.activeWorldBattle);
+    for (let index = 0; index < nextStepCount; index += 1) {
+      applyWorldBattleLogEntry(entries[index], state.activeWorldBattleTeams);
+    }
+    state.activeWorldBattleLogIndex = nextStepCount - 1;
+    state.worldBattleReplayPlaying = false;
+    state.worldBattlePlayback = {
+      totalSteps: entries.length,
+      isPaused: true,
+      stepDirection: 0,
+      waitResolve: null
+    };
+    setWorldBattlePausedClass(true);
+    renderWorldBattleReplay(state.activeWorldBattle);
+  }
+
+  function setWorldBattleSpeed(speed) {
+    if (!BATTLE_SPEED_OPTIONS.includes(speed)) return;
+    state.worldBattleSpeed = speed;
+    try {
+      localStorage.setItem(BATTLE_SPEED_KEY, String(speed));
+    } catch (error) {
+      // Ignore storage failures; the in-memory speed still applies.
+    }
+    renderWorldBattleControls();
+  }
+
+  function setWorldBattlePausedClass(isPaused) {
+    document.documentElement.classList.toggle('is-combat-paused', Boolean(isPaused));
+  }
+
+  function renderWorldBattleReplay(battle) {
+    const meta = state.activeWorldBattleMeta || normalizeWorldBattleMeta('battle', battle);
+    const teams = state.activeWorldBattleTeams || createWorldBattleReplayTeams(battle);
+    const playerTeam = teams.player || [];
+    const enemyTeam = teams.enemy || [];
+
+    elements.worldBattleModal?.classList.toggle('is-log-open', state.worldBattleLogOpen);
+    elements.worldBattleModal?.classList.toggle('is-buffs-open', state.worldBattleBuffsOpen);
+    setText(elements.worldBattleEyebrow, meta.eyebrow);
+    setText(elements.worldBattleTitle, meta.title);
+    setText(elements.worldBattleEnemyLabel, meta.enemyLabel);
+    setText(elements.worldBattlePlayerCount, `${countLivingWorldBattleDemons(playerTeam)}/${playerTeam.length}`);
+    setText(elements.worldBattleEnemyCount, `${countLivingWorldBattleDemons(enemyTeam)}/${enemyTeam.length}`);
+
+    if (elements.worldBattleResult) {
+      elements.worldBattleResult.innerHTML = renderWorldBattleResult(battle, meta);
+    }
+    if (elements.worldBattleBuffPanel) {
+      elements.worldBattleBuffPanel.hidden = !state.worldBattleBuffsOpen;
+      elements.worldBattleBuffPanel.innerHTML = state.worldBattleBuffsOpen
+        ? renderWorldBattleBuffPanel(battle.playerBuffs, battle.enemyBuffs)
+        : '';
+    }
+    if (elements.worldBattleTeamGrid) {
+      elements.worldBattleTeamGrid.innerHTML = renderWorldBattleFormation(playerTeam, 'player');
+    }
+    if (elements.worldBattleEnemyGrid) {
+      elements.worldBattleEnemyGrid.innerHTML = renderWorldBattleFormation(enemyTeam, 'enemy');
+    }
+
+    renderWorldBattleControls();
+    renderWorldBattleFightLog(battle);
+  }
+
+  function renderWorldBattleResult(battle, meta) {
+    const won = battle.winner === 'player';
+    const lost = battle.winner === 'enemy';
+    const title = won ? meta.winText : lost ? meta.lossText : meta.neutralText;
+    const detail = `${formatNumber(battle.ticks || 0)} ticks${battle.endReason ? ` - ${escapeHtml(formatWorldBattleLabel(battle.endReason))}` : ''}`;
+    const icon = won ? 'swords' : lost ? 'skull' : 'stars';
+    const tone = won ? 'is-win' : lost ? 'is-loss' : '';
+
+    return `
+      <span class="world-battle-outcome ${tone}">
+        ${renderIcon(icon)}
+        <span>
+          <strong>${escapeHtml(title)}</strong>
+          <small>${detail}</small>
+        </span>
+      </span>
+      ${renderWorldBattleBuffSummary(battle.playerBuffs, { compact: true })}
+    `;
+  }
+
+  function renderWorldBattleBuffSummary(buffs = [], options = {}) {
+    const activeBuffs = (Array.isArray(buffs) ? buffs : []).filter(Boolean);
+    if (!activeBuffs.length) return '';
+    const limit = options.compact ? 3 : activeBuffs.length;
+
+    return `
+      <span class="world-battle-buffs" aria-label="Soulbound Buffs">
+        <span class="world-battle-buffs-label">Soulbound Buffs</span>
+        ${activeBuffs.slice(0, limit).map((buff) => `
+          <span class="world-battle-buff" title="${escapeAttribute(buff.description || buff.name || '')}">
+            ${renderIcon(buff.icon || 'stars')}
+            <span>${escapeHtml(buff.name || formatWorldBattleLabel(buff.id))}</span>
+          </span>
+        `).join('')}
+        ${activeBuffs.length > limit ? `<span class="world-battle-buff">+${activeBuffs.length - limit}</span>` : ''}
+      </span>
+    `;
+  }
+
+  function renderWorldBattleBuffPanel(playerBuffs = [], enemyBuffs = []) {
+    const playerList = renderWorldBattleBuffList(playerBuffs, 'Your Buffs');
+    const enemyList = renderWorldBattleBuffList(enemyBuffs, 'Enemy Buffs');
+
+    return `
+      <div class="world-battle-buff-grid">
+        ${playerList}
+        ${enemyList}
+      </div>
+    `;
+  }
+
+  function renderWorldBattleBuffList(buffs = [], title = 'Buffs') {
+    const activeBuffs = (Array.isArray(buffs) ? buffs : []).filter(Boolean);
+
+    return `
+      <section class="world-battle-buff-list" aria-label="${escapeAttribute(title)}">
+        <h3>${escapeHtml(title)}</h3>
+        ${activeBuffs.length ? activeBuffs.map((buff) => `
+          <article class="world-battle-buff-detail">
+            <span>${renderIcon(buff.icon || 'stars')}</span>
+            <span>
+              <strong>${escapeHtml(buff.name || formatWorldBattleLabel(buff.id))}</strong>
+              ${buff.description ? `<small>${escapeHtml(buff.description)}</small>` : ''}
+            </span>
+          </article>
+        `).join('') : '<p class="world-empty-text">No active buffs.</p>'}
+      </section>
+    `;
+  }
+
+  function renderWorldBattleControls() {
+    if (!elements.worldBattleControls) return;
+
+    const total = Array.isArray(state.activeWorldBattle?.combatLog) ? state.activeWorldBattle.combatLog.length : 0;
+    const current = total ? Math.max(0, state.activeWorldBattleLogIndex + 1) : 0;
+    const playback = state.worldBattlePlayback || {};
+    const isPaused = Boolean(playback.isPaused) || !state.worldBattleReplayPlaying;
+    const canStepBack = current > 0;
+    const canStepForward = current < total;
+
+    elements.worldBattleControls.innerHTML = `
+      <div class="world-battle-toolbar-group">
+        <div class="battle-playback-control" role="group" aria-label="Battle playback">
+          <button class="battle-playback-btn" type="button" data-world-battle-step="-1" title="Last attack" aria-label="Last attack" ${canStepBack ? '' : 'disabled'}>
+            ${renderIcon('last-attack')}
+          </button>
+          <button class="battle-playback-btn is-primary" type="button" data-world-battle-toggle-play title="${isPaused ? 'Play' : 'Pause'}" aria-label="${isPaused ? 'Play' : 'Pause'}" ${total ? '' : 'disabled'}>
+            ${renderIcon(isPaused ? 'play' : 'pause')}
+          </button>
+          <button class="battle-playback-btn" type="button" data-world-battle-step="1" title="Next attack" aria-label="Next attack" ${canStepForward ? '' : 'disabled'}>
+            ${renderIcon('next-attack')}
+          </button>
+          <button class="battle-playback-btn" type="button" data-world-battle-replay title="Replay Fight" aria-label="Replay Fight" ${state.worldBattleReplayPlaying || !total ? 'disabled' : ''}>
+            ${renderIcon('replay')}
+          </button>
+        </div>
+        <div class="battle-speed-control" role="group" aria-label="Battle animation speed">
+          ${BATTLE_SPEED_OPTIONS.map((speed) => `
+            <button class="battle-speed-option ${state.worldBattleSpeed === speed ? 'active' : ''}" type="button" data-world-battle-speed="${speed}" aria-pressed="${state.worldBattleSpeed === speed ? 'true' : 'false'}" title="${formatWorldBattleSpeed(speed)} battle speed">
+              ${formatWorldBattleSpeed(speed)}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+      <div class="world-battle-toolbar-group">
+        <button class="battle-playback-btn ${state.worldBattleBuffsOpen ? 'is-primary' : ''}" type="button" data-world-battle-toggle-buffs title="Buffs" aria-label="Buffs" aria-pressed="${state.worldBattleBuffsOpen ? 'true' : 'false'}">
+          ${renderIcon('stars')}
+        </button>
+        <button class="battle-playback-btn ${state.worldBattleLogOpen ? 'is-primary' : ''}" type="button" data-world-battle-toggle-log title="Fight Log" aria-label="Fight Log" aria-pressed="${state.worldBattleLogOpen ? 'true' : 'false'}">
+          ${renderIcon('log')}
+        </button>
+        <small class="world-battle-step-count">${formatNumber(current)} / ${formatNumber(total)}</small>
+      </div>
+    `;
+  }
+
+  function renderWorldBattleFightLog(battle) {
+    const fightLog = elements.worldBattleFightLog;
+    if (!fightLog) return;
+
+    fightLog.hidden = !state.worldBattleLogOpen;
+    if (!state.worldBattleLogOpen) {
+      fightLog.innerHTML = '';
+      return;
+    }
+
+    const entries = Array.isArray(battle?.combatLog) ? battle.combatLog : [];
+    if (!entries.length) {
+      fightLog.classList.add('text-muted');
+      fightLog.innerHTML = 'No battle actions were recorded.';
+      return;
+    }
+
+    const lookup = createWorldBattleLookup(battle);
+    fightLog.classList.remove('text-muted');
+    fightLog.innerHTML = entries.map((entry, index) => renderWorldBattleLogRow(entry, index, lookup)).join('');
+    fightLog.querySelector('.fight-log-row.active')?.scrollIntoView({ block: 'nearest' });
+  }
+
+  function renderWorldBattleLogRow(entry, index, lookup) {
+    const side = getWorldBattleEntrySide(entry, lookup);
+    const actionClass = side === 'player' ? 'is-player-action' : 'is-enemy-action';
+    const activeClass = index === state.activeWorldBattleLogIndex ? 'active' : '';
+    const amount = getWorldBattleEntryAmount(entry);
+    const targetHp = Object.prototype.hasOwnProperty.call(entry, 'targetHp') ? Math.max(0, Number(entry.targetHp) || 0) : null;
+
+    return `
+      <div class="fight-log-row ${actionClass} ${activeClass}" data-world-battle-log-index="${index}">
+        <span>${formatNumber(entry.tick || index + 1)}</span>
+        <span class="fight-log-side">${side === 'player' ? 'You' : 'Enemy'}</span>
+        <span class="fight-log-action">${escapeHtml(formatWorldBattleLogAction(entry, lookup))}</span>
+        <span class="fight-log-damage">${escapeHtml(amount)}</span>
+        <span>${targetHp === null ? '' : `${formatNumber(targetHp)} HP`}</span>
+      </div>
+    `;
+  }
+
+  function renderWorldBattleFormation(team, side) {
+    const assignments = getWorldBattleFormationAssignments(team, side);
+    const sideClass = side === 'enemy' ? 'battle-formation-enemy' : 'battle-formation-player';
+
+    return `
+      <div class="battle-formation battle-formation-grid ${sideClass}">
+        ${Array.from({ length: FORMATION_GRID_SIZE }, (item, slot) => (
+          renderWorldBattleFormationSlot(assignments.get(slot), side, slot)
+        )).join('')}
+      </div>
+    `;
+  }
+
+  function renderWorldBattleFormationSlot(demon, side, slot) {
+    const position = getFormationSlotPosition(slot, side);
+    const classes = [
+      'formation-slot',
+      `formation-slot-${position}`,
+      demon ? 'has-demon' : 'is-empty'
+    ].join(' ');
+
+    return `
+      <div class="${classes}" data-formation-slot="${slot}">
+        <div class="formation-slot-cards">
+          ${demon ? renderWorldBattleDemonCard(demon, side) : renderWorldBattleEmptySlot(position, slot + 1)}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderWorldBattleDemonCard(demon, side) {
+    const poisonStacks = getWorldBattlePoisonStackCount(demon);
+    const className = [
+      'world-battle-demon-card',
+      side === 'enemy' ? 'is-enemy-revealed' : '',
+      poisonStacks ? 'is-poisoned' : ''
+    ].filter(Boolean).join(' ');
+
+    return renderSharedDemonCard(demon, {
+      className,
+      defeated: Number(demon.hp) <= 0,
+      imageLoading: 'eager',
+      overlayHtml: renderWorldBattleDemonStatus(demon),
+      attributes: {
+        'data-instance-id': demon.instanceId,
+        'data-side': side
+      }
+    });
+  }
+
+  function renderWorldBattleDemonStatus(demon) {
+    const poisonStacks = getWorldBattlePoisonStackCount(demon);
+    if (!poisonStacks) return '';
+
+    return `
+      <div class="demon-status-strip" aria-label="Status effects">
+        <span class="demon-status-badge demon-status-poison" aria-label="Poisoned, ${poisonStacks} stack${poisonStacks === 1 ? '' : 's'}" title="Poisoned">
+          <span class="demon-status-icon">${renderIcon('poison')}</span>
+          ${poisonStacks > 1 ? `<span class="demon-status-count">${formatNumber(poisonStacks)}</span>` : ''}
+        </span>
+      </div>
+    `;
+  }
+
+  function renderWorldBattleEmptySlot(position, slotNumber) {
+    return `
+      <div class="formation-empty formation-empty-${position}" aria-hidden="true" data-slot-number="${slotNumber}">
+        <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" width="1024" height="1024" loading="lazy" decoding="async" draggable="false">
+      </div>
+    `;
+  }
+
+  function createWorldBattleReplayTeams(battle = {}) {
+    return {
+      player: createWorldBattleReplayTeam(battle.playerTeamBefore, 'player'),
+      enemy: createWorldBattleReplayTeam(battle.enemyTeamBefore, 'enemy')
+    };
+  }
+
+  function createWorldBattleReplayTeam(team = [], side = 'player') {
+    const usedSlots = new Set();
+    return (Array.isArray(team) ? team : []).slice(0, FORMATION_GRID_SIZE).map((demon, index) => {
+      const instanceId = String(demon.instanceId || demon.id || `${side}-${index + 1}`);
+      const explicitSlot = normalizeFormationSlot(demon.formationSlot ?? demon.formationRow);
+      const requestedPosition = explicitSlot !== null
+        ? getFormationSlotPosition(explicitSlot, side)
+        : normalizeBattlePosition(demon.position || (index === 0 ? 'front' : 'back'));
+      const slot = explicitSlot !== null && !usedSlots.has(explicitSlot)
+        ? explicitSlot
+        : chooseFormationSlot(usedSlots, requestedPosition, side);
+      const maxHp = Math.max(1, Number(demon.maxHp) || Number(demon.hp) || 1);
+      const hp = Math.max(0, Math.min(maxHp, Number(demon.hp) || 0));
+
+      usedSlots.add(slot);
+
+      return {
+        ...demon,
+        instanceId,
+        maxHp,
+        hp,
+        shield: Math.max(0, Number(demon.shield) || 0),
+        position: getFormationSlotPosition(slot, side),
+        formationSlot: slot,
+        statusEffects: {
+          poison: Array.isArray(demon.statusEffects?.poison)
+            ? demon.statusEffects.poison.map((poison) => ({ ...poison }))
+            : []
+        }
+      };
+    });
+  }
+
+  function applyWorldBattleLogEntry(entry, teams) {
+    if (!entry || !teams) return;
+
+    const target = findWorldBattleDemon(teams, entry.target);
+    if (target) {
+      if (Object.prototype.hasOwnProperty.call(entry, 'targetHp')) {
+        target.hp = Math.max(0, Number(entry.targetHp) || 0);
+      }
+      if (Object.prototype.hasOwnProperty.call(entry, 'targetShield')) {
+        target.shield = Math.max(0, Number(entry.targetShield) || 0);
+      }
+      if (entry.effect === 'poison_apply') {
+        syncWorldBattlePoisonStatus(target, entry.poisonStacks || 1);
+      } else if (entry.effect === 'poison' && Object.prototype.hasOwnProperty.call(entry, 'poisonStacks')) {
+        syncWorldBattlePoisonStatus(target, entry.poisonStacks);
+      }
+    }
+
+    applyWorldBattleKnockback(entry.knockback, teams);
+  }
+
+  function applyWorldBattleKnockback(knockback, teams) {
+    if (!knockback) return;
+
+    const side = knockback.side === 'enemy' ? 'enemy' : 'player';
+    const target = findWorldBattleDemon(teams, knockback.target);
+    const targetSlot = normalizeFormationSlot(knockback.toSlot);
+    if (target && targetSlot !== null) {
+      target.formationSlot = targetSlot;
+      target.position = normalizeBattlePosition(knockback.targetPositionAfter || getFormationSlotPosition(targetSlot, side));
+    }
+
+    const swapped = findWorldBattleDemon(teams, knockback.swappedWith);
+    const swappedSlot = normalizeFormationSlot(knockback.swappedToSlot);
+    if (swapped && swappedSlot !== null) {
+      swapped.formationSlot = swappedSlot;
+      swapped.position = normalizeBattlePosition(knockback.swappedPositionAfter || getFormationSlotPosition(swappedSlot, side));
+    }
+  }
+
+  function syncWorldBattlePoisonStatus(demon, stackCount) {
+    const count = Math.max(0, Math.floor(Number(stackCount) || 0));
+    demon.statusEffects = demon.statusEffects || {};
+    demon.statusEffects.poison = Array.from({ length: count }, () => ({}));
+  }
+
+  function highlightWorldBattleLogEntry(entry, token) {
+    const attackerCard = findWorldBattleCard(entry?.attacker);
+    const targetCard = findWorldBattleCard(entry?.target);
+    const attackerSide = attackerCard?.dataset.side;
+
+    drawWorldBattleAttackEffect(entry, token);
+    showWorldBattleFloatingAmount(entry, token);
+    attackerCard?.classList.add('is-attacking', attackerSide === 'enemy' ? 'is-enemy-attack' : 'is-player-attack');
+    if (entry?.effect === 'poison') {
+      targetCard?.classList.add('is-poison-tick');
+    } else if (entry?.effect !== 'heal') {
+      targetCard?.classList.add('is-hit');
+    }
+
+    window.setTimeout(() => {
+      if (state.worldBattleReplayToken !== token) return;
+      attackerCard?.classList.remove('is-attacking', 'is-player-attack', 'is-enemy-attack');
+      targetCard?.classList.remove('is-hit', 'is-poison-tick');
+    }, Math.max(120, getWorldBattleReplayDelay(entry) - 80));
+  }
+
+  function drawWorldBattleAttackEffect(entry, token) {
+    if (!entry?.attacker || !entry?.target || entry.effect === 'heal' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+    const attackerCard = findWorldBattleCard(entry.attacker);
+    const targetCard = findWorldBattleCard(entry.target);
+    const container = elements.worldBattleModal;
+    if (!attackerCard || !targetCard || !container) return;
+
+    const start = getElementCenter(attackerCard);
+    const end = getElementCenter(targetCard);
+    const controlX = (start.x + end.x) / 2;
+    const controlY = Math.min(start.y, end.y) - Math.max(26, Math.abs(end.x - start.x) * 0.08);
+    const theme = getWorldBattleEntryTheme(entry);
+    const classes = [
+      'attack-zap',
+      getWorldBattleEntrySide(entry, createWorldBattleLookup(state.activeWorldBattle)) === 'player' ? 'is-player-attack' : 'is-enemy-attack',
+      entry.effect === 'poison_apply' ? 'is-poison-apply is-poison-flame' : '',
+      Number(entry.dmg) >= 40 ? 'is-heavy' : ''
+    ].filter(Boolean).join(' ');
+
+    const zap = document.createElement('div');
+    zap.className = classes;
+    zap.style.setProperty('--combat-color', theme.color || COMBAT_THEMES.default.color);
+    zap.style.setProperty('--combat-shadow', theme.shadow || COMBAT_THEMES.default.shadow);
+    zap.innerHTML = `
+      <svg aria-hidden="true" focusable="false">
+        <path class="attack-zap-trail" d="M ${start.x.toFixed(1)} ${start.y.toFixed(1)} Q ${controlX.toFixed(1)} ${controlY.toFixed(1)} ${end.x.toFixed(1)} ${end.y.toFixed(1)}" />
+        <circle class="attack-zap-impact" cx="${end.x.toFixed(1)}" cy="${end.y.toFixed(1)}" r="4" />
+      </svg>
+    `;
+    container.appendChild(zap);
+    window.setTimeout(() => {
+      if (state.worldBattleReplayToken === token) zap.remove();
+    }, Math.max(180, getWorldBattleReplayDelay(entry) + 140));
+  }
+
+  function showWorldBattleFloatingAmount(entry, token) {
+    if (!entry?.target || entry.effect === 'poison_apply' || (!Object.prototype.hasOwnProperty.call(entry, 'dmg') && !Object.prototype.hasOwnProperty.call(entry, 'healing'))) return;
+
+    const targetCard = findWorldBattleCard(entry.target);
+    const container = elements.worldBattleModal;
+    if (!targetCard || !container) return;
+
+    const amount = entry.effect === 'heal' ? `+${formatNumber(entry.healing || 0)}` : `-${formatNumber(entry.dmg || 0)}`;
+    const type = entry.effect === 'heal' ? 'heal' : entry.effect === 'poison' ? 'poison' : 'damage';
+    const theme = getWorldBattleEntryTheme(entry);
+    const center = getElementCenter(targetCard);
+    const floating = document.createElement('span');
+    floating.className = `floating-combat-number is-${type}`;
+    floating.style.setProperty('--combat-color', theme.color || COMBAT_THEMES.default.color);
+    floating.style.setProperty('--combat-shadow', theme.shadow || COMBAT_THEMES.default.shadow);
+    floating.style.left = `${Math.round(center.x)}px`;
+    floating.style.top = `${Math.round(center.y - 12)}px`;
+    floating.textContent = amount;
+    container.appendChild(floating);
+    window.setTimeout(() => {
+      if (state.worldBattleReplayToken === token) floating.remove();
+    }, Math.max(280, getWorldBattleReplayDelay(entry) + 360));
+  }
+
+  function clearWorldBattleTransientEffects() {
+    elements.worldBattleModal?.querySelectorAll('.attack-zap, .floating-combat-number').forEach((element) => element.remove());
+  }
+
+  function getElementCenter(element) {
+    const rect = element.getBoundingClientRect();
+    return {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2
+    };
+  }
+
+  function getWorldBattleEntryTheme(entry = {}) {
+    if (entry.effect === 'poison' || entry.effect === 'poison_apply') return COMBAT_THEMES.poison;
+    if (entry.effect === 'heal') return COMBAT_THEMES.heal;
+    const attacker = findWorldBattleDemon(state.activeWorldBattleTeams, entry.attacker);
+    return COMBAT_THEMES[Number(attacker?.typeId)] || COMBAT_THEMES.default;
+  }
+
+  function findWorldBattleCard(instanceId) {
+    if (!instanceId || !elements.worldBattleModal) return null;
+    return elements.worldBattleModal.querySelector(`.dungeon-demon-card[data-instance-id="${cssEscape(String(instanceId))}"]`);
+  }
+
+  function findWorldBattleDemon(teams, instanceId) {
+    if (!instanceId) return null;
+    return [...(teams?.player || []), ...(teams?.enemy || [])].find((demon) => String(demon.instanceId) === String(instanceId)) || null;
+  }
+
+  function getWorldBattleFormationAssignments(team, side) {
+    const assignments = new Map();
+    const usedSlots = new Set();
+
+    (Array.isArray(team) ? team : []).slice(0, FORMATION_GRID_SIZE).forEach((demon, index) => {
+      const explicitSlot = normalizeFormationSlot(demon.formationSlot ?? demon.formationRow);
+      const slot = explicitSlot !== null && !usedSlots.has(explicitSlot)
+        ? explicitSlot
+        : chooseFormationSlot(usedSlots, demon.position || (index === 0 ? 'front' : 'back'), side);
+      usedSlots.add(slot);
+      assignments.set(slot, {
+        ...demon,
+        formationSlot: slot,
+        position: getFormationSlotPosition(slot, side)
+      });
+    });
+
+    return assignments;
+  }
+
+  function chooseFormationSlot(takenSlots, position, side = 'player') {
+    const preferredSlot = getFormationSlotOrder(position, side).find((slot) => !takenSlots.has(slot));
+    if (preferredSlot !== undefined) return preferredSlot;
+    return Array.from({ length: FORMATION_GRID_SIZE }, (item, index) => index).find((slot) => !takenSlots.has(slot)) || 0;
+  }
+
+  function getFormationSlotOrder(position, side = 'player') {
+    const normalizedPosition = normalizeBattlePosition(position);
+    const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
+    const middleColumn = 1;
+    const outerColumn = side === 'enemy' ? FORMATION_GRID_COLUMNS - 1 : 0;
+    const columns = side === 'enemy'
+      ? normalizedPosition === 'front'
+        ? [frontColumn, middleColumn]
+        : [outerColumn, middleColumn]
+      : normalizedPosition === 'front'
+        ? [frontColumn]
+        : [middleColumn, outerColumn];
+
+    return columns.flatMap((column) => (
+      Array.from({ length: FORMATION_GRID_COLUMNS }, (item, rowIndex) => rowIndex * FORMATION_GRID_COLUMNS + column)
+    ));
+  }
+
+  function getFormationSlotPosition(slot, side = 'player') {
+    const normalizedSlot = normalizeFormationSlot(slot);
+    const column = (normalizedSlot === null ? 0 : normalizedSlot) % FORMATION_GRID_COLUMNS;
+    const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
+    return column === frontColumn ? 'front' : 'back';
+  }
+
+  function normalizeFormationSlot(slot) {
+    const number = Number(slot);
+    if (!Number.isInteger(number) || number < 0 || number >= FORMATION_GRID_SIZE) return null;
+    return number;
+  }
+
+  function normalizeBattlePosition(position) {
+    return position === 'back' ? 'back' : 'front';
+  }
+
+  function countLivingWorldBattleDemons(team = []) {
+    return (Array.isArray(team) ? team : []).filter((demon) => Number(demon.hp) > 0).length;
+  }
+
+  function getWorldBattlePoisonStackCount(demon = {}) {
+    return Array.isArray(demon.statusEffects?.poison) ? demon.statusEffects.poison.length : 0;
+  }
+
+  function createWorldBattleLookup(battle = {}) {
+    const playerTeam = [
+      ...(Array.isArray(battle.playerTeamBefore) ? battle.playerTeamBefore : []),
+      ...(Array.isArray(battle.playerTeamAfter) ? battle.playerTeamAfter : [])
+    ];
+    const enemyTeam = [
+      ...(Array.isArray(battle.enemyTeamBefore) ? battle.enemyTeamBefore : []),
+      ...(Array.isArray(battle.enemyTeamAfter) ? battle.enemyTeamAfter : [])
+    ];
+    const names = new Map();
+    const sides = new Map();
+
+    playerTeam.forEach((demon) => {
+      if (!demon?.instanceId) return;
+      names.set(String(demon.instanceId), demon.species || demon.name || 'Demon');
+      sides.set(String(demon.instanceId), 'player');
+    });
+    enemyTeam.forEach((demon) => {
+      if (!demon?.instanceId) return;
+      names.set(String(demon.instanceId), demon.species || demon.name || 'Demon');
+      sides.set(String(demon.instanceId), 'enemy');
+    });
+
+    return { names, sides };
+  }
+
+  function getWorldBattleEntrySide(entry, lookup) {
+    const attackerSide = lookup.sides.get(String(entry?.attacker || ''));
+    if (attackerSide) return attackerSide;
+    const targetSide = lookup.sides.get(String(entry?.target || ''));
+    return targetSide === 'player' ? 'enemy' : 'player';
+  }
+
+  function getWorldBattleEntryAmount(entry = {}) {
+    if (entry.effect === 'heal') return `+${formatNumber(entry.healing || 0)}`;
+    if (entry.effect === 'poison_apply') return 'poison';
+    if (Object.prototype.hasOwnProperty.call(entry, 'dmg')) return `${formatNumber(entry.dmg || 0)} dmg`;
+    return '';
+  }
+
+  function formatWorldBattleLogAction(entry, lookup) {
+    const attacker = getWorldBattleDemonName(entry?.attacker, lookup);
+    const target = getWorldBattleDemonName(entry?.target, lookup);
+
+    if (entry?.effect === 'heal') return `${attacker} healed ${target}`;
+    if (entry?.effect === 'poison_apply') return `${attacker} poisoned ${target}`;
+    if (entry?.effect === 'poison') return `${target} took poison damage`;
+    if (entry?.effect === 'retaliate') return `${attacker} retaliated against ${target}`;
+    if (entry?.effect === 'thorns') return `${attacker} returned thorns to ${target}`;
+    if (entry?.knockback) return `${attacker} pushed ${target} back`;
+    return `${attacker} hit ${target}`;
+  }
+
+  function getWorldBattleDemonName(instanceId, lookup) {
+    if (!instanceId) return 'Combat';
+    return lookup.names.get(String(instanceId)) || 'Demon';
+  }
+
+  function getWorldBattleMeta(type, battle = {}) {
+    return normalizeWorldBattleMeta(type, battle);
+  }
+
+  function normalizeWorldBattleMeta(type = 'battle', battle = {}, overrides = {}) {
+    const normalizedType = type || overrides.type || 'battle';
+    const won = battle.winner === 'player';
+    const title = normalizedType === 'try_hunt'
+      ? won ? 'Try Hunt Won' : 'Try Hunt Failed'
+      : won ? 'Ambush Won' : battle.winner === 'enemy' ? 'Ambush Lost' : 'Ambush';
+
+    return {
+      type: normalizedType,
+      eyebrow: overrides.eyebrow || (normalizedType === 'try_hunt' ? 'Try Hunt' : 'World Ambush'),
+      title: overrides.title || title,
+      enemyLabel: overrides.enemyLabel || (normalizedType === 'try_hunt' ? 'Demon Patrol' : 'Ambushers'),
+      winText: overrides.winText || (normalizedType === 'try_hunt' ? 'Hunting unlocked' : 'Ambush cleared'),
+      lossText: overrides.lossText || (normalizedType === 'try_hunt' ? 'Hunting remains locked' : 'Ambush lost'),
+      neutralText: overrides.neutralText || 'Battle ended'
+    };
+  }
+
+  function getWorldBattleFallbackMessage(battle = {}, meta = {}) {
+    const normalizedMeta = normalizeWorldBattleMeta(meta.type, battle, meta);
+    if (battle.winner === 'player') return normalizedMeta.winText;
+    if (battle.winner === 'enemy') return normalizedMeta.lossText;
+    return normalizedMeta.neutralText;
+  }
+
+  function formatWorldBattleLabel(value) {
+    return capitalize(String(value || '').replace(/[_-]+/g, ' '));
+  }
+
+  function cssEscape(value) {
+    if (window.CSS?.escape) return window.CSS.escape(value);
+    return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+
+  let worldDungeonBattleActionsRegistered = false;
+
+  function registerWorldDungeonBattleActions() {
+    if (worldDungeonBattleActionsRegistered) return;
+    registerDungeonActions({
+      ...dungeonDom,
+      ...dungeonLifecycle,
+      ...dungeonRender,
+      ...dungeonCombat,
+      ...dungeonRewards,
+      ...dungeonPacts,
+      ...dungeonHand,
+      ...dungeonRecruit,
+      ...dungeonModals,
+      ...dungeonDragDrop,
+      ...dungeonCards,
+      ...dungeonUtils
+    });
+    worldDungeonBattleActionsRegistered = true;
+  }
+
+  function shouldShowWorldBattleReplay(battle) {
+    return Boolean(battle && Array.isArray(battle.combatLog) && battle.combatLog.length);
+  }
+
+  async function showWorldBattleReplay(battle, meta = {}) {
+    if (!battle) return Promise.resolve();
+
+    if (battle.error && !Array.isArray(battle.combatLog)) {
+      setMessage(battle.error, 'warning');
+      return Promise.resolve();
+    }
+
+    const modalElement = elements.worldBattleModal;
+    const modalApi = window.bootstrap?.Modal;
+    if (!modalElement || !modalApi) {
+      setMessage(getWorldBattleFallbackMessage(battle, meta), battle.winner === 'player' ? 'success' : 'warning');
+      return Promise.resolve();
+    }
+
+    registerWorldDungeonBattleActions();
+    dungeonDom.cacheElements();
+    const token = state.worldBattleReplayToken + 1;
+    state.worldBattleReplayToken = token;
+    state.activeWorldBattle = battle;
+    state.activeWorldBattleMeta = normalizeWorldBattleMeta(meta.type, battle, meta);
+    document.body.classList.add('dungeon-page', 'is-world-battle-open');
+    prepareWorldDungeonBattleReplay(battle, state.activeWorldBattleMeta);
+
+    const modal = modalApi.getOrCreateInstance(modalElement);
+    const shownPromise = modalElement.classList.contains('show')
+      ? Promise.resolve()
+      : new Promise((resolve) => modalElement.addEventListener('shown.bs.modal', resolve, { once: true }));
+    const hiddenPromise = new Promise((resolve) => modalElement.addEventListener('hidden.bs.modal', resolve, { once: true }));
+
+    if (!modalElement.classList.contains('show')) modal.show();
+    await shownPromise;
+    if (state.worldBattleReplayToken !== token) return hiddenPromise;
+
+    try {
+      await dungeonLifecycle.replayFight();
+      const resultType = getWorldDungeonBattleResultType(battle);
+      if (state.worldBattleReplayToken === token && resultType) {
+        await dungeonRender.showBattleResultOverlay(resultType);
+      }
+    } catch (error) {
+      console.error('World battle replay failed', error);
+      setMessage(getWorldBattleFallbackMessage(battle, meta), battle.winner === 'player' ? 'success' : 'warning');
+    }
+
+    return hiddenPromise;
+  }
+
+  function cancelWorldBattleReplay() {
+    state.worldBattleReplayToken += 1;
+    state.activeWorldBattle = null;
+    state.activeWorldBattleMeta = null;
+    const resolvePlayback = dungeonState.combatPlayback?.waitResolve;
+    dungeonState.combatPlayback = null;
+    dungeonState.isBattleAnimating = false;
+    dungeonState.isResultAnimating = false;
+    if (resolvePlayback) resolvePlayback();
+    document.body.classList.remove('dungeon-page', 'is-world-battle-open');
+    document.documentElement.classList.remove('is-combat-paused');
+    clearWorldDungeonBattleTransientElements();
+  }
+
+  function prepareWorldDungeonBattleReplay(battle, meta = {}) {
+    const run = createWorldDungeonBattleRun(battle, meta);
+    dungeonState.player = state.player || dungeonState.player;
+    dungeonState.statPoints = null;
+    dungeonState.run = run;
+    dungeonState.combatLog = run.lastBattle.combatLog || [];
+    dungeonState.combatDemons = new Map();
+    dungeonState.combatPlayback = null;
+    dungeonState.isLoading = false;
+    dungeonState.isRecruiting = false;
+    dungeonState.isResultAnimating = false;
+    dungeonState.isBattleAnimating = false;
+    dungeonState.endNotice = null;
+    dungeonState.endSummary = null;
+    dungeonState.endedReplayRun = null;
+    dungeonState.selectedRecruitRewardId = null;
+    dungeonState.selectedSwapInstanceId = null;
+    dungeonState.selectedRewardDemonKey = null;
+    dungeonState.rewardDraftCandidate = null;
+    dungeonState.battleHandPreview = null;
+    dungeonState.activeHandTab = 'hand';
+    dungeonState.isMobileRewardBoxOpen = false;
+    dungeonState.isRecruitContinuePending = false;
+    dungeonState.collectionReinforcementPlaceholderInteracted = true;
+    dungeonState.collectionReinforcementStagedInteracted = true;
+    dungeonState.formationRows = new Map();
+    dungeonRender.setBattlePanel('combat');
+    dungeonCombat.applyBattleSpeed();
+    dungeonRender.renderRun();
+  }
+
+  function createWorldDungeonBattleRun(battle = {}, meta = {}) {
+    const currentFloor = 1;
+    const playerBefore = normalizeWorldDungeonTeam(battle.playerTeamBefore || battle.playerTeam || [], 'player');
+    const enemyBefore = normalizeWorldDungeonTeam(battle.enemyTeamBefore || battle.enemyTeam || [], 'enemy');
+    const playerAfter = Array.isArray(battle.playerTeamAfter) && battle.playerTeamAfter.length
+      ? normalizeWorldDungeonTeam(battle.playerTeamAfter, 'player')
+      : null;
+    const enemyAfter = Array.isArray(battle.enemyTeamAfter) && battle.enemyTeamAfter.length
+      ? normalizeWorldDungeonTeam(battle.enemyTeamAfter, 'enemy')
+      : null;
+
+    return {
+      runId: `world-${meta.type || 'battle'}-${Date.now()}`,
+      status: 'active',
+      currentFloor,
+      team: playerBefore,
+      enemies: enemyBefore,
+      rewards: [],
+      recruitRewards: [],
+      awaitingRecruit: true,
+      enemyPressure: null,
+      nextEnemyPressure: null,
+      buffs: {
+        activeBuffs: normalizeWorldDungeonBuffs(battle.playerBuffs),
+        pendingChoices: []
+      },
+      lastBattle: {
+        ...battle,
+        floor: currentFloor,
+        combatLog: Array.isArray(battle.combatLog) ? battle.combatLog : [],
+        playerTeamBefore: playerBefore,
+        enemyTeamBefore: enemyBefore,
+        playerTeamAfter: playerAfter,
+        enemyTeamAfter: enemyAfter
+      }
+    };
+  }
+
+  function normalizeWorldDungeonTeam(team = [], side = 'player') {
+    return (Array.isArray(team) ? team : []).map((demon, index) => normalizeWorldDungeonDemon(demon, index, side));
+  }
+
+  function normalizeWorldDungeonDemon(demon = {}, index = 0, side = 'player') {
+    const instanceId = String(demon.instanceId || demon.id || `${side}-${index + 1}`);
+    const maxHp = Math.max(1, Number(demon.maxHp) || Number(demon.hp) || 1);
+    const rawHp = Number(demon.hp);
+    const hp = Math.max(0, Math.min(maxHp, Number.isFinite(rawHp) ? rawHp : maxHp));
+    const formationRow = normalizeWorldDungeonFormationRow(demon.formationSlot ?? demon.formationRow ?? index);
+
+    return {
+      ...demon,
+      instanceId,
+      maxHp,
+      hp,
+      shield: Math.max(0, Number(demon.shield) || 0),
+      position: demon.position === 'back' ? 'back' : (index > 0 ? 'back' : 'front'),
+      formationRow,
+      formationSlot: formationRow,
+      statusEffects: {
+        ...(demon.statusEffects || {}),
+        poison: Array.isArray(demon.statusEffects?.poison)
+          ? demon.statusEffects.poison.map((poison) => ({ ...poison }))
+          : []
+      }
+    };
+  }
+
+  function normalizeWorldDungeonFormationRow(value) {
+    const row = Number(value);
+    if (!Number.isInteger(row)) return 0;
+    return Math.max(0, Math.min(8, row));
+  }
+
+  function normalizeWorldDungeonBuffs(buffs = []) {
+    return (Array.isArray(buffs) ? buffs : [])
+      .map((buff, index) => {
+        if (!buff) return null;
+        if (typeof buff === 'string') {
+          return { id: buff, name: formatWorldBattleLabel(buff), description: '', rarity: 'common', icon: 'sparkles', tags: ['World'] };
+        }
+        const id = buff.id || buff.name || `world-buff-${index + 1}`;
+        return {
+          ...buff,
+          id,
+          name: buff.name || formatWorldBattleLabel(id),
+          description: buff.description || '',
+          tooltip: buff.tooltip || [buff.name || formatWorldBattleLabel(id), buff.description || ''].filter(Boolean).join('\n'),
+          rarity: String(buff.rarity || 'common').toLowerCase(),
+          icon: buff.icon || 'sparkles',
+          tags: Array.isArray(buff.tags) && buff.tags.length ? buff.tags : ['World']
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function getWorldDungeonBattleResultType(battle = {}) {
+    if (battle.winner === 'player') return 'victory';
+    if (battle.winner === 'enemy') return 'defeat';
+    return null;
+  }
+
+  function clearWorldDungeonBattleTransientElements() {
+    document.querySelectorAll([
+      '.attack-zap',
+      '.battle-result-burst',
+      '.chaos-lightning',
+      '.combat-impact-burst',
+      '.dark-spike',
+      '.fireball-shot',
+      '.fire-nova',
+      '.floating-combat-number',
+      '.heal-effect',
+      '.sword-swing',
+      '.thorn-burst'
+    ].join(',')).forEach((element) => element.remove());
+    document.querySelector('.dungeon-arena')?.classList.remove('is-combat-screenshake');
   }
 
   function onPointerDown(event) {
@@ -2576,6 +3726,19 @@ import { COMBAT_THEMES } from './dungeon/config.js';
   function formatStepCount(stepCount) {
     const count = Math.max(0, Math.trunc(Number(stepCount) || 0));
     return `${formatNumber(count)} ${count === 1 ? 'step' : 'steps'}`;
+  }
+
+  function getStoredWorldBattleSpeed() {
+    try {
+      const stored = Number(localStorage.getItem(BATTLE_SPEED_KEY));
+      return BATTLE_SPEED_OPTIONS.includes(stored) ? stored : 1;
+    } catch (error) {
+      return 1;
+    }
+  }
+
+  function formatWorldBattleSpeed(speed) {
+    return `${Number(speed)}x`;
   }
 
   function formatNumber(value) {
