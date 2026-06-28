@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('./lib/db');
 const { cleanPlayer, requireAuth } = require('./lib/auth');
+const { getNextAccountLevel } = require('./lib/progression');
 const {
   ANCHOR_SUCCESS_MESSAGE,
   getAmbushDefeatReturn,
@@ -194,9 +195,18 @@ router.post('/world/hunting/stop', requireAuth, async (req, res) => {
     const snapshot = parseHuntSnapshot(huntRows[0].snapshot);
     const rewards = await calculateHuntRewards(snapshot, new Date());
 
+    const [lockedRows] = await connection.query(
+      'SELECT level, xp FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
+      [req.player.id]
+    );
+    const currentLevel = Number(lockedRows[0]?.level) || 1;
+    const currentXp = Number(lockedRows[0]?.xp) || 0;
+    const nextXp = currentXp + (Number(rewards.xp) || 0);
+    const nextLevel = getNextAccountLevel(currentLevel, nextXp);
+
     await connection.query(
-      'UPDATE players SET xp = xp + ?, souls = souls + ? WHERE id = ?',
-      [rewards.xp, rewards.souls, req.player.id]
+      'UPDATE players SET xp = ?, souls = souls + ?, level = ? WHERE id = ?',
+      [nextXp, rewards.souls, nextLevel, req.player.id]
     );
     await connection.query(
       'DELETE FROM player_active_hunts WHERE player_id = ?',
