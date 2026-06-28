@@ -6,11 +6,12 @@ const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, getTemporaryTeamSizeBonus, hasPendingBuffChoices, serializeRunBuffState, shouldOfferRunBuffChoices } = require('../lib/run-buffs');
+const { normalizeCombatBuffState, serializeCombatBuffState } = require('../lib/combat-buffs');
+const { resolvePlayerCombatBuffState } = require('../lib/player-combat-buffs');
 const { assignFormationSlots, mergeBattleTeamForRun, resetRunDemon } = require('../lib/run-demons');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
-const { getPlayerStatPointSummary } = require('../lib/account-stat-points');
 
 const router = express.Router();
 
@@ -42,14 +43,15 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   });
   const rng = createRng(run.seed + run.floor);
   const demonTypes = await getDemonTypes();
-  const statPoints = await getPlayerStatPointSummary(req.player);
+  const skillBuffs = await resolvePlayerCombatBuffState(req.player);
+  const playerBuffs = getDungeonPlayerCombatBuffs(run.state.buffs, skillBuffs);
   applyRunBuffStatModifiers(run);
   run.state.team = assignFormationSlots(run.state.team || [], 'player');
   run.state.enemies = assignFormationSlots(run.state.enemies || [], 'enemy');
   const result = simulateFight(rng, run.state.team, run.state.enemies, {
     demonTypes,
-    buffs: run.state.buffs,
-    accountBonuses: statPoints.bonuses
+    combatType: 'dungeon',
+    playerBuffs
   });
   run.state.team = mergeBattleTeamForRun(run.state.team, result.playerTeam);
   run.state.enemies = result.enemyTeam;
@@ -64,7 +66,9 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     playerTeamBefore: cloneForBattleReplay(result.playerTeamBefore),
     enemyTeamBefore: cloneForBattleReplay(result.enemyTeamBefore),
     playerTeamAfter: cloneForBattleReplay(result.playerTeam),
-    enemyTeamAfter: cloneForBattleReplay(result.enemyTeam)
+    enemyTeamAfter: cloneForBattleReplay(result.enemyTeam),
+    playerBuffs: serializeCombatBuffState(playerBuffs).activeBuffs,
+    enemyBuffs: []
   };
 
   let rewards = {};
@@ -113,6 +117,17 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     rewards
   });
 });
+
+function getDungeonPlayerCombatBuffs(runBuffs, skillBuffs) {
+  const normalizedRunBuffs = normalizeCombatBuffState(runBuffs || {});
+  const normalizedSkillBuffs = normalizeCombatBuffState(skillBuffs || {});
+
+  return normalizeCombatBuffState({
+    active: normalizedRunBuffs.active,
+    temporary: normalizedRunBuffs.temporary,
+    activeBuffs: normalizedSkillBuffs.activeBuffs
+  });
+}
 
 function cloneForBattleReplay(team) {
   return (team || []).map((demon) => ({ ...demon }));

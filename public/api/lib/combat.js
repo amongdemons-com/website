@@ -5,8 +5,8 @@ const {
   applyPoisonModifiers,
   applyPreBattleBuffs,
   handleDeathBuffTriggers,
-  normalizeRunBuffState
-} = require('./run-buffs');
+  normalizeCombatBuffState
+} = require('./combat-buffs');
 
 const MAX_COMBAT_TICKS = 1000;
 const STALEMATE_STATE_REPEAT_LIMIT = 6;
@@ -300,6 +300,7 @@ function applyPoisonTick(team, tick, context, targetSide) {
         ...context,
         tick,
         target,
+        attackerSide: poison.sourceSide || getOpposingSide(targetSide),
         targetSide,
         cause: 'poison'
       });
@@ -334,7 +335,9 @@ function applyDamage({
     damageKind,
     targeting,
     isAoe: targeting === 'all' || targeting === 'cleave' || Number(hitCount) > 1,
-    buffs: context.buffs
+    buffs: context.buffs,
+    playerBuffs: context.playerBuffs,
+    enemyBuffs: context.enemyBuffs
   });
   const damageResult = dealDamage(target, modifiedDamage);
 
@@ -369,6 +372,7 @@ function applyDamage({
     ...context,
     tick,
     target,
+    attackerSide,
     targetSide,
     cause: damageKind
   });
@@ -376,6 +380,7 @@ function applyDamage({
   applyThornsDamage({
     tick,
     defender: target,
+    defenderSide: targetSide,
     attacker,
     attackerSide,
     receivedDamage: damageResult.damage,
@@ -394,7 +399,9 @@ function applyDamage({
       damageKind: 'retaliation',
       targeting: 'retaliate',
       isAoe: false,
-      buffs: context.buffs
+      buffs: context.buffs,
+      playerBuffs: context.playerBuffs,
+      enemyBuffs: context.enemyBuffs
     });
     const retaliationResult = dealDamage(attacker, retaliationDamage);
 
@@ -416,6 +423,7 @@ function applyDamage({
       ...context,
       tick,
       target: attacker,
+      attackerSide: targetSide,
       targetSide: attackerSide,
       cause: 'retaliation'
     });
@@ -423,6 +431,7 @@ function applyDamage({
     applyThornsDamage({
       tick,
       defender: attacker,
+      defenderSide: attackerSide,
       attacker: target,
       attackerSide: targetSide,
       receivedDamage: retaliationResult.damage,
@@ -435,6 +444,7 @@ function applyDamage({
 function applyThornsDamage({
   tick,
   defender,
+  defenderSide,
   attacker,
   attackerSide,
   receivedDamage,
@@ -467,6 +477,7 @@ function applyThornsDamage({
     ...context,
     tick,
     target: attacker,
+    attackerSide: defenderSide || getOpposingSide(attackerSide),
     targetSide: attackerSide,
     cause: 'thorns'
   });
@@ -481,7 +492,9 @@ function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {
     healerSide,
     target,
     healing: Math.max(1, Number(healer.atk) || 1),
-    buffs: context.buffs
+    buffs: context.buffs,
+    playerBuffs: context.playerBuffs,
+    enemyBuffs: context.enemyBuffs
   });
   const missingHp = Math.max(0, (Number(target.maxHp) || 1) - (Number(target.hp) || 0));
   const appliedHealing = Math.min(missingHp, healingResult.healing);
@@ -522,7 +535,9 @@ function applyPoison({ tick, attacker, attackerSide, enemies, demonTypes, combat
     attackerSide,
     damage: Math.max(1, Math.round((Number(attacker.atk) || 1) * positiveNumber(ability.damagePerTickScale || ability.damagePerTurnScale, 1))),
     durationTicks: Math.max(1, Math.round(positiveNumber(ability.durationTicks || ability.durationTurns, 1))),
-    buffs: context.buffs
+    buffs: context.buffs,
+    playerBuffs: context.playerBuffs,
+    enemyBuffs: context.enemyBuffs
   });
   target.statusEffects = target.statusEffects || {};
   target.statusEffects.poison = [...(target.statusEffects.poison || [])];
@@ -564,17 +579,21 @@ function applyPoison({ tick, attacker, attackerSide, enemies, demonTypes, combat
 
 function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
   const demonTypes = options.demonTypes || {};
-  const buffs = normalizeRunBuffState(options.buffs || options.runBuffs || {});
-  const players = applyPreBattleBuffs(cloneTeam(playerTeam), buffs, options.accountBonuses);
-  const enemies = cloneTeam(enemyTeam);
+  const playerBuffs = normalizeCombatBuffState(options.playerBuffs || options.buffs || options.runBuffs || {});
+  const enemyBuffs = normalizeCombatBuffState(options.enemyBuffs || {});
+  const players = applyPreBattleBuffs(cloneTeam(playerTeam), playerBuffs, options.accountBonuses);
+  const enemies = applyPreBattleBuffs(cloneTeam(enemyTeam), enemyBuffs, options.enemyAccountBonuses);
   const battleState = {
-    lastBreathUsed: false
+    playerLastBreathUsed: false,
+    enemyLastBreathUsed: false
   };
   const combatLog = [];
   const context = {
     players,
     enemies,
-    buffs,
+    buffs: playerBuffs,
+    playerBuffs,
+    enemyBuffs,
     battleState,
     combatLog,
     dealDamage,
@@ -681,13 +700,20 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
     playerTeamBefore,
     enemyTeamBefore,
     playerTeam: cloneBattleTeamForReplay(players),
-    enemyTeam: cloneBattleTeamForReplay(enemies)
+    enemyTeam: cloneBattleTeamForReplay(enemies),
+    playerBuffs,
+    enemyBuffs
   };
+}
+
+function getOpposingSide(side) {
+  return side === 'enemy' ? 'player' : 'enemy';
 }
 
 function getBattleStateKey(players, enemies, battleState = {}) {
   return JSON.stringify({
-    lastBreathUsed: Boolean(battleState.lastBreathUsed),
+    playerLastBreathUsed: Boolean(battleState.playerLastBreathUsed),
+    enemyLastBreathUsed: Boolean(battleState.enemyLastBreathUsed),
     players: getTeamStateKey(players),
     enemies: getTeamStateKey(enemies)
   });

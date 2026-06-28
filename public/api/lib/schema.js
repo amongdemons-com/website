@@ -269,6 +269,36 @@ async function initializeSchema() {
   await addIndexIfMissing('player_bound_world_shrines', 'idx_player_bound_world_shrines_xy', 'INDEX idx_player_bound_world_shrines_xy (x, y)');
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS player_hunt_unlocks (
+      player_id VARCHAR(255) NOT NULL,
+      encounter_id VARCHAR(64) NOT NULL,
+      unlocked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, encounter_id),
+      INDEX idx_player_hunt_unlocks_encounter (encounter_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column('player_hunt_unlocks', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_hunt_unlocks', 'encounter_id', 'VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_active_hunts (
+      player_id VARCHAR(255) NOT NULL PRIMARY KEY,
+      encounter_id VARCHAR(64) NOT NULL,
+      snapshot LONGTEXT NOT NULL,
+      started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      enemy_respawn_seconds INT UNSIGNED NOT NULL DEFAULT 300,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_player_active_hunts_encounter (encounter_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await addColumnIfMissing('player_active_hunts', 'snapshot', '`snapshot` LONGTEXT NULL');
+  await addColumnIfMissing('player_active_hunts', 'started_at', '`started_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await addColumnIfMissing('player_active_hunts', 'enemy_respawn_seconds', '`enemy_respawn_seconds` INT UNSIGNED NOT NULL DEFAULT 300');
+  await addColumnIfMissing('player_active_hunts', 'updated_at', '`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+  await normalizeUtf8Column('player_active_hunts', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_active_hunts', 'encounter_id', 'VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS player_demons (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
       player_id VARCHAR(255) NOT NULL,

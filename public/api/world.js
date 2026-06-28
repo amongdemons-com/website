@@ -1,7 +1,6 @@
 const express = require('express');
 const db = require('./lib/db');
-const { requireAuth } = require('./lib/auth');
-const { getCurrentRunForPlayer } = require('./lib/runs');
+const { cleanPlayer, requireAuth } = require('./lib/auth');
 const {
   ANCHOR_SUCCESS_MESSAGE,
   getAmbushDefeatReturn,
@@ -10,6 +9,14 @@ const {
   getWorldShrines,
   saveBoundShrine
 } = require('./lib/world-shrines');
+const {
+  calculateHuntRewards,
+  createHuntSnapshot,
+  getActiveWorldTeam,
+  getActiveWorldTeamSummary,
+  simulateTryHunt,
+  simulateWorldAmbush
+} = require('./lib/world-combat');
 const worldMap = require('./data/map.json');
 
 const router = express.Router();
@@ -38,10 +45,11 @@ const MOCK_PLAYERS = [
 
 router.get('/world/state', requireAuth, async (req, res) => {
   const position = await getOrCreatePosition(req.player.id);
-  const [playersAt, activeTeam, boundShrine] = await Promise.all([
+  const [playersAt, activeWorldTeam, boundShrine, hunt] = await Promise.all([
     getPlayersAt(position.x, position.y, req.player.id),
-    getActiveTeamSummary(req.player.id),
-    getBoundShrine(req.player.id)
+    getActiveWorldTeam(req.player.id),
+    getBoundShrine(req.player.id),
+    getHuntState(req.player.id)
   ]);
 
   res.json({
@@ -57,7 +65,8 @@ router.get('/world/state', requireAuth, async (req, res) => {
     currentEvent: getEventAt(position.x, position.y),
     currentEncounter: getEncounterAt(position.x, position.y),
     playersAt,
-    activeTeam
+    activeTeam: getActiveWorldTeamSummary(activeWorldTeam),
+    hunt
   });
 });
 
@@ -106,8 +115,120 @@ router.post('/world/move', requireAuth, async (req, res) => {
     currentEvent: getEventAt(position.x, position.y),
     currentEncounter: getEncounterAt(position.x, position.y),
     playersAt,
-    travelEvents
+    travelEvents: await resolveTravelEvents(req.player, travelEvents)
   });
+});
+
+router.post('/world/hunt/try', requireAuth, async (req, res) => {
+  const encounter = getEncounterById(req.body?.encounterId);
+  if (!encounter) {
+    return res.status(404).json({ error: 'Demon patrol not found.' });
+  }
+
+  const battle = await simulateTryHunt(req.player, encounter);
+  const unlocked = battle.winner === 'player';
+
+  if (unlocked) {
+    await unlockHunt(req.player.id, encounter.id);
+  }
+
+  res.json({
+    unlocked,
+    battle,
+    hunt: await getHuntState(req.player.id)
+  });
+});
+
+router.post('/world/hunting/start', requireAuth, async (req, res) => {
+  const encounter = getEncounterById(req.body?.encounterId);
+  if (!encounter) {
+    return res.status(404).json({ error: 'Demon patrol not found.' });
+  }
+
+  if (!(await isHuntUnlocked(req.player.id, encounter.id))) {
+    return res.status(409).json({ error: 'Win Try Hunt before starting passive hunting.' });
+  }
+
+  const active = await getActiveHunt(req.player.id);
+  if (active) {
+    return res.status(409).json({ error: 'Stop your current hunt before starting another.' });
+  }
+
+  const snapshot = await createHuntSnapshot(req.player, encounter);
+  await db.query(
+    `INSERT INTO player_active_hunts
+       (player_id, encounter_id, snapshot, started_at, enemy_respawn_seconds)
+     VALUES (?, ?, ?, FROM_UNIXTIME(?), ?)`,
+    [
+      req.player.id,
+      encounter.id,
+      JSON.stringify(snapshot),
+      Math.floor(Date.parse(snapshot.startedAt) / 1000),
+      snapshot.enemyRespawnSeconds
+    ]
+  );
+
+  res.json({
+    ok: true,
+    hunt: await getHuntState(req.player.id)
+  });
+});
+
+router.post('/world/hunting/stop', requireAuth, async (req, res) => {
+  const connection = await db.getConnection();
+  let committed = false;
+
+  try {
+    await connection.beginTransaction();
+
+    const [huntRows] = await connection.query(
+      'SELECT * FROM player_active_hunts WHERE player_id = ? LIMIT 1 FOR UPDATE',
+      [req.player.id]
+    );
+
+    if (!huntRows.length) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'No active hunt is running.' });
+    }
+
+    const snapshot = parseHuntSnapshot(huntRows[0].snapshot);
+    const rewards = await calculateHuntRewards(snapshot, new Date());
+
+    await connection.query(
+      'UPDATE players SET xp = xp + ?, souls = souls + ? WHERE id = ?',
+      [rewards.xp, rewards.souls, req.player.id]
+    );
+    await connection.query(
+      'DELETE FROM player_active_hunts WHERE player_id = ?',
+      [req.player.id]
+    );
+
+    const [playerRows] = await connection.query(
+      'SELECT * FROM players WHERE id = ? LIMIT 1',
+      [req.player.id]
+    );
+
+    await connection.commit();
+    committed = true;
+
+    res.json({
+      ok: true,
+      rewards,
+      player: playerRows[0] ? cleanPlayer(playerRows[0]) : null,
+      hunt: await getHuntState(req.player.id)
+    });
+  } catch (error) {
+    if (!committed) {
+      await connection.rollback();
+    }
+    throw error;
+  } finally {
+    connection.release();
+  }
+});
+
+router.get('/world/hunting/status', requireAuth, async (req, res) => {
+  res.json(await getHuntState(req.player.id));
 });
 
 router.post('/world/ambush-defeat', requireAuth, async (req, res) => {
@@ -215,23 +336,91 @@ async function getPlayersAt(x, y, currentPlayerId) {
 }
 
 async function getActiveTeamSummary(playerId) {
-  // TODO: Swap this for the future camp team API once teams exist outside dungeon runs.
-  const run = await getCurrentRunForPlayer(playerId);
-  const team = Array.isArray(run?.state?.team) ? run.state.team : [];
+  return getActiveWorldTeamSummary(await getActiveWorldTeam(playerId));
+}
+
+async function resolveTravelEvents(player, travelEvents = []) {
+  const resolved = [];
+
+  for (const event of travelEvents) {
+    if (event.type !== 'ambush') {
+      resolved.push(event);
+      continue;
+    }
+
+    let battle = null;
+    try {
+      battle = await simulateWorldAmbush(player, event.position, WORLD_ENCOUNTERS);
+    } catch (error) {
+      if (!error.status || error.status >= 500) throw error;
+      battle = {
+        error: error.message
+      };
+    }
+    resolved.push({
+      ...event,
+      battle
+    });
+  }
+
+  return resolved;
+}
+
+async function getHuntState(playerId) {
+  const [unlockRows, activeRows] = await Promise.all([
+    db.query('SELECT encounter_id AS encounterId, unlocked_at AS unlockedAt FROM player_hunt_unlocks WHERE player_id = ?', [playerId]),
+    db.query('SELECT encounter_id AS encounterId, snapshot, started_at AS startedAt, enemy_respawn_seconds AS enemyRespawnSeconds FROM player_active_hunts WHERE player_id = ? LIMIT 1', [playerId])
+  ]);
+  const active = activeRows[0][0] || null;
 
   return {
-    source: team.length ? 'current-run' : 'none',
-    count: team.length,
-    members: team.slice(0, 4).map((demon) => ({
-      instanceId: demon.instanceId || demon.id || null,
-      species: demon.species || 'Demon',
-      rarity: demon.rarity || 'common',
-      hp: Number(demon.hp) || 0,
-      atk: Number(demon.atk) || 0,
-      speed: Number(demon.speed) || 0,
-      imageUrl: demon.imageUrl || demon.image_url || ''
-    }))
+    unlockedEncounterIds: unlockRows[0].map((row) => row.encounterId),
+    active: active ? serializeActiveHunt(active) : null
   };
+}
+
+async function isHuntUnlocked(playerId, encounterId) {
+  const [rows] = await db.query(
+    'SELECT 1 FROM player_hunt_unlocks WHERE player_id = ? AND encounter_id = ? LIMIT 1',
+    [playerId, encounterId]
+  );
+  return rows.length > 0;
+}
+
+async function unlockHunt(playerId, encounterId) {
+  await db.query(
+    `INSERT INTO player_hunt_unlocks (player_id, encounter_id)
+     VALUES (?, ?)
+     ON DUPLICATE KEY UPDATE unlocked_at = unlocked_at`,
+    [playerId, encounterId]
+  );
+}
+
+async function getActiveHunt(playerId) {
+  const [rows] = await db.query(
+    'SELECT encounter_id AS encounterId, snapshot, started_at AS startedAt, enemy_respawn_seconds AS enemyRespawnSeconds FROM player_active_hunts WHERE player_id = ? LIMIT 1',
+    [playerId]
+  );
+  return rows[0] || null;
+}
+
+function serializeActiveHunt(row) {
+  const snapshot = parseHuntSnapshot(row.snapshot);
+  return {
+    encounterId: row.encounterId,
+    startedAt: snapshot.startedAt || row.startedAt,
+    enemyRespawnSeconds: Number(snapshot.enemyRespawnSeconds || row.enemyRespawnSeconds) || 0,
+    activeTeamCount: Array.isArray(snapshot.activeTeam) ? snapshot.activeTeam.length : 0,
+    activeBuffs: Array.isArray(snapshot.activeSkillTreeBuffs) ? snapshot.activeSkillTreeBuffs : []
+  };
+}
+
+function parseHuntSnapshot(value) {
+  try {
+    return JSON.parse(value || '{}');
+  } catch (error) {
+    return {};
+  }
 }
 
 function getWorldPlayer(player) {
@@ -249,6 +438,12 @@ function getEventAt(x, y) {
 
 function getEncounterAt(x, y) {
   return WORLD_ENCOUNTERS.find((encounter) => encounter.x === x && encounter.y === y) || null;
+}
+
+function getEncounterById(encounterId) {
+  const id = String(encounterId || '').trim();
+  if (!id) return null;
+  return WORLD_ENCOUNTERS.find((encounter) => String(encounter.id) === id) || null;
 }
 
 function normalizeTravelPath(value) {

@@ -111,6 +111,8 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     activeTeam: null,
     currentEvent: null,
     currentEncounter: null,
+    hunt: null,
+    huntBusy: false,
     boundShrine: null,
     bindingShrine: false,
     blockedTiles: FALLBACK_BLOCKED_TILES,
@@ -182,9 +184,25 @@ import { COMBAT_THEMES } from './dungeon/config.js';
 
     elements.worldEncounterList?.addEventListener('click', (event) => {
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
-      const button = target?.closest('[data-challenge-player]');
-      if (!button) return;
-      challengePlayer(button.dataset.challengePlayer, button);
+      const challengeButton = target?.closest('[data-challenge-player]');
+      if (challengeButton) {
+        challengePlayer(challengeButton.dataset.challengePlayer, challengeButton);
+        return;
+      }
+      const tryHuntButton = target?.closest('[data-try-hunt]');
+      if (tryHuntButton) {
+        tryHunt(tryHuntButton.dataset.tryHunt, tryHuntButton);
+        return;
+      }
+      const startHuntingButton = target?.closest('[data-start-hunting]');
+      if (startHuntingButton) {
+        startHunting(startHuntingButton.dataset.startHunting, startHuntingButton);
+        return;
+      }
+      const stopHuntingButton = target?.closest('[data-stop-hunting]');
+      if (stopHuntingButton) {
+        stopHunting(stopHuntingButton);
+      }
     });
 
     elements.worldShrinePanel?.addEventListener('click', (event) => {
@@ -321,6 +339,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     state.blockedMap = new Map(state.blockedTiles.map((tile) => [getTileKey(tile), tile]));
     state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
     state.activeTeam = payload.activeTeam || null;
+    state.hunt = normalizeHunt(payload.hunt);
     state.boundShrine = normalizeShrine(payload.boundShrine);
     state.currentEvent = payload.currentEvent || getEventAt(state.position);
     state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
@@ -412,6 +431,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
         };
         state.travelLog.unshift(state.recentStepEvent);
         state.currentEvent = getEventAt(step);
+        state.currentEncounter = getEncounterAt(step);
         renderWorld();
         renderPanels();
         await delay(getStepDelay());
@@ -420,6 +440,7 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       state.position = normalizePosition(payload.position || state.position);
       state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
       state.currentEvent = payload.currentEvent || getEventAt(state.position);
+      state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
       clearRoutePreview('arrived', { keepLog: true });
       renderPanels();
     } catch (error) {
@@ -449,7 +470,8 @@ import { COMBAT_THEMES } from './dungeon/config.js';
     return path.slice(1).map((step, index) => ({
       type: events[index]?.type || 'none',
       title: events[index]?.title || 'No Event',
-      position: normalizePosition(events[index]?.position || step)
+      position: normalizePosition(events[index]?.position || step),
+      battle: events[index]?.battle || null
     }));
   }
 
@@ -602,6 +624,71 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       }
       handleAuthError(error);
     } finally {
+      setButtonBusy(button, false);
+      renderEncounterPanel();
+    }
+  }
+
+  async function tryHunt(encounterId, button) {
+    if (!encounterId || state.huntBusy) return;
+    state.huntBusy = true;
+    setButtonBusy(button, true);
+
+    try {
+      const payload = await api('/api/world/hunt/try', {
+        method: 'POST',
+        body: { encounterId }
+      });
+      state.hunt = normalizeHunt(payload.hunt);
+      const won = payload.battle?.winner === 'player';
+      setMessage(won ? 'Hunting unlocked for this patrol.' : 'Try Hunt failed. Hunting remains locked.', won ? 'success' : 'warning');
+    } catch (error) {
+      handleAuthError(error);
+    } finally {
+      state.huntBusy = false;
+      setButtonBusy(button, false);
+      renderEncounterPanel();
+    }
+  }
+
+  async function startHunting(encounterId, button) {
+    if (!encounterId || state.huntBusy) return;
+    state.huntBusy = true;
+    setButtonBusy(button, true);
+
+    try {
+      const payload = await api('/api/world/hunting/start', {
+        method: 'POST',
+        body: { encounterId }
+      });
+      state.hunt = normalizeHunt(payload.hunt);
+      setMessage('Hunting started. Current skill buffs were snapshotted.', 'success');
+    } catch (error) {
+      handleAuthError(error);
+    } finally {
+      state.huntBusy = false;
+      setButtonBusy(button, false);
+      renderEncounterPanel();
+    }
+  }
+
+  async function stopHunting(button) {
+    if (state.huntBusy) return;
+    state.huntBusy = true;
+    setButtonBusy(button, true);
+
+    try {
+      const payload = await api('/api/world/hunting/stop', { method: 'POST' });
+      state.hunt = normalizeHunt(payload.hunt);
+      if (payload.player) {
+        window.AmongDemons.ui?.updateNavAccount?.(payload.player);
+      }
+      const rewards = payload.rewards || {};
+      setMessage(`Hunting stopped. Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.`, 'success');
+    } catch (error) {
+      handleAuthError(error);
+    } finally {
+      state.huntBusy = false;
       setButtonBusy(button, false);
       renderEncounterPanel();
     }
@@ -1332,15 +1419,23 @@ import { COMBAT_THEMES } from './dungeon/config.js';
 
   function renderEncounterPanel() {
     if (!elements.worldEncounterList) return;
-    setText(elements.worldEncounterHeading, `Hunters in area ${formatCoords(state.position)}`);
+    setText(elements.worldEncounterHeading, `Area ${formatCoords(state.position)}`);
 
     const players = state.playersAt || [];
+    const parts = [];
+    const encounter = state.moving ? null : state.currentEncounter;
+
+    if (encounter) {
+      parts.push(renderCurrentEncounter(encounter));
+    }
+
     if (!players.length) {
-      elements.worldEncounterList.innerHTML = '<p class="world-empty-text">No hunters on this tile.</p>';
+      parts.push('<p class="world-empty-text">No hunters on this tile.</p>');
+      elements.worldEncounterList.innerHTML = parts.join('');
       return;
     }
 
-    elements.worldEncounterList.innerHTML = players.map((player) => {
+    parts.push(players.map((player) => {
       const cooldownUntil = state.challengeCooldowns.get(player.id) || 0;
       const isCoolingDown = cooldownUntil > Date.now();
       const label = isCoolingDown ? 'Cooldown' : 'Challenge';
@@ -1355,7 +1450,32 @@ import { COMBAT_THEMES } from './dungeon/config.js';
           <button class="btn btn-outline-light btn-sm" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
         </article>
       `;
-    }).join('');
+    }).join(''));
+    elements.worldEncounterList.innerHTML = parts.join('');
+  }
+
+  function renderCurrentEncounter(encounter) {
+    const unlocked = isEncounterUnlocked(encounter.id);
+    const active = isActiveHuntFor(encounter.id);
+    const activeElsewhere = Boolean(state.hunt?.active && !active);
+    const demons = (Array.isArray(encounter.team) ? encounter.team : []).slice(0, 4).map(renderDemonPortrait).join('');
+    const action = active
+      ? `<button class="btn btn-warning btn-sm" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>Stop Hunting</button>`
+      : unlocked
+        ? `<button class="btn btn-outline-light btn-sm" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy || activeElsewhere ? 'disabled' : ''}>Start Hunting</button>`
+        : `<button class="btn btn-outline-light btn-sm" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Try Hunt</button>`;
+
+    return `
+      <article class="world-encounter-player">
+        <span class="world-encounter-mark" aria-hidden="true"></span>
+        <span class="world-encounter-copy">
+          <strong>Demon Patrol</strong>
+          <small>Threat ${formatNumber(encounter.difficulty || 1)}${active ? ' - Hunting' : unlocked ? ' - Hunting unlocked' : ''}</small>
+          ${demons ? `<span class="world-enc-demons">${demons}</span>` : ''}
+        </span>
+        ${action}
+      </article>
+    `;
   }
 
   function renderDemonPortrait(member) {
@@ -1385,7 +1505,14 @@ import { COMBAT_THEMES } from './dungeon/config.js';
 
   function renderTravelLogItem(entry) {
     const isAmbush = entry.type === 'ambush';
-    const title = isAmbush ? 'Ambush' : 'No Event';
+    const battleWinner = entry.battle?.winner;
+    const title = isAmbush
+      ? battleWinner === 'player'
+        ? 'Ambush Won'
+        : battleWinner === 'enemy'
+          ? 'Ambush Lost'
+          : 'Ambush'
+      : 'No Event';
 
     return `
       <article class="world-travel-log-item ${isAmbush ? 'is-ambush' : ''}">
@@ -1773,6 +1900,21 @@ import { COMBAT_THEMES } from './dungeon/config.js';
       type: 'forsaken_shrine',
       title: shrine.title || 'Forsaken Shrine'
     };
+  }
+
+  function normalizeHunt(hunt) {
+    return {
+      unlockedEncounterIds: Array.isArray(hunt?.unlockedEncounterIds) ? hunt.unlockedEncounterIds.map(String) : [],
+      active: hunt?.active || null
+    };
+  }
+
+  function isEncounterUnlocked(encounterId) {
+    return (state.hunt?.unlockedEncounterIds || []).includes(String(encounterId));
+  }
+
+  function isActiveHuntFor(encounterId) {
+    return String(state.hunt?.active?.encounterId || '') === String(encounterId || '');
   }
 
   function getTileKey(position) {
