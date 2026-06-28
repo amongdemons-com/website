@@ -3,13 +3,13 @@ const { requireAuth } = require('../lib/auth');
 const {
   claimDailyQuest,
   claimDailyReward,
-  getDailyQuestState
+  getDailyQuestStateForPlayer
 } = require('../lib/daily-quests');
 
 const router = express.Router();
 
 router.get('/account/quests', requireAuth, async (req, res) => {
-  res.json(await getDailyQuestState(req.player.id));
+  res.json(await getDailyQuestStateForPlayer(req.player));
 });
 
 router.post('/account/quests/:questId/claim', requireAuth, async (req, res) => {

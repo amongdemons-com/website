@@ -1237,6 +1237,7 @@ function getFightLogActionText(step) {
   if (entry.effect === 'chain_explosion') return `${attacker} exploded into ${target}`;
   if (entry.effect === 'retaliate') return `${attacker} retaliated against ${target}`;
   if (entry.effect === 'thorns') return `${attacker} reflected damage to ${target}`;
+  if (entry.knockback) return `${attacker} crushed ${target} back`;
   if (entry.targeting === 'chaotic') return `${attacker} chaotically struck ${target}`;
   if (entry.targeting === 'cleave') return `${attacker} cleaved ${step.entries.length} demons`;
   if (step.isAoe) return `${attacker} splashed ${step.entries.length} enemies`;
@@ -1274,6 +1275,7 @@ function getFightLogAmountText(step) {
     const label = counterEntry.effect === 'thorns' ? 'thorns' : 'retaliation';
     return `${entry.dmg} dmg, ${counterEntry.dmg} ${label}`;
   }
+  if (entry.knockback) return `${entry.dmg} dmg, push`;
   if (entry.targeting === 'cleave') return `${step.entries.length} x ${entry.dmg} cleave`;
   if (step.isAoe) return `${step.entries.length} x ${entry.dmg} dmg`;
   return `${entry.dmg} dmg`;

@@ -10,6 +10,10 @@ const {
 
 const MAX_COMBAT_TICKS = 1000;
 const STALEMATE_STATE_REPEAT_LIMIT = 6;
+const FORMATION_GRID_COLUMNS = 3;
+const FORMATION_GRID_SIZE = 9;
+const CHU_PERK_TYPE_ID = 9;
+const CHU_KNOCKBACK_CHANCE = 0.01;
 
 function alive(team) {
   return team.filter((demon) => demon.hp > 0);
@@ -17,6 +21,19 @@ function alive(team) {
 
 function normalizePosition(position) {
   return position === 'back' ? 'back' : 'front';
+}
+
+function normalizeFormationSlot(slot) {
+  const number = Number(slot);
+  if (!Number.isInteger(number) || number < 0 || number >= FORMATION_GRID_SIZE) return null;
+  return number;
+}
+
+function getFormationSlotPosition(slot, side = 'enemy') {
+  const normalizedSlot = normalizeFormationSlot(slot);
+  const column = (normalizedSlot === null ? 0 : normalizedSlot) % FORMATION_GRID_COLUMNS;
+  const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
+  return column === frontColumn ? 'front' : 'back';
 }
 
 function getTypeData(demon, demonTypes = {}) {
@@ -74,13 +91,13 @@ function isBlockedBehindFrontline(demon, allies) {
 }
 
 function getFormationDepth(demon, side = 'enemy') {
-  const slot = Number(demon.formationSlot);
-  if (!Number.isInteger(slot) || slot < 0 || slot > 8) {
+  const slot = normalizeFormationSlot(demon.formationSlot ?? demon.formationRow);
+  if (slot === null) {
     return normalizePosition(demon.position) === 'front' ? 0 : 1;
   }
 
-  const column = slot % 3;
-  return side === 'enemy' ? column : 2 - column;
+  const column = slot % FORMATION_GRID_COLUMNS;
+  return side === 'enemy' ? column : FORMATION_GRID_COLUMNS - 1 - column;
 }
 
 function frontToBack(targets, side = 'enemy') {
@@ -180,6 +197,64 @@ function cloneTeam(team) {
   }));
 }
 
+function isChuPerkHit(attacker, demonTypes = {}) {
+  return Number(attacker.typeId) === CHU_PERK_TYPE_ID ||
+    getAbility(attacker, demonTypes).kind === 'slow_crushing_attack';
+}
+
+function getKnockbackDestinationSlot(target, side) {
+  const currentSlot = normalizeFormationSlot(target.formationSlot ?? target.formationRow);
+  if (currentSlot === null) return null;
+
+  const row = Math.floor(currentSlot / FORMATION_GRID_COLUMNS);
+  const column = currentSlot % FORMATION_GRID_COLUMNS;
+  const nextColumn = column + (side === 'enemy' ? 1 : -1);
+  if (nextColumn < 0 || nextColumn >= FORMATION_GRID_COLUMNS) return null;
+
+  return row * FORMATION_GRID_COLUMNS + nextColumn;
+}
+
+function moveDemonToFormationSlot(demon, slot, side) {
+  demon.formationSlot = slot;
+  demon.position = getFormationSlotPosition(slot, side);
+}
+
+function findDemonInFormationSlot(team, slot, excludeInstanceId) {
+  return (team || []).find((demon) => (
+    demon.instanceId !== excludeInstanceId &&
+    normalizeFormationSlot(demon.formationSlot ?? demon.formationRow) === slot
+  )) || null;
+}
+
+function applyChuKnockback({ rng, attacker, target, targetSide, targetTeam, demonTypes, logEntry }) {
+  if (typeof rng !== 'function') return;
+  if (!isChuPerkHit(attacker, demonTypes)) return;
+  if (!target || target.hp <= 0) return;
+  if (rng() >= CHU_KNOCKBACK_CHANCE) return;
+
+  const fromSlot = normalizeFormationSlot(target.formationSlot ?? target.formationRow);
+  const toSlot = getKnockbackDestinationSlot(target, targetSide);
+  if (fromSlot === null || toSlot === null) return;
+
+  const swappedDemon = findDemonInFormationSlot(targetTeam, toSlot, target.instanceId);
+  moveDemonToFormationSlot(target, toSlot, targetSide);
+  if (swappedDemon) {
+    moveDemonToFormationSlot(swappedDemon, fromSlot, targetSide);
+  }
+
+  logEntry.knockback = {
+    target: target.instanceId,
+    side: targetSide,
+    fromSlot,
+    toSlot,
+    targetPositionAfter: normalizePosition(target.position),
+    swappedWith: swappedDemon?.instanceId || null,
+    swappedFromSlot: swappedDemon ? toSlot : null,
+    swappedToSlot: swappedDemon ? fromSlot : null,
+    swappedPositionAfter: swappedDemon ? normalizePosition(swappedDemon.position) : null
+  };
+}
+
 function getPoisonStacks(target, source) {
   return (target.statusEffects?.poison || [])
     .filter((poison) => poison.source === source)
@@ -240,6 +315,7 @@ function applyDamage({
   attackerSide,
   target,
   targetSide,
+  targetTeam,
   damage,
   targeting,
   hitIndex,
@@ -262,7 +338,7 @@ function applyDamage({
   });
   const damageResult = dealDamage(target, modifiedDamage);
 
-  combatLog.push({
+  const logEntry = {
     tick,
     attacker: attacker.instanceId,
     attackerPosition: normalizePosition(attacker.position),
@@ -275,7 +351,19 @@ function applyDamage({
     shieldDamage: damageResult.shieldDamage,
     targetShield: target.shield || 0,
     targetHp: target.hp
+  };
+
+  applyChuKnockback({
+    rng: context.rng,
+    attacker,
+    target,
+    targetSide,
+    targetTeam,
+    demonTypes,
+    logEntry
   });
+
+  combatLog.push(logEntry);
 
   handleDeathBuffTriggers({
     ...context,
@@ -489,7 +577,8 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
     buffs,
     battleState,
     combatLog,
-    dealDamage
+    dealDamage,
+    rng
   };
   const playerTeamBefore = cloneBattleTeamForReplay(players);
   const enemyTeamBefore = cloneBattleTeamForReplay(enemies);
@@ -550,6 +639,7 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
           attackerSide: actorIsPlayer ? 'player' : 'enemy',
           target,
           targetSide: actorIsPlayer ? 'enemy' : 'player',
+          targetTeam: targets,
           damage,
           targeting,
           hitIndex: targetIndex + 1,
@@ -606,6 +696,8 @@ function getBattleStateKey(players, enemies, battleState = {}) {
 function getTeamStateKey(team) {
   return (team || []).map((demon) => ({
     id: demon.instanceId,
+    position: normalizePosition(demon.position),
+    formationSlot: normalizeFormationSlot(demon.formationSlot ?? demon.formationRow),
     hp: Math.max(0, Number(demon.hp) || 0),
     shield: Math.max(0, Number(demon.shield) || 0),
     attackMeter: Number(demon.attackMeter) || 0,

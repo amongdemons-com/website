@@ -269,6 +269,7 @@ Combat is automatic and simulated in `public/api/lib/combat.js`.
 - When `attackMeter >= 100`, the demon acts and the meter resets.
 - Battles stop when one side has no living demons, or after the 1000 tick safety limit.
 - Front-row targeting prefers living front-row enemies and falls back to any living enemy.
+- Chu Perk's `slow_crushing_attack` has a 1% chance on hit to shove the target one row behind. If that row is occupied, the two demons swap formation slots; if the target is already in the last row, nothing moves.
 - Team state is cloned for battle, then persisted from the simulator result.
 - The API returns both a combat log and before/after snapshots for UI replay.
 - Poison effects tick slowly over time, can stack without a per-target cap, and are cleared from teams between cleared floors.
@@ -278,7 +279,8 @@ Implemented ability kinds include:
 
 | Ability | Behavior |
 | --- | --- |
-| `basic_attack`, `heavy_attack`, `slow_crushing_attack`, `ranged_execute`, `fast_execute`, `aoe_attack` | Damage using configured targeting rules |
+| `basic_attack`, `heavy_attack`, `ranged_execute`, `fast_execute`, `aoe_attack` | Damage using configured targeting rules |
+| `slow_crushing_attack` | Damage using configured targeting rules, with Chu Perk's rare one-row knockback and occupied-slot swap |
 | `poison` | Applies stacking poison to high-HP targets |
 | `heal` | Heals the living ally with the most missing HP |
 | `retaliate` | Does not proactively attack; returns configured thorns damage when hit |

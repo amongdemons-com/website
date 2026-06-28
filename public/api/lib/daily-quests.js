@@ -1,5 +1,9 @@
 const db = require('./db');
-const { getNextAccountLevel } = require('./progression');
+const { getNextAccountLevel, getXpForAccountLevel } = require('./progression');
+
+const XP_REWARD_LEVEL_FRACTION = 0.1;
+const SOUL_REWARD_LEVEL_GROWTH = 0.12;
+const REWARD_ROUNDING_STEP = 5;
 
 const QUEST_DEFINITIONS = Object.freeze([
   Object.freeze({
@@ -45,6 +49,11 @@ const DAILY_REWARD = Object.freeze({
 });
 
 async function getDailyQuestState(playerId, queryable = db, now = new Date()) {
+  return getDailyQuestStateForPlayer({ id: playerId }, queryable, now);
+}
+
+async function getDailyQuestStateForPlayer(player, queryable = db, now = new Date()) {
+  const playerId = player?.id;
   const questDate = getUtcQuestDate(now);
   await ensureDailyQuestRow(queryable, playerId, questDate);
 
@@ -60,7 +69,7 @@ async function getDailyQuestState(playerId, queryable = db, now = new Date()) {
     [playerId, questDate]
   );
 
-  return serializeDailyQuestState(rows[0] || {}, now);
+  return serializeDailyQuestState(rows[0] || {}, now, player);
 }
 
 async function recordDailyQuestProgress(playerId, progress = {}, queryable = db, now = new Date()) {
@@ -121,7 +130,7 @@ async function claimDailyQuest(playerId, questId, now = new Date()) {
   }
 
   return {
-    ...(await getDailyQuestState(playerId, db, now)),
+    ...(await getDailyQuestStateForPlayer({ id: playerId, ...progression }, db, now)),
     progression
   };
 }
@@ -155,7 +164,7 @@ async function claimDailyReward(playerId, now = new Date()) {
   }
 
   return {
-    ...(await getDailyQuestState(playerId, db, now)),
+    ...(await getDailyQuestStateForPlayer({ id: playerId, ...progression }, db, now)),
     progression
   };
 }
@@ -200,8 +209,9 @@ async function ensureDailyQuestRow(queryable, playerId, questDate) {
 }
 
 async function grantReward(connection, player, reward) {
-  const xpReward = reward.type === 'xp' ? toPositiveInteger(reward.value) : 0;
-  const soulReward = reward.type === 'souls' ? toPositiveInteger(reward.value) : 0;
+  const resolvedReward = resolveQuestReward(reward, player);
+  const xpReward = resolvedReward.type === 'xp' ? toPositiveInteger(resolvedReward.value) : 0;
+  const soulReward = resolvedReward.type === 'souls' ? toPositiveInteger(resolvedReward.value) : 0;
   const nextXp = toPositiveInteger(player.xp) + xpReward;
   const nextLevel = getNextAccountLevel(player.level, nextXp);
   const nextSouls = toPositiveInteger(player.souls) + soulReward;
@@ -219,7 +229,7 @@ async function grantReward(connection, player, reward) {
   };
 }
 
-function serializeDailyQuestState(row, now = new Date()) {
+function serializeDailyQuestState(row, now = new Date(), player = null) {
   const claimedQuestIds = parseClaimedQuestIds(row.claimedQuests);
   const dailyRewardClaimed = Boolean(Number(row.dailyRewardClaimed));
 
@@ -241,7 +251,7 @@ function serializeDailyQuestState(row, now = new Date()) {
         current,
         target: definition.target,
         requirements: definition.requirements || [],
-        reward: definition.reward,
+        reward: resolveQuestReward(definition.reward, player),
         href: definition.href,
         completed,
         claimed,
@@ -250,6 +260,7 @@ function serializeDailyQuestState(row, now = new Date()) {
     }),
     dailyReward: {
       ...DAILY_REWARD,
+      reward: resolveQuestReward(DAILY_REWARD.reward, player),
       claimed: dailyRewardClaimed,
       claimable: !dailyRewardClaimed
     }
@@ -258,6 +269,54 @@ function serializeDailyQuestState(row, now = new Date()) {
 
 function getQuestProgress(row, definition) {
   return toPositiveInteger(row[definition.progressKey]);
+}
+
+function resolveQuestReward(reward = {}, player = null) {
+  const baseReward = {
+    type: reward.type,
+    value: toPositiveInteger(reward.value)
+  };
+  const level = getRewardPlayerLevel(player);
+
+  if (!level || level <= 1) return baseReward;
+
+  if (baseReward.type === 'xp') {
+    const currentLevelXp = getXpForAccountLevel(level);
+    const nextLevelXp = getXpForAccountLevel(level + 1);
+    const levelXpSpan = Math.max(1, nextLevelXp - currentLevelXp);
+    const scaledValue = roundRewardValue(levelXpSpan * XP_REWARD_LEVEL_FRACTION);
+
+    return {
+      ...baseReward,
+      value: Math.max(baseReward.value, scaledValue)
+    };
+  }
+
+  if (baseReward.type === 'souls') {
+    const scaledValue = roundRewardValue(baseReward.value * (1 + ((level - 1) * SOUL_REWARD_LEVEL_GROWTH)));
+
+    return {
+      ...baseReward,
+      value: Math.max(baseReward.value, scaledValue)
+    };
+  }
+
+  return baseReward;
+}
+
+function getRewardPlayerLevel(player) {
+  if (!player) return null;
+  const hasLevel = Number.isFinite(Number(player.level));
+  const hasXp = Number.isFinite(Number(player.xp));
+  if (!hasLevel && !hasXp) return null;
+
+  return Math.max(1, getNextAccountLevel(hasLevel ? player.level : 1, hasXp ? player.xp : 0));
+}
+
+function roundRewardValue(value) {
+  const amount = Math.max(0, Number(value) || 0);
+  if (amount <= 0) return 0;
+  return Math.ceil(amount / REWARD_ROUNDING_STEP) * REWARD_ROUNDING_STEP;
 }
 
 function parseClaimedQuestIds(value) {
@@ -302,9 +361,11 @@ module.exports = {
   claimDailyQuest,
   claimDailyReward,
   getDailyQuestState,
+  getDailyQuestStateForPlayer,
   getNextUtcReset,
   getUtcQuestDate,
   qualifiesForTrialOfTheFew,
   recordDailyQuestProgress,
+  resolveQuestReward,
   serializeDailyQuestState
 };

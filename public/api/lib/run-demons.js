@@ -135,11 +135,16 @@ function mergeBattleTeamForRun(sourceTeam, battleTeam) {
     const maxHp = Math.max(1, Number(demon.maxHp) || Number(demon.hp) || 1);
     const battleMaxHp = Math.max(1, Number(battleDemon.maxHp) || maxHp);
     const battleHpRatio = Math.max(0, Math.min(1, (Number(battleDemon.hp) || 0) / battleMaxHp));
+    const battleFormationSlot = normalizeFormationSlot(battleDemon.formationSlot ?? battleDemon.formationRow);
 
     return {
       ...demon,
       maxHp,
       hp: Math.max(battleDemon.hp > 0 ? 1 : 0, Math.min(maxHp, Math.round(maxHp * battleHpRatio))),
+      position: battleFormationSlot !== null
+        ? getFormationSlotPosition(battleFormationSlot, 'player')
+        : normalizePosition(battleDemon.position || demon.position),
+      ...(battleFormationSlot !== null ? { formationSlot: battleFormationSlot } : {}),
       attackMeter: Number(battleDemon.attackMeter) || 0,
       statusEffects: {
         poison: (battleDemon.statusEffects?.poison || []).map((poison) => ({ ...poison }))
