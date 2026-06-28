@@ -658,7 +658,7 @@
     if (!button) return;
 
     button.disabled = !canAfford || state.trainingDemonId === Number(demon.id);
-    button.className = `btn btn-${canAfford ? 'success' : 'outline-danger'} collection-train-action`;
+    button.className = `btn btn-${canAfford ? 'success' : 'outline-danger'} btn-glass-${canAfford ? 'gold' : 'danger'} collection-train-action`;
     button.title = canAfford
       ? `Costs ${formatNumber(cost)} Souls${chanceLabel ? `. ${chanceLabel} success chance` : ''}`
       : `Need ${formatNumber(deficit)} more Souls`;

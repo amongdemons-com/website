@@ -343,7 +343,7 @@ function renderRewardPayout(earned, canExtract = false) {
         <strong>${escapeHtml(String(souls))}</strong>
         <span>Souls</span>
       </div>
-      <button class="btn btn-warning dungeon-reward-extract-btn" id="getRewardBtn" type="button" ${canExtract ? '' : 'disabled'}>
+      <button class="btn btn-glass-gold dungeon-reward-extract-btn" id="getRewardBtn" type="button" ${canExtract ? '' : 'disabled'}>
         ${renderIcon('flag')}
         Extract
       </button>

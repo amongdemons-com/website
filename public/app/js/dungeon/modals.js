@@ -63,7 +63,7 @@ function renderCollectionReinforcementModal(query = '') {
     </div>
   `;
   elements.teamChoiceModalFooter.innerHTML = `
-    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Done</button>
+    <button type="button" class="btn btn-glass-muted" data-bs-dismiss="modal">Done</button>
   `;
 
   document.getElementById('collectionReinforcementSearch')?.addEventListener('input', (event) => {
@@ -146,8 +146,8 @@ async function confirmCollectionReplacement(incomingDemon) {
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-light" data-choice="keep">Keep Current</button>
-            <button type="button" class="btn btn-warning" data-choice="replace">Replace</button>
+            <button type="button" class="btn btn-glass-muted" data-choice="keep">Keep Current</button>
+            <button type="button" class="btn btn-glass-danger" data-choice="replace">Replace</button>
           </div>
         </div>
       </div>

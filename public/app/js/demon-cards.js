@@ -215,7 +215,8 @@
   function renderDetailAction(action, index) {
     const variant = action.variant || 'outline-light';
     const icon = action.icon ? renderIcon(action.icon, action.iconOptions || {}) : '';
-    const className = ['btn', `btn-${variant}`, action.className || ''].filter(Boolean).join(' ');
+    const glassClass = action.glassClass || getDetailActionGlassClass(variant);
+    const className = ['btn', `btn-${variant}`, glassClass, action.className || ''].filter(Boolean).join(' ');
     const attributes = action.href
       ? {
         href: action.href,
@@ -235,6 +236,15 @@
     const tag = action.href ? 'a' : 'button';
 
     return `<${tag} ${renderAttributes(attributes)}>${icon}${escapeHtml(action.label || 'Action')}</${tag}>`;
+  }
+
+  function getDetailActionGlassClass(variant = '') {
+    const normalized = String(variant || '').toLowerCase();
+    if (normalized.includes('danger')) return 'btn-glass-danger';
+    if (normalized.startsWith('outline-')) return 'btn-glass-muted';
+    if (['primary', 'success', 'warning'].includes(normalized)) return 'btn-glass-gold';
+    if (normalized.includes('secondary') || normalized.includes('light')) return 'btn-glass-muted';
+    return '';
   }
 
   function renderDetailTitle(title, demon = {}) {
