@@ -152,6 +152,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     gestureWasPinch: false,
     sidePanelMedia: null,
     sidePanelExpanded: false,
+    worldEncounterTab: 'pve',
     activeWorldBattle: null,
     activeWorldBattleMeta: null,
     worldBattleReplayToken: 0
@@ -209,6 +210,17 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     elements.worldEncounterList?.addEventListener('click', (event) => {
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const tabButton = target?.closest('[data-world-encounter-tab]');
+      if (tabButton) {
+        state.worldEncounterTab = tabButton.dataset.worldEncounterTab === 'pvp' ? 'pvp' : 'pve';
+        renderEncounterPanel();
+        return;
+      }
+      const anchorButton = target?.closest('[data-anchor-soul]');
+      if (anchorButton) {
+        anchorSoul(anchorButton);
+        return;
+      }
       const challengeButton = target?.closest('[data-challenge-player]');
       if (challengeButton) {
         challengePlayer(challengeButton.dataset.challengePlayer, challengeButton);
@@ -242,13 +254,6 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     elements.worldBattleModal?.addEventListener('hidden.bs.modal', () => {
       cancelWorldBattleReplay();
-    });
-
-    elements.worldShrinePanel?.addEventListener('click', (event) => {
-      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
-      const button = target?.closest('[data-anchor-soul]');
-      if (!button) return;
-      anchorSoul(button);
     });
   }
 
@@ -744,7 +749,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       if (shouldShowWorldBattleReplay(payload.battle)) {
         await showWorldBattleReplay(payload.battle, getWorldBattleMeta('try_hunt', payload.battle));
       }
-      setMessage(won ? 'Hunting unlocked for this patrol.' : 'Try Hunt failed. Hunting remains locked.', won ? 'success' : 'warning');
+      setMessage(won ? 'Hunting unlocked for this spot.' : 'Fight failed. Hunting remains locked.', won ? 'success' : 'warning');
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -765,7 +770,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         body: { encounterId }
       });
       setHuntState(payload.hunt);
-      setMessage('Hunting started. Current skill buffs were snapshotted.', 'success');
+      setMessage(`You started hunting ${getEncounterHuntTargetLabel(getEncounterById(encounterId))}.`, 'success');
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -831,7 +836,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       state.boundShrine = normalizeShrine(payload.boundShrine);
       state.currentEvent = payload.currentShrine || getEventAt(state.position);
       setMessage(
-        payload.message || 'Soul anchored. You will return to this Forsaken Shrine if defeated while traveling.',
+        payload.message || 'Soul anchored. You will return to this Forsaken Shrine if defeated.',
         'success'
       );
       renderWorld();
@@ -1677,7 +1682,6 @@ import * as dungeonUtils from './dungeon/utils.js';
   function renderShrinePanel() {
     if (!elements.worldShrinePanel) return;
 
-    const currentShrine = state.moving ? null : getShrineAt(state.position);
     const boundShrine = state.boundShrine;
     const parts = [];
 
@@ -1697,24 +1701,8 @@ import * as dungeonUtils from './dungeon/utils.js';
           <span class="world-shrine-mark" aria-hidden="true"></span>
           <span class="world-shrine-copy">
             <strong>Respawn Point</strong>
-            <small>Default · ${escapeHtml(formatCoords({ x: 0, y: 0 }))}</small>
+            <small>Default - ${escapeHtml(formatCoords({ x: 0, y: 0 }))}</small>
           </span>
-        </article>
-      `);
-    }
-
-    if (currentShrine) {
-      const isCurrentAnchor = boundShrine && positionsEqual(currentShrine, boundShrine);
-      parts.push(`
-        <article class="world-shrine-action ${isCurrentAnchor ? 'is-current-anchor' : ''}">
-          <div class="world-shrine-action-copy">
-            <strong>${escapeHtml(currentShrine.title || 'Forsaken Shrine')}</strong>
-            <small>Anchor your soul to this place.</small>
-          </div>
-          <button class="btn btn-warning btn-sm" type="button" data-anchor-soul ${state.bindingShrine ? 'disabled' : ''}>
-            ${renderIcon('anchor')}
-            <span>Anchor Soul</span>
-          </button>
         </article>
       `);
     }
@@ -1727,40 +1715,96 @@ import * as dungeonUtils from './dungeon/utils.js';
     setText(elements.worldEncounterHeading, `Area ${formatCoords(state.position)}`);
 
     const players = state.playersAt || [];
-    const parts = [];
     const encounter = state.moving ? null : state.currentEncounter;
+    const currentShrine = state.moving ? null : getShrineAt(state.position);
+    const pveParts = [];
+    const pvpParts = [];
 
+    if (currentShrine) {
+      pveParts.push(renderShrineAnchorAction(currentShrine));
+    }
     if (encounter) {
-      parts.push(renderCurrentEncounter(encounter));
+      pveParts.push(renderCurrentEncounter(encounter));
     }
 
     if (state.hunt?.active && !isActiveHuntFor(encounter?.id)) {
-      parts.push(renderActiveHuntSummary());
+      pveParts.push(renderActiveHuntSummary());
     }
 
-    if (!players.length) {
-      parts.push('<p class="world-empty-text">No hunters on this tile.</p>');
-      elements.worldEncounterList.innerHTML = parts.join('');
-      return;
+    if (players.length) {
+      pvpParts.push(players.map((player) => {
+        const cooldownUntil = state.challengeCooldowns.get(player.id) || 0;
+        const isCoolingDown = cooldownUntil > Date.now();
+        const label = isCoolingDown ? 'Cooldown' : 'Challenge';
+
+        return `
+          <article class="world-encounter-player">
+            <span class="world-encounter-mark" aria-hidden="true"></span>
+            <span class="world-encounter-copy">
+              <strong>${escapeHtml(player.username || 'Unknown Hunter')}</strong>
+              <small>Level ${formatNumber(player.level || 1)}</small>
+            </span>
+            <button class="btn btn-outline-light btn-sm" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
+          </article>
+        `;
+      }).join(''));
     }
 
-    parts.push(players.map((player) => {
-      const cooldownUntil = state.challengeCooldowns.get(player.id) || 0;
-      const isCoolingDown = cooldownUntil > Date.now();
-      const label = isCoolingDown ? 'Cooldown' : 'Challenge';
+    const activeTab = state.worldEncounterTab === 'pvp' ? 'pvp' : 'pve';
+    const activeParts = activeTab === 'pvp' ? pvpParts : pveParts;
+    const emptyText = activeTab === 'pvp' ? 'No hunters on this tile.' : 'No PvE activity on this tile.';
 
-      return `
-        <article class="world-encounter-player">
-          <span class="world-encounter-mark" aria-hidden="true"></span>
-          <span class="world-encounter-copy">
-            <strong>${escapeHtml(player.username || 'Unknown Hunter')}</strong>
-            <small>Level ${formatNumber(player.level || 1)}</small>
-          </span>
-          <button class="btn btn-outline-light btn-sm" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
-        </article>
+    elements.worldEncounterList.innerHTML = `
+      ${renderEncounterTabs({
+        activeTab,
+        pveCount: pveParts.length,
+        pvpCount: players.length
+      })}
+      <div class="world-encounter-tab-panel" role="tabpanel">
+        ${activeParts.length ? activeParts.join('') : `<p class="world-empty-text">${emptyText}</p>`}
+      </div>
+    `;
+  }
+
+  function renderEncounterTabs({ activeTab, pveCount, pvpCount }) {
+    return `
+      <div class="world-encounter-tabs" role="tablist" aria-label="Area encounters">
+        ${renderEncounterTabButton('pve', 'PvE', pveCount, activeTab)}
+        ${renderEncounterTabButton('pvp', 'PvP', pvpCount, activeTab)}
+      </div>
+    `;
+  }
+
+  function renderEncounterTabButton(tab, label, count, activeTab) {
+    const active = tab === activeTab;
+    return `
+      <button class="world-encounter-tab ${active ? 'is-active' : ''}" type="button" role="tab" aria-selected="${active}" data-world-encounter-tab="${tab}">
+        <span>${label}</span>
+        <strong>${formatNumber(count)}</strong>
+      </button>
+    `;
+  }
+
+  function renderShrineAnchorAction(currentShrine) {
+    const isCurrentAnchor = state.boundShrine && positionsEqual(currentShrine, state.boundShrine);
+    const action = isCurrentAnchor
+      ? ''
+      : `
+        <button class="btn btn-warning btn-sm" type="button" data-anchor-soul ${state.bindingShrine ? 'disabled' : ''}>
+          ${renderIcon('hand-heart')}
+          <span>Pray</span>
+        </button>
       `;
-    }).join(''));
-    elements.worldEncounterList.innerHTML = parts.join('');
+
+    return `
+      <article class="world-encounter-player is-demon-spot is-shrine-spot">
+        <span class="world-encounter-copy">
+          <strong>${escapeHtml(currentShrine.title || 'Forsaken Shrine')}</strong>
+          <small>${isCurrentAnchor ? 'Your respawn point.' : 'Anchor your soul to this place.'}</small>
+        </span>
+        ${action}
+      </article>
+    `;
   }
 
   function renderCurrentEncounter(encounter) {
@@ -1769,16 +1813,15 @@ import * as dungeonUtils from './dungeon/utils.js';
     const activeElsewhere = Boolean(state.hunt?.active && !active);
     const demons = (Array.isArray(encounter.team) ? encounter.team : []).slice(0, 4).map(renderDemonPortrait).join('');
     const action = active
-      ? `<button class="btn btn-warning btn-sm" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>Stop Hunting</button>`
+      ? `<button class="btn btn-warning btn-sm" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>End Hunt</button>`
       : unlocked
-        ? `<button class="btn btn-outline-light btn-sm" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy || activeElsewhere ? 'disabled' : ''}>Start Hunting</button>`
-        : `<button class="btn btn-outline-light btn-sm" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Try Hunt</button>`;
+        ? `<button class="btn btn-outline-light btn-sm" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy || activeElsewhere ? 'disabled' : ''}>Hunt</button>`
+        : `<button class="btn btn-outline-light btn-sm" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Fight</button>`;
 
     return `
-      <article class="world-encounter-player">
-        <span class="world-encounter-mark" aria-hidden="true"></span>
+      <article class="world-encounter-player is-demon-spot">
         <span class="world-encounter-copy">
-          <strong>Demon Patrol</strong>
+          ${renderEncounterTitle(encounter)}
           <small>Threat ${formatNumber(encounter.difficulty || 1)}${active ? ' - Hunting' : unlocked ? ' - Hunting unlocked' : ''}</small>
           ${demons ? `<span class="world-enc-demons">${demons}</span>` : ''}
         </span>
@@ -1791,7 +1834,6 @@ import * as dungeonUtils from './dungeon/utils.js';
   function renderActiveHuntSummary() {
     const encounter = getActiveHuntEncounter();
     const progress = computeHuntProgress();
-    const title = encounter?.title || 'Demon Patrol';
     const meta = [
       'Hunting',
       encounter ? formatCoords(encounter) : null,
@@ -1802,10 +1844,10 @@ import * as dungeonUtils from './dungeon/utils.js';
       <article class="world-encounter-player">
         <span class="world-encounter-mark" aria-hidden="true"></span>
         <span class="world-encounter-copy">
-          <strong>${escapeHtml(title)}</strong>
+          ${renderEncounterTitle(encounter)}
           <small>${escapeHtml(meta)}</small>
         </span>
-        <button class="btn btn-warning btn-sm" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>Stop Hunting</button>
+        <button class="btn btn-warning btn-sm" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>End Hunt</button>
       </article>
       ${encounter ? renderHuntRewards(encounter, true) : ''}
     `;
@@ -1818,20 +1860,32 @@ import * as dungeonUtils from './dungeon/utils.js';
     const expected = `
       <div class="world-hunt-stat">
         <span class="world-hunt-stat-label">Per kill</span>
-        <span class="world-hunt-stat-value">+${formatNumber(rate.xpPerCycle)} XP · +${formatNumber(rate.soulsPerCycle)} Souls</span>
+        <span class="world-hunt-stat-value">${formatNumber(rate.xpPerCycle)} XP / ${formatNumber(rate.soulsPerCycle)} Souls</span>
         <span class="world-hunt-stat-note">one kill every ${formatDuration(rate.respawnSeconds)}</span>
       </div>
     `;
 
     const accrued = progress ? `
       <div class="world-hunt-stat is-accrued">
-        <span class="world-hunt-stat-label">Accumulated</span>
-        <span class="world-hunt-stat-value">+${formatNumber(progress.accruedXp)} XP · +${formatNumber(progress.accruedSouls)} Souls</span>
-        <span class="world-hunt-stat-note">${formatNumber(progress.cycles)} ${progress.cycles === 1 ? 'kill' : 'kills'}${progress.capped ? ' · cap reached' : ''}</span>
+        <span class="world-hunt-stat-label">Hunt Rewards</span>
+        <span class="world-hunt-stat-value">${formatNumber(progress.accruedXp)} XP / ${formatNumber(progress.accruedSouls)} Souls</span>
+        <span class="world-hunt-stat-note">${formatNumber(progress.cycles)} ${progress.cycles === 1 ? 'kill' : 'kills'}${progress.capped ? ' - cap reached' : ''}</span>
       </div>
     ` : '';
 
     return `<div class="world-hunt-rewards">${expected}${accrued}</div>`;
+  }
+
+  function renderEncounterTitle(encounter, extraClass = '') {
+    const identity = getEncounterIdentity(encounter);
+    const classes = ['world-encounter-title', extraClass].filter(Boolean).join(' ');
+
+    return `
+      <strong class="${classes}">
+        <span class="world-encounter-rarity" style="--rarity-color:${identity.color}">${escapeHtml(identity.rarityLabel)}</span>
+        <span class="world-encounter-name">${escapeHtml(`${identity.name} Spot`)}</span>
+      </strong>
+    `;
   }
 
   function renderDemonPortrait(member) {
@@ -2723,14 +2777,14 @@ import * as dungeonUtils from './dungeon/utils.js';
     const normalizedType = type || overrides.type || 'battle';
     const won = battle.winner === 'player';
     const title = normalizedType === 'try_hunt'
-      ? won ? 'Try Hunt Won' : 'Try Hunt Failed'
+      ? won ? 'Fight Won' : 'Fight Failed'
       : won ? 'Ambush Won' : battle.winner === 'enemy' ? 'Ambush Lost' : 'Ambush';
 
     return {
       type: normalizedType,
-      eyebrow: overrides.eyebrow || (normalizedType === 'try_hunt' ? 'Try Hunt' : 'World Ambush'),
+      eyebrow: overrides.eyebrow || (normalizedType === 'try_hunt' ? 'Fight' : 'World Ambush'),
       title: overrides.title || title,
-      enemyLabel: overrides.enemyLabel || (normalizedType === 'try_hunt' ? 'Demon Patrol' : 'Ambushers'),
+      enemyLabel: overrides.enemyLabel || (normalizedType === 'try_hunt' ? getEncounterPlainLabel(battle.encounter) : 'Ambushers'),
       winText: overrides.winText || (normalizedType === 'try_hunt' ? 'Hunting unlocked' : 'Ambush cleared'),
       lossText: overrides.lossText || (normalizedType === 'try_hunt' ? 'Hunting remains locked' : 'Ambush lost'),
       neutralText: overrides.neutralText || 'Battle ended'
@@ -3354,6 +3408,29 @@ import * as dungeonUtils from './dungeon/utils.js';
     return state.encounters.find((encounter) => encounter.x === position.x && encounter.y === position.y) || null;
   }
 
+  function getEncounterIdentity(encounter = {}) {
+    const keyDemon = encounter?.keyDemon || (Array.isArray(encounter?.team) ? encounter.team[0] : null) || {};
+    const rarity = String(keyDemon.rarity || 'common').toLowerCase();
+    const name = keyDemon.species || keyDemon.name || 'Demon';
+
+    return {
+      rarity,
+      rarityLabel: capitalize(rarity),
+      name,
+      color: rarityCss(rarity)
+    };
+  }
+
+  function getEncounterPlainLabel(encounter = {}) {
+    const identity = getEncounterIdentity(encounter);
+    return `${identity.rarityLabel} ${identity.name} Spot`;
+  }
+
+  function getEncounterHuntTargetLabel(encounter = {}) {
+    const identity = getEncounterIdentity(encounter);
+    return `${identity.rarityLabel} ${identity.name} demons`;
+  }
+
   function rarityCss(rarity) {
     return RARITY_COLORS[rarity] || RARITY_COLORS.common;
   }
@@ -3497,7 +3574,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   // Mirrors calculateHuntRewards() on the server: each respawn cycle yields one
-  // win against the snapshotted patrol, capped at HUNT_REWARD_CYCLE_CAP cycles.
+  // win against the snapshotted demon spot, capped at HUNT_REWARD_CYCLE_CAP cycles.
   function computeHuntProgress(active = state.hunt?.active, now = Date.now()) {
     if (!active) return null;
 
@@ -3674,7 +3751,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     )).join('');
 
     tooltip.innerHTML = `
-      <strong class="world-tooltip-title">Demon Patrol</strong>
+      ${renderEncounterTitle(encounter, 'world-tooltip-title')}
       <span class="world-tooltip-meta">${escapeHtml(formatTravelMeta(encounter, stepCount))}</span>
       ${demons ? `<div class="world-enc-demons">${demons}</div>` : ''}
       <div class="world-enc-difficulty is-${meterTone}">

@@ -2,7 +2,7 @@ const db = require('./db');
 const worldMap = require('../data/map.json');
 
 const SHRINE_TYPE = 'forsaken_shrine';
-const ANCHOR_SUCCESS_MESSAGE = 'Soul anchored. You will return to this Forsaken Shrine if defeated while traveling.';
+const ANCHOR_SUCCESS_MESSAGE = 'Soul anchored. You will return to this Forsaken Shrine if defeated.';
 const AMBUSH_DEFEAT_ANCHORED_MESSAGE = 'You were defeated and dragged back to your Anchored Shrine.';
 const AMBUSH_DEFEAT_SPAWN_MESSAGE = 'You were defeated and dragged back to camp.';
 const WORLD_SPAWN = worldMap.spawn || { x: 0, y: 0 };
@@ -24,11 +24,15 @@ async function getBoundShrine(playerId) {
     [playerId]
   );
 
-  if (!rows.length) return null;
+  if (!rows.length) return getDefaultBoundShrine();
   return getShrineAt(rows[0].x, rows[0].y);
 }
 
-async function saveBoundShrine(playerId, shrine) {
+function getDefaultBoundShrine() {
+  return getShrineAt(WORLD_SPAWN.x, WORLD_SPAWN.y);
+}
+
+async function saveBoundShrine(playerId, shrine, client = db) {
   const normalized = serializeShrine(shrine);
   if (!normalized) {
     const error = new Error('Choose a valid Forsaken Shrine.');
@@ -36,7 +40,7 @@ async function saveBoundShrine(playerId, shrine) {
     throw error;
   }
 
-  await db.query(
+  await client.query(
     `INSERT INTO player_bound_world_shrines (player_id, x, y)
      VALUES (?, ?, ?)
      ON DUPLICATE KEY UPDATE x = VALUES(x), y = VALUES(y), updated_at = CURRENT_TIMESTAMP`,
@@ -44,6 +48,12 @@ async function saveBoundShrine(playerId, shrine) {
   );
 
   return normalized;
+}
+
+async function saveDefaultBoundShrine(playerId, client = db) {
+  const defaultShrine = getDefaultBoundShrine();
+  if (!defaultShrine) return null;
+  return saveBoundShrine(playerId, defaultShrine, client);
 }
 
 function getAmbushDefeatReturn(boundShrine) {
@@ -89,8 +99,10 @@ module.exports = {
   AMBUSH_DEFEAT_SPAWN_MESSAGE,
   getAmbushDefeatReturn,
   getBoundShrine,
+  getDefaultBoundShrine,
   getShrineAt,
   getWorldShrines,
+  saveDefaultBoundShrine,
   saveBoundShrine,
   serializeShrine
 };

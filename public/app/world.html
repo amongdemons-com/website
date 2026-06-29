@@ -19,7 +19,7 @@
     <meta name="twitter:description" content="Private Among Demons hunter exploration prototype.">
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_dungeon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/app/css/main.css?v=20260628-world-battle-v4" rel="stylesheet">
+    <link href="/app/css/main.css?v=20260629-world-ui-v3" rel="stylesheet">
   </head>
   <body class="world-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -84,7 +84,14 @@
         </button>
 
         <div class="world-side-content" id="worldSideContent">
-          <section class="world-panel-block" aria-labelledby="worldTeamHeading">
+          <section aria-labelledby="worldEncounterHeading">
+            <div class="world-block-heading">
+              <h2 id="worldEncounterHeading">Area 0, 0</h2>
+            </div>
+            <div class="world-encounter-list" id="worldEncounterList"></div>
+          </section>
+
+          <section aria-labelledby="worldTeamHeading">
             <div class="world-block-heading">
               <h2 id="worldTeamHeading">Active Team</h2>
               <a class="world-panel-link" href="/camp">Edit Team</a>
@@ -92,26 +99,13 @@
             <div class="world-team-summary" id="worldTeamSummary"></div>
           </section>
 
-          <section class="world-panel-block" aria-labelledby="worldShrineHeading">
+          <section aria-labelledby="worldShrineHeading">
             <div class="world-block-heading">
               <h2 id="worldShrineHeading">Respawn Point</h2>
             </div>
             <div class="world-shrine-panel" id="worldShrinePanel"></div>
           </section>
 
-          <section class="world-panel-block" aria-labelledby="worldEncounterHeading">
-            <div class="world-block-heading">
-              <h2 id="worldEncounterHeading">Hunters in area 0, 0</h2>
-            </div>
-            <div class="world-encounter-list" id="worldEncounterList"></div>
-          </section>
-
-          <section class="world-panel-block" aria-labelledby="worldTravelHeading">
-            <div class="world-block-heading">
-              <h2 id="worldTravelHeading">Travel</h2>
-            </div>
-            <div class="world-travel-panel" id="worldTravelPanel"></div>
-          </section>
         </div>
       </aside>
     </main>
@@ -199,6 +193,6 @@
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/vendor/pixi/pixi.min.js"></script>
-    <script type="module" src="/app/js/world-ui.js?v=20260628-world-hunt-stale-v1"></script>
+    <script type="module" src="/app/js/world-ui.js?v=20260629-world-ui-v3"></script>
   </body>
 </html>

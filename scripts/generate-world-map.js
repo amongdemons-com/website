@@ -322,9 +322,9 @@ const LANDMARKS = [
   {
     x: 0,
     y: 0,
-    type: 'landmark',
-    title: 'Hunter Camp',
-    description: 'A guarded fire at the center of the wilds.'
+    type: 'forsaken_shrine',
+    title: 'Forsaken Shrine',
+    description: 'A guarded shrine at the center of the wilds.'
   },
   {
     x: 10,

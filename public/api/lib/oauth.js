@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const db = require('./db');
 const { hashPassword } = require('./auth');
+const { saveDefaultBoundShrine } = require('./world-shrines');
 
 const PROVIDERS = {
   google: {
@@ -215,6 +216,7 @@ async function createOAuthPlayer(connection, options) {
         'INSERT INTO players (id, username, email, password_hash, password_salt, unlocks) VALUES (?, ?, ?, ?, ?, ?)',
         [playerId, username, options.email || null, hash, salt, JSON.stringify([])]
       );
+      await saveDefaultBoundShrine(playerId, connection);
 
       const [rows] = await connection.query('SELECT * FROM players WHERE id = ? LIMIT 1', [playerId]);
       return rows[0];

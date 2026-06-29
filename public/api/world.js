@@ -37,7 +37,7 @@ const WORLD_ROADS = Array.isArray(worldMap.roads) ? worldMap.roads : [];
 const ROAD_TILES = new Set(WORLD_ROADS.map((tile) => `${tile.x},${tile.y}`));
 const BLOCKED_TILES = new Set(WORLD_BLOCKS.map((tile) => `${tile.x},${tile.y}`));
 const AMBUSH_CHANCE_OFF_ROAD = 7; // 1-in-N chance to be ambushed per step
-const AMBUSH_CHANCE_ON_ROAD = 34; // roads are patrolled — far safer to travel
+const AMBUSH_CHANCE_ON_ROAD = 34; // roads are watched but far safer to travel
 
 const MOCK_PLAYERS = [
   { id: 'mock-ember-duelist', username: 'Ember Duelist', level: 6, x: 2, y: -1 },
@@ -123,7 +123,7 @@ router.post('/world/move', requireAuth, async (req, res) => {
 router.post('/world/hunt/try', requireAuth, async (req, res) => {
   const encounter = getEncounterById(req.body?.encounterId);
   if (!encounter) {
-    return res.status(404).json({ error: 'Demon patrol not found.' });
+    return res.status(404).json({ error: 'Demon spot not found.' });
   }
 
   const battle = await simulateTryHunt(req.player, encounter);
@@ -143,11 +143,11 @@ router.post('/world/hunt/try', requireAuth, async (req, res) => {
 router.post('/world/hunting/start', requireAuth, async (req, res) => {
   const encounter = getEncounterById(req.body?.encounterId);
   if (!encounter) {
-    return res.status(404).json({ error: 'Demon patrol not found.' });
+    return res.status(404).json({ error: 'Demon spot not found.' });
   }
 
   if (!(await isHuntUnlocked(req.player.id, encounter.id))) {
-    return res.status(409).json({ error: 'Win Try Hunt before starting passive hunting.' });
+    return res.status(409).json({ error: 'Win a fight before starting passive hunting.' });
   }
 
   const active = await getActiveHunt(req.player.id);
@@ -515,11 +515,19 @@ function validateTravelPath(currentPosition, requestedPosition, path) {
 }
 
 function resolveTravelStepEvent(position, stepIndex) {
+  if (!isAmbushEligibleTile(position.x, position.y)) {
+    return { type: 'none', title: 'No Event' };
+  }
+
   const ambushChance = isRoad(position.x, position.y) ? AMBUSH_CHANCE_ON_ROAD : AMBUSH_CHANCE_OFF_ROAD;
   const roll = (getTileNoise(position.x, position.y) + stepIndex * 17) % ambushChance;
   return roll === 0
     ? { type: 'ambush', title: 'Ambush' }
     : { type: 'none', title: 'No Event' };
+}
+
+function isAmbushEligibleTile(x, y) {
+  return !getEventAt(x, y) && !getEncounterAt(x, y);
 }
 
 function normalizePosition(value = {}, options = {}) {
@@ -571,5 +579,10 @@ function throwWorldError(message, status = 400) {
   error.status = status;
   throw error;
 }
+
+router._test = {
+  isAmbushEligibleTile,
+  resolveTravelStepEvent
+};
 
 module.exports = router;

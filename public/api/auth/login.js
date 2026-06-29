@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const db = require('../lib/db');
 const { cleanPlayer, createSession, hashPassword, verifyPassword } = require('../lib/auth');
+const { saveDefaultBoundShrine } = require('../lib/world-shrines');
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.post('/auth/login', async (req, res) => {
       'INSERT INTO players (id, username, email, password_hash, password_salt, unlocks) VALUES (?, ?, ?, ?, ?, ?)',
       [playerId, username, email, hash, salt, JSON.stringify([])]
     );
+    await saveDefaultBoundShrine(playerId);
     const [createdRows] = await db.query('SELECT * FROM players WHERE id = ? LIMIT 1', [playerId]);
     player = createdRows[0];
   } else if (!player.password_salt) {
