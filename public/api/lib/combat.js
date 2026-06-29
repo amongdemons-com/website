@@ -106,6 +106,13 @@ function frontToBack(targets, side = 'enemy') {
   ));
 }
 
+function frontmostLine(targets, side = 'enemy') {
+  const living = alive(targets);
+  if (!living.length) return [];
+  const minDepth = Math.min(...living.map((demon) => getFormationDepth(demon, side)));
+  return living.filter((demon) => getFormationDepth(demon, side) === minDepth);
+}
+
 function chooseTarget(rng, attacker, enemies, demonTypes, targetSide = 'enemy') {
   const targeting = getTargeting(attacker, demonTypes);
   const living = alive(enemies);
@@ -156,8 +163,7 @@ function chooseTargets(rng, attacker, enemies, demonTypes, targetSide = 'enemy')
   const living = alive(enemies);
 
   if (ability.kind === 'cleave_attack') {
-    const frontRow = frontToBack(living.filter((demon) => normalizePosition(demon.position) === 'front'), targetSide);
-    return frontRow.length ? frontRow : frontToBack(living, targetSide);
+    return frontmostLine(living, targetSide);
   }
 
   if (targeting === 'all') {

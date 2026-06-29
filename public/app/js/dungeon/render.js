@@ -517,10 +517,10 @@ function renderFightLogActions() {
     state.isBattleAnimating &&
     state.combatPlayback
   );
-  const hasCurrentFightLog = Boolean(isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
-  const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && hasCurrentFightLog);
-  const canViewLog = canReplay;
   const hasPendingPacts = hasPendingBuffChoices(state.run);
+  const hasCurrentFightLog = Boolean(isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
+  const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && !hasPendingPacts && hasCurrentFightLog);
+  const canViewLog = canReplay;
   const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
   const canExtract = Boolean(!state.isBattleAnimating && !state.isResultAnimating && !hasPendingPacts && canExtractRun());
   const continuePending = Boolean(state.isRecruitContinuePending);

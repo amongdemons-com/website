@@ -8073,16 +8073,6 @@ body.camp-page > .camp-lobby {
     padding: 1rem 1.1rem 1.05rem;
 }
 
-body.camp-page > .alert {
-    position: fixed;
-    top: calc(var(--game-nav-height, 3.6rem) + 0.72rem);
-    left: 50%;
-    z-index: 1100;
-    width: min(38rem, calc(100% - 2rem));
-    margin: 0;
-    transform: translateX(-50%);
-}
-
 .camp-lobby-grid {
     display: grid;
     grid-template-columns: minmax(17rem, 22vw) minmax(0, 1fr) minmax(18rem, 24vw);
@@ -15271,16 +15261,15 @@ body.skill-tree-page {
 /* Shared notifications float above every game surface and dismiss on interaction. */
 .alert.game-toast-alert[role="alert"] {
     position: fixed !important;
-    top: clamp(0.75rem, 2.2vw, 1.25rem) !important;
-    right: clamp(0.75rem, 2.2vw, 1.25rem) !important;
+    top: calc(var(--game-nav-height, 3.6rem) + max(0.35rem, env(safe-area-inset-top, 0px))) !important;
+    right: auto !important;
     bottom: auto !important;
-    left: auto !important;
+    left: 50% !important;
     z-index: 20000 !important;
-    width: min(28rem, calc(100vw - 1.5rem)) !important;
+    width: min(38rem, calc(100vw - 2rem)) !important;
     min-height: 3.4rem;
     margin: 0 !important;
     border: 1px solid rgba(111,214,189,0.42) !important;
-    border-left: 3px solid var(--ad-teal, #6fd6bd) !important;
     border-radius: 4px !important;
     background:
         radial-gradient(circle at 8% 0%, rgba(111,214,189,0.14), transparent 9rem),
@@ -15290,34 +15279,23 @@ body.skill-tree-page {
         0 0 24px rgba(50,151,155,0.18),
         0 16px 42px rgba(0,0,0,0.56) !important;
     color: rgba(236,246,243,0.94) !important;
-    padding: 0.85rem 2.65rem 0.85rem 1rem !important;
+    padding: 0.85rem 1rem !important;
     font-size: 0.8rem;
     font-weight: 750;
     line-height: 1.4;
+    text-align: center;
     cursor: pointer;
-    transform: none !important;
+    transform: translateX(-50%) !important;
     animation: game-alert-enter 180ms ease-out both;
     isolation: isolate;
 }
 
-.alert.game-toast-alert[role="alert"]::after {
-    content: "\00d7";
-    position: absolute;
-    top: 50%;
-    right: 0.9rem;
-    color: rgba(220,232,229,0.56);
-    font: 700 1.35rem/1 Georgia, "Times New Roman", serif;
-    transform: translateY(-53%);
-}
-
 .alert.game-toast-alert.alert-success {
     border-color: rgba(111,214,189,0.5) !important;
-    border-left-color: var(--ad-teal, #6fd6bd) !important;
 }
 
 .alert.game-toast-alert.alert-danger {
     border-color: rgba(241,113,103,0.44) !important;
-    border-left-color: #f17167 !important;
     background:
         radial-gradient(circle at 8% 0%, rgba(191,49,48,0.17), transparent 9rem),
         linear-gradient(145deg, rgba(25,11,13,0.98), rgba(7,7,10,0.98)) !important;
@@ -15326,7 +15304,6 @@ body.skill-tree-page {
 
 .alert.game-toast-alert.alert-warning {
     border-color: rgba(232,199,106,0.46) !important;
-    border-left-color: var(--ad-gold, #e8c76a) !important;
 }
 
 .alert.game-toast-alert:focus-visible {
@@ -15386,24 +15363,6 @@ body.world-page > .game-shell-nav {
         linear-gradient(180deg, rgba(4,10,13,0.92), rgba(4,10,13,0.62)),
         rgba(4,10,13,0.62) !important;
     backdrop-filter: blur(12px);
-}
-
-body.world-page > .alert {
-    position: fixed;
-    top: calc(var(--game-nav-height, 3.6rem) + max(0.35rem, env(safe-area-inset-top, 0px)));
-    left: 50%;
-    z-index: 1100;
-    width: min(38rem, calc(100% - 2rem));
-    margin: 0;
-    transform: translateX(-50%);
-}
-
-body.world-page > .alert.game-toast-alert[role="alert"] {
-    top: calc(var(--game-nav-height, 3.6rem) + max(0.35rem, env(safe-area-inset-top, 0px))) !important;
-    right: auto !important;
-    left: 50% !important;
-    width: min(38rem, calc(100% - 2rem)) !important;
-    transform: translateX(-50%) !important;
 }
 
 .world-shell {
