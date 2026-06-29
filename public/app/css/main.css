@@ -15830,19 +15830,82 @@ body.world-page > .alert.game-toast-alert[role="alert"] {
     z-index: 10;
     display: flex;
     flex-direction: column;
-    gap: 0.72rem;
     width: min(23rem, calc(100vw - 1.7rem));
-    overflow: hidden auto;
+    max-height: calc(100dvh - var(--game-nav-height, 3.6rem) - 1.7rem);
+    overflow: hidden;
     border-radius: 8px;
     background:
         linear-gradient(180deg, rgba(111,214,189,0.06), transparent 32%),
         rgba(3,8,11,0.72);
-    padding: 0.9rem;
+    padding: 0;
     backdrop-filter: blur(14px);
 }
 
 .world-side-toggle {
-    display: none;
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    width: 100%;
+    min-height: 3rem;
+    border: 0;
+    border-bottom: 1px solid rgba(161,212,201,0.16);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.1), rgba(255,255,255,0.02)),
+        rgba(3,8,11,0.9);
+    color: rgba(232,199,106,0.92);
+    padding: 0.72rem 0.95rem;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.world-side-toggle:hover,
+.world-side-toggle:focus-visible {
+    color: #fff3bd;
+    outline: 0;
+}
+
+.world-side-status-copy {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    min-width: 0;
+    overflow: hidden;
+    text-align: left;
+}
+
+.world-side-status-copy > span {
+    flex: 0 0 auto;
+}
+
+.world-side-status-copy > small {
+    flex: 1 1 auto;
+    color: rgba(220,232,229,0.62);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.world-side-status-copy > span,
+.world-side-status-copy > small {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-side-toggle .ad-icon {
+    flex: 0 0 auto;
+    width: 0.92rem;
+    height: 0.92rem;
+    margin: 0;
+    transition: transform 180ms ease;
 }
 
 .world-side-content {
@@ -15851,6 +15914,31 @@ body.world-page > .alert.game-toast-alert[role="alert"] {
     gap: 0.66rem;
     min-width: 0;
     min-height: 0;
+    max-height: calc(100% - 3rem);
+    overflow: hidden auto;
+    padding: 0.7rem;
+}
+
+.world-side-panel.is-collapsed {
+    top: auto;
+    right: 0.85rem;
+    bottom: 0.85rem;
+    left: auto;
+    width: min(14.5rem, calc(100vw - 1.7rem));
+    max-height: calc(3rem + env(safe-area-inset-bottom, 0px));
+}
+
+.world-side-panel.is-collapsed .world-side-toggle {
+    border-bottom: 0;
+    border-radius: 8px;
+}
+
+.world-side-panel.is-collapsed .world-side-content {
+    display: none;
+}
+
+.world-side-panel:not(.is-collapsed) .world-side-toggle .ad-icon {
+    transform: rotate(180deg);
 }
 
 .world-side-content > section {
@@ -16437,7 +16525,6 @@ body.world-page > .alert.game-toast-alert[role="alert"] {
 @media (max-width: 1199.98px) {
     .world-side-panel {
         width: min(20rem, calc(100vw - 1.3rem));
-        padding: 0.7rem;
     }
 
     .world-side-content {
@@ -16458,6 +16545,15 @@ body.world-page > .alert.game-toast-alert[role="alert"] {
         width: auto;
         max-height: 38vh;
         overflow: hidden auto;
+    }
+
+    .world-side-panel.is-collapsed {
+        right: 0.65rem;
+        bottom: 0.65rem;
+        left: auto;
+        width: min(14.5rem, calc(100vw - 1.3rem));
+        max-height: calc(3rem + env(safe-area-inset-bottom, 0px));
+        overflow: hidden;
     }
 
     .world-map-status {
@@ -16486,8 +16582,8 @@ body.world-page > .alert.game-toast-alert[role="alert"] {
         z-index: 3;
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 0.45rem;
+        justify-content: space-between;
+        gap: 0.85rem;
         width: 100%;
         min-height: 3rem;
         border: 0;
@@ -16524,7 +16620,12 @@ body.world-page > .alert.game-toast-alert[role="alert"] {
     }
 
     .world-side-panel.is-collapsed {
+        right: 0.65rem;
+        bottom: 0.65rem;
+        left: auto;
+        width: min(14.5rem, calc(100vw - 1.3rem));
         max-height: calc(3rem + env(safe-area-inset-bottom, 0px));
+        border-radius: 8px;
     }
 
     .world-side-panel.is-collapsed .world-side-toggle {

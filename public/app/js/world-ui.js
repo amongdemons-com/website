@@ -35,7 +35,6 @@ import * as dungeonUtils from './dungeon/utils.js';
   const HUNT_DEFAULT_RESPAWN_SECONDS = 300;
   const HUNT_REWARD_CYCLE_CAP = 288;
   const HUNT_STATUS_REFRESH_MS = 15000;
-  const WORLD_SIDE_PANEL_QUERY = '(max-width: 899.98px) and (orientation: portrait)';
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
   const BOARD_COLORS = {
     background: 0x070806,
@@ -150,8 +149,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     activePointers: new Map(),
     pinch: null,
     gestureWasPinch: false,
-    sidePanelMedia: null,
-    sidePanelExpanded: false,
+    sidePanelExpanded: true,
     worldEncounterTab: 'pve',
     activeWorldBattle: null,
     activeWorldBattleMeta: null,
@@ -198,6 +196,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       'worldTravelPanel',
       'worldSidePanel',
       'worldSideToggle',
+      'worldSideStatusLabel',
+      'worldSideAreaLabel',
       'worldBattleModal'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
@@ -261,16 +261,14 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!elements.worldSidePanel || !elements.worldSideToggle) return;
 
     elements.worldSideToggle.addEventListener('click', () => {
-      state.sidePanelExpanded = !state.sidePanelExpanded;
-      syncWorldSidePanel();
+      setWorldSidePanelExpanded(!state.sidePanelExpanded);
     });
 
-    if (typeof window.matchMedia === 'function') {
-      state.sidePanelMedia = window.matchMedia(WORLD_SIDE_PANEL_QUERY);
-      state.sidePanelMedia.addEventListener?.('change', syncWorldSidePanel);
-      state.cleanup.push(() => state.sidePanelMedia?.removeEventListener?.('change', syncWorldSidePanel));
-    }
+    syncWorldSidePanel();
+  }
 
+  function setWorldSidePanelExpanded(expanded) {
+    state.sidePanelExpanded = Boolean(expanded);
     syncWorldSidePanel();
   }
 
@@ -279,10 +277,19 @@ import * as dungeonUtils from './dungeon/utils.js';
     const toggle = elements.worldSideToggle;
     if (!panel || !toggle) return;
 
-    const sheetMode = Boolean(state.sidePanelMedia?.matches);
-    panel.classList.toggle('is-sheet-mode', sheetMode);
-    panel.classList.toggle('is-collapsed', sheetMode && !state.sidePanelExpanded);
+    const status = getWorldSidePanelStatus();
+    panel.classList.add('is-sheet-mode');
+    panel.classList.toggle('is-collapsed', !state.sidePanelExpanded);
+    panel.dataset.worldStatus = status.toLowerCase();
     toggle.setAttribute('aria-expanded', String(!panel.classList.contains('is-collapsed')));
+    setText(elements.worldSideStatusLabel, status);
+    setText(elements.worldSideAreaLabel, `Area ${formatCoords(state.position)}`);
+  }
+
+  function getWorldSidePanelStatus() {
+    if (state.moving || state.travelStatus === 'moving') return 'Traveling';
+    if (isHuntActive()) return 'Hunting';
+    return 'Resting';
   }
 
   async function initPixi() {
@@ -415,8 +422,6 @@ import * as dungeonUtils from './dungeon/utils.js';
       return;
     }
 
-    if (await shouldBlockTravelForHunt()) return;
-
     if (isBlocked(target)) {
       clearRoutePreview('blocked');
       return;
@@ -453,16 +458,18 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   async function travelSelectedPath() {
     const path = (state.selectedPath || []).slice();
-    if (state.moving || path.length < 2) return;
-    if (await shouldBlockTravelForHunt()) return;
+    if (state.moving || state.huntBusy || path.length < 2) return;
+    if (!(await stopHuntingForTravel())) return;
 
     state.moving = true;
     state.travelStatus = 'moving';
     state.travelLog = [];
     state.recentStepEvent = null;
+    setWorldSidePanelExpanded(false);
     renderTravelPanel();
     renderWorld();
 
+    let completedTravel = false;
     try {
       const payload = await commitTravelPath(path);
       const stepEvents = getTravelStepEvents(payload, path);
@@ -502,12 +509,14 @@ import * as dungeonUtils from './dungeon/utils.js';
 
       if (lostAmbush) {
         await resolveAmbushDefeat();
+        completedTravel = true;
       } else {
         state.position = normalizePosition(payload.position || state.position);
         state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
         state.currentEvent = payload.currentEvent || getEventAt(state.position);
         state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
         clearRoutePreview('arrived', { keepLog: true });
+        completedTravel = true;
         renderPanels();
       }
     } catch (error) {
@@ -517,27 +526,14 @@ import * as dungeonUtils from './dungeon/utils.js';
       handleAuthError(error);
     } finally {
       state.moving = false;
+      if (completedTravel) {
+        setWorldSidePanelExpanded(true);
+      } else {
+        syncWorldSidePanel();
+      }
       renderWorld();
       renderPanels();
     }
-  }
-
-  async function shouldBlockTravelForHunt() {
-    if (!isHuntActive()) return false;
-
-    try {
-      await refreshHuntStatus({ force: true });
-    } catch (error) {
-      if (error.status === 401) {
-        handleAuthError(error);
-      }
-    }
-
-    if (!isHuntActive()) return false;
-
-    clearRoutePreview();
-    setMessage('Stop hunting before you travel.', 'warning');
-    return true;
   }
 
   function commitTravelPath(path) {
@@ -749,7 +745,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       if (shouldShowWorldBattleReplay(payload.battle)) {
         await showWorldBattleReplay(payload.battle, getWorldBattleMeta('try_hunt', payload.battle));
       }
-      setMessage(won ? 'Hunting unlocked for this spot.' : 'Fight failed. Hunting remains locked.', won ? 'success' : 'warning');
+      setMessage(won ? 'You are strong enough to hunt in this area.' : 'Fight failed. Hunting remains locked.', won ? 'success' : 'warning');
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -770,6 +766,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         body: { encounterId }
       });
       setHuntState(payload.hunt);
+      setWorldSidePanelExpanded(false);
       setMessage(`You started hunting ${getEncounterHuntTargetLabel(getEncounterById(encounterId))}.`, 'success');
     } catch (error) {
       handleAuthError(error);
@@ -782,9 +779,22 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   async function stopHunting(button) {
-    if (state.huntBusy) return;
+    await finishActiveHunt({ button });
+  }
+
+  async function stopHuntingForTravel() {
+    if (!isHuntActive()) return true;
+    return finishActiveHunt({
+      alreadyStoppedMessage: 'Hunting already stopped. Traveling now.',
+      stoppedMessage: (rewards) => `Hunting ended. Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.`,
+      render: false
+    });
+  }
+
+  async function finishActiveHunt(options = {}) {
+    if (state.huntBusy) return false;
     state.huntBusy = true;
-    setButtonBusy(button, true);
+    setButtonBusy(options.button, true);
 
     try {
       const payload = await api('/api/world/hunting/stop', { method: 'POST' });
@@ -795,10 +805,13 @@ import * as dungeonUtils from './dungeon/utils.js';
       const rewards = payload.rewards || {};
       setMessage(
         payload.alreadyStopped
-          ? 'Hunting already stopped.'
-          : `Hunting stopped. Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.`,
+          ? (options.alreadyStoppedMessage || 'Hunting already stopped.')
+          : (typeof options.stoppedMessage === 'function'
+            ? options.stoppedMessage(rewards)
+            : `Hunting stopped. Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.`),
         'success'
       );
+      return true;
     } catch (error) {
       if (error.status === 404) {
         try {
@@ -809,14 +822,18 @@ import * as dungeonUtils from './dungeon/utils.js';
             active: null
           });
         }
-        setMessage('Hunting already stopped.', 'success');
+        setMessage(options.alreadyStoppedMessage || 'Hunting already stopped.', 'success');
+        return true;
       } else {
         handleAuthError(error);
+        return false;
       }
     } finally {
       state.huntBusy = false;
-      setButtonBusy(button, false);
-      renderEncounterPanel();
+      setButtonBusy(options.button, false);
+      if (options.render !== false) {
+        renderEncounterPanel();
+      }
       syncHuntTicker();
     }
   }
@@ -1651,6 +1668,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function renderPanels() {
+    syncWorldSidePanel();
     renderPositionPanel();
     renderTeamSummary();
     renderShrinePanel();
@@ -3504,6 +3522,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   function setHuntState(hunt) {
     state.hunt = normalizeHunt(hunt);
     state.huntStatusRefreshAt = Date.now();
+    syncWorldSidePanel();
     return state.hunt;
   }
 
