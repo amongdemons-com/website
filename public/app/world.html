@@ -19,7 +19,7 @@
     <meta name="twitter:description" content="Private Among Demons hunter exploration prototype.">
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_dungeon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/app/css/main.css?v=20260629-world-ui-v6" rel="stylesheet">
+    <link href="/app/css/main.css?v=20260629-world-team-v4" rel="stylesheet">
   </head>
   <body class="world-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -94,8 +94,8 @@
 
           <section aria-labelledby="worldTeamHeading">
             <div class="world-block-heading">
-              <h2 id="worldTeamHeading">Active Team</h2>
-              <a class="world-panel-link" href="/camp">Edit Team</a>
+              <h2 id="worldTeamHeading">Hunting Team</h2>
+              <button class="world-panel-link world-panel-link-button" id="worldEditTeamButton" type="button">Edit Team</button>
             </div>
             <div class="world-team-summary" id="worldTeamSummary"></div>
           </section>
@@ -110,6 +110,48 @@
         </div>
       </aside>
     </main>
+
+    <div class="modal fade world-team-modal" id="worldTeamModal" tabindex="-1" aria-labelledby="worldTeamModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+          <div class="modal-body p-0">
+            <section class="world-team-editor-shell" aria-label="World team editor">
+              <header class="world-team-editor-head">
+                <div class="world-team-editor-title">
+                  <span>World</span>
+                  <h2 id="worldTeamModalTitle">Hunting Team</h2>
+                </div>
+                <div class="world-team-editor-head-actions">
+                  <span class="world-team-editor-count" id="worldTeamEditorCount">0/6</span>
+                  <button class="btn btn-glass-gold world-team-editor-save" id="worldTeamSaveButton" type="button">
+                    <i data-lucide="save"></i>
+                    <span>Save</span>
+                  </button>
+                  <button class="world-team-editor-close" type="button" data-bs-dismiss="modal" aria-label="Close" title="Close">
+                    <i data-lucide="x"></i>
+                  </button>
+                </div>
+              </header>
+
+              <div class="world-team-editor-status d-none" id="worldTeamEditorStatus" role="status" aria-live="polite"></div>
+
+              <div class="world-team-editor-layout">
+                <section class="world-team-editor-board battle-side battle-side-player" aria-labelledby="worldTeamEditorBoardTitle">
+                  <div class="battle-side-heading">
+                    <span id="worldTeamEditorBoardTitle">Add from collection</span>
+                  </div>
+                  <div class="world-team-editor-grid-host" id="worldTeamEditorGrid"></div>
+                </section>
+
+                <section class="world-team-editor-collection" aria-label="Collection">
+                  <div class="world-team-editor-collection-grid" id="worldTeamEditorCollection"></div>
+                </section>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="modal fade dungeon-modal world-battle-modal" id="worldBattleModal" tabindex="-1" aria-label="World battle" aria-hidden="true">
       <div class="modal-dialog modal-fullscreen">
@@ -194,6 +236,6 @@
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/vendor/pixi/pixi.min.js"></script>
-    <script type="module" src="/app/js/world-ui.js?v=20260629-world-ui-v6"></script>
+    <script type="module" src="/app/js/world-ui.js?v=20260629-world-team-v4"></script>
   </body>
 </html>

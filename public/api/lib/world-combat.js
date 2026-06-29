@@ -2,7 +2,6 @@ const db = require('./db');
 const { simulateFight } = require('./combat');
 const { getDemonTypes } = require('./game-data');
 const { createRng } = require('./rng');
-const { getCurrentRunForPlayer } = require('./runs');
 const {
   assignFormationSlots,
   createRunDemonFromCollection,
@@ -16,32 +15,215 @@ const { resolvePlayerCombatBuffState } = require('./player-combat-buffs');
 
 const HUNT_REWARD_CYCLE_CAP = 288;
 const DEFAULT_ENEMY_RESPAWN_SECONDS = 300;
+const WORLD_TEAM_LIMIT = 6;
+const WORLD_FORMATION_SLOT_COUNT = 9;
 
 async function getActiveWorldTeam(playerId) {
-  const run = await getCurrentRunForPlayer(playerId);
-  const runTeam = Array.isArray(run?.state?.team) ? run.state.team : [];
-  if (runTeam.length) {
-    return assignFormationSlots(
-      runTeam.slice(0, 9).map((demon, index) => resetRunDemon(demon, demon.instanceId || `world-run-${index + 1}`)),
-      'player'
-    );
-  }
+  const savedRows = await getSavedWorldTeamRows(playerId);
 
+  return materializeWorldTeamRows(savedRows);
+}
+
+async function getSavedWorldTeamRows(playerId) {
   const [rows] = await db.query(
-    `SELECT id, source_demon_id, type_id, species, rarity, image_url, hp, atk, speed
-     FROM player_demons
-     WHERE player_id = ?
-     ORDER BY created_at DESC, id DESC
-     LIMIT 4`,
-    [playerId]
+    `SELECT pd.id,
+            pd.source_demon_id AS sourceDemonId,
+            pd.type_id AS typeId,
+            pd.species,
+            pd.rarity,
+            pd.image_url AS imageUrl,
+            pd.hp,
+            pd.atk,
+            pd.speed,
+            pwt.formation_slot AS formationSlot
+     FROM player_world_teams pwt
+     INNER JOIN player_demons pd
+       ON pd.id = pwt.demon_id
+      AND pd.player_id = pwt.player_id
+     WHERE pwt.player_id = ?
+     ORDER BY pwt.formation_slot ASC, pd.created_at DESC, pd.id DESC
+     LIMIT ?`,
+    [playerId, WORLD_TEAM_LIMIT]
   );
 
+  return rows;
+}
+
+async function materializeWorldTeamRows(rows = []) {
   const team = [];
   for (const row of rows) {
-    team.push(await createRunDemonFromCollection(row, `world-collection-${row.id}`));
+    const demon = await createRunDemonFromCollection(row, `world-collection-${row.id}`);
+    const formationSlot = normalizeWorldTeamSlot(row.formationSlot);
+    if (formationSlot !== null) {
+      demon.formationSlot = formationSlot;
+      demon.formationRow = formationSlot;
+    }
+    team.push(demon);
   }
 
   return assignFormationSlots(team.map((demon) => resetRunDemon(demon, demon.instanceId)), 'player');
+}
+
+async function saveActiveWorldTeam(playerId, requestedTeam = [], options = {}) {
+  const team = normalizeWorldTeamRequest(requestedTeam);
+  await assertWorldTeamDemonsBelongToPlayer(playerId, team);
+
+  const connection = await db.getConnection();
+  let committed = false;
+  let changed = false;
+
+  try {
+    await connection.beginTransaction();
+
+    const [currentRows] = await connection.query(
+      `SELECT demon_id AS demonId, formation_slot AS formationSlot
+       FROM player_world_teams
+       WHERE player_id = ?
+       ORDER BY formation_slot ASC, demon_id ASC
+       FOR UPDATE`,
+      [playerId]
+    );
+    changed = !areWorldTeamEntriesEqual(currentRows, team);
+
+    if (changed) {
+      await connection.query('DELETE FROM player_world_teams WHERE player_id = ?', [playerId]);
+
+      for (const entry of team) {
+        await connection.query(
+          `INSERT INTO player_world_teams (player_id, demon_id, formation_slot)
+           VALUES (?, ?, ?)`,
+          [playerId, entry.demonId, entry.formationSlot]
+        );
+      }
+    }
+
+    await connection.commit();
+    committed = true;
+  } catch (error) {
+    if (!committed) {
+      await connection.rollback();
+    }
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  const savedTeam = await getActiveWorldTeam(playerId);
+  return options.includeChanged
+    ? { team: savedTeam, changed }
+    : savedTeam;
+}
+
+function areWorldTeamEntriesEqual(currentRows = [], requestedTeam = []) {
+  const current = normalizeComparableWorldTeamEntries(
+    currentRows.map((entry) => ({
+      demonId: entry.demonId,
+      formationSlot: entry.formationSlot
+    }))
+  );
+  const requested = normalizeComparableWorldTeamEntries(requestedTeam);
+
+  if (current.length !== requested.length) return false;
+
+  return current.every((entry, index) => (
+    entry.demonId === requested[index].demonId &&
+    entry.formationSlot === requested[index].formationSlot
+  ));
+}
+
+function normalizeComparableWorldTeamEntries(entries = []) {
+  return entries
+    .map((entry) => ({
+      demonId: Number(entry.demonId),
+      formationSlot: Number(entry.formationSlot)
+    }))
+    .filter((entry) => (
+      Number.isInteger(entry.demonId) &&
+      Number.isInteger(entry.formationSlot)
+    ))
+    .sort((a, b) => (
+      a.formationSlot - b.formationSlot ||
+      a.demonId - b.demonId
+    ));
+}
+
+function normalizeWorldTeamRequest(requestedTeam = []) {
+  if (!Array.isArray(requestedTeam)) {
+    const error = new Error('World team must be an array.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (requestedTeam.length > WORLD_TEAM_LIMIT) {
+    const error = new Error(`World team cannot exceed ${WORLD_TEAM_LIMIT} demons.`);
+    error.status = 400;
+    throw error;
+  }
+
+  const seenDemons = new Set();
+  const seenSlots = new Set();
+
+  return requestedTeam.map((entry) => {
+    const demonId = Number(entry?.demonId ?? entry?.collectionDemonId ?? entry?.id);
+    const formationSlot = normalizeWorldTeamSlot(entry?.formationSlot ?? entry?.slot);
+
+    if (!Number.isInteger(demonId) || demonId <= 0) {
+      const error = new Error('Choose a valid collection demon.');
+      error.status = 400;
+      throw error;
+    }
+
+    if (formationSlot === null) {
+      const error = new Error('Choose a valid formation slot.');
+      error.status = 400;
+      throw error;
+    }
+
+    if (seenDemons.has(demonId)) {
+      const error = new Error('Each demon can only appear once in your world team.');
+      error.status = 400;
+      throw error;
+    }
+
+    if (seenSlots.has(formationSlot)) {
+      const error = new Error('Each world team slot can only hold one demon.');
+      error.status = 400;
+      throw error;
+    }
+
+    seenDemons.add(demonId);
+    seenSlots.add(formationSlot);
+
+    return { demonId, formationSlot };
+  });
+}
+
+async function assertWorldTeamDemonsBelongToPlayer(playerId, team = []) {
+  if (!team.length) return;
+
+  const ids = team.map((entry) => entry.demonId);
+  const placeholders = ids.map(() => '?').join(', ');
+  const [rows] = await db.query(
+    `SELECT id
+     FROM player_demons
+     WHERE player_id = ?
+       AND id IN (${placeholders})`,
+    [playerId, ...ids]
+  );
+  const ownedIds = new Set(rows.map((row) => Number(row.id)));
+  const missingId = ids.find((id) => !ownedIds.has(id));
+
+  if (missingId) {
+    const error = new Error('That demon is not in your collection.');
+    error.status = 404;
+    throw error;
+  }
+}
+
+function normalizeWorldTeamSlot(slot) {
+  const number = Number(slot);
+  if (!Number.isInteger(number) || number < 0 || number >= WORLD_FORMATION_SLOT_COUNT) return null;
+  return number;
 }
 
 function getActiveWorldTeamSummary(team = []) {
@@ -91,7 +273,7 @@ async function createHuntSnapshot(player, encounter) {
   const now = new Date();
 
   if (!playerTeam.length) {
-    const error = new Error('Choose an active team before starting a hunt.');
+    const error = new Error('Choose a hunting team before starting a hunt.');
     error.status = 409;
     throw error;
   }
@@ -161,7 +343,7 @@ async function simulateWorldCombat({ player, encounter, combatType, seed }) {
   ]);
 
   if (!playerTeam.length) {
-    const error = new Error('Choose an active team before entering combat.');
+    const error = new Error('Choose a hunting team before entering combat.');
     error.status = 409;
     throw error;
   }
@@ -296,6 +478,7 @@ module.exports = {
   getActiveWorldTeamSummary,
   getEnemyRespawnSeconds,
   materializeEncounterTeam,
+  saveActiveWorldTeam,
   simulateTryHunt,
   simulateWorldAmbush
 };

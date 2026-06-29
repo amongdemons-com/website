@@ -1,4 +1,4 @@
-import { COMBAT_THEMES } from './dungeon/config.js';
+import { BATTLE_SPEED_KEY, BATTLE_SPEED_OPTIONS, COMBAT_THEMES, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE } from './dungeon/config.js';
 import { registerDungeonActions } from './dungeon/registry.js';
 import { state as dungeonState, elements as dungeonElements } from './dungeon/state.js';
 import * as dungeonDom from './dungeon/dom.js';
@@ -20,6 +20,9 @@ import * as dungeonUtils from './dungeon/utils.js';
   const api = window.AmongDemons.api;
   const appUrl = window.AmongDemons.appUrl || ((value) => value);
   const renderIcon = window.AmongDemons?.ui?.renderIcon || (() => '');
+  const renderDemonCard = window.AmongDemons?.ui?.renderDemonCard || (() => '');
+  const openDemonDetailsModal = window.AmongDemons?.ui?.openDemonDetailsModal || (() => {});
+  const replaceStaticIcons = window.AmongDemons?.ui?.replaceStaticIcons || (() => {});
   const TILE_SIZE = 64;
   const WORLD_RADIUS = 50;
   const ZONE_START_RADIUS = 24;
@@ -35,6 +38,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   const HUNT_DEFAULT_RESPAWN_SECONDS = 300;
   const HUNT_REWARD_CYCLE_CAP = 288;
   const HUNT_STATUS_REFRESH_MS = 15000;
+  const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
   const BOARD_COLORS = {
     background: 0x070806,
@@ -91,6 +95,15 @@ import * as dungeonUtils from './dungeon/utils.js';
     epic: '#9365B8',
     legendary: '#FAC51C',
     mythic: '#E25041'
+  };
+  const RARITY_SORT_RANK = {
+    mythic: 0,
+    mithyc: 0,
+    legendary: 1,
+    epic: 2,
+    rare: 3,
+    uncommon: 4,
+    common: 5
   };
 
   const state = {
@@ -153,7 +166,18 @@ import * as dungeonUtils from './dungeon/utils.js';
     worldEncounterTab: 'pve',
     activeWorldBattle: null,
     activeWorldBattleMeta: null,
-    worldBattleReplayToken: 0
+    worldBattleReplayToken: 0,
+    worldTeamEditor: {
+      collection: [],
+      team: [],
+      loaded: false,
+      loading: false,
+      saving: false,
+      status: '',
+      statusType: 'info',
+      drag: null,
+      suppressClickUntil: 0
+    }
   };
 
   const elements = {};
@@ -189,7 +213,14 @@ import * as dungeonUtils from './dungeon/utils.js';
       'worldTargetTooltip',
       'worldEncounterTooltip',
       'worldHuntTooltip',
+      'worldEditTeamButton',
       'worldTeamSummary',
+      'worldTeamModal',
+      'worldTeamEditorStatus',
+      'worldTeamEditorCount',
+      'worldTeamEditorGrid',
+      'worldTeamEditorCollection',
+      'worldTeamSaveButton',
       'worldShrinePanel',
       'worldEncounterHeading',
       'worldEncounterList',
@@ -206,6 +237,15 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function bindDomControls() {
     elements.worldPositionButton?.addEventListener('click', () => resetCameraOnHunter());
+    elements.worldEditTeamButton?.addEventListener('click', openWorldTeamEditor);
+    elements.worldTeamSaveButton?.addEventListener('click', saveWorldTeamEditor);
+    elements.worldTeamModal?.addEventListener('pointerdown', onWorldTeamEditorPointerDown);
+    elements.worldTeamModal?.addEventListener('click', onWorldTeamEditorCardClick);
+    elements.worldTeamModal?.addEventListener('keydown', onWorldTeamEditorCardKeydown);
+    elements.worldTeamModal?.addEventListener('hidden.bs.modal', () => {
+      cancelWorldTeamEditorDrag();
+      setWorldTeamEditorStatus('');
+    });
     bindWorldSidePanel();
 
     elements.worldEncounterList?.addEventListener('click', (event) => {
@@ -1689,12 +1729,561 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     if (!members.length) {
       elements.worldTeamSummary.innerHTML = `
-        <p class="world-empty-text">No active team.</p>
+        <p class="world-empty-text">No hunting team.</p>
       `;
       return;
     }
 
     elements.worldTeamSummary.innerHTML = `<div class="world-team-demons">${members.map(renderDemonPortrait).join('')}</div>`;
+  }
+
+  async function openWorldTeamEditor() {
+    const modalElement = elements.worldTeamModal;
+    const modalApi = window.bootstrap?.Modal;
+    if (!modalElement || !modalApi) {
+      setMessage('Hunting team editor is unavailable.', 'danger');
+      return;
+    }
+
+    state.worldTeamEditor.loading = true;
+    state.worldTeamEditor.loaded = false;
+    setWorldTeamEditorStatus('Loading team...', 'info');
+    renderWorldTeamEditor();
+    modalApi.getOrCreateInstance(modalElement).show();
+
+    try {
+      const payload = await api('/api/world/team');
+      const collection = normalizeWorldTeamEditorCollection(payload.collection || []);
+      state.worldTeamEditor.collection = collection;
+      state.worldTeamEditor.team = normalizeWorldTeamEditorTeam(payload.team || [], collection);
+      state.worldTeamEditor.loaded = true;
+      setWorldTeamEditorStatus('');
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setWorldTeamEditorStatus(error.message || 'Could not load hunting team.', 'danger');
+    } finally {
+      state.worldTeamEditor.loading = false;
+      renderWorldTeamEditor();
+    }
+  }
+
+  async function saveWorldTeamEditor() {
+    const editor = state.worldTeamEditor;
+    if (editor.loading || editor.saving || !editor.loaded) return;
+
+    const team = getSortedWorldTeamEditorTeam();
+
+    editor.saving = true;
+    setWorldTeamEditorStatus('Saving team...', 'info');
+    renderWorldTeamEditor();
+
+    try {
+      const payload = await api('/api/world/team', {
+        method: 'POST',
+        body: {
+          team: team.map((demon) => ({
+            demonId: getWorldTeamEditorDemonId(demon),
+            formationSlot: normalizeWorldTeamEditorSlot(demon.formationSlot)
+          }))
+        }
+      });
+
+      state.activeTeam = payload.activeTeam || null;
+      if (payload.hunt) {
+        setHuntState(payload.hunt);
+      }
+      if (payload.player) {
+        state.player = payload.player;
+        window.AmongDemons.ui?.updateNavAccount?.(payload.player);
+      }
+      renderTeamSummary();
+      renderEncounterPanel();
+      syncHuntTicker();
+      setMessage(getWorldTeamSaveMessage(payload), 'success');
+      window.bootstrap?.Modal.getOrCreateInstance(elements.worldTeamModal)?.hide();
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setWorldTeamEditorStatus(error.message || 'Could not save hunting team.', 'danger');
+    } finally {
+      editor.saving = false;
+      renderWorldTeamEditor();
+    }
+  }
+
+  function getWorldTeamSaveMessage(payload = {}) {
+    const reset = payload.huntingReset || {};
+    if (!payload.teamChanged) return 'Hunting team updated.';
+
+    if (reset.stoppedHunt) {
+      const rewards = payload.rewards || {};
+      return `Hunting team updated. Active hunt ended; earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls. Hunting spots reset.`;
+    }
+
+    return 'Hunting team updated. Hunting spots reset.';
+  }
+
+  function renderWorldTeamEditor() {
+    const editor = state.worldTeamEditor;
+    const team = getSortedWorldTeamEditorTeam();
+
+    renderWorldTeamEditorStatus();
+    setText(elements.worldTeamEditorCount, `${team.length}/${WORLD_TEAM_LIMIT}`);
+
+    if (elements.worldTeamSaveButton) {
+      elements.worldTeamSaveButton.disabled = editor.loading || editor.saving || !editor.loaded;
+      elements.worldTeamSaveButton.classList.toggle('is-busy', editor.saving);
+      elements.worldTeamSaveButton.innerHTML = editor.saving
+        ? '<span class="dungeon-action-spinner" aria-hidden="true"></span><span>Saving</span>'
+        : `${renderIcon('save')}<span>Save</span>`;
+    }
+
+    if (elements.worldTeamEditorGrid) {
+      elements.worldTeamEditorGrid.innerHTML = renderWorldTeamEditorFormation(team);
+    }
+
+    if (elements.worldTeamEditorCollection) {
+      elements.worldTeamEditorCollection.classList.add('world-team-drop-target');
+      elements.worldTeamEditorCollection.dataset.worldTeamDropZone = 'collection';
+      elements.worldTeamEditorCollection.innerHTML = renderWorldTeamEditorCollection();
+    }
+
+    replaceStaticIcons();
+  }
+
+  function renderWorldTeamEditorStatus() {
+    const status = elements.worldTeamEditorStatus;
+    if (!status) return;
+
+    const text = state.worldTeamEditor.status || '';
+    status.textContent = text;
+    status.className = [
+      'world-team-editor-status',
+      text ? '' : 'd-none',
+      `is-${state.worldTeamEditor.statusType || 'info'}`
+    ].filter(Boolean).join(' ');
+  }
+
+  function setWorldTeamEditorStatus(text, type = 'info') {
+    state.worldTeamEditor.status = text || '';
+    state.worldTeamEditor.statusType = type || 'info';
+    renderWorldTeamEditorStatus();
+  }
+
+  function renderWorldTeamEditorFormation(team = []) {
+    const assignments = new Map(team.map((demon) => [normalizeWorldTeamEditorSlot(demon.formationSlot), demon]));
+
+    return `
+      <div class="battle-formation battle-formation-grid battle-formation-player" role="list" aria-label="Hunting team formation">
+        ${Array.from({ length: FORMATION_GRID_SIZE }, (item, slot) => renderWorldTeamEditorSlot(assignments.get(slot), slot)).join('')}
+      </div>
+    `;
+  }
+
+  function renderWorldTeamEditorSlot(demon, slot) {
+    const position = getWorldTeamEditorSlotPosition(slot);
+    const classes = [
+      'formation-slot',
+      `formation-slot-${position}`,
+      demon ? 'has-demon' : 'is-empty'
+    ].join(' ');
+
+    return `
+      <div class="${classes}" data-formation-slot="${slot}" role="listitem" aria-label="${escapeAttribute(`Hunting team slot ${slot + 1}`)}">
+        <div class="formation-slot-cards world-team-drop-target" data-world-team-drop-zone="team" data-world-team-slot="${slot}">
+          ${demon ? renderWorldTeamEditorDemonCard(demon, 'team', slot) : renderWorldTeamEditorEmptySlot(position, slot + 1)}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderWorldTeamEditorEmptySlot(position, slotNumber) {
+    return `
+      <div class="formation-empty formation-empty-${position}" aria-hidden="true" data-slot-number="${slotNumber}">
+        <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" width="1024" height="1024" loading="lazy" decoding="async" draggable="false">
+      </div>
+    `;
+  }
+
+  function renderWorldTeamEditorCollection() {
+    const editor = state.worldTeamEditor;
+    if (editor.loading) return '<p class="world-empty-text">Loading...</p>';
+    if (!editor.collection.length) return '<p class="world-empty-text">No collection demons.</p>';
+
+    return editor.collection.map((demon) => renderWorldTeamEditorDemonCard(demon, 'collection')).join('');
+  }
+
+  function renderWorldTeamEditorDemonCard(demon, zone, slot = null) {
+    const demonId = getWorldTeamEditorDemonId(demon);
+    const teamEntry = getWorldTeamEditorTeamEntry(demonId);
+    const isCollection = zone === 'collection';
+    const isInTeam = Boolean(teamEntry);
+    const displayDemon = normalizeWorldTeamEditorCardDemon(
+      isCollection ? { ...demon, ...(teamEntry ? { formationSlot: teamEntry.formationSlot } : {}) } : demon,
+      zone,
+      slot
+    );
+    const classes = [
+      'world-team-editor-card',
+      'world-team-drop-target',
+      isCollection ? 'world-team-editor-collection-card' : 'world-team-editor-team-card',
+      isCollection && isInTeam ? 'is-in-team' : ''
+    ].filter(Boolean).join(' ');
+    const overlayHtml = isCollection && isInTeam
+      ? `<span class="world-team-editor-in-team-mark" title="In team" aria-label="In team">${renderIcon('check')}</span>`
+      : '';
+
+    return renderDemonCard(displayDemon, {
+      className: classes,
+      overlayHtml,
+      attributes: {
+        'data-world-team-demon-id': demonId,
+        'data-world-team-drop-zone': zone,
+        'data-world-team-source-zone': zone,
+        'data-world-team-slot': Number.isInteger(slot) ? slot : null,
+        'data-world-team-in-team': isInTeam ? 'true' : null,
+        role: 'button',
+        tabindex: '0'
+      }
+    });
+  }
+
+  function normalizeWorldTeamEditorCollection(collection = []) {
+    return (Array.isArray(collection) ? collection : [])
+      .map((demon) => {
+        const demonId = Number(demon?.id ?? demon?.collectionDemonId);
+        if (!Number.isInteger(demonId) || demonId <= 0) return null;
+        return normalizeWorldTeamEditorCardDemon({
+          ...demon,
+          id: demonId,
+          collectionDemonId: demonId
+        }, 'collection');
+      })
+      .filter(Boolean)
+      .sort(compareWorldTeamEditorCollectionDemons);
+  }
+
+  function compareWorldTeamEditorCollectionDemons(a, b) {
+    return getWorldTeamEditorRarityRank(a?.rarity) - getWorldTeamEditorRarityRank(b?.rarity)
+      || getWorldTeamEditorCreatedTime(b) - getWorldTeamEditorCreatedTime(a)
+      || getWorldTeamEditorDemonId(b) - getWorldTeamEditorDemonId(a)
+      || String(a?.species || '').localeCompare(String(b?.species || ''));
+  }
+
+  function getWorldTeamEditorRarityRank(rarity) {
+    return RARITY_SORT_RANK[String(rarity || 'common').toLowerCase()] ?? 99;
+  }
+
+  function getWorldTeamEditorCreatedTime(demon = {}) {
+    const time = Date.parse(demon.createdAt || demon.created_at || '');
+    return Number.isFinite(time) ? time : 0;
+  }
+
+  function normalizeWorldTeamEditorTeam(team = [], collection = []) {
+    const collectionById = new Map(collection.map((demon) => [getWorldTeamEditorDemonId(demon), demon]));
+    const usedDemons = new Set();
+    const usedSlots = new Set();
+
+    return (Array.isArray(team) ? team : [])
+      .map((demon, index) => {
+        const demonId = Number(demon?.collectionDemonId ?? demon?.id);
+        if (!Number.isInteger(demonId) || demonId <= 0 || usedDemons.has(demonId)) return null;
+        const requestedSlot = normalizeWorldTeamEditorSlot(demon.formationSlot ?? demon.formationRow);
+        const slot = requestedSlot !== null && !usedSlots.has(requestedSlot)
+          ? requestedSlot
+          : getNextWorldTeamEditorOpenSlot(usedSlots, index);
+        if (slot === null) return null;
+
+        usedDemons.add(demonId);
+        usedSlots.add(slot);
+
+        return createWorldTeamEditorTeamEntry(collectionById.get(demonId) || demon, slot);
+      })
+      .filter(Boolean)
+      .sort(compareWorldTeamEditorSlots);
+  }
+
+  function normalizeWorldTeamEditorCardDemon(demon = {}, zone = 'collection', slot = null) {
+    const demonId = getWorldTeamEditorDemonId(demon);
+    const maxHp = Math.max(1, Number(demon.maxHp) || Number(demon.hp) || 1);
+    const currentHp = Math.max(0, Math.min(maxHp, Number(demon.hp) || maxHp));
+    const formationSlot = normalizeWorldTeamEditorSlot(slot ?? demon.formationSlot ?? demon.formationRow);
+
+    return {
+      ...demon,
+      id: demonId,
+      collectionDemonId: demonId,
+      instanceId: `world-team-editor-${zone}-${demonId}`,
+      maxHp,
+      hp: currentHp,
+      formationSlot,
+      formationRow: formationSlot,
+      position: formationSlot === null ? normalizeWorldTeamEditorPosition(demon.preferredPosition || demon.position) : getWorldTeamEditorSlotPosition(formationSlot)
+    };
+  }
+
+  function createWorldTeamEditorTeamEntry(demon, slot) {
+    const normalizedSlot = normalizeWorldTeamEditorSlot(slot);
+    return normalizeWorldTeamEditorCardDemon(demon, 'team', normalizedSlot === null ? 0 : normalizedSlot);
+  }
+
+  function onWorldTeamEditorPointerDown(event) {
+    if (!elements.worldTeamModal?.classList.contains('show')) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (state.worldTeamEditor.loading || state.worldTeamEditor.saving) return;
+
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const card = target?.closest('.world-team-editor-card[data-world-team-demon-id]');
+    if (!card || !elements.worldTeamModal.contains(card)) return;
+
+    const demonId = Number(card.dataset.worldTeamDemonId);
+    if (!Number.isInteger(demonId) || demonId <= 0) return;
+
+    const drag = {
+      card,
+      demonId,
+      pointerId: event.pointerId,
+      sourceZone: card.dataset.worldTeamSourceZone === 'team' ? 'team' : 'collection',
+      sourceSlot: normalizeWorldTeamEditorSlot(card.dataset.worldTeamSlot),
+      startX: event.clientX,
+      startY: event.clientY,
+      currentTarget: null,
+      ghost: null,
+      active: false,
+      onMove: null,
+      onUp: null,
+      onCancel: null
+    };
+
+    drag.onMove = (moveEvent) => moveWorldTeamEditorDrag(moveEvent);
+    drag.onUp = (upEvent) => finishWorldTeamEditorDrag(upEvent);
+    drag.onCancel = (cancelEvent) => cancelWorldTeamEditorDrag(cancelEvent);
+    state.worldTeamEditor.drag = drag;
+
+    document.addEventListener('pointermove', drag.onMove, { passive: false });
+    document.addEventListener('pointerup', drag.onUp);
+    document.addEventListener('pointercancel', drag.onCancel);
+  }
+
+  function moveWorldTeamEditorDrag(event) {
+    const drag = state.worldTeamEditor.drag;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    if (!drag.active && Math.hypot(dx, dy) < 8) return;
+    if (!drag.active) activateWorldTeamEditorDrag(drag, event.clientX, event.clientY);
+
+    if (event.cancelable) event.preventDefault();
+    positionWorldTeamEditorDragGhost(drag, event.clientX, event.clientY);
+    setWorldTeamEditorDropTarget(drag, getWorldTeamEditorDropTarget(event.clientX, event.clientY, drag));
+  }
+
+  function activateWorldTeamEditorDrag(drag, clientX, clientY) {
+    drag.active = true;
+    drag.card.classList.add('is-dragging');
+    document.body.classList.add('is-world-team-dragging');
+    drag.ghost = document.createElement('div');
+    drag.ghost.className = 'pointer-drag-ghost world-team-drag-ghost';
+    drag.ghost.innerHTML = drag.card.outerHTML;
+    document.body.appendChild(drag.ghost);
+    positionWorldTeamEditorDragGhost(drag, clientX, clientY);
+  }
+
+  function finishWorldTeamEditorDrag(event) {
+    const drag = state.worldTeamEditor.drag;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+
+    if (drag.active) {
+      if (event.cancelable) event.preventDefault();
+      const target = getWorldTeamEditorDropTarget(event.clientX, event.clientY, drag);
+      if (target) {
+        applyWorldTeamEditorDrop(drag, target);
+      }
+      state.worldTeamEditor.suppressClickUntil = Date.now() + 250;
+    }
+
+    cleanupWorldTeamEditorDrag();
+  }
+
+  function cancelWorldTeamEditorDrag(event = null) {
+    const drag = state.worldTeamEditor.drag;
+    if (event && drag && event.pointerId !== drag.pointerId) return;
+    cleanupWorldTeamEditorDrag();
+  }
+
+  function cleanupWorldTeamEditorDrag() {
+    const drag = state.worldTeamEditor.drag;
+    if (!drag) return;
+
+    document.removeEventListener('pointermove', drag.onMove);
+    document.removeEventListener('pointerup', drag.onUp);
+    document.removeEventListener('pointercancel', drag.onCancel);
+    drag.card?.classList.remove('is-dragging');
+    drag.ghost?.remove();
+    drag.currentTarget?.classList.remove('is-drag-over');
+    document.body.classList.remove('is-world-team-dragging');
+    state.worldTeamEditor.drag = null;
+  }
+
+  function positionWorldTeamEditorDragGhost(drag, clientX, clientY) {
+    if (!drag?.ghost) return;
+    drag.ghost.style.left = `${Math.round(clientX)}px`;
+    drag.ghost.style.top = `${Math.round(clientY)}px`;
+  }
+
+  function getWorldTeamEditorDropTarget(clientX, clientY, drag) {
+    const element = document.elementFromPoint(clientX, clientY);
+    const target = element?.closest?.('.world-team-drop-target');
+    if (!target || !elements.worldTeamModal?.contains(target)) return null;
+    return canDropWorldTeamEditorDragOnTarget(drag, target) ? target : null;
+  }
+
+  function setWorldTeamEditorDropTarget(drag, target) {
+    if (drag.currentTarget === target) return;
+    drag.currentTarget?.classList.remove('is-drag-over');
+    drag.currentTarget = target;
+    drag.currentTarget?.classList.add('is-drag-over');
+  }
+
+  function canDropWorldTeamEditorDragOnTarget(drag, target) {
+    if (!drag || !target) return false;
+    const zone = target.dataset.worldTeamDropZone;
+    if (zone === 'team') {
+      const slot = normalizeWorldTeamEditorSlot(target.dataset.worldTeamSlot);
+      return slot !== null;
+    }
+    if (zone === 'collection') {
+      return Boolean(getWorldTeamEditorTeamEntry(drag.demonId));
+    }
+    return false;
+  }
+
+  function applyWorldTeamEditorDrop(drag, target) {
+    const zone = target.dataset.worldTeamDropZone;
+    if (zone === 'team') {
+      const slot = normalizeWorldTeamEditorSlot(target.dataset.worldTeamSlot);
+      if (slot !== null) moveWorldTeamEditorDemonToSlot(drag.demonId, slot);
+    } else if (zone === 'collection') {
+      removeWorldTeamEditorDemonFromTeam(drag.demonId);
+    }
+
+    renderWorldTeamEditor();
+  }
+
+  function moveWorldTeamEditorDemonToSlot(demonId, targetSlot) {
+    const editor = state.worldTeamEditor;
+    const sourceEntry = getWorldTeamEditorTeamEntry(demonId);
+    const targetEntry = editor.team.find((demon) => normalizeWorldTeamEditorSlot(demon.formationSlot) === targetSlot) || null;
+    const sourceDemon = sourceEntry || getWorldTeamEditorCollectionDemon(demonId);
+    if (!sourceDemon) return;
+    if (!sourceEntry && !targetEntry && editor.team.length >= WORLD_TEAM_LIMIT) {
+      setWorldTeamEditorStatus(`Hunting team can hold up to ${WORLD_TEAM_LIMIT} demons.`, 'danger');
+      return;
+    }
+
+    const sourceSlot = normalizeWorldTeamEditorSlot(sourceEntry?.formationSlot);
+    const nextTeam = editor.team.filter((demon) => {
+      const id = getWorldTeamEditorDemonId(demon);
+      const slot = normalizeWorldTeamEditorSlot(demon.formationSlot);
+      return id !== demonId && slot !== targetSlot;
+    });
+
+    if (sourceEntry && targetEntry && getWorldTeamEditorDemonId(targetEntry) !== demonId && sourceSlot !== null) {
+      nextTeam.push(createWorldTeamEditorTeamEntry(targetEntry, sourceSlot));
+    }
+
+    nextTeam.push(createWorldTeamEditorTeamEntry(sourceDemon, targetSlot));
+    editor.team = nextTeam.sort(compareWorldTeamEditorSlots);
+  }
+
+  function removeWorldTeamEditorDemonFromTeam(demonId) {
+    state.worldTeamEditor.team = state.worldTeamEditor.team
+      .filter((demon) => getWorldTeamEditorDemonId(demon) !== Number(demonId))
+      .sort(compareWorldTeamEditorSlots);
+  }
+
+  function onWorldTeamEditorCardClick(event) {
+    if (Date.now() < state.worldTeamEditor.suppressClickUntil) {
+      event.preventDefault();
+      return;
+    }
+
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const card = target?.closest('.world-team-editor-card[data-world-team-demon-id]');
+    if (!card || !elements.worldTeamModal?.contains(card)) return;
+
+    openWorldTeamEditorCardDetails(card);
+  }
+
+  function onWorldTeamEditorCardKeydown(event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const card = target?.closest('.world-team-editor-card[data-world-team-demon-id]');
+    if (!card || !elements.worldTeamModal?.contains(card)) return;
+
+    event.preventDefault();
+    openWorldTeamEditorCardDetails(card);
+  }
+
+  function openWorldTeamEditorCardDetails(card) {
+    const demonId = Number(card.dataset.worldTeamDemonId);
+    const demon = getWorldTeamEditorTeamEntry(demonId) || getWorldTeamEditorCollectionDemon(demonId);
+    if (demon) openDemonDetailsModal(demon);
+  }
+
+  function getWorldTeamEditorCollectionDemon(demonId) {
+    const id = Number(demonId);
+    return state.worldTeamEditor.collection.find((demon) => getWorldTeamEditorDemonId(demon) === id) || null;
+  }
+
+  function getWorldTeamEditorTeamEntry(demonId) {
+    const id = Number(demonId);
+    return state.worldTeamEditor.team.find((demon) => getWorldTeamEditorDemonId(demon) === id) || null;
+  }
+
+  function getSortedWorldTeamEditorTeam() {
+    return [...(state.worldTeamEditor.team || [])].sort(compareWorldTeamEditorSlots);
+  }
+
+  function compareWorldTeamEditorSlots(a, b) {
+    return (normalizeWorldTeamEditorSlot(a?.formationSlot) ?? FORMATION_GRID_SIZE)
+      - (normalizeWorldTeamEditorSlot(b?.formationSlot) ?? FORMATION_GRID_SIZE)
+      || getWorldTeamEditorDemonId(a) - getWorldTeamEditorDemonId(b);
+  }
+
+  function getNextWorldTeamEditorOpenSlot(usedSlots, fallbackIndex = 0) {
+    const preferred = normalizeWorldTeamEditorSlot(fallbackIndex);
+    if (preferred !== null && !usedSlots.has(preferred)) return preferred;
+    for (let slot = 0; slot < FORMATION_GRID_SIZE; slot += 1) {
+      if (!usedSlots.has(slot)) return slot;
+    }
+    return null;
+  }
+
+  function getWorldTeamEditorDemonId(demon = {}) {
+    return Number(demon.collectionDemonId ?? demon.id ?? demon.demonId) || 0;
+  }
+
+  function getWorldTeamEditorSlotPosition(slot) {
+    const normalizedSlot = normalizeWorldTeamEditorSlot(slot);
+    const column = (normalizedSlot === null ? 0 : normalizedSlot) % FORMATION_GRID_COLUMNS;
+    return column === FORMATION_GRID_COLUMNS - 1 ? 'front' : 'back';
+  }
+
+  function normalizeWorldTeamEditorSlot(slot) {
+    const number = Number(slot);
+    if (!Number.isInteger(number) || number < 0 || number >= FORMATION_GRID_SIZE) return null;
+    return number;
+  }
+
+  function normalizeWorldTeamEditorPosition(position) {
+    return position === 'back' ? 'back' : 'front';
   }
 
   function renderShrinePanel() {

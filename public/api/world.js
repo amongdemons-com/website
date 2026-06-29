@@ -15,9 +15,11 @@ const {
   createHuntSnapshot,
   getActiveWorldTeam,
   getActiveWorldTeamSummary,
+  saveActiveWorldTeam,
   simulateTryHunt,
   simulateWorldAmbush
 } = require('./lib/world-combat');
+const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const worldMap = require('./data/map.json');
 
 const router = express.Router();
@@ -68,6 +70,44 @@ router.get('/world/state', requireAuth, async (req, res) => {
     playersAt,
     activeTeam: getActiveWorldTeamSummary(activeWorldTeam),
     hunt
+  });
+});
+
+router.get('/world/team', requireAuth, async (req, res) => {
+  const [team, collection] = await Promise.all([
+    getActiveWorldTeam(req.player.id),
+    getWorldTeamCollection(req.player.id)
+  ]);
+
+  res.json({
+    team,
+    activeTeam: getActiveWorldTeamSummary(team),
+    collection
+  });
+});
+
+router.post('/world/team', requireAuth, async (req, res) => {
+  const saveResult = await saveActiveWorldTeam(req.player.id, req.body?.team || [], {
+    includeChanged: true
+  });
+  const reset = saveResult.changed
+    ? await settleActiveHunt(req.player, { clearUnlocks: true })
+    : null;
+
+  res.json({
+    ok: true,
+    team: saveResult.team,
+    teamChanged: saveResult.changed,
+    activeTeam: getActiveWorldTeamSummary(saveResult.team),
+    ...(reset ? {
+      player: reset.player,
+      rewards: reset.rewards,
+      huntingReset: {
+        stoppedHunt: reset.stoppedHunt,
+        clearedUnlocks: reset.clearedUnlocks
+      },
+      hunt: reset.hunt
+    } : {})
   });
 });
 
@@ -176,72 +216,7 @@ router.post('/world/hunting/start', requireAuth, async (req, res) => {
 });
 
 router.post('/world/hunting/stop', requireAuth, async (req, res) => {
-  const connection = await db.getConnection();
-  let committed = false;
-
-  try {
-    await connection.beginTransaction();
-
-    const [huntRows] = await connection.query(
-      'SELECT * FROM player_active_hunts WHERE player_id = ? LIMIT 1 FOR UPDATE',
-      [req.player.id]
-    );
-
-    if (!huntRows.length) {
-      await connection.rollback();
-      committed = true;
-      return res.json({
-        ok: true,
-        alreadyStopped: true,
-        rewards: createEmptyHuntRewards(),
-        player: cleanPlayer(req.player),
-        hunt: await getHuntState(req.player.id)
-      });
-    }
-
-    const snapshot = parseHuntSnapshot(huntRows[0].snapshot);
-    const rewards = await calculateHuntRewards(snapshot, new Date());
-
-    const [lockedRows] = await connection.query(
-      'SELECT level, xp FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
-      [req.player.id]
-    );
-    const currentLevel = Number(lockedRows[0]?.level) || 1;
-    const currentXp = Number(lockedRows[0]?.xp) || 0;
-    const nextXp = currentXp + (Number(rewards.xp) || 0);
-    const nextLevel = getNextAccountLevel(currentLevel, nextXp);
-
-    await connection.query(
-      'UPDATE players SET xp = ?, souls = souls + ?, level = ? WHERE id = ?',
-      [nextXp, rewards.souls, nextLevel, req.player.id]
-    );
-    await connection.query(
-      'DELETE FROM player_active_hunts WHERE player_id = ?',
-      [req.player.id]
-    );
-
-    const [playerRows] = await connection.query(
-      'SELECT * FROM players WHERE id = ? LIMIT 1',
-      [req.player.id]
-    );
-
-    await connection.commit();
-    committed = true;
-
-    res.json({
-      ok: true,
-      rewards,
-      player: playerRows[0] ? cleanPlayer(playerRows[0]) : null,
-      hunt: await getHuntState(req.player.id)
-    });
-  } catch (error) {
-    if (!committed) {
-      await connection.rollback();
-    }
-    throw error;
-  } finally {
-    connection.release();
-  }
+  res.json(await settleActiveHunt(req.player));
 });
 
 router.get('/world/hunting/status', requireAuth, async (req, res) => {
@@ -356,6 +331,27 @@ async function getActiveTeamSummary(playerId) {
   return getActiveWorldTeamSummary(await getActiveWorldTeam(playerId));
 }
 
+async function getWorldTeamCollection(playerId) {
+  const [rows] = await db.query(
+    `SELECT id,
+            source_demon_id AS sourceDemonId,
+            type_id AS typeId,
+            species,
+            rarity,
+            image_url AS imageUrl,
+            hp,
+            atk,
+            speed,
+            created_at AS createdAt
+     FROM player_demons
+     WHERE player_id = ?
+     ORDER BY created_at DESC, id DESC`,
+    [playerId]
+  );
+
+  return enrichCollectionDemonsWithTraining(rows);
+}
+
 async function resolveTravelEvents(player, travelEvents = []) {
   const resolved = [];
 
@@ -381,6 +377,86 @@ async function resolveTravelEvents(player, travelEvents = []) {
   }
 
   return resolved;
+}
+
+async function settleActiveHunt(player, options = {}) {
+  const clearUnlocks = Boolean(options.clearUnlocks);
+  const connection = await db.getConnection();
+  let committed = false;
+  let rewards = createEmptyHuntRewards();
+  let stoppedHunt = false;
+  let clearedUnlocks = 0;
+  // `player` is req.player, which requireAuth already passed through cleanPlayer.
+  // The DB row fetched below is the raw shape that still needs cleaning.
+  let playerPayload = player;
+
+  try {
+    await connection.beginTransaction();
+
+    const [huntRows] = await connection.query(
+      'SELECT * FROM player_active_hunts WHERE player_id = ? LIMIT 1 FOR UPDATE',
+      [player.id]
+    );
+
+    if (huntRows.length) {
+      const snapshot = parseHuntSnapshot(huntRows[0].snapshot);
+      rewards = await calculateHuntRewards(snapshot, new Date());
+
+      const [lockedRows] = await connection.query(
+        'SELECT level, xp FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
+        [player.id]
+      );
+      const currentLevel = Number(lockedRows[0]?.level) || 1;
+      const currentXp = Number(lockedRows[0]?.xp) || 0;
+      const nextXp = currentXp + (Number(rewards.xp) || 0);
+      const nextLevel = getNextAccountLevel(currentLevel, nextXp);
+
+      await connection.query(
+        'UPDATE players SET xp = ?, souls = souls + ?, level = ? WHERE id = ?',
+        [nextXp, rewards.souls, nextLevel, player.id]
+      );
+      await connection.query(
+        'DELETE FROM player_active_hunts WHERE player_id = ?',
+        [player.id]
+      );
+
+      stoppedHunt = true;
+    }
+
+    if (clearUnlocks) {
+      const [result] = await connection.query(
+        'DELETE FROM player_hunt_unlocks WHERE player_id = ?',
+        [player.id]
+      );
+      clearedUnlocks = Number(result?.affectedRows) || 0;
+    }
+
+    const [playerRows] = await connection.query(
+      'SELECT * FROM players WHERE id = ? LIMIT 1',
+      [player.id]
+    );
+    playerPayload = playerRows[0] ? cleanPlayer(playerRows[0]) : playerPayload;
+
+    await connection.commit();
+    committed = true;
+  } catch (error) {
+    if (!committed) {
+      await connection.rollback();
+    }
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  return {
+    ok: true,
+    alreadyStopped: !stoppedHunt,
+    stoppedHunt,
+    rewards,
+    player: playerPayload,
+    clearedUnlocks,
+    hunt: await getHuntState(player.id)
+  };
 }
 
 async function getHuntState(playerId) {

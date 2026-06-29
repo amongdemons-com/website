@@ -323,6 +323,30 @@ async function initializeSchema() {
   );
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS player_world_teams (
+      player_id VARCHAR(255) NOT NULL,
+      demon_id INT UNSIGNED NOT NULL,
+      formation_slot TINYINT UNSIGNED NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, demon_id),
+      UNIQUE INDEX uniq_player_world_teams_slot (player_id, formation_slot),
+      INDEX idx_player_world_teams_demon_id (demon_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await addColumnIfMissing('player_world_teams', 'demon_id', '`demon_id` INT UNSIGNED NOT NULL');
+  await addColumnIfMissing('player_world_teams', 'formation_slot', '`formation_slot` TINYINT UNSIGNED NOT NULL DEFAULT 0');
+  await addColumnIfMissing('player_world_teams', 'created_at', '`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await addColumnIfMissing('player_world_teams', 'updated_at', '`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+  await normalizeUtf8Column('player_world_teams', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addIndexIfMissing(
+    'player_world_teams',
+    'uniq_player_world_teams_slot',
+    'UNIQUE INDEX uniq_player_world_teams_slot (player_id, formation_slot)'
+  );
+  await addIndexIfMissing('player_world_teams', 'idx_player_world_teams_demon_id', 'INDEX idx_player_world_teams_demon_id (demon_id)');
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS runs (
       id VARCHAR(36) NOT NULL PRIMARY KEY,
       player_id VARCHAR(255) NOT NULL,
