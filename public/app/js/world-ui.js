@@ -35,9 +35,17 @@ import * as dungeonUtils from './dungeon/utils.js';
   const CLICK_THRESHOLD = 7;
   const STEP_DURATION_MS = 180;
   // Kept in sync with world-combat.js so the live hunt readout matches the server payout.
-  const HUNT_DEFAULT_RESPAWN_SECONDS = 300;
+  const HUNT_DEFAULT_KILL_SECONDS = 300;
   const HUNT_REWARD_CYCLE_CAP = 288;
   const HUNT_STATUS_REFRESH_MS = 15000;
+  // Keep this in sync with WORLD_BATTLE_REPLAY_STEP_MS in public/api/lib/world-combat.js.
+  const WORLD_BATTLE_REPLAY_STEP_MS = 520;
+  const WORLD_BATTLE_REPLAY_REDUCED_STEP_MS = 160;
+  const WORLD_DISTANCE_REWARD_START = 8;
+  const WORLD_DISTANCE_REWARD_CAP = 70;
+  const WORLD_DISTANCE_XP_MULTIPLIER_BONUS = 2;
+  const WORLD_TERROR_START_DISTANCE = 10;
+  const WORLD_TERROR_MAX_LEVEL = 40;
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
   const BOARD_COLORS = {
@@ -269,7 +277,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       const replayButton = target?.closest('[data-view-world-battle]');
       if (replayButton) {
         const entry = state.travelLog[Number(replayButton.dataset.viewWorldBattle)];
-        if (entry?.battle) {
+        if (shouldShowAmbushBattleReplay(entry?.battle)) {
           showWorldBattleReplay(entry.battle, getWorldBattleMeta('ambush', entry.battle));
         }
         return;
@@ -295,7 +303,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       const replayButton = target?.closest('[data-view-world-battle]');
       if (!replayButton) return;
       const entry = state.travelLog[Number(replayButton.dataset.viewWorldBattle)];
-      if (entry?.battle) {
+      if (shouldShowAmbushBattleReplay(entry?.battle)) {
         showWorldBattleReplay(entry.battle, getWorldBattleMeta('ambush', entry.battle));
       }
     });
@@ -539,7 +547,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         state.currentEncounter = getEncounterAt(step);
         renderWorld();
         renderPanels();
-        if (shouldShowWorldBattleReplay(stepEvent.battle)) {
+        if (shouldShowAmbushBattleReplay(stepEvent.battle)) {
           await showWorldBattleReplay(stepEvent.battle, getWorldBattleMeta('ambush', stepEvent.battle));
         } else if (stepEvent.type === 'ambush' && stepEvent.battle?.error) {
           setMessage(stepEvent.battle.error, 'warning');
@@ -2414,6 +2422,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function renderCurrentEncounter(encounter) {
     const unlocked = isEncounterUnlocked(encounter.id);
+    const terror = getEncounterTerror(encounter);
     const enemyDemons = renderDemonPortraitGroup(encounter.team, {
       className: 'world-enemy-demons',
       label: 'Enemy demons'
@@ -2428,6 +2437,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         <span class="world-card-copy">
           ${renderEncounterTitle(encounter)}
           <small class="world-card-meta">Threat ${formatNumber(encounter.difficulty || 1)} \u00b7 ${escapeHtml(requirement)}</small>
+          ${renderWorldTerrorChip(terror)}
           ${enemyDemons}
         </span>
         ${action}
@@ -2439,6 +2449,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const encounter = getActiveHuntEncounter();
     const progress = computeHuntProgress();
     const rate = computeHuntRate(encounter);
+    const terror = rate.terror || getEncounterTerror(encounter);
     const huntingDemons = renderDemonPortraitGroup(encounter?.team, {
       max: 5,
       className: 'world-hunt-target-demons',
@@ -2450,6 +2461,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         <span class="world-card-copy">
           ${renderEncounterTitleLink(encounter, 'world-card-title')}
           <small class="world-card-meta">Threat ${formatNumber(rate.difficulty)}</small>
+          ${renderWorldTerrorChip(terror)}
         </span>
         ${huntingDemons || '<p class="world-empty-text">No hunted demons visible.</p>'}
         ${renderHuntProgress(progress, rate)}
@@ -2516,7 +2528,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function renderHuntProgress(progress, rate) {
-    const totalSeconds = Math.max(1, Number(progress?.respawnSeconds || rate.respawnSeconds) || HUNT_DEFAULT_RESPAWN_SECONDS);
+    const totalSeconds = Math.max(1, Number(progress?.killSeconds || rate.killSeconds) || HUNT_DEFAULT_KILL_SECONDS);
     const remainingSeconds = progress ? progress.secondsToNext : totalSeconds;
     const capped = Boolean(progress?.capped);
     const progressPercent = capped
@@ -2637,7 +2649,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   function renderTravelLogItem(entry, index = 0) {
     const isAmbush = entry.type === 'ambush';
     const battleWinner = entry.battle?.winner;
-    const canReplay = isAmbush && shouldShowWorldBattleReplay(entry.battle);
+    const canReplay = isAmbush && shouldShowAmbushBattleReplay(entry.battle);
     const title = isAmbush
       ? battleWinner === 'player'
         ? 'Ambush Won'
@@ -2665,6 +2677,10 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function shouldShowWorldBattleReplay(battle) {
     return Boolean(battle && Array.isArray(battle.combatLog) && battle.combatLog.length);
+  }
+
+  function shouldShowAmbushBattleReplay(battle) {
+    return battle?.winner === 'enemy' && shouldShowWorldBattleReplay(battle);
   }
 
   function showWorldBattleReplay(battle, meta = {}) {
@@ -3665,6 +3681,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       ? normalizeWorldDungeonTeam(battle.enemyTeamAfter, 'enemy')
       : null;
 
+    const enemyPressure = getWorldBattleEnemyPressure(battle);
+
     return {
       runId: `world-${meta.type || 'battle'}-${Date.now()}`,
       status: 'active',
@@ -3674,8 +3692,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       rewards: [],
       recruitRewards: [],
       awaitingRecruit: true,
-      enemyPressure: null,
-      nextEnemyPressure: null,
+      enemyPressure,
+      nextEnemyPressure: enemyPressure,
       buffs: {
         activeBuffs: normalizeWorldDungeonBuffs(battle.playerBuffs),
         pendingChoices: []
@@ -3690,6 +3708,57 @@ import * as dungeonUtils from './dungeon/utils.js';
         enemyTeamAfter: enemyAfter
       }
     };
+  }
+
+  function getWorldBattleEnemyPressure(battle = {}) {
+    const encounterPressure = battle.encounter?.terror;
+    if (encounterPressure?.active) {
+      return {
+        description: 'Demons grow stronger farther from the center.',
+        ...encounterPressure
+      };
+    }
+
+    const terrorBuff = (Array.isArray(battle.enemyBuffs) ? battle.enemyBuffs : [])
+      .find((buff) => isWorldTerrorBuff(buff));
+    if (!terrorBuff) return null;
+
+    const hpMult = getBuffEffectMultiplier(terrorBuff, 'max_hp_mult');
+    const atkMult = getBuffEffectMultiplier(terrorBuff, 'attack_mult');
+    const speedMult = getBuffEffectMultiplier(terrorBuff, 'speed_mult');
+    const level = Math.max(0, Math.round(Number(String(terrorBuff.id || terrorBuff.name || '').match(/\d+/)?.[0]) || 0));
+
+    return {
+      level,
+      hpMult,
+      atkMult,
+      speedMult,
+      hpBonusPct: getBonusPercent(hpMult),
+      atkBonusPct: getBonusPercent(atkMult),
+      speedBonusPct: getBonusPercent(speedMult),
+      description: 'Demons grow stronger farther from the center.',
+      active: level > 0 || hpMult > 1 || atkMult > 1 || speedMult > 1
+    };
+  }
+
+  function getBuffEffectMultiplier(buff = {}, type) {
+    return (Array.isArray(buff.effects) ? buff.effects : [])
+      .filter((effect) => effect?.type === type)
+      .reduce((product, effect) => product * positiveMultiplier(effect.value, 1), 1);
+  }
+
+  function isWorldTerrorBuff(buff = {}) {
+    const tags = Array.isArray(buff.tags) ? buff.tags : [];
+    const id = String(buff.id || '').toLowerCase();
+    const name = String(buff.name || '').toLowerCase();
+    return tags.includes('Terror')
+      || id.startsWith('world_terror_')
+      || name.startsWith('terror ');
+  }
+
+  function positiveMultiplier(value, fallback = 1) {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? number : fallback;
   }
 
   function normalizeWorldDungeonTeam(team = [], side = 'player') {
@@ -4368,57 +4437,192 @@ import * as dungeonUtils from './dungeon/utils.js';
       || (isActiveHuntFor(state.currentEncounter?.id) ? state.currentEncounter : null);
   }
 
-  // Expected payout per respawn cycle for an encounter, derived from its threat
-  // the same way getEnemyRespawnSeconds()/calculateHuntRewards() do server-side.
+  // Expected payout per kill. Active hunts receive server-snapshotted values
+  // based on the 1x unlock-fight playback time and defeated demon count.
   function computeHuntRate(encounter) {
     const difficulty = Math.max(1, Number(encounter?.difficulty) || 1);
+    const active = state.hunt?.active;
+    const activeKillSeconds = Number(active?.killSeconds ?? active?.enemyRespawnSeconds);
     const explicit = Number(encounter?.enemyRespawnSeconds || encounter?.respawnSeconds);
-    const respawnSeconds = Number.isFinite(explicit) && explicit > 0
+    const fallbackKillSeconds = Number.isFinite(explicit) && explicit > 0
       ? Math.floor(explicit)
-      : HUNT_DEFAULT_RESPAWN_SECONDS + Math.max(0, difficulty - 1) * 60;
+      : HUNT_DEFAULT_KILL_SECONDS + Math.max(0, difficulty - 1) * 60;
+    const killSeconds = Number.isFinite(activeKillSeconds) && activeKillSeconds > 0
+      ? Math.floor(activeKillSeconds)
+      : fallbackKillSeconds;
+    const soulReward = active?.soulReward || encounter?.soulReward || computeWorldSoulReward(encounter);
+    const xpReward = active?.xpReward || encounter?.xpReward || computeWorldXpReward(encounter);
+    const fallbackSoulCount = Number.isFinite(Number(soulReward?.soulsPerCycle))
+      ? Math.floor(Number(soulReward.soulsPerCycle))
+      : Array.isArray(encounter?.team)
+        ? encounter.team.length
+        : Math.max(1, Math.ceil(difficulty / 2));
+    const xpPerCycle = Number(active?.xpPerCycle ?? active?.xpPerKill);
+    const soulsPerCycle = Number(active?.soulsPerCycle ?? active?.soulsPerKill ?? active?.defeatedDemonsPerCycle);
 
     return {
       difficulty,
-      respawnSeconds,
-      xpPerCycle: 5 + difficulty * 2,
-      soulsPerCycle: Math.max(1, Math.ceil(difficulty / 2))
+      killSeconds,
+      respawnSeconds: killSeconds,
+      xpReward,
+      soulReward,
+      terror: active?.terror || getEncounterTerror(encounter),
+      xpPerCycle: Number.isFinite(xpPerCycle) && xpPerCycle >= 0
+        ? Math.round(xpPerCycle)
+        : Math.max(0, Math.round(Number(xpReward?.xpPerCycle) || (5 + difficulty * 2))),
+      soulsPerCycle: Number.isFinite(soulsPerCycle) && soulsPerCycle >= 0
+        ? Math.floor(soulsPerCycle)
+        : fallbackSoulCount
     };
   }
 
-  // Mirrors calculateHuntRewards() on the server: each respawn cycle yields one
+  // Mirrors calculateHuntRewards() on the server: each kill interval yields one
   // win against the snapshotted demon spot, capped at HUNT_REWARD_CYCLE_CAP cycles.
   function computeHuntProgress(active = state.hunt?.active, now = Date.now()) {
     if (!active) return null;
 
     const startedAt = Date.parse(active.startedAt || '');
-    const respawnSeconds = Math.max(1, Number(active.enemyRespawnSeconds) || HUNT_DEFAULT_RESPAWN_SECONDS);
     const encounter = getActiveHuntEncounter();
-    const difficulty = Math.max(1, Number(encounter?.difficulty) || 1);
+    const rate = computeHuntRate(encounter);
+    const killSeconds = Math.max(1, Number(active.killSeconds ?? active.enemyRespawnSeconds ?? rate.killSeconds) || HUNT_DEFAULT_KILL_SECONDS);
 
     const elapsedSeconds = Number.isFinite(startedAt)
       ? Math.max(0, Math.floor((now - startedAt) / 1000))
       : 0;
-    const cyclesRaw = Math.floor(elapsedSeconds / respawnSeconds);
+    const cyclesRaw = Math.floor(elapsedSeconds / killSeconds);
     const cycles = Math.min(HUNT_REWARD_CYCLE_CAP, cyclesRaw);
     const capped = cyclesRaw >= HUNT_REWARD_CYCLE_CAP;
 
-    const xpPerCycle = 5 + difficulty * 2;
-    const soulsPerCycle = Math.max(1, Math.ceil(difficulty / 2));
-    const secondsIntoCycle = elapsedSeconds % respawnSeconds;
-    const secondsToNext = capped ? 0 : respawnSeconds - secondsIntoCycle;
+    const secondsIntoCycle = elapsedSeconds % killSeconds;
+    const secondsToNext = capped ? 0 : killSeconds - secondsIntoCycle;
 
     return {
       elapsedSeconds,
-      respawnSeconds,
-      difficulty,
+      killSeconds,
+      respawnSeconds: killSeconds,
+      difficulty: rate.difficulty,
       cycles,
       capped,
-      xpPerCycle,
-      soulsPerCycle,
-      accruedXp: cycles * xpPerCycle,
-      accruedSouls: cycles * soulsPerCycle,
+      xpPerCycle: rate.xpPerCycle,
+      soulsPerCycle: rate.soulsPerCycle,
+      accruedXp: cycles * rate.xpPerCycle,
+      accruedSouls: cycles * rate.soulsPerCycle,
       secondsToNext
     };
+  }
+
+  function renderWorldTerrorChip(terror = null) {
+    if (!terror?.active) return '';
+
+    const level = Math.max(0, Math.round(Number(terror.level) || 0));
+    if (level <= 0) return '';
+
+    const tooltip = [
+      `Terror ${level}`,
+      'Demons grow stronger farther from the center.',
+      `Enemy HP +${formatNumber(terror.hpBonusPct || 0)}%`,
+      `Enemy Attack +${formatNumber(terror.atkBonusPct || 0)}%`,
+      `Enemy Speed +${formatNumber(terror.speedBonusPct || 0)}%`
+    ].join('\n');
+
+    return `
+      <span class="world-terror-line">
+        <span
+          class="enemy-pressure-chip"
+          tabindex="0"
+          data-tooltip="${escapeAttribute(tooltip)}"
+          aria-label="${escapeAttribute(tooltip)}"
+        >
+          <span>Terror</span>
+          <strong>${escapeHtml(String(level))}</strong>
+        </span>
+      </span>
+    `;
+  }
+
+  function getEncounterTerror(encounter = {}) {
+    return encounter?.terror || computeWorldTerror(encounter);
+  }
+
+  function computeWorldTerror(encounter = {}) {
+    const level = getWorldTerrorLevel(encounter);
+    const pressure = getDungeonTerrorPressure(level);
+
+    return {
+      level,
+      distance: roundNumber(getWorldTerrorDistance(encounter), 1),
+      hpMult: roundMultiplier(pressure.hp),
+      atkMult: roundMultiplier(pressure.atk),
+      speedMult: roundMultiplier(pressure.speed),
+      hpBonusPct: getBonusPercent(pressure.hp),
+      atkBonusPct: getBonusPercent(pressure.atk),
+      speedBonusPct: getBonusPercent(pressure.speed),
+      active: level > 0
+    };
+  }
+
+  function getWorldTerrorLevel(encounter = {}) {
+    return clamp(Math.floor(getWorldTerrorDistance(encounter) - WORLD_TERROR_START_DISTANCE), 0, WORLD_TERROR_MAX_LEVEL);
+  }
+
+  function getDungeonTerrorPressure(level) {
+    const terrorLevel = Math.max(0, Number(level) || 0);
+
+    return {
+      hp: 1 + terrorLevel * 0.045,
+      atk: 1 + terrorLevel * 0.04,
+      speed: Math.min(1.85, 1 + terrorLevel * 0.012)
+    };
+  }
+
+  function computeWorldSoulReward(encounter = {}) {
+    const baseSouls = Array.isArray(encounter?.team) ? encounter.team.length : 0;
+
+    return {
+      baseSouls,
+      soulsPerCycle: baseSouls
+    };
+  }
+
+  function computeWorldXpReward(encounter = {}) {
+    const difficulty = Math.max(1, Number(encounter?.difficulty) || 1);
+    const baseXp = 5 + difficulty * 2;
+    const distance = getWorldDistance(encounter);
+    const distanceFactor = getDistanceProgress(encounter, WORLD_DISTANCE_REWARD_START, WORLD_DISTANCE_REWARD_CAP);
+    const distanceMultiplier = 1 + Math.pow(distanceFactor, 1.4) * WORLD_DISTANCE_XP_MULTIPLIER_BONUS;
+
+    return {
+      baseXp,
+      xpPerCycle: Math.ceil(baseXp * distanceMultiplier),
+      distance: roundNumber(distance, 1),
+      distanceFactor: roundNumber(distanceFactor, 3),
+      distanceMultiplier: roundMultiplier(distanceMultiplier)
+    };
+  }
+
+  function getDistanceProgress(encounter = {}, start, cap) {
+    return clamp((getWorldDistance(encounter) - start) / Math.max(1, cap - start), 0, 1);
+  }
+
+  function getWorldDistance(encounter = {}) {
+    return Math.hypot(Number(encounter?.x) || 0, Number(encounter?.y) || 0);
+  }
+
+  function getWorldTerrorDistance(encounter = {}) {
+    return Math.max(Math.abs(Number(encounter?.x) || 0), Math.abs(Number(encounter?.y) || 0));
+  }
+
+  function roundMultiplier(value) {
+    return Math.round((Number(value) || 1) * 1000) / 1000;
+  }
+
+  function getBonusPercent(value) {
+    return Math.max(0, Math.round(((Number(value) || 1) - 1) * 100));
+  }
+
+  function roundNumber(value, precision = 0) {
+    const factor = 10 ** Math.max(0, Number(precision) || 0);
+    return Math.round((Number(value) || 0) * factor) / factor;
   }
 
   function getTileKey(position) {

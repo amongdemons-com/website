@@ -16531,6 +16531,16 @@ body.world-page > .game-shell-nav {
     white-space: nowrap;
 }
 
+.world-terror-line {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.world-terror-line .enemy-pressure-chip {
+    max-width: 100%;
+}
+
 .world-card-action {
     justify-self: end;
     min-width: 4.5rem;

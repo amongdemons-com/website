@@ -15,6 +15,9 @@ const {
   createHuntSnapshot,
   getActiveWorldTeam,
   getActiveWorldTeamSummary,
+  getWorldSoulReward,
+  getWorldTerrorPreview,
+  getWorldXpReward,
   saveActiveWorldTeam,
   simulateTryHunt,
   simulateWorldAmbush
@@ -38,7 +41,7 @@ const WORLD_EVENTS = Array.isArray(worldMap.events) ? worldMap.events : [];
 const WORLD_ROADS = Array.isArray(worldMap.roads) ? worldMap.roads : [];
 const ROAD_TILES = new Set(WORLD_ROADS.map((tile) => `${tile.x},${tile.y}`));
 const BLOCKED_TILES = new Set(WORLD_BLOCKS.map((tile) => `${tile.x},${tile.y}`));
-const AMBUSH_CHANCE_OFF_ROAD = 7; // 1-in-N chance to be ambushed per step
+const AMBUSH_CHANCE_OFF_ROAD = 7; // 1-in-N chance to be ambushed per eligible off-road step
 const AMBUSH_CHANCE_ON_ROAD = 34; // roads are watched but far safer to travel
 
 const MOCK_PLAYERS = [
@@ -62,11 +65,11 @@ router.get('/world/state', requireAuth, async (req, res) => {
     events: WORLD_EVENTS,
     blockedTiles: WORLD_BLOCKS,
     roads: WORLD_ROADS,
-    encounters: WORLD_ENCOUNTERS,
+    encounters: WORLD_ENCOUNTERS.map(serializeWorldEncounterForClient),
     shrines: getWorldShrines(),
     boundShrine,
     currentEvent: getEventAt(position.x, position.y),
-    currentEncounter: getEncounterAt(position.x, position.y),
+    currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
     playersAt,
     activeTeam: getActiveWorldTeamSummary(activeWorldTeam),
     hunt
@@ -154,7 +157,7 @@ router.post('/world/move', requireAuth, async (req, res) => {
   res.json({
     position,
     currentEvent: getEventAt(position.x, position.y),
-    currentEncounter: getEncounterAt(position.x, position.y),
+    currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
     playersAt,
     travelEvents: await resolveTravelEvents(req.player, travelEvents)
   });
@@ -205,7 +208,7 @@ router.post('/world/hunting/start', requireAuth, async (req, res) => {
       encounter.id,
       JSON.stringify(snapshot),
       Math.floor(Date.parse(snapshot.startedAt) / 1000),
-      snapshot.enemyRespawnSeconds
+      snapshot.killSeconds ?? snapshot.enemyRespawnSeconds
     ]
   );
 
@@ -231,7 +234,7 @@ router.post('/world/ambush-defeat', requireAuth, async (req, res) => {
   res.json({
     ...result,
     currentEvent: getEventAt(result.position.x, result.position.y),
-    currentEncounter: getEncounterAt(result.position.x, result.position.y),
+    currentEncounter: serializeWorldEncounterForClient(getEncounterAt(result.position.x, result.position.y)),
     playersAt: await getPlayersAt(result.position.x, result.position.y, req.player.id)
   });
 });
@@ -499,13 +502,70 @@ async function getActiveHunt(playerId) {
 
 function serializeActiveHunt(row) {
   const snapshot = parseHuntSnapshot(row.snapshot);
+  const killSeconds = getSnapshotKillSeconds(snapshot, row.enemyRespawnSeconds);
+  const difficulty = Math.max(1, Number(snapshot.encounter?.difficulty) || 1);
+  const xpReward = snapshot.encounter
+    ? getWorldXpReward(snapshot.encounter, difficulty, snapshot.xpReward)
+    : snapshot.xpReward || null;
+  const xpPerCycle = getSnapshotNonNegativeInteger(
+    xpReward?.xpPerCycle,
+    snapshot.xpPerCycle ?? snapshot.xpPerKill ?? 5 + difficulty * 2
+  );
+  const fallbackSoulCount = Array.isArray(snapshot.targetEnemyTeam)
+    ? snapshot.targetEnemyTeam.length
+    : Math.max(1, Math.ceil(difficulty / 2));
+  const defeatedDemonsPerCycle = getSnapshotNonNegativeInteger(
+    snapshot.defeatedDemonsPerCycle ?? snapshot.soulReward?.baseSouls,
+    fallbackSoulCount
+  );
+  const soulsPerCycle = getSnapshotNonNegativeInteger(
+    defeatedDemonsPerCycle,
+    snapshot.soulsPerCycle ?? snapshot.soulsPerKill ?? fallbackSoulCount
+  );
+  const battleMetrics = snapshot.battleMetrics || {};
+
   return {
     encounterId: row.encounterId,
     startedAt: snapshot.startedAt || row.startedAt,
-    enemyRespawnSeconds: Number(snapshot.enemyRespawnSeconds || row.enemyRespawnSeconds) || 0,
+    killSeconds,
+    enemyRespawnSeconds: killSeconds,
+    xpPerCycle,
+    soulsPerCycle,
+    defeatedDemonsPerCycle,
+    xpReward,
+    soulReward: snapshot.soulReward || null,
+    terror: snapshot.terror || null,
+    combatSecondsAt1x: killSeconds,
+    combatTicks: Math.max(0, Number(battleMetrics.ticks) || 0),
+    combatLogSteps: Math.max(0, Number(battleMetrics.combatLogSteps) || 0),
     activeTeamCount: Array.isArray(snapshot.activeTeam) ? snapshot.activeTeam.length : 0,
-    activeBuffs: Array.isArray(snapshot.activeSkillTreeBuffs) ? snapshot.activeSkillTreeBuffs : []
+    activeBuffs: Array.isArray(snapshot.activeSkillTreeBuffs) ? snapshot.activeSkillTreeBuffs : [],
+    enemyBuffs: Array.isArray(snapshot.activeWorldTerrorBuffs) ? snapshot.activeWorldTerrorBuffs : []
   };
+}
+
+function serializeWorldEncounterForClient(encounter) {
+  if (!encounter) return null;
+  const defeatedDemons = Array.isArray(encounter.team) ? encounter.team.length : 0;
+
+  return {
+    ...encounter,
+    terror: getWorldTerrorPreview(encounter),
+    xpReward: getWorldXpReward(encounter, Math.max(1, Number(encounter.difficulty) || 1)),
+    soulReward: getWorldSoulReward(encounter, defeatedDemons)
+  };
+}
+
+function getSnapshotKillSeconds(snapshot = {}, fallback) {
+  const explicit = Number(snapshot.killSeconds ?? snapshot.enemyRespawnSeconds ?? fallback);
+  return Number.isFinite(explicit) && explicit > 0 ? Math.floor(explicit) : 300;
+}
+
+function getSnapshotNonNegativeInteger(value, fallback = 0) {
+  const number = Number(value);
+  if (Number.isFinite(number) && number >= 0) return Math.floor(number);
+  const fallbackNumber = Number(fallback);
+  return Number.isFinite(fallbackNumber) && fallbackNumber >= 0 ? Math.floor(fallbackNumber) : 0;
 }
 
 function parseHuntSnapshot(value) {
@@ -595,11 +655,15 @@ function resolveTravelStepEvent(position, stepIndex) {
     return { type: 'none', title: 'No Event' };
   }
 
-  const ambushChance = isRoad(position.x, position.y) ? AMBUSH_CHANCE_ON_ROAD : AMBUSH_CHANCE_OFF_ROAD;
+  const ambushChance = getAmbushChanceForTile(position.x, position.y);
   const roll = (getTileNoise(position.x, position.y) + stepIndex * 17) % ambushChance;
   return roll === 0
     ? { type: 'ambush', title: 'Ambush' }
     : { type: 'none', title: 'No Event' };
+}
+
+function getAmbushChanceForTile(x, y) {
+  return isRoad(x, y) ? AMBUSH_CHANCE_ON_ROAD : AMBUSH_CHANCE_OFF_ROAD;
 }
 
 function isAmbushEligibleTile(x, y) {
@@ -657,6 +721,7 @@ function throwWorldError(message, status = 400) {
 }
 
 router._test = {
+  getAmbushChanceForTile,
   isAmbushEligibleTile,
   resolveTravelStepEvent
 };

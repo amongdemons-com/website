@@ -296,7 +296,7 @@ function renderEnemyPressureChip(pressure = null) {
 
   const tooltip = [
     `Terror ${level}`,
-    'Demons grow stronger in darkness.',
+    pressure.description || 'Demons grow stronger in darkness.',
     `Enemy HP ${hpBonus}`,
     `Enemy Attack ${atkBonus}`,
     `Enemy Speed ${speedBonus}`
