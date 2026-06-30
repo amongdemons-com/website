@@ -46,6 +46,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   const WORLD_DISTANCE_XP_MULTIPLIER_BONUS = 2;
   const WORLD_TERROR_START_DISTANCE = 10;
   const WORLD_TERROR_MAX_LEVEL = 40;
+  const WORLD_AMBUSH_DEFEAT_FADE_MS = 900;
+  const WORLD_AMBUSH_DEFEAT_HOLD_MS = 140;
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
   const BOARD_COLORS = {
@@ -175,6 +177,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     activeWorldBattle: null,
     activeWorldBattleMeta: null,
     worldBattleReplayToken: 0,
+    ambushDefeatBlackoutActive: false,
+    ambushDefeatBlackoutClosing: false,
     worldTeamEditor: {
       collection: [],
       team: [],
@@ -310,6 +314,12 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     elements.worldBattleModal?.addEventListener('hidden.bs.modal', () => {
       cancelWorldBattleReplay();
+    });
+    elements.worldBattleModal?.querySelector('.world-battle-close')?.addEventListener('click', (event) => {
+      if (!shouldCloseWorldBattleModalInstantly()) return;
+      event.preventDefault();
+      event.stopPropagation();
+      closeWorldBattleModal();
     });
   }
 
@@ -581,6 +591,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       handleAuthError(error);
     } finally {
       state.moving = false;
+      const shouldFadeOutAmbushDefeat = state.ambushDefeatBlackoutActive;
       if (completedTravel) {
         setWorldSidePanelExpanded(true);
       } else {
@@ -588,6 +599,9 @@ import * as dungeonUtils from './dungeon/utils.js';
       }
       renderWorld();
       renderPanels();
+      if (shouldFadeOutAmbushDefeat) {
+        await fadeWorldAmbushDefeatFromBlack();
+      }
     }
   }
 
@@ -3597,7 +3611,14 @@ import * as dungeonUtils from './dungeon/utils.js';
     const shownPromise = modalElement.classList.contains('show')
       ? Promise.resolve()
       : new Promise((resolve) => modalElement.addEventListener('shown.bs.modal', resolve, { once: true }));
-    const hiddenPromise = new Promise((resolve) => modalElement.addEventListener('hidden.bs.modal', resolve, { once: true }));
+    const hiddenPromise = new Promise((resolve) => {
+      modalElement.addEventListener('hidden.bs.modal', () => {
+        const waitForBackdrop = isLostAmbushBattle(battle, meta)
+          ? waitForWorldBattleBackdropClear()
+          : Promise.resolve();
+        waitForBackdrop.then(resolve);
+      }, { once: true });
+    });
 
     if (!modalElement.classList.contains('show')) modal.show();
     await shownPromise;
@@ -3945,7 +3966,105 @@ import * as dungeonUtils from './dungeon/utils.js';
   function closeWorldBattleModal() {
     const modalElement = elements.worldBattleModal;
     if (!modalElement) return;
+    const closeInstantly = shouldCloseWorldBattleModalInstantly();
+    if (closeInstantly) {
+      void closeLostAmbushWorldBattleModal(modalElement);
+      return;
+    }
+
     window.bootstrap?.Modal.getOrCreateInstance(modalElement)?.hide();
+  }
+
+  async function closeLostAmbushWorldBattleModal(modalElement) {
+    if (state.ambushDefeatBlackoutClosing) return;
+    state.ambushDefeatBlackoutClosing = true;
+    await fadeWorldAmbushDefeatToBlack();
+
+    const hadFade = modalElement.classList.contains('fade');
+
+    document.body.classList.add('is-world-battle-instant-close');
+    modalElement.classList.remove('fade');
+
+    const cleanupInstantClose = () => {
+      if (hadFade) modalElement.classList.add('fade');
+      document.body.classList.remove('is-world-battle-instant-close');
+      state.ambushDefeatBlackoutClosing = false;
+    };
+
+    modalElement.addEventListener('hidden.bs.modal', cleanupInstantClose, { once: true });
+    window.bootstrap?.Modal.getOrCreateInstance(modalElement)?.hide();
+    if (!modalElement.classList.contains('show')) cleanupInstantClose();
+  }
+
+  function shouldCloseWorldBattleModalInstantly() {
+    return isLostAmbushBattle(state.activeWorldBattle, state.activeWorldBattleMeta);
+  }
+
+  function isLostAmbushBattle(battle = {}, meta = {}) {
+    return meta?.type === 'ambush' && battle?.winner === 'enemy';
+  }
+
+  async function waitForWorldBattleBackdropClear() {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      if (!document.querySelector('.modal-backdrop')) return;
+      await delay(16);
+    }
+
+    if (!document.querySelector('.modal.show')) {
+      document.querySelectorAll('.modal-backdrop').forEach((backdrop) => backdrop.remove());
+    }
+  }
+
+  async function fadeWorldAmbushDefeatToBlack() {
+    const overlay = getWorldAmbushDefeatOverlay();
+    const fadeMs = getWorldAmbushDefeatFadeMs();
+    overlay.style.setProperty('--world-ambush-defeat-fade-ms', `${fadeMs}ms`);
+    document.body.classList.add('is-world-ambush-defeat-transition');
+    await delay(16);
+    state.ambushDefeatBlackoutActive = true;
+    document.body.classList.add('is-world-ambush-defeat-blackout');
+    await delay(fadeMs);
+  }
+
+  async function fadeWorldAmbushDefeatFromBlack() {
+    const overlay = document.querySelector('.world-ambush-defeat-fade');
+    const fadeMs = getWorldAmbushDefeatFadeMs();
+    if (!overlay) {
+      clearWorldAmbushDefeatBlackout();
+      return;
+    }
+
+    await delay(getWorldAmbushDefeatHoldMs());
+    overlay.style.setProperty('--world-ambush-defeat-fade-ms', `${fadeMs}ms`);
+    document.body.classList.remove('is-world-ambush-defeat-blackout');
+    await delay(fadeMs);
+    overlay.remove();
+    clearWorldAmbushDefeatBlackout();
+  }
+
+  function clearWorldAmbushDefeatBlackout() {
+    state.ambushDefeatBlackoutActive = false;
+    state.ambushDefeatBlackoutClosing = false;
+    document.body.classList.remove('is-world-ambush-defeat-transition', 'is-world-ambush-defeat-blackout', 'is-world-battle-instant-close');
+  }
+
+  function getWorldAmbushDefeatOverlay() {
+    const existing = document.querySelector('.world-ambush-defeat-fade');
+    if (existing) return existing;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'world-ambush-defeat-fade';
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function getWorldAmbushDefeatFadeMs() {
+    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 120 : WORLD_AMBUSH_DEFEAT_FADE_MS;
+  }
+
+  function getWorldAmbushDefeatHoldMs() {
+    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 20 : WORLD_AMBUSH_DEFEAT_HOLD_MS;
   }
 
   function clearWorldDungeonBattleTransientElements() {

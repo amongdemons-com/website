@@ -16952,6 +16952,34 @@ body.is-world-battle-result-animating .battle-result-burst {
         linear-gradient(180deg, rgba(2,7,9,0.16), rgba(3,8,10,0.24));
 }
 
+body.is-world-battle-instant-close .world-battle-modal,
+body.is-world-battle-instant-close .world-battle-modal .modal-dialog,
+body.is-world-battle-instant-close .modal-backdrop {
+    transition: none !important;
+}
+
+body.is-world-battle-instant-close .modal-backdrop {
+    opacity: 0 !important;
+}
+
+.world-ambush-defeat-fade {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--world-ambush-defeat-fade-ms, 900ms) ease-in-out;
+}
+
+body.is-world-ambush-defeat-transition .world-ambush-defeat-fade {
+    pointer-events: auto;
+}
+
+body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
+    opacity: 1;
+}
+
 .world-battle-modal #dungeonHandBar {
     grid-column: 1 / -1;
 }
