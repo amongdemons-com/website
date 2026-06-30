@@ -465,8 +465,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!isInBounds(target)) return;
 
     if (positionsEqual(target, state.position)) {
-      clearRoutePreview();
-      centerOnHunter();
+      window.location.href = appUrl('/camp');
       return;
     }
 
@@ -3592,7 +3591,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       await dungeonLifecycle.replayFight();
       const resultType = getWorldDungeonBattleResultType(battle);
       if (state.worldBattleReplayToken === token && resultType) {
-        await dungeonRender.showBattleResultOverlay(resultType);
+        await showWorldDungeonBattleResultOverlay(resultType);
       }
       if (state.worldBattleReplayToken === token) {
         renderWorldDungeonBattleResultDock(battle);
@@ -3617,6 +3616,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (resolvePlayback) resolvePlayback();
     document.body.classList.remove('dungeon-page', 'is-world-battle-open');
     document.documentElement.classList.remove('is-combat-paused');
+    setWorldDungeonBattleResultAnimation(false);
+    setWorldDungeonBattleResultMode(false);
     clearWorldDungeonBattleTransientElements();
   }
 
@@ -3647,6 +3648,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     dungeonState.collectionReinforcementStagedInteracted = true;
     dungeonState.formationRows = new Map();
     dungeonRender.setBattlePanel('combat');
+    setWorldDungeonBattleResultMode(false);
     dungeonCombat.applyBattleSpeed();
     dungeonRender.renderRun();
     renderWorldDungeonBattleCenterIcon();
@@ -3754,24 +3756,111 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function renderWorldDungeonBattleResultDock(battle = {}) {
-    const handCards = elements.worldBattleModal?.querySelector('.dungeon-hand-cards');
-    if (!handCards) return;
+    const resultLayer = getWorldDungeonBattleResultLayer();
+    if (!resultLayer) return;
 
     const won = battle.winner === 'player';
     const lost = battle.winner === 'enemy';
     const label = won ? 'VICTORY' : lost ? 'DEFEAT' : 'BATTLE ENDED';
     const tone = won ? 'is-victory' : lost ? 'is-defeat' : 'is-neutral';
+    const canReplay = shouldShowWorldBattleReplay(battle);
 
-    handCards.classList.add('is-world-battle-result');
-    handCards.innerHTML = `
+    setWorldDungeonBattleResultMode(true);
+    resultLayer.innerHTML = `
       <div class="world-dungeon-result ${tone}" role="status" aria-live="polite">
         <strong>${escapeHtml(label)}</strong>
-        <button class="btn btn-glass-gold world-dungeon-result-continue" type="button">
-          Continue
-        </button>
+        <span class="world-dungeon-result-actions">
+          <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-replay title="Replay Fight" aria-label="Replay Fight" ${canReplay ? '' : 'disabled'}>
+            ${renderIcon('replay')}
+          </button>
+          <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-log title="Fight Log" aria-label="Fight Log" aria-pressed="false" ${canReplay ? '' : 'disabled'}>
+            ${renderIcon('log')}
+          </button>
+          <button class="btn btn-glass-gold world-dungeon-result-continue" type="button">
+            Continue
+          </button>
+        </span>
       </div>
     `;
-    handCards.querySelector('.world-dungeon-result-continue')?.addEventListener('click', closeWorldBattleModal, { once: true });
+    resultLayer.querySelector('.world-dungeon-result-continue')?.addEventListener('click', closeWorldBattleModal, { once: true });
+    resultLayer.querySelector('[data-world-dungeon-result-replay]')?.addEventListener('click', (event) => {
+      void replayWorldDungeonBattleFromResult(event.currentTarget);
+    });
+    resultLayer.querySelector('[data-world-dungeon-result-log]')?.addEventListener('click', (event) => {
+      toggleWorldDungeonBattleLogFromResult(event.currentTarget);
+    });
+  }
+
+  async function replayWorldDungeonBattleFromResult(button) {
+    const battle = state.activeWorldBattle;
+    if (!battle || button?.disabled) return;
+
+    if (button) button.disabled = true;
+    setWorldDungeonBattleResultMode(false);
+    dungeonRender.setBattlePanel('combat');
+
+    try {
+      await dungeonLifecycle.replayFight();
+      const resultType = getWorldDungeonBattleResultType(battle);
+      if (resultType) {
+        await showWorldDungeonBattleResultOverlay(resultType);
+      }
+      renderWorldDungeonBattleResultDock(battle);
+      renderWorldDungeonBattleCenterIcon();
+    } catch (error) {
+      console.error('World battle replay failed', error);
+      setMessage(getWorldBattleFallbackMessage(battle, state.activeWorldBattleMeta || {}), battle.winner === 'player' ? 'success' : 'warning');
+      renderWorldDungeonBattleResultDock(battle);
+    }
+  }
+
+  async function showWorldDungeonBattleResultOverlay(resultType) {
+    setWorldDungeonBattleResultAnimation(true);
+    try {
+      await dungeonRender.showBattleResultOverlay(resultType);
+    } finally {
+      setWorldDungeonBattleResultAnimation(false);
+    }
+  }
+
+  function toggleWorldDungeonBattleLogFromResult(button) {
+    dungeonRender.toggleFightLogPanel();
+    const isLogActive = Boolean(elements.worldBattleModal?.querySelector('#battleLogPanel')?.classList.contains('show'));
+    button?.classList.toggle('is-primary', isLogActive);
+    button?.setAttribute('aria-pressed', String(isLogActive));
+  }
+
+  function setWorldDungeonBattleResultMode(enabled) {
+    const modal = elements.worldBattleModal;
+    const handBar = modal?.querySelector('#dungeonHandBar');
+    const handCards = modal?.querySelector('.dungeon-hand-cards');
+    const active = Boolean(enabled);
+
+    modal?.classList.toggle('is-world-battle-result-mode', active);
+    handBar?.classList.toggle('is-world-battle-result-mode', active);
+    handCards?.classList.toggle('is-world-battle-result', active);
+    if (!active) {
+      modal?.querySelector('.world-dungeon-result-layer')?.remove();
+    }
+  }
+
+  function getWorldDungeonBattleResultLayer() {
+    const modalBody = elements.worldBattleModal?.querySelector('.modal-body');
+    if (!modalBody) return null;
+
+    const existing = modalBody.querySelector('.world-dungeon-result-layer');
+    if (existing) return existing;
+
+    const layer = document.createElement('div');
+    layer.className = 'world-dungeon-result-layer';
+    modalBody.appendChild(layer);
+    return layer;
+  }
+
+  function setWorldDungeonBattleResultAnimation(enabled) {
+    const active = Boolean(enabled);
+    document.body.classList.toggle('is-world-battle-result-animating', active);
+    elements.worldBattleModal?.classList.toggle('is-world-battle-result-animating', active);
   }
 
   function renderWorldDungeonBattleCenterIcon() {

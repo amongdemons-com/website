@@ -16924,23 +16924,77 @@ body.world-page > .game-shell-nav {
     grid-template-columns: minmax(0, 1fr) !important;
 }
 
+.world-battle-modal.is-world-battle-result-mode .dungeon-bottom-panel {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.world-battle-modal.is-world-battle-result-animating .dungeon-bottom-panel,
+.world-battle-modal.is-world-battle-result-animating .world-dungeon-result-layer,
+.world-battle-modal.is-world-battle-result-animating .world-battle-close {
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.is-world-battle-result-animating .battle-result-burst {
+    background:
+        radial-gradient(circle at 50% 50%, rgba(232,199,106,0.12), transparent 34%),
+        linear-gradient(180deg, rgba(2,7,9,0.16), rgba(3,8,10,0.24));
+}
+
 .world-battle-modal #dungeonHandBar {
     grid-column: 1 / -1;
+}
+
+.world-battle-modal #dungeonHandBar.is-world-battle-result-mode .dungeon-hand-tabs,
+.world-battle-modal #dungeonHandBar.is-world-battle-result-mode #dungeonBottomControls {
+    display: none !important;
+}
+
+.world-battle-modal #dungeonHandBar.is-world-battle-result-mode {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.world-battle-modal #dungeonHandBar.is-world-battle-result-mode .dungeon-hand-grid {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    justify-self: stretch;
+    width: 100%;
+    overflow: visible;
 }
 
 .world-battle-modal .dungeon-hand-cards.is-world-battle-result {
     display: grid;
     place-items: center;
     width: 100%;
+    max-width: none;
     height: 100%;
     min-height: 0;
 }
 
+.world-dungeon-result-layer {
+    position: fixed;
+    left: 50%;
+    bottom: clamp(1rem, 4vh, 2.4rem);
+    z-index: 2604;
+    display: grid;
+    place-items: center;
+    width: min(34rem, calc(100vw - 2rem));
+    min-width: 0;
+    transform: translateX(-50%);
+    pointer-events: auto;
+}
+
 .world-dungeon-result {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    justify-content: center;
     justify-items: center;
-    gap: 0.42rem;
-    min-width: min(18rem, 100%);
+    gap: 0.48rem;
+    width: 100%;
+    min-width: 0;
+    text-align: center;
 }
 
 .world-dungeon-result strong {
@@ -16960,6 +17014,26 @@ body.world-page > .game-shell-nav {
 .world-dungeon-result.is-defeat strong {
     color: #ff7770;
     text-shadow: 0 0 18px rgba(255,119,112,0.42), 0 2px 12px rgba(0,0,0,0.82);
+}
+
+.world-dungeon-result-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.34rem;
+    min-width: 0;
+}
+
+.world-dungeon-result-icon-btn {
+    width: 2rem;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0;
+}
+
+.world-dungeon-result-icon-btn .ad-icon {
+    width: 0.9rem;
+    height: 0.9rem;
 }
 
 .world-dungeon-result-continue {
