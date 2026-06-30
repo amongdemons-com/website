@@ -266,6 +266,14 @@ import * as dungeonUtils from './dungeon/utils.js';
         challengePlayer(challengeButton.dataset.challengePlayer, challengeButton);
         return;
       }
+      const replayButton = target?.closest('[data-view-world-battle]');
+      if (replayButton) {
+        const entry = state.travelLog[Number(replayButton.dataset.viewWorldBattle)];
+        if (entry?.battle) {
+          showWorldBattleReplay(entry.battle, getWorldBattleMeta('ambush', entry.battle));
+        }
+        return;
+      }
       const tryHuntButton = target?.closest('[data-try-hunt]');
       if (tryHuntButton) {
         tryHunt(tryHuntButton.dataset.tryHunt, tryHuntButton);
@@ -322,8 +330,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     panel.classList.toggle('is-collapsed', !state.sidePanelExpanded);
     panel.dataset.worldStatus = status.toLowerCase();
     toggle.setAttribute('aria-expanded', String(!panel.classList.contains('is-collapsed')));
-    setText(elements.worldSideStatusLabel, status);
-    setText(elements.worldSideAreaLabel, `Area ${formatCoords(state.position)}`);
+    setText(elements.worldSideStatusLabel, `${status.toUpperCase()} \u00b7 Area ${formatCoords(state.position)}`);
+    setText(elements.worldSideAreaLabel, '');
   }
 
   function getWorldSidePanelStatus() {
@@ -627,6 +635,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
     renderWorld();
     renderTravelPanel();
+    renderEncounterPanel();
   }
 
   function findPath(start, target) {
@@ -806,7 +815,6 @@ import * as dungeonUtils from './dungeon/utils.js';
         body: { encounterId }
       });
       setHuntState(payload.hunt);
-      setWorldSidePanelExpanded(false);
       setMessage(`You started hunting ${getEncounterHuntTargetLabel(getEncounterById(encounterId))}.`, 'success');
     } catch (error) {
       handleAuthError(error);
@@ -1722,19 +1730,22 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function renderTeamSummary() {
-    const team = state.activeTeam || {};
-    const members = Array.isArray(team.members) ? team.members : [];
+    const members = getActiveTeamMembers();
 
     if (!elements.worldTeamSummary) return;
+    setText(document.getElementById('worldTeamHeading'), isHuntActive() ? 'Team' : 'Active Team');
 
     if (!members.length) {
       elements.worldTeamSummary.innerHTML = `
-        <p class="world-empty-text">No hunting team.</p>
+        <p class="world-empty-text">No active team.</p>
       `;
       return;
     }
 
-    elements.worldTeamSummary.innerHTML = `<div class="world-team-demons">${members.map(renderDemonPortrait).join('')}</div>`;
+    elements.worldTeamSummary.innerHTML = renderDemonPortraitGroup(members, {
+      className: 'world-team-demons',
+      label: 'Active team demons'
+    });
   }
 
   async function openWorldTeamEditor() {
@@ -2319,43 +2330,13 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function renderEncounterPanel() {
     if (!elements.worldEncounterList) return;
-    setText(elements.worldEncounterHeading, `Area ${formatCoords(state.position)}`);
+    setText(elements.worldEncounterHeading, `World activity at Area ${formatCoords(state.position)}`);
 
     const players = state.playersAt || [];
     const encounter = state.moving ? null : state.currentEncounter;
     const currentShrine = state.moving ? null : getShrineAt(state.position);
-    const pveParts = [];
-    const pvpParts = [];
-
-    if (currentShrine) {
-      pveParts.push(renderShrineAnchorAction(currentShrine));
-    }
-    if (encounter) {
-      pveParts.push(renderCurrentEncounter(encounter));
-    }
-
-    if (state.hunt?.active && !isActiveHuntFor(encounter?.id)) {
-      pveParts.push(renderActiveHuntSummary());
-    }
-
-    if (players.length) {
-      pvpParts.push(players.map((player) => {
-        const cooldownUntil = state.challengeCooldowns.get(player.id) || 0;
-        const isCoolingDown = cooldownUntil > Date.now();
-        const label = isCoolingDown ? 'Cooldown' : 'Challenge';
-
-        return `
-          <article class="world-encounter-player">
-            <span class="world-encounter-mark" aria-hidden="true"></span>
-            <span class="world-encounter-copy">
-              <strong>${escapeHtml(player.username || 'Unknown Hunter')}</strong>
-              <small>Level ${formatNumber(player.level || 1)}</small>
-            </span>
-            <button class="btn btn-outline-light btn-sm" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
-          </article>
-        `;
-      }).join(''));
-    }
+    const pveParts = renderPveSidebarParts({ encounter, currentShrine });
+    const pvpParts = players.map(renderPvpPlayerCard);
 
     const activeTab = state.worldEncounterTab === 'pvp' ? 'pvp' : 'pve';
     const activeParts = activeTab === 'pvp' ? pvpParts : pveParts;
@@ -2365,12 +2346,27 @@ import * as dungeonUtils from './dungeon/utils.js';
       ${renderEncounterTabs({
         activeTab,
         pveCount: pveParts.length,
-        pvpCount: players.length
+        pvpCount: pvpParts.length
       })}
       <div class="world-encounter-tab-panel" role="tabpanel">
         ${activeParts.length ? activeParts.join('') : `<p class="world-empty-text">${emptyText}</p>`}
       </div>
     `;
+  }
+
+  function renderPveSidebarParts({ encounter, currentShrine }) {
+    if (state.moving || state.travelStatus === 'moving') {
+      return [renderTravelStatusCard()];
+    }
+
+    if (isHuntActive()) {
+      return [renderActiveHuntSummary()];
+    }
+
+    return [
+      currentShrine ? renderShrineAnchorAction(currentShrine) : '',
+      encounter ? renderCurrentEncounter(encounter) : ''
+    ].filter(Boolean);
   }
 
   function renderEncounterTabs({ activeTab, pveCount, pvpCount }) {
@@ -2394,20 +2390,23 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function renderShrineAnchorAction(currentShrine) {
     const isCurrentAnchor = state.boundShrine && positionsEqual(currentShrine, state.boundShrine);
+    const description = currentShrine.description || (isCurrentAnchor
+      ? 'Your respawn point.'
+      : 'Anchor your soul to this place.');
     const action = isCurrentAnchor
       ? ''
       : `
-        <button class="btn btn-warning btn-sm" type="button" data-anchor-soul ${state.bindingShrine ? 'disabled' : ''}>
+        <button class="btn btn-warning btn-sm world-card-action" type="button" data-anchor-soul ${state.bindingShrine ? 'disabled' : ''}>
           ${renderIcon('hand-heart')}
           <span>Pray</span>
         </button>
       `;
 
     return `
-      <article class="world-encounter-player is-demon-spot is-shrine-spot">
-        <span class="world-encounter-copy">
-          <strong>${escapeHtml(currentShrine.title || 'Forsaken Shrine')}</strong>
-          <small>${isCurrentAnchor ? 'Your respawn point.' : 'Anchor your soul to this place.'}</small>
+      <article class="world-sidebar-card world-shrine-card">
+        <span class="world-card-copy">
+          <strong class="world-card-title">${escapeHtml(currentShrine.title || 'Forsaken Shrine')}</strong>
+          <small class="world-card-meta">${escapeHtml(description)}</small>
         </span>
         ${action}
       </article>
@@ -2416,71 +2415,121 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function renderCurrentEncounter(encounter) {
     const unlocked = isEncounterUnlocked(encounter.id);
-    const active = isActiveHuntFor(encounter.id);
-    const activeElsewhere = Boolean(state.hunt?.active && !active);
-    const demons = (Array.isArray(encounter.team) ? encounter.team : []).slice(0, 4).map(renderDemonPortrait).join('');
-    const action = active
-      ? `<button class="btn btn-warning btn-sm" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>End Hunt</button>`
-      : unlocked
-        ? `<button class="btn btn-outline-light btn-sm" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy || activeElsewhere ? 'disabled' : ''}>Hunt</button>`
-        : `<button class="btn btn-outline-light btn-sm" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Fight</button>`;
+    const enemyDemons = renderDemonPortraitGroup(encounter.team, {
+      className: 'world-enemy-demons',
+      label: 'Enemy demons'
+    });
+    const requirement = unlocked ? 'Hunting unlocked' : 'Win fight to unlock';
+    const action = unlocked
+      ? `<button class="btn btn-warning btn-sm world-card-action" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Hunt</button>`
+      : `<button class="btn btn-outline-light btn-sm world-card-action" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Fight</button>`;
 
     return `
-      <article class="world-encounter-player is-demon-spot">
-        <span class="world-encounter-copy">
+      <article class="world-sidebar-card world-spot-card">
+        <span class="world-card-copy">
           ${renderEncounterTitle(encounter)}
-          <small>Threat ${formatNumber(encounter.difficulty || 1)}${active ? ' - Hunting' : unlocked ? ' - Hunting unlocked' : ''}</small>
-          ${demons ? `<span class="world-enc-demons">${demons}</span>` : ''}
+          <small class="world-card-meta">Threat ${formatNumber(encounter.difficulty || 1)} \u00b7 ${escapeHtml(requirement)}</small>
+          ${enemyDemons}
         </span>
         ${action}
       </article>
-      ${renderHuntRewards(encounter, active)}
     `;
   }
 
   function renderActiveHuntSummary() {
     const encounter = getActiveHuntEncounter();
     const progress = computeHuntProgress();
-    const meta = [
-      'Hunting',
-      encounter ? formatCoords(encounter) : null,
-      progress ? `${formatDuration(progress.elapsedSeconds)} elapsed` : null
-    ].filter(Boolean).join(' - ');
+    const rate = computeHuntRate(encounter);
+    const huntingDemons = renderDemonPortraitGroup(encounter?.team, {
+      max: 5,
+      className: 'world-hunt-target-demons',
+      label: 'Hunting demons'
+    });
 
     return `
-      <article class="world-encounter-player">
-        <span class="world-encounter-mark" aria-hidden="true"></span>
-        <span class="world-encounter-copy">
-          ${renderEncounterTitle(encounter)}
-          <small>${escapeHtml(meta)}</small>
+      <article class="world-sidebar-card world-active-hunt-card">
+        <span class="world-card-copy">
+          ${renderEncounterTitleLink(encounter, 'world-card-title')}
+          <small class="world-card-meta">Threat ${formatNumber(rate.difficulty)}</small>
         </span>
-        <button class="btn btn-warning btn-sm" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>End Hunt</button>
+        ${huntingDemons || '<p class="world-empty-text">No hunted demons visible.</p>'}
+        ${renderHuntProgress(progress, rate)}
+        ${renderHuntRewardLines(rate, progress)}
+        <button class="btn btn-outline-light btn-sm world-card-action world-end-hunt-action" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>End Hunt</button>
       </article>
-      ${encounter ? renderHuntRewards(encounter, true) : ''}
     `;
   }
 
-  function renderHuntRewards(encounter, active) {
-    const rate = computeHuntRate(encounter);
-    const progress = active ? computeHuntProgress() : null;
+  function renderPvpPlayerCard(player) {
+    const cooldownUntil = state.challengeCooldowns.get(player.id) || 0;
+    const isCoolingDown = cooldownUntil > Date.now();
+    const label = isCoolingDown ? 'Cooldown' : 'Challenge';
 
-    const expected = `
-      <div class="world-hunt-stat">
-        <span class="world-hunt-stat-label">Per kill</span>
-        <span class="world-hunt-stat-value">${formatNumber(rate.xpPerCycle)} XP / ${formatNumber(rate.soulsPerCycle)} Souls</span>
-        <span class="world-hunt-stat-note">one kill every ${formatDuration(rate.respawnSeconds)}</span>
-      </div>
+    return `
+      <article class="world-sidebar-card world-pvp-card">
+        <span class="world-card-copy">
+          <strong class="world-card-title">${escapeHtml(player.username || 'Unknown Hunter')}</strong>
+          <small class="world-card-meta">Level ${formatNumber(player.level || 1)}</small>
+        </span>
+        <button class="btn btn-warning btn-sm world-card-action" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
+      </article>
     `;
+  }
 
-    const accrued = progress ? `
-      <div class="world-hunt-stat is-accrued">
-        <span class="world-hunt-stat-label">Hunt Rewards</span>
-        <span class="world-hunt-stat-value">${formatNumber(progress.accruedXp)} XP / ${formatNumber(progress.accruedSouls)} Souls</span>
-        <span class="world-hunt-stat-note">${formatNumber(progress.cycles)} ${progress.cycles === 1 ? 'kill' : 'kills'}${progress.capped ? ' - cap reached' : ''}</span>
-      </div>
-    ` : '';
+  function renderTravelStatusCard() {
+    const destination = state.selectedPath?.[state.selectedPath.length - 1] || state.selectedTarget || state.position;
+    const remainingSteps = getPathStepCount(state.selectedPath || []);
+    const logs = state.travelLog || [];
+    const meta = remainingSteps
+      ? `${formatStepCount(remainingSteps)} remaining`
+      : 'Resolving route';
 
-    return `<div class="world-hunt-rewards">${expected}${accrued}</div>`;
+    return `
+      <article class="world-sidebar-card world-travel-card">
+        <span class="world-card-kicker">Traveling</span>
+        <span class="world-card-copy">
+          <strong class="world-card-title">Area ${escapeHtml(formatCoords(destination))}</strong>
+          <small class="world-card-meta">${escapeHtml(meta)}</small>
+        </span>
+        ${logs.length ? renderTravelLog(logs) : '<p class="world-empty-text">Moving through the wilds.</p>'}
+      </article>
+    `;
+  }
+
+  function renderHuntRewardLines(rate, progress) {
+    const accruedXp = progress ? progress.accruedXp : 0;
+    const accruedSouls = progress ? progress.accruedSouls : 0;
+
+    return `
+      <span class="world-hunt-reward-lines">
+        <span class="world-hunt-reward-row">
+          <span class="world-hunt-reward-label">Per kill:</span>
+          <span class="world-hunt-reward-value">${formatNumber(rate.xpPerCycle)} XP</span>
+          <span class="world-hunt-reward-value">${formatSoulCount(rate.soulsPerCycle)}</span>
+        </span>
+        <span class="world-hunt-reward-row is-earned">
+          <span class="world-hunt-reward-label">Earned:</span>
+          <span class="world-hunt-reward-value">${formatNumber(accruedXp)} XP</span>
+          <span class="world-hunt-reward-value">${formatSoulCount(accruedSouls)}</span>
+        </span>
+      </span>
+    `;
+  }
+
+  function renderHuntProgress(progress, rate) {
+    const totalSeconds = Math.max(1, Number(progress?.respawnSeconds || rate.respawnSeconds) || HUNT_DEFAULT_RESPAWN_SECONDS);
+    const remainingSeconds = progress ? progress.secondsToNext : totalSeconds;
+    const capped = Boolean(progress?.capped);
+    const progressPercent = capped
+      ? 100
+      : clamp(((totalSeconds - remainingSeconds) / totalSeconds) * 100, 0, 100);
+    const roundedProgress = Math.round(progressPercent);
+
+    return `
+      <span class="world-hunt-progress" role="progressbar" aria-label="Reward progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${roundedProgress}">
+        <span class="world-hunt-progress-fill" style="--hunt-progress:${progressPercent.toFixed(2)}%"></span>
+      </span>
+    `;
   }
 
   function renderEncounterTitle(encounter, extraClass = '') {
@@ -2493,6 +2542,31 @@ import * as dungeonUtils from './dungeon/utils.js';
         <span class="world-encounter-name">${escapeHtml(`${identity.name} Spot`)}</span>
       </strong>
     `;
+  }
+
+  function renderEncounterTitleLink(encounter, extraClass = '') {
+    const href = getEncounterDemonPageHref(encounter);
+    if (!href) return renderEncounterTitle(encounter, extraClass);
+
+    const identity = getEncounterIdentity(encounter);
+    const classes = ['world-encounter-title', 'world-encounter-title-link', extraClass].filter(Boolean).join(' ');
+    const label = `${identity.rarityLabel} ${identity.name} Spot`;
+
+    return `
+      <a class="${classes}" href="${escapeAttribute(href)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeAttribute(label)} demon guide">
+        <span class="world-encounter-rarity" style="--rarity-color:${identity.color}">${escapeHtml(identity.rarityLabel)}</span>
+        <span class="world-encounter-name">${escapeHtml(`${identity.name} Spot`)}</span>
+      </a>
+    `;
+  }
+
+  function getEncounterDemonPageHref(encounter) {
+    const keyDemon = encounter?.keyDemon || (Array.isArray(encounter?.team) ? encounter.team[0] : null);
+    const name = keyDemon?.species || keyDemon?.typeName || keyDemon?.name;
+    const rarity = keyDemon?.rarity;
+    if (!name || !rarity) return '';
+
+    return appUrl(`/demons/${slugify(`${name}-${rarity}`)}`);
   }
 
   function renderDemonPortrait(member) {
@@ -2508,6 +2582,43 @@ import * as dungeonUtils from './dungeon/utils.js';
     `;
   }
 
+  function renderDemonPortraitGroup(members = [], options = {}) {
+    const demons = (Array.isArray(members) ? members : []).filter(Boolean);
+    if (!demons.length) return '';
+
+    const max = Number.isInteger(options.max) && options.max > 0 ? options.max : demons.length;
+    const visibleDemons = demons.slice(0, max);
+    const overflow = Math.max(0, demons.length - visibleDemons.length);
+    const classes = ['world-enc-demons', options.className || ''].filter(Boolean).join(' ');
+    const label = options.label ? ` aria-label="${escapeAttribute(options.label)}"` : '';
+
+    return `
+      <div class="${classes}"${label}>
+        ${visibleDemons.map(renderDemonPortrait).join('')}
+        ${overflow ? `<span class="world-enc-demon-overflow">+${formatNumber(overflow)}</span>` : ''}
+      </div>
+    `;
+  }
+
+  function getActiveTeamMembers() {
+    const team = state.activeTeam || {};
+    return Array.isArray(team.members) ? team.members.filter(Boolean) : [];
+  }
+
+  function formatSoulCount(value) {
+    const count = Math.max(0, Number(value) || 0);
+    return `${formatNumber(count)} ${count === 1 ? 'Soul' : 'Souls'}`;
+  }
+
+  function slugify(value) {
+    return String(value || '')
+      .normalize('NFKD')
+      .replace(/['\u2018\u2019]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
   function renderTravelPanel() {
     if (!elements.worldTravelPanel) return;
 
@@ -2517,7 +2628,11 @@ import * as dungeonUtils from './dungeon/utils.js';
       return;
     }
 
-    elements.worldTravelPanel.innerHTML = `<div class="world-travel-log">${logs.slice(0, 5).map((entry, index) => renderTravelLogItem(entry, index)).join('')}</div>`;
+    elements.worldTravelPanel.innerHTML = renderTravelLog(logs);
+  }
+
+  function renderTravelLog(logs = []) {
+    return `<div class="world-travel-log">${logs.slice(0, 5).map((entry, index) => renderTravelLogItem(entry, index)).join('')}</div>`;
   }
 
   function renderTravelLogItem(entry, index = 0) {
