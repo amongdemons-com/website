@@ -146,6 +146,9 @@ import * as dungeonUtils from './dungeon/utils.js';
     encounterTextures: new Map(),
     tileTextures: new Map(),
     terrainBuilt: false,
+    puddleFxTiles: [],
+    puddleFxStyles: null,
+    puddleFxLast: 0,
     selectedEncounter: null,
     player: null,
     playersAt: [],
@@ -395,6 +398,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.pathLayer = new Pixi.Graphics();
     state.pathPulse = new Pixi.Graphics();     // animated destination ring
     state.shrineGlow = new Pixi.Graphics();    // animated soul smoke around forsaken shrines
+    state.puddleFx = new Pixi.Graphics();      // animated bubbles / embers over puddles
     state.markerLayer = new Pixi.Container();
     state.encounterLayer = new Pixi.Container();
     state.hunterLayer = new Pixi.Container();
@@ -410,6 +414,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.viewport.addChild(state.gridLayer);
     state.viewport.addChild(state.fogLayer);
     state.viewport.addChild(state.roadLayer);
+    state.viewport.addChild(state.puddleFx);
     state.viewport.addChild(state.hoverLayer);
     state.viewport.addChild(state.pathLayer);
     state.viewport.addChild(state.pathPulse);
@@ -422,6 +427,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     app.ticker.add(updatePathPulse);
     app.ticker.add(updateShrineGlow);
+    app.ticker.add(updatePuddleFx);
 
     bindCanvasInput(canvas);
     bindResize();
@@ -1243,6 +1249,10 @@ import * as dungeonUtils from './dungeon/utils.js';
         drawPoisonPuddle(g, rng, palette);
         return;
       }
+      if (zone === 4) {
+        drawLavaPuddle(g, rng, palette);
+        return;
+      }
       drawObstacle(g, kind, rng, palette);
     });
   }
@@ -1250,17 +1260,21 @@ import * as dungeonUtils from './dungeon/utils.js';
   // Top-down cluster of dark leaves used to mask blocked tiles in the demon
   // type 8 zone. The tile stays blocked in pathing logic; this only changes how
   // it's drawn.
-  function drawTreeObstacle(g, rng, palette) {
-    const cx = TILE_SIZE / 2 + (rng() - 0.5) * 4;
-    const cy = TILE_SIZE / 2 + (rng() - 0.5) * 4;
-    const radius = TILE_SIZE * 0.46;
-
-    // Deep, desaturated greens tinted by the zone accent — dark and brooding.
+  // Deep, desaturated leaf greens tinted by the zone accent — dark and brooding.
+  function leafClusterColors(palette) {
     const accentRgb = colorNumberToRgb(palette.accent);
-    const leafDeep = tintBaseColor(0x0c1207, accentRgb, 0.12);
-    const leafDark = tintBaseColor(0x14200d, accentRgb, 0.16);
-    const leafMid = tintBaseColor(0x1f3214, accentRgb, 0.2);
-    const leafEdge = tintBaseColor(0x35501f, accentRgb, 0.24); // faint rim light
+    return {
+      leafDeep: tintBaseColor(0x0c1207, accentRgb, 0.12),
+      leafDark: tintBaseColor(0x14200d, accentRgb, 0.16),
+      leafMid: tintBaseColor(0x1f3214, accentRgb, 0.2),
+      leafEdge: tintBaseColor(0x35501f, accentRgb, 0.24) // faint rim light
+    };
+  }
+
+  // Paint one pile of overlapping leaves centred at (cx,cy). No shadow — the
+  // caller lays shadows down first so a merged mass shares one continuous pool.
+  function drawLeafCluster(g, cx, cy, radius, rng, colors) {
+    const { leafDeep, leafDark, leafMid, leafEdge } = colors;
 
     // A single pointed leaf (almond shape) from base (ox,oy) toward `angle`.
     const leaf = (ox, oy, angle, length, width, color, alpha) => {
@@ -1277,10 +1291,6 @@ import * as dungeonUtils from './dungeon/utils.js';
         .quadraticCurveTo(mx - px, my - py, ox, oy)
         .fill({ color, alpha });
     };
-
-    // Soft cast shadow pooled under the cluster.
-    g.ellipse(cx + 3, cy + 4, radius * 0.85, radius * 0.72)
-      .fill({ color: 0x000000, alpha: 0.32 });
 
     // Dark underlayer of leaves fanning out in every direction.
     const under = 9 + Math.floor(rng() * 3);
@@ -1314,43 +1324,85 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
   }
 
-  // Top-down toxic puddle used to mask blocked tiles in the demon type 3 zone.
-  // The tile stays blocked in pathing logic; this only changes how it's drawn.
-  function drawPoisonPuddle(g, rng, palette) {
+  function drawTreeObstacle(g, rng, palette) {
     const cx = TILE_SIZE / 2 + (rng() - 0.5) * 4;
     const cy = TILE_SIZE / 2 + (rng() - 0.5) * 4;
     const radius = TILE_SIZE * 0.46;
+    g.ellipse(cx + 3, cy + 4, radius * 0.85, radius * 0.72)
+      .fill({ color: 0x000000, alpha: 0.32 });
+    drawLeafCluster(g, cx, cy, radius, rng, leafClusterColors(palette));
+  }
 
-    // Sickly green ooze tones tinted by the zone accent.
-    const accentRgb = colorNumberToRgb(palette.accent);
-    const oozeBorder = tintBaseColor(0x081209, accentRgb, 0.28); // dark wet edge
-    const oozeBody = tintBaseColor(0x1d3a22, accentRgb, 0.55);
-    const oozeDeep = tintBaseColor(0x102414, accentRgb, 0.45);
-    const oozeGlow = tintBaseColor(0x39663a, accentRgb, 0.7); // bright toxic sheen
+  // A single merged leaf mass spanning a connected cluster of blocked zone-8
+  // tiles. Drawn in world coordinates so the foliage flows across tile
+  // boundaries. Blocking/pathing logic is unchanged — every tile stays blocked.
+  function drawGiantLeafCluster(g, tiles, palette) {
+    const colors = leafClusterColors(palette);
+    const keySet = new Set(tiles.map(getTileKey));
+    const seedFor = (a, b, c) => (Math.imul(a | 0, 73856093) ^ Math.imul(b | 0, 19349663) ^ (c >>> 0)) >>> 0;
 
-    // A single irregular puddle outline. Summing a few sine harmonics at
-    // different frequencies (rather than one) gives organic bumps and concave
-    // bays instead of a regular polygon; the curve is then smoothed below.
+    // Collect a leaf pile per tile, plus extra piles at the seam between each
+    // pair of adjacent tiles so the foliage reads continuous with no gap.
+    const nodes = [];
+    for (const t of tiles) {
+      const c = tileCenter(t);
+      nodes.push({ x: c.x, y: c.y, r: TILE_SIZE * 0.5, seed: seedFor(t.x, t.y, 0x9e3779b1) });
+    }
+    for (const t of tiles) {
+      for (const d of [{ x: 1, y: 0 }, { x: 0, y: 1 }]) {
+        const n = { x: t.x + d.x, y: t.y + d.y };
+        if (!keySet.has(getTileKey(n))) continue;
+        const a = tileCenter(t);
+        const b = tileCenter(n);
+        nodes.push({
+          x: (a.x + b.x) / 2,
+          y: (a.y + b.y) / 2,
+          r: TILE_SIZE * 0.44,
+          seed: seedFor(t.x + n.x, t.y + n.y, 0x85ebca6b)
+        });
+      }
+    }
+
+    // Shadows first (one soft pool per pile), then all the leaves on top.
+    for (const node of nodes) {
+      g.ellipse(node.x + 3, node.y + 4, node.r * 0.85, node.r * 0.72)
+        .fill({ color: 0x000000, alpha: 0.26 });
+    }
+    for (const node of nodes) {
+      drawLeafCluster(g, node.x, node.y, node.r, seededRng(node.seed), colors);
+    }
+  }
+
+  // --- puddle-style obstacles (poison ooze in zone 3, lava in zone 4) --------
+  // A blocked tile is drawn as an irregular puddle; connected clusters merge
+  // into one giant puddle. The tile stays blocked in pathing logic — this only
+  // changes how it's drawn. Poison and lava share the same shape/merge code and
+  // differ only in their colour set and the details painted on the surface.
+
+  // Trace an irregular closed puddle outline into the current path (no fill).
+  // Summing a few sine harmonics at different frequencies gives organic bumps
+  // and concave bays instead of a regular polygon; the curve is smoothed by
+  // passing through edge midpoints with the raw vertices as control points.
+  // `ampScale` dials the wobble down for the overlapping blobs of a merged
+  // puddle so their union never pinches apart.
+  function tracePuddleBlobPath(g, cx, cy, radius, rng, ampScale = 1) {
     const lobes = 16;
     const h = [
-      { freq: 2, amp: 0.16 + rng() * 0.1, phase: rng() * Math.PI * 2 },
-      { freq: 3, amp: 0.12 + rng() * 0.08, phase: rng() * Math.PI * 2 },
-      { freq: 5, amp: 0.07 + rng() * 0.06, phase: rng() * Math.PI * 2 }
+      { freq: 2, amp: (0.16 + rng() * 0.1) * ampScale, phase: rng() * Math.PI * 2 },
+      { freq: 3, amp: (0.12 + rng() * 0.08) * ampScale, phase: rng() * Math.PI * 2 },
+      { freq: 5, amp: (0.07 + rng() * 0.06) * ampScale, phase: rng() * Math.PI * 2 }
     ];
     const pts = [];
     for (let i = 0; i < lobes; i += 1) {
       const a = (i / lobes) * Math.PI * 2;
       let raw = 0;
       for (const { freq, amp, phase } of h) raw += amp * Math.sin(a * freq + phase);
-      // Asymmetric: shallow outward bulges (stay inside the tile) but deep
-      // inward bays, which is what gives a puddle its lobed, irregular outline.
+      // Asymmetric: shallow outward bulges but deeper inward bays — the lobed,
+      // irregular look of a real puddle edge.
       const factor = 1 + (raw > 0 ? raw * 0.5 : raw * 0.95);
       const r = radius * factor;
       pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r * 0.95 });
     }
-
-    // Trace a smooth closed curve that passes through the midpoint of each edge,
-    // using the raw vertices as quadratic control points — rounds off the shape.
     const mid = (p, q) => ({ x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 });
     const start = mid(pts[lobes - 1], pts[0]);
     g.moveTo(start.x, start.y);
@@ -1359,26 +1411,295 @@ import * as dungeonUtils from './dungeon/utils.js';
       const m = mid(cur, pts[(i + 1) % lobes]);
       g.quadraticCurveTo(cur.x, cur.y, m.x, m.y);
     }
-    g.closePath()
-      .fill({ color: oozeBody })
-      .stroke({ color: oozeBorder, width: 3, alpha: 0.95 });
+    g.closePath();
+  }
 
-    // One glossy highlight toward the upper-left (light source).
-    g.ellipse(cx - radius * 0.22, cy - radius * 0.24, radius * 0.3, radius * 0.16)
-      .fill({ color: oozeGlow, alpha: 0.4 });
+  // Generic single-tile puddle: irregular body + dark rim + style-specific
+  // surface details.
+  function drawPuddle(g, rng, palette, colorsFn, drawDetails) {
+    const cx = TILE_SIZE / 2 + (rng() - 0.5) * 4;
+    const cy = TILE_SIZE / 2 + (rng() - 0.5) * 4;
+    const radius = TILE_SIZE * 0.46;
+    const colors = colorsFn(palette);
 
-    // Bubbles of toxic gas rising in the ooze — bright rims, dark mouths.
-    const bubbles = 3 + Math.floor(rng() * 3);
-    for (let i = 0; i < bubbles; i += 1) {
-      const a = rng() * Math.PI * 2;
-      const dist = radius * (0.1 + rng() * 0.5);
-      const bx = cx + Math.cos(a) * dist;
-      const by = cy + Math.sin(a) * dist * 0.9;
-      const r = radius * (0.07 + rng() * 0.08);
-      g.circle(bx, by, r).fill({ color: oozeDeep, alpha: 0.9 })
-        .stroke({ color: oozeGlow, width: 1.4, alpha: 0.7 });
-      g.circle(bx - r * 0.3, by - r * 0.3, r * 0.32).fill({ color: oozeGlow, alpha: 0.7 });
+    tracePuddleBlobPath(g, cx, cy, radius, rng);
+    g.fill({ color: colors.body })
+      .stroke({ color: colors.border, width: 3, alpha: 0.95 });
+
+    drawDetails(g, cx, cy, radius, rng, colors);
+  }
+
+  // Generic merged puddle spanning a connected cluster of blocked tiles. Drawn
+  // in world coordinates (not a per-tile texture) so the shape flows across tile
+  // boundaries. Blocking/pathing logic is unchanged — every tile in `tiles` is
+  // still individually blocked.
+  function drawGiantPuddle(g, tiles, palette, colorsFn, drawDetails) {
+    const colors = colorsFn(palette);
+    const keySet = new Set(tiles.map(getTileKey));
+    const tileRng = (t) => seededRng((Math.imul(t.x | 0, 73856093) ^ Math.imul(t.y | 0, 19349663) ^ 0x9e3779b1) >>> 0);
+    const edgeRng = (t, n) => seededRng((Math.imul((t.x + n.x) | 0, 40503) ^ Math.imul((t.y + n.y) | 0, 12289) ^ 0x85ebca6b) >>> 0);
+
+    // Trace the whole silhouette once. `grow` inflates every piece uniformly so
+    // the border pass sits just outside the body pass, leaving a clean outer rim
+    // and no seams between merged tiles.
+    const tracePass = (grow) => {
+      for (const t of tiles) {
+        const c = tileCenter(t);
+        tracePuddleBlobPath(g, c.x, c.y, TILE_SIZE * 0.5 + grow, tileRng(t), 0.55);
+      }
+      // Bridge each tile to its right/down neighbour (each edge once) with a
+      // couple of overlapping rounded blobs along the corridor. Blobs (not a
+      // straight rectangle) keep the join organic — no straight edges or hard
+      // corners — while still overlapping enough that it can never pinch apart.
+      for (const t of tiles) {
+        for (const d of [{ x: 1, y: 0 }, { x: 0, y: 1 }]) {
+          const n = { x: t.x + d.x, y: t.y + d.y };
+          if (!keySet.has(getTileKey(n))) continue;
+          const a = tileCenter(t);
+          const b = tileCenter(n);
+          const rng = edgeRng(t, n);
+          for (const at of [0.34, 0.66]) {
+            const nx = a.x + (b.x - a.x) * at;
+            const ny = a.y + (b.y - a.y) * at;
+            tracePuddleBlobPath(g, nx, ny, TILE_SIZE * 0.42 + grow, rng, 0.4);
+          }
+        }
+      }
+      // Fill the middle of any solid 2x2 quad so it leaves no diamond hole.
+      for (const t of tiles) {
+        const right = getTileKey({ x: t.x + 1, y: t.y });
+        const down = getTileKey({ x: t.x, y: t.y + 1 });
+        const diag = { x: t.x + 1, y: t.y + 1 };
+        if (keySet.has(right) && keySet.has(down) && keySet.has(getTileKey(diag))) {
+          const a = tileCenter(t);
+          tracePuddleBlobPath(g, a.x + TILE_SIZE / 2, a.y + TILE_SIZE / 2, TILE_SIZE * 0.5 + grow, edgeRng(t, diag), 0.35);
+        }
+      }
+    };
+
+    tracePass(3);
+    g.fill({ color: colors.border });
+    tracePass(0);
+    g.fill({ color: colors.body });
+
+    // Surface details scattered per tile so the large surface stays lively.
+    for (const t of tiles) {
+      const c = tileCenter(t);
+      drawDetails(g, c.x, c.y, TILE_SIZE * 0.42, tileRng(t), colors);
     }
+  }
+
+  // --- poison ooze (demon type 3) --------------------------------------------
+  // Sickly green ooze tones tinted by the zone accent.
+  function poisonPuddleColors(palette) {
+    const accentRgb = colorNumberToRgb(palette.accent);
+    return {
+      border: tintBaseColor(0x081209, accentRgb, 0.28), // dark wet edge
+      body: tintBaseColor(0x1d3a22, accentRgb, 0.55),
+      deep: tintBaseColor(0x102414, accentRgb, 0.45),
+      glow: tintBaseColor(0x39663a, accentRgb, 0.7) // bright toxic sheen
+    };
+  }
+
+  // Baked surface of a poison puddle: just the glossy sheen. The rising gas
+  // bubbles are animated separately (see drawPoisonFxParticle).
+  function drawPoisonDetails(g, cx, cy, radius, rng, colors) {
+    const { glow } = colors;
+    g.ellipse(cx - radius * 0.22, cy - radius * 0.24, radius * 0.3, radius * 0.16)
+      .fill({ color: glow, alpha: 0.4 });
+  }
+
+  function drawPoisonPuddle(g, rng, palette) {
+    drawPuddle(g, rng, palette, poisonPuddleColors, drawPoisonDetails);
+  }
+
+  function drawGiantPoisonPuddle(g, tiles, palette) {
+    drawGiantPuddle(g, tiles, palette, poisonPuddleColors, drawPoisonDetails);
+  }
+
+  // --- lava (demon type 4) ---------------------------------------------------
+  // Molten body with a cooled dark crust rim, tinted by the zone accent.
+  function lavaPuddleColors(palette) {
+    const accentRgb = colorNumberToRgb(palette.accent);
+    return {
+      border: tintBaseColor(0x140805, accentRgb, 0.16), // cooled rock crust
+      body: tintBaseColor(0x6f1d0c, accentRgb, 0.5), // molten red-orange
+      deep: tintBaseColor(0x2a0d05, accentRgb, 0.2), // dark cooled patches
+      glow: tintBaseColor(0xffb648, accentRgb, 0.2) // white-hot glow
+    };
+  }
+
+  // Baked surface of a lava puddle: warm sheen, cooled crust islands and molten
+  // hot spots. The rising sparks are animated separately (see drawLavaFxParticle).
+  function drawLavaDetails(g, cx, cy, radius, rng, colors) {
+    const { deep, glow } = colors;
+
+    // Broad warm sheen across the pool.
+    g.ellipse(cx - radius * 0.18, cy - radius * 0.2, radius * 0.34, radius * 0.2)
+      .fill({ color: glow, alpha: 0.18 });
+
+    // Dark cooled crust islands floating on the surface.
+    const crusts = 2 + Math.floor(rng() * 2);
+    for (let i = 0; i < crusts; i += 1) {
+      const a = rng() * Math.PI * 2;
+      const dist = radius * (0.15 + rng() * 0.5);
+      const px = cx + Math.cos(a) * dist;
+      const py = cy + Math.sin(a) * dist * 0.9;
+      const r = radius * (0.12 + rng() * 0.13);
+      g.ellipse(px, py, r, r * 0.8).fill({ color: deep, alpha: 0.55 });
+    }
+
+    // A couple of white-hot molten spots with a soft halo.
+    const spots = 2 + Math.floor(rng() * 2);
+    for (let i = 0; i < spots; i += 1) {
+      const a = rng() * Math.PI * 2;
+      const dist = radius * (0.1 + rng() * 0.45);
+      const px = cx + Math.cos(a) * dist;
+      const py = cy + Math.sin(a) * dist * 0.9;
+      const r = radius * (0.05 + rng() * 0.05);
+      g.circle(px, py, r * 2).fill({ color: glow, alpha: 0.22 });
+      g.circle(px, py, r).fill({ color: glow, alpha: 0.9 });
+    }
+  }
+
+  function drawLavaPuddle(g, rng, palette) {
+    drawPuddle(g, rng, palette, lavaPuddleColors, drawLavaDetails);
+  }
+
+  function drawGiantLavaPuddle(g, tiles, palette) {
+    drawGiantPuddle(g, tiles, palette, lavaPuddleColors, drawLavaDetails);
+  }
+
+  // --- animated puddle particles (rising bubbles / embers) -------------------
+  // The puddle bodies are baked once; only these particles animate. They loop
+  // purely off a time value (no per-particle state) and are drawn each tick for
+  // on-screen puddle tiles only, so cost scales with what's visible, not the
+  // whole world.
+  const PUDDLE_FX_RADIUS = TILE_SIZE * 0.42;
+
+  // Deterministic 0..1 hash so a particle can pick a fresh spawn spot each loop.
+  function fxHash(a, b, c) {
+    let h = Math.imul((a | 0) ^ 0x9e3779b1, 2654435761);
+    h = Math.imul(h ^ ((b | 0) + 0x85ebca6b), 2246822519);
+    h = Math.imul(h ^ ((c | 0) + 0x27d4eb2f), 3266489917);
+    h ^= h >>> 15;
+    return (h >>> 0) / 4294967296;
+  }
+
+  // A poison gas bubble: translucent dark body with a bright rim.
+  function drawPoisonFxParticle(g, x, y, r, alpha, colors) {
+    g.circle(x, y, r * 1.6).fill({ color: colors.glow, alpha: 0.14 * alpha });
+    g.circle(x, y, r).fill({ color: colors.deep, alpha: 0.7 * alpha })
+      .stroke({ color: colors.glow, width: 1.2, alpha: 0.85 * alpha });
+  }
+
+  // A lava ember: a glowing hot dot with a soft halo.
+  function drawLavaFxParticle(g, x, y, r, alpha, colors) {
+    g.circle(x, y, r * 1.9).fill({ color: colors.glow, alpha: 0.22 * alpha });
+    g.circle(x, y, r).fill({ color: colors.glow, alpha: 0.92 * alpha });
+  }
+
+  // Draw one tile's worth of rising particles at time `now` (ms). Each particle
+  // is born low in the pool, floats north, shrinks and fades over its lifetime,
+  // then respawns at a new spot on the next loop.
+  function drawPuddleFxParticles(g, cx, cy, now, seed, style) {
+    const radius = PUDDLE_FX_RADIUS;
+    for (let i = 0; i < style.count; i += 1) {
+      const t = now / style.period + i / style.count;
+      const life = t - Math.floor(t); // 0 at birth → 1 at top
+      const cycle = Math.floor(t); // increments each loop → reseed spawn
+      const baseX = cx + (fxHash(seed, i * 7 + 1, cycle) - 0.5) * radius * 0.9;
+      const sway = Math.sin(life * Math.PI * 1.4 + fxHash(seed, i * 7 + 3, cycle) * 6.283) * radius * 0.12;
+      const x = baseX + sway;
+      const y = cy + radius * 0.15 - life * radius * style.rise;
+      const r = radius * style.startR * (1 - life * 0.72); // shrink as it rises
+      if (r <= 0.4) continue;
+      const alpha = Math.sin(life * Math.PI); // fade in then out
+      style.render(g, x, y, r, alpha, style.colors);
+    }
+  }
+
+  // Build the per-style particle config once (colours depend on zone palette).
+  function buildPuddleFxStyles() {
+    return {
+      poison: {
+        colors: poisonPuddleColors(ZONE_PALETTES[3] || DEFAULT_ZONE_PALETTE),
+        render: drawPoisonFxParticle,
+        count: 3, period: 2600, rise: 1.35, startR: 0.13
+      },
+      lava: {
+        colors: lavaPuddleColors(ZONE_PALETTES[4] || DEFAULT_ZONE_PALETTE),
+        render: drawLavaFxParticle,
+        count: 4, period: 2100, rise: 1.5, startR: 0.13
+      }
+    };
+  }
+
+  // Ticker: redraw the animated particles for every on-screen puddle tile.
+  function updatePuddleFx() {
+    const layer = state.puddleFx;
+    if (!layer) return;
+    const tiles = state.puddleFxTiles;
+    if (!tiles || !tiles.length) return;
+
+    const now = performance.now();
+    // Embers drift slowly — ~30fps is plenty and halves the redraw cost.
+    if (now - (state.puddleFxLast || 0) < 33) return;
+    state.puddleFxLast = now;
+
+    layer.clear();
+
+    // Visible world rectangle (with a tile of margin) for culling.
+    const scale = state.viewport.scale.x || 1;
+    const margin = TILE_SIZE;
+    const left = -state.viewport.x / scale - margin;
+    const top = -state.viewport.y / scale - margin;
+    const right = (state.app.screen.width - state.viewport.x) / scale + margin;
+    const bottom = (state.app.screen.height - state.viewport.y) / scale + margin;
+
+    const styles = state.puddleFxStyles;
+    for (const tile of tiles) {
+      if (tile.cx < left || tile.cx > right || tile.cy < top || tile.cy > bottom) continue;
+      drawPuddleFxParticles(layer, tile.cx, tile.cy, now, tile.seed, styles[tile.styleKey]);
+    }
+  }
+
+  // Group blocked tiles of a given zone into orthogonally-connected clusters so
+  // adjacent ones can be rendered as one merged shape (giant puddle / leaf mass).
+  function computeBlockedComponents(zoneId) {
+    const set = new Set();
+    const byKey = new Map();
+    for (const t of state.blockedTiles) {
+      if (!isInBounds(t) || zoneTypeIdForTile(t.x, t.y) !== zoneId) continue;
+      const k = getTileKey(t);
+      set.add(k);
+      byKey.set(k, { x: t.x, y: t.y });
+    }
+    const seen = new Set();
+    const components = [];
+    for (const [key, tile] of byKey) {
+      if (seen.has(key)) continue;
+      const comp = [];
+      const stack = [tile];
+      seen.add(key);
+      while (stack.length) {
+        const cur = stack.pop();
+        comp.push(cur);
+        const neigh = [
+          { x: cur.x + 1, y: cur.y }, { x: cur.x - 1, y: cur.y },
+          { x: cur.x, y: cur.y + 1 }, { x: cur.x, y: cur.y - 1 }
+        ];
+        for (const nb of neigh) {
+          const nk = getTileKey(nb);
+          if (set.has(nk) && !seen.has(nk)) {
+            seen.add(nk);
+            stack.push(byKey.get(nk));
+          }
+        }
+      }
+      components.push(comp);
+    }
+    return components;
   }
 
   // Temporary full-square brick wall pattern for every blocked tile.
@@ -1464,6 +1785,26 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const min = state.bounds.min ?? -WORLD_RADIUS;
     const max = state.bounds.max ?? WORLD_RADIUS;
+
+    // Tiles in a connected cluster of 2+ blocked tiles get drawn together as one
+    // merged shape below (poison puddle in zone 3, lava in zone 4, leaf mass in
+    // zone 8), so skip their per-tile obstacle art here.
+    const puddleComponents = computeBlockedComponents(3);
+    const lavaComponents = computeBlockedComponents(4);
+    const leafComponents = computeBlockedComponents(8);
+    const mergedKeys = new Set();
+    for (const comps of [puddleComponents, lavaComponents, leafComponents]) {
+      for (const comp of comps) {
+        if (comp.length >= 2) for (const t of comp) mergedKeys.add(getTileKey(t));
+      }
+    }
+
+    // Every blocked puddle tile (poison zone 3, lava zone 4) emits animated
+    // particles on the ticker, whether it renders solo or as part of a merge.
+    state.puddleFxStyles = buildPuddleFxStyles();
+    state.puddleFxTiles = [];
+    const PUDDLE_FX_ZONES = { 3: 'poison', 4: 'lava' };
+
     for (let y = min; y <= max; y += 1) {
       for (let x = min; x <= max; x += 1) {
         const zone = zoneTypeIdForTile(x, y);
@@ -1474,10 +1815,24 @@ import * as dungeonUtils from './dungeon/utils.js';
 
         const blocked = getBlockedTile({ x, y });
         if (blocked) {
-          const kind = OBSTACLE_KINDS[Math.floor(hashTile(x, y, 1) * OBSTACLE_KINDS.length)];
-          const obstacle = makeTileSprite(obstacleTexture(kind, Math.floor(hashTile(x, y, 2) * OBSTACLE_VARIANTS), zone), x, y);
-          if (hashTile(x, y, 5) < 0.5) obstacle.scale.x = -1;
-          state.groundLayer.addChild(obstacle);
+          const fxStyle = PUDDLE_FX_ZONES[zone];
+          if (fxStyle) {
+            const c = tileCenter({ x, y });
+            state.puddleFxTiles.push({
+              cx: c.x,
+              cy: c.y,
+              seed: (Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263)) >>> 0,
+              styleKey: fxStyle
+            });
+          }
+          if (mergedKeys.has(getTileKey({ x, y }))) {
+            // Part of a merged cluster drawn after this loop.
+          } else {
+            const kind = OBSTACLE_KINDS[Math.floor(hashTile(x, y, 1) * OBSTACLE_KINDS.length)];
+            const obstacle = makeTileSprite(obstacleTexture(kind, Math.floor(hashTile(x, y, 2) * OBSTACLE_VARIANTS), zone), x, y);
+            if (hashTile(x, y, 5) < 0.5) obstacle.scale.x = -1;
+            state.groundLayer.addChild(obstacle);
+          }
         } else if (!isRoadTile({ x, y }) && hashTile(x, y, 7) < PROP_CHANCE) {
           // Rare, subtle stone decal on open ground.
           const prop = makeTileSprite(propTexture(zone, Math.floor(hashTile(x, y, 8) * 3)), x, y);
@@ -1485,6 +1840,26 @@ import * as dungeonUtils from './dungeon/utils.js';
           state.groundLayer.addChild(prop);
         }
       }
+    }
+
+    // Merged clusters: one Graphics per connected component, in world coordinates.
+    for (const comp of puddleComponents) {
+      if (comp.length < 2) continue;
+      const puddle = new Pixi.Graphics();
+      drawGiantPoisonPuddle(puddle, comp, ZONE_PALETTES[3] || DEFAULT_ZONE_PALETTE);
+      state.groundLayer.addChild(puddle);
+    }
+    for (const comp of lavaComponents) {
+      if (comp.length < 2) continue;
+      const lava = new Pixi.Graphics();
+      drawGiantLavaPuddle(lava, comp, ZONE_PALETTES[4] || DEFAULT_ZONE_PALETTE);
+      state.groundLayer.addChild(lava);
+    }
+    for (const comp of leafComponents) {
+      if (comp.length < 2) continue;
+      const leaves = new Pixi.Graphics();
+      drawGiantLeafCluster(leaves, comp, ZONE_PALETTES[8] || DEFAULT_ZONE_PALETTE);
+      state.groundLayer.addChild(leaves);
     }
 
     drawGrid();
@@ -5228,8 +5603,10 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     state.app?.ticker?.remove(updatePathPulse);
     state.app?.ticker?.remove(updateShrineGlow);
+    state.app?.ticker?.remove(updatePuddleFx);
     state.tileTextures.forEach((texture) => texture?.destroy?.(true));
     state.tileTextures.clear();
+    state.puddleFxTiles = [];
     state.terrainBuilt = false;
 
     if (state.app) {
