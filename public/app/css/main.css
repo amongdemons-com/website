@@ -16624,13 +16624,26 @@ body.world-page > .game-shell-nav {
     transition: color 160ms ease, text-shadow 160ms ease;
 }
 
+.world-hunter-profile-link {
+    display: block;
+    overflow: hidden;
+    color: inherit;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 160ms ease;
+}
+
 .world-card-copy .world-encounter-title-link:hover,
-.world-card-copy .world-encounter-title-link:focus-visible {
+.world-card-copy .world-encounter-title-link:focus-visible,
+.world-hunter-profile-link:hover,
+.world-hunter-profile-link:focus-visible {
     color: #fff3bd;
     text-decoration: none;
 }
 
-.world-card-copy .world-encounter-title-link:focus-visible {
+.world-card-copy .world-encounter-title-link:focus-visible,
+.world-hunter-profile-link:focus-visible {
     outline: 1px solid rgba(232,199,106,0.58);
     outline-offset: 2px;
 }
@@ -16658,6 +16671,27 @@ body.world-page > .game-shell-nav {
 .world-card-action {
     justify-self: end;
     min-width: 4.5rem;
+}
+
+.world-pvp-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.34rem;
+}
+
+.world-scout-action {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    min-width: 2rem;
+    height: 1.95rem;
+    padding: 0;
+}
+
+.world-scout-action .ad-icon {
+    width: 0.92rem;
+    height: 0.92rem;
 }
 
 .world-active-hunt-card .world-card-action,
@@ -17457,6 +17491,19 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
         width: 100%;
     }
 
+    .world-pvp-actions {
+        justify-content: stretch;
+        width: 100%;
+    }
+
+    .world-pvp-actions .world-card-action {
+        flex: 1 1 auto;
+    }
+
+    .world-scout-action {
+        flex: 0 0 2.1rem;
+    }
+
     .world-team-editor-title h2 {
         font-size: 1.12rem;
     }
@@ -17486,4 +17533,337 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
         grid-template-columns: repeat(auto-fill, minmax(4.85rem, 1fr));
     }
 
+}
+
+body.hunter-page {
+    min-height: 100vh;
+    background:
+        linear-gradient(180deg, rgba(4, 11, 14, 0.82), rgba(10, 19, 24, 0.94) 42%, rgba(4, 9, 12, 0.98)),
+        url("/images/assets/background/amongdemons_home.png") center top / cover fixed,
+        #05090c;
+    color: #edf5f2;
+}
+
+.hunter-shell {
+    max-width: 1180px;
+}
+
+.hunter-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(22rem, 0.92fr);
+    align-items: stretch;
+    gap: 1rem;
+    border: 1px solid rgba(161, 212, 201, 0.18);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, rgba(22, 43, 46, 0.92), rgba(25, 18, 24, 0.94)),
+        rgba(8, 14, 18, 0.96);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32);
+    padding: clamp(1rem, 2.4vw, 1.45rem);
+}
+
+.hunter-identity {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.hunter-avatar {
+    display: grid;
+    place-items: center;
+    width: clamp(4.5rem, 9vw, 6rem);
+    height: clamp(4.5rem, 9vw, 6rem);
+    border: 1px solid rgba(232, 199, 106, 0.36);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.24);
+    box-shadow: inset 0 0 24px rgba(232, 199, 106, 0.08);
+    overflow: hidden;
+}
+
+.hunter-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hunter-title-block {
+    min-width: 0;
+}
+
+.hunter-kicker {
+    display: inline-flex;
+    align-items: center;
+    color: rgba(232, 199, 106, 0.82);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.hunter-title-block h1 {
+    margin: 0.08rem 0 0.2rem;
+    color: #fff8dc;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2.1rem, 5.6vw, 4.2rem);
+    font-weight: 900;
+    line-height: 0.96;
+    overflow-wrap: anywhere;
+}
+
+.hunter-title-block p {
+    margin: 0;
+    color: rgba(237, 245, 242, 0.72);
+    font-size: clamp(0.88rem, 1.7vw, 1rem);
+}
+
+.hunter-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.hunter-stat {
+    display: grid;
+    align-content: center;
+    min-height: 5.05rem;
+    border: 1px solid rgba(161, 212, 201, 0.14);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.24);
+    padding: 0.8rem;
+}
+
+.hunter-stat-value {
+    color: #f4d675;
+    font-size: clamp(1.08rem, 2vw, 1.42rem);
+    font-weight: 900;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+}
+
+.hunter-stat-label {
+    margin-top: 0.28rem;
+    color: rgba(237, 245, 242, 0.58);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.hunter-content-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(19rem, 0.75fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.hunter-panel {
+    min-width: 0;
+    border: 1px solid rgba(161, 212, 201, 0.16);
+    border-radius: 8px;
+    background: rgba(8, 14, 18, 0.94);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
+    padding: clamp(0.9rem, 2vw, 1.1rem);
+}
+
+.hunter-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.85rem;
+    margin-bottom: 0.9rem;
+}
+
+.hunter-panel-head h2 {
+    margin: 0;
+    color: #fff2bd;
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.hunter-panel-head p {
+    margin: 0.18rem 0 0;
+    color: rgba(237, 245, 242, 0.62);
+    font-size: 0.82rem;
+}
+
+.hunter-panel-icon {
+    display: grid;
+    place-items: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    min-width: 2.15rem;
+    border: 1px solid rgba(232, 199, 106, 0.24);
+    border-radius: 8px;
+    color: #f1d581;
+    background: rgba(232, 199, 106, 0.08);
+}
+
+.hunter-panel-icon .ad-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.hunter-team-board {
+    display: grid;
+    justify-items: center;
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+}
+
+.hunter-team-board .battle-formation-grid {
+    --dungeon-formation-gap: clamp(0.42rem, 1vw, 0.75rem);
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    align-content: stretch;
+    justify-content: stretch;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    aspect-ratio: 1;
+    height: auto;
+    margin: 0;
+}
+
+.hunter-team-board .formation-slot {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+.hunter-team-board .formation-slot-cards {
+    min-width: 0;
+    min-height: 0;
+}
+
+.hunter-team-board .dungeon-demon-card {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.hunter-team-board .dungeon-demon-card:hover,
+.hunter-team-board .dungeon-demon-card:focus-visible {
+    outline: 2px solid rgba(232, 199, 106, 0.58);
+    outline-offset: 2px;
+}
+
+.hunter-buff-list {
+    display: grid;
+    gap: 0.62rem;
+}
+
+.hunter-buff {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.68rem;
+    align-items: start;
+    border: 1px solid rgba(161, 212, 201, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.035);
+    padding: 0.72rem;
+}
+
+.hunter-buff-icon {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    color: #8de6cb;
+    background: rgba(141, 230, 203, 0.1);
+}
+
+.hunter-buff-copy {
+    display: grid;
+    gap: 0.28rem;
+    min-width: 0;
+}
+
+.hunter-buff-copy strong {
+    color: #f6efd5;
+    font-size: 0.9rem;
+    line-height: 1.1;
+}
+
+.hunter-buff-copy small {
+    color: rgba(237, 245, 242, 0.58);
+    line-height: 1.35;
+}
+
+.hunter-buff-effects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.34rem;
+}
+
+.hunter-buff-effects span {
+    border: 1px solid rgba(232, 199, 106, 0.18);
+    border-radius: 6px;
+    background: rgba(232, 199, 106, 0.08);
+    color: rgba(255, 245, 211, 0.88);
+    padding: 0.2rem 0.42rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.hunter-empty {
+    margin: 0;
+    border: 1px dashed rgba(161, 212, 201, 0.2);
+    border-radius: 8px;
+    color: rgba(237, 245, 242, 0.58);
+    background: rgba(255, 255, 255, 0.025);
+    padding: 0.8rem;
+    text-align: center;
+}
+
+.rank-hunter-name-link {
+    color: #fff4c7;
+    text-decoration: none;
+}
+
+.rank-hunter-name-link:hover,
+.rank-hunter-name-link:focus-visible {
+    color: #ffffff;
+    text-decoration: underline;
+    text-underline-offset: 0.18rem;
+}
+
+@media (max-width: 991.98px) {
+    .hunter-hero,
+    .hunter-content-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .hunter-hero {
+        gap: 0.75rem;
+        padding: 0.9rem;
+    }
+
+    .hunter-identity {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hunter-stat-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hunter-stat {
+        min-height: 4.25rem;
+    }
+
+    .hunter-team-board .battle-formation-grid {
+        --dungeon-formation-gap: 0.38rem;
+    }
 }

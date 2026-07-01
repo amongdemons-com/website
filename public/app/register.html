@@ -77,7 +77,8 @@
               <form id="authForm" class="auth-form">
                 <div class="auth-field">
                   <label class="form-label" for="username">Username</label>
-                  <input class="form-control" id="username" name="username" autocomplete="username" minlength="3" required>
+                  <input class="form-control" id="username" name="username" autocomplete="username" minlength="3" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9]" aria-describedby="registerUsernameHelp" title="Use 3 to 64 letters, numbers, hyphens, or underscores. Start and end with a letter or number." required>
+                  <div class="form-text" id="registerUsernameHelp">Use 3 to 64 letters, numbers, hyphens, or underscores.</div>
                 </div>
                 <div class="auth-field">
                   <label class="form-label" for="email">Email</label>
@@ -121,6 +122,7 @@
     <script src="/app/js/icons.js?v=20260622-alerts-v1"></script>
     <script src="/app/js/api-config.js"></script>
     <script src="/app/js/session.js"></script>
+    <script src="/app/js/usernames.js?v=20260701-hunter-profile-v1"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/app/js/auth-ui.js"></script>
   </body>

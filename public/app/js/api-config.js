@@ -45,6 +45,12 @@
 
     const parsed = splitLocalUrl(value);
     const normalizedPath = normalizeRoutePath(parsed.pathname);
+    const hunterUsername = getHunterUsername(normalizedPath);
+    if (hunterUsername) {
+      const joiner = parsed.search ? '&' : '';
+      return `./hunter.html?username=${encodeURIComponent(hunterUsername)}${joiner}${parsed.search.replace(/^\?/, '')}${parsed.hash}`;
+    }
+
     const rankingSort = getRankingSort(normalizedPath);
     if (rankingSort) return `./rankings.html?sort=${encodeURIComponent(rankingSort)}${parsed.hash}`;
 
@@ -115,6 +121,11 @@
 
     const sort = pathname.slice('/rankings/'.length).split('/')[0];
     return ['floor', 'level', 'souls', 'pvp'].includes(sort) ? sort : '';
+  }
+
+  function getHunterUsername(pathname) {
+    if (!pathname.startsWith('/hunter/')) return '';
+    return pathname.slice('/hunter/'.length).split('/')[0] || '';
   }
 
   window.AmongDemons = {

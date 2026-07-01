@@ -3,15 +3,16 @@ const crypto = require('crypto');
 const db = require('../lib/db');
 const { cleanPlayer, createSession, hashPassword } = require('../lib/auth');
 const { saveDefaultBoundShrine } = require('../lib/world-shrines');
+const { assertValidUsername } = require('../lib/usernames');
 
 const router = express.Router();
 
 router.post('/auth/register', async (req, res) => {
-  const username = String(req.body.username || '').trim();
+  const username = assertValidUsername(req.body.username);
   const password = String(req.body.password || '');
 
-  if (username.length < 3 || password.length < 6) {
-    return res.status(400).json({ error: 'Username must be at least 3 characters and password at least 6 characters.' });
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters.' });
   }
 
   const { salt, hash } = hashPassword(password);

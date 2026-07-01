@@ -44,6 +44,7 @@ router.use(require('./runs/cashout'));
 router.use(require('./runs/end'));
 router.use(require('./world'));
 router.use(require('./leaderboard'));
+router.use(require('./hunters'));
 
 router.use((error, req, res, next) => {
   console.error(error);

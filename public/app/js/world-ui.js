@@ -2914,16 +2914,36 @@ import * as dungeonUtils from './dungeon/utils.js';
     const label = isCoolingDown ? 'Cooldown' : 'Challenge';
     const pvpWins = Math.max(0, Number(player.pvpWins) || 0);
     const pvpLosses = Math.max(0, Number(player.pvpLosses) || 0);
+    const username = player.username || 'Unknown Hunter';
+    const hunterHref = getHunterProfileHref(player);
+    const hunterName = hunterHref
+      ? `<a class="world-hunter-profile-link" href="${escapeAttribute(hunterHref)}" target="_blank" rel="noopener">${escapeHtml(username)}</a>`
+      : escapeHtml(username);
+    const scoutAction = hunterHref
+      ? `
+        <a class="btn btn-outline-light btn-sm world-scout-action" href="${escapeAttribute(hunterHref)}" target="_blank" rel="noopener" title="Scout ${escapeAttribute(username)}" aria-label="Scout ${escapeAttribute(username)}">
+          ${renderIcon('search', { size: 15 })}
+        </a>
+      `
+      : '';
 
     return `
       <article class="world-sidebar-card world-pvp-card">
         <span class="world-card-copy">
-          <strong class="world-card-title">${escapeHtml(player.username || 'Unknown Hunter')}</strong>
+          <strong class="world-card-title">${hunterName}</strong>
           <small class="world-card-meta">Level ${formatNumber(player.level || 1)} \u00b7 ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}</small>
         </span>
-        <button class="btn btn-warning btn-sm world-card-action" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
+        <span class="world-pvp-actions">
+          ${scoutAction}
+          <button class="btn btn-warning btn-sm world-card-action" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
+        </span>
       </article>
     `;
+  }
+
+  function getHunterProfileHref(player = {}) {
+    const username = String(player.username || '').trim();
+    return username ? appUrl(`/hunter/${encodeURIComponent(username)}`) : '';
   }
 
   function applyPvpChallengeRecords(payload = {}) {

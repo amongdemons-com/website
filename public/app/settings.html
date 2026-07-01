@@ -67,8 +67,8 @@
         <form id="usernameForm" class="settings-form" novalidate>
           <div class="settings-field">
             <label class="form-label" for="settingsUsername">Username</label>
-            <input class="form-control" id="settingsUsername" name="username" autocomplete="username" minlength="3" maxlength="64" aria-describedby="usernameHelp" required disabled>
-            <div class="form-text" id="usernameHelp">Use between 3 and 64 characters.</div>
+            <input class="form-control" id="settingsUsername" name="username" autocomplete="username" minlength="3" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9]" aria-describedby="usernameHelp" title="Use 3 to 64 letters, numbers, hyphens, or underscores. Start and end with a letter or number." required disabled>
+            <div class="form-text" id="usernameHelp">Use 3 to 64 letters, numbers, hyphens, or underscores.</div>
           </div>
           <div class="settings-form-footer">
             <p class="d-none settings-message" id="settingsMessage" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -113,6 +113,7 @@
     <script src="/app/js/icons.js?v=20260622-alerts-v1"></script>
     <script src="/app/js/api-config.js"></script>
     <script src="/app/js/session.js"></script>
+    <script src="/app/js/usernames.js?v=20260701-hunter-profile-v1"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/app/js/settings-ui.js"></script>
   </body>

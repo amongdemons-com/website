@@ -2,6 +2,10 @@ const crypto = require('crypto');
 const db = require('./db');
 const { hashPassword } = require('./auth');
 const { saveDefaultBoundShrine } = require('./world-shrines');
+const {
+  USERNAME_MAX_LENGTH,
+  createUsernameCandidate
+} = require('./usernames');
 
 const PROVIDERS = {
   google: {
@@ -235,7 +239,7 @@ async function createOAuthPlayer(connection, options) {
 
 async function buildUniqueUsername(connection, baseUsername, attempt) {
   const suffix = attempt === 0 ? '' : `-${crypto.randomBytes(2).toString('hex')}`;
-  const username = `${baseUsername.slice(0, 64 - suffix.length)}${suffix}`;
+  const username = `${baseUsername.slice(0, USERNAME_MAX_LENGTH - suffix.length)}${suffix}`;
   const [rows] = await connection.query('SELECT id FROM players WHERE username = ? LIMIT 1', [username]);
   if (!rows.length) return username;
   return buildUniqueUsername(connection, baseUsername, attempt + 1);
@@ -331,14 +335,7 @@ function parseJson(text) {
 }
 
 function buildUsernameCandidate(value, provider) {
-  const normalized = String(value || '')
-    .split('@')[0]
-    .replace(/[^a-zA-Z0-9_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40);
-
-  if (normalized.length >= 3) return normalized;
-  return `${provider}-hunter`;
+  return createUsernameCandidate(value, `${provider}-hunter`);
 }
 
 function normalizeEmail(value) {

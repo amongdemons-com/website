@@ -4,6 +4,7 @@
   const SESSION_KEY = 'amongdemons-session';
   const api = window.AmongDemons.api;
   const apiUrl = window.AmongDemons.apiUrl || ((value) => value);
+  const usernames = window.AmongDemons.usernames;
   const mode = document.body.dataset.authMode;
   const form = document.getElementById('authForm');
   const message = document.getElementById('authMessage');
@@ -24,10 +25,25 @@
 
     try {
       const formData = new FormData(form);
+      const usernameInput = form.querySelector('[name="username"]');
       const body = {
-        username: String(formData.get('username') || '').trim(),
+        username: usernames?.normalize
+          ? usernames.normalize(formData.get('username'))
+          : String(formData.get('username') || '').trim(),
         password: String(formData.get('password') || '')
       };
+
+      if (mode === 'register') {
+        const usernameError = usernames?.getValidationMessage?.(body.username) || '';
+        if (usernameError) {
+          usernameInput?.setCustomValidity(usernameError);
+          usernameInput?.reportValidity();
+          setMessage(usernameError, 'danger');
+          return;
+        }
+      }
+
+      usernameInput?.setCustomValidity('');
 
       if (mode === 'register') {
         const email = String(formData.get('email') || '').trim();

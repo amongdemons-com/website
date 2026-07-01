@@ -2,6 +2,7 @@
   'use strict';
 
   const api = window.AmongDemons.api;
+  const usernames = window.AmongDemons.usernames;
   // Keep in sync with the battle-feel keys in js/dungeon/config.js.
   const BATTLE_SCREEN_SHAKE_KEY = 'amongdemons-battle-screen-shake';
   const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
@@ -76,11 +77,14 @@
   async function saveUsername(event) {
     event.preventDefault();
 
-    const username = elements.username.value.trim();
+    const username = usernames?.normalize
+      ? usernames.normalize(elements.username.value)
+      : elements.username.value.trim();
     elements.username.value = username;
 
-    if (username.length < 3 || username.length > 64) {
-      elements.username.setCustomValidity('Username must be between 3 and 64 characters.');
+    const usernameError = usernames?.getValidationMessage?.(username) || '';
+    if (usernameError) {
+      elements.username.setCustomValidity(usernameError);
       elements.username.reportValidity();
       return;
     }

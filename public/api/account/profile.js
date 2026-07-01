@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../lib/db');
 const { cleanPlayer, requireAuth } = require('../lib/auth');
+const { getUsernameValidationError, normalizeUsername } = require('../lib/usernames');
 
 const router = express.Router();
 
@@ -13,9 +14,12 @@ router.patch('/account/profile', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Choose a profile setting to update.' });
   }
 
-  const username = hasUsername ? String(body.username || '').trim() : '';
-  if (hasUsername && (username.length < 3 || username.length > 64)) {
-    return res.status(400).json({ error: 'Username must be between 3 and 64 characters.' });
+  const username = hasUsername ? normalizeUsername(body.username) : '';
+  if (hasUsername) {
+    const usernameError = getUsernameValidationError(username);
+    if (usernameError) {
+      return res.status(400).json({ error: usernameError });
+    }
   }
 
   let profileDemon = null;

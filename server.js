@@ -47,6 +47,8 @@ app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found.' });
 });
 
+app.use('/images/assets', express.static(path.join(appDir, 'images', 'assets')));
+
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(renderRobotsTxt());
 });
@@ -134,6 +136,14 @@ app.get(['/terms', '/terms/'], (req, res) => {
 
 app.get(['/collection', '/collection/'], (req, res) => {
   res.sendFile(path.join(appDir, 'collection.html'));
+});
+
+app.get(['/hunter', '/hunter/'], (req, res) => {
+  res.redirect(302, '/rankings');
+});
+
+app.get(['/hunter/:username', '/hunter/:username/'], (req, res) => {
+  res.sendFile(path.join(appDir, 'hunter.html'));
 });
 
 app.get(['/rank', '/rank/'], (req, res) => {

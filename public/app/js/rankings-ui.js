@@ -99,6 +99,7 @@
     const souls = Number(player.souls) || 0;
     const pvpWins = Math.max(0, Number(player.pvpWins) || 0);
     const pvpLosses = Math.max(0, Number(player.pvpLosses) || 0);
+    const hunterHref = window.AmongDemons.appUrl(`/hunter/${encodeURIComponent(player.username || '')}`);
     const topRankIcon = topRankIcons[index] || '';
     const rowClasses = [
       'rank-row',
@@ -116,7 +117,7 @@
         </td>
         <td class="rank-hunter-cell" data-label="Hunter">
           <span class="rank-hunter">
-            <span class="rank-hunter-name">${escapeHtml(player.username)}</span>
+            <a class="rank-hunter-name rank-hunter-name-link" href="${escapeHtml(hunterHref)}">${escapeHtml(player.username)}</a>
             <small class="rank-hunter-meta">Level ${formatNumber(level)} &middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}</small>
           </span>
         </td>
