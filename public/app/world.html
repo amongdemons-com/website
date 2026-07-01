@@ -19,7 +19,7 @@
     <meta name="twitter:description" content="Private Among Demons hunter exploration prototype.">
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_dungeon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/app/css/main.css?v=20260630-world-ambush-blackout-v1" rel="stylesheet">
+    <link href="/app/css/main.css?v=20260701-world-travel-team-v3" rel="stylesheet">
   </head>
   <body class="world-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -152,6 +152,21 @@
       </div>
     </div>
 
+    <div class="modal fade world-travel-team-modal" id="worldTravelTeamRequiredModal" tabindex="-1" aria-label="It&rsquo;s dangerous to travel alone." aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body world-travel-team-prompt">
+            <span class="world-travel-team-mark" aria-hidden="true"><i data-lucide="shield-alert"></i></span>
+            <div class="world-travel-team-copy">
+              <p class="world-travel-team-title mb-0">It&rsquo;s dangerous to travel alone.</p>
+              <small>Form a demon team before moving.</small>
+              <button type="button" class="btn btn-glass-gold" id="worldTravelTeamConfirmButton">Choose Team</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal fade dungeon-modal world-battle-modal" id="worldBattleModal" tabindex="-1" aria-label="World battle" aria-hidden="true">
       <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
@@ -235,6 +250,6 @@
     <script src="/app/js/session.js"></script>
     <script src="/app/js/navigation.js"></script>
     <script src="/vendor/pixi/pixi.min.js"></script>
-    <script type="module" src="/app/js/world-ui.js?v=20260630-world-ambush-blackout-v1"></script>
+    <script type="module" src="/app/js/world-ui.js?v=20260701-world-travel-team-v1"></script>
   </body>
 </html>

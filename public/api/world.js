@@ -150,6 +150,13 @@ router.post('/world/move', requireAuth, async (req, res) => {
   const travelEvents = path.length
     ? validateTravelPath(currentPosition, position, path)
     : [];
+  const activeWorldTeam = await getActiveWorldTeam(req.player.id);
+
+  if (!activeWorldTeam.length) {
+    return res.status(409).json({
+      error: "It's dangerous to travel alone. Assign a team before traveling."
+    });
+  }
 
   await savePosition(req.player.id, position);
 

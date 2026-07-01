@@ -34,6 +34,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   const ROAD_MOVE_COST = AVERAGE_TERRAIN_COST - 1;
   const CLICK_THRESHOLD = 7;
   const STEP_DURATION_MS = 180;
+  const TRAVEL_ZOOM = 1;
   // Kept in sync with world-combat.js so the live hunt readout matches the server payout.
   const HUNT_DEFAULT_KILL_SECONDS = 300;
   const HUNT_REWARD_CYCLE_CAP = 288;
@@ -228,6 +229,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       'worldEditTeamButton',
       'worldTeamSummary',
       'worldTeamModal',
+      'worldTravelTeamRequiredModal',
+      'worldTravelTeamConfirmButton',
       'worldTeamEditorStatus',
       'worldTeamEditorCount',
       'worldTeamEditorGrid',
@@ -250,6 +253,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   function bindDomControls() {
     elements.worldPositionButton?.addEventListener('click', () => resetCameraOnHunter());
     elements.worldEditTeamButton?.addEventListener('click', openWorldTeamEditor);
+    elements.worldTravelTeamConfirmButton?.addEventListener('click', openWorldTeamEditorFromTravelWarning);
     elements.worldTeamSaveButton?.addEventListener('click', saveWorldTeamEditor);
     elements.worldTeamModal?.addEventListener('pointerdown', onWorldTeamEditorPointerDown);
     elements.worldTeamModal?.addEventListener('click', onWorldTeamEditorCardClick);
@@ -524,12 +528,17 @@ import * as dungeonUtils from './dungeon/utils.js';
   async function travelSelectedPath() {
     const path = (state.selectedPath || []).slice();
     if (state.moving || state.huntBusy || path.length < 2) return;
+    if (!hasAssignedWorldTeam()) {
+      showTravelTeamRequiredModal();
+      return;
+    }
     if (!(await stopHuntingForTravel())) return;
 
     state.moving = true;
     state.travelStatus = 'moving';
     state.travelLog = [];
     state.recentStepEvent = null;
+    setTravelCameraZoom();
     setWorldSidePanelExpanded(false);
     renderTravelPanel();
     renderWorld();
@@ -585,6 +594,13 @@ import * as dungeonUtils from './dungeon/utils.js';
         renderPanels();
       }
     } catch (error) {
+      if (isTravelTeamRequiredError(error)) {
+        state.travelStatus = state.selectedPath.length > 1 ? 'preview' : 'idle';
+        state.recentStepEvent = null;
+        setWorldSidePanelExpanded(true);
+        showTravelTeamRequiredModal();
+        return;
+      }
       if (error.status !== 401) {
         clearRoutePreview('idle');
       }
@@ -738,12 +754,17 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       state.position = nextPosition;
       state.hunterRenderPosition = null;
+      centerOnWorldPoint(tileCenter(nextPosition));
       return Promise.resolve();
     }
 
     const from = state.position;
     const to = nextPosition;
     const startedAt = performance.now();
+    const cameraFrom = state.viewport
+      ? { x: state.viewport.x, y: state.viewport.y }
+      : null;
+    const cameraTo = getCenteredViewportPosition(tileCenter(to));
 
     return new Promise((resolve) => {
       function tick(now) {
@@ -755,6 +776,11 @@ import * as dungeonUtils from './dungeon/utils.js';
           y: from.y + (to.y - from.y) * eased
         };
         drawHunter();
+        if (cameraFrom && cameraTo && state.viewport) {
+          state.viewport.x = cameraFrom.x + (cameraTo.x - cameraFrom.x) * eased;
+          state.viewport.y = cameraFrom.y + (cameraTo.y - cameraFrom.y) * eased;
+          updateCameraStatus();
+        }
 
         if (progress < 1) {
           window.requestAnimationFrame(tick);
@@ -763,6 +789,9 @@ import * as dungeonUtils from './dungeon/utils.js';
 
         state.position = to;
         state.hunterRenderPosition = null;
+        if (cameraTo) {
+          setViewportPosition(cameraTo);
+        }
         resolve();
       }
 
@@ -2630,6 +2659,50 @@ import * as dungeonUtils from './dungeon/utils.js';
     return Array.isArray(team.members) ? team.members.filter(Boolean) : [];
   }
 
+  function hasAssignedWorldTeam() {
+    return getActiveTeamMembers().length > 0;
+  }
+
+  function showTravelTeamRequiredModal() {
+    const modalElement = elements.worldTravelTeamRequiredModal;
+    const modalApi = window.bootstrap?.Modal;
+
+    if (!modalElement || !modalApi) {
+      setMessage("It's dangerous to travel alone. Assign a team before traveling.", 'warning');
+      openWorldTeamEditor();
+      return;
+    }
+
+    modalApi.getOrCreateInstance(modalElement).show();
+  }
+
+  function openWorldTeamEditorFromTravelWarning() {
+    const modalElement = elements.worldTravelTeamRequiredModal;
+    const modalApi = window.bootstrap?.Modal;
+
+    if (!modalElement || !modalApi) {
+      openWorldTeamEditor();
+      return;
+    }
+
+    const openEditor = () => {
+      openWorldTeamEditor();
+    };
+
+    if (modalElement.classList.contains('show')) {
+      modalElement.addEventListener('hidden.bs.modal', openEditor, { once: true });
+      modalApi.getOrCreateInstance(modalElement).hide();
+      return;
+    }
+
+    openEditor();
+  }
+
+  function isTravelTeamRequiredError(error) {
+    return Number(error?.status) === 409 &&
+      String(error?.message || '').toLowerCase().includes('dangerous to travel alone');
+  }
+
   function formatSoulCount(value) {
     const count = Math.max(0, Number(value) || 0);
     return `${formatNumber(count)} ${count === 1 ? 'Soul' : 'Souls'}`;
@@ -4248,6 +4321,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function updatePinchZoom() {
+    if (state.moving) return;
+
     const pinch = getPinchMetrics();
     if (!pinch || !state.pinch || !state.viewport) return;
 
@@ -4278,6 +4353,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!state.viewport) return;
 
     event.preventDefault();
+    if (state.moving) return;
 
     const oldScale = state.viewport.scale.x || 1;
     const nextScale = clamp(oldScale * (event.deltaY > 0 ? 0.9 : 1.1), MIN_ZOOM, MAX_ZOOM);
@@ -4338,16 +4414,34 @@ import * as dungeonUtils from './dungeon/utils.js';
     centerOnHunter();
   }
 
+  function setTravelCameraZoom() {
+    setZoom(TRAVEL_ZOOM);
+    centerOnHunter();
+  }
+
   function centerOnWorldPoint(point) {
+    setViewportPosition(getCenteredViewportPosition(point));
+  }
+
+  function getCenteredViewportPosition(point) {
     const app = state.app;
-    if (!app || !state.viewport) return;
+    if (!app || !state.viewport) return null;
 
     const width = app.screen?.width || app.renderer.width;
     const height = app.screen?.height || app.renderer.height;
     const scale = state.viewport.scale.x || 1;
 
-    state.viewport.x = width / 2 - point.x * scale;
-    state.viewport.y = height / 2 - point.y * scale;
+    return {
+      x: width / 2 - point.x * scale,
+      y: height / 2 - point.y * scale
+    };
+  }
+
+  function setViewportPosition(position) {
+    if (!position || !state.viewport) return;
+
+    state.viewport.x = position.x;
+    state.viewport.y = position.y;
     updateCameraStatus();
   }
 

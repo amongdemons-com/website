@@ -16088,6 +16088,83 @@ body.world-page > .game-shell-nav {
     margin: 0;
 }
 
+.world-travel-team-modal .modal-dialog {
+    width: min(25.25rem, calc(100vw - 1.5rem));
+    max-width: calc(100vw - 1.5rem);
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.world-travel-team-modal .modal-content {
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    background: #14181c;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.26);
+}
+
+.world-travel-team-modal .modal-content::before {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05), transparent);
+    content: "";
+}
+
+.world-travel-team-prompt {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 0.82rem;
+    padding: 1rem;
+}
+
+.world-travel-team-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 1px solid rgba(232,176,74,0.45);
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(40,52,55,0.9), rgba(18,28,31,0.95));
+    color: #e8b04a;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 0 10px rgba(232,176,74,0.12);
+}
+
+.world-travel-team-mark .ad-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.world-travel-team-copy {
+    display: grid;
+    justify-items: start;
+    gap: 0.32rem;
+    min-width: 0;
+}
+
+.world-travel-team-title {
+    color: #f8fbf9;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.world-travel-team-copy small {
+    color: var(--ad-muted);
+    font-size: 0.78rem;
+    line-height: 1.25;
+}
+
+.world-travel-team-copy .btn {
+    margin-top: 0.3rem;
+    padding: 0.42rem 0.78rem;
+    font-size: 0.82rem;
+    line-height: 1.1;
+}
+
 .world-team-editor-shell {
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr);
