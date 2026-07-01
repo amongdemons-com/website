@@ -282,7 +282,8 @@ function renderTeamSideTitle(teamCount = null, teamLimit = null) {
 function renderEnemySideTitle(pressure = null) {
   if (!elements.enemySideTitle) return;
 
-  elements.enemySideTitle.innerHTML = `<span>Enemies</span>${renderEnemyPressureChip(pressure)}`;
+  const label = state.run?.enemyLabel || 'Enemies';
+  elements.enemySideTitle.innerHTML = `<span>${escapeHtml(label)}</span>${renderEnemyPressureChip(pressure)}`;
 }
 
 function renderEnemyPressureChip(pressure = null) {

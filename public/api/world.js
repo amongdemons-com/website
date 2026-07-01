@@ -20,7 +20,8 @@ const {
   getWorldXpReward,
   saveActiveWorldTeam,
   simulateTryHunt,
-  simulateWorldAmbush
+  simulateWorldAmbush,
+  simulateWorldPvpChallenge
 } = require('./lib/world-combat');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const worldMap = require('./data/map.json');
@@ -43,11 +44,6 @@ const ROAD_TILES = new Set(WORLD_ROADS.map((tile) => `${tile.x},${tile.y}`));
 const BLOCKED_TILES = new Set(WORLD_BLOCKS.map((tile) => `${tile.x},${tile.y}`));
 const AMBUSH_CHANCE_OFF_ROAD = 7; // 1-in-N chance to be ambushed per eligible off-road step
 const AMBUSH_CHANCE_ON_ROAD = 34; // roads are watched but far safer to travel
-
-const MOCK_PLAYERS = [
-  { id: 'mock-ember-duelist', username: 'Ember Duelist', level: 6, x: 2, y: -1 },
-  { id: 'mock-veil-hunter', username: 'Veil Hunter', level: 9, x: -4, y: 3 }
-];
 
 router.get('/world/state', requireAuth, async (req, res) => {
   const position = await getOrCreatePosition(req.player.id);
@@ -261,6 +257,24 @@ router.post('/world/challenge', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Choose a player to challenge.' });
   }
 
+  if (targetPlayerId === String(req.player.id)) {
+    return res.status(400).json({ error: 'Choose another hunter to challenge.' });
+  }
+
+  const [currentPosition, targetPosition, targetPlayer] = await Promise.all([
+    getOrCreatePosition(req.player.id),
+    getExistingPosition(targetPlayerId),
+    getPlayerById(targetPlayerId)
+  ]);
+
+  if (!targetPlayer || !targetPosition) {
+    return res.status(404).json({ error: 'That hunter is no longer here.' });
+  }
+
+  if (!positionsEqual(currentPosition, targetPosition)) {
+    return res.status(409).json({ error: 'That hunter moved away.' });
+  }
+
   const cooldownKey = `${req.player.id}:${targetPlayerId}`;
   const cooldownUntil = challengeCooldowns.get(cooldownKey) || 0;
 
@@ -271,14 +285,18 @@ router.post('/world/challenge', requireAuth, async (req, res) => {
     });
   }
 
-  // TODO: Replace this placeholder with a real PvP challenge queue or match invite.
+  const battle = await simulateWorldPvpChallenge(req.player, targetPlayer);
   const nextCooldownUntil = Date.now() + CHALLENGE_COOLDOWN_MS;
   challengeCooldowns.set(cooldownKey, nextCooldownUntil);
 
   res.json({
     ok: true,
-    status: 'placeholder',
-    message: 'Challenge placeholder accepted.',
+    status: 'resolved',
+    targetPlayer: battle.targetPlayer,
+    battle,
+    message: battle.winner === 'player'
+      ? `You defeated ${targetPlayer.username || 'that hunter'}.`
+      : `${targetPlayer.username || 'That hunter'} won the challenge.`,
     cooldownUntil: new Date(nextCooldownUntil).toISOString()
   });
 });
@@ -313,25 +331,62 @@ async function savePosition(playerId, position) {
   );
 }
 
-async function getPlayersAt(x, y, currentPlayerId) {
-  // TODO: Replace mock players with live online-presence rows when PvP is implemented.
+async function getExistingPosition(playerId) {
   const [rows] = await db.query(
-    `SELECT p.id, p.username, p.level, wp.x, wp.y
+    'SELECT x, y FROM player_world_positions WHERE player_id = ? LIMIT 1',
+    [playerId]
+  );
+  if (!rows.length) return null;
+  return normalizePosition(rows[0], { allowBlocked: true });
+}
+
+async function getPlayerById(playerId) {
+  const [rows] = await db.query(
+    `SELECT p.*, pd.image_url AS profile_demon_image_url
+     FROM players p
+     LEFT JOIN player_demons pd
+       ON pd.id = p.profile_demon_id
+      AND pd.player_id = p.id
+     WHERE p.id = ?
+     LIMIT 1`,
+    [playerId]
+  );
+
+  return rows[0] ? cleanPlayer(rows[0]) : null;
+}
+
+async function getPlayersAt(x, y, currentPlayerId) {
+  const [rows] = await db.query(
+    `SELECT p.id,
+            p.username,
+            p.level,
+            wp.x,
+            wp.y,
+            (
+              SELECT COUNT(*)
+              FROM player_world_teams pwt_count
+              WHERE pwt_count.player_id = wp.player_id
+            ) AS teamCount
      FROM player_world_positions wp
      INNER JOIN players p ON p.id = wp.player_id
      WHERE wp.x = ?
        AND wp.y = ?
        AND wp.player_id <> ?
+       AND EXISTS (
+         SELECT 1
+         FROM player_world_teams pwt
+         WHERE pwt.player_id = wp.player_id
+       )
      ORDER BY wp.updated_at DESC
      LIMIT 8`,
     [x, y, currentPlayerId]
   );
 
-  const mockRows = MOCK_PLAYERS.filter((player) => player.x === x && player.y === y);
-  return [...rows, ...mockRows].map((player) => ({
+  return rows.map((player) => ({
     id: player.id,
     username: player.username || 'Unknown Hunter',
     level: Math.max(1, Number(player.level) || 1),
+    teamCount: Math.max(0, Number(player.teamCount) || 0),
     x: Number(player.x) || 0,
     y: Number(player.y) || 0
   }));

@@ -817,7 +817,15 @@ import * as dungeonUtils from './dungeon/utils.js';
       });
 
       rememberCooldown(targetPlayerId, payload.cooldownUntil);
-      setMessage(payload.message || 'Challenge placeholder accepted.', 'success');
+      const battle = payload.battle || null;
+      const targetPlayer = payload.targetPlayer || battle?.targetPlayer || getPvpPlayerById(targetPlayerId);
+      if (shouldShowWorldBattleReplay(battle)) {
+        await showWorldBattleReplay(battle, getWorldBattleMeta('pvp_challenge', battle, { targetPlayer }));
+      }
+      setMessage(
+        payload.message || getWorldBattleFallbackMessage(battle, getWorldBattleMeta('pvp_challenge', battle, { targetPlayer })),
+        battle?.winner === 'enemy' ? 'warning' : 'success'
+      );
     } catch (error) {
       if (error.status === 429 && error.payload?.cooldownUntil) {
         rememberCooldown(targetPlayerId, error.payload.cooldownUntil);
@@ -2382,7 +2390,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!elements.worldEncounterList) return;
     setText(elements.worldEncounterHeading, `World activity at Area ${formatCoords(state.position)}`);
 
-    const players = state.playersAt || [];
+    const players = (state.playersAt || []).filter(hasPvpTeamAssigned);
     const encounter = state.moving ? null : state.currentEncounter;
     const currentShrine = state.moving ? null : getShrineAt(state.position);
     const pveParts = renderPveSidebarParts({ encounter, currentShrine });
@@ -2518,16 +2526,27 @@ import * as dungeonUtils from './dungeon/utils.js';
     const cooldownUntil = state.challengeCooldowns.get(player.id) || 0;
     const isCoolingDown = cooldownUntil > Date.now();
     const label = isCoolingDown ? 'Cooldown' : 'Challenge';
+    const teamCount = Math.max(0, Number(player.teamCount) || Number(player.activeTeam?.count) || 0);
+    const teamMeta = teamCount ? ` \u00b7 ${formatNumber(teamCount)} ${teamCount === 1 ? 'demon' : 'demons'}` : '';
 
     return `
       <article class="world-sidebar-card world-pvp-card">
         <span class="world-card-copy">
           <strong class="world-card-title">${escapeHtml(player.username || 'Unknown Hunter')}</strong>
-          <small class="world-card-meta">Level ${formatNumber(player.level || 1)}</small>
+          <small class="world-card-meta">Level ${formatNumber(player.level || 1)}${teamMeta}</small>
         </span>
         <button class="btn btn-warning btn-sm world-card-action" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
       </article>
     `;
+  }
+
+  function hasPvpTeamAssigned(player = {}) {
+    return Math.max(0, Number(player.teamCount) || Number(player.activeTeam?.count) || 0) > 0;
+  }
+
+  function getPvpPlayerById(playerId) {
+    const id = String(playerId || '');
+    return (state.playersAt || []).find((player) => String(player.id) === id) || null;
   }
 
   function renderTravelStatusCard() {
@@ -3593,32 +3612,58 @@ import * as dungeonUtils from './dungeon/utils.js';
     return lookup.names.get(String(instanceId)) || 'Demon';
   }
 
-  function getWorldBattleMeta(type, battle = {}) {
-    return normalizeWorldBattleMeta(type, battle);
+  function getWorldBattleMeta(type, battle = {}, overrides = {}) {
+    return normalizeWorldBattleMeta(type, battle || {}, overrides);
   }
 
   function normalizeWorldBattleMeta(type = 'battle', battle = {}, overrides = {}) {
+    const battleState = battle || {};
     const normalizedType = type || overrides.type || 'battle';
-    const won = battle.winner === 'player';
+    const won = battleState.winner === 'player';
+    const lost = battleState.winner === 'enemy';
+    const pvpTargetName = getWorldBattlePvpTargetName(battleState, overrides);
     const title = normalizedType === 'try_hunt'
       ? won ? 'Fight Won' : 'Fight Failed'
-      : won ? 'Ambush Won' : battle.winner === 'enemy' ? 'Ambush Lost' : 'Ambush';
+      : normalizedType === 'pvp_challenge'
+        ? won ? 'Challenge Won' : lost ? 'Challenge Lost' : 'Challenge'
+        : won ? 'Ambush Won' : lost ? 'Ambush Lost' : 'Ambush';
 
     return {
       type: normalizedType,
-      eyebrow: overrides.eyebrow || (normalizedType === 'try_hunt' ? 'Fight' : 'World Ambush'),
+      eyebrow: overrides.eyebrow || (normalizedType === 'try_hunt'
+        ? 'Fight'
+        : normalizedType === 'pvp_challenge'
+          ? 'PvP Challenge'
+          : 'World Ambush'),
       title: overrides.title || title,
-      enemyLabel: overrides.enemyLabel || (normalizedType === 'try_hunt' ? getEncounterPlainLabel(battle.encounter) : 'Ambushers'),
-      winText: overrides.winText || (normalizedType === 'try_hunt' ? 'Hunting unlocked' : 'Ambush cleared'),
-      lossText: overrides.lossText || (normalizedType === 'try_hunt' ? 'Hunting remains locked' : 'Ambush lost'),
+      enemyLabel: overrides.enemyLabel || (normalizedType === 'try_hunt'
+        ? getEncounterPlainLabel(battleState.encounter)
+        : normalizedType === 'pvp_challenge'
+          ? pvpTargetName
+          : 'Ambushers'),
+      winText: overrides.winText || (normalizedType === 'try_hunt'
+        ? 'Hunting unlocked'
+        : normalizedType === 'pvp_challenge'
+          ? `Defeated ${pvpTargetName}`
+          : 'Ambush cleared'),
+      lossText: overrides.lossText || (normalizedType === 'try_hunt'
+        ? 'Hunting remains locked'
+        : normalizedType === 'pvp_challenge'
+          ? `${pvpTargetName} won`
+          : 'Ambush lost'),
       neutralText: overrides.neutralText || 'Battle ended'
     };
   }
 
+  function getWorldBattlePvpTargetName(battle = {}, overrides = {}) {
+    return overrides.targetPlayer?.username || battle.targetPlayer?.username || 'Hunter';
+  }
+
   function getWorldBattleFallbackMessage(battle = {}, meta = {}) {
-    const normalizedMeta = normalizeWorldBattleMeta(meta.type, battle, meta);
-    if (battle.winner === 'player') return normalizedMeta.winText;
-    if (battle.winner === 'enemy') return normalizedMeta.lossText;
+    const battleState = battle || {};
+    const normalizedMeta = normalizeWorldBattleMeta(meta.type, battleState, meta);
+    if (battleState.winner === 'player') return normalizedMeta.winText;
+    if (battleState.winner === 'enemy') return normalizedMeta.lossText;
     return normalizedMeta.neutralText;
   }
 
@@ -3783,6 +3828,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       currentFloor,
       team: playerBefore,
       enemies: enemyBefore,
+      enemyLabel: meta.enemyLabel || 'Enemies',
       rewards: [],
       recruitRewards: [],
       awaitingRecruit: true,

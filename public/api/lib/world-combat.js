@@ -273,6 +273,43 @@ async function simulateTryHunt(player, encounter) {
   });
 }
 
+async function simulateWorldPvpChallenge(player, targetPlayer, options = {}) {
+  const [playerTeam, targetTeam, playerBuffs, targetBuffs, demonTypes] = await Promise.all([
+    getActiveWorldTeam(player.id),
+    getActiveWorldTeam(targetPlayer.id),
+    resolvePlayerCombatBuffState(player),
+    resolvePlayerCombatBuffState(targetPlayer),
+    getDemonTypes()
+  ]);
+
+  if (!playerTeam.length) {
+    const error = new Error('Choose a world team before challenging another hunter.');
+    error.status = 409;
+    throw error;
+  }
+
+  if (!targetTeam.length) {
+    const error = new Error('That hunter has no assigned world team.');
+    error.status = 409;
+    throw error;
+  }
+
+  const seed = options.seed || hashSeed(`pvp:${player.id}:${targetPlayer.id}:${Date.now()}`);
+  const enemyTeam = mirrorWorldTeamForEnemySide(targetTeam);
+  const result = simulateFight(createRng(seed), playerTeam, enemyTeam, {
+    demonTypes,
+    combatType: 'pvp_challenge',
+    playerBuffs,
+    enemyBuffs: targetBuffs
+  });
+
+  return {
+    combatType: 'pvp_challenge',
+    targetPlayer: serializeWorldPvpTarget(targetPlayer, targetTeam),
+    ...serializeWorldCombatResult(result, playerBuffs, targetBuffs)
+  };
+}
+
 async function createHuntSnapshot(player, encounter) {
   const [playerTeam, playerBuffs, demonTypes] = await Promise.all([
     getActiveWorldTeam(player.id),
@@ -444,6 +481,34 @@ function serializeWorldCombatResult(result, playerBuffs, enemyBuffs) {
     enemyTeamAfter: result.enemyTeam,
     playerBuffs: serializeCombatBuffState(playerBuffs).activeBuffs,
     enemyBuffs: serializeCombatBuffState(enemyBuffs).activeBuffs
+  };
+}
+
+function mirrorWorldTeamForEnemySide(team = []) {
+  return assignFormationSlots(team.map((demon, index) => ({
+    ...demon,
+    instanceId: demon.instanceId || `pvp-enemy-${demon.collectionDemonId || demon.id || index + 1}`,
+    formationSlot: mirrorFormationSlot(demon.formationSlot ?? demon.formationRow),
+    formationRow: mirrorFormationSlot(demon.formationSlot ?? demon.formationRow)
+  })), 'enemy');
+}
+
+function mirrorFormationSlot(slot) {
+  const normalizedSlot = normalizeWorldTeamSlot(slot);
+  if (normalizedSlot === null) return null;
+
+  const row = Math.floor(normalizedSlot / 3);
+  const column = normalizedSlot % 3;
+  return row * 3 + (2 - column);
+}
+
+function serializeWorldPvpTarget(player = {}, team = []) {
+  return {
+    id: player.id,
+    username: player.username || 'Unknown Hunter',
+    level: Math.max(1, Number(player.level) || 1),
+    teamCount: Array.isArray(team) ? team.length : 0,
+    profileDemonImageUrl: player.profileDemonImageUrl || null
   };
 }
 
@@ -730,5 +795,6 @@ module.exports = {
   materializeEncounterTeam,
   saveActiveWorldTeam,
   simulateTryHunt,
-  simulateWorldAmbush
+  simulateWorldAmbush,
+  simulateWorldPvpChallenge
 };
