@@ -7,8 +7,13 @@
 }
 
 body.skill-tree-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
     min-height: 100vh;
-    overflow-x: hidden;
+    min-height: 100dvh;
+    overflow: hidden;
     background:
         radial-gradient(circle at 50% 28%, rgba(91, 112, 102, 0.16), transparent 34rem),
         linear-gradient(180deg, rgba(2, 6, 8, 0.78), rgba(3, 8, 10, 0.97)),
@@ -17,11 +22,16 @@ body.skill-tree-page {
 }
 
 .ascension-shell {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
     width: 100%;
+    min-height: 0;
     padding: clamp(0.3rem, 0.7vw, 0.65rem);
 }
 
 .ascension-shell > .alert {
+    flex: 0 0 auto;
     width: 100%;
     margin: 0 0 0.55rem;
 }
@@ -29,9 +39,10 @@ body.skill-tree-page {
 .ascension-screen {
     position: relative;
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     width: 100%;
-    min-height: calc(100dvh - 4.7rem);
+    min-height: 0;
     overflow: hidden;
     border: 1px solid rgba(204, 181, 124, 0.24);
     border-radius: 5px;
@@ -72,12 +83,20 @@ body.skill-tree-page {
     min-height: 0;
     overflow: auto;
     outline: none;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
     scrollbar-color: rgba(217, 185, 111, 0.42) rgba(2, 7, 8, 0.8);
     scrollbar-width: thin;
 }
 
 .ascension-viewport:focus-visible {
     box-shadow: inset 0 0 0 2px rgba(217, 185, 111, 0.3);
+}
+
+.ascension-viewport.is-panning,
+.ascension-viewport.is-panning .ascension-node {
+    cursor: grabbing;
 }
 
 .ascension-map {
@@ -378,6 +397,47 @@ body.skill-tree-page {
 .ascension-actions button:disabled {
     cursor: not-allowed;
     opacity: 0.32;
+}
+
+.ascension-reset-cost {
+    display: inline-flex;
+    align-items: stretch;
+    justify-content: center;
+    min-width: 3.8rem;
+}
+
+.ascension-reset-cost-chip {
+    min-width: 3.8rem;
+    min-height: 2.35rem;
+    border-color: rgba(85, 255, 255, 0.26);
+    border-radius: 2px;
+    background:
+        linear-gradient(180deg, rgba(85, 255, 255, 0.1), rgba(85, 255, 255, 0.03)),
+        rgba(5, 18, 21, 0.78);
+    padding: 0.42rem 0.68rem;
+    font-size: 0.78rem;
+}
+
+.ascension-reset-cost-chip .soul-icon {
+    width: 1.05em;
+    height: 1.05em;
+}
+
+.ascension-reset-cost.is-disabled .ascension-reset-cost-chip {
+    opacity: 0.62;
+}
+
+.ascension-action-separator {
+    display: inline-block;
+    width: 0.28rem;
+    height: 0.28rem;
+    border-radius: 50%;
+    background: rgba(217, 185, 111, 0.64);
+    box-shadow: 0 0 10px rgba(217, 185, 111, 0.22);
+}
+
+.ascension-reset-cost.d-none + .ascension-action-separator {
+    display: none;
 }
 
 @media (max-width: 767.98px) {

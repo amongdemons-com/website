@@ -2,6 +2,7 @@
   'use strict';
 
   const api = window.AmongDemons.api;
+  const renderSoulAmount = window.AmongDemons.ui?.renderSoulAmount || ((value) => String(value ?? '-'));
   const NODE_DEFINITIONS = {
     health_flat: { label: 'Max Health', cap: 5, requires: [] },
     health_percent: { label: 'Greater Health', cap: 5, requires: [['health_flat', 5]] },
@@ -22,11 +23,16 @@
     poison_mastery: { label: 'Endless Poison', cap: Infinity, requires: [['poison_percent', 5]] }
   };
   const STAT_KEYS = Object.keys(NODE_DEFINITIONS);
+  const PAN_CLICK_THRESHOLD = 5;
   const state = {
     summary: null,
     draft: null,
+    player: null,
     busy: false,
-    viewportCenterScheduled: false
+    busyAction: '',
+    viewportCenterScheduled: false,
+    viewportPointer: null,
+    suppressNextClick: false
   };
   const elements = {};
 
@@ -46,8 +52,8 @@
         api('/api/auth/me'),
         api('/api/account/stat-points')
       ]);
+      applyPlayer(me.player);
       applySummary(summary);
-      window.AmongDemons.ui?.updateNavAccount?.(me.player);
       render();
     } catch (error) {
       handleError(error);
@@ -66,7 +72,8 @@
       'skillTreeUnspentCard',
       'skillTreeStatus',
       'skillTreeSaveButton',
-      'skillTreeResetButton'
+      'skillTreeResetButton',
+      'skillTreeResetCost'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -78,6 +85,13 @@
     });
 
     elements.skillTreeGrid?.addEventListener('click', (event) => {
+      if (state.suppressNextClick) {
+        state.suppressNextClick = false;
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
       const node = target?.closest('[data-stat-point-key]');
       if (!node || state.busy) return;
@@ -106,6 +120,10 @@
 
     elements.skillTreeSaveButton?.addEventListener('click', save);
     elements.skillTreeResetButton?.addEventListener('click', reset);
+
+    elements.skillTreeViewport?.addEventListener('pointerdown', onViewportPointerDown);
+    elements.skillTreeViewport?.addEventListener('wheel', onViewportWheel, { passive: false });
+    window.addEventListener('blur', clearViewportPointer);
   }
 
   function updateDraft(key) {
@@ -143,6 +161,10 @@
     const unspent = total - spent;
     const valid = ready && isDraftValid(state.draft) && unspent >= 0;
     const dirty = ready && STAT_KEYS.some((key) => Number(state.draft[key]) !== Number(state.summary.allocations?.[key] || 0));
+    const savedSpent = ready ? getSpent(state.summary.allocations) : 0;
+    const resetCost = ready ? getResetCost() : 0;
+    const playerSouls = getPlayerSouls();
+    const canAffordReset = resetCost <= 0 || playerSouls >= resetCost;
 
     setText(elements.skillTreeTotal, ready ? formatNumber(total) : '-');
     setText(elements.skillTreeSpent, ready ? formatNumber(spent) : '-');
@@ -194,11 +216,25 @@
 
     if (elements.skillTreeSaveButton) {
       elements.skillTreeSaveButton.disabled = !valid || !dirty || state.busy;
-      elements.skillTreeSaveButton.textContent = state.busy ? 'Saving...' : 'Save';
+      elements.skillTreeSaveButton.textContent = state.busyAction === 'save' ? 'Saving...' : 'Save';
     }
     if (elements.skillTreeResetButton) {
-      elements.skillTreeResetButton.disabled = !ready || state.busy || getSpent(state.draft) <= 0;
+      elements.skillTreeResetButton.disabled = !ready || state.busy || spent <= 0 || !canAffordReset;
+      elements.skillTreeResetButton.textContent = getResetButtonLabel({
+        busy: state.busyAction === 'reset'
+      });
+      elements.skillTreeResetButton.title = resetCost > 0
+        ? `Reset costs ${formatNumber(resetCost)} Soul${resetCost === 1 ? '' : 's'}.`
+        : 'Clear unsaved skill point changes.';
     }
+
+    renderResetCost({
+      ready,
+      savedSpent,
+      resetCost,
+      playerSouls,
+      canAffordReset
+    });
   }
 
   function canInvest(key) {
@@ -228,6 +264,7 @@
   async function save() {
     if (!state.summary || !state.draft || state.busy) return;
     state.busy = true;
+    state.busyAction = 'save';
     render();
 
     try {
@@ -240,6 +277,7 @@
       handleError(error);
     } finally {
       state.busy = false;
+      state.busyAction = '';
       render();
     }
   }
@@ -254,15 +292,20 @@
     }
 
     state.busy = true;
+    state.busyAction = 'reset';
     render();
 
     try {
-      applySummary(await api('/api/account/stat-points/reset', { method: 'POST' }));
-      setMessage('All constellation bindings were released for free.', 'success');
+      const payload = await api('/api/account/stat-points/reset', { method: 'POST' });
+      applyPlayer(payload.player);
+      applySummary(payload);
+      const cost = Math.max(0, Number(payload.reset?.cost ?? payload.resetCost) || 0);
+      setMessage(`All constellation bindings were released for ${formatNumber(cost)} Soul${cost === 1 ? '' : 's'}.`, 'success');
     } catch (error) {
       handleError(error);
     } finally {
       state.busy = false;
+      state.busyAction = '';
       render();
     }
   }
@@ -275,8 +318,69 @@
     }, {});
   }
 
+  function applyPlayer(player) {
+    if (!player) return;
+
+    state.player = player;
+    const session = typeof window.AmongDemons.getSession === 'function'
+      ? window.AmongDemons.getSession()
+      : {};
+
+    if (typeof window.AmongDemons.setSession === 'function') {
+      window.AmongDemons.setSession({
+        ...session,
+        token: typeof window.AmongDemons.getToken === 'function' ? window.AmongDemons.getToken() : session.token,
+        player
+      });
+    }
+
+    window.AmongDemons.ui?.updateNavAccount?.(player);
+  }
+
   function getSpent(allocations) {
     return STAT_KEYS.reduce((sum, key) => sum + (Number(allocations?.[key]) || 0), 0);
+  }
+
+  function getResetCost() {
+    return Math.max(0, Number(state.summary?.resetCost) || getSpent(state.summary?.allocations));
+  }
+
+  function getPlayerSouls() {
+    return Math.max(0, Number(state.player?.souls) || 0);
+  }
+
+  function getResetButtonLabel({ busy }) {
+    if (busy) return 'Resetting...';
+    return 'Reset';
+  }
+
+  function renderResetCost({ ready, savedSpent, resetCost, playerSouls, canAffordReset }) {
+    const element = elements.skillTreeResetCost;
+    if (!element) return;
+
+    const visible = ready && savedSpent > 0 && resetCost > 0;
+    element.classList.toggle('d-none', !visible);
+    element.classList.toggle('is-disabled', visible && !canAffordReset);
+
+    if (!visible) {
+      element.innerHTML = '';
+      element.removeAttribute('title');
+      element.removeAttribute('aria-label');
+      return;
+    }
+
+    const deficit = Math.max(0, resetCost - playerSouls);
+    const formattedCost = formatNumber(resetCost);
+    const title = canAffordReset
+      ? `Reset costs ${formattedCost} Soul${resetCost === 1 ? '' : 's'}.`
+      : `Need ${formatNumber(deficit)} more Soul${deficit === 1 ? '' : 's'} to reset.`;
+
+    element.title = title;
+    element.innerHTML = renderSoulAmount(`-${formattedCost}`, {
+      className: 'soul-chip ascension-reset-cost-chip',
+      ariaLabel: title,
+      showLabel: false
+    });
   }
 
   function handleError(error) {
@@ -298,10 +402,113 @@
     if (element) element.textContent = value;
   }
 
+  function onViewportPointerDown(event) {
+    if (event.button !== 0 && event.pointerType !== 'touch') return;
+
+    const viewport = elements.skillTreeViewport;
+    if (!viewport) return;
+
+    clearViewportPointer();
+
+    state.viewportPointer = {
+      id: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startScrollLeft: viewport.scrollLeft,
+      startScrollTop: viewport.scrollTop,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      dragging: false
+    };
+
+    document.addEventListener('pointermove', onViewportPointerMove, { passive: false });
+    document.addEventListener('pointerup', onViewportPointerUp);
+    document.addEventListener('pointercancel', onViewportPointerUp);
+  }
+
+  function onViewportPointerMove(event) {
+    const viewport = elements.skillTreeViewport;
+    const pointer = state.viewportPointer;
+    if (!viewport || !pointer || pointer.id !== event.pointerId) return;
+
+    const totalDx = event.clientX - pointer.startX;
+    const totalDy = event.clientY - pointer.startY;
+
+    if (!pointer.dragging && Math.hypot(totalDx, totalDy) >= PAN_CLICK_THRESHOLD) {
+      pointer.dragging = true;
+      viewport.classList.add('is-panning');
+    }
+
+    if (pointer.dragging) {
+      event.preventDefault();
+      viewport.scrollLeft = pointer.startScrollLeft - totalDx;
+      viewport.scrollTop = pointer.startScrollTop - totalDy;
+    }
+
+    pointer.lastX = event.clientX;
+    pointer.lastY = event.clientY;
+  }
+
+  function onViewportPointerUp(event) {
+    const viewport = elements.skillTreeViewport;
+    const pointer = state.viewportPointer;
+    if (!viewport || !pointer || pointer.id !== event.pointerId) return;
+
+    if (pointer.dragging) {
+      state.suppressNextClick = true;
+      window.setTimeout(() => {
+        state.suppressNextClick = false;
+      }, 100);
+    }
+
+    clearViewportPointer();
+  }
+
+  function clearViewportPointer() {
+    document.removeEventListener('pointermove', onViewportPointerMove);
+    document.removeEventListener('pointerup', onViewportPointerUp);
+    document.removeEventListener('pointercancel', onViewportPointerUp);
+    elements.skillTreeViewport?.classList.remove('is-panning');
+    state.viewportPointer = null;
+  }
+
+  function onViewportWheel(event) {
+    const viewport = elements.skillTreeViewport;
+    if (!viewport) return;
+
+    let deltaX = normalizeWheelDelta(event.deltaX, event, viewport);
+    let deltaY = normalizeWheelDelta(event.deltaY, event, viewport);
+
+    if (event.shiftKey && Math.abs(deltaX) < Math.abs(deltaY)) {
+      deltaX = deltaY;
+      deltaY = 0;
+    }
+
+    if (!deltaX && !deltaY) return;
+
+    const previousLeft = viewport.scrollLeft;
+    const previousTop = viewport.scrollTop;
+    viewport.scrollLeft += deltaX;
+    viewport.scrollTop += deltaY;
+
+    if (viewport.scrollLeft !== previousLeft || viewport.scrollTop !== previousTop) {
+      event.preventDefault();
+    }
+  }
+
+  function normalizeWheelDelta(value, event, viewport) {
+    const delta = Number(value) || 0;
+    if (!delta) return 0;
+    if (event.deltaMode === 1) return delta * 16;
+    if (event.deltaMode === 2) return delta * viewport.clientHeight;
+    return delta;
+  }
+
   function centerConstellation() {
     const viewport = elements.skillTreeViewport;
-    if (!viewport || viewport.scrollWidth <= viewport.clientWidth) return;
+    if (!viewport) return;
     viewport.scrollLeft = Math.max(0, (viewport.scrollWidth - viewport.clientWidth) / 2);
+    viewport.scrollTop = Math.max(0, (viewport.scrollHeight - viewport.clientHeight) / 2);
   }
 
   function scheduleConstellationCenter() {

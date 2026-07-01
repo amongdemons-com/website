@@ -1,4 +1,5 @@
 const db = require('./db');
+const { cleanPlayer } = require('./auth');
 const { getNextAccountLevel } = require('./progression');
 
 const NODE_DEFINITIONS = Object.freeze({
@@ -154,6 +155,7 @@ function createStatPointSummary(player, source = {}) {
     level,
     totalPoints,
     spentPoints,
+    resetCost: getSkillTreeResetCost(allocations),
     unspentPoints: Math.max(0, totalPoints - spentPoints),
     allocations,
     bonuses: calculateStatBonuses(allocations),
@@ -193,7 +195,87 @@ async function savePlayerStatAllocations(player, source) {
 }
 
 async function resetPlayerStatAllocations(player) {
-  return savePlayerStatAllocations(player, ZERO_ALLOCATIONS);
+  const connection = await db.getConnection();
+  let committed = false;
+
+  try {
+    await connection.beginTransaction();
+
+    const [playerRows] = await connection.query(
+      'SELECT * FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
+      [player.id]
+    );
+    if (!playerRows.length) {
+      const error = new Error('Player not found.');
+      error.status = 404;
+      throw error;
+    }
+
+    const [allocationRows] = await connection.query(
+      `SELECT ${STAT_KEYS.join(', ')}
+       FROM player_stat_points
+       WHERE player_id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [player.id]
+    );
+
+    const allocations = normalizeStoredAllocations(allocationRows[0] || ZERO_ALLOCATIONS);
+    const resetCost = getSkillTreeResetCost(allocations);
+    const playerSouls = Math.max(0, Number(playerRows[0].souls) || 0);
+
+    if (playerSouls < resetCost) {
+      throwStatPointError(`Reset costs ${resetCost} Soul${resetCost === 1 ? '' : 's'}.`);
+    }
+
+    const columns = STAT_KEYS.join(', ');
+    const placeholders = STAT_KEYS.map(() => '?').join(', ');
+    const updates = STAT_KEYS.map((key) => `${key} = VALUES(${key})`).join(',\n       ');
+
+    await connection.query(
+      `INSERT INTO player_stat_points
+         (player_id, ${columns})
+       VALUES (?, ${placeholders})
+       ON DUPLICATE KEY UPDATE
+         ${updates}`,
+      [player.id, ...STAT_KEYS.map(() => 0)]
+    );
+
+    if (resetCost > 0) {
+      await connection.query(
+        'UPDATE players SET souls = souls - ? WHERE id = ?',
+        [resetCost, player.id]
+      );
+    }
+
+    const [updatedPlayerRows] = await connection.query(
+      'SELECT * FROM players WHERE id = ? LIMIT 1',
+      [player.id]
+    );
+
+    await connection.commit();
+    committed = true;
+
+    return {
+      ...createStatPointSummary(updatedPlayerRows[0], ZERO_ALLOCATIONS),
+      reset: {
+        cost: resetCost,
+        usedPoints: resetCost
+      },
+      player: cleanPlayer(updatedPlayerRows[0])
+    };
+  } catch (error) {
+    if (!committed) {
+      await connection.rollback();
+    }
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+function getSkillTreeResetCost(allocations = {}) {
+  return getSpentPoints(normalizeStoredAllocations(allocations));
 }
 
 function requirementsMet(allocations, requirements = []) {
@@ -221,6 +303,7 @@ module.exports = {
   calculatePathProgress,
   calculateStatBonuses,
   createStatPointSummary,
+  getSkillTreeResetCost,
   getPlayerStatPointSummary,
   getTotalStatPoints,
   normalizeStoredAllocations,
