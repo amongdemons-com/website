@@ -5,9 +5,10 @@
   const session = window.AmongDemons.getSession();
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const currentUsername = session.player && session.player.username;
-  const pathSorts = new Set(['floor', 'level', 'souls']);
+  const pathSorts = new Set(['floor', 'level', 'souls', 'pvp']);
   const topRankIcons = ['crown', 'trophy', 'medal'];
   let currentSort = getInitialSort();
+  let activeLoadId = 0;
 
   onReady(init);
 
@@ -20,21 +21,28 @@
 
   function cacheElements() {
     elements.body = document.getElementById('rankBody');
+    elements.table = elements.body?.closest('table');
     elements.message = document.getElementById('rankMessage');
     elements.sortLinks = document.querySelectorAll('.rank-sort-link');
     elements.statPlayers = document.querySelector('[data-rank-stat="players"]');
     elements.statSouls = document.querySelector('[data-rank-stat="souls"]');
+    elements.statPvpBattles = document.querySelector('[data-rank-stat="pvpBattles"]');
   }
 
   function bindSortLinks() {
     elements.sortLinks.forEach((link) => {
       link.addEventListener('click', async (event) => {
         event.preventDefault();
-        currentSort = link.dataset.sort || 'floor';
+        if (link.getAttribute('aria-disabled') === 'true') return;
+
+        const nextSort = link.dataset.sort || 'floor';
+        if (nextSort === currentSort) return;
+
+        currentSort = nextSort;
         const nextPath = currentSort === 'floor' ? '/rankings' : `/rankings/${currentSort}`;
         window.history.replaceState({}, '', window.AmongDemons.appUrl(nextPath));
         syncSortLinks();
-        await loadRank();
+        await loadRank({ preserveRows: true });
       });
     });
   }
@@ -47,26 +55,41 @@
     });
   }
 
-  async function loadRank() {
+  async function loadRank(options = {}) {
+    const loadId = activeLoadId + 1;
+    activeLoadId = loadId;
+    const preserveRows = options.preserveRows === true && hasRenderedRows();
+
     setMessage('', '');
-    elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="5" class="rank-empty-cell">Loading rankings...</td></tr>';
+    setRankBusy(true);
+    if (!preserveRows) {
+      elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">Loading rankings...</td></tr>';
+    }
 
     try {
       const payload = await window.AmongDemons.api(`/api/leaderboard?sort=${encodeURIComponent(currentSort)}`);
-      renderRows(payload.players || []);
+      if (loadId !== activeLoadId) return;
+      renderRows(payload.players || [], payload.stats || {});
     } catch (error) {
-      elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="5" class="rank-empty-cell">Could not load rankings.</td></tr>';
-      updateStats([]);
+      if (loadId !== activeLoadId) return;
+      if (!preserveRows) {
+        elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">Could not load rankings.</td></tr>';
+        updateStats([], {});
+      }
       setMessage(error.message || 'Could not load rankings.', 'danger');
+    } finally {
+      if (loadId === activeLoadId) {
+        setRankBusy(false);
+      }
     }
   }
 
-  function renderRows(players) {
-    updateStats(players);
+  function renderRows(players, stats = {}) {
+    updateStats(players, stats);
 
     elements.body.innerHTML = players.length
       ? players.map((player, index) => renderPlayerRow(player, index)).join('')
-      : '<tr class="rank-empty-row"><td colspan="5" class="rank-empty-cell">No hunters yet.</td></tr>';
+      : '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">No hunters yet.</td></tr>';
   }
 
   function renderPlayerRow(player, index) {
@@ -74,6 +97,8 @@
     const floor = Number(player.highestFloor) || 0;
     const level = Number(player.level) || 1;
     const souls = Number(player.souls) || 0;
+    const pvpWins = Math.max(0, Number(player.pvpWins) || 0);
+    const pvpLosses = Math.max(0, Number(player.pvpLosses) || 0);
     const topRankIcon = topRankIcons[index] || '';
     const rowClasses = [
       'rank-row',
@@ -92,6 +117,7 @@
         <td class="rank-hunter-cell" data-label="Hunter">
           <span class="rank-hunter">
             <span class="rank-hunter-name">${escapeHtml(player.username)}</span>
+            <small class="rank-hunter-meta">Level ${formatNumber(level)} &middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}</small>
           </span>
         </td>
         <td class="rank-floor-cell" data-label="Highest Floor">
@@ -100,7 +126,6 @@
             <span class="rank-floor-label">floor</span>
           </span>
         </td>
-        <td data-label="Level"><span class="rank-metric">${formatNumber(level)}</span></td>
         <td data-label="Souls">${renderSoulAmount(formatNumber(souls), {
           showLabel: false,
           className: 'rank-metric rank-metric-souls',
@@ -110,11 +135,23 @@
     `;
   }
 
-  function updateStats(players) {
-    const souls = players.reduce((sum, player) => sum + (Number(player.souls) || 0), 0);
+  function updateStats(players, stats = {}) {
+    const fallbackPlayers = players.length;
+    const fallbackSouls = players.reduce((sum, player) => sum + (Number(player.souls) || 0), 0);
+    const fallbackPvpBattles = players.reduce((sum, player) => sum + Math.max(0, Number(player.pvpWins) || 0), 0);
+    const playerCount = Number.isFinite(Number(stats.players))
+      ? Math.max(0, Number(stats.players) || 0)
+      : fallbackPlayers;
+    const souls = Number.isFinite(Number(stats.souls))
+      ? Math.max(0, Number(stats.souls) || 0)
+      : fallbackSouls;
+    const pvpBattles = Number.isFinite(Number(stats.pvpBattles))
+      ? Math.max(0, Number(stats.pvpBattles) || 0)
+      : fallbackPvpBattles;
 
-    setStatText(elements.statPlayers, players.length, { compact: true, label: 'Hunters' });
+    setStatText(elements.statPlayers, playerCount, { compact: true, label: 'Hunters' });
     setStatText(elements.statSouls, souls, { compact: true, label: 'Souls held' });
+    setStatText(elements.statPvpBattles, pvpBattles, { compact: true, label: 'PvP Battles' });
   }
 
   function getInitialSort() {
@@ -130,6 +167,22 @@
   function setMessage(text, type) {
     elements.message.textContent = text;
     elements.message.className = text ? `alert alert-${type}` : 'alert d-none';
+  }
+
+  function hasRenderedRows() {
+    return Boolean(elements.body?.querySelector('tr:not(.rank-empty-row)'));
+  }
+
+  function setRankBusy(isBusy) {
+    elements.table?.classList.toggle('is-rank-loading', isBusy);
+    elements.table?.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+    elements.sortLinks?.forEach((link) => {
+      if (isBusy) {
+        link.setAttribute('aria-disabled', 'true');
+      } else {
+        link.removeAttribute('aria-disabled');
+      }
+    });
   }
 
   function renderRankIcon(iconName) {

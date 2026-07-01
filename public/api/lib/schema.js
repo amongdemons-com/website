@@ -103,6 +103,8 @@ async function initializeSchema() {
       xp INT UNSIGNED NOT NULL DEFAULT 0,
       souls INT UNSIGNED NOT NULL DEFAULT 0,
       highest_floor INT UNSIGNED NOT NULL DEFAULT 0,
+      pvp_wins INT UNSIGNED NOT NULL DEFAULT 0,
+      pvp_losses INT UNSIGNED NOT NULL DEFAULT 0,
       profile_demon_id INT UNSIGNED NULL,
       unlocks LONGTEXT NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -114,6 +116,8 @@ async function initializeSchema() {
   await addColumnIfMissing('players', 'email', '`email` VARCHAR(255) NULL');
   await addColumnIfMissing('players', 'unlocks', '`unlocks` LONGTEXT NULL');
   await addColumnIfMissing('players', 'highest_floor', '`highest_floor` INT UNSIGNED NOT NULL DEFAULT 0');
+  await addColumnIfMissing('players', 'pvp_wins', '`pvp_wins` INT UNSIGNED NOT NULL DEFAULT 0');
+  await addColumnIfMissing('players', 'pvp_losses', '`pvp_losses` INT UNSIGNED NOT NULL DEFAULT 0');
   await addColumnIfMissing('players', 'profile_demon_id', '`profile_demon_id` INT UNSIGNED NULL');
   await normalizeUtf8Column('players', 'id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
   await normalizeUtf8Column('players', 'email', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');

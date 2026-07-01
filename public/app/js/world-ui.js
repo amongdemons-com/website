@@ -641,7 +641,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     }));
   }
 
-  async function resolveAmbushDefeat() {
+  async function resolveAmbushDefeat(options = {}) {
     const recovery = await api('/api/world/ambush-defeat', { method: 'POST' });
     const returnPosition = normalizePosition(recovery.position || state.position);
 
@@ -655,7 +655,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     clearRoutePreview('arrived', { keepLog: true });
     centerOnHunter();
     setMessage(
-      recovery.message || 'You were defeated and dragged back to your Anchored Shrine.',
+      options.message || recovery.message || 'You were defeated and dragged back to your Anchored Shrine.',
       'danger'
     );
     renderPanels();
@@ -819,13 +819,21 @@ import * as dungeonUtils from './dungeon/utils.js';
       rememberCooldown(targetPlayerId, payload.cooldownUntil);
       const battle = payload.battle || null;
       const targetPlayer = payload.targetPlayer || battle?.targetPlayer || getPvpPlayerById(targetPlayerId);
+      applyPvpChallengeRecords(payload);
+      const battleMeta = getWorldBattleMeta('pvp_challenge', battle, { targetPlayer });
       if (shouldShowWorldBattleReplay(battle)) {
-        await showWorldBattleReplay(battle, getWorldBattleMeta('pvp_challenge', battle, { targetPlayer }));
+        await showWorldBattleReplay(battle, battleMeta);
       }
-      setMessage(
-        payload.message || getWorldBattleFallbackMessage(battle, getWorldBattleMeta('pvp_challenge', battle, { targetPlayer })),
-        battle?.winner === 'enemy' ? 'warning' : 'success'
-      );
+      if (isLostPvpChallenge(battle, battleMeta)) {
+        await resolveAmbushDefeat({
+          message: 'You lost the challenge and returned to your Anchored Shrine.'
+        });
+      } else {
+        setMessage(
+          payload.message || getWorldBattleFallbackMessage(battle, battleMeta),
+          battle?.winner === 'enemy' ? 'warning' : 'success'
+        );
+      }
     } catch (error) {
       if (error.status === 429 && error.payload?.cooldownUntil) {
         rememberCooldown(targetPlayerId, error.payload.cooldownUntil);
@@ -834,6 +842,9 @@ import * as dungeonUtils from './dungeon/utils.js';
     } finally {
       setButtonBusy(button, false);
       renderEncounterPanel();
+      if (state.ambushDefeatBlackoutActive) {
+        await fadeWorldAmbushDefeatFromBlack();
+      }
     }
   }
 
@@ -2526,18 +2537,41 @@ import * as dungeonUtils from './dungeon/utils.js';
     const cooldownUntil = state.challengeCooldowns.get(player.id) || 0;
     const isCoolingDown = cooldownUntil > Date.now();
     const label = isCoolingDown ? 'Cooldown' : 'Challenge';
-    const teamCount = Math.max(0, Number(player.teamCount) || Number(player.activeTeam?.count) || 0);
-    const teamMeta = teamCount ? ` \u00b7 ${formatNumber(teamCount)} ${teamCount === 1 ? 'demon' : 'demons'}` : '';
+    const pvpWins = Math.max(0, Number(player.pvpWins) || 0);
+    const pvpLosses = Math.max(0, Number(player.pvpLosses) || 0);
 
     return `
       <article class="world-sidebar-card world-pvp-card">
         <span class="world-card-copy">
           <strong class="world-card-title">${escapeHtml(player.username || 'Unknown Hunter')}</strong>
-          <small class="world-card-meta">Level ${formatNumber(player.level || 1)}${teamMeta}</small>
+          <small class="world-card-meta">Level ${formatNumber(player.level || 1)} \u00b7 ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}</small>
         </span>
         <button class="btn btn-warning btn-sm world-card-action" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
       </article>
     `;
+  }
+
+  function applyPvpChallengeRecords(payload = {}) {
+    if (payload.player) {
+      state.player = {
+        ...(state.player || {}),
+        ...payload.player
+      };
+      window.AmongDemons.ui?.updateNavAccount?.(payload.player);
+    }
+
+    const targetPlayer = payload.targetPlayer || payload.battle?.targetPlayer;
+    if (!targetPlayer?.id) return;
+
+    state.playersAt = (state.playersAt || []).map((player) => (
+      String(player.id) === String(targetPlayer.id)
+        ? {
+          ...player,
+          pvpWins: Math.max(0, Number(targetPlayer.pvpWins) || 0),
+          pvpLosses: Math.max(0, Number(targetPlayer.pvpLosses) || 0)
+        }
+        : player
+    ));
   }
 
   function hasPvpTeamAssigned(player = {}) {
@@ -3731,7 +3765,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       : new Promise((resolve) => modalElement.addEventListener('shown.bs.modal', resolve, { once: true }));
     const hiddenPromise = new Promise((resolve) => {
       modalElement.addEventListener('hidden.bs.modal', () => {
-        const waitForBackdrop = isLostAmbushBattle(battle, meta)
+        const waitForBackdrop = shouldReturnToShrineAfterWorldBattle(battle, meta)
           ? waitForWorldBattleBackdropClear()
           : Promise.resolve();
         waitForBackdrop.then(resolve);
@@ -4116,11 +4150,19 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function shouldCloseWorldBattleModalInstantly() {
-    return isLostAmbushBattle(state.activeWorldBattle, state.activeWorldBattleMeta);
+    return shouldReturnToShrineAfterWorldBattle(state.activeWorldBattle, state.activeWorldBattleMeta);
+  }
+
+  function shouldReturnToShrineAfterWorldBattle(battle = {}, meta = {}) {
+    return isLostAmbushBattle(battle, meta) || isLostPvpChallenge(battle, meta);
   }
 
   function isLostAmbushBattle(battle = {}, meta = {}) {
     return meta?.type === 'ambush' && battle?.winner === 'enemy';
+  }
+
+  function isLostPvpChallenge(battle = {}, meta = {}) {
+    return meta?.type === 'pvp_challenge' && battle?.winner === 'enemy';
   }
 
   async function waitForWorldBattleBackdropClear() {

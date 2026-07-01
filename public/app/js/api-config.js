@@ -114,7 +114,7 @@
     if (!pathname.startsWith('/rankings/')) return '';
 
     const sort = pathname.slice('/rankings/'.length).split('/')[0];
-    return ['floor', 'level', 'souls'].includes(sort) ? sort : '';
+    return ['floor', 'level', 'souls', 'pvp'].includes(sort) ? sort : '';
   }
 
   window.AmongDemons = {

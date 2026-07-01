@@ -7063,7 +7063,7 @@ body.rankings-page {
 
 .rankings-stats {
     display: grid;
-    grid-template-columns: repeat(2, minmax(7.2rem, max-content));
+    grid-template-columns: repeat(3, minmax(6.6rem, max-content));
     justify-self: end;
     width: max-content;
     max-width: 100%;
@@ -7165,6 +7165,14 @@ body.rankings-page {
     text-decoration: none;
 }
 
+.rankings-page .rank-sort-link[aria-disabled="true"] {
+    cursor: progress;
+}
+
+.rankings-page .rank-sort-link[aria-disabled="true"]:not(.active) {
+    opacity: 0.72;
+}
+
 .rankings-page .table-dark {
     --bs-table-bg: transparent;
     --bs-table-striped-bg: rgba(255,255,255,0.025);
@@ -7174,7 +7182,15 @@ body.rankings-page {
 }
 
 .rankings-page .rank-table {
-    min-width: 43rem;
+    min-width: 36rem;
+}
+
+.rankings-page .rank-table tbody {
+    transition: opacity 0.16s ease;
+}
+
+.rankings-page .rank-table.is-rank-loading tbody {
+    opacity: 0.62;
 }
 
 .rankings-page .rank-table th,
@@ -7291,6 +7307,15 @@ body.rankings-page {
     overflow-wrap: anywhere;
 }
 
+.rank-hunter-meta {
+    max-width: 100%;
+    color: var(--ad-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
 .rank-floor-cell {
     min-width: 9rem;
 }
@@ -7384,8 +7409,9 @@ body.rankings-page {
     }
 
     .rankings-stats {
-        grid-template-columns: repeat(2, minmax(7rem, max-content));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         justify-self: start;
+        width: 100%;
     }
 
     .rankings-stat {
@@ -7504,7 +7530,18 @@ body.rankings-page {
 
 @media (max-width: 420px) {
     .rankings-stats {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.4rem;
+    }
+
+    .rankings-stat {
+        padding: 0.52rem 0.45rem;
+    }
+
+    .rankings-stat-label {
+        font-size: 0.58rem;
+        letter-spacing: 0.02em;
+        line-height: 1.12;
     }
 
     .rank-row td {

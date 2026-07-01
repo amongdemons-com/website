@@ -145,7 +145,7 @@ app.get(['/rankings', '/rankings/'], (req, res) => {
 });
 
 app.get(['/rankings/:sort', '/rankings/:sort/'], (req, res) => {
-  if (!['floor', 'level', 'souls'].includes(req.params.sort)) {
+  if (!['floor', 'level', 'souls', 'pvp'].includes(req.params.sort)) {
     return res.redirect(302, '/rankings');
   }
 

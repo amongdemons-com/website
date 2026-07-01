@@ -29,6 +29,8 @@ function cleanPlayer(row) {
     xp: row.xp,
     souls: row.souls,
     highestFloor: row.highest_floor || 0,
+    pvpWins: Math.max(0, Number(row.pvp_wins) || 0),
+    pvpLosses: Math.max(0, Number(row.pvp_losses) || 0),
     profileDemonId: row.profile_demon_id ? Number(row.profile_demon_id) : null,
     profileDemonImageUrl: row.profile_demon_image_url || null,
     unlocks: JSON.parse(row.unlocks || '[]')

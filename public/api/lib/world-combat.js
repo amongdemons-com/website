@@ -507,6 +507,8 @@ function serializeWorldPvpTarget(player = {}, team = []) {
     id: player.id,
     username: player.username || 'Unknown Hunter',
     level: Math.max(1, Number(player.level) || 1),
+    pvpWins: Math.max(0, Number(player.pvpWins ?? player.pvp_wins) || 0),
+    pvpLosses: Math.max(0, Number(player.pvpLosses ?? player.pvp_losses) || 0),
     teamCount: Array.isArray(team) ? team.length : 0,
     profileDemonImageUrl: player.profileDemonImageUrl || null
   };

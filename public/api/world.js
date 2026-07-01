@@ -286,12 +286,20 @@ router.post('/world/challenge', requireAuth, async (req, res) => {
   }
 
   const battle = await simulateWorldPvpChallenge(req.player, targetPlayer);
+  const pvpResult = await recordPvpChallengeResult(req.player.id, targetPlayer.id, battle.winner);
   const nextCooldownUntil = Date.now() + CHALLENGE_COOLDOWN_MS;
   challengeCooldowns.set(cooldownKey, nextCooldownUntil);
+  const updatedPlayer = pvpResult.players.get(String(req.player.id)) || req.player;
+  const updatedTargetPlayer = pvpResult.players.get(String(targetPlayer.id)) || targetPlayer;
+  battle.targetPlayer = {
+    ...battle.targetPlayer,
+    ...getWorldPvpPlayerRecord(updatedTargetPlayer)
+  };
 
   res.json({
     ok: true,
     status: 'resolved',
+    player: getWorldPlayer(updatedPlayer),
     targetPlayer: battle.targetPlayer,
     battle,
     message: battle.winner === 'player'
@@ -300,6 +308,50 @@ router.post('/world/challenge', requireAuth, async (req, res) => {
     cooldownUntil: new Date(nextCooldownUntil).toISOString()
   });
 });
+
+async function recordPvpChallengeResult(attackerPlayerId, targetPlayerId, winner) {
+  const attackerWon = winner === 'player';
+  const winnerId = attackerWon ? attackerPlayerId : targetPlayerId;
+  const loserId = attackerWon ? targetPlayerId : attackerPlayerId;
+  const connection = await db.getConnection();
+  let committed = false;
+
+  try {
+    await connection.beginTransaction();
+    await connection.query(
+      'UPDATE players SET pvp_wins = pvp_wins + 1 WHERE id = ?',
+      [winnerId]
+    );
+    await connection.query(
+      'UPDATE players SET pvp_losses = pvp_losses + 1 WHERE id = ?',
+      [loserId]
+    );
+
+    const [rows] = await connection.query(
+      `SELECT p.*, pd.image_url AS profile_demon_image_url
+       FROM players p
+       LEFT JOIN player_demons pd
+         ON pd.id = p.profile_demon_id
+        AND pd.player_id = p.id
+       WHERE p.id IN (?, ?)`,
+      [attackerPlayerId, targetPlayerId]
+    );
+
+    await connection.commit();
+    committed = true;
+
+    return {
+      players: new Map(rows.map((row) => [String(row.id), cleanPlayer(row)]))
+    };
+  } catch (error) {
+    if (!committed) {
+      await connection.rollback();
+    }
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
 
 async function getOrCreatePosition(playerId) {
   const [rows] = await db.query(
@@ -360,6 +412,8 @@ async function getPlayersAt(x, y, currentPlayerId) {
     `SELECT p.id,
             p.username,
             p.level,
+            p.pvp_wins AS pvpWins,
+            p.pvp_losses AS pvpLosses,
             wp.x,
             wp.y,
             (
@@ -386,6 +440,7 @@ async function getPlayersAt(x, y, currentPlayerId) {
     id: player.id,
     username: player.username || 'Unknown Hunter',
     level: Math.max(1, Number(player.level) || 1),
+    ...getWorldPvpPlayerRecord(player),
     teamCount: Math.max(0, Number(player.teamCount) || 0),
     x: Number(player.x) || 0,
     y: Number(player.y) || 0
@@ -653,7 +708,15 @@ function getWorldPlayer(player) {
     id: player.id,
     username: player.username || 'Hunter',
     level: Math.max(1, Number(player.level) || 1),
+    ...getWorldPvpPlayerRecord(player),
     profileDemonImageUrl: player.profileDemonImageUrl || null
+  };
+}
+
+function getWorldPvpPlayerRecord(player = {}) {
+  return {
+    pvpWins: Math.max(0, Number(player.pvpWins ?? player.pvp_wins) || 0),
+    pvpLosses: Math.max(0, Number(player.pvpLosses ?? player.pvp_losses) || 0)
   };
 }
 
