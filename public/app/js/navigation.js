@@ -2,6 +2,7 @@
   'use strict';
 
   const ME_API = '/api/auth/me';
+  const PROGRESSION_API = '/api/account/progression';
 
   onReady(init);
 
@@ -68,6 +69,7 @@
     }
 
     if (typeof auth.api === 'function') {
+      registerXpProgressRefresh(auth);
       refreshAccount(auth, session);
     }
   }
@@ -103,11 +105,35 @@
       }
 
       updateAccountNav(player);
+      refreshProgress(auth);
     } catch (error) {
       if (error.status === 401) {
         if (typeof auth.clearSession === 'function') auth.clearSession();
         clearAccountNav();
       }
+    }
+  }
+
+  function registerXpProgressRefresh(auth) {
+    const ui = window.AmongDemons?.ui;
+    if (!ui || typeof auth.api !== 'function') return;
+
+    ui.refreshNavXpProgress = () => refreshProgress(auth);
+  }
+
+  async function refreshProgress(auth) {
+    const updater = window.AmongDemons?.ui?.updateNavXpProgress;
+    if (typeof auth.api !== 'function' || typeof updater !== 'function') return null;
+
+    try {
+      const progression = await auth.api(PROGRESSION_API);
+      return updater(progression);
+    } catch (error) {
+      if (error.status === 401) {
+        if (typeof auth.clearSession === 'function') auth.clearSession();
+        clearAccountNav();
+      }
+      return null;
     }
   }
 

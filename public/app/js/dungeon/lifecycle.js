@@ -391,7 +391,11 @@ async function finishRun(message, summary = {}) {
       type: summary.defeated ? 'warning' : 'success'
     };
     getModal(elements.teamChoiceModal).hide();
-    await Promise.all([loadStartOptions(), loadAccountStatPoints()]);
+    await Promise.all([
+      loadStartOptions(),
+      loadAccountStatPoints(),
+      window.AmongDemons.ui?.refreshNavXpProgress?.()
+    ]);
     renderRun();
   } catch (error) {
     showError(error);

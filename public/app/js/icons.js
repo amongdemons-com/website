@@ -34,7 +34,12 @@
     trash: 'Trash2'
   };
   const SOUL_ICON_PATH = '/app/images/assets/soul.svg';
+  const ACCOUNT_LEVEL_BASE_XP = 250;
+  const ACCOUNT_LEVEL_EXPONENT = 1.65;
+  const XP_MINOR_MARKERS = [10, 20, 30, 40, 60, 70, 80, 90];
+  const XP_MAJOR_MARKERS = [25, 50, 75];
   const alertTimers = new WeakMap();
+  let navXpState = null;
 
   function renderIcon(name, options = {}) {
     if (isSoulIcon(name)) return renderImageIcon(SOUL_ICON_PATH, 'soul', options);
@@ -109,6 +114,7 @@
         ariaLabel: `${formattedSouls} Souls`
       });
     }
+    if (hasXpProgressSource(player)) updateNavXpProgress(player);
 
     return {
       username,
@@ -123,6 +129,204 @@
 
     if (accountElement) accountElement.classList.add('d-none');
     if (authElement) authElement.classList.remove('d-none');
+    clearNavXpProgress({ root });
+  }
+
+  function ensureNavXpProgress(options = {}) {
+    const root = getDocumentRoot(options.root);
+    const host = root.body || document.body;
+    if (!host) return null;
+
+    let progress = root.querySelector('[data-nav-xp-progress]');
+    if (progress) {
+      bindNavXpProgress(progress);
+      return progress;
+    }
+
+    progress = root.createElement('div');
+    progress.className = 'nav-xp-progress d-none';
+    progress.dataset.navXpProgress = 'true';
+    progress.id = 'navXpProgress';
+    progress.tabIndex = 0;
+    progress.setAttribute('role', 'progressbar');
+    progress.setAttribute('aria-label', 'XP progress');
+    progress.setAttribute('aria-valuemin', '0');
+    progress.setAttribute('aria-valuemax', '100');
+    progress.setAttribute('aria-valuenow', '0');
+    progress.setAttribute('aria-describedby', 'navXpProgressTooltip');
+    const minorMarkers = XP_MINOR_MARKERS
+      .map((value) => `<span class="nav-xp-progress-mark nav-xp-progress-mark-minor" style="left: ${value}%"></span>`)
+      .join('');
+    const majorMarkers = XP_MAJOR_MARKERS
+      .map((value) => `<span class="nav-xp-progress-mark nav-xp-progress-mark-major" style="left: ${value}%"></span>`)
+      .join('');
+    progress.innerHTML = `
+      <span class="nav-xp-progress-fill" data-nav-xp-progress-fill></span>
+      <span class="nav-xp-progress-marks" aria-hidden="true">
+        ${minorMarkers}
+        ${majorMarkers}
+      </span>
+      <span class="nav-xp-progress-tooltip" id="navXpProgressTooltip" data-nav-xp-tooltip role="tooltip">XP loading</span>
+    `;
+    host.appendChild(progress);
+    bindNavXpProgress(progress);
+    return progress;
+  }
+
+  function bindNavXpProgress(progress) {
+    if (!progress || progress.dataset.navXpProgressBound === 'true') return;
+    progress.dataset.navXpProgressBound = 'true';
+
+    progress.addEventListener('click', (event) => {
+      event.stopPropagation();
+      progress.classList.toggle('is-tooltip-visible');
+    });
+
+    progress.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        progress.classList.remove('is-tooltip-visible');
+        progress.blur();
+        return;
+      }
+
+      if (!['Enter', ' '].includes(event.key)) return;
+      event.preventDefault();
+      progress.classList.toggle('is-tooltip-visible');
+    });
+
+    progress.addEventListener('blur', () => {
+      window.setTimeout(() => progress.classList.remove('is-tooltip-visible'), 120);
+    });
+
+    document.addEventListener('click', () => {
+      progress.classList.remove('is-tooltip-visible');
+    });
+  }
+
+  function updateNavXpProgress(data = {}, options = {}) {
+    const root = getDocumentRoot(options.root);
+    const progress = ensureNavXpProgress({ root });
+    if (!progress) return null;
+
+    const nextState = normalizeXpProgress(data);
+    if (!nextState) return null;
+    navXpState = nextState;
+
+    const percentValue = Math.round(nextState.percent * 1000) / 10;
+    const percentLabel = formatPercent(nextState.percent);
+    const xpIntoLevel = formatNumber(nextState.xpIntoLevel);
+    const xpForNextLevel = formatNumber(nextState.xpForNextLevel);
+    const nextLevel = formatNumber(nextState.level + 1);
+    const level = formatNumber(nextState.level);
+    const tooltipHtml = `
+      <strong>Level ${escapeHtml(level)}</strong>
+      <span>${escapeHtml(xpIntoLevel)} / ${escapeHtml(xpForNextLevel)} XP</span>
+      <small>${escapeHtml(percentLabel)} to level ${escapeHtml(nextLevel)}</small>
+    `;
+    const ariaText = `Level ${level}. ${xpIntoLevel} of ${xpForNextLevel} XP. ${percentLabel} to level ${nextLevel}.`;
+
+    progress.classList.remove('d-none');
+    progress.style.setProperty('--nav-xp-progress', `${nextState.percent * 100}%`);
+    progress.style.setProperty('--nav-xp-tooltip-left', `${nextState.percent * 100}%`);
+    progress.setAttribute('aria-valuenow', String(percentValue));
+    progress.setAttribute('aria-valuetext', ariaText);
+    progress.title = ariaText;
+    root.body?.classList.add('has-nav-xp-progress');
+
+    const fill = progress.querySelector('[data-nav-xp-progress-fill]');
+    if (fill) fill.style.width = `${nextState.percent * 100}%`;
+
+    const tooltip = progress.querySelector('[data-nav-xp-tooltip]');
+    if (tooltip) tooltip.innerHTML = tooltipHtml;
+
+    return nextState;
+  }
+
+  function clearNavXpProgress(options = {}) {
+    const root = getDocumentRoot(options.root);
+    const progress = root.querySelector('[data-nav-xp-progress]');
+    if (progress) {
+      progress.classList.add('d-none');
+      progress.classList.remove('is-tooltip-visible');
+    }
+    root.body?.classList.remove('has-nav-xp-progress');
+    navXpState = null;
+  }
+
+  function getDocumentRoot(root) {
+    if (!root) return document;
+    return root.nodeType === 9 ? root : root.ownerDocument || document;
+  }
+
+  function normalizeXpProgress(data = {}) {
+    const source = data || {};
+    const fallback = navXpState || {};
+    const xp = Math.max(0, Math.floor(toFiniteNumber(source.xp, fallback.xp || 0)));
+    const levelFromXp = getAccountLevelForXp(xp);
+    const level = Math.max(1, Math.floor(toFiniteNumber(source.level, fallback.level || levelFromXp)), levelFromXp);
+    const serverProgress = source.levelProgress || {};
+    const currentLevelXp = toFiniteNumber(serverProgress.currentLevelXp, getXpForAccountLevel(level));
+    const nextLevelXp = toFiniteNumber(serverProgress.nextLevelXp, getXpForAccountLevel(level + 1));
+    const xpForNextLevel = Math.max(1, toFiniteNumber(serverProgress.xpForNextLevel, nextLevelXp - currentLevelXp));
+    const xpIntoLevel = clamp(
+      toFiniteNumber(serverProgress.xpIntoLevel, xp - currentLevelXp),
+      0,
+      xpForNextLevel
+    );
+    const xpToNextLevel = Math.max(0, toFiniteNumber(serverProgress.xpToNextLevel, nextLevelXp - xp));
+    const percent = clamp(toFiniteNumber(serverProgress.percent, xpIntoLevel / xpForNextLevel), 0, 1);
+
+    return {
+      currentLevelXp,
+      level,
+      nextLevelXp,
+      percent,
+      xp,
+      xpForNextLevel,
+      xpIntoLevel,
+      xpToNextLevel
+    };
+  }
+
+  function hasXpProgressSource(data = {}) {
+    if (!data) return false;
+    return Boolean(
+      data.levelProgress ||
+      Number.isFinite(Number(data.xp)) ||
+      Number.isFinite(Number(data.xpIntoLevel))
+    );
+  }
+
+  function getAccountLevelForXp(xp) {
+    const totalXp = Math.max(0, Math.floor(Number(xp) || 0));
+    let level = Math.floor(Math.pow(totalXp / ACCOUNT_LEVEL_BASE_XP, 1 / ACCOUNT_LEVEL_EXPONENT)) + 1;
+
+    while (getXpForAccountLevel(level + 1) <= totalXp) level += 1;
+    while (level > 1 && getXpForAccountLevel(level) > totalXp) level -= 1;
+
+    return level;
+  }
+
+  function getXpForAccountLevel(level) {
+    const targetLevel = Math.max(1, Math.floor(Number(level) || 1));
+    if (targetLevel <= 1) return 0;
+
+    return Math.ceil(ACCOUNT_LEVEL_BASE_XP * Math.pow(targetLevel - 1, ACCOUNT_LEVEL_EXPONENT));
+  }
+
+  function toFiniteNumber(value, fallback = 0) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : fallback;
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function formatPercent(value) {
+    const percent = clamp(Number(value) || 0, 0, 1) * 100;
+    if (percent > 0 && percent < 1) return '<1%';
+    return `${Math.round(percent)}%`;
   }
 
   function renderImageIcon(src, name, options = {}) {
@@ -296,6 +500,8 @@
   ui.renderSoulAmount = renderSoulAmount;
   ui.updateNavAccount = updateNavAccount;
   ui.clearNavAccount = clearNavAccount;
+  ui.updateNavXpProgress = updateNavXpProgress;
+  ui.clearNavXpProgress = clearNavXpProgress;
   ui.replaceStaticIcons = replaceStaticIcons;
   ui.dismissGameAlert = dismissGameAlert;
 

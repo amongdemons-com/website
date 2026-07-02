@@ -401,17 +401,19 @@
     const xp = Number(progression.xp ?? player.xp ?? 0) || 0;
     const progress = getLevelProgress(progression, level, xp);
     const percent = Math.round(progress.percent * 100);
+    const nextLevel = level + 1;
+    const xpIntoLevel = formatNumber(progress.xpIntoLevel);
+    const xpForNextLevel = formatNumber(progress.xpForNextLevel);
+    const progressText = `${xpIntoLevel} / ${xpForNextLevel} XP· ${percent}% to level ${formatNumber(nextLevel)}`;
 
     setText(elements.levelStat, formatNumber(level));
-    setText(elements.xpStat, progress.xpToNextLevel > 0
-      ? `${formatNumber(progress.xpToNextLevel)} XP to level ${formatNumber(level + 1)}`
-      : `${formatNumber(xp)} total XP`);
+    setText(elements.xpStat, progressText);
 
     if (elements.xpProgressBar) {
       elements.xpProgressBar.style.width = `${percent}%`;
       const progressTrack = elements.xpProgressBar.parentElement;
       if (progressTrack) {
-        progressTrack.setAttribute('aria-label', `${percent}% progress to level ${formatNumber(level + 1)}`);
+        progressTrack.setAttribute('aria-label', progressText);
       }
     }
   }
@@ -439,6 +441,8 @@
 
     return {
       percent,
+      xpForNextLevel,
+      xpIntoLevel,
       xpToNextLevel
     };
   }

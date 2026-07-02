@@ -640,7 +640,11 @@ async function finishCashout(result, options = {}) {
     type: 'success'
   };
   getModal(elements.cashoutModal).hide();
-  await Promise.all([loadStartOptions(), loadAccountStatPoints()]);
+  await Promise.all([
+    loadStartOptions(),
+    loadAccountStatPoints(),
+    window.AmongDemons.ui?.refreshNavXpProgress?.()
+  ]);
   renderRun();
 }
 
