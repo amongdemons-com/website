@@ -133,6 +133,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     hunterLayer: null,
     hunterFrame: null,
     hunterAvatar: null,
+    hunterMask: null,
     hunterAvatarTexture: null,
     effectLayer: null,
     resizeObserver: null,
@@ -409,6 +410,10 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.hunterAvatar.anchor.set(0.5);
     state.hunterLayer.addChild(state.hunterFrame);
     state.hunterLayer.addChild(state.hunterAvatar);
+    // Circular portrait mask for the hunter token (repositioned in drawHunter).
+    state.hunterMask = new Pixi.Graphics();
+    state.hunterLayer.addChild(state.hunterMask);
+    state.hunterAvatar.mask = state.hunterMask;
 
     state.viewport.addChild(state.groundLayer);
     state.viewport.addChild(state.gridLayer);
@@ -433,6 +438,9 @@ import * as dungeonUtils from './dungeon/utils.js';
     bindResize();
     resizeCanvas();
     setZoom(getInitialZoom(), { preserveCenter: false });
+
+    // Debug handle for tooling (Pixi devtools / dev captures).
+    window.__adWorld = { app, state, renderWorld };
   }
 
   function bindCanvasInput(canvas) {
@@ -1012,8 +1020,10 @@ import * as dungeonUtils from './dungeon/utils.js';
   // ground reads as one quiet surface; everything else is built from a single
   // ruined-stone family so the map stays cohesive.
   const DEFAULT_ZONE_PALETTE = {
-    ground: [0x121711, 0x151a13, 0x10150f],
+    ground: [0x131812, 0x141913, 0x121711],
     patch: 0x20291f,
+    moss: 0x28381f,
+    crack: 0x0a0d09,
     road: [0x261f14, 0x2d2618],
     roadEdge: 0x0d0a06,
     roadSheen: 0x4a3d22,
@@ -1047,10 +1057,12 @@ import * as dungeonUtils from './dungeon/utils.js';
     return {
       ground: [
         tintBaseColor(DEFAULT_ZONE_PALETTE.ground[0], accentRgb, 0.08),
-        tintBaseColor(DEFAULT_ZONE_PALETTE.ground[1], accentRgb, 0.1),
-        tintBaseColor(DEFAULT_ZONE_PALETTE.ground[2], accentRgb, 0.07)
+        tintBaseColor(DEFAULT_ZONE_PALETTE.ground[1], accentRgb, 0.08),
+        tintBaseColor(DEFAULT_ZONE_PALETTE.ground[2], accentRgb, 0.08)
       ],
       patch: tintBaseColor(DEFAULT_ZONE_PALETTE.patch, accentRgb, 0.14),
+      moss: tintBaseColor(DEFAULT_ZONE_PALETTE.moss, accentRgb, 0.1),
+      crack: tintBaseColor(DEFAULT_ZONE_PALETTE.crack, accentRgb, 0.04),
       road: [
         tintBaseColor(DEFAULT_ZONE_PALETTE.road[0], accentRgb, 0.06),
         tintBaseColor(DEFAULT_ZONE_PALETTE.road[1], accentRgb, 0.08)
@@ -1162,18 +1174,79 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   // --- texture builders -------------------------------------------------------
 
+  // Mossy broken-flagstone ground. Values stay near-identical across variants —
+  // large-scale tonal drift comes from the macro shading overlay, not the tile
+  // grid, so the ground reads as one continuous surface instead of a checker.
   function groundTexture(zone, variant) {
     return getTileTexture(`ground:${zone}:${variant}`, (g) => {
-      const rng = seededRng(variant * 911 + 7);
+      const rng = seededRng(variant * 911 + zone * 53 + 7);
       const palette = ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE;
       g.rect(0, 0, TILE_SIZE, TILE_SIZE).fill({ color: palette.ground[variant % palette.ground.length] });
-      // A couple of very soft, low-contrast patches — enough to break up flat
-      // repetition without any visible square noise. Terrain stays in back.
+
+      // Soft low-contrast patches to break flat repetition.
       for (let i = 0; i < 2; i += 1) {
         g.ellipse(rng() * TILE_SIZE, rng() * TILE_SIZE, 12 + rng() * 18, 10 + rng() * 16)
-          .fill({ color: palette.patch, alpha: 0.09 });
+          .fill({ color: palette.patch, alpha: 0.08 });
+      }
+
+      // Flagstone cracks: 2-3 faint meandering seams wandering across the tile.
+      // Kept very low contrast so random tile rotation never shows a seam.
+      const cracks = 2 + Math.floor(rng() * 2);
+      for (let i = 0; i < cracks; i += 1) {
+        const vertical = rng() < 0.5;
+        let x = vertical ? rng() * TILE_SIZE : -2;
+        let y = vertical ? -2 : rng() * TILE_SIZE;
+        g.moveTo(x, y);
+        const steps = 3 + Math.floor(rng() * 2);
+        for (let s = 1; s <= steps; s += 1) {
+          const t = s / steps;
+          x = vertical ? x + (rng() - 0.5) * 22 : -2 + t * (TILE_SIZE + 4);
+          y = vertical ? -2 + t * (TILE_SIZE + 4) : y + (rng() - 0.5) * 22;
+          g.lineTo(x, y);
+        }
+        g.stroke({ color: palette.crack, width: 1 + rng(), alpha: 0.5 });
+      }
+
+      // Moss creeping out of a couple of crack junctions: small clustered dabs.
+      const mossClumps = rng() < 0.75 ? 1 + Math.floor(rng() * 2) : 0;
+      for (let i = 0; i < mossClumps; i += 1) {
+        const mx = 8 + rng() * (TILE_SIZE - 16);
+        const my = 8 + rng() * (TILE_SIZE - 16);
+        const dabs = 3 + Math.floor(rng() * 3);
+        for (let d = 0; d < dabs; d += 1) {
+          g.ellipse(mx + (rng() - 0.5) * 12, my + (rng() - 0.5) * 10, 2.5 + rng() * 4, 2 + rng() * 3)
+            .fill({ color: palette.moss, alpha: 0.16 + rng() * 0.1 });
+        }
+      }
+
+      // A few tiny grit speckles.
+      for (let i = 0; i < 3; i += 1) {
+        g.circle(rng() * TILE_SIZE, rng() * TILE_SIZE, 0.7 + rng() * 0.7)
+          .fill({ color: rng() < 0.5 ? palette.stoneDark : palette.stoneLight, alpha: 0.12 });
       }
     });
+  }
+
+  // World-space macro shading: broad, soft light/dark pools laid over the whole
+  // board so tonal drift crosses tile boundaries. This is what makes the ground
+  // read as terrain instead of a grid of squares. Static — drawn once.
+  function drawMacroShading(g) {
+    const min = state.bounds.min ?? -WORLD_RADIUS;
+    const max = state.bounds.max ?? WORLD_RADIUS;
+    const cell = 5; // one blob every ~5 tiles
+    for (let gy = min; gy <= max; gy += cell) {
+      for (let gx = min; gx <= max; gx += cell) {
+        const r1 = hashTile(gx, gy, 21);
+        const r2 = hashTile(gx, gy, 22);
+        const r3 = hashTile(gx, gy, 23);
+        const cx = (gx + r1 * cell) * TILE_SIZE;
+        const cy = (gy + r2 * cell) * TILE_SIZE;
+        const radius = TILE_SIZE * (2.2 + r3 * 2.6);
+        const dark = hashTile(gx, gy, 24) < 0.55;
+        g.ellipse(cx, cy, radius, radius * (0.7 + r1 * 0.4))
+          .fill({ color: dark ? 0x000000 : 0x8fa08a, alpha: dark ? 0.05 : 0.025 });
+      }
+    }
   }
 
   // Rare, subtle stone decals (a few small pebbles) for open ground.
@@ -1198,7 +1271,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   // so dirt reaches connected sides and tiles merge into one continuous road.
   function roadTexture(mask, variant, zone) {
     return getTileTexture(`road:${zone}:${mask}:${variant}`, (g) => {
-      const rng = seededRng(mask * 733 + variant * 197 + 11);
+      const rng = seededRng(mask * 733 + variant * 197 + zone * 61 + 11);
       const palette = ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE;
       const w = 24;
       const inset = (TILE_SIZE - w) / 2;
@@ -1211,28 +1284,71 @@ import * as dungeonUtils from './dungeon/utils.js';
       if (mask & 4) segs.push([inset, half, w, half]);
       if (mask & 8) segs.push([0, inset, half, w]);
 
-      // Soft dark edge halo, then the dirt fill.
-      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx - 2, sy - 2, sw + 4, sh + 4).fill({ color: palette.roadEdge, alpha: 0.34 }));
-      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx, sy, sw, sh).fill({ color: dirt, alpha: 0.92 }));
+      // Organic bulges along each arm's spine. Kept away from the tile edge so
+      // the cross-section at the boundary stays constant and neighbouring road
+      // tiles still merge without a seam. Collected once, drawn in two passes
+      // (edge halo below, dirt above) so bulges never stripe over each other.
+      const bulges = [];
+      const spine = (dx, dy) => {
+        for (const at of [0.28, 0.52, 0.74]) {
+          const jitter = (rng() - 0.5) * 5;
+          bulges.push({
+            x: half + dx * at * half + (dy ? jitter : 0),
+            y: half + dy * at * half + (dx ? jitter : 0),
+            r: w * 0.52 + rng() * 4.5
+          });
+        }
+      };
+      if (mask & 1) spine(0, -1);
+      if (mask & 2) spine(1, 0);
+      if (mask & 4) spine(0, 1);
+      if (mask & 8) spine(-1, 0);
+      if (!mask) bulges.push({ x: half, y: half, r: w * 0.62 });
 
-      // Faint worn sheen down the centre of the path.
-      g.ellipse(half, half, 8, 8).fill({ color: palette.roadSheen, alpha: 0.18 });
+      // Dark packed-earth halo first (rect arms + bulges), then the dirt body.
+      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx - 2.5, sy - 2.5, sw + 5, sh + 5).fill({ color: palette.roadEdge, alpha: 0.4 }));
+      bulges.forEach(({ x, y, r }) => g.ellipse(x, y, r + 2.5, (r + 2.5) * 0.9).fill({ color: palette.roadEdge, alpha: 0.4 }));
+      segs.forEach(([sx, sy, sw, sh]) => g.rect(sx, sy, sw, sh).fill({ color: dirt, alpha: 0.96 }));
+      bulges.forEach(({ x, y, r }) => g.ellipse(x, y, r, r * 0.9).fill({ color: dirt, alpha: 0.96 }));
 
-      // Worn darker edges along the path's length (off the connecting ends, so
-      // neighbouring road tiles still merge without a seam).
-      if ((mask & 1) || (mask & 4) || mask === 0) {
-        g.rect(inset, 0, 2, TILE_SIZE).fill({ color: palette.roadEdge, alpha: 0.28 });
-        g.rect(inset + w - 2, 0, 2, TILE_SIZE).fill({ color: palette.roadEdge, alpha: 0.28 });
-      }
-      if ((mask & 2) || (mask & 8) || mask === 0) {
-        g.rect(0, inset, TILE_SIZE, 2).fill({ color: palette.roadEdge, alpha: 0.28 });
-        g.rect(0, inset + w - 2, TILE_SIZE, 2).fill({ color: palette.roadEdge, alpha: 0.28 });
-      }
+      // Worn sheen down the centre of each arm.
+      const sheen = (dx, dy) => {
+        for (const at of [0.2, 0.55]) {
+          g.ellipse(half + dx * at * half, half + dy * at * half, 6 + rng() * 3, 5 + rng() * 3)
+            .fill({ color: palette.roadSheen, alpha: 0.14 });
+        }
+      };
+      g.ellipse(half, half, 7, 7).fill({ color: palette.roadSheen, alpha: 0.16 });
+      if (mask & 1) sheen(0, -1);
+      if (mask & 2) sheen(1, 0);
+      if (mask & 4) sheen(0, 1);
+      if (mask & 8) sheen(-1, 0);
 
-      // Just a couple of small embedded stones — no speckle clutter.
-      for (let i = 0; i < 2; i += 1) {
-        g.ellipse(inset + 5 + rng() * (w - 10), inset + 5 + rng() * (w - 10), 1.6 + rng(), 1.3 + rng())
-          .fill({ color: palette.stoneDark, alpha: 0.45 });
+      // Embedded cobbles scattered along the arms: rounded worn stones with a
+      // hint of a shadow. Kept off the tile boundary so they never get sliced.
+      const margin = 5;
+      const cobbleIn = (sx, sy, sw, sh, count) => {
+        for (let i = 0; i < count; i += 1) {
+          const cx = clamp(sx + 4 + rng() * (sw - 8), margin, TILE_SIZE - margin);
+          const cy = clamp(sy + 4 + rng() * (sh - 8), margin, TILE_SIZE - margin);
+          const rx = 2.2 + rng() * 2.4;
+          const ry = rx * (0.7 + rng() * 0.25);
+          const tone = palette.stone[Math.floor(rng() * palette.stone.length)];
+          g.ellipse(cx + 0.8, cy + 1, rx, ry).fill({ color: palette.roadEdge, alpha: 0.5 });
+          g.ellipse(cx, cy, rx, ry).fill({ color: tone, alpha: 0.5 + rng() * 0.2 });
+        }
+      };
+      segs.forEach(([sx, sy, sw, sh], index) => cobbleIn(sx, sy, sw, sh, index === 0 ? 2 : 3));
+
+      // Moss nibbling at the road edges.
+      const mossBits = 2 + Math.floor(rng() * 3);
+      for (let i = 0; i < mossBits; i += 1) {
+        const [sx, sy, sw, sh] = segs[Math.floor(rng() * segs.length)];
+        const side = rng() < 0.5 ? -1 : 1;
+        const alongX = sw >= sh;
+        const mx = clamp(alongX ? sx + rng() * sw : sx + (side < 0 ? 1 : sw - 1), margin, TILE_SIZE - margin);
+        const my = clamp(alongX ? sy + (side < 0 ? 1 : sh - 1) : sy + rng() * sh, margin, TILE_SIZE - margin);
+        g.ellipse(mx, my, 2.5 + rng() * 3, 2 + rng() * 2).fill({ color: palette.moss, alpha: 0.2 });
       }
     });
   }
@@ -1494,19 +1610,37 @@ import * as dungeonUtils from './dungeon/utils.js';
   function poisonPuddleColors(palette) {
     const accentRgb = colorNumberToRgb(palette.accent);
     return {
-      border: tintBaseColor(0x081209, accentRgb, 0.28), // dark wet edge
-      body: tintBaseColor(0x1d3a22, accentRgb, 0.55),
-      deep: tintBaseColor(0x102414, accentRgb, 0.45),
-      glow: tintBaseColor(0x39663a, accentRgb, 0.7) // bright toxic sheen
+      border: tintBaseColor(0x060d07, accentRgb, 0.2), // dark wet edge
+      body: tintBaseColor(0x14291a, accentRgb, 0.4), // murky ooze
+      deep: tintBaseColor(0x0b1a0e, accentRgb, 0.3),
+      glow: tintBaseColor(0x4e8a48, accentRgb, 0.55) // bright toxic sheen
     };
   }
 
-  // Baked surface of a poison puddle: just the glossy sheen. The rising gas
-  // bubbles are animated separately (see drawPoisonFxParticle).
+  // Baked surface of a poison puddle: a darker depth pool, floating scum
+  // blotches and a glossy toxic sheen. The rising gas bubbles are animated
+  // separately (see drawPoisonFxParticle).
   function drawPoisonDetails(g, cx, cy, radius, rng, colors) {
-    const { glow } = colors;
-    g.ellipse(cx - radius * 0.22, cy - radius * 0.24, radius * 0.3, radius * 0.16)
-      .fill({ color: glow, alpha: 0.4 });
+    const { deep, glow } = colors;
+
+    // Deeper murk pooled off-centre.
+    g.ellipse(cx + radius * 0.1, cy + radius * 0.12, radius * 0.55, radius * 0.42)
+      .fill({ color: deep, alpha: 0.55 });
+
+    // Floating scum blotches drifting on the surface.
+    const scum = 2 + Math.floor(rng() * 3);
+    for (let i = 0; i < scum; i += 1) {
+      const a = rng() * Math.PI * 2;
+      const dist = radius * (0.15 + rng() * 0.5);
+      g.ellipse(cx + Math.cos(a) * dist, cy + Math.sin(a) * dist * 0.85, radius * (0.1 + rng() * 0.12), radius * (0.06 + rng() * 0.07))
+        .fill({ color: glow, alpha: 0.12 + rng() * 0.08 });
+    }
+
+    // Glossy sheen crescent catching the light.
+    g.ellipse(cx - radius * 0.24, cy - radius * 0.26, radius * 0.3, radius * 0.14)
+      .fill({ color: glow, alpha: 0.3 });
+    g.ellipse(cx - radius * 0.1, cy - radius * 0.38, radius * 0.12, radius * 0.06)
+      .fill({ color: glow, alpha: 0.22 });
   }
 
   function drawPoisonPuddle(g, rng, palette) {
@@ -1522,43 +1656,68 @@ import * as dungeonUtils from './dungeon/utils.js';
   function lavaPuddleColors(palette) {
     const accentRgb = colorNumberToRgb(palette.accent);
     return {
-      border: tintBaseColor(0x140805, accentRgb, 0.16), // cooled rock crust
-      body: tintBaseColor(0x6f1d0c, accentRgb, 0.5), // molten red-orange
-      deep: tintBaseColor(0x2a0d05, accentRgb, 0.2), // dark cooled patches
-      glow: tintBaseColor(0xffb648, accentRgb, 0.2) // white-hot glow
+      border: tintBaseColor(0x120704, accentRgb, 0.12), // cooled rock crust
+      body: tintBaseColor(0x31100a, accentRgb, 0.22), // dark cooling crust
+      deep: tintBaseColor(0x190803, accentRgb, 0.12), // cold crust plates
+      fissure: tintBaseColor(0xff7a2e, accentRgb, 0.15), // molten crack
+      glow: tintBaseColor(0xffc257, accentRgb, 0.12) // white-hot core
     };
   }
 
-  // Baked surface of a lava puddle: warm sheen, cooled crust islands and molten
-  // hot spots. The rising sparks are animated separately (see drawLavaFxParticle).
-  function drawLavaDetails(g, cx, cy, radius, rng, colors) {
-    const { deep, glow } = colors;
+  // Cooled crust plates and the occasional white-hot well — the non-fissure
+  // surface of a lava pool. The rising embers are animated separately
+  // (see drawLavaFxParticle).
+  function drawLavaCrust(g, cx, cy, radius, rng, colors) {
+    const { deep, fissure, glow } = colors;
 
-    // Broad warm sheen across the pool.
-    g.ellipse(cx - radius * 0.18, cy - radius * 0.2, radius * 0.34, radius * 0.2)
-      .fill({ color: glow, alpha: 0.18 });
-
-    // Dark cooled crust islands floating on the surface.
     const crusts = 2 + Math.floor(rng() * 2);
     for (let i = 0; i < crusts; i += 1) {
       const a = rng() * Math.PI * 2;
-      const dist = radius * (0.15 + rng() * 0.5);
+      const dist = radius * (0.2 + rng() * 0.45);
       const px = cx + Math.cos(a) * dist;
       const py = cy + Math.sin(a) * dist * 0.9;
-      const r = radius * (0.12 + rng() * 0.13);
-      g.ellipse(px, py, r, r * 0.8).fill({ color: deep, alpha: 0.55 });
+      const r = radius * (0.18 + rng() * 0.14);
+      g.ellipse(px, py, r, r * 0.75).fill({ color: deep, alpha: 0.5 });
     }
 
-    // A couple of white-hot molten spots with a soft halo.
-    const spots = 2 + Math.floor(rng() * 2);
-    for (let i = 0; i < spots; i += 1) {
+    if (rng() < 0.45) {
       const a = rng() * Math.PI * 2;
-      const dist = radius * (0.1 + rng() * 0.45);
+      const dist = radius * (0.1 + rng() * 0.4);
       const px = cx + Math.cos(a) * dist;
       const py = cy + Math.sin(a) * dist * 0.9;
-      const r = radius * (0.05 + rng() * 0.05);
-      g.circle(px, py, r * 2).fill({ color: glow, alpha: 0.22 });
-      g.circle(px, py, r).fill({ color: glow, alpha: 0.9 });
+      const r = radius * (0.05 + rng() * 0.04);
+      g.circle(px, py, r * 2.4).fill({ color: fissure, alpha: 0.3 });
+      g.circle(px, py, r).fill({ color: glow, alpha: 0.95 });
+    }
+  }
+
+  // Stroke one wobbling molten crack from (sx,sy) to (ex,ey). `pass` 0 is the
+  // wide soft halo, pass 1 the hot core — run both with the same rng seed.
+  function strokeLavaCrack(g, sx, sy, ex, ey, rng, colors, pass) {
+    const m1x = sx + (ex - sx) * 0.3 + (rng() - 0.5) * 30;
+    const m1y = sy + (ey - sy) * 0.3 + (rng() - 0.5) * 30;
+    const m2x = sx + (ex - sx) * 0.68 + (rng() - 0.5) * 30;
+    const m2y = sy + (ey - sy) * 0.68 + (rng() - 0.5) * 30;
+    g.moveTo(sx, sy)
+      .quadraticCurveTo(m1x, m1y, (m1x + m2x) / 2, (m1y + m2y) / 2)
+      .quadraticCurveTo(m2x, m2y, ex, ey);
+    if (pass === 0) g.stroke({ color: colors.fissure, width: 6.5, alpha: 0.2 });
+    else g.stroke({ color: colors.fissure, width: 1.3 + rng() * 1.2, alpha: 0.6 + rng() * 0.25 });
+  }
+
+  // Solo-tile lava surface: crust plates plus one crack across the pool.
+  function drawLavaDetails(g, cx, cy, radius, rng, colors) {
+    drawLavaCrust(g, cx, cy, radius, rng, colors);
+    const crackSeed = Math.floor(rng() * 0xffffffff);
+    const a = rng() * Math.PI * 2;
+    const b = a + Math.PI + (rng() - 0.5) * 0.9;
+    for (let pass = 0; pass < 2; pass += 1) {
+      strokeLavaCrack(
+        g,
+        cx + Math.cos(a) * radius * 0.9, cy + Math.sin(a) * radius * 0.8,
+        cx + Math.cos(b) * radius * 0.9, cy + Math.sin(b) * radius * 0.8,
+        seededRng(crackSeed), colors, pass
+      );
     }
   }
 
@@ -1566,8 +1725,10 @@ import * as dungeonUtils from './dungeon/utils.js';
     drawPuddle(g, rng, palette, lavaPuddleColors, drawLavaDetails);
   }
 
+  // Merged pools keep just the crust plates and hot wells — no crack lines
+  // running between tiles.
   function drawGiantLavaPuddle(g, tiles, palette) {
-    drawGiantPuddle(g, tiles, palette, lavaPuddleColors, drawLavaDetails);
+    drawGiantPuddle(g, tiles, palette, lavaPuddleColors, drawLavaCrust);
   }
 
   // --- animated puddle particles (rising bubbles / embers) -------------------
@@ -1702,77 +1863,71 @@ import * as dungeonUtils from './dungeon/utils.js';
     return components;
   }
 
-  // Temporary full-square brick wall pattern for every blocked tile.
+  // Trace one irregular angular boulder outline centred at (cx,cy).
+  function boulderPoints(cx, cy, radius, rng) {
+    const sides = 6 + Math.floor(rng() * 3);
+    const start = rng() * Math.PI * 2;
+    const pts = [];
+    for (let i = 0; i < sides; i += 1) {
+      const a = start + (i / sides) * Math.PI * 2 + (rng() - 0.5) * 0.35;
+      const r = radius * (0.62 + rng() * 0.38);
+      pts.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.86);
+    }
+    return pts;
+  }
+
+  // Blocked tile: a cluster of ruined rock outcrops — dark angular boulders
+  // with a moonlit top edge, rubble at the base and moss in the cracks.
   function drawObstacle(g, kind, rng, palette) {
     void kind;
-    const mortar = palette.stoneDark;
-    const brickA = palette.stone[0] || 0x282520;
-    const brickB = palette.stone[1] || brickA;
-    const brickC = palette.stone[2] || brickA;
-    const brickHeight = 12;
-    const rowCount = Math.ceil(TILE_SIZE / brickHeight);
-
-    g.rect(0, 0, TILE_SIZE, TILE_SIZE).fill({ color: mortar, alpha: 0.96 });
-
-    for (let row = 0; row < rowCount; row += 1) {
-      const y = row * brickHeight + 1;
-      const offset = row % 2 === 0 ? 0 : -14;
-      for (let x = offset; x < TILE_SIZE; x += 28) {
-        const brickTone = [brickA, brickB, brickC][Math.floor(rng() * 3)];
-        const left = Math.max(1, x + 1);
-        const width = Math.min(27, TILE_SIZE - left - 1);
-        if (width <= 0) continue;
-        g.rect(left, y, width, brickHeight - 2)
-          .fill({ color: brickTone, alpha: 0.92 })
-          .stroke({ color: mortar, width: 1, alpha: 0.88 });
-      }
-    }
-
-    g.rect(0.5, 0.5, TILE_SIZE - 1, TILE_SIZE - 1)
-      .stroke({ color: mortar, width: 2, alpha: 0.92 });
-    g.rect(3, 3, TILE_SIZE - 6, 3).fill({ color: palette.stoneLight, alpha: 0.13 });
-    g.rect(3, TILE_SIZE - 6, TILE_SIZE - 6, 3).fill({ color: 0x000000, alpha: 0.18 });
-    return;
-
     const tone = () => palette.stone[Math.floor(rng() * palette.stone.length)];
 
-    if (kind === 'rocks') {
-      for (let i = 0; i < 3; i += 1) {
-        const cx = 18 + rng() * 28;
-        const cy = 28 + rng() * 18;
-        const r = 9 + rng() * 7;
-        g.ellipse(cx, cy, r, r * 0.78).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1, alpha: 0.55 });
-        g.ellipse(cx - r * 0.25, cy - r * 0.3, r * 0.38, r * 0.24).fill({ color: palette.stoneLight, alpha: 0.22 });
-      }
-    } else if (kind === 'rubble') {
-      for (let i = 0; i < 6; i += 1) {
-        const s = 5 + rng() * 7;
-        const cx = 12 + rng() * 40;
-        const cy = 30 + rng() * 18;
-        g.poly([cx, cy, cx + s, cy - s * 0.3, cx + s * 0.8, cy + s * 0.6, cx - s * 0.2, cy + s * 0.5])
-          .fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 0.8, alpha: 0.5 });
-      }
-    } else if (kind === 'wall') {
-      // Cracked wall — a tall block beside a broken-down stub.
-      g.rect(12, 22, 22, 32).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1.4, alpha: 0.8 });
-      g.rect(34, 34, 18, 20).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1.4, alpha: 0.8 });
-      g.rect(12, 22, 22, 3).fill({ color: palette.stoneLight, alpha: 0.18 }); // top highlight
-      g.moveTo(22, 24).lineTo(19, 38).lineTo(24, 52).stroke({ color: palette.stoneDark, width: 1.2, alpha: 0.6 }); // crack
-    } else if (kind === 'pillar') {
-      // Broken pillar on a footing.
-      g.rect(22, 16, 18, 34).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1.4, alpha: 0.8 });
-      g.rect(17, 48, 28, 7).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1.2, alpha: 0.7 });
-      g.rect(22, 16, 18, 3).fill({ color: palette.stoneLight, alpha: 0.2 });
-      for (let i = 0; i < 3; i += 1) g.rect(22, 24 + i * 8, 18, 1.4).fill({ color: palette.stoneDark, alpha: 0.45 });
-    } else { // masonry — a couple of collapsed brick courses
-      for (let r = 0; r < 3; r += 1) {
-        const yy = TILE_SIZE - 16 - r * 11;
-        const offset = (r % 2) * 8;
-        for (let bx = 0; bx < 3; bx += 1) {
-          if (r >= 1 && rng() < 0.35) continue; // missing/collapsed bricks
-          g.rect(8 + bx * 16 + offset, yy, 15, 9).fill({ color: tone() }).stroke({ color: palette.stoneDark, width: 1, alpha: 0.6 });
-        }
-      }
+    // Shared pool of ground shadow under the whole cluster.
+    g.ellipse(TILE_SIZE / 2 + 2, TILE_SIZE / 2 + 6, TILE_SIZE * 0.42, TILE_SIZE * 0.32)
+      .fill({ color: 0x000000, alpha: 0.35 });
+
+    // Two or three overlapping boulders, back-to-front.
+    const count = 2 + Math.floor(rng() * 2);
+    const spots = [
+      { x: TILE_SIZE * (0.34 + rng() * 0.1), y: TILE_SIZE * (0.36 + rng() * 0.08), r: TILE_SIZE * (0.3 + rng() * 0.06) },
+      { x: TILE_SIZE * (0.62 + rng() * 0.1), y: TILE_SIZE * (0.5 + rng() * 0.1), r: TILE_SIZE * (0.26 + rng() * 0.06) },
+      { x: TILE_SIZE * (0.4 + rng() * 0.14), y: TILE_SIZE * (0.62 + rng() * 0.08), r: TILE_SIZE * (0.2 + rng() * 0.05) }
+    ];
+    for (let i = 0; i < count; i += 1) {
+      const { x, y, r } = spots[i];
+      const body = tone();
+      const pts = boulderPoints(x, y, r, rng);
+      g.poly(pts).fill({ color: body })
+        .stroke({ color: palette.stoneDark, width: 1.6, alpha: 0.85 });
+
+      // Moonlit facet on the upper-left of the boulder.
+      const litPts = boulderPoints(x - r * 0.18, y - r * 0.22, r * 0.55, rng);
+      g.poly(litPts).fill({ color: palette.stoneLight, alpha: 0.16 });
+
+      // A crack line falling from near the top.
+      const crackX = x + (rng() - 0.5) * r * 0.6;
+      g.moveTo(crackX, y - r * 0.55)
+        .lineTo(crackX + (rng() - 0.5) * 6, y - r * 0.1)
+        .lineTo(crackX + (rng() - 0.5) * 8, y + r * 0.4)
+        .stroke({ color: palette.stoneDark, width: 1.1, alpha: 0.6 });
+    }
+
+    // Rubble scatter at the base.
+    const rubble = 3 + Math.floor(rng() * 3);
+    for (let i = 0; i < rubble; i += 1) {
+      const a = rng() * Math.PI * 2;
+      const dist = TILE_SIZE * (0.3 + rng() * 0.14);
+      const px = TILE_SIZE / 2 + Math.cos(a) * dist;
+      const py = TILE_SIZE / 2 + Math.sin(a) * dist * 0.8 + 4;
+      const s = 1.6 + rng() * 2.6;
+      g.ellipse(px, py, s, s * 0.75).fill({ color: tone(), alpha: 0.8 });
+    }
+
+    // Moss clinging to the shaded side.
+    const mossBits = 2 + Math.floor(rng() * 2);
+    for (let i = 0; i < mossBits; i += 1) {
+      g.ellipse(TILE_SIZE * (0.3 + rng() * 0.4), TILE_SIZE * (0.5 + rng() * 0.24), 2.5 + rng() * 3.5, 2 + rng() * 2.5)
+        .fill({ color: palette.moss, alpha: 0.3 });
     }
   }
 
@@ -1862,6 +2017,11 @@ import * as dungeonUtils from './dungeon/utils.js';
       state.groundLayer.addChild(leaves);
     }
 
+    // Broad soft light/dark pools across the whole board (crosses tile seams).
+    const macro = new Pixi.Graphics();
+    drawMacroShading(macro);
+    state.groundLayer.addChild(macro);
+
     drawGrid();
 
     state.roads.forEach((tile) => {
@@ -1898,12 +2058,6 @@ import * as dungeonUtils from './dungeon/utils.js';
     layer.stroke({ color: GRID_COLOR, width: 1, alpha: 0.05 });
   }
 
-  function cellOutline(layer, tile, color, alpha, width) {
-    const left = tile.x * TILE_SIZE;
-    const top = tile.y * TILE_SIZE;
-    layer.rect(left + 1, top + 1, TILE_SIZE - 2, TILE_SIZE - 2).stroke({ color, width, alpha });
-  }
-
   // --- dynamic layers ---------------------------------------------------------
 
   function drawFog() {
@@ -1917,7 +2071,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       const cx = event.x * TILE_SIZE + TILE_SIZE / 2;
       const cy = event.y * TILE_SIZE + TILE_SIZE / 2;
       if (event.type === 'boss') {
-        layer.rect(event.x * TILE_SIZE + 6, event.y * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12).fill({ color: BOARD_COLORS.dangerousGlow, alpha: 0.16 });
+        layer.circle(cx, cy, TILE_SIZE * 0.42).fill({ color: BOARD_COLORS.dangerousGlow, alpha: 0.14 });
       } else if (event.type === 'soul-cache') {
         layer.circle(cx, cy, TILE_SIZE * 0.32).fill({ color: BOARD_COLORS.soulNode, alpha: 0.16 });
       } else if (event.type === 'forsaken_shrine') {
@@ -1930,8 +2084,9 @@ import * as dungeonUtils from './dungeon/utils.js';
       }
     });
 
-    // Active tile: a touch more grid emphasis (no heavy box).
-    cellOutline(layer, state.position, BOARD_COLORS.selection, 0.32, 1);
+    // Active tile: a faint gold ground-ring under the hunter token.
+    const active = tileCenter(state.position);
+    layer.circle(active.x, active.y, 26).stroke({ color: BOARD_COLORS.selection, width: 1.2, alpha: 0.22 });
   }
 
   function drawHover() {
@@ -1940,7 +2095,10 @@ import * as dungeonUtils from './dungeon/utils.js';
     layer.clear();
     if (!state.hoverTile || state.moving) return;
     if (positionsEqual(state.hoverTile, state.position)) return;
-    cellOutline(layer, state.hoverTile, GRID_COLOR, 0.5, 1);
+    // A quiet ring on the ground instead of a grid box.
+    const c = tileCenter(state.hoverTile);
+    layer.circle(c.x, c.y, 15).stroke({ color: GRID_COLOR, width: 1.4, alpha: 0.55 });
+    layer.circle(c.x, c.y, 15).fill({ color: GRID_COLOR, alpha: 0.06 });
   }
 
   function drawPath() {
@@ -1951,19 +2109,26 @@ import * as dungeonUtils from './dungeon/utils.js';
     const path = state.selectedPath || [];
     if (path.length < 2) return;
 
-    // A soft ember trail rather than outlined boxes; the destination is a touch
-    // stronger so it reads as the target.
+    // A trail of drifting ember motes — jittered off the tile centres so the
+    // route reads as a wandering trace, not a grid. The destination glow is
+    // handled by the animated pulse.
     path.forEach((tile, index) => {
       if (index === 0) return;
       const c = tileCenter(tile);
       const isTarget = index === path.length - 1;
       if (isTarget) {
-        cellOutline(layer, tile, EMBER_GLOW, 0.4, 1.5);
-        return; // glow handled by the animated pulse
+        layer.circle(c.x, c.y, 12).fill({ color: EMBER_GLOW, alpha: 0.12 });
+        return;
       }
-      cellOutline(layer, tile, EMBER_GLOW, 0.08, 1);
-      layer.circle(c.x, c.y, 4).fill({ color: EMBER_GLOW, alpha: 0.12 });
-      layer.circle(c.x, c.y, 1.8).fill({ color: EMBER_CORE, alpha: 0.7 });
+      const jx = (hashTile(tile.x, tile.y, 41) - 0.5) * 16;
+      const jy = (hashTile(tile.x, tile.y, 42) - 0.5) * 16;
+      layer.circle(c.x + jx, c.y + jy, 4.5).fill({ color: EMBER_GLOW, alpha: 0.14 });
+      layer.circle(c.x + jx, c.y + jy, 1.8).fill({ color: EMBER_CORE, alpha: 0.75 });
+      // A smaller trailing spark between this mote and the previous tile.
+      const prev = tileCenter(path[index - 1]);
+      const mx = (c.x + jx + prev.x) / 2 + (hashTile(tile.x, tile.y, 43) - 0.5) * 10;
+      const my = (c.y + jy + prev.y) / 2 + (hashTile(tile.x, tile.y, 44) - 0.5) * 10;
+      layer.circle(mx, my, 1.1).fill({ color: EMBER_CORE, alpha: 0.4 });
     });
   }
 
@@ -2036,34 +2201,100 @@ import * as dungeonUtils from './dungeon/utils.js';
       const marker = new Pixi.Graphics();
       const color = EVENT_COLORS[event.type] || 0xe8c76a;
       const position = tileCenter(event);
+      const rng = seededRng((Math.imul(event.x | 0, 48271) ^ Math.imul(event.y | 0, 16807)) >>> 0);
 
       if (event.type === 'boss') {
-        marker.rect(-15, -15, 30, 30).fill({ color: BOARD_COLORS.dangerous, alpha: 0.88 }).stroke({ color, width: 2, alpha: 0.92 });
-        marker.rotation = Math.PI / 4;
+        // A spiked obsidian sigil crouched on the tile.
+        marker.ellipse(0, 12, 18, 6).fill({ color: 0x000000, alpha: 0.4 });
+        marker.poly([0, -19, 5, -5, 19, 0, 5, 5, 0, 19, -5, 5, -19, 0, -5, -5])
+          .fill({ color: BOARD_COLORS.dangerous, alpha: 0.94 })
+          .stroke({ color, width: 2, alpha: 0.92 });
+        marker.poly([0, -8, 7, 0, 0, 8, -7, 0]).fill({ color: 0x180505, alpha: 0.9 });
+        marker.circle(0, 0, 3).fill({ color, alpha: 0.9 });
+        marker.circle(0, 0, 6).fill({ color, alpha: 0.25 });
       } else if (event.type === 'dungeon-portal') {
-        marker.circle(0, 0, 24).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.22 });
-        marker.circle(0, 0, 15).fill({ color: BOARD_COLORS.portal, alpha: 0.9 }).stroke({ color, width: 3, alpha: 1 });
+        // A dark well with pale light swirling into it.
+        marker.ellipse(0, 14, 17, 6).fill({ color: 0x000000, alpha: 0.38 });
+        marker.circle(0, 0, 24).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.2 });
+        marker.circle(0, 0, 15).fill({ color: 0x0d0812, alpha: 0.95 })
+          .stroke({ color, width: 2.5, alpha: 0.95 });
+        for (let i = 0; i < 3; i += 1) {
+          const a = (i / 3) * Math.PI * 2;
+          const r = 9.5 - i * 1.5;
+          marker.moveTo(Math.cos(a) * r, Math.sin(a) * r)
+            .arc(0, 0, r, a, a + Math.PI * 0.9)
+            .stroke({ color, width: 1.6, alpha: 0.6 - i * 0.12 });
+        }
+        marker.circle(0, 0, 2.6).fill({ color: 0xd9c8ea, alpha: 0.9 });
       } else if (event.type === 'forsaken_shrine') {
         const bound = isBoundShrine(event);
         const soul = BOARD_COLORS.shrineSoul;
-        // Same silhouette as the Old Watch landmark — a dark hollow box with an
-        // inscribed star — just outlined in soul-blue. The floating smoke
-        // (updateShrineGlow) supplies the glow, so no rings or core here.
-        marker.rect(-12, -12, 24, 24).fill({ color: 0x111819, alpha: 0.9 }).stroke({ color: soul, width: bound ? 2.4 : 1.8, alpha: bound ? 0.95 : 0.78 });
-        marker.moveTo(0, -17).lineTo(14, 0).lineTo(0, 17).lineTo(-14, 0).lineTo(0, -17)
-          .stroke({ color: soul, width: 1.5, alpha: bound ? 0.85 : 0.62 });
+        drawShrineMarker(marker, soul, bound, rng);
       } else if (event.type === 'landmark') {
-        marker.rect(-12, -12, 24, 24).fill({ color: 0x111819, alpha: 0.9 }).stroke({ color, width: 2, alpha: 0.85 });
-        marker.moveTo(0, -17).lineTo(14, 0).lineTo(0, 17).lineTo(-14, 0).lineTo(0, -17)
-          .stroke({ color, width: 1.5, alpha: 0.72 });
+        // A leaning waymarker monolith on a cairn of stones.
+        marker.ellipse(1, 15, 16, 5.5).fill({ color: 0x000000, alpha: 0.38 });
+        marker.poly([-5, 14, -8, -14, -2, -18, 5, -15, 7, 14])
+          .fill({ color: 0x1a201d, alpha: 0.96 })
+          .stroke({ color: 0x0b0f0d, width: 1.6, alpha: 0.9 });
+        marker.poly([-6.5, -4, -2.5, -16.5, 0.5, -17.5, 0, -4]).fill({ color: 0x39463f, alpha: 0.4 });
+        // Carved sigil, faintly lit in the event colour.
+        marker.moveTo(0, -11).lineTo(0, 6).stroke({ color, width: 1.4, alpha: 0.75 });
+        marker.moveTo(-4, -6).lineTo(4, -6).stroke({ color, width: 1.4, alpha: 0.75 });
+        marker.moveTo(-3, 1).lineTo(3, 1).stroke({ color, width: 1.2, alpha: 0.6 });
+        for (let i = 0; i < 3; i += 1) {
+          const sx = -8 + i * 7 + rng() * 2;
+          marker.ellipse(sx, 13, 3.4 + rng() * 1.4, 2.4 + rng()).fill({ color: 0x232b26, alpha: 0.95 })
+            .stroke({ color: 0x0b0f0d, width: 1, alpha: 0.7 });
+        }
       } else {
-        marker.circle(0, 0, 16).fill({ color, alpha: 0.28 }).stroke({ color, width: 2, alpha: 0.9 });
-        marker.circle(0, 0, 7).fill({ color: 0xbfeaf5, alpha: 0.88 });
+        // Soul cache: a small hollow of glowing soul-orbs.
+        marker.ellipse(0, 11, 15, 5).fill({ color: 0x000000, alpha: 0.35 });
+        marker.circle(0, 2, 15).fill({ color, alpha: 0.14 });
+        marker.ellipse(0, 6, 12, 6).fill({ color: 0x14170f, alpha: 0.95 })
+          .stroke({ color: 0x060704, width: 1.4, alpha: 0.8 });
+        const orbs = [[-5, 2, 3.4], [4.5, 1, 2.8], [0, -3.5, 3.8]];
+        for (const [ox, oy, or] of orbs) {
+          marker.circle(ox, oy, or * 1.9).fill({ color, alpha: 0.2 });
+          marker.circle(ox, oy, or).fill({ color, alpha: 0.85 });
+          marker.circle(ox - or * 0.3, oy - or * 0.35, or * 0.4).fill({ color: 0xfdf6dd, alpha: 0.8 });
+        }
       }
 
       marker.position.set(position.x, position.y);
       layer.addChild(marker);
     });
+  }
+
+  // A forsaken shrine: a cracked standing stone on a slab, its carved rune
+  // spilling soul-light. The drifting smoke comes from updateShrineGlow.
+  function drawShrineMarker(g, soul, bound, rng) {
+    const glowAlpha = bound ? 0.9 : 0.66;
+
+    // Ground shadow + base slab.
+    g.ellipse(1, 16, 17, 6).fill({ color: 0x000000, alpha: 0.4 });
+    g.poly([-14, 13, 14, 13, 11, 18, -11, 18]).fill({ color: 0x161a19, alpha: 0.96 })
+      .stroke({ color: 0x070909, width: 1.4, alpha: 0.9 });
+
+    // The standing stone, slightly asymmetric with a broken shoulder.
+    g.poly([-8, 13, -9, -10, -4, -17, 3, -19, 8, -12, 9, 5, 7, 13])
+      .fill({ color: 0x1d2323, alpha: 0.97 })
+      .stroke({ color: 0x0a0d0d, width: 1.6, alpha: 0.9 });
+    // Lit face on the left edge.
+    g.poly([-7.5, 10, -8.5, -9, -4, -16, -2, -16, -3.5, 10]).fill({ color: 0x394547, alpha: 0.4 });
+    // A crack running down from the broken shoulder.
+    g.moveTo(3 + rng() * 2, -18).lineTo(1, -8).lineTo(3.5, 2)
+      .stroke({ color: 0x0a0d0d, width: 1.1, alpha: 0.7 });
+
+    // Carved soul rune, glowing.
+    g.circle(0, -3, 8).fill({ color: soul, alpha: bound ? 0.16 : 0.09 });
+    g.moveTo(0, -9).lineTo(0, 3).stroke({ color: soul, width: 1.6, alpha: glowAlpha });
+    g.moveTo(-4, -6.5).lineTo(4, -6.5).stroke({ color: soul, width: 1.5, alpha: glowAlpha });
+    g.moveTo(-3.5, 0).lineTo(3.5, 0).stroke({ color: soul, width: 1.3, alpha: glowAlpha * 0.8 });
+
+    // A small soul-flame guttering at the crown.
+    g.circle(0, -21, 5.5).fill({ color: soul, alpha: bound ? 0.28 : 0.16 });
+    g.ellipse(0, -21, 2.4, 3.4).fill({ color: soul, alpha: glowAlpha });
+    g.ellipse(0, -21.8, 1.1, 1.8).fill({ color: 0xeafcff, alpha: 0.9 });
   }
 
   function drawEncounterMarkers() {
@@ -2078,16 +2309,31 @@ import * as dungeonUtils from './dungeon/utils.js';
       const ringColor = rarityHex(encounter.keyDemon?.rarity);
       const selected = state.selectedEncounter?.id === encounter.id;
       const radius = 22;
+      const rng = seededRng((Math.imul(encounter.x | 0, 92821) ^ Math.imul(encounter.y | 0, 68917)) >>> 0);
 
       const node = new Pixi.Container();
       node.position.set(center.x, center.y);
 
-      // A grounded world node: a soft ground shadow, a faint rarity glow, and a
-      // single thin ring around the portrait — no UI-sticker rings or runes.
+      // A grounded world node: trampled dark earth where the demon prowls, a
+      // soft ground shadow, a faint rarity glow, and a single thin ring around
+      // the portrait — no UI-sticker rings or runes.
       const base = new Pixi.Graphics();
+      // Trampled ground: overlapping dark scuffs with a few prowl marks.
+      for (let i = 0; i < 3; i += 1) {
+        base.ellipse((rng() - 0.5) * 14, radius - 4 + (rng() - 0.5) * 8, radius * (0.6 + rng() * 0.3), 6 + rng() * 4)
+          .fill({ color: 0x000000, alpha: 0.1 });
+      }
+      for (let i = 0; i < 4; i += 1) {
+        const a = rng() * Math.PI;
+        const dist = radius * (0.7 + rng() * 0.4);
+        base.ellipse(Math.cos(a) * dist, radius - 2 + Math.sin(a) * 6, 1.6 + rng(), 1 + rng() * 0.8)
+          .fill({ color: 0x000000, alpha: 0.22 });
+      }
       base.ellipse(0, radius + 3, radius - 2, 5).fill({ color: 0x000000, alpha: 0.35 }); // shadow
-      base.circle(0, 0, radius + 4).fill({ color: ringColor, alpha: selected ? 0.18 : 0.09 }); // glow
+      base.circle(0, 0, radius + 4).fill({ color: ringColor, alpha: selected ? 0.2 : 0.09 }); // glow
+      if (selected) base.circle(0, 0, radius + 8).fill({ color: ringColor, alpha: 0.08 });
       base.circle(0, 0, radius + 1).fill({ color: 0x080c0e, alpha: 0.92 });
+      base.circle(0, 0, radius + 2.5).stroke({ color: 0x0a0705, width: 2, alpha: 0.7 }); // dark rim seats the ring
       base.circle(0, 0, radius + 1).stroke({ color: ringColor, width: selected ? 2.5 : 1.5, alpha: selected ? 0.95 : 0.6 });
       node.addChild(base);
 
@@ -2111,6 +2357,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     });
   }
 
+  // The hunter as a grounded circular token: soft ground shadow, faint gold
+  // aura, dark disc with a gold ring, and the avatar clipped to a circle.
   function drawHunter() {
     const layer = state.hunterLayer;
     const frame = state.hunterFrame;
@@ -2119,24 +2367,33 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const center = tileCenter(state.hunterRenderPosition || state.position);
     const hasAvatar = Boolean(avatar && state.hunterAvatarTexture);
+    const radius = 20;
 
     frame.clear();
 
+    // Ground shadow + a quiet gold aura so the hunter reads at a glance.
+    frame.ellipse(center.x, center.y + radius + 2, radius - 3, 5.5).fill({ color: 0x000000, alpha: 0.4 });
+    frame.circle(center.x, center.y, radius + 7).fill({ color: BOARD_COLORS.selection, alpha: 0.09 });
+
+    // Dark portrait disc with a dark outer rim under the gold ring.
+    frame.circle(center.x, center.y, radius + 1).fill({ color: 0x050b0e, alpha: 0.97 });
+    frame.circle(center.x, center.y, radius + 2).stroke({ color: 0x0a0705, width: 2.5, alpha: 0.85 });
+    frame.circle(center.x, center.y, radius).stroke({ color: BOARD_COLORS.selection, width: 2, alpha: 0.95 });
+
     if (hasAvatar) {
-      frame.rect(center.x - 20, center.y - 20, 40, 40)
-        .fill({ color: 0x050b0e, alpha: 0.96 })
-        .stroke({ color: BOARD_COLORS.selection, width: 2, alpha: 0.92 });
       avatar.texture = state.hunterAvatarTexture;
       avatar.visible = true;
       avatar.position.set(center.x, center.y);
-      avatar.width = 34;
-      avatar.height = 34;
+      avatar.width = radius * 2;
+      avatar.height = radius * 2;
+      if (state.hunterMask) {
+        state.hunterMask.clear();
+        state.hunterMask.circle(center.x, center.y, radius - 1).fill({ color: 0xffffff });
+      }
     } else {
       if (avatar) avatar.visible = false;
-      frame.rect(center.x - 20, center.y - 20, 40, 40)
-        .fill({ color: 0x050b0e, alpha: 0.96 })
-        .stroke({ color: BOARD_COLORS.selection, width: 2, alpha: 0.92 });
-      frame.circle(center.x, center.y, 9)
+      if (state.hunterMask) state.hunterMask.clear();
+      frame.circle(center.x, center.y, 8)
         .fill({ color: 0x6fd6bd, alpha: 0.95 })
         .stroke({ color: 0xf8fbf9, width: 1, alpha: 0.64 });
     }
