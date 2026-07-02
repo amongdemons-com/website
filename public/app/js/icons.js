@@ -107,15 +107,17 @@
     const username = player && player.username ? player.username : 'Hunter';
     const level = Math.max(1, Number(player?.level) || 1);
     const profileImageUrl = options.profileImageUrl || player?.profileDemonImageUrl || '';
-    const souls = options.souls ?? player?.souls ?? '-';
-    const formattedSouls = formatNumber(souls);
+    const hasSoulValue = options.souls !== undefined || player?.souls !== undefined;
+    const souls = hasSoulValue ? (options.souls ?? player?.souls) : undefined;
+    const currentSoulText = getCurrentSoulText(soulElement);
+    const formattedSouls = hasSoulValue ? formatNumber(souls) : (currentSoulText || '-');
 
     if (authElement) authElement.classList.add('d-none');
     if (accountElement) accountElement.classList.remove('d-none');
     if (nameElement) nameElement.textContent = username;
     if (levelElement) levelElement.textContent = `Level ${formatNumber(level)}`;
     if (profileImageElement && profileImageUrl) profileImageElement.src = profileImageUrl;
-    if (soulElement) {
+    if (soulElement && (hasSoulValue || !currentSoulText)) {
       soulElement.innerHTML = renderSoulAmount(formattedSouls, {
         className: 'nav-soul-amount',
         ariaLabel: `${formattedSouls} Souls`
@@ -127,6 +129,10 @@
       username,
       souls: formattedSouls
     };
+  }
+
+  function getCurrentSoulText(soulElement) {
+    return soulElement?.querySelector?.('.soul-amount-value')?.textContent?.trim() || '';
   }
 
   function clearNavAccount(options = {}) {
