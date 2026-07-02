@@ -402,9 +402,7 @@
     const progress = getLevelProgress(progression, level, xp);
     const percent = Math.round(progress.percent * 100);
     const nextLevel = level + 1;
-    const xpIntoLevel = formatNumber(progress.xpIntoLevel);
-    const xpForNextLevel = formatNumber(progress.xpForNextLevel);
-    const progressText = `${xpIntoLevel} / ${xpForNextLevel} XP· ${percent}% to level ${formatNumber(nextLevel)}`;
+    const progressText = `${formatNumber(progress.xpToNextLevel)} XP to level ${formatNumber(nextLevel)}`;
 
     setText(elements.levelStat, formatNumber(level));
     setText(elements.xpStat, progressText);
