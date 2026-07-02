@@ -55,7 +55,7 @@
     });
     const text = await response.text();
 
-    return handleApiResponse(response.ok, response.status, text ? parsePayload(text) : null);
+    return handleApiResponse(response.ok, response.status, text ? parsePayload(text) : null, path);
   }
 
   async function nativeApi(url, options, headers, body) {
@@ -68,7 +68,7 @@
     });
 
     const status = Number(response.status || 0);
-    return handleApiResponse(status >= 200 && status < 300, status, normalizePayload(response.data));
+    return handleApiResponse(status >= 200 && status < 300, status, normalizePayload(response.data), url);
   }
 
   function shouldUseNativeHttp() {
@@ -79,7 +79,7 @@
     );
   }
 
-  function handleApiResponse(ok, status, payload) {
+  function handleApiResponse(ok, status, payload, path = '') {
     if (!ok) {
       const message = payload && payload.error ? payload.error : 'Something went wrong.';
       const error = new Error(message);
@@ -88,7 +88,71 @@
       throw error;
     }
 
+    notifyProgressionPayload(payload, path);
     return payload;
+  }
+
+  function notifyProgressionPayload(payload, path = '') {
+    if (!payload || typeof payload !== 'object') return;
+
+    const ui = window.AmongDemons?.ui;
+    if (!ui) return;
+
+    const candidate = getProgressionCandidate(payload, path);
+    if (!candidate) return;
+
+    if (candidate.kind === 'player' && typeof ui.updateNavAccount === 'function') {
+      ui.updateNavAccount(candidate.data);
+      return;
+    }
+
+    if (typeof ui.updateNavProgression === 'function') {
+      ui.updateNavProgression(candidate.data);
+      return;
+    }
+
+    if (typeof ui.updateNavXpProgress === 'function') {
+      ui.updateNavXpProgress(candidate.data);
+    }
+  }
+
+  function getProgressionCandidate(payload, path = '') {
+    // Future XP-granting endpoints should return updated `player` or `progression`.
+    // Top-level `xp` is ignored because run payout responses use it as earned XP, not total account XP.
+    if (hasProgressionShape(payload.progression)) {
+      return { kind: 'progression', data: payload.progression };
+    }
+
+    if (hasProgressionShape(payload.player)) {
+      return { kind: 'player', data: payload.player };
+    }
+
+    if (isProgressionEndpoint(path) && hasProgressionShape(payload)) {
+      return { kind: 'progression', data: payload };
+    }
+
+    if (payload.levelProgress && hasProgressionShape(payload)) {
+      return { kind: 'progression', data: payload };
+    }
+
+    return null;
+  }
+
+  function hasProgressionShape(value) {
+    if (!value || typeof value !== 'object') return false;
+    return Boolean(
+      value.levelProgress ||
+      Number.isFinite(Number(value.xp)) ||
+      Number.isFinite(Number(value.level))
+    );
+  }
+
+  function isProgressionEndpoint(path = '') {
+    try {
+      return new URL(String(path), window.location.origin).pathname.replace(/\/+$/, '') === '/api/account/progression';
+    } catch (error) {
+      return String(path).replace(/\/+$/, '') === '/api/account/progression';
+    }
   }
 
   function normalizePayload(data) {

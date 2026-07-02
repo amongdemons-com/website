@@ -38,8 +38,15 @@
   const ACCOUNT_LEVEL_EXPONENT = 1.65;
   const XP_MINOR_MARKERS = [10, 20, 30, 40, 60, 70, 80, 90];
   const XP_MAJOR_MARKERS = [25, 50, 75];
+  const LEVEL_UP_PARTICLE_COUNT = 88;
+  const LEVEL_UP_ANIMATION_MS = 3200;
+  const LEVEL_UP_REDUCED_ANIMATION_MS = 1600;
+  const LEVEL_UP_DISMISS_MS = 220;
+  const LEVEL_UP_ANCHOR_ANIMATION_MS = 2200;
   const alertTimers = new WeakMap();
   let navXpState = null;
+  let levelUpAnimationSerial = 0;
+  let dismissActiveLevelUpAnimation = null;
 
   function renderIcon(name, options = {}) {
     if (isSoulIcon(name)) return renderImageIcon(SOUL_ICON_PATH, 'soul', options);
@@ -132,6 +139,30 @@
     clearNavXpProgress({ root });
   }
 
+  function updateNavProgression(progression = {}, options = {}) {
+    const root = options.root || document;
+    const levelElement = options.levelElement || root.querySelector('[data-nav-player-level]') || root.getElementById('navPlayerLevel');
+    const soulElement = options.soulElement || root.querySelector('[data-nav-souls]') || root.getElementById('navSoulBalance');
+
+    if (levelElement && Number.isFinite(Number(progression.level))) {
+      levelElement.textContent = `Level ${formatNumber(Math.max(1, Number(progression.level) || 1))}`;
+    }
+
+    if (soulElement && progression.souls !== undefined) {
+      const formattedSouls = formatNumber(progression.souls);
+      soulElement.innerHTML = renderSoulAmount(formattedSouls, {
+        className: 'nav-soul-amount',
+        ariaLabel: `${formattedSouls} Souls`
+      });
+    }
+
+    if (hasXpProgressSource(progression)) {
+      return updateNavXpProgress(progression, options);
+    }
+
+    return null;
+  }
+
   function ensureNavXpProgress(options = {}) {
     const root = getDocumentRoot(options.root);
     const host = root.body || document.body;
@@ -146,6 +177,7 @@
     progress = root.createElement('div');
     progress.className = 'nav-xp-progress d-none';
     progress.dataset.navXpProgress = 'true';
+    progress.dataset.xpProgress = 'true';
     progress.id = 'navXpProgress';
     progress.tabIndex = 0;
     progress.setAttribute('role', 'progressbar');
@@ -210,6 +242,7 @@
 
     const nextState = normalizeXpProgress(data);
     if (!nextState) return null;
+    const previousState = navXpState ? { ...navXpState } : null;
     navXpState = nextState;
 
     const percentValue = Math.round(nextState.percent * 1000) / 10;
@@ -239,7 +272,201 @@
     const tooltip = progress.querySelector('[data-nav-xp-tooltip]');
     if (tooltip) tooltip.innerHTML = tooltipHtml;
 
+    if (options.animate !== false && previousState && nextState.level > previousState.level) {
+      const view = root.defaultView || window;
+      view.requestAnimationFrame(() => {
+        triggerLevelUpAnimation({
+          root,
+          level: nextState.level,
+          previousLevel: previousState.level,
+          detail: getLevelUpDetail(previousState, nextState),
+          progress: nextState
+        });
+      });
+    }
+
     return nextState;
+  }
+
+  function triggerLevelUpAnimation(options = {}) {
+    const root = getDocumentRoot(options.root);
+    const host = root.body || document.body;
+    if (!host) return null;
+
+    const view = root.defaultView || window;
+    const reducedMotion = Boolean(view.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+    const currentState = options.progress || navXpState || {};
+    const level = Math.max(1, Math.floor(toFiniteNumber(options.level, currentState.level || 1)));
+    const previousLevel = Math.max(0, Math.floor(toFiniteNumber(options.previousLevel, 0)));
+    const levelLabel = options.label || `Level ${formatNumber(level)}`;
+    const detail = options.detail || (previousLevel > 0 && level > previousLevel
+      ? getLevelUpDetail({ level: previousLevel }, { level })
+      : 'New power awakened');
+    const serial = String(++levelUpAnimationSerial);
+
+    animateLevelUpAnchors(root, serial, reducedMotion);
+    if (typeof dismissActiveLevelUpAnimation === 'function') {
+      dismissActiveLevelUpAnimation({ immediate: true });
+    }
+    root.querySelectorAll('[data-level-up-celebration]').forEach((node) => node.remove());
+
+    const overlay = root.createElement('div');
+    overlay.className = `level-up-celebration${reducedMotion ? ' is-reduced-motion' : ''}`;
+    overlay.dataset.levelUpCelebration = 'true';
+    overlay.dataset.levelUpSerial = serial;
+    overlay.tabIndex = -1;
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'assertive');
+    overlay.setAttribute('aria-atomic', 'true');
+    overlay.innerHTML = renderLevelUpCelebration(levelLabel, detail, reducedMotion);
+    host.appendChild(overlay);
+    host.classList.add('is-level-up-celebrating');
+
+    let dismissed = false;
+    let removalTimer = view.setTimeout(removeLevelUpAnimation, reducedMotion ? LEVEL_UP_REDUCED_ANIMATION_MS : LEVEL_UP_ANIMATION_MS);
+
+    function dismissLevelUpAnimation(eventOrOptions = {}) {
+      eventOrOptions.preventDefault?.();
+      if (dismissed) return;
+      dismissed = true;
+      view.clearTimeout(removalTimer);
+      cleanupLevelUpAnchors(root, serial);
+
+      if (eventOrOptions.immediate || reducedMotion) {
+        removeLevelUpAnimation();
+        return;
+      }
+
+      overlay.classList.add('is-dismissing');
+      removalTimer = view.setTimeout(removeLevelUpAnimation, LEVEL_UP_DISMISS_MS);
+    }
+
+    function handleLevelUpKeydown(event) {
+      if (event.key === 'Escape') dismissLevelUpAnimation(event);
+    }
+
+    function removeLevelUpAnimation() {
+      view.clearTimeout(removalTimer);
+      root.removeEventListener('keydown', handleLevelUpKeydown);
+      cleanupLevelUpAnchors(root, serial);
+      if (overlay.isConnected) overlay.remove();
+      if (!root.querySelector('[data-level-up-celebration]')) {
+        host.classList.remove('is-level-up-celebrating');
+      }
+      if (dismissActiveLevelUpAnimation === dismissLevelUpAnimation) {
+        dismissActiveLevelUpAnimation = null;
+      }
+    }
+
+    overlay.addEventListener('pointerdown', dismissLevelUpAnimation);
+    overlay.addEventListener('click', dismissLevelUpAnimation);
+    root.addEventListener('keydown', handleLevelUpKeydown);
+    dismissActiveLevelUpAnimation = dismissLevelUpAnimation;
+
+    return overlay;
+  }
+
+  function animateLevelUpAnchors(root, serial, reducedMotion) {
+    const anchors = getLevelUpAnchors(root);
+    const view = root.defaultView || window;
+
+    anchors.forEach((anchor, index) => {
+      const fill = anchor.querySelector('[data-nav-xp-progress-fill], .camp-xp-progress-bar, [data-xp-progress-fill]');
+      const progress = getAnchorProgress(anchor, fill);
+      anchor.dataset.levelUpSerial = serial;
+      anchor.style.setProperty('--level-up-progress', progress);
+      anchor.style.setProperty('--level-up-delay', `${Math.min(index * 80, 240)}ms`);
+      restartClass(anchor, reducedMotion ? 'is-level-up-soft' : 'is-level-up-anchored');
+
+      if (fill) {
+        fill.dataset.levelUpSerial = serial;
+        restartClass(fill, 'is-level-up-fill');
+      }
+
+      view.setTimeout(() => {
+        cleanupLevelUpAnchor(anchor, fill, serial);
+      }, reducedMotion ? 900 : LEVEL_UP_ANCHOR_ANIMATION_MS + Math.min(index * 80, 240));
+    });
+  }
+
+  function cleanupLevelUpAnchors(root, serial) {
+    root.querySelectorAll('[data-xp-progress], [data-nav-xp-progress], .camp-xp-progress').forEach((anchor) => {
+      const fill = anchor.querySelector('[data-nav-xp-progress-fill], .camp-xp-progress-bar, [data-xp-progress-fill]');
+      cleanupLevelUpAnchor(anchor, fill, serial);
+    });
+  }
+
+  function cleanupLevelUpAnchor(anchor, fill, serial) {
+    if (anchor.dataset.levelUpSerial === serial) {
+      anchor.classList.remove('is-level-up-anchored', 'is-level-up-soft');
+      delete anchor.dataset.levelUpSerial;
+      anchor.style.removeProperty('--level-up-delay');
+    }
+    if (fill?.dataset.levelUpSerial === serial) {
+      fill.classList.remove('is-level-up-fill');
+      delete fill.dataset.levelUpSerial;
+    }
+  }
+
+  function getLevelUpAnchors(root) {
+    return Array.from(root.querySelectorAll('[data-xp-progress], [data-nav-xp-progress], .camp-xp-progress'))
+      .filter((anchor) => anchor instanceof Element && !anchor.classList.contains('d-none'));
+  }
+
+  function getAnchorProgress(anchor, fill) {
+    const navProgress = anchor.style.getPropertyValue('--nav-xp-progress');
+    if (navProgress) return navProgress.trim();
+    const levelProgress = anchor.style.getPropertyValue('--level-up-progress');
+    if (levelProgress) return levelProgress.trim();
+    if (fill?.style?.width) return fill.style.width;
+    return '50%';
+  }
+
+  function restartClass(element, className) {
+    element.classList.remove(className);
+    void element.offsetWidth;
+    element.classList.add(className);
+  }
+
+  function renderLevelUpCelebration(levelLabel, detail, reducedMotion) {
+    const particles = reducedMotion ? '' : renderLevelUpParticles(LEVEL_UP_PARTICLE_COUNT);
+
+    return `
+      <div class="level-up-celebration-vignette" aria-hidden="true"></div>
+      <div class="level-up-particles" aria-hidden="true">${particles}</div>
+      <div class="level-up-celebration-burst">
+        <span class="level-up-ring level-up-ring-outer" aria-hidden="true"></span>
+        <span class="level-up-ring level-up-ring-inner" aria-hidden="true"></span>
+        <span class="level-up-beams" aria-hidden="true"></span>
+        <span class="level-up-eyebrow">Level Up</span>
+        <strong>${escapeHtml(levelLabel)}</strong>
+        <small>${escapeHtml(detail)}</small>
+      </div>
+    `;
+  }
+
+  function renderLevelUpParticles(count) {
+    return Array.from({ length: count }, (_, index) => {
+      const angle = Math.round((index / count) * 360 + Math.random() * 18 - 9);
+      const distance = Math.round(118 + Math.random() * 238);
+      const size = Math.round(3 + Math.random() * 7);
+      const duration = Math.round(1250 + Math.random() * 1250);
+      const delay = Math.round(Math.random() * 420);
+      const tone = index % 5 === 0 ? 'is-orange' : (index % 3 === 0 ? 'is-teal' : 'is-gold');
+
+      return `<span class="${tone}" style="--angle: ${angle}deg; --distance: ${distance}px; --size: ${size}px; --duration: ${duration}ms; --delay: ${delay}ms;"></span>`;
+    }).join('');
+  }
+
+  function getLevelUpDetail(previousState, nextState) {
+    const gained = Math.max(1, (Number(nextState?.level) || 1) - (Number(previousState?.level) || 0));
+    return gained > 1
+      ? `${formatNumber(gained)} levels gained`
+      : 'New power awakened';
+  }
+
+  function getNavXpProgressState() {
+    return navXpState ? { ...navXpState } : null;
   }
 
   function clearNavXpProgress(options = {}) {
@@ -499,9 +726,12 @@
   ui.renderIcon = renderIcon;
   ui.renderSoulAmount = renderSoulAmount;
   ui.updateNavAccount = updateNavAccount;
+  ui.updateNavProgression = updateNavProgression;
   ui.clearNavAccount = clearNavAccount;
   ui.updateNavXpProgress = updateNavXpProgress;
   ui.clearNavXpProgress = clearNavXpProgress;
+  ui.triggerLevelUpAnimation = triggerLevelUpAnimation;
+  ui.getNavXpProgressState = getNavXpProgressState;
   ui.replaceStaticIcons = replaceStaticIcons;
   ui.dismissGameAlert = dismissGameAlert;
 

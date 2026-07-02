@@ -387,7 +387,7 @@
 
     renderLevelProgress(progression, player);
     setText(elements.floorStat, formatNumber(bestFloor));
-    updateNavAccount(player, { souls });
+    updateNavAccount({ ...player, ...progression }, { souls });
     syncProfileImages(getSelectedProfileDemon());
     setHtml(elements.soulsStat, renderSoulAmount(formatNumber(souls), {
       showLabel: false,
@@ -411,6 +411,12 @@
       elements.xpProgressBar.style.width = `${percent}%`;
       const progressTrack = elements.xpProgressBar.parentElement;
       if (progressTrack) {
+        progressTrack.dataset.xpProgress = 'true';
+        progressTrack.setAttribute('role', 'progressbar');
+        progressTrack.setAttribute('aria-valuemin', '0');
+        progressTrack.setAttribute('aria-valuemax', '100');
+        progressTrack.setAttribute('aria-valuenow', String(percent));
+        progressTrack.style.setProperty('--level-up-progress', `${percent}%`);
         progressTrack.setAttribute('aria-label', progressText);
       }
     }

@@ -13844,6 +13844,384 @@ body.has-nav-xp-progress:not(.dungeon-page):not(.world-page) {
         0 0 0 2px rgba(111,214,189,0.62);
 }
 
+.level-up-celebration {
+    position: fixed;
+    inset: 0;
+    z-index: 3900;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    color: #fff6d7;
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: manipulation;
+}
+
+.level-up-celebration-vignette {
+    position: absolute;
+    inset: 0;
+    background:
+        conic-gradient(from 0deg at 50% 48%, transparent 0 8%, rgba(232,199,106,0.2) 10%, transparent 14% 25%, rgba(111,214,189,0.14) 28%, transparent 34% 46%, rgba(255,110,47,0.14) 50%, transparent 56% 100%),
+        linear-gradient(180deg, rgba(3,8,10,0.16), rgba(3,8,10,0.34));
+    opacity: 0;
+    animation: level-up-screen-glow 3000ms ease-out both;
+}
+
+.level-up-celebration-burst {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: 0.34rem;
+    width: min(30rem, calc(100vw - 2rem));
+    min-height: min(17rem, calc(100vh - 2rem));
+    padding: 1.25rem;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(0.6rem) scale(0.88);
+    animation: level-up-burst-card 3000ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.level-up-celebration.is-dismissing .level-up-celebration-vignette,
+.level-up-celebration.is-dismissing .level-up-celebration-burst,
+.level-up-celebration.is-dismissing .level-up-ring,
+.level-up-celebration.is-dismissing .level-up-beams,
+.level-up-celebration.is-dismissing .level-up-particles span {
+    animation: level-up-fast-dismiss 220ms ease-in both !important;
+}
+
+.level-up-ring,
+.level-up-beams {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.level-up-ring {
+    width: min(19rem, 70vw);
+    aspect-ratio: 1;
+    border: 1px solid rgba(232,199,106,0.36);
+    border-radius: 50%;
+    box-shadow:
+        inset 0 0 28px rgba(232,199,106,0.1),
+        0 0 38px rgba(111,214,189,0.12);
+}
+
+.level-up-ring-outer {
+    animation: level-up-ring-expand 2600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.level-up-ring-inner {
+    width: min(12.5rem, 52vw);
+    border-color: rgba(111,214,189,0.38);
+    animation: level-up-ring-spin 2500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.level-up-beams {
+    width: min(21rem, 78vw);
+    aspect-ratio: 1;
+    background: repeating-conic-gradient(from 0deg, transparent 0 13deg, rgba(232,199,106,0.24) 14deg 16deg, transparent 18deg 36deg);
+    -webkit-mask-image: radial-gradient(circle, transparent 0 24%, #000 25% 58%, transparent 60%);
+    mask-image: radial-gradient(circle, transparent 0 24%, #000 25% 58%, transparent 60%);
+    opacity: 0;
+    animation: level-up-beams 2400ms ease-out both;
+}
+
+.level-up-eyebrow {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 1.8rem;
+    border: 1px solid rgba(232,199,106,0.38);
+    border-radius: 999px;
+    background: rgba(5,13,16,0.78);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        0 0 22px rgba(232,199,106,0.22);
+    color: #f3dc93;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.38rem 0.76rem;
+    text-transform: uppercase;
+}
+
+.level-up-celebration-burst strong {
+    position: relative;
+    z-index: 1;
+    color: #fff9dd;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(3rem, 12vw, 7.5rem);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: 0;
+    text-shadow:
+        0 2px 0 rgba(0,0,0,0.32),
+        0 8px 24px rgba(0,0,0,0.88),
+        0 18px 44px rgba(0,0,0,0.7);
+}
+
+.level-up-celebration-burst small {
+    position: relative;
+    z-index: 1;
+    color: rgba(220,232,229,0.88);
+    font-size: clamp(0.9rem, 2.4vw, 1.15rem);
+    font-weight: 900;
+    line-height: 1.1;
+    text-shadow:
+        0 1px 0 rgba(0,0,0,0.42),
+        0 5px 16px rgba(0,0,0,0.82);
+}
+
+.level-up-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.level-up-particles span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--size);
+    height: calc(var(--size) * 0.36);
+    border-radius: 2px;
+    background: currentColor;
+    color: #f3dc93;
+    box-shadow: 0 0 12px currentColor;
+    opacity: 0;
+    transform: rotate(var(--angle)) translate3d(0, 0, 0) scale(0.35);
+    animation: level-up-spark var(--duration) cubic-bezier(0.16, 1, 0.3, 1) var(--delay) both;
+}
+
+.level-up-particles span.is-teal {
+    color: #6fd6bd;
+}
+
+.level-up-particles span.is-orange {
+    color: #ff8a4d;
+}
+
+.nav-xp-progress.is-level-up-anchored,
+.camp-xp-progress.is-level-up-anchored,
+[data-xp-progress].is-level-up-anchored,
+.nav-xp-progress.is-level-up-soft,
+.camp-xp-progress.is-level-up-soft,
+[data-xp-progress].is-level-up-soft {
+    overflow: visible;
+}
+
+.nav-xp-progress::before,
+.nav-xp-progress::after,
+.camp-xp-progress::before,
+.camp-xp-progress::after,
+[data-xp-progress]::before,
+[data-xp-progress]::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.nav-xp-progress.is-level-up-anchored::before,
+.camp-xp-progress.is-level-up-anchored::before,
+[data-xp-progress].is-level-up-anchored::before {
+    inset: -0.42rem;
+    border: 1px solid rgba(232,199,106,0.42);
+    border-radius: inherit;
+    box-shadow:
+        0 0 18px rgba(232,199,106,0.34),
+        0 0 34px rgba(111,214,189,0.18);
+    animation: level-up-track-aura 2100ms ease-out var(--level-up-delay, 0ms) both;
+}
+
+.nav-xp-progress.is-level-up-anchored::after,
+.camp-xp-progress.is-level-up-anchored::after,
+[data-xp-progress].is-level-up-anchored::after {
+    top: 50%;
+    left: clamp(0.8rem, var(--level-up-progress, 50%), calc(100% - 0.8rem));
+    width: min(9rem, 42vw);
+    height: 2.15rem;
+    background:
+        linear-gradient(90deg, transparent, rgba(255,255,255,0.92), rgba(232,199,106,0.92), transparent);
+    filter: blur(0.5px);
+    transform: translate(-50%, -50%) scaleX(0.2);
+    animation: level-up-track-sweep 1350ms cubic-bezier(0.16, 1, 0.3, 1) var(--level-up-delay, 0ms) both;
+}
+
+.nav-xp-progress-fill.is-level-up-fill,
+.camp-xp-progress-bar.is-level-up-fill,
+[data-xp-progress-fill].is-level-up-fill {
+    animation: level-up-fill-flare 2100ms ease-out both;
+}
+
+.nav-xp-progress.is-level-up-soft::before,
+.camp-xp-progress.is-level-up-soft::before,
+[data-xp-progress].is-level-up-soft::before {
+    inset: -0.28rem;
+    border: 1px solid rgba(232,199,106,0.38);
+    border-radius: inherit;
+    animation: level-up-soft-aura 800ms ease-out both;
+}
+
+@keyframes level-up-screen-glow {
+    0% {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    18% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.04);
+    }
+}
+
+@keyframes level-up-burst-card {
+    0% {
+        opacity: 0;
+        transform: translateY(0.7rem) scale(0.82);
+        filter: blur(2px);
+    }
+    18% {
+        opacity: 1;
+        transform: translateY(0) scale(1.04);
+        filter: blur(0);
+    }
+    34% {
+        transform: translateY(0) scale(1);
+    }
+    78% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-0.35rem) scale(0.96);
+    }
+}
+
+@keyframes level-up-fast-dismiss {
+    to {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+}
+
+@keyframes level-up-ring-expand {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    18% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.32);
+    }
+}
+
+@keyframes level-up-ring-spin {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(-24deg) scale(0.62);
+    }
+    22% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(72deg) scale(1.08);
+    }
+}
+
+@keyframes level-up-beams {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(-18deg) scale(0.72);
+    }
+    28% {
+        opacity: 0.86;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(26deg) scale(1.14);
+    }
+}
+
+@keyframes level-up-spark {
+    0% {
+        opacity: 0;
+        transform: rotate(var(--angle)) translate3d(0, 0, 0) scale(0.25);
+    }
+    12% {
+        opacity: 1;
+    }
+    74% {
+        opacity: 0.86;
+    }
+    100% {
+        opacity: 0;
+        transform: rotate(var(--angle)) translate3d(var(--distance), 0, 0) rotate(80deg) scale(1);
+    }
+}
+
+@keyframes level-up-track-aura {
+    0% {
+        opacity: 0;
+        transform: scaleX(0.94);
+    }
+    18% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scaleX(1.04);
+    }
+}
+
+@keyframes level-up-track-sweep {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scaleX(0.18);
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scaleX(1.18);
+    }
+}
+
+@keyframes level-up-fill-flare {
+    0%, 100% {
+        filter: brightness(1);
+    }
+    24% {
+        filter: brightness(1.82) saturate(1.28);
+        box-shadow:
+            0 0 18px rgba(232,199,106,0.52),
+            0 0 30px rgba(111,214,189,0.28);
+    }
+}
+
+@keyframes level-up-soft-aura {
+    0% {
+        opacity: 0;
+    }
+    30% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 body.camp-page {
     --camp-nav-height: var(--game-nav-height);
 }
@@ -13981,17 +14359,33 @@ body.dungeon-page #runPanel {
     }
 
     body .game-shell-nav .nav-account {
-        grid-template-columns: minmax(0, 1fr) auto auto;
+        grid-template-columns: minmax(0, 1fr) repeat(2, 2.42rem);
     }
 
     body .game-shell-nav .nav-balance {
-        grid-column: auto;
+        grid-column: 1;
+        grid-row: 1;
         justify-content: center;
     }
 
     body .game-shell-nav .nav-player {
+        grid-column: 1 / -1;
+        grid-row: 2;
         width: auto;
         min-width: 0;
+    }
+
+    body .game-shell-nav .nav-settings-link,
+    body .game-shell-nav .nav-logout-btn {
+        grid-row: 1;
+    }
+
+    body .game-shell-nav .nav-settings-link {
+        grid-column: 2;
+    }
+
+    body .game-shell-nav .nav-logout-btn {
+        grid-column: 3;
     }
 }
 
@@ -14003,6 +14397,29 @@ body.dungeon-page #runPanel {
     .nav-xp-progress-fill,
     .nav-xp-progress-tooltip {
         transition: none;
+    }
+
+    .level-up-celebration-vignette,
+    .level-up-celebration-burst,
+    .level-up-ring,
+    .level-up-beams,
+    .level-up-particles span,
+    .nav-xp-progress.is-level-up-anchored::before,
+    .nav-xp-progress.is-level-up-anchored::after,
+    .camp-xp-progress.is-level-up-anchored::before,
+    .camp-xp-progress.is-level-up-anchored::after,
+    [data-xp-progress].is-level-up-anchored::before,
+    [data-xp-progress].is-level-up-anchored::after,
+    .nav-xp-progress-fill.is-level-up-fill,
+    .camp-xp-progress-bar.is-level-up-fill,
+    [data-xp-progress-fill].is-level-up-fill {
+        animation-duration: 700ms !important;
+        transform: none;
+    }
+
+    .level-up-particles,
+    .level-up-beams {
+        display: none;
     }
 }
 
