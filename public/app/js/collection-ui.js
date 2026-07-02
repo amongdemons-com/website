@@ -356,28 +356,47 @@
       ];
     }
 
+    return getTrainingActions(demon);
+  }
+
+  function getTrainingActions(demon) {
     const training = demon.training || {};
     const cost = Number(training.cost);
     if (training.maxed || !Number.isFinite(cost) || cost <= 0) return [];
 
     const canAfford = Number(state.player?.souls) >= cost;
     const deficit = Math.max(0, cost - (Number(state.player?.souls) || 0));
+    const disabled = !canAfford || state.trainingDemonId === Number(demon.id);
     const chanceLabel = formatChance(training.successChance);
+    const unavailableTitle = `Need ${formatNumber(deficit)} more Souls`;
+    const attemptTitle = `Costs ${formatNumber(cost)} Souls${chanceLabel ? `. ${chanceLabel} success chance` : ''}`;
+    const iconOptions = {
+      size: 19,
+      className: 'collection-train-action-icon'
+    };
+
     return [
       {
-        label: canAfford ? 'Train' : `Need ${formatNumber(deficit)} Souls`,
-        icon: 'book-plus',
-        iconOptions: {
-          size: 19,
-          className: 'collection-train-action-icon'
-        },
-        className: 'collection-train-action',
-        variant: canAfford ? 'success' : 'outline-danger',
-        disabled: !canAfford || state.trainingDemonId === Number(demon.id),
+        label: 'Auto Train',
+        icon: 'stars',
+        iconOptions,
+        className: 'collection-train-action collection-train-max-action',
+        variant: canAfford ? 'outline-light' : 'outline-danger',
+        disabled,
         title: canAfford
-          ? `Costs ${formatNumber(cost)} Souls${chanceLabel ? `. ${chanceLabel} success chance` : ''}`
-          : `Need ${formatNumber(deficit)} more Souls`,
-        onClick: (modalDemon, button) => trainDemon(demon.id, button)
+          ? 'Auto-train keeps trying automatically.'
+          : unavailableTitle,
+        onClick: (modalDemon, button) => trainDemon(demon.id, button, 'max')
+      },
+      {
+        label: 'Train',
+        icon: 'book-plus',
+        iconOptions,
+        className: 'collection-train-action collection-train-once-action',
+        variant: canAfford ? 'success' : 'outline-danger',
+        disabled,
+        title: canAfford ? attemptTitle : unavailableTitle,
+        onClick: (modalDemon, button) => trainDemon(demon.id, button, 'once')
       }
     ];
   }
@@ -417,17 +436,20 @@
     const chanceLabel = formatChance(training.successChance);
 
     return `
-      <div class="collection-training-action-cost" aria-label="Training attempt costs ${escapeHtml(formatNumber(cost))} Souls${chanceLabel ? ` with a ${escapeHtml(chanceLabel)} success chance` : ''}. ${canAfford ? 'You have enough souls.' : `You need ${escapeHtml(formatNumber(deficit))} more souls.`}">
-        <div class="collection-training-action-item">
-          <span class="collection-training-cost-label">Attempt Cost</span>
+      <div class="collection-training-action-cost" aria-label="Training costs ${escapeHtml(formatNumber(cost))} Souls per attempt${chanceLabel ? ` with a ${escapeHtml(chanceLabel)} success chance` : ''}. ${canAfford ? 'You have enough souls.' : `You need ${escapeHtml(formatNumber(deficit))} more souls.`}">
+        <div class="collection-training-action-head">
+          ${canAfford ? '' : `<span class="collection-training-disabled-reason">Not enough souls</span>`}
+        </div>
+        <div class="collection-training-action-row">
+          <span class="collection-training-cost-label">Cost</span>
           ${renderSoulAmount(formatNumber(cost), {
             className: 'soul-chip collection-training-action-souls',
             ariaLabel: `${formatNumber(cost)} Souls`
           })}
         </div>
         ${chanceLabel ? `
-          <div class="collection-training-action-item collection-training-chance">
-            <span class="collection-training-cost-label">Success Chance</span>
+          <div class="collection-training-action-row collection-training-chance">
+            <span class="collection-training-cost-label">Chance</span>
             <strong>${escapeHtml(chanceLabel)}</strong>
           </div>
         ` : ''}
@@ -441,7 +463,7 @@
     return stat.maxed ? `${max}` : `${current} / ${max}`;
   }
 
-  async function trainDemon(demonId, button) {
+  async function trainDemon(demonId, button, mode = 'once') {
     const normalizedDemonId = Number(demonId);
     if (!normalizedDemonId || state.trainingDemonId) return;
 
@@ -450,12 +472,14 @@
 
     state.trainingDemonId = normalizedDemonId;
     clearTrainingFeedbackArtifacts();
+    syncModalTrainingAction(demon);
     setTrainingButtonBusy(button, true);
 
     let revealPending = false;
     try {
       const result = await api(`/api/demons/${encodeURIComponent(normalizedDemonId)}/train`, {
-        method: 'POST'
+        method: 'POST',
+        body: { mode: mode === 'max' ? 'max' : 'once' }
       });
       revealPending = true;
       playTrainingFeedback(normalizedDemonId, result.training || {}, {
@@ -471,6 +495,7 @@
       if (!revealPending) {
         state.trainingDemonId = null;
         setTrainingButtonBusy(button, false);
+        syncModalTrainingAction(demon);
       }
     }
   }
@@ -639,39 +664,49 @@
   function syncModalTrainingAction(demon) {
     const modal = document.getElementById('demonDetailModal');
     const actions = modal?.querySelector('.demon-detail-actions');
-    if (!actions) return;
+    if (!modal) return;
 
     const training = demon.training || {};
     const cost = Number(training.cost);
     if (training.maxed || !Number.isFinite(cost) || cost <= 0) {
-      actions.remove();
+      actions?.remove();
       return;
     }
 
-    const canAfford = Number(state.player?.souls) >= cost;
-    const deficit = Math.max(0, cost - (Number(state.player?.souls) || 0));
-    const chanceLabel = formatChance(training.successChance);
+    if (!actions) return;
     const lead = actions.querySelector('.demon-detail-action-lead');
     if (lead) lead.innerHTML = renderTrainingActionCost(demon);
 
-    const button = actions.querySelector('[data-demon-detail-action]');
-    if (!button) return;
+    getTrainingActions(demon).forEach((action, index) => {
+      const button = actions.querySelector(`[data-demon-detail-action="${index}"]`);
+      if (!button) return;
 
-    button.disabled = !canAfford || state.trainingDemonId === Number(demon.id);
-    button.className = `btn btn-${canAfford ? 'success' : 'outline-danger'} btn-glass-${canAfford ? 'gold' : 'danger'} collection-train-action`;
-    button.title = canAfford
-      ? `Costs ${formatNumber(cost)} Souls${chanceLabel ? `. ${chanceLabel} success chance` : ''}`
-      : `Need ${formatNumber(deficit)} more Souls`;
-    button.innerHTML = renderTrainingButtonContent(canAfford ? 'Train' : `Need ${formatNumber(deficit)} Souls`);
+      button.disabled = Boolean(action.disabled);
+      button.className = getTrainingButtonClass(action);
+      button.title = action.title || '';
+      button.innerHTML = renderTrainingButtonContent(action.label, action.icon, action.iconOptions, action.helper);
+    });
   }
 
-  function renderTrainingButtonContent(label) {
+  function getTrainingButtonClass(action = {}) {
+    const variant = action.variant || 'outline-light';
+    const normalized = String(variant || '').toLowerCase();
+    const glassClass = normalized.includes('danger')
+      ? 'btn-glass-danger'
+      : ['primary', 'success', 'warning'].includes(normalized)
+        ? 'btn-glass-gold'
+        : 'btn-glass-muted';
+    return ['btn', `btn-${variant}`, glassClass, action.className || 'collection-train-action'].filter(Boolean).join(' ');
+  }
+
+  function renderTrainingButtonContent(label, icon = 'book-plus', iconOptions = {}, helper = '') {
     return `
-      ${renderIcon('book-plus', {
-        size: 19,
-        className: 'collection-train-action-icon'
+      ${renderIcon(icon, {
+        size: iconOptions.size || 19,
+        className: iconOptions.className || 'collection-train-action-icon'
       })}
       <span>${escapeHtml(label)}</span>
+      ${helper ? `<small>${escapeHtml(helper)}</small>` : ''}
     `;
   }
 
@@ -718,8 +753,12 @@
   }
 
   function renderIncreaseChips(training = {}) {
+    const spent = Math.max(0, Number(training.spent) || 0);
     if (training.succeeded === false) {
-      return '<span class="is-failure">Training failed</span>';
+      return [
+        '<span class="is-failure">Training failed</span>',
+        renderTrainingSpentChip(spent)
+      ].filter(Boolean).join('');
     }
 
     const increases = training.increases || {};
@@ -730,7 +769,22 @@
         return `<span>${renderIcon(icon)}+${escapeHtml(amount)} ${escapeHtml(label)}</span>`;
       });
 
+    const spentChip = renderTrainingSpentChip(spent);
+    if (spentChip) chips.push(spentChip);
+
     return chips.length ? chips.join('') : '<span>Trained</span>';
+  }
+
+  function renderTrainingSpentChip(spent) {
+    const amount = Math.max(0, Number(spent) || 0);
+    if (!amount) return '';
+
+    return `
+      <span class="collection-training-spent-pill" aria-label="${escapeHtml(formatNumber(amount))} Souls spent">
+        <strong class="collection-training-spent-minus">-${escapeHtml(formatNumber(amount))}</strong>
+        ${renderIcon('soul', { size: 18, className: 'collection-training-spent-icon' })}
+      </span>
+    `;
   }
 
   function formatChance(value) {

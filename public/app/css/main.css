@@ -2676,40 +2676,55 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     box-shadow: 0 0 0 2px rgba(85,255,255,0.2), 0 0 20px rgba(85,255,255,0.18);
 }
 
-.demon-detail-actions:has(.collection-training-action-cost) {
+.demon-detail-actions:has(.collection-train-action) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(5.75rem, 6.35rem);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: stretch;
     justify-items: stretch;
     gap: 0.6rem;
     padding-top: 0.75rem;
 }
 
-.demon-detail-actions:has(.collection-training-action-cost) .demon-detail-action-lead {
+.demon-detail-actions:has(.collection-train-action) .demon-detail-action-lead {
     display: block;
     box-sizing: border-box;
+    grid-column: 1 / -1;
     width: 100%;
     min-height: 0;
     margin-right: 0;
     margin-left: 0;
-    padding: 0.7rem;
+    padding: 0.62rem;
     border: 1px solid rgba(85,255,255,0.14);
     border-radius: 6px;
     background: rgba(5,14,17,0.52);
 }
 
-.demon-detail-actions:has(.collection-training-action-cost) .btn {
+.demon-detail-actions:has(.collection-train-action) .btn {
     width: 100%;
     height: 100%;
-    min-width: 5.75rem;
-    min-height: 2.45rem;
+    min-width: 0;
+    min-height: 2.58rem;
 }
 
-.demon-detail-actions:has(.collection-training-action-cost) .collection-train-action {
-    flex-direction: column;
-    gap: 0.28rem;
+.demon-detail-actions:has(.collection-train-action) .collection-train-action {
+    flex-direction: row;
+    gap: 0.38rem;
     line-height: 1.05;
     white-space: normal;
+}
+
+.collection-train-max-action {
+    border-color: rgba(161,212,201,0.26);
+    background:
+        linear-gradient(180deg, rgba(19,32,34,0.74), rgba(6,13,15,0.7)),
+        rgba(6,13,15,0.82);
+    color: rgba(226,244,239,0.9);
+}
+
+.collection-train-max-action:not(:disabled):hover,
+.collection-train-max-action:not(:disabled):focus-visible {
+    border-color: rgba(85,255,255,0.46);
+    color: #f5ffff;
 }
 
 .collection-train-action .ad-icon,
@@ -2724,6 +2739,16 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     overflow-wrap: anywhere;
 }
 
+.collection-train-action small {
+    display: block;
+    color: rgba(207,226,220,0.72);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.15;
+    text-transform: none;
+}
+
 .collection-train-loading-dot {
     width: 0.58rem;
     height: 0.58rem;
@@ -2731,11 +2756,6 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     border-top-color: #f5ffff;
     border-radius: 50%;
     animation: dungeon-loading-spin 0.78s linear infinite;
-}
-
-.demon-detail-actions:has(.collection-training-action-cost) .collection-training-action-cost {
-    height: 100%;
-    min-height: 0;
 }
 
 @media (min-width: 992px) {
@@ -2846,17 +2866,17 @@ body:has(#demonDetailModal.show) .modal-backdrop {
         padding-left: 0.75rem;
     }
 
-    .demon-detail-actions:has(.collection-training-action-cost) {
+    .demon-detail-actions:has(.collection-train-action) {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .demon-detail-actions:has(.collection-training-action-cost) .demon-detail-action-lead {
-        padding: 0.62rem;
+    .demon-detail-actions:has(.collection-train-action) .demon-detail-action-lead {
+        padding: 0.58rem;
     }
 
-    .demon-detail-actions:has(.collection-training-action-cost) .btn {
+    .demon-detail-actions:has(.collection-train-action) .btn {
         height: auto;
-        min-height: 2.45rem;
+        min-height: 2.58rem;
     }
 }
 
@@ -10610,12 +10630,22 @@ body.collection-page {
     font-size: 0.88rem;
 }
 
+.collection-training-disabled-reason {
+    flex: 0 0 auto;
+    border: 1px solid rgba(228,104,94,0.34);
+    border-radius: 999px;
+    background: rgba(40,12,12,0.48);
+    color: #ffd4ce;
+    font-size: 0.64rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.32rem 0.48rem;
+    text-transform: none;
+}
+
 .collection-training-action-cost {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.55rem;
+    display: grid;
+    gap: 0.34rem;
     min-height: 2.25rem;
     width: 100%;
     color: #a8b6bf;
@@ -10624,6 +10654,30 @@ body.collection-page {
     letter-spacing: 0.04em;
     line-height: 1;
     text-transform: uppercase;
+}
+
+.collection-training-action-head,
+.collection-training-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.collection-training-action-head strong {
+    color: #bff7dc;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+}
+
+.collection-training-action-cost small {
+    color: rgba(207,226,220,0.68);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.15;
+    text-transform: none;
 }
 
 .collection-training-action-item {
@@ -10655,8 +10709,8 @@ body.collection-page {
 }
 
 .collection-training-action-souls.soul-chip {
-    min-height: 2.05rem;
-    padding: 0.32rem 0.5rem;
+    min-height: 1.25rem;
+    padding: 0;
     border: 0;
     background: none;
     box-shadow: none;
@@ -10811,7 +10865,7 @@ body.collection-page {
     appearance: none;
 }
 
-.collection-training-result-pop span {
+.collection-training-result-pop > span {
     display: inline-flex;
     align-items: center;
     gap: 0.48rem;
@@ -10850,6 +10904,28 @@ body.collection-page {
     width: 1.22rem;
     height: 1.22rem;
     color: #fac51c;
+}
+
+.collection-training-result-pop .collection-training-spent-pill {
+    border-color: rgba(85,255,255,0.58);
+    background:
+        linear-gradient(135deg, rgba(85,255,255,0.24), rgba(67,135,255,0.2)),
+        rgba(5,19,28,0.96);
+    color: #c8ffff;
+    box-shadow:
+        0 12px 32px rgba(0,0,0,0.5),
+        0 0 30px rgba(85,255,255,0.24),
+        inset 0 0 0 1px rgba(255,255,255,0.12);
+}
+
+.collection-training-spent-minus {
+    color: #f5ffff;
+}
+
+.collection-training-result-pop .collection-training-spent-icon {
+    width: 1.22rem;
+    height: 1.22rem;
+    color: #55ffff;
 }
 
 .demon-detail-art.is-training-fed img {
@@ -13598,11 +13674,27 @@ body .game-shell-nav .game-shell-auth-actions .btn {
 }
 
 body .game-shell-nav .nav-balance {
-    padding: 0.3rem 0.52rem;
+    height: 2.42rem;
+    min-height: 2.42rem;
+    align-self: center;
+    justify-self: start;
+    width: max-content;
+    max-width: 100%;
+    padding: 0.18rem 0.42rem;
 }
 
 body .game-shell-nav .nav-balance .soul-amount-label {
     display: none;
+}
+
+body .game-shell-nav .nav-balance .soul-amount {
+    gap: 0.24rem;
+    font-size: 0.72rem;
+}
+
+body .game-shell-nav .nav-balance .soul-icon {
+    width: 0.96em;
+    height: 0.96em;
 }
 
 body .game-shell-nav .nav-player {
@@ -13684,11 +13776,22 @@ body .game-shell-nav .game-shell-auth-actions .btn-primary:focus-visible {
 }
 
 .game-shell-toggle {
+    display: inline-grid;
+    place-items: center;
     width: 2.42rem;
     height: 2.42rem;
     border-color: rgba(161,212,201,0.2);
     border-radius: 6px;
-    padding: 0.38rem;
+    padding: 0;
+    line-height: 1;
+}
+
+.game-shell-toggle .navbar-toggler-icon {
+    width: 1.18rem;
+    height: 1.18rem;
+    margin: 0;
+    background-position: center;
+    background-size: 100% 100%;
 }
 
 body.has-nav-xp-progress:not(.dungeon-page):not(.world-page) {
@@ -13765,7 +13868,7 @@ body.has-nav-xp-progress:not(.dungeon-page):not(.world-page) {
 .nav-xp-progress-tooltip {
     position: absolute;
     bottom: calc(100% + 0.52rem);
-    left: clamp(7rem, var(--nav-xp-tooltip-left), calc(100vw - 7rem));
+    left: 50vw;
     display: grid;
     gap: 0.12rem;
     width: max-content;
@@ -14364,20 +14467,23 @@ body.dungeon-page #runPanel {
 
     body .game-shell-nav .nav-balance {
         grid-column: 1;
-        grid-row: 1;
+        grid-row: 2;
+        height: 2.42rem;
+        min-height: 2.42rem;
         justify-content: center;
     }
 
     body .game-shell-nav .nav-player {
         grid-column: 1 / -1;
-        grid-row: 2;
+        grid-row: 1;
         width: auto;
         min-width: 0;
+        max-width: none;
     }
 
     body .game-shell-nav .nav-settings-link,
     body .game-shell-nav .nav-logout-btn {
-        grid-row: 1;
+        grid-row: 2;
     }
 
     body .game-shell-nav .nav-settings-link {
@@ -15874,6 +15980,83 @@ body.skill-tree-page {
         animation: none;
         border-color: rgba(141,231,255,0.72);
         box-shadow: 0 0 0 2px rgba(141,231,255,0.18), 0 0 18px rgba(82,183,255,0.22);
+    }
+}
+
+@media (max-width: 767.98px) and (orientation: portrait) {
+    .camp-lobby {
+        padding: 0.72rem;
+    }
+
+    .camp-lobby-grid {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "player"
+            "stage"
+            "quests";
+        gap: 0.7rem;
+    }
+
+    .camp-player-panel {
+        grid-area: player;
+    }
+
+    .camp-center-stage {
+        grid-area: stage;
+        grid-template-rows: auto;
+        min-height: 0;
+    }
+
+    .camp-quests-panel {
+        grid-area: quests;
+    }
+
+    .camp-scene-depth,
+    .camp-stage-runes {
+        display: none;
+    }
+
+    .camp-action-deck {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.56rem;
+        width: 100%;
+        padding: 0;
+    }
+
+    .camp-action-card {
+        grid-template-columns: auto minmax(0, 1fr);
+        justify-items: start;
+        gap: 0.46rem;
+        min-height: 4.65rem;
+        padding: 0.58rem 0.52rem;
+        text-align: left;
+    }
+
+    .camp-action-icon {
+        width: 2rem;
+    }
+
+    .camp-action-icon .ad-icon {
+        width: 1.35rem;
+        height: 1.35rem;
+    }
+
+    .camp-action-body {
+        gap: 0.08rem;
+    }
+
+    .camp-action-kicker {
+        display: block;
+        font-size: 0.58rem;
+        line-height: 1;
+    }
+
+    .camp-action-body strong {
+        font-size: 1.02rem;
+    }
+
+    .camp-action-body small {
+        display: none;
     }
 }
 

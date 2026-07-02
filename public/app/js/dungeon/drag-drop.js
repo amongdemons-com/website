@@ -66,9 +66,8 @@ async function setDemonPosition(instanceId, position, rowIndex = null) {
 }
 
 function bindNativeDragSource(card, options) {
-  const boundKey = options.stateKey || 'default';
-  if (card.dataset.nativeDragSourceBound === boundKey) return;
-  card.dataset.nativeDragSourceBound = boundKey;
+  const boundKey = options.bindingKey || options.stateKey || 'default';
+  if (!markBinding(card, 'nativeDragSourceBound', boundKey)) return;
 
   card.addEventListener('dragstart', (event) => {
     const payload = options.getPayload(card);
@@ -93,8 +92,8 @@ function bindNativeDragSource(card, options) {
 }
 
 function bindNativeDropTarget(target, options) {
-  if (target.dataset.nativeDropTargetBound === 'true') return;
-  target.dataset.nativeDropTargetBound = 'true';
+  const boundKey = options.bindingKey || 'default';
+  if (!markBinding(target, 'nativeDropTargetBound', boundKey)) return;
 
   target.addEventListener('dragover', (event) => {
     if (isPactChoiceBlockingDrag()) return;
@@ -123,6 +122,14 @@ function bindNativeDropTarget(target, options) {
   });
 }
 
+function markBinding(element, datasetKey, boundKey) {
+  const bindings = new Set(String(element.dataset[datasetKey] || '').split(/\s+/).filter(Boolean));
+  if (bindings.has(boundKey)) return false;
+  bindings.add(boundKey);
+  element.dataset[datasetKey] = Array.from(bindings).join(' ');
+  return true;
+}
+
 function clearDragOverTargets(selector) {
   document.querySelectorAll(selector).forEach((target) => target.classList.remove('is-drag-over'));
 }
@@ -134,18 +141,24 @@ function bindFormationDragAndDrop() {
     if (card.dataset.rewardId) return;
 
     bindNativeDragSource(card, {
+      bindingKey: 'formation-card',
       stateKey: 'draggedFormationInstanceId',
       clearSelector: FORMATION_DRAG_OVER_SELECTOR,
       markStaged: true,
-      getPayload: () => ({
-        type: 'formation',
-        instanceId: card.dataset.instanceId
-      })
+      getPayload: () => (
+        state.run && !state.run.awaitingRecruit
+          ? {
+              type: 'formation',
+              instanceId: card.dataset.instanceId
+            }
+          : null
+      )
     });
   });
 
   document.querySelectorAll('#teamGrid .formation-lane-cards').forEach((lane) => {
     bindNativeDropTarget(lane, {
+      bindingKey: 'formation-lane',
       readPayload: readDragPayload,
       canDrop: (payload) => {
         if (payload?.type !== 'formation' && !state.draggedFormationInstanceId) return false;
@@ -162,6 +175,7 @@ function bindFormationDragAndDrop() {
 
 function bindRecruitCardDragAndDrop(card, options) {
   bindNativeDragSource(card, {
+    bindingKey: options.dragBindingKey,
     stateKey: options.stateKey,
     clearSelector: REWARD_DRAG_OVER_SELECTOR,
     markStaged: options.markStaged,
@@ -169,6 +183,7 @@ function bindRecruitCardDragAndDrop(card, options) {
   });
 
   bindNativeDropTarget(card, {
+    bindingKey: options.dropBindingKey || 'recruit-card',
     readPayload: readRecruitDragPayload,
     stopPropagation: true,
     renderAfterDrop: true,
@@ -190,6 +205,7 @@ function getRecruitDropContext(event) {
 
 function bindTeamFormationDropTarget(target, getLane, getPosition) {
   bindNativeDropTarget(target, {
+    bindingKey: 'recruit-team-lane',
     readPayload: getRecruitDropContext,
     renderAfterDrop: true,
     canDragOver: (context) => canDragOverTeamFormationTarget(context, getLane(), getPosition()),
@@ -322,6 +338,7 @@ function applyTeamFormationTargetDrop(context, lane, position, event) {
 
 function bindHandFormationDropTarget(lane) {
   bindNativeDropTarget(lane, {
+    bindingKey: 'recruit-hand-lane',
     readPayload: getRecruitDropContext,
     renderAfterDrop: true,
     canDragOver: (context) => canDragOverHandFormationTarget(context, lane),
@@ -344,16 +361,28 @@ function bindRecruitDragAndDrop() {
 
   document.querySelectorAll('#dungeonHandGrid .dungeon-demon-card[data-instance-id]').forEach((card) => {
     bindRecruitCardDragAndDrop(card, {
+      dragBindingKey: 'recruit-pool-card',
+      dropBindingKey: 'recruit-pool-card-drop',
       stateKey: 'draggedRecruitPoolInstanceId',
       markStaged: true,
-      getPayload: () => getRecruitDragPayload(state.recruitDraftPool, 'recruit-pool', card)
+      getPayload: () => (
+        state.run?.awaitingRecruit && state.isRecruiting
+          ? getRecruitDragPayload(state.recruitDraftPool, 'recruit-pool', card)
+          : null
+      )
     });
   });
 
   document.querySelectorAll('#teamGrid .dungeon-demon-card[data-instance-id]').forEach((card) => {
     bindRecruitCardDragAndDrop(card, {
+      dragBindingKey: 'recruit-team-card',
+      dropBindingKey: 'recruit-team-card-drop',
       stateKey: 'draggedFormationInstanceId',
-      getPayload: () => getRecruitDragPayload(state.recruitDraftTeam, 'recruit-team', card)
+      getPayload: () => (
+        state.run?.awaitingRecruit && state.isRecruiting
+          ? getRecruitDragPayload(state.recruitDraftTeam, 'recruit-team', card)
+          : null
+      )
     });
   });
 
@@ -369,6 +398,7 @@ function bindRewardDragAndDrop() {
 
   document.querySelectorAll('#dungeonRewardGrid .dungeon-demon-card[data-reward-candidate-key]').forEach((card) => {
     bindNativeDragSource(card, {
+      bindingKey: 'reward-selection-card',
       stateKey: 'draggedRewardDemonKey',
       clearSelector: REWARD_DRAG_OVER_SELECTOR,
       getPayload: () => ({
@@ -380,6 +410,7 @@ function bindRewardDragAndDrop() {
 
   document.querySelectorAll('#dungeonRewardGrid .dungeon-reward-dropzone').forEach((dropzone) => {
     bindNativeDropTarget(dropzone, {
+      bindingKey: 'reward-dropzone',
       readPayload: readRewardDragPayload,
       renderAfterDrop: true,
       canDrop: canDropOnRewardBox,

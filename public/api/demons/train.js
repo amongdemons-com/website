@@ -10,6 +10,8 @@ const {
 const { getDemonTypes } = require('../lib/game-data');
 
 const router = express.Router();
+const TRAIN_MAX_MODE = 'max';
+const TRAINING_ATTEMPT_LIMIT = 1000;
 
 router.post('/demons/:id/train', requireAuth, async (req, res) => {
   const demonId = Number(req.params.id);
@@ -50,36 +52,15 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
     }
 
     const demon = demonRows[0];
-    const training = getDemonTrainingInfo(demon, types);
-    if (training.maxed) {
-      const error = new Error('This demon is already maxed out.');
-      error.status = 409;
-      throw error;
-    }
+    const trainMode = req.body?.mode === TRAIN_MAX_MODE || req.body?.max === true
+      ? TRAIN_MAX_MODE
+      : 'once';
+    const trainingResult = runTrainingSeries(demon, types, Number(playerRows[0].souls) || 0, {
+      max: trainMode === TRAIN_MAX_MODE
+    });
+    const nextStats = trainingResult.stats;
 
-    const cost = Number(training.cost) || 0;
-    if ((Number(playerRows[0].souls) || 0) < cost) {
-      const error = new Error(`Training costs ${cost} Souls.`);
-      error.status = 400;
-      throw error;
-    }
-
-    const attempt = rollTrainingAttempt(training);
-    if (attempt.succeeded && !Object.keys(attempt.increases).length) {
-      const error = new Error('This demon is already maxed out.');
-      error.status = 409;
-      throw error;
-    }
-
-    const nextStats = attempt.succeeded
-      ? applyTrainingIncreases(demon, training, attempt.increases)
-      : {
-          hp: demon.hp,
-          atk: demon.atk,
-          speed: demon.speed
-        };
-
-    if (attempt.succeeded) {
+    if (trainingResult.statsChanged) {
       await connection.query(
         'UPDATE player_demons SET hp = ?, atk = ?, speed = ? WHERE id = ? AND player_id = ?',
         [nextStats.hp, nextStats.atk, nextStats.speed, demon.id, req.player.id]
@@ -88,7 +69,7 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
 
     await connection.query(
       'UPDATE players SET souls = souls - ? WHERE id = ?',
-      [cost, req.player.id]
+      [trainingResult.spent, req.player.id]
     );
 
     const [updatedPlayerRows] = await connection.query(
@@ -110,12 +91,16 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
       demon: updatedDemon,
       player,
       training: {
-        succeeded: attempt.succeeded,
-        spent: cost,
-        successChance: attempt.successChance,
-        increases: attempt.increases,
+        mode: trainMode,
+        attempts: trainingResult.attempts.length,
+        succeeded: trainingResult.succeededCount > 0,
+        succeededCount: trainingResult.succeededCount,
+        spent: trainingResult.spent,
+        successChance: trainingResult.lastSuccessChance,
+        increases: trainingResult.increases,
         maxed: updatedDemon.training.maxed,
-        nextCost: updatedDemon.training.cost
+        nextCost: updatedDemon.training.cost,
+        stoppedReason: trainingResult.stoppedReason
       }
     });
   } catch (error) {
@@ -127,5 +112,100 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
     connection.release();
   }
 });
+
+function runTrainingSeries(demon, types, souls, options = {}) {
+  const trainMax = Boolean(options.max);
+  const current = {
+    ...demon,
+    hp: Math.max(1, Number(demon.hp) || 1),
+    atk: Math.max(1, Number(demon.atk) || 1),
+    speed: Math.max(1, Number(demon.speed) || 1)
+  };
+  const originalStats = {
+    hp: current.hp,
+    atk: current.atk,
+    speed: current.speed
+  };
+  const attempts = [];
+  const increases = { hp: 0, atk: 0, speed: 0 };
+  let availableSouls = Math.max(0, Math.floor(Number(souls) || 0));
+  let spent = 0;
+  let succeededCount = 0;
+  let stoppedReason = trainMax ? 'attempt_limit' : 'once';
+  let lastSuccessChance = null;
+
+  while (attempts.length < TRAINING_ATTEMPT_LIMIT) {
+    const training = getDemonTrainingInfo(current, types);
+    if (training.maxed) {
+      if (!attempts.length) throwTrainingError('This demon is already maxed out.', 409);
+      stoppedReason = 'maxed';
+      break;
+    }
+
+    const cost = Number(training.cost) || 0;
+    if (availableSouls < cost) {
+      if (!attempts.length) throwTrainingError(`Training costs ${cost} Souls.`, 400);
+      stoppedReason = 'out_of_souls';
+      break;
+    }
+
+    const attempt = rollTrainingAttempt(training);
+    lastSuccessChance = attempt.successChance;
+    if (attempt.succeeded && !Object.keys(attempt.increases).length) {
+      if (!attempts.length) throwTrainingError('This demon is already maxed out.', 409);
+      stoppedReason = 'maxed';
+      break;
+    }
+
+    availableSouls -= cost;
+    spent += cost;
+
+    if (attempt.succeeded) {
+      const nextStats = applyTrainingIncreases(current, training, attempt.increases);
+      Object.assign(current, nextStats);
+      succeededCount += 1;
+      Object.entries(attempt.increases).forEach(([key, value]) => {
+        increases[key] = (Number(increases[key]) || 0) + Math.max(0, Number(value) || 0);
+      });
+    }
+
+    attempts.push({
+      succeeded: attempt.succeeded,
+      spent: cost,
+      successChance: attempt.successChance,
+      increases: attempt.increases
+    });
+
+    if (!trainMax) {
+      stoppedReason = 'once';
+      break;
+    }
+  }
+
+  if (!attempts.length) {
+    throwTrainingError('Unable to train this demon.', 400);
+  }
+
+  return {
+    attempts,
+    increases: Object.fromEntries(Object.entries(increases).filter(([, value]) => Number(value) > 0)),
+    spent,
+    succeededCount,
+    lastSuccessChance,
+    stoppedReason,
+    stats: {
+      hp: current.hp,
+      atk: current.atk,
+      speed: current.speed
+    },
+    statsChanged: current.hp !== originalStats.hp || current.atk !== originalStats.atk || current.speed !== originalStats.speed
+  };
+}
+
+function throwTrainingError(message, status) {
+  const error = new Error(message);
+  error.status = status;
+  throw error;
+}
 
 module.exports = router;

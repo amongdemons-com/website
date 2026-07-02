@@ -235,7 +235,8 @@
       };
     const tag = action.href ? 'a' : 'button';
 
-    return `<${tag} ${renderAttributes(attributes)}>${icon}${escapeHtml(action.label || 'Action')}</${tag}>`;
+    const helper = action.helper ? `<small>${escapeHtml(action.helper)}</small>` : '';
+    return `<${tag} ${renderAttributes(attributes)}>${icon}<span>${escapeHtml(action.label || 'Action')}</span>${helper}</${tag}>`;
   }
 
   function getDetailActionGlassClass(variant = '') {
