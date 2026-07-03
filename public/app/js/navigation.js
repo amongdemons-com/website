@@ -65,7 +65,7 @@
     }
 
     if (session.player) {
-      updateAccountNav(session.player);
+      updateAccountNav(session.player, { animate: false });
     }
 
     if (typeof auth.api === 'function') {
@@ -104,7 +104,7 @@
         });
       }
 
-      updateAccountNav(player);
+      updateAccountNav(player, { animate: false });
       refreshProgress(auth);
     } catch (error) {
       if (error.status === 401) {
@@ -127,7 +127,7 @@
 
     try {
       const progression = await auth.api(PROGRESSION_API);
-      return updater(progression);
+      return updater(progression, { animate: false });
     } catch (error) {
       if (error.status === 401) {
         if (typeof auth.clearSession === 'function') auth.clearSession();

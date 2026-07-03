@@ -123,7 +123,7 @@
         ariaLabel: `${formattedSouls} Souls`
       });
     }
-    if (hasXpProgressSource(player)) updateNavXpProgress(player);
+    if (hasXpProgressSource(player)) updateNavXpProgress(player, { root, animate: options.animate });
 
     return {
       username,

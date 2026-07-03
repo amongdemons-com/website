@@ -2998,6 +2998,30 @@ import * as dungeonUtils from './dungeon/utils.js';
     return position === 'back' ? 'back' : 'front';
   }
 
+  // Static SVG twin of drawShrineMarker (the Pixi board marker): the same
+  // cracked standing stone, slab, soul rune and crown flame — minus the smoke.
+  function renderShrineMarkSvg(bound) {
+    const soul = '#8de7ff';
+    const glowAlpha = bound ? 0.9 : 0.66;
+
+    return `
+      <svg class="world-shrine-mark" viewBox="-17 -28 34 51" aria-hidden="true" focusable="false">
+        <ellipse cx="1" cy="16" rx="17" ry="6" fill="#000000" opacity="0.4"></ellipse>
+        <polygon points="-14,13 14,13 11,18 -11,18" fill="#161a19" fill-opacity="0.96" stroke="#070909" stroke-width="1.4" stroke-opacity="0.9"></polygon>
+        <polygon points="-8,13 -9,-10 -4,-17 3,-19 8,-12 9,5 7,13" fill="#1d2323" fill-opacity="0.97" stroke="#0a0d0d" stroke-width="1.6" stroke-opacity="0.9"></polygon>
+        <polygon points="-7.5,10 -8.5,-9 -4,-16 -2,-16 -3.5,10" fill="#394547" fill-opacity="0.4"></polygon>
+        <path d="M4 -18 L1 -8 L3.5 2" fill="none" stroke="#0a0d0d" stroke-width="1.1" stroke-opacity="0.7"></path>
+        <circle cx="0" cy="-3" r="8" fill="${soul}" fill-opacity="${bound ? 0.16 : 0.09}"></circle>
+        <line x1="0" y1="-9" x2="0" y2="3" stroke="${soul}" stroke-width="1.6" stroke-opacity="${glowAlpha}"></line>
+        <line x1="-4" y1="-6.5" x2="4" y2="-6.5" stroke="${soul}" stroke-width="1.5" stroke-opacity="${glowAlpha}"></line>
+        <line x1="-3.5" y1="0" x2="3.5" y2="0" stroke="${soul}" stroke-width="1.3" stroke-opacity="${glowAlpha * 0.8}"></line>
+        <circle cx="0" cy="-21" r="5.5" fill="${soul}" fill-opacity="${bound ? 0.28 : 0.16}"></circle>
+        <ellipse cx="0" cy="-21" rx="2.4" ry="3.4" fill="${soul}" fill-opacity="${glowAlpha}"></ellipse>
+        <ellipse cx="0" cy="-21.8" rx="1.1" ry="1.8" fill="#eafcff" fill-opacity="0.9"></ellipse>
+      </svg>
+    `;
+  }
+
   function renderShrinePanel() {
     if (!elements.worldShrinePanel) return;
 
@@ -3007,21 +3031,23 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (boundShrine) {
       parts.push(`
         <article class="world-shrine-status is-bound">
-          <span class="world-shrine-mark" aria-hidden="true"></span>
+          ${renderShrineMarkSvg(true)}
           <span class="world-shrine-copy">
             <strong>${escapeHtml(boundShrine.title || 'Forsaken Shrine')}</strong>
-            <small>${escapeHtml(formatCoords(boundShrine))}</small>
+            <span class="world-shrine-label">Respawn Point</span>
           </span>
+          <span class="world-shrine-area">Area ${escapeHtml(formatCoords(boundShrine))}</span>
         </article>
       `);
     } else {
       parts.push(`
         <article class="world-shrine-status">
-          <span class="world-shrine-mark" aria-hidden="true"></span>
+          ${renderShrineMarkSvg(false)}
           <span class="world-shrine-copy">
-            <strong>Respawn Point</strong>
-            <small>Default - ${escapeHtml(formatCoords({ x: 0, y: 0 }))}</small>
+            <strong>Default Spawn</strong>
+            <span class="world-shrine-label">Respawn Point</span>
           </span>
+          <span class="world-shrine-area">Area ${escapeHtml(formatCoords({ x: 0, y: 0 }))}</span>
         </article>
       `);
     }

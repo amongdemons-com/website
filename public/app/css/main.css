@@ -13499,7 +13499,13 @@ body.dungeon-page .dungeon-hand-scroll-btn:disabled {
 
 @media (min-width: 768px) {
     :root {
-        --nav-xp-progress-height: 0.58rem;
+        --nav-xp-progress-height: 0.72rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    :root {
+        --nav-xp-progress-height: 0.9rem;
     }
 }
 
@@ -16237,7 +16243,7 @@ body.world-page > .game-shell-nav {
 .world-map-status {
     position: absolute;
     left: 0.85rem;
-    bottom: 0.75rem;
+    bottom: calc(0.75rem + var(--nav-xp-progress-height, 0rem));
     z-index: 3;
     display: inline-flex;
     align-items: center;
@@ -16610,12 +16616,12 @@ body.world-page > .game-shell-nav {
     position: fixed;
     top: calc(var(--game-nav-height, 3.6rem) + 0.85rem);
     right: 0.85rem;
-    bottom: 0.85rem;
+    bottom: auto;
     z-index: 10;
     display: flex;
     flex-direction: column;
     width: min(23rem, calc(100vw - 1.7rem));
-    max-height: calc(100dvh - var(--game-nav-height, 3.6rem) - 1.7rem);
+    max-height: calc(100dvh - var(--game-nav-height, 3.6rem) - 1.7rem - var(--nav-xp-progress-height, 0rem));
     overflow: hidden;
     border-radius: 8px;
     background:
@@ -16705,9 +16711,9 @@ body.world-page > .game-shell-nav {
 }
 
 .world-side-panel.is-collapsed {
-    top: auto;
+    top: calc(var(--game-nav-height, 3.6rem) + 0.85rem);
     right: 0.85rem;
-    bottom: 0.85rem;
+    bottom: auto;
     left: auto;
     width: min(14.5rem, calc(100vw - 1.7rem));
     max-height: calc(3rem + env(safe-area-inset-bottom, 0px));
@@ -16724,6 +16730,16 @@ body.world-page > .game-shell-nav {
 
 .world-side-panel:not(.is-collapsed) .world-side-toggle .ad-icon {
     transform: rotate(180deg);
+}
+
+@media (min-width: 900px) {
+    .world-side-panel.is-collapsed .world-side-toggle .ad-icon {
+        transform: rotate(180deg);
+    }
+
+    .world-side-panel:not(.is-collapsed) .world-side-toggle .ad-icon {
+        transform: none;
+    }
 }
 
 .world-side-content > section {
@@ -17526,69 +17542,56 @@ body.world-page > .game-shell-nav {
     align-items: center;
     gap: 0.48rem;
     min-width: 0;
-    border: 1px solid rgba(161,212,201,0.12);
-    border-radius: 6px;
-    background: rgba(0,0,0,0.16);
-    padding: 0.5rem;
+    padding: 0.5rem 0.5rem 0.5rem 0;
 }
 
 .world-shrine-status {
-    grid-template-columns: auto minmax(0, 1fr);
-}
-
-.world-shrine-status.is-bound {
-    border-color: rgba(232,199,106,0.34);
-    background:
-        radial-gradient(circle at 10% 50%, rgba(141,231,255,0.11), transparent 4rem),
-        linear-gradient(180deg, rgba(232,199,106,0.07), rgba(0,0,0,0.06)),
-        rgba(0,0,0,0.18);
+    grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
 .world-shrine-mark {
-    position: relative;
     display: block;
-    width: 1rem;
-    height: 1.45rem;
-    border: 1px solid rgba(232,199,106,0.74);
-    border-radius: 2px 2px 6px 6px;
-    background: linear-gradient(180deg, #3b1618, #16090a);
-    box-shadow: 0 0 15px rgba(232,199,106,0.16);
-}
-
-.world-shrine-mark::after {
-    content: "";
-    position: absolute;
-    top: 0.42rem;
-    left: 50%;
-    width: 0.34rem;
-    height: 0.34rem;
-    border-radius: 50%;
-    background: #8de7ff;
-    box-shadow: 0 0 10px rgba(141,231,255,0.52);
-    transform: translateX(-50%);
+    width: 2.1rem;
+    height: 3.15rem;
+    flex: 0 0 auto;
 }
 
 .world-shrine-copy {
     display: grid;
     gap: 0.12rem;
     min-width: 0;
+    padding-bottom: 0.4rem;
 }
 
 .world-shrine-copy strong {
     overflow: hidden;
-    color: #fff3bd;
-    font-size: 0.78rem;
+    color: var(--ad-gold, #e8c76a);
+    font-size: 0.72rem;
     font-weight: 900;
     line-height: 1.1;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.world-shrine-copy small {
-    color: rgba(220,232,229,0.58);
-    font-size: 0.64rem;
-    font-weight: 800;
-    line-height: 1.2;
+.world-shrine-label {
+    overflow: hidden;
+    color: rgba(220,232,229,0.92);
+    font-size: 0.78rem;
+    font-weight: 900;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.world-shrine-area {
+    color: rgba(220,232,229,0.38);
+    font-size: 0.8rem;
+    font-weight: 900;
+    line-height: 1;
+    padding-bottom: 0.4rem;
+    text-align: right;
+    white-space: nowrap;
 }
 
 .world-team-summary,
@@ -18117,7 +18120,7 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     .world-side-panel {
         top: auto;
         right: 0.65rem;
-        bottom: 0.65rem;
+        bottom: calc(0.65rem + var(--nav-xp-progress-height, 0rem));
         left: 0.65rem;
         width: auto;
         max-height: 38vh;
@@ -18125,8 +18128,9 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     }
 
     .world-side-panel.is-collapsed {
+        top: auto;
         right: 0.65rem;
-        bottom: 0.65rem;
+        bottom: calc(0.65rem + var(--nav-xp-progress-height, 0rem));
         left: auto;
         width: min(14.5rem, calc(100vw - 1.3rem));
         max-height: calc(3rem + env(safe-area-inset-bottom, 0px));
