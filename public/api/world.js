@@ -45,6 +45,28 @@ const BLOCKED_TILES = new Set(WORLD_BLOCKS.map((tile) => `${tile.x},${tile.y}`))
 const AMBUSH_CHANCE_OFF_ROAD = 7; // 1-in-N chance to be ambushed per eligible off-road step
 const AMBUSH_CHANCE_ON_ROAD = 34; // roads are watched but far safer to travel
 
+// The map layout never changes per player, so it is served once from
+// /world/map with an immutable cache keyed by a content hash; /world/state
+// only carries per-player data plus the current mapVersion so clients know
+// which cached map to use (a new map.json produces a new hash → new URL).
+const WORLD_MAP_PAYLOAD = {
+  bounds: { min: WORLD_MIN, max: WORLD_MAX },
+  events: WORLD_EVENTS,
+  blockedTiles: WORLD_BLOCKS,
+  roads: WORLD_ROADS,
+  encounters: WORLD_ENCOUNTERS.map(serializeWorldEncounterForClient)
+};
+const WORLD_MAP_VERSION = require('crypto')
+  .createHash('sha1')
+  .update(JSON.stringify(WORLD_MAP_PAYLOAD))
+  .digest('hex')
+  .slice(0, 12);
+
+router.get('/world/map', requireAuth, (req, res) => {
+  res.set('Cache-Control', 'private, max-age=31536000, immutable');
+  res.json({ ...WORLD_MAP_PAYLOAD, mapVersion: WORLD_MAP_VERSION });
+});
+
 router.get('/world/state', requireAuth, async (req, res) => {
   const position = await getOrCreatePosition(req.player.id);
   const [playersAt, activeWorldTeam, boundShrine, hunt] = await Promise.all([
@@ -57,17 +79,13 @@ router.get('/world/state', requireAuth, async (req, res) => {
   res.json({
     player: getWorldPlayer(req.player),
     position,
-    bounds: { min: WORLD_MIN, max: WORLD_MAX },
-    events: WORLD_EVENTS,
-    blockedTiles: WORLD_BLOCKS,
-    roads: WORLD_ROADS,
-    encounters: WORLD_ENCOUNTERS.map(serializeWorldEncounterForClient),
+    mapVersion: WORLD_MAP_VERSION,
     shrines: getWorldShrines(),
     boundShrine,
     currentEvent: getEventAt(position.x, position.y),
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
     playersAt,
-    activeTeam: getActiveWorldTeamSummary(activeWorldTeam),
+    activeTeam: serializeTeamSummaryForClient(getActiveWorldTeamSummary(activeWorldTeam)),
     hunt
   });
 });
@@ -80,7 +98,7 @@ router.get('/world/team', requireAuth, async (req, res) => {
 
   res.json({
     team,
-    activeTeam: getActiveWorldTeamSummary(team),
+    activeTeam: serializeTeamSummaryForClient(getActiveWorldTeamSummary(team)),
     collection
   });
 });
@@ -97,7 +115,7 @@ router.post('/world/team', requireAuth, async (req, res) => {
     ok: true,
     team: saveResult.team,
     teamChanged: saveResult.changed,
-    activeTeam: getActiveWorldTeamSummary(saveResult.team),
+    activeTeam: serializeTeamSummaryForClient(getActiveWorldTeamSummary(saveResult.team)),
     ...(reset ? {
       player: reset.player,
       rewards: reset.rewards,
@@ -448,7 +466,7 @@ async function getPlayersAt(x, y, currentPlayerId) {
 }
 
 async function getActiveTeamSummary(playerId) {
-  return getActiveWorldTeamSummary(await getActiveWorldTeam(playerId));
+  return serializeTeamSummaryForClient(getActiveWorldTeamSummary(await getActiveWorldTeam(playerId)));
 }
 
 async function getWorldTeamCollection(playerId) {
@@ -667,9 +685,31 @@ function serializeWorldEncounterForClient(encounter) {
 
   return {
     ...encounter,
+    keyDemon: encounter.keyDemon
+      ? { ...encounter.keyDemon, imageUrl: toWorldMapImageUrl(encounter.keyDemon.imageUrl) }
+      : encounter.keyDemon,
+    team: Array.isArray(encounter.team)
+      ? encounter.team.map((member) => ({ ...member, imageUrl: toWorldMapImageUrl(member.imageUrl) }))
+      : encounter.team,
     terror: getWorldTerrorPreview(encounter),
     xpReward: getWorldXpReward(encounter, Math.max(1, Number(encounter.difficulty) || 1)),
     soulReward: getWorldSoulReward(encounter, defeatedDemons)
+  };
+}
+
+// The world map and side panels render demon art as small tokens/avatars, so
+// they get lightweight WebP variants (scripts/generate-demon-map-variants.js)
+// instead of the multi-megabyte battle-card PNGs. Unknown URLs pass through.
+function toWorldMapImageUrl(url) {
+  const match = /^\/app\/images\/demons\/(?:thumbnails\/)?(\d+)\.png$/.exec(String(url || ''));
+  return match ? `/app/images/demons/map/${match[1]}.webp` : url;
+}
+
+function serializeTeamSummaryForClient(summary) {
+  if (!summary || !Array.isArray(summary.members)) return summary;
+  return {
+    ...summary,
+    members: summary.members.map((member) => ({ ...member, imageUrl: toWorldMapImageUrl(member.imageUrl) }))
   };
 }
 

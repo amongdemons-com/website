@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const path = require('path');
 require('./public/api/lib/async-errors');
 const apiRoutes = require('./public/api');
@@ -39,6 +40,7 @@ const noindexPaths = new Set([
 ]);
 
 app.set('trust proxy', true);
+app.use(compression());
 app.use(enforceCanonicalHost);
 app.use(applyRobotsHeaders);
 app.use(express.json());
@@ -47,7 +49,25 @@ app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found.' });
 });
 
-app.use('/images/assets', express.static(path.join(appDir, 'images', 'assets')));
+// Long-lived immutable caching is safe because JS/CSS references carry ?v=
+// stamps and image art is content-stable; HTML must always revalidate.
+// Disabled outside production so local iteration never fights the cache.
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const staticOptions = {
+  maxAge: IS_PRODUCTION ? '365d' : 0,
+  immutable: IS_PRODUCTION,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.set('Cache-Control', 'no-cache');
+    }
+  }
+};
+
+function sendAppPage(res, fileName) {
+  res.sendFile(path.join(appDir, fileName), { headers: { 'Cache-Control': 'no-cache' } });
+}
+
+app.use('/images/assets', express.static(path.join(appDir, 'images', 'assets'), staticOptions));
 
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(renderRobotsTxt());
@@ -71,9 +91,9 @@ app.get('/app/images/demons/:imageName', async (req, res, next) => {
   res.sendFile(getDemonImageFilePath(demon));
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules', 'lucide', 'dist', 'umd')));
-app.use('/vendor/pixi', express.static(path.join(__dirname, 'node_modules', 'pixi.js', 'dist')));
+app.use(express.static(path.join(__dirname, 'public'), staticOptions));
+app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules', 'lucide', 'dist', 'umd'), staticOptions));
+app.use('/vendor/pixi', express.static(path.join(__dirname, 'node_modules', 'pixi.js', 'dist'), staticOptions));
 
 app.get(['/demons/type', '/demons/type/', '/demons/type/:page'], (req, res) => {
   return res.redirect(301, '/demons');
@@ -98,44 +118,44 @@ app.get(['/demons/:slug', '/demons/:slug/'], async (req, res, next) => {
 });
 
 app.get(['/camp', '/camp/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'camp.html'));
+  sendAppPage(res, 'camp.html');
 });
 
 app.get(['/world', '/world/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'world.html'));
+  sendAppPage(res, 'world.html');
 });
 
 // === Dungeon Route: GET /dungeon/
 app.get(['/dungeon', '/dungeon/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'dungeon.html'));
+  sendAppPage(res, 'dungeon.html');
 });
 
 app.get(['/register', '/register/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'register.html'));
+  sendAppPage(res, 'register.html');
 });
 
 app.get(['/login', '/login/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'login.html'));
+  sendAppPage(res, 'login.html');
 });
 
 app.get(['/settings', '/settings/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'settings.html'));
+  sendAppPage(res, 'settings.html');
 });
 
 app.get(['/skill-tree', '/skill-tree/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'skill-tree.html'));
+  sendAppPage(res, 'skill-tree.html');
 });
 
 app.get(['/privacy', '/privacy/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'privacy.html'));
+  sendAppPage(res, 'privacy.html');
 });
 
 app.get(['/terms', '/terms/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'terms.html'));
+  sendAppPage(res, 'terms.html');
 });
 
 app.get(['/collection', '/collection/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'collection.html'));
+  sendAppPage(res, 'collection.html');
 });
 
 app.get(['/hunter', '/hunter/'], (req, res) => {
@@ -143,7 +163,7 @@ app.get(['/hunter', '/hunter/'], (req, res) => {
 });
 
 app.get(['/hunter/:username', '/hunter/:username/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'hunter.html'));
+  sendAppPage(res, 'hunter.html');
 });
 
 app.get(['/rank', '/rank/'], (req, res) => {
@@ -151,7 +171,7 @@ app.get(['/rank', '/rank/'], (req, res) => {
 });
 
 app.get(['/rankings', '/rankings/'], (req, res) => {
-  res.sendFile(path.join(appDir, 'rankings.html'));
+  sendAppPage(res, 'rankings.html');
 });
 
 app.get(['/rankings/:sort', '/rankings/:sort/'], (req, res) => {
@@ -159,7 +179,7 @@ app.get(['/rankings/:sort', '/rankings/:sort/'], (req, res) => {
     return res.redirect(302, '/rankings');
   }
 
-  res.sendFile(path.join(appDir, 'rankings.html'));
+  sendAppPage(res, 'rankings.html');
 });
 
 // ============================================================================

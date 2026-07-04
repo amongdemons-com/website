@@ -50,7 +50,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   const WORLD_AMBUSH_DEFEAT_FADE_MS = 900;
   const WORLD_AMBUSH_DEFEAT_HOLD_MS = 140;
   const WORLD_TEAM_LIMIT = 6;
-  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
+  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
   const BOARD_COLORS = {
     background: 0x070806,
     tileNormal: 0x121814,
@@ -211,8 +211,10 @@ import * as dungeonUtils from './dungeon/utils.js';
     bindDomControls();
 
     try {
+      // Fetch the world state while Pixi boots instead of after it.
+      const statePromise = api('/api/world/state');
       await initPixi();
-      await loadWorld();
+      await loadWorld(await statePromise);
       hideLoading();
     } catch (error) {
       handleAuthError(error);
@@ -464,16 +466,19 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.resizeObserver.observe(host);
   }
 
-  async function loadWorld() {
-    const payload = await api('/api/world/state');
+  async function loadWorld(initialPayload = null) {
+    const payload = initialPayload || await api('/api/world/state');
+    // Static map layout comes from a separate immutable-cached endpoint keyed
+    // by mapVersion, so repeat visits skip re-downloading the whole map.
+    const map = await loadWorldMapData(payload.mapVersion);
     state.position = normalizePosition(payload.position);
-    state.bounds = payload.bounds || state.bounds;
-    state.events = Array.isArray(payload.events) ? payload.events : [];
-    state.roads = Array.isArray(payload.roads) ? payload.roads : [];
+    state.bounds = map.bounds || state.bounds;
+    state.events = Array.isArray(map.events) ? map.events : [];
+    state.roads = Array.isArray(map.roads) ? map.roads : [];
     state.roadKeys = new Set(state.roads.map((tile) => getTileKey(tile)));
-    state.encounters = Array.isArray(payload.encounters) ? payload.encounters : [];
+    state.encounters = Array.isArray(map.encounters) ? map.encounters : [];
     state.player = payload.player || state.player;
-    state.blockedTiles = Array.isArray(payload.blockedTiles) ? payload.blockedTiles : FALLBACK_BLOCKED_TILES;
+    state.blockedTiles = Array.isArray(map.blockedTiles) ? map.blockedTiles : FALLBACK_BLOCKED_TILES;
     state.blockedMap = new Map(state.blockedTiles.map((tile) => [getTileKey(tile), tile]));
     state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
     state.activeTeam = payload.activeTeam || null;
@@ -481,8 +486,6 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.boundShrine = normalizeShrine(payload.boundShrine);
     state.currentEvent = payload.currentEvent || getEventAt(state.position);
     state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
-    await loadHunterAvatar();
-    await loadEncounterTextures();
 
     buildBoard();
     renderWorld();
@@ -491,6 +494,31 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!state.initialCameraCentered) {
       centerOnHunter();
       state.initialCameraCentered = true;
+    }
+
+    // Portrait art is not worth blocking the map for: markers render with
+    // rarity-tinted fallbacks and get their portraits swapped in on arrival.
+    void loadWorldArt();
+  }
+
+  async function loadWorldMapData(version) {
+    if (state.worldMapData && state.worldMapDataVersion === version) {
+      return state.worldMapData;
+    }
+
+    const query = version ? `?v=${encodeURIComponent(version)}` : '';
+    const map = await api(`/api/world/map${query}`);
+    state.worldMapData = map;
+    state.worldMapDataVersion = map.mapVersion || version || null;
+    return map;
+  }
+
+  async function loadWorldArt() {
+    try {
+      await Promise.all([loadHunterAvatar(), loadEncounterTextures()]);
+    } finally {
+      drawMarkers();
+      drawEncounterMarkers();
     }
   }
 

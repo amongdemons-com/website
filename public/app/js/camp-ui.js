@@ -5,11 +5,10 @@
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const session = window.AmongDemons.getSession();
-  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/thumbnails/1.png';
+  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
   const state = {
     player: session.player || null,
     progression: null,
-    run: null,
     questData: null,
     statPoints: null,
     collection: [],
@@ -46,7 +45,6 @@
       'campPlayerName',
       'playerHudName',
       'playerTitle',
-      'playerSubtitle',
       'welcomeText',
       'appMessage',
       'levelStat',
@@ -54,23 +52,12 @@
       'xpProgressBar',
       'floorStat',
       'soulsStat',
-      'runActionLabel',
-      'runStatus',
-      'runFloor',
-      'runTeam',
-      'runTeamLabel',
-      'runEnemy',
-      'runEnemyLabel',
-      'runEarned',
-      'runEarnedLabel',
       'objectiveList',
       'questResetChip',
       'dailyRewardTitle',
       'dailyRewardValue',
       'dailyRewardStatus',
       'dailyRewardButton',
-      'primaryDungeonMeta',
-      'dungeonActionEyebrow',
       'profileDemonButton',
       'profileDemonImage',
       'profileDemonPicker',
@@ -327,10 +314,9 @@
 
   async function loadCamp() {
     try {
-      const [me, progression, run, collection, questData, statPoints] = await Promise.all([
+      const [me, progression, collection, questData, statPoints] = await Promise.all([
         api('/api/auth/me'),
         api('/api/account/progression'),
-        loadCurrentRun(),
         loadCollection(),
         api('/api/account/quests'),
         api('/api/account/stat-points')
@@ -338,14 +324,12 @@
 
       state.player = me.player;
       state.progression = progression;
-      state.run = run;
       state.questData = questData;
       state.statPoints = statPoints;
       state.collection = collection.demons || [];
       state.collectionLoaded = true;
 
       renderPlayer();
-      renderRun();
       renderObjectives();
       renderDailyReward();
       renderSkillTreeLink();
@@ -357,15 +341,6 @@
 
   async function loadCollection() {
     return api('/api/demons');
-  }
-
-  async function loadCurrentRun() {
-    try {
-      return await api('/api/runs/current');
-    } catch (error) {
-      if (error.status === 404) return null;
-      throw error;
-    }
   }
 
   function renderPlayer() {
@@ -465,54 +440,6 @@
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
-  }
-
-  function renderRun() {
-    const run = state.run;
-    const currentFloor = Number(run?.currentFloor ?? 0);
-
-    if (!run) {
-      setText(elements.runActionLabel, 'Dungeon');
-      setText(elements.dungeonActionEyebrow, 'Portal to');
-      setText(elements.primaryDungeonMeta, 'Descend into the depths and face the unknown.');
-      setText(elements.playerSubtitle, 'No active run. Camp reserves are standing by.');
-      setText(elements.runStatus, 'Ready');
-      setClassName(elements.runStatus, 'play-status-chip is-ready');
-      setText(elements.runFloor, '0');
-      setText(elements.runTeam, '-');
-      setText(elements.runTeamLabel, 'Team');
-      setText(elements.runEnemy, '-');
-      setText(elements.runEnemyLabel, 'Enemies');
-      setText(elements.runEarned, '0 Souls');
-      setText(elements.runEarnedLabel, 'Extract');
-      return;
-    }
-
-    const isDefeated = run.status === 'defeated';
-    const isRecruiting = Boolean(run.awaitingRecruit);
-    const teamCount = getTeamCount(run);
-    const teamLimit = getTeamLimit(run);
-    const enemyCount = getEnemyCount(run);
-    const payout = getExtractPayout(run);
-    const runSummary = getRunSummary(run);
-
-    setText(elements.runActionLabel, 'Dungeon');
-    setText(elements.dungeonActionEyebrow, 'Portal to');
-    setText(elements.primaryDungeonMeta, runSummary);
-    setText(elements.playerSubtitle, isDefeated
-      ? 'The last breach collapsed. Resolve it before the next climb.'
-      : `Current run holding at floor ${formatNumber(currentFloor)}.`);
-    setText(elements.runStatus, isDefeated ? 'Defeated' : (isRecruiting ? 'Recruit' : 'Active'));
-    setClassName(elements.runStatus, `play-status-chip ${isDefeated ? 'is-danger' : (isRecruiting ? 'is-choice' : 'is-active')}`);
-    setText(elements.runFloor, formatNumber(currentFloor));
-    setText(elements.runTeam, Number.isFinite(teamLimit)
-      ? `${formatNumber(teamCount)}/${formatNumber(teamLimit)}`
-      : formatNumber(teamCount));
-    setText(elements.runTeamLabel, Number.isFinite(teamLimit) ? 'Team Slots' : 'Team');
-    setText(elements.runEnemy, formatNumber(enemyCount));
-    setText(elements.runEnemyLabel, isRecruiting ? 'Next Enemies' : 'Enemies');
-    setText(elements.runEarned, `${formatNumber(payout.xp)} XP / ${formatNumber(payout.souls)} Souls`);
-    setText(elements.runEarnedLabel, isRecruiting && !isDefeated ? 'Extract Now' : 'Banked');
   }
 
   function renderObjectives() {
@@ -692,87 +619,6 @@
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return hours > 0 ? `${hours}h ${remainingMinutes}m` : `${remainingMinutes}m`;
-  }
-
-  function getRunSummary(run) {
-    var tfloor = Number(run.currentFloor) || 0;
-    if (tfloor <=1)
-      return 'Descend into the depths and face the unknown.';
-    return 'Floor ' + tfloor + ': the darkness grows heavier.';
-  }
-
-  function getTeamCount(run) {
-    return (run?.team || []).length;
-  }
-
-  function getTeamLimit(run) {
-    if (!run || run.status !== 'active') return null;
-    const floor = Number(run.currentFloor) || 0;
-    return Math.min(6, Math.max(2, floor + 2));
-  }
-
-  function getEnemyCount(run) {
-    if (!run) return 0;
-    if (run.awaitingRecruit && (run.nextEnemies || []).length) {
-      return run.nextEnemies.length;
-    }
-
-    const enemies = run.enemies || [];
-    if (!enemies.length) return 0;
-
-    const livingEnemies = enemies.filter((enemy) => Number(enemy.hp) > 0);
-    return livingEnemies.length || enemies.length;
-  }
-
-  function getExtractPayout(run) {
-    const earned = run?.earned || { xp: 0, souls: 0 };
-    if (run?.status === 'defeated') return { xp: 0, souls: 0 };
-
-    return {
-      xp: Number(earned.xp) || 0,
-      souls: (Number(earned.souls) || 0) + getPendingDiscardedSoulValue(run)
-    };
-  }
-
-  function getPendingDiscardedSoulValue(run) {
-    const excludedRewardIds = getKeptOrExtractedRewardIds(run);
-
-    return (run?.rewards || []).reduce((total, reward) => {
-      if (!isPendingDiscardSoulReward(run, reward, excludedRewardIds)) return total;
-      return total + getRewardSoulValue(reward);
-    }, 0);
-  }
-
-  function getKeptOrExtractedRewardIds(run) {
-    const rewardIds = new Set();
-    const choice = run?.extractChoice;
-
-    if (choice?.source === 'reward' && choice.rewardId) {
-      rewardIds.add(Number(choice.rewardId));
-    }
-
-    return rewardIds;
-  }
-
-  function isPendingDiscardSoulReward(run, reward, excludedRewardIds = new Set()) {
-    if (!reward || reward.type !== 'recruit') return false;
-    if (Number(reward.floor) !== Number(run?.currentFloor)) return false;
-    if (Number(reward.floor) <= 0) return false;
-    if (excludedRewardIds.has(Number(reward.rewardId))) return false;
-    if (!(reward.soulPending === true || (Number(reward.souls) > 0 && !reward.soulAwarded))) return false;
-    return !(
-      reward.claimed ||
-      reward.recruited ||
-      reward.saved ||
-      reward.extracted ||
-      reward.discarded ||
-      reward.soulAwarded
-    );
-  }
-
-  function getRewardSoulValue(reward) {
-    const souls = Number(reward?.souls);
-    return Number.isFinite(souls) && souls > 0 ? souls : 1;
   }
 
   function getSelectedProfileDemon() {

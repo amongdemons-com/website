@@ -1,0 +1,836 @@
+/* collection.css — split from main.css by scripts/split-main-css.js.
+   Collection grid. Loaded by collection.html only.
+   Edit these files directly; main.css no longer exists. */
+
+.dungeon-demon-card.is-collection-reinforcement-attention,
+.collection-reinforcement-placeholder.is-collection-reinforcement-attention {
+    animation: collection-reinforcement-pulse 1.25s ease-in-out infinite;
+}
+
+.collection-reinforcement-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    width: var(--dungeon-demon-card-width, 9.25rem);
+    color: #8de7ff;
+    border: 2px dashed rgba(141,231,255,0.54);
+    border-radius: 6px;
+    background: rgba(16,45,56,0.42);
+    box-shadow:
+        inset 0 0 0 1px rgba(141,231,255,0.08),
+        0 0 18px rgba(82,183,255,0.14);
+    cursor: pointer;
+}
+
+.collection-reinforcement-placeholder-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.collection-reinforcement-placeholder-icon .ad-icon {
+    width: 3rem;
+    height: 3rem;
+}
+
+.demon-detail-actions:has(.collection-train-action) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    justify-items: stretch;
+    gap: 0.6rem;
+    padding-top: 0.75rem;
+}
+
+.demon-detail-actions:has(.collection-train-action) .demon-detail-action-lead {
+    display: block;
+    box-sizing: border-box;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 0;
+    margin-right: 0;
+    margin-left: 0;
+    padding: 0.62rem;
+    border: 1px solid rgba(85,255,255,0.14);
+    border-radius: 6px;
+    background: rgba(5,14,17,0.52);
+}
+
+.demon-detail-actions:has(.collection-train-action) .btn {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 2.58rem;
+}
+
+.demon-detail-actions:has(.collection-train-action) .collection-train-action {
+    flex-direction: row;
+    gap: 0.38rem;
+    line-height: 1.05;
+    white-space: normal;
+}
+
+.collection-train-max-action {
+    border-color: rgba(161,212,201,0.26);
+    background:
+        linear-gradient(180deg, rgba(19,32,34,0.74), rgba(6,13,15,0.7)),
+        rgba(6,13,15,0.82);
+    color: rgba(226,244,239,0.9);
+}
+
+.collection-train-max-action:not(:disabled):hover,
+.collection-train-max-action:not(:disabled):focus-visible {
+    border-color: rgba(85,255,255,0.46);
+    color: #f5ffff;
+}
+
+.collection-train-action .ad-icon,
+.collection-train-action-icon {
+    width: 1.18rem;
+    height: 1.18rem;
+    margin-right: 0;
+    color: currentColor;
+}
+
+.collection-train-action span {
+    overflow-wrap: anywhere;
+}
+
+.collection-train-action small {
+    display: block;
+    color: rgba(207,226,220,0.72);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.15;
+    text-transform: none;
+}
+
+.collection-train-loading-dot {
+    width: 0.58rem;
+    height: 0.58rem;
+    border: 2px solid rgba(245,255,255,0.34);
+    border-top-color: #f5ffff;
+    border-radius: 50%;
+    animation: dungeon-loading-spin 0.78s linear infinite;
+}
+
+@media (min-width: 768px) {
+.demon-detail-modal:has(.collection-training-panel) .demon-detail-heading {
+        padding-top: 0.88rem;
+        padding-bottom: 0.62rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .demon-detail-title {
+        font-size: 1.34rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .demon-detail-stats {
+        gap: 0.56rem 1.05rem;
+        padding-top: 0.55rem;
+        padding-bottom: 0.55rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .demon-detail-meta {
+        gap: 0.55rem;
+        padding-bottom: 0.68rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .demon-detail-meta div {
+        padding: 0.44rem 0.58rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .demon-detail-extra {
+        padding-bottom: 0.68rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .collection-training-panel {
+        gap: 0.46rem;
+        padding: 0.6rem 0.66rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .collection-training-panel-head {
+        font-size: 0.68rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .collection-training-stat-list {
+        gap: 0.34rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .collection-training-stat {
+        gap: 0.2rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .collection-training-stat-line {
+        font-size: 0.7rem;
+    }
+
+.demon-detail-modal:has(.collection-training-panel) .collection-training-stat-track {
+        height: 0.3rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+.demon-detail-actions:has(.collection-train-action) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+.demon-detail-actions:has(.collection-train-action) .demon-detail-action-lead {
+        padding: 0.58rem;
+    }
+
+.demon-detail-actions:has(.collection-train-action) .btn {
+        height: auto;
+        min-height: 2.58rem;
+    }
+}
+
+.dungeon-hand-cards .dungeon-demon-card,
+.dungeon-hand-cards .collection-reinforcement-placeholder,
+.dungeon-hand-empty {
+    width: var(--dungeon-hand-card-width);
+    height: var(--dungeon-hand-card-width);
+    flex: 0 0 var(--dungeon-hand-card-width);
+}
+
+.collection-reinforcement-toolbar {
+    margin-bottom: 0.75rem;
+}
+
+.collection-reinforcement-grid {
+    max-height: min(58vh, 34rem);
+    overflow: auto;
+    padding-right: 0.25rem;
+}
+
+.collection-replace-card {
+    width: 100%;
+}
+
+.collection-replace-preview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 11rem));
+    justify-content: center;
+    gap: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+.dungeon-demon-card.is-collection-reinforcement-attention,
+    .collection-reinforcement-placeholder.is-collection-reinforcement-attention {
+        animation: none;
+        box-shadow: 0 0 0 2px rgba(141,231,255,0.24), 0 0 18px rgba(82,183,255,0.2);
+    }
+
+.attack-zap path,
+    .attack-zap circle,
+    .fire-spark,
+    .fireball-projectile,
+    .fireball-impact,
+    .fireball-ember,
+    .fire-nova-flash,
+    .fire-nova-ring,
+    .dark-spike,
+    .sword-swing-arc,
+    .sword-swing-belly,
+    .thorn-spike,
+    .heal-ring,
+    .chaos-lightning path,
+    .floating-combat-number,
+    .dungeon-loading-mark,
+    .dungeon-loading-arena span,
+    .dungeon-loading-dot,
+    .collection-training-burst::before,
+    .collection-training-particle,
+    .collection-training-core,
+    .collection-training-result-pop,
+    .demon-detail-art.is-training-fed img {
+        animation: none;
+    }
+}
+
+body.collection-page {
+    min-height: 100%;
+    background:
+        linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.78)),
+        radial-gradient(circle at 18% 18%, rgba(111,214,189,0.14), transparent 24rem),
+        radial-gradient(circle at 86% 14%, rgba(232,199,106,0.11), transparent 22rem),
+        url("/app/images/assets/background/amongdemons_collection.png") center top / cover fixed no-repeat,
+        var(--ad-bg);
+}
+
+.collection-page main {
+    min-height: calc(100vh - 170px);
+}
+
+.collection-page h1 {
+    color: var(--ad-text);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.46);
+}
+
+.collection-page .card {
+    border-color: rgba(111,214,189,0.18);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.05), transparent 38%),
+        rgba(7,16,19,0.78);
+    backdrop-filter: blur(2px);
+}
+
+.collection-gallery-card {
+    overflow: hidden;
+}
+
+.collection-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    min-height: 1.45rem;
+    padding: 0.12rem 0.55rem;
+    border: 1px solid rgba(111,214,189,0.28);
+    border-radius: 999px;
+    background: rgba(111,214,189,0.12);
+    color: var(--ad-green);
+    font-size: 0.8rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.collection-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(10rem, 1fr)) minmax(9rem, auto);
+    gap: 0.5rem;
+    width: min(100%, 49rem);
+}
+
+.collection-controls .form-select {
+    border-color: rgba(161,212,201,0.18);
+    background-color: rgba(4,10,12,0.72);
+    color: var(--ad-text);
+}
+
+.collection-filters-toggle {
+    display: none;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.collection-checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(1.5em + 0.5rem + 2px);
+    gap: 0.45rem;
+    padding: 0.25rem 0.65rem;
+    border: 1px solid rgba(161,212,201,0.18);
+    border-radius: 0.375rem;
+    background: rgba(4,10,12,0.72);
+    color: var(--ad-text);
+    font-size: 0.875rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.collection-checkbox .form-check-input {
+    margin: 0;
+}
+
+.collection-card-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.collection-grid-item {
+    display: flex;
+    justify-content: center;
+}
+
+.collection-grid-full {
+    grid-column: 1 / -1;
+}
+
+.collection-demon-card {
+    width: 100%;
+    background: rgba(3,9,11,0.55);
+}
+
+.collection-card-grid .dungeon-demon-card {
+    width: 100%;
+}
+
+.collection-demon-card img {
+    background: transparent;
+}
+
+.collection-missing-card {
+    --rarity-color: rgba(161,212,201,0.45) !important;
+    border-color: rgba(161,212,201,0.14);
+    border-style: dashed;
+    opacity: 0.62;
+    filter: grayscale(0.95);
+    cursor: pointer;
+}
+
+.collection-missing-card .dungeon-demon-rarity-gem {
+    opacity: 0.35;
+}
+
+.collection-missing-card img {
+    opacity: 0.7;
+    filter: grayscale(1) contrast(0.78) brightness(0.78);
+}
+
+.collection-missing-label {
+    margin-top: 0.45rem;
+    color: rgba(209,219,218,0.72);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-align: center;
+}
+
+.collection-training-badge {
+    position: absolute;
+    top: 0.34rem;
+    right: 0.34rem;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.35rem;
+    min-height: 1.08rem;
+    padding: 0.14rem 0.42rem;
+    border: 1px solid rgba(85,255,255,0.28);
+    border-radius: 4px;
+    background: rgba(5,25,29,0.78);
+    color: #8dffff;
+    font-size: 0.56rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    pointer-events: none;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.collection-training-panel {
+    display: grid;
+    gap: 0.58rem;
+    border: 1px solid rgba(85,255,255,0.18);
+    border-radius: 6px;
+    background:
+        linear-gradient(135deg, rgba(85,255,255,0.08), rgba(250,197,28,0.05)),
+        rgba(5,14,17,0.62);
+    padding: 0.72rem;
+}
+
+.collection-training-panel.is-maxed {
+    border-color: rgba(250,197,28,0.32);
+    background:
+        linear-gradient(135deg, rgba(250,197,28,0.12), rgba(85,255,255,0.05)),
+        rgba(23,17,7,0.66);
+}
+
+.is-maxed .collection-training-stat-list{
+    display: none;
+}
+
+.collection-training-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    min-width: 0;
+    color: #a8b6bf;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.collection-training-panel-head strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #fac51c;
+    white-space: nowrap;
+    display: none;
+}
+
+.is-maxed .collection-training-panel-head strong {
+    display: inline-flex;
+}
+
+.collection-training-cost {
+    flex: 0 0 auto;
+    font-size: 0.88rem;
+}
+
+.collection-training-disabled-reason {
+    flex: 0 0 auto;
+    border: 1px solid rgba(228,104,94,0.34);
+    border-radius: 999px;
+    background: rgba(40,12,12,0.48);
+    color: #ffd4ce;
+    font-size: 0.64rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.32rem 0.48rem;
+    text-transform: none;
+}
+
+.collection-training-action-cost {
+    display: grid;
+    gap: 0.34rem;
+    min-height: 2.25rem;
+    width: 100%;
+    color: #a8b6bf;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.collection-training-action-head,
+.collection-training-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.collection-training-action-head strong {
+    color: #bff7dc;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+}
+
+.collection-training-action-cost small {
+    color: rgba(207,226,220,0.68);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.15;
+    text-transform: none;
+}
+
+.collection-training-action-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.collection-training-cost-label {
+    color: rgba(207,226,220,0.72);
+    letter-spacing: 0.05em;
+}
+
+.collection-training-chance strong {
+    color: #fac51c;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+    text-transform: none;
+    padding-right: 0.2em;
+}
+
+.collection-training-action-souls {
+    color: #55ffff;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.collection-training-action-souls.soul-chip {
+    min-height: 1.25rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    flex-direction: row-reverse;
+    padding-right: 0;
+}
+
+.collection-training-action-souls .soul-amount-label {
+    font-size: 0.68em;
+    display: none;
+}
+
+.collection-training-stat-list {
+    display: grid;
+    gap: 0.42rem;
+}
+
+.collection-training-stat {
+    display: grid;
+    gap: 0.28rem;
+}
+
+.collection-training-stat-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    color: #dce8eb;
+    font-size: 0.74rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.collection-training-stat-line span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.collection-training-stat-line .ad-icon,
+.collection-training-stat-line .combat-stat-icon {
+    width: 0.82rem;
+    height: 0.82rem;
+    color: #8dffff;
+}
+
+.collection-training-stat.is-maxed .collection-training-stat-line strong {
+    color: #fac51c;
+}
+
+.collection-training-stat-track {
+    height: 0.34rem;
+    border-radius: 999px;
+    background: rgba(207,226,220,0.14);
+    overflow: hidden;
+}
+
+.collection-training-stat-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #41a85f, #55ffff);
+}
+
+.collection-training-stat.is-maxed .collection-training-stat-track span {
+    background: linear-gradient(90deg, #e8c76a, #fac51c);
+}
+
+.collection-training-burst {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.collection-training-burst::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(85,255,255,0.22), transparent 16%),
+        radial-gradient(circle at 50% 50%, rgba(85,255,255,0.12), transparent 40%);
+    mix-blend-mode: screen;
+    animation: collection-training-vortex-pulse 4100ms ease-out both;
+}
+
+.collection-training-vortex,
+.collection-training-core {
+    position: absolute;
+    inset: 0;
+}
+
+.collection-training-particle {
+    position: absolute;
+    left: 50%;
+    top: 48%;
+    display: inline-grid;
+    place-items: center;
+    width: calc(0.7rem * var(--size, 1));
+    height: calc(0.7rem * var(--size, 1));
+    border-radius: 999px;
+    background: var(--ad-soul, #55ffff);
+    box-shadow:
+        0 0 calc(10px * var(--size, 1)) rgba(85,255,255,0.78),
+        0 0 calc(18px * var(--size, 1)) rgba(85,255,255,0.28);
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(var(--sx), var(--sy)) scale(calc(var(--size, 1) * 0.55));
+    animation: collection-training-particle-converge var(--duration, 1900ms) cubic-bezier(0.14, 0.92, 0.16, 1) both;
+    animation-delay: var(--delay, 0ms);
+}
+
+.collection-training-core {
+    inset: auto;
+    left: 50%;
+    top: 48%;
+    width: min(8.5rem, 36%);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, rgba(255,255,255,0.82) 0 8%, rgba(85,255,255,0.52) 9% 28%, transparent 62%);
+    box-shadow:
+        0 0 32px rgba(85,255,255,0.68),
+        0 0 52px rgba(85,255,255,0.3);
+    mix-blend-mode: screen;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.1);
+    animation: collection-training-core-impact 4100ms ease-out both;
+}
+
+.collection-training-result-pop {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(92%, 25rem);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    animation: collection-training-result-pop 420ms cubic-bezier(0.18, 0.84, 0.18, 1) both;
+    appearance: none;
+}
+
+.collection-training-result-pop > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.48rem;
+    border: 2px solid rgba(250,197,28,0.66);
+    border-radius: 999px;
+    background:
+        linear-gradient(135deg, rgba(250,197,28,0.22), rgba(85,255,255,0.16)),
+        rgba(8,18,19,0.94);
+    color: #fff6ce;
+    box-shadow:
+        0 12px 32px rgba(0,0,0,0.5),
+        0 0 30px rgba(250,197,28,0.28),
+        inset 0 0 0 1px rgba(255,255,255,0.12);
+    font-size: 1.18rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.62rem 0.86rem;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.72);
+    white-space: nowrap;
+}
+
+.collection-training-result-pop .is-failure {
+    border-color: rgba(228,104,94,0.72);
+    background:
+        linear-gradient(135deg, rgba(228,104,94,0.22), rgba(250,197,28,0.1)),
+        rgba(20,9,9,0.94);
+    color: #ffd7d3;
+    box-shadow:
+        0 12px 32px rgba(0,0,0,0.5),
+        0 0 30px rgba(228,104,94,0.26),
+        inset 0 0 0 1px rgba(255,255,255,0.1);
+}
+
+.collection-training-result-pop .ad-icon,
+.collection-training-result-pop .combat-stat-icon {
+    width: 1.22rem;
+    height: 1.22rem;
+    color: #fac51c;
+}
+
+.collection-training-result-pop .collection-training-spent-pill {
+    border-color: rgba(85,255,255,0.58);
+    background:
+        linear-gradient(135deg, rgba(85,255,255,0.24), rgba(67,135,255,0.2)),
+        rgba(5,19,28,0.96);
+    color: #c8ffff;
+    box-shadow:
+        0 12px 32px rgba(0,0,0,0.5),
+        0 0 30px rgba(85,255,255,0.24),
+        inset 0 0 0 1px rgba(255,255,255,0.12);
+}
+
+.collection-training-spent-minus {
+    color: #f5ffff;
+}
+
+.collection-training-result-pop .collection-training-spent-icon {
+    width: 1.22rem;
+    height: 1.22rem;
+    color: #55ffff;
+}
+
+.collection-empty-state {
+    min-height: 320px;
+    border: 1px dashed rgba(161,212,201,0.2);
+    border-radius: var(--ad-radius);
+    background: rgba(4,10,12,0.32);
+}
+
+@media (max-width: 767.98px) {
+.collection-filters-toggle {
+        display: inline-flex;
+    }
+
+.collection-controls {
+        display: none;
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+.collection-controls.is-mobile-open {
+        display: grid;
+    }
+
+.collection-checkbox {
+        justify-content: flex-start;
+    }
+
+.collection-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+.collection-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.7rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199.98px) {
+.collection-card-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.dungeon-hand-cards .dungeon-demon-card,
+.dungeon-hand-cards .collection-reinforcement-placeholder,
+.dungeon-hand-empty,
+.dungeon-reward-demon-card,
+.dungeon-reward-empty {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+@media (max-width: 575.98px) and (orientation: portrait) {
+.dungeon-hand-cards .dungeon-demon-card,
+    .dungeon-hand-cards .collection-reinforcement-placeholder,
+    .dungeon-hand-empty {
+        width: var(--dungeon-hand-card-width);
+        height: 100%;
+        min-height: 0;
+        aspect-ratio: 1 / 1;
+        flex: 0 0 var(--dungeon-hand-card-width);
+    }
+}
