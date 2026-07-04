@@ -1047,8 +1047,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   const ROAD_VARIANTS = 2;
   const OBSTACLE_VARIANTS = 2;
   const PROP_CHANCE = 0.05; // rare, subtle stone decals on open ground
-  const EMBER_CORE = 0xffd8a6;
-  const EMBER_GLOW = 0xd9742e;
+  const PATH_CORE = 0xd8f3ff;
+  const PATH_GLOW = 0x58c7f0;
 
   function createZonePalette(typeId) {
     const accent = zoneAccentForType(typeId);
@@ -2097,8 +2097,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (positionsEqual(state.hoverTile, state.position)) return;
     // A quiet ring on the ground instead of a grid box.
     const c = tileCenter(state.hoverTile);
-    layer.circle(c.x, c.y, 15).stroke({ color: GRID_COLOR, width: 1.4, alpha: 0.55 });
-    layer.circle(c.x, c.y, 15).fill({ color: GRID_COLOR, alpha: 0.06 });
+    layer.circle(c.x, c.y, 21).stroke({ color: PATH_GLOW, width: 1.6, alpha: 0.6 });
+    layer.circle(c.x, c.y, 21).fill({ color: PATH_GLOW, alpha: 0.08 });
   }
 
   function drawPath() {
@@ -2109,7 +2109,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const path = state.selectedPath || [];
     if (path.length < 2) return;
 
-    // A trail of drifting ember motes — jittered off the tile centres so the
+    // A trail of drifting pale-blue motes — jittered off the tile centres so the
     // route reads as a wandering trace, not a grid. The destination glow is
     // handled by the animated pulse.
     path.forEach((tile, index) => {
@@ -2117,22 +2117,22 @@ import * as dungeonUtils from './dungeon/utils.js';
       const c = tileCenter(tile);
       const isTarget = index === path.length - 1;
       if (isTarget) {
-        layer.circle(c.x, c.y, 12).fill({ color: EMBER_GLOW, alpha: 0.12 });
+        layer.circle(c.x, c.y, 12).fill({ color: PATH_GLOW, alpha: 0.12 });
         return;
       }
       const jx = (hashTile(tile.x, tile.y, 41) - 0.5) * 16;
       const jy = (hashTile(tile.x, tile.y, 42) - 0.5) * 16;
-      layer.circle(c.x + jx, c.y + jy, 4.5).fill({ color: EMBER_GLOW, alpha: 0.14 });
-      layer.circle(c.x + jx, c.y + jy, 1.8).fill({ color: EMBER_CORE, alpha: 0.75 });
+      layer.circle(c.x + jx, c.y + jy, 4.5).fill({ color: PATH_GLOW, alpha: 0.14 });
+      layer.circle(c.x + jx, c.y + jy, 1.8).fill({ color: PATH_CORE, alpha: 0.75 });
       // A smaller trailing spark between this mote and the previous tile.
       const prev = tileCenter(path[index - 1]);
       const mx = (c.x + jx + prev.x) / 2 + (hashTile(tile.x, tile.y, 43) - 0.5) * 10;
       const my = (c.y + jy + prev.y) / 2 + (hashTile(tile.x, tile.y, 44) - 0.5) * 10;
-      layer.circle(mx, my, 1.1).fill({ color: EMBER_CORE, alpha: 0.4 });
+      layer.circle(mx, my, 1.1).fill({ color: PATH_CORE, alpha: 0.4 });
     });
   }
 
-  // Animated destination marker — a pulsing ember ring (runs on the ticker).
+  // Animated destination marker — a pulsing pale-blue ring (runs on the ticker).
   function updatePathPulse() {
     const layer = state.pathPulse;
     if (!layer) return;
@@ -2143,9 +2143,9 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const c = tileCenter(path[path.length - 1]);
     const phase = (performance.now() % 1600) / 1600;
-    layer.circle(c.x, c.y, 8 + phase * 10).stroke({ color: EMBER_GLOW, width: 1.5, alpha: 0.32 * (1 - phase) });
-    layer.circle(c.x, c.y, 6).fill({ color: EMBER_GLOW, alpha: 0.14 });
-    layer.circle(c.x, c.y, 2.6).fill({ color: EMBER_CORE, alpha: 0.9 });
+    layer.circle(c.x, c.y, 8 + phase * 10).stroke({ color: PATH_GLOW, width: 1.5, alpha: 0.32 * (1 - phase) });
+    layer.circle(c.x, c.y, 6).fill({ color: PATH_GLOW, alpha: 0.14 });
+    layer.circle(c.x, c.y, 2.6).fill({ color: PATH_CORE, alpha: 0.9 });
   }
 
   // Animated soul glow for forsaken shrines — a gently breathing blue halo with a
@@ -5703,7 +5703,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const event = getEventAt(target);
     const meta = escapeHtml(formatTravelMeta(target, getPathStepCount(path)));
     const header = `
-      <strong class="world-tooltip-title">Move to</strong>
+      <strong class="world-tooltip-title">Travel to</strong>
       <span class="world-tooltip-meta">${meta}</span>
     `;
 
@@ -5928,7 +5928,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function formatTravelMeta(position, stepCount) {
-    return `${formatCoords(position)} · ${formatStepCount(stepCount)}`;
+    return `Area ${formatCoords(position)} · ${formatStepCount(stepCount)}`;
   }
 
   function getPathStepCount(path) {

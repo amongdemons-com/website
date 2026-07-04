@@ -16753,6 +16753,10 @@ body.world-page > .game-shell-nav {
     padding-top: 0.64rem;
 }
 
+.world-side-content > section[aria-labelledby="worldTeamHeading"] {
+    margin-top: 1rem;
+}
+
 .world-block-heading {
     display: flex;
     align-items: center;
