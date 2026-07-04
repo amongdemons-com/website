@@ -16,6 +16,7 @@ const SOURCE = path.join(CSS_DIR, 'main.css');
 const BUCKET_MATCHERS = [
   ['world', /\.world-|#world[A-Z]/],
   ['camp', /\.camp-|#camp[A-Z]/],
+  ['battle', /\.collection-reinforcement-|is-collection-reinforcement|\.dungeon-hand-cards|\.dungeon-hand-empty/],
   ['collection', /\.collection-|#collection[A-Z]/],
   ['battle', /\.dungeon-|\.battle-|\.fight-|\.vs-divider|#dungeon[A-Z]|#battleLog|#combatPanel|#enemyGrid|#teamGrid|#run(Panel|Empty|Loading)|#fightLog|#cashout|#shortTeamModal|#teamChoiceModal|#teamSideTitle|#enemySideTitle/]
 ];

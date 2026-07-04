@@ -1309,6 +1309,64 @@ body.world-page > .game-shell-nav {
     white-space: nowrap;
 }
 
+.world-card-meta-inline {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.22rem;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+}
+
+.world-meta-item {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.world-meta-separator {
+    color: rgba(220,232,229,0.36);
+}
+
+.world-terror-meta-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.18rem;
+    max-width: none;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: rgba(255,180,150,0.86);
+    font: inherit;
+    line-height: inherit;
+    padding: 0;
+}
+
+.world-terror-meta-chip strong {
+    color: rgba(255,211,178,0.95);
+    font: inherit;
+    font-weight: 900;
+}
+
+.world-terror-meta-chip::after {
+    top: calc(100% + 0.38rem);
+    left: 0;
+    width: max-content;
+    max-width: min(17rem, calc(100vw - 2rem));
+    transform: translate(0, -0.16rem);
+}
+
+.world-terror-meta-chip:hover::after,
+.world-terror-meta-chip:focus::after,
+.world-terror-meta-chip:focus-visible::after {
+    transform: translate(0, 0);
+}
+
 .world-terror-line {
     display: flex;
     align-items: center;

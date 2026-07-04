@@ -3175,7 +3175,6 @@ import * as dungeonUtils from './dungeon/utils.js';
       className: 'world-enemy-demons',
       label: 'Enemy demons'
     });
-    const requirement = unlocked ? 'Hunting unlocked' : 'Win fight to unlock';
     const action = unlocked
       ? `<button class="btn btn-warning btn-sm world-card-action" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Hunt</button>`
       : `<button class="btn btn-outline-light btn-sm world-card-action" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Fight</button>`;
@@ -3184,8 +3183,10 @@ import * as dungeonUtils from './dungeon/utils.js';
       <article class="world-sidebar-card world-spot-card">
         <span class="world-card-copy">
           ${renderEncounterTitle(encounter)}
-          <small class="world-card-meta">Threat ${formatNumber(encounter.difficulty || 1)} \u00b7 ${escapeHtml(requirement)}</small>
-          ${renderWorldTerrorChip(terror)}
+          ${renderWorldCardMeta([
+            renderWorldTerrorChip(terror, { inline: true }),
+            `Threat ${formatNumber(encounter.difficulty || 1)}`
+          ])}
           ${enemyDemons}
         </span>
         ${action}
@@ -3208,8 +3209,10 @@ import * as dungeonUtils from './dungeon/utils.js';
       <article class="world-sidebar-card world-active-hunt-card">
         <span class="world-card-copy">
           ${renderEncounterTitleLink(encounter, 'world-card-title')}
-          <small class="world-card-meta">Threat ${formatNumber(rate.difficulty)}</small>
-          ${renderWorldTerrorChip(terror)}
+          ${renderWorldCardMeta([
+            renderWorldTerrorChip(terror, { inline: true }),
+            `Threat ${formatNumber(rate.difficulty)}`
+          ])}
         </span>
         ${huntingDemons || '<p class="world-empty-text">No hunted demons visible.</p>'}
         ${renderHuntProgress(progress, rate)}
@@ -5518,7 +5521,18 @@ import * as dungeonUtils from './dungeon/utils.js';
     };
   }
 
-  function renderWorldTerrorChip(terror = null) {
+  function renderWorldCardMeta(parts = []) {
+    const visibleParts = parts.filter(Boolean);
+    if (!visibleParts.length) return '';
+
+    return `
+      <small class="world-card-meta world-card-meta-inline">
+        ${visibleParts.map((part, index) => `${index > 0 ? '<span class="world-meta-separator" aria-hidden="true">·</span>' : ''}<span class="world-meta-item">${part}</span>`).join('')}
+      </small>
+    `;
+  }
+
+  function renderWorldTerrorChip(terror = null, options = {}) {
     if (!terror?.active) return '';
 
     const level = Math.max(0, Math.round(Number(terror.level) || 0));
@@ -5531,18 +5545,27 @@ import * as dungeonUtils from './dungeon/utils.js';
       `Enemy Attack +${formatNumber(terror.atkBonusPct || 0)}%`,
       `Enemy Speed +${formatNumber(terror.speedBonusPct || 0)}%`
     ].join('\n');
+    const className = [
+      'enemy-pressure-chip',
+      options.inline ? 'world-terror-meta-chip' : ''
+    ].filter(Boolean).join(' ');
+    const chip = `
+      <span
+        class="${className}"
+        tabindex="0"
+        data-tooltip="${escapeAttribute(tooltip)}"
+        aria-label="${escapeAttribute(tooltip)}"
+      >
+        <span>Terror</span>
+        <strong>${escapeHtml(String(level))}</strong>
+      </span>
+    `;
+
+    if (options.inline) return chip;
 
     return `
       <span class="world-terror-line">
-        <span
-          class="enemy-pressure-chip"
-          tabindex="0"
-          data-tooltip="${escapeAttribute(tooltip)}"
-          aria-label="${escapeAttribute(tooltip)}"
-        >
-          <span>Terror</span>
-          <strong>${escapeHtml(String(level))}</strong>
-        </span>
+        ${chip}
       </span>
     `;
   }
