@@ -63,7 +63,7 @@
     setMessage('', '');
     setRankBusy(true);
     if (!preserveRows) {
-      elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">Loading rankings...</td></tr>';
+      elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">Reading the hunter board...</td></tr>';
     }
 
     try {
@@ -72,11 +72,12 @@
       renderRows(payload.players || [], payload.stats || {});
     } catch (error) {
       if (loadId !== activeLoadId) return;
+      console.error(error);
       if (!preserveRows) {
-        elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">Could not load rankings.</td></tr>';
+        elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">The hunter board is veiled. Try again soon.</td></tr>';
         updateStats([], {});
       }
-      setMessage(error.message || 'Could not load rankings.', 'danger');
+      setMessage(error, 'danger');
     } finally {
       if (loadId === activeLoadId) {
         setRankBusy(false);
@@ -89,7 +90,7 @@
 
     elements.body.innerHTML = players.length
       ? players.map((player, index) => renderPlayerRow(player, index)).join('')
-      : '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">No hunters yet.</td></tr>';
+      : '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">No hunters have reached the board yet.</td></tr>';
   }
 
   function renderPlayerRow(player, index) {
@@ -166,8 +167,7 @@
   }
 
   function setMessage(text, type) {
-    elements.message.textContent = text;
-    elements.message.className = text ? `alert alert-${type}` : 'alert d-none';
+    window.AmongDemons.setGameAlert(elements.message, text, { type });
   }
 
   function hasRenderedRows() {

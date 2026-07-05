@@ -32,7 +32,8 @@
         return;
       }
 
-      showMessage(error.message || 'Unable to load settings.', 'danger');
+      console.error(error);
+      showMessage(error, 'danger');
     }
   }
 
@@ -86,6 +87,7 @@
     if (usernameError) {
       elements.username.setCustomValidity(usernameError);
       elements.username.reportValidity();
+      showMessage(usernameError, 'warning');
       return;
     }
 
@@ -112,7 +114,8 @@
         return;
       }
 
-      showMessage(error.message || 'Unable to update username.', 'danger');
+      console.error(error);
+      showMessage(error, 'danger');
     } finally {
       setBusy(false);
     }
@@ -142,14 +145,12 @@
   }
 
   function showMessage(message, type) {
-    const tone = type === 'success'
-      ? 'is-success'
-      : type === 'danger'
-        ? 'is-error'
-        : 'is-neutral';
-
-    elements.message.textContent = message;
-    elements.message.className = `settings-message ${tone}`;
+    window.AmongDemons.setGameAlert(elements.message, message, {
+      type,
+      inline: true,
+      className: 'settings-message'
+    });
+    elements.message.classList.toggle('d-none', !message);
   }
 
   function redirectToLogin() {

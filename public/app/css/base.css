@@ -7257,7 +7257,7 @@ body.settings-page .game-shell-nav .nav-settings-link {
     padding-left: 0.9rem;
 }
 
-.settings-message::before {
+.settings-message:not(.game-alert)::before {
     content: "";
     position: absolute;
     top: 0.42em;
@@ -8265,32 +8265,144 @@ body.skill-tree-page {
     }
 }
 
+/* Shared game alerts use one compact structure across toasts, inline forms, and logs. */
+.game-alert {
+    --game-alert-accent: rgba(141,231,255,0.82);
+    --game-alert-accent-soft: rgba(141,231,255,0.14);
+    --game-alert-border: rgba(141,231,255,0.32);
+    --game-alert-title: #f4fbff;
+    --game-alert-body: rgba(224,238,236,0.9);
+    --game-alert-action: #b7ecff;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.68rem;
+    border: 1px solid var(--game-alert-border);
+    border-radius: 6px;
+    background:
+        radial-gradient(circle at 8% 0%, var(--game-alert-accent-soft), transparent 8rem),
+        linear-gradient(145deg, rgba(8,20,23,0.96), rgba(3,8,11,0.98));
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.025),
+        0 16px 42px rgba(0,0,0,0.38);
+    color: var(--game-alert-body);
+    padding: 0.82rem 0.92rem;
+    font-size: 0.84rem;
+    line-height: 1.35;
+    text-align: left;
+}
+
+.game-alert-error {
+    --game-alert-accent: #f19187;
+    --game-alert-accent-soft: rgba(191,49,48,0.18);
+    --game-alert-border: rgba(241,113,103,0.46);
+    --game-alert-title: #fff2f0;
+    --game-alert-action: #ffb7ae;
+}
+
+.game-alert-warning {
+    --game-alert-accent: #e8c76a;
+    --game-alert-accent-soft: rgba(232,199,106,0.17);
+    --game-alert-border: rgba(232,199,106,0.5);
+    --game-alert-title: #fff5c7;
+    --game-alert-action: #ffe08a;
+}
+
+.game-alert-success {
+    --game-alert-accent: #80d697;
+    --game-alert-accent-soft: rgba(128,214,151,0.15);
+    --game-alert-border: rgba(128,214,151,0.42);
+    --game-alert-title: #efffed;
+    --game-alert-action: #b8ef9e;
+}
+
+.game-alert-info {
+    --game-alert-accent: #9c7ac8;
+    --game-alert-accent-soft: rgba(98,114,198,0.18);
+    --game-alert-border: rgba(141,166,255,0.36);
+    --game-alert-title: #f0edff;
+    --game-alert-action: #c7d4ff;
+}
+
+.game-alert-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid color-mix(in srgb, var(--game-alert-accent) 62%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--game-alert-accent) 16%, transparent);
+    color: var(--game-alert-accent);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--game-alert-accent) 18%, transparent);
+    flex: 0 0 auto;
+}
+
+.game-alert-icon .ad-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+}
+
+.game-alert-copy {
+    display: grid;
+    gap: 0.16rem;
+    min-width: 0;
+}
+
+.game-alert-title {
+    color: var(--game-alert-title);
+    font-size: 0.92rem;
+    font-weight: 900;
+    line-height: 1.18;
+}
+
+.game-alert-message {
+    color: var(--game-alert-body);
+    font-weight: 650;
+}
+
+.game-alert-action {
+    color: var(--game-alert-action);
+    font-size: 0.77rem;
+    font-weight: 850;
+}
+
+.game-alert-action::before {
+    content: "Next: ";
+    color: rgba(235,245,242,0.68);
+    font-weight: 750;
+}
+
+.game-alert-host {
+    position: relative;
+    z-index: 20000;
+}
+
 /* Shared notifications float above every game surface and dismiss on interaction. */
-.alert.game-toast-alert[role="alert"] {
+.alert.game-toast-alert {
     position: fixed !important;
     top: calc(var(--game-nav-height, 3.6rem) + max(0.35rem, env(safe-area-inset-top, 0px))) !important;
     right: auto !important;
     bottom: auto !important;
     left: 50% !important;
     z-index: 20000 !important;
-    width: min(38rem, calc(100vw - 2rem)) !important;
+    width: min(36rem, calc(100vw - 2rem)) !important;
     min-height: 3.4rem;
     margin: 0 !important;
-    border: 1px solid rgba(111,214,189,0.42) !important;
-    border-radius: 4px !important;
+    border: 1px solid var(--game-alert-border, rgba(111,214,189,0.42)) !important;
+    border-radius: 6px !important;
     background:
-        radial-gradient(circle at 8% 0%, rgba(111,214,189,0.14), transparent 9rem),
+        radial-gradient(circle at 8% 0%, var(--game-alert-accent-soft, rgba(111,214,189,0.14)), transparent 9rem),
         linear-gradient(145deg, rgba(8,20,23,0.98), rgba(3,8,11,0.98)) !important;
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.025),
-        0 0 24px rgba(50,151,155,0.18),
+        0 0 24px color-mix(in srgb, var(--game-alert-accent, #6fd6bd) 18%, transparent),
         0 16px 42px rgba(0,0,0,0.56) !important;
     color: rgba(236,246,243,0.94) !important;
-    padding: 0.85rem 1rem !important;
-    font-size: 0.8rem;
-    font-weight: 750;
-    line-height: 1.4;
-    text-align: center;
+    padding: 0.82rem 0.92rem !important;
+    text-align: left;
     cursor: pointer;
     transform: translateX(-50%) !important;
     animation: game-alert-enter 180ms ease-out both;
@@ -8298,19 +8410,19 @@ body.skill-tree-page {
 }
 
 .alert.game-toast-alert.alert-success {
-    border-color: rgba(111,214,189,0.5) !important;
+    border-color: var(--game-alert-border, rgba(111,214,189,0.5)) !important;
 }
 
 .alert.game-toast-alert.alert-danger {
-    border-color: rgba(241,113,103,0.44) !important;
+    border-color: var(--game-alert-border, rgba(241,113,103,0.44)) !important;
     background:
-        radial-gradient(circle at 8% 0%, rgba(191,49,48,0.17), transparent 9rem),
+        radial-gradient(circle at 8% 0%, var(--game-alert-accent-soft, rgba(191,49,48,0.17)), transparent 9rem),
         linear-gradient(145deg, rgba(25,11,13,0.98), rgba(7,7,10,0.98)) !important;
     box-shadow: 0 0 24px rgba(191,49,48,0.16), 0 16px 42px rgba(0,0,0,0.56) !important;
 }
 
 .alert.game-toast-alert.alert-warning {
-    border-color: rgba(232,199,106,0.46) !important;
+    border-color: var(--game-alert-border, rgba(232,199,106,0.46)) !important;
 }
 
 .alert.game-toast-alert:focus-visible {
@@ -8321,12 +8433,59 @@ body.skill-tree-page {
 @keyframes game-alert-enter {
     from {
         opacity: 0;
-        transform: translateY(-0.6rem) scale(0.98);
+        transform: translateX(-50%) translateY(-0.6rem) scale(0.98);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateX(-50%) translateY(0) scale(1);
     }
+}
+
+.fight-log-notice.game-alert {
+    margin-bottom: 0.48rem;
+    padding: 0.6rem 0.64rem;
+    border: 1px solid var(--game-alert-border);
+    border-bottom: 1px solid var(--game-alert-border);
+    background:
+        radial-gradient(circle at 4% 0%, var(--game-alert-accent-soft), transparent 6.5rem),
+        rgba(3,9,11,0.48);
+    box-shadow: none;
+    font-size: 0.78rem;
+}
+
+.fight-log-notice.game-alert .game-alert-icon {
+    width: 1.55rem;
+    height: 1.55rem;
+}
+
+.fight-log-notice.game-alert .game-alert-title {
+    font-size: 0.82rem;
+}
+
+.fight-log-notice.game-alert .game-alert-action {
+    font-size: 0.72rem;
+}
+
+.settings-message.game-alert,
+.world-team-editor-status.game-alert {
+    box-shadow: none;
+    font-size: 0.76rem;
+}
+
+.settings-message.game-alert .game-alert-icon,
+.world-team-editor-status.game-alert .game-alert-icon {
+    width: 1.55rem;
+    height: 1.55rem;
+}
+
+.settings-message.game-alert .game-alert-title,
+.world-team-editor-status.game-alert .game-alert-title {
+    font-size: 0.78rem;
+}
+
+.settings-message.game-alert .game-alert-action,
+.world-team-editor-status.game-alert .game-alert-action {
+    font-size: 0.7rem;
 }
 
 .settings-submit {
@@ -8334,7 +8493,7 @@ body.skill-tree-page {
 }
 
 @media (prefers-reduced-motion: reduce) {
-.alert.game-toast-alert[role="alert"] {
+.alert.game-toast-alert {
         animation: none;
     }
 }

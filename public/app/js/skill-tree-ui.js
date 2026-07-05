@@ -389,13 +389,13 @@
       window.location.href = window.AmongDemons.appUrl('/login');
       return;
     }
-    setMessage(error.message || 'Something went wrong.', 'danger');
+    console.error(error);
+    setMessage(error, 'danger');
   }
 
   function setMessage(text, type) {
     if (!elements.appMessage) return;
-    elements.appMessage.textContent = text;
-    elements.appMessage.className = text ? `alert alert-${type}` : 'alert d-none';
+    window.AmongDemons.setGameAlert(elements.appMessage, text, { type });
   }
 
   function setText(element, value) {

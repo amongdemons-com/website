@@ -33,6 +33,7 @@
     stars: 'Sparkles',
     trash: 'Trash2'
   };
+  const GAME_ALERT_SELECTOR = '.alert.game-alert, .alert[role="alert"], .alert[role="status"]';
   const SOUL_ICON_PATH = '/app/images/assets/soul.svg';
   const ACCOUNT_LEVEL_BASE_XP = 250;
   const ACCOUNT_LEVEL_EXPONENT = 1.65;
@@ -613,7 +614,7 @@
   }
 
   function initializeGameAlerts() {
-    document.querySelectorAll('.alert[role="alert"]').forEach(bindGameAlert);
+    document.querySelectorAll(GAME_ALERT_SELECTOR).forEach(bindGameAlert);
 
     if (!document.body || typeof MutationObserver !== 'function') return;
     const observer = new MutationObserver((mutations) => {
@@ -621,16 +622,16 @@
 
       mutations.forEach((mutation) => {
         if (mutation.target instanceof Element) {
-          const alert = mutation.target.matches?.('.alert[role="alert"]')
+          const alert = mutation.target.matches?.(GAME_ALERT_SELECTOR)
             ? mutation.target
-            : mutation.target.closest?.('.alert[role="alert"]');
+            : mutation.target.closest?.(GAME_ALERT_SELECTOR);
           if (alert) alerts.add(alert);
         }
 
         mutation.addedNodes.forEach((node) => {
           if (!(node instanceof Element)) return;
-          if (node.matches('.alert[role="alert"]')) alerts.add(node);
-          node.querySelectorAll?.('.alert[role="alert"]').forEach((alert) => alerts.add(alert));
+          if (node.matches(GAME_ALERT_SELECTOR)) alerts.add(node);
+          node.querySelectorAll?.(GAME_ALERT_SELECTOR).forEach((alert) => alerts.add(alert));
         });
       });
 

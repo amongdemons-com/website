@@ -54,20 +54,20 @@ function renderCashoutModal() {
       <div class="cashout-selected-reward">
         ${demon ? renderCashoutDemonPreview(demon, candidate) : `
           <div class="dungeon-reward-empty">
-            <span>No demon selected</span>
+            <span>No demon chosen</span>
           </div>
         `}
       </div>
       <div class="cashout-extract-copy">
         <div class="cashout-demon-summary">
-          <span class="cashout-demon-eyebrow">${demon ? 'Selected demon' : 'No demon selected'}</span>
+          <span class="cashout-demon-eyebrow">${demon ? 'Chosen demon' : 'No demon chosen'}</span>
           <h3 class="cashout-demon-name-line">${demon ? `
             <span class="cashout-rarity-label" style="--rarity-color: ${demonRarityColor}">${demonRarityLabel}</span>
             <span>${demonName}</span>
           ` : 'Run rewards only'}</h3>
           <p>${demon
             ? 'Added to your collection after extraction.'
-            : 'No demon will be extracted.'}</p>
+            : 'You will leave with run rewards only.'}</p>
         </div>
         <div class="cashout-section-title">
           <span>Run Rewards</span>
@@ -625,9 +625,9 @@ async function finishCashout(result, options = {}) {
   clearRecruitDrafts();
   resetCombatState();
   state.endSummary = {
-    title: 'Dungeon ended',
+    title: 'Extraction complete',
     outcome: 'extraction',
-    message: skippedDemon ? 'No demon was extracted.' : demonMessage,
+    message: skippedDemon ? 'You left with run rewards only.' : demonMessage,
     demon: skippedDemon ? null : result.demon || null,
     xp: result.xp,
     souls: result.souls
@@ -635,8 +635,8 @@ async function finishCashout(result, options = {}) {
   state.endedReplayRun = null;
   state.endNotice = {
     html: skippedDemon
-      ? renderEarnedNoticeHtml('Dungeon ended.', result)
-      : renderEarnedNoticeHtml(`Dungeon ended. ${demonMessage}`, result),
+      ? renderEarnedNoticeHtml('Extraction complete.', result)
+      : renderEarnedNoticeHtml(`Extraction complete. ${demonMessage}`, result),
     type: 'success'
   };
   getModal(elements.cashoutModal).hide();

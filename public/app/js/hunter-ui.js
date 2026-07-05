@@ -37,7 +37,8 @@
       const payload = await window.AmongDemons.api(`/api/hunters/${encodeURIComponent(username)}`);
       renderHunter(payload);
     } catch (error) {
-      showMessage(error.status === 404 ? 'Hunter not found.' : (error.message || 'Unable to load hunter.'), 'danger');
+      console.error(error);
+      showMessage(error.status === 404 ? 'Hunter not found.' : error, error.status === 404 ? 'warning' : 'danger');
       showNotFound(username);
     }
   }
@@ -90,7 +91,7 @@
     ));
     setText(elements.teamSummary, sortedTeam.length
       ? `${formatNumber(sortedTeam.length)} assigned demon${sortedTeam.length === 1 ? '' : 's'}`
-      : 'No assigned world team.');
+      : 'No active team assigned.');
 
     if (!elements.team) return;
 
@@ -196,7 +197,7 @@
 
     elements.buffs.innerHTML = buffs.length
       ? buffs.map(renderBuff).join('')
-      : renderEmpty('No active level buffs.');
+      : renderEmpty('No active level buffs yet.');
   }
 
   function renderBuff(buff = {}) {
@@ -250,13 +251,12 @@
     Object.values(elements.stats).forEach((element) => setText(element, '-'));
     if (elements.avatar) elements.avatar.src = FALLBACK_AVATAR;
     if (elements.team) elements.team.innerHTML = renderFormationGrid([]);
-    if (elements.buffs) elements.buffs.innerHTML = renderEmpty('No buffs found.');
+    if (elements.buffs) elements.buffs.innerHTML = renderEmpty('No active level buffs yet.');
   }
 
   function showMessage(text, type) {
     if (!elements.message) return;
-    elements.message.textContent = text;
-    elements.message.className = text ? `alert alert-${type}` : 'alert d-none';
+    window.AmongDemons.setGameAlert(elements.message, text, { type });
   }
 
   function updateCanonical(username) {

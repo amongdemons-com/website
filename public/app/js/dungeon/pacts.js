@@ -245,7 +245,8 @@ async function chooseDemonicPact(buffId, button = null) {
       renderRun();
       setMessage(`${chosen?.name || 'Demonic Pact'} sealed.`, 'success');
     } catch (error) {
-      setMessage(error.message || 'Unable to choose Demonic Pact.', 'danger');
+      console.error(error);
+      setMessage(error, 'danger');
     }
   });
 }
@@ -271,7 +272,8 @@ async function rerollDemonicPacts(button = null) {
       setMessage(`Demonic Pacts recast for ${cost} Souls.`, 'success');
     } catch (error) {
       clearDemonicPactRecastAnimation();
-      setMessage(error.message || 'Unable to recast Demonic Pacts.', 'danger');
+      console.error(error);
+      setMessage(error, 'danger');
     }
   });
 }

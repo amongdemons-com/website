@@ -232,28 +232,28 @@
     if (!elements.profileDemonGrid) return;
 
     if (!state.collectionLoaded) {
-      setText(elements.profileDemonPickerStatus, 'Loading collection demons...');
+      setText(elements.profileDemonPickerStatus, 'Gathering bound demons...');
       setHtml(elements.profileDemonGrid, `
         <div class="profile-demon-empty">
           <img src="/app/images/amongdemons_logo_250x250.png" alt="" width="88" height="88" loading="lazy">
-          <span>Loading collection</span>
+          <span>Gathering demons</span>
         </div>
       `);
       return;
     }
 
     if (!demons.length) {
-      setText(elements.profileDemonPickerStatus, 'Collect a demon in the dungeon before choosing a camp portrait.');
+      setText(elements.profileDemonPickerStatus, 'Extract a demon from the dungeon before choosing a camp portrait.');
       setHtml(elements.profileDemonGrid, `
         <div class="profile-demon-empty">
           <img src="/app/images/amongdemons_logo_250x250.png" alt="" width="88" height="88" loading="lazy">
-          <span>No collection demons yet</span>
+          <span>No demons bound yet</span>
         </div>
       `);
       return;
     }
 
-    setText(elements.profileDemonPickerStatus, 'Pick one collected demon for your camp portrait.');
+    setText(elements.profileDemonPickerStatus, 'Choose one bound demon for your camp portrait.');
     setHtml(elements.profileDemonGrid, demons.map((demon) => renderProfileDemonOption(demon, selectedId)).join(''));
     replaceStaticIcons();
   }
@@ -673,13 +673,13 @@
   }
 
   function showError(error) {
-    setMessage(error.message || 'Something went wrong.', 'danger');
+    console.error(error);
+    setMessage(error, 'danger');
   }
 
   function setMessage(text, type) {
     if (!elements.appMessage) return;
-    elements.appMessage.textContent = text;
-    elements.appMessage.className = text ? `alert alert-${type}` : 'alert d-none';
+    window.AmongDemons.setGameAlert(elements.appMessage, text, { type });
   }
 
   function renderIcon(name) {

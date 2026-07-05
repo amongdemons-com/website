@@ -2466,7 +2466,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     if (!members.length) {
       elements.worldTeamSummary.innerHTML = `
-        <p class="world-empty-text">No active team.</p>
+        <p class="world-empty-text">No active team assigned.</p>
       `;
       return;
     }
@@ -2503,7 +2503,8 @@ import * as dungeonUtils from './dungeon/utils.js';
         handleAuthError(error);
         return;
       }
-      setWorldTeamEditorStatus(error.message || 'Could not load hunting team.', 'danger');
+      console.error(error);
+      setWorldTeamEditorStatus(error, 'danger');
     } finally {
       state.worldTeamEditor.loading = false;
       renderWorldTeamEditor();
@@ -2517,7 +2518,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const team = getSortedWorldTeamEditorTeam();
 
     editor.saving = true;
-    setWorldTeamEditorStatus('Saving team...', 'info');
+    setWorldTeamEditorStatus('');
     renderWorldTeamEditor();
 
     try {
@@ -2549,7 +2550,8 @@ import * as dungeonUtils from './dungeon/utils.js';
         handleAuthError(error);
         return;
       }
-      setWorldTeamEditorStatus(error.message || 'Could not save hunting team.', 'danger');
+      console.error(error);
+      setWorldTeamEditorStatus(error, 'danger');
     } finally {
       editor.saving = false;
       renderWorldTeamEditor();
@@ -2578,6 +2580,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (elements.worldTeamSaveButton) {
       elements.worldTeamSaveButton.disabled = editor.loading || editor.saving || !editor.loaded;
       elements.worldTeamSaveButton.classList.toggle('is-busy', editor.saving);
+      elements.worldTeamSaveButton.setAttribute('aria-busy', editor.saving ? 'true' : 'false');
+      elements.worldTeamSaveButton.setAttribute('aria-label', editor.saving ? 'Saving team' : 'Save team');
       elements.worldTeamSaveButton.innerHTML = editor.saving
         ? '<span class="dungeon-action-spinner" aria-hidden="true"></span><span>Saving</span>'
         : `${renderIcon('save')}<span>Save</span>`;
@@ -2601,12 +2605,17 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!status) return;
 
     const text = state.worldTeamEditor.status || '';
-    status.textContent = text;
-    status.className = [
-      'world-team-editor-status',
-      text ? '' : 'd-none',
-      `is-${state.worldTeamEditor.statusType || 'info'}`
-    ].filter(Boolean).join(' ');
+    if (!text) {
+      status.innerHTML = '';
+      status.className = 'world-team-editor-status d-none';
+      return;
+    }
+
+    window.AmongDemons.setGameAlert(status, text, {
+      type: state.worldTeamEditor.statusType || 'info',
+      inline: true,
+      className: 'world-team-editor-status'
+    });
   }
 
   function setWorldTeamEditorStatus(text, type = 'info') {
@@ -2652,8 +2661,8 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function renderWorldTeamEditorCollection() {
     const editor = state.worldTeamEditor;
-    if (editor.loading) return '<p class="world-empty-text">Loading...</p>';
-    if (!editor.collection.length) return '<p class="world-empty-text">No collection demons.</p>';
+    if (editor.loading) return '<p class="world-empty-text">Gathering bound demons...</p>';
+    if (!editor.collection.length) return '<p class="world-empty-text">No bound demons available. Extract one from the dungeon first.</p>';
 
     return editor.collection.map((demon) => renderWorldTeamEditorDemonCard(demon, 'collection')).join('');
   }
@@ -3484,7 +3493,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const logs = state.travelLog || [];
     if (!logs.length) {
-      elements.worldTravelPanel.innerHTML = '<p class="world-empty-text">No travel yet.</p>';
+      elements.worldTravelPanel.innerHTML = '<p class="world-empty-text">No path taken yet.</p>';
       return;
     }
 
@@ -3868,7 +3877,7 @@ import * as dungeonUtils from './dungeon/utils.js';
               ${buff.description ? `<small>${escapeHtml(buff.description)}</small>` : ''}
             </span>
           </article>
-        `).join('') : '<p class="world-empty-text">No active buffs.</p>'}
+        `).join('') : '<p class="world-empty-text">No active buffs yet.</p>'}
       </section>
     `;
   }
@@ -5936,8 +5945,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function setMessage(text, type) {
     if (!elements.appMessage) return;
-    elements.appMessage.textContent = text;
-    elements.appMessage.className = text ? `alert alert-${type}` : 'alert d-none';
+    window.AmongDemons.setGameAlert(elements.appMessage, text, { type });
   }
 
   function handleAuthError(error) {
@@ -5947,7 +5955,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       return;
     }
 
-    setMessage(error.message || 'Something went wrong.', 'danger');
+    console.error(error);
+    setMessage(error, 'danger');
   }
 
   function destroyWorld() {

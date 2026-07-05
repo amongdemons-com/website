@@ -40,18 +40,26 @@ function handleAuthError(error) {
 }
 
 function showError(error) {
-  setMessage(error.message || 'Something went wrong.', 'danger');
+  console.error(error);
+  setMessage(error, 'danger');
 }
 
 function setMessage(text, type) {
   if (!text) return;
 
-  const className = type === 'danger'
-    ? 'fight-log-notice text-danger'
-    : type === 'warning'
-      ? 'fight-log-notice text-warning'
-      : 'fight-log-notice text-success';
-  const notice = `<div class="${className}">${escapeHtml(text)}</div>`;
+  const alert = window.AmongDemons.normalizeGameAlert(text, { type });
+  const textClass = alert.type === 'error'
+    ? 'text-danger'
+    : alert.type === 'warning'
+      ? 'text-warning'
+      : alert.type === 'success'
+        ? 'text-success'
+        : 'text-info';
+  const notice = `
+    <div class="fight-log-notice game-alert game-alert-${escapeHtml(alert.type)} ${textClass}" role="${alert.type === 'error' || alert.type === 'warning' ? 'alert' : 'status'}">
+      ${window.AmongDemons.ui.renderGameAlertHtml(alert)}
+    </div>
+  `;
 
   elements.fightLog.classList.remove('text-muted');
   if (!state.combatLog.length && !state.endNotice) {

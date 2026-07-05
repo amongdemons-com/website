@@ -378,16 +378,16 @@ async function finishRun(message, summary = {}) {
     clearDragState();
     clearRecruitDrafts();
     state.endSummary = {
-      title: 'Dungeon ended',
+      title: summary.defeated ? 'Run ended in defeat' : 'Extraction complete',
       outcome: summary.defeated ? 'defeat' : 'extraction',
-      message: message || 'Dungeon ended.',
+      message: message || (summary.defeated ? 'Your team was defeated.' : 'You left the dungeon with your rewards.'),
       demon: summary.demon || null,
       xp: result.xp,
       souls: result.souls
     };
     state.endedReplayRun = replayRun;
     state.endNotice = {
-      html: renderEarnedNoticeHtml(message || 'Dungeon ended.', result),
+      html: renderEarnedNoticeHtml(message || (summary.defeated ? 'Run ended in defeat.' : 'Extraction complete.'), result),
       type: summary.defeated ? 'warning' : 'success'
     };
     getModal(elements.teamChoiceModal).hide();

@@ -38,7 +38,7 @@
         if (usernameError) {
           usernameInput?.setCustomValidity(usernameError);
           usernameInput?.reportValidity();
-          setMessage(usernameError, 'danger');
+          setMessage(usernameError, 'warning');
           return;
         }
       }
@@ -61,7 +61,8 @@
       }));
       window.location.href = window.AmongDemons.appUrl('/camp');
     } catch (error) {
-      setMessage(error.message, 'danger');
+      console.error(error);
+      setMessage(error, 'danger');
     } finally {
       submitButton.disabled = false;
     }
@@ -146,7 +147,6 @@
   }
 
   function setMessage(text, type) {
-    message.textContent = text;
-    message.className = text ? `alert alert-${type}` : 'alert d-none';
+    window.AmongDemons.setGameAlert(message, text, { type });
   }
 })();

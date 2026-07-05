@@ -438,7 +438,7 @@
     return `
       <div class="collection-training-action-cost" aria-label="Training costs ${escapeHtml(formatNumber(cost))} Souls per attempt${chanceLabel ? ` with a ${escapeHtml(chanceLabel)} success chance` : ''}. ${canAfford ? 'You have enough souls.' : `You need ${escapeHtml(formatNumber(deficit))} more souls.`}">
         <div class="collection-training-action-head">
-          ${canAfford ? '' : `<span class="collection-training-disabled-reason">Not enough souls</span>`}
+          ${canAfford ? '' : `<span class="collection-training-disabled-reason">Not enough Souls</span>`}
         </div>
         <div class="collection-training-action-row">
           <span class="collection-training-cost-label">Cost</span>
@@ -490,6 +490,9 @@
     } catch (error) {
       if (error.status === 401) {
         await handleCollectionError(error);
+      } else {
+        console.error(error);
+        window.AmongDemons.showGameAlert(error, { type: 'danger', context: 'training' });
       }
     } finally {
       if (!revealPending) {
@@ -756,7 +759,7 @@
     const spent = Math.max(0, Number(training.spent) || 0);
     if (training.succeeded === false) {
       return [
-        '<span class="is-failure">Training failed</span>',
+        '<span class="is-failure">Ritual failed</span>',
         renderTrainingSpentChip(spent)
       ].filter(Boolean).join('');
     }
@@ -772,7 +775,7 @@
     const spentChip = renderTrainingSpentChip(spent);
     if (spentChip) chips.push(spentChip);
 
-    return chips.length ? chips.join('') : '<span>Trained</span>';
+    return chips.length ? chips.join('') : '<span>Ritual complete</span>';
   }
 
   function renderTrainingSpentChip(spent) {
@@ -801,8 +804,8 @@
         <div class="empty-state collection-empty-state">
           <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" width="250" height="250" loading="lazy" decoding="async">
           <div>
-            <h2 class="h5 mb-2">No demons collected yet</h2>
-            <p class="text-muted mb-0">Earn and choose demons to bring them here.</p>
+            <h2 class="h5 mb-2">No demons bound yet</h2>
+            <p class="text-muted mb-0">Extract from the dungeon with a demon to add it here.</p>
           </div>
           <a class="btn btn-primary" href="/dungeon">
             ${renderIcon('play')}
@@ -819,8 +822,8 @@
         <div class="empty-state collection-empty-state">
           <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" width="250" height="250" loading="lazy" decoding="async">
           <div>
-            <h2 class="h5 mb-2">No demons match these filters</h2>
-            <p class="text-muted mb-0">Try another type or rarity.</p>
+            <h2 class="h5 mb-2">No demons answer these filters</h2>
+            <p class="text-muted mb-0">Choose another type or rarity to reveal more slots.</p>
           </div>
         </div>
       </div>
@@ -925,6 +928,7 @@
     }
 
     console.error(error);
+    window.AmongDemons.showGameAlert(error, { type: 'danger', context: 'collection' });
   }
 
   function escapeHtml(value) {

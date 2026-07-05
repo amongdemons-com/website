@@ -69,7 +69,7 @@ function renderRun() {
     if (laneResizeObserver) laneResizeObserver.disconnect();
     state.isMobileRewardBoxOpen = false;
     elements.dungeonBottomPanel?.classList.remove('is-battle-active', 'is-mobile-reward-open');
-    elements.fightLog.innerHTML = 'Loading latest dungeon state...';
+    elements.fightLog.innerHTML = 'Opening the latest dungeon state...';
     elements.fightLog.classList.add('text-muted');
     renderDemonicPacts(false);
     renderFightLogActions();
@@ -167,7 +167,7 @@ function renderDungeonEndScreen() {
     <div class="dungeon-end-screen ${isDefeat ? 'is-defeat' : 'is-extraction'}">
       <div class="dungeon-end-copy">
         <span class="dungeon-phase-eyebrow">${eyebrow}</span>
-        <h2>${escapeHtml(summary.title || 'Dungeon ended')}</h2>
+        <h2>${escapeHtml(summary.title || 'Run complete')}</h2>
         <p>${escapeHtml(summary.message || 'Run extracted.')}</p>
       </div>
       ${demon ? `

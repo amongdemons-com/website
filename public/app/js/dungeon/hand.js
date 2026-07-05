@@ -243,7 +243,7 @@ function formatLevelPowerBonus(value) {
 
 function renderHandPactTags(activeBuffs) {
   if (!activeBuffs.length) {
-    return '<div class="dungeon-hand-pacts-empty">No active buffs.</div>';
+    return '<div class="dungeon-hand-pacts-empty">No active buffs yet.</div>';
   }
 
   return `

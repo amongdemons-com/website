@@ -59,7 +59,7 @@ function renderCollectionReinforcementModal(query = '') {
       <input class="form-control form-control-sm" id="collectionReinforcementSearch" type="search" value="${escapeHtml(query)}" placeholder="Search collection">
     </div>
     <div class="choice-card-grid collection-reinforcement-grid">
-      ${candidates.length ? candidates.map(renderCollectionReinforcementChoice).join('') : renderEmptyText('No available collection demons.')}
+      ${candidates.length ? candidates.map(renderCollectionReinforcementChoice).join('') : renderEmptyText('No bound demons can answer this call. Extract more demons, then return.')}
     </div>
   `;
   elements.teamChoiceModalFooter.innerHTML = `
