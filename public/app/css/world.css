@@ -1439,6 +1439,23 @@ body.world-page > .game-shell-nav {
     color: rgba(220,232,229,0.72);
 }
 
+.world-hunt-vessel-row .world-hunt-reward-value {
+    color: rgba(143,167,255,0.88);
+}
+
+.world-hunt-vessel-row.is-vessel-full .world-hunt-reward-value {
+    color: rgba(223,119,121,0.92);
+}
+
+.world-hunt-vessel-full-note {
+    color: rgba(223,119,121,0.78);
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
 .world-hunt-progress {
     display: block;
     height: 0.42rem;

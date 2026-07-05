@@ -37,7 +37,6 @@ import * as dungeonUtils from './dungeon/utils.js';
   const TRAVEL_ZOOM = 1;
   // Kept in sync with world-combat.js so the live hunt readout matches the server payout.
   const HUNT_DEFAULT_KILL_SECONDS = 300;
-  const HUNT_REWARD_CYCLE_CAP = 288;
   const HUNT_STATUS_REFRESH_MS = 15000;
   // Keep this in sync with WORLD_BATTLE_REPLAY_STEP_MS in public/api/lib/world-combat.js.
   const WORLD_BATTLE_REPLAY_STEP_MS = 520;
@@ -945,9 +944,17 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!isHuntActive()) return true;
     return finishActiveHunt({
       alreadyStoppedMessage: 'Hunting already stopped. Traveling now.',
-      stoppedMessage: (rewards) => `Hunting ended. Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.`,
+      stoppedMessage: (rewards) => `Hunting ended. ${formatHuntRewardSummary(rewards)}`,
       render: false
     });
+  }
+
+  function formatHuntRewardSummary(rewards = {}) {
+    const soulsLost = Math.max(0, Number(rewards.soulsLost) || 0);
+    const overflowNote = soulsLost > 0
+      ? ` Your Soul Vessel overflowed — ${formatSoulCount(soulsLost)} slipped into the dark.`
+      : '';
+    return `Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.${overflowNote}`;
   }
 
   async function finishActiveHunt(options = {}) {
@@ -967,7 +974,7 @@ import * as dungeonUtils from './dungeon/utils.js';
           ? (options.alreadyStoppedMessage || 'Hunting already stopped.')
           : (typeof options.stoppedMessage === 'function'
             ? options.stoppedMessage(rewards)
-            : `Hunting stopped. Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.`),
+            : `Hunting stopped. ${formatHuntRewardSummary(rewards)}`),
         'success'
       );
       return true;
@@ -2564,7 +2571,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     if (reset.stoppedHunt) {
       const rewards = payload.rewards || {};
-      return `Hunting team updated. Active hunt ended; earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls. Hunting spots reset.`;
+      return `Hunting team updated. Active hunt ended. ${formatHuntRewardSummary(rewards)} Hunting spots reset.`;
     }
 
     return 'Hunting team updated. Hunting spots reset.';
@@ -3337,6 +3344,30 @@ import * as dungeonUtils from './dungeon/utils.js';
           <span class="world-hunt-reward-value">${formatNumber(accruedXp)} XP</span>
           <span class="world-hunt-reward-value">${formatSoulCount(accruedSouls)}</span>
         </span>
+        ${renderHuntVesselRow(progress)}
+      </span>
+    `;
+  }
+
+  function renderHuntVesselRow(progress) {
+    const capacity = Number(progress?.soulCapacity);
+    if (!Number.isFinite(capacity) || capacity <= 0) return '';
+
+    const full = Boolean(progress?.vesselFull);
+    const tooltip = full
+      ? 'Your Soul Vessel is full. New kills grant XP, but their souls slip into the dark. End the hunt to bank them, or expand the vessel in the skill tree.'
+      : 'Souls banked while hunting are held in your Soul Vessel. When it fills, souls stop accruing until the hunt ends.';
+
+    return `
+      <span class="world-hunt-reward-row world-hunt-vessel-row ${full ? 'is-vessel-full' : ''}" data-tooltip="${escapeAttribute(tooltip)}" tabindex="0" aria-label="${escapeAttribute(tooltip)}">
+        <span class="world-hunt-reward-label">Vessel:</span>
+        <span class="world-hunt-reward-value">${formatNumber(progress.accruedSouls)} / ${formatNumber(capacity)}</span>
+        ${full ? `
+          <span class="world-hunt-vessel-status">
+            <span class="world-hunt-vessel-full-note">Full</span>
+            <a class="world-hunt-vessel-upgrade-btn" href="${escapeAttribute(appUrl('/skill-tree'))}" aria-label="Expand your Soul Vessel in the skill tree">Upgrade</a>
+          </span>
+        ` : ''}
       </span>
     `;
   }
@@ -3344,10 +3375,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   function renderHuntProgress(progress, rate) {
     const totalSeconds = Math.max(1, Number(progress?.killSeconds || rate.killSeconds) || HUNT_DEFAULT_KILL_SECONDS);
     const remainingSeconds = progress ? progress.secondsToNext : totalSeconds;
-    const capped = Boolean(progress?.capped);
-    const progressPercent = capped
-      ? 100
-      : clamp(((totalSeconds - remainingSeconds) / totalSeconds) * 100, 0, 100);
+    const progressPercent = clamp(((totalSeconds - remainingSeconds) / totalSeconds) * 100, 0, 100);
     const roundedProgress = Math.round(progressPercent);
 
     return `
@@ -5496,7 +5524,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   // Mirrors calculateHuntRewards() on the server: each kill interval yields one
-  // win against the snapshotted demon spot, capped at HUNT_REWARD_CYCLE_CAP cycles.
+  // win against the snapshotted demon spot. XP is uncapped; souls stop at the
+  // Soul Vessel capacity.
   function computeHuntProgress(active = state.hunt?.active, now = Date.now()) {
     if (!active) return null;
 
@@ -5508,12 +5537,16 @@ import * as dungeonUtils from './dungeon/utils.js';
     const elapsedSeconds = Number.isFinite(startedAt)
       ? Math.max(0, Math.floor((now - startedAt) / 1000))
       : 0;
-    const cyclesRaw = Math.floor(elapsedSeconds / killSeconds);
-    const cycles = Math.min(HUNT_REWARD_CYCLE_CAP, cyclesRaw);
-    const capped = cyclesRaw >= HUNT_REWARD_CYCLE_CAP;
+    const cycles = Math.floor(elapsedSeconds / killSeconds);
 
     const secondsIntoCycle = elapsedSeconds % killSeconds;
-    const secondsToNext = capped ? 0 : killSeconds - secondsIntoCycle;
+    const secondsToNext = killSeconds - secondsIntoCycle;
+
+    // Souls stop accruing once the Soul Vessel fills; XP keeps flowing.
+    const capacityRaw = Number(active.soulCapacity);
+    const soulCapacity = Number.isFinite(capacityRaw) && capacityRaw > 0 ? Math.floor(capacityRaw) : Infinity;
+    const uncappedSouls = cycles * rate.soulsPerCycle;
+    const accruedSouls = Math.min(uncappedSouls, soulCapacity);
 
     return {
       elapsedSeconds,
@@ -5521,11 +5554,13 @@ import * as dungeonUtils from './dungeon/utils.js';
       respawnSeconds: killSeconds,
       difficulty: rate.difficulty,
       cycles,
-      capped,
       xpPerCycle: rate.xpPerCycle,
       soulsPerCycle: rate.soulsPerCycle,
       accruedXp: cycles * rate.xpPerCycle,
-      accruedSouls: cycles * rate.soulsPerCycle,
+      accruedSouls,
+      soulCapacity: Number.isFinite(soulCapacity) ? soulCapacity : null,
+      vesselFull: Number.isFinite(soulCapacity) && uncappedSouls >= soulCapacity,
+      soulsLost: Math.max(0, uncappedSouls - accruedSouls),
       secondsToNext
     };
   }
@@ -5895,8 +5930,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function renderHuntTooltipContent(progress) {
-    const next = progress.capped
-      ? 'Reward cap reached'
+    const next = progress.vesselFull
+      ? `Vessel full — XP only. Next kill in ${formatDuration(progress.secondsToNext)}`
       : `Next kill in ${formatDuration(progress.secondsToNext)}`;
 
     return `

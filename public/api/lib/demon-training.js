@@ -4,8 +4,10 @@ const { enrichDemonPreferredPositions } = require('./run-demons');
 
 const STAT_KEYS = ['hp', 'atk', 'speed'];
 const TRAINING_BASE_COST = 2;
-const TRAINING_MAX_PROGRESS_BONUS = 12;
-const TRAINING_PROGRESS_EXPONENT = 2.2;
+// Steep late-game tail: early training stays cheap, but pushing a demon toward
+// its stat caps is the economy's main long-term soul sink.
+const TRAINING_MAX_PROGRESS_BONUS = 30;
+const TRAINING_PROGRESS_EXPONENT = 2.6;
 const TRAINING_SUCCESS_CHANCE = 0.8;
 const RARITY_COST_MULTIPLIER = {
   common: 1,

@@ -20,7 +20,10 @@
     aoe_mastery: { label: 'Endless Ruin', cap: Infinity, requires: [['aoe_percent', 5]] },
     poison_flat: { label: 'Poison Damage', cap: 5, requires: [] },
     poison_percent: { label: 'Virulent Poison', cap: 5, requires: [['poison_flat', 5]] },
-    poison_mastery: { label: 'Endless Poison', cap: Infinity, requires: [['poison_percent', 5]] }
+    poison_mastery: { label: 'Endless Poison', cap: Infinity, requires: [['poison_percent', 5]] },
+    soul_capacity: { label: 'Soul Vessel', cap: 5, requires: [] },
+    soul_capacity_percent: { label: 'Greater Vessel', cap: 5, requires: [['soul_capacity', 5]] },
+    soul_capacity_mastery: { label: 'Endless Vessel', cap: Infinity, requires: [['soul_capacity_percent', 5]] }
   };
   const STAT_KEYS = Object.keys(NODE_DEFINITIONS);
   const PAN_CLICK_THRESHOLD = 5;

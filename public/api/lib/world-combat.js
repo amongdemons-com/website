@@ -12,9 +12,9 @@ const {
   serializeCombatBuffState
 } = require('./combat-buffs');
 const { getEnemyPressureMultipliers } = require('./dungeon-enemies');
-const { resolvePlayerCombatBuffState } = require('./player-combat-buffs');
+const { createPlayerCombatBuffState, resolvePlayerCombatBuffState } = require('./player-combat-buffs');
+const { getHuntSoulCapacity, getPlayerStatPointSummary } = require('./account-stat-points');
 
-const HUNT_REWARD_CYCLE_CAP = 288;
 const DEFAULT_ENEMY_RESPAWN_SECONDS = 300;
 // Keep this in sync with WORLD_BATTLE_REPLAY_STEP_MS in public/app/js/world-ui.js.
 const WORLD_BATTLE_REPLAY_STEP_MS = 520;
@@ -311,11 +311,13 @@ async function simulateWorldPvpChallenge(player, targetPlayer, options = {}) {
 }
 
 async function createHuntSnapshot(player, encounter) {
-  const [playerTeam, playerBuffs, demonTypes] = await Promise.all([
+  const [playerTeam, statSummary, demonTypes] = await Promise.all([
     getActiveWorldTeam(player.id),
-    resolvePlayerCombatBuffState(player),
+    getPlayerStatPointSummary(player),
     getDemonTypes()
   ]);
+  const playerBuffs = createPlayerCombatBuffState(statSummary);
+  const soulCapacity = getHuntSoulCapacity(statSummary);
   const enemyTeam = materializeEncounterTeam(encounter, demonTypes);
   const enemyBuffs = normalizeCombatBuffState({
     activeBuffs: createWorldTerrorBuffs(encounter)
@@ -367,6 +369,7 @@ async function createHuntSnapshot(player, encounter) {
     xpPerCycle: xpReward.xpPerCycle,
     soulsPerCycle: soulReward.soulsPerCycle,
     defeatedDemonsPerCycle: battleMetrics.defeatedDemons,
+    soulCapacity,
     xpReward,
     soulReward,
     terror,
@@ -375,15 +378,18 @@ async function createHuntSnapshot(player, encounter) {
   };
 }
 
-async function calculateHuntRewards(snapshot, stoppedAt = new Date()) {
+async function calculateHuntRewards(snapshot, stoppedAt = new Date(), options = {}) {
   const startedAt = Date.parse(snapshot?.startedAt || '');
   const stoppedTime = stoppedAt instanceof Date ? stoppedAt.getTime() : Date.parse(stoppedAt || '');
   const killSeconds = getHuntKillSeconds(snapshot);
   const elapsedSeconds = Math.max(0, Math.floor(((Number(stoppedTime) || Date.now()) - (startedAt || Date.now())) / 1000));
-  const cycles = Math.min(HUNT_REWARD_CYCLE_CAP, Math.floor(elapsedSeconds / killSeconds));
+  // Cycles are uncapped: XP accrues for the whole hunt, while soul income is
+  // bounded by the Soul Vessel capacity below.
+  const cycles = Math.floor(elapsedSeconds / killSeconds);
   const difficulty = getEncounterDifficulty(snapshot?.encounter);
   const xpPerCycle = getSnapshotXpPerCycle(snapshot, difficulty);
   const fallbackSoulsPerCycle = getSnapshotSoulsPerCycle(snapshot);
+  const soulCapacity = getSnapshotSoulCapacity(snapshot, options.soulCapacity);
 
   if (!cycles || !Array.isArray(snapshot?.activeTeam) || !Array.isArray(snapshot?.targetEnemyTeam)) {
     return {
@@ -395,7 +401,9 @@ async function calculateHuntRewards(snapshot, stoppedAt = new Date()) {
       soulsPerCycle: fallbackSoulsPerCycle,
       defeatedDemonsPerCycle: fallbackSoulsPerCycle,
       xp: 0,
-      souls: 0
+      souls: 0,
+      soulCapacity: Number.isFinite(soulCapacity) ? soulCapacity : null,
+      soulsLost: 0
     };
   }
 
@@ -425,6 +433,9 @@ async function calculateHuntRewards(snapshot, stoppedAt = new Date()) {
     ? getWorldSoulReward(snapshot.encounter, defeatedDemonsPerCycle, snapshot.soulReward).soulsPerCycle
     : fallbackSoulsPerCycle;
 
+  const uncappedSouls = wins * soulsPerCycle;
+  const souls = Math.min(uncappedSouls, soulCapacity);
+
   return {
     elapsedSeconds,
     killSeconds,
@@ -434,7 +445,9 @@ async function calculateHuntRewards(snapshot, stoppedAt = new Date()) {
     soulsPerCycle,
     defeatedDemonsPerCycle,
     xp: wins * xpPerCycle,
-    souls: wins * soulsPerCycle,
+    souls,
+    soulCapacity: Number.isFinite(soulCapacity) ? soulCapacity : null,
+    soulsLost: Math.max(0, uncappedSouls - souls),
     sampleBattle: serializeWorldCombatResult(result, playerBuffs, enemyBuffs)
   };
 }
@@ -612,6 +625,16 @@ function getDefeatedEnemyCount(result = {}, fallbackEnemyTeam = []) {
   if (defeated > 0) return defeated;
   if (result.winner === 'player' && Array.isArray(fallbackEnemyTeam)) return fallbackEnemyTeam.length;
   return 0;
+}
+
+// Hunts started before the Soul Vessel existed have no snapshotted capacity;
+// the caller passes the player's live capacity as the fallback.
+function getSnapshotSoulCapacity(snapshot = {}, fallback) {
+  const snapshotted = Number(snapshot.soulCapacity);
+  if (Number.isFinite(snapshotted) && snapshotted > 0) return Math.floor(snapshotted);
+  const fallbackCapacity = Number(fallback);
+  if (Number.isFinite(fallbackCapacity) && fallbackCapacity > 0) return Math.floor(fallbackCapacity);
+  return Infinity;
 }
 
 function getHuntKillSeconds(snapshot = {}) {

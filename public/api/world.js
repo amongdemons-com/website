@@ -24,6 +24,7 @@ const {
   simulateWorldPvpChallenge
 } = require('./lib/world-combat');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
+const { getHuntSoulCapacity, getPlayerStatPointSummary } = require('./lib/account-stat-points');
 const worldMap = require('./data/map.json');
 
 const router = express.Router();
@@ -538,7 +539,9 @@ async function settleActiveHunt(player, options = {}) {
 
     if (huntRows.length) {
       const snapshot = parseHuntSnapshot(huntRows[0].snapshot);
-      rewards = await calculateHuntRewards(snapshot, new Date());
+      // Fallback capacity for hunts snapshotted before the Soul Vessel existed.
+      const soulCapacity = getHuntSoulCapacity(await getPlayerStatPointSummary(player));
+      rewards = await calculateHuntRewards(snapshot, new Date(), { soulCapacity });
 
       const [lockedRows] = await connection.query(
         'SELECT level, xp FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
@@ -659,6 +662,8 @@ function serializeActiveHunt(row) {
   );
   const battleMetrics = snapshot.battleMetrics || {};
 
+  const soulCapacity = Number(snapshot.soulCapacity);
+
   return {
     encounterId: row.encounterId,
     startedAt: snapshot.startedAt || row.startedAt,
@@ -667,6 +672,7 @@ function serializeActiveHunt(row) {
     xpPerCycle,
     soulsPerCycle,
     defeatedDemonsPerCycle,
+    soulCapacity: Number.isFinite(soulCapacity) && soulCapacity > 0 ? Math.floor(soulCapacity) : null,
     xpReward,
     soulReward: snapshot.soulReward || null,
     terror: snapshot.terror || null,
@@ -739,7 +745,9 @@ function createEmptyHuntRewards() {
     cycles: 0,
     wins: 0,
     xp: 0,
-    souls: 0
+    souls: 0,
+    soulCapacity: null,
+    soulsLost: 0
   };
 }
 

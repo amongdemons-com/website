@@ -19,8 +19,18 @@ const NODE_DEFINITIONS = Object.freeze({
   aoe_mastery: Object.freeze({ label: 'Endless AOE', cap: Infinity, requires: [['aoe_percent', 5]] }),
   poison_flat: Object.freeze({ label: 'Poison Damage', cap: 5, requires: [] }),
   poison_percent: Object.freeze({ label: 'Poison Damage %', cap: 5, requires: [['poison_flat', 5]] }),
-  poison_mastery: Object.freeze({ label: 'Endless Poison', cap: Infinity, requires: [['poison_percent', 5]] })
+  poison_mastery: Object.freeze({ label: 'Endless Poison', cap: Infinity, requires: [['poison_percent', 5]] }),
+  soul_capacity: Object.freeze({ label: 'Soul Vessel', cap: 5, requires: [] }),
+  soul_capacity_percent: Object.freeze({ label: 'Greater Vessel', cap: 5, requires: [['soul_capacity', 5]] }),
+  soul_capacity_mastery: Object.freeze({ label: 'Endless Vessel', cap: Infinity, requires: [['soul_capacity_percent', 5]] })
 });
+
+// Passive hunts stop banking souls once the player's Soul Vessel fills up, so
+// AFK soul income is bounded by these skill-tree investments rather than time.
+const HUNT_SOUL_CAPACITY_BASE = 50;
+const HUNT_SOUL_CAPACITY_PER_RANK = 20;
+const HUNT_SOUL_CAPACITY_PERCENT_PER_RANK = 10;
+const HUNT_SOUL_CAPACITY_PER_MASTERY = 10;
 
 const STAT_KEYS = Object.freeze(Object.keys(NODE_DEFINITIONS));
 const ZERO_ALLOCATIONS = Object.freeze(STAT_KEYS.reduce((allocations, key) => {
@@ -112,8 +122,24 @@ function calculateStatBonuses(source = {}) {
     aoeDamageFlat: allocations.aoe_mastery,
     aoeDamagePercent: roundPercent(allocations.aoe_percent * 2),
     poisonDamageFlat: allocations.poison_flat + allocations.poison_mastery,
-    poisonDamagePercent: roundPercent(allocations.poison_percent * 3)
+    poisonDamagePercent: roundPercent(allocations.poison_percent * 3),
+    huntSoulCapacity: calculateHuntSoulCapacity(allocations)
   };
+}
+
+function calculateHuntSoulCapacity(allocations = {}) {
+  const flat = HUNT_SOUL_CAPACITY_BASE +
+    (Number(allocations.soul_capacity) || 0) * HUNT_SOUL_CAPACITY_PER_RANK +
+    (Number(allocations.soul_capacity_mastery) || 0) * HUNT_SOUL_CAPACITY_PER_MASTERY;
+  const percentMultiplier = 1 + ((Number(allocations.soul_capacity_percent) || 0) * HUNT_SOUL_CAPACITY_PERCENT_PER_RANK) / 100;
+  return Math.max(1, Math.floor(flat * percentMultiplier));
+}
+
+function getHuntSoulCapacity(summary = {}) {
+  const capacity = Number(summary?.bonuses?.huntSoulCapacity);
+  return Number.isFinite(capacity) && capacity > 0
+    ? Math.floor(capacity)
+    : HUNT_SOUL_CAPACITY_BASE;
 }
 
 function calculatePathProgress(source = {}) {
@@ -140,6 +166,12 @@ function calculatePathProgress(source = {}) {
       root: allocations.poison_flat,
       branches: {
         poison: { node: allocations.poison_percent, mastery: allocations.poison_mastery }
+      }
+    },
+    soul: {
+      root: allocations.soul_capacity,
+      branches: {
+        vessel: { node: allocations.soul_capacity_percent, mastery: allocations.soul_capacity_mastery }
       }
     }
   };
@@ -297,9 +329,11 @@ function throwStatPointError(message) {
 }
 
 module.exports = {
+  HUNT_SOUL_CAPACITY_BASE,
   NODE_DEFINITIONS,
   STAT_KEYS,
   ZERO_ALLOCATIONS,
+  getHuntSoulCapacity,
   calculatePathProgress,
   calculateStatBonuses,
   createStatPointSummary,

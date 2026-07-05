@@ -663,11 +663,14 @@
 
     const huntEnded = text.match(/hunting (?:ended|stopped).*earned ([\d,]+) xp and ([\d,]+) souls/i);
     if (huntEnded) {
+      const vesselOverflow = text.match(/vessel overflowed — ([\d,]+) souls? slipped/i);
       return {
         type: 'success',
         title: 'Hunt ended.',
-        message: `You earned ${huntEnded[1]} XP and ${huntEnded[2]} Souls.`,
-        action: 'Choose another hunt or return to camp.'
+        message: `You earned ${huntEnded[1]} XP and ${huntEnded[2]} Souls.${vesselOverflow ? ` Your Soul Vessel overflowed — ${vesselOverflow[1]} Souls slipped into the dark.` : ''}`,
+        action: vesselOverflow
+          ? 'Expand your Soul Vessel in the skill tree to bank more.'
+          : 'Choose another hunt or return to camp.'
       };
     }
 
