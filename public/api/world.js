@@ -34,6 +34,8 @@ const WORLD_SPAWN = worldMap.spawn || { x: 0, y: 0 };
 const MAX_TRAVEL_STEPS = 256;
 const CHALLENGE_COOLDOWN_MS = 30 * 1000;
 const challengeCooldowns = new Map();
+const DARKNESS_PORTAL_TYPE = 'darkness-portal';
+const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
 
 // World elements (events/objects, unpassable blocks, and demon-team encounters) live in
 // data/map.json so the map can be regenerated without touching this route.
@@ -155,6 +157,30 @@ router.post('/world/shrine/bind', requireAuth, async (req, res) => {
     currentShrine: shrine,
     boundShrine,
     message: ANCHOR_SUCCESS_MESSAGE
+  });
+});
+
+router.post('/world/portal/summon', requireAuth, async (req, res) => {
+  const requestedPosition = normalizePosition(req.body?.position || req.body);
+  const portal = getDarknessPortalAt(requestedPosition.x, requestedPosition.y);
+
+  if (!portal) {
+    return res.status(404).json({ error: 'Choose a valid Darkness Portal.' });
+  }
+
+  const result = await summonToDarknessPortal(req.player.id, portal);
+  const position = result.position;
+
+  res.json({
+    ok: true,
+    position,
+    player: getWorldPlayer(result.player),
+    currentEvent: getEventAt(position.x, position.y),
+    currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
+    playersAt: await getPlayersAt(position.x, position.y, req.player.id),
+    summonCost: result.summonCost,
+    summonDistance: result.summonDistance,
+    message: `Summoned to Area ${position.x}, ${position.y} for ${formatSoulCount(result.summonCost)}.`
   });
 });
 
@@ -392,9 +418,9 @@ async function getOrCreatePosition(playerId) {
   return position;
 }
 
-async function savePosition(playerId, position) {
+async function savePosition(playerId, position, client = db) {
   // TODO: Move persistence into a world service once exploration has server-side rules.
-  await db.query(
+  await client.query(
     `INSERT INTO player_world_positions (player_id, x, y)
      VALUES (?, ?, ?)
      ON DUPLICATE KEY UPDATE x = VALUES(x), y = VALUES(y), updated_at = CURRENT_TIMESTAMP`,
@@ -464,6 +490,77 @@ async function getPlayersAt(x, y, currentPlayerId) {
     x: Number(player.x) || 0,
     y: Number(player.y) || 0
   }));
+}
+
+async function summonToDarknessPortal(playerId, portal) {
+  const position = normalizePosition(portal);
+  const connection = await db.getConnection();
+  let committed = false;
+
+  try {
+    await connection.beginTransaction();
+
+    const [playerRows] = await connection.query(
+      `SELECT p.*, pd.image_url AS profile_demon_image_url
+       FROM players p
+       LEFT JOIN player_demons pd
+         ON pd.id = p.profile_demon_id
+        AND pd.player_id = p.id
+       WHERE p.id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [playerId]
+    );
+
+    if (!playerRows.length) {
+      throwWorldError('Player not found.', 404);
+    }
+
+    const currentPosition = await getSummonCurrentPosition(playerId, connection);
+    const summonDistance = getTileDistance(currentPosition, position);
+    const summonCost = getDarknessPortalSummonCost(portal, currentPosition);
+    const availableSouls = Math.max(0, Number(playerRows[0].souls) || 0);
+    if (availableSouls < summonCost) {
+      throwWorldError(`Not enough Souls. Summon costs ${formatSoulCount(summonCost)}.`, 409);
+    }
+
+    await connection.query(
+      'UPDATE players SET souls = souls - ? WHERE id = ?',
+      [summonCost, playerId]
+    );
+    await savePosition(playerId, position, connection);
+
+    const [updatedRows] = await connection.query(
+      `SELECT p.*, pd.image_url AS profile_demon_image_url
+       FROM players p
+       LEFT JOIN player_demons pd
+         ON pd.id = p.profile_demon_id
+        AND pd.player_id = p.id
+       WHERE p.id = ?
+       LIMIT 1`,
+      [playerId]
+    );
+
+    await connection.commit();
+    committed = true;
+
+    return {
+      position,
+      summonCost,
+      summonDistance,
+      player: cleanPlayer(updatedRows[0] || {
+        ...playerRows[0],
+        souls: Math.max(0, availableSouls - summonCost)
+      })
+    };
+  } catch (error) {
+    if (!committed) {
+      await connection.rollback();
+    }
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function getActiveTeamSummary(playerId) {
@@ -761,6 +858,7 @@ function getWorldPlayer(player) {
     id: player.id,
     username: player.username || 'Hunter',
     level: Math.max(1, Number(player.level) || 1),
+    souls: Math.max(0, Number(player.souls) || 0),
     ...getWorldPvpPlayerRecord(player),
     profileDemonImageUrl: player.profileDemonImageUrl || null
   };
@@ -775,6 +873,43 @@ function getWorldPvpPlayerRecord(player = {}) {
 
 function getEventAt(x, y) {
   return WORLD_EVENTS.find((event) => event.x === x && event.y === y) || null;
+}
+
+function getDarknessPortalAt(x, y) {
+  const event = getEventAt(x, y);
+  return event?.type === DARKNESS_PORTAL_TYPE ? event : null;
+}
+
+async function getSummonCurrentPosition(playerId, client = db) {
+  const [rows] = await client.query(
+    'SELECT x, y FROM player_world_positions WHERE player_id = ? LIMIT 1 FOR UPDATE',
+    [playerId]
+  );
+
+  if (!rows.length) return { ...WORLD_SPAWN };
+
+  const position = normalizePosition(rows[0], { allowBlocked: true });
+  return isBlocked(position.x, position.y) ? { ...WORLD_SPAWN } : position;
+}
+
+function getDarknessPortalSummonCost(portal = {}, fromPosition = WORLD_SPAWN) {
+  return getTileDistance(fromPosition, portal) * getDarknessPortalSummonCostPerDistance(portal);
+}
+
+function getDarknessPortalSummonCostPerDistance(portal = {}) {
+  const cost = Number(portal.summonCostPerDistance);
+  return Number.isFinite(cost) && cost >= 0
+    ? Math.floor(cost)
+    : DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE;
+}
+
+function getTileDistance(from = {}, to = {}) {
+  return Math.abs(Number(to.x) - Number(from.x)) + Math.abs(Number(to.y) - Number(from.y));
+}
+
+function formatSoulCount(value) {
+  const count = Math.max(0, Math.floor(Number(value) || 0));
+  return `${count} Soul${count === 1 ? '' : 's'}`;
 }
 
 function getEncounterAt(x, y) {
@@ -899,6 +1034,8 @@ function throwWorldError(message, status = 400) {
 }
 
 router._test = {
+  getDarknessPortalAt,
+  getDarknessPortalSummonCost,
   getAmbushChanceForTile,
   isAmbushEligibleTile,
   resolveTravelStepEvent

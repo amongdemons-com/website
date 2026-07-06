@@ -51,6 +51,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   const WORLD_AMBUSH_DEFEAT_FADE_MS = 900;
   const WORLD_AMBUSH_DEFEAT_HOLD_MS = 140;
   const WORLD_TEAM_LIMIT = 6;
+  const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
   const BOARD_COLORS = {
     background: 0x070806,
@@ -62,9 +63,6 @@ import * as dungeonUtils from './dungeon/utils.js';
     obstacle: 0x35281f,
     obstacleInner: 0x241b16,
     obstacleEdge: 0x120d0a,
-    dangerous: 0x4b1716,
-    dangerousGlow: 0xb65b3f,
-    soulNode: 0xc7b56f,
     shrine: 0x3b1618,
     shrineGlow: 0xe8c76a,
     shrineSoul: 0x8de7ff,
@@ -94,10 +92,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     { x: 6, y: 0, type: 'ruin' }
   ];
   const EVENT_COLORS = {
-    boss: BOARD_COLORS.dangerousGlow,
-    'soul-cache': BOARD_COLORS.soulNode,
     forsaken_shrine: BOARD_COLORS.shrineGlow,
-    'dungeon-portal': BOARD_COLORS.portalGlow,
+    'darkness-portal': BOARD_COLORS.portalGlow,
     landmark: BOARD_COLORS.landmark
   };
   const RARITY_COLORS = {
@@ -164,6 +160,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     huntStatusRefreshAt: 0,
     boundShrine: null,
     bindingShrine: false,
+    summoningPortal: false,
     blockedTiles: FALLBACK_BLOCKED_TILES,
     blockedMap: new Map(),
     selectedPath: [],
@@ -260,6 +257,15 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function bindDomControls() {
     elements.worldPositionButton?.addEventListener('click', () => resetCameraOnHunter());
+    elements.worldTargetTooltip?.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const summonButton = target?.closest('[data-summon-portal]');
+      if (!summonButton) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      summonDarknessPortal(summonButton);
+    });
     elements.worldEditTeamButton?.addEventListener('click', openWorldTeamEditor);
     elements.worldTravelTeamConfirmButton?.addEventListener('click', openWorldTeamEditorFromTravelWarning);
     elements.worldTeamSaveButton?.addEventListener('click', saveWorldTeamEditor);
@@ -560,6 +566,18 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     if (isBlocked(target)) {
       clearRoutePreview('blocked');
+      return;
+    }
+
+    const event = getEventAt(target);
+    if (isDarknessPortalEvent(event)) {
+      state.selectedTarget = target;
+      state.selectedPath = [];
+      state.travelStatus = 'preview';
+      state.recentStepEvent = null;
+      hideEncounterTooltip();
+      renderWorld();
+      renderTravelPanel();
       return;
     }
 
@@ -992,6 +1010,10 @@ import * as dungeonUtils from './dungeon/utils.js';
       const payload = await api('/api/world/hunting/stop', { method: 'POST' });
       setHuntState(payload.hunt);
       if (payload.player) {
+        state.player = {
+          ...(state.player || {}),
+          ...payload.player
+        };
         window.AmongDemons.ui?.updateNavAccount?.(payload.player);
       }
       const rewards = payload.rewards || {};
@@ -1054,6 +1076,55 @@ import * as dungeonUtils from './dungeon/utils.js';
     } finally {
       state.bindingShrine = false;
       setButtonBusy(button, false);
+      renderPanels();
+    }
+  }
+
+  async function summonDarknessPortal(button) {
+    if (state.summoningPortal || state.moving) return;
+
+    const position = normalizePosition({
+      x: button?.dataset?.summonPortalX,
+      y: button?.dataset?.summonPortalY
+    });
+    const portal = getEventAt(position);
+    if (!isDarknessPortalEvent(portal)) return;
+
+    state.summoningPortal = true;
+    setButtonBusy(button, true);
+
+    try {
+      if (!(await stopHuntingForTravel())) return;
+
+      const payload = await api('/api/world/portal/summon', {
+        method: 'POST',
+        body: { position }
+      });
+
+      if (payload.player) {
+        state.player = {
+          ...(state.player || {}),
+          ...payload.player
+        };
+        window.AmongDemons.ui?.updateNavAccount?.(payload.player);
+      }
+
+      state.position = normalizePosition(payload.position || position);
+      state.hunterRenderPosition = null;
+      state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
+      state.currentEvent = payload.currentEvent || getEventAt(state.position);
+      state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
+
+      clearRoutePreview('arrived', { keepLog: true });
+      centerOnHunter();
+      setWorldSidePanelExpanded(true);
+      setMessage(payload.message || `Summoned to Area ${formatCoords(state.position)}.`, 'success');
+    } catch (error) {
+      handleAuthError(error);
+    } finally {
+      state.summoningPortal = false;
+      setButtonBusy(button, false);
+      renderWorld();
       renderPanels();
     }
   }
@@ -2128,14 +2199,10 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.events.forEach((event) => {
       const cx = event.x * TILE_SIZE + TILE_SIZE / 2;
       const cy = event.y * TILE_SIZE + TILE_SIZE / 2;
-      if (event.type === 'boss') {
-        layer.circle(cx, cy, TILE_SIZE * 0.42).fill({ color: BOARD_COLORS.dangerousGlow, alpha: 0.14 });
-      } else if (event.type === 'soul-cache') {
-        layer.circle(cx, cy, TILE_SIZE * 0.32).fill({ color: BOARD_COLORS.soulNode, alpha: 0.16 });
-      } else if (event.type === 'forsaken_shrine') {
+      if (event.type === 'forsaken_shrine') {
         // Soul-glow is drawn entirely by updateShrineGlow (above the roads), so the
         // smoke isn't clipped by road tiles. Nothing to draw on the fog layer here.
-      } else if (event.type === 'dungeon-portal') {
+      } else if (event.type === 'darkness-portal') {
         layer.circle(cx, cy, TILE_SIZE * 0.4).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.18 });
       } else if (event.type === 'landmark') {
         layer.circle(cx, cy, TILE_SIZE * 0.34).fill({ color: BOARD_COLORS.landmark, alpha: 0.12 });
@@ -2261,16 +2328,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       const position = tileCenter(event);
       const rng = seededRng((Math.imul(event.x | 0, 48271) ^ Math.imul(event.y | 0, 16807)) >>> 0);
 
-      if (event.type === 'boss') {
-        // A spiked obsidian sigil crouched on the tile.
-        marker.ellipse(0, 12, 18, 6).fill({ color: 0x000000, alpha: 0.4 });
-        marker.poly([0, -19, 5, -5, 19, 0, 5, 5, 0, 19, -5, 5, -19, 0, -5, -5])
-          .fill({ color: BOARD_COLORS.dangerous, alpha: 0.94 })
-          .stroke({ color, width: 2, alpha: 0.92 });
-        marker.poly([0, -8, 7, 0, 0, 8, -7, 0]).fill({ color: 0x180505, alpha: 0.9 });
-        marker.circle(0, 0, 3).fill({ color, alpha: 0.9 });
-        marker.circle(0, 0, 6).fill({ color, alpha: 0.25 });
-      } else if (event.type === 'dungeon-portal') {
+      if (event.type === 'darkness-portal') {
         // A dark well with pale light swirling into it.
         marker.ellipse(0, 14, 17, 6).fill({ color: 0x000000, alpha: 0.38 });
         marker.circle(0, 0, 24).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.2 });
@@ -2305,17 +2363,7 @@ import * as dungeonUtils from './dungeon/utils.js';
             .stroke({ color: 0x0b0f0d, width: 1, alpha: 0.7 });
         }
       } else {
-        // Soul cache: a small hollow of glowing soul-orbs.
-        marker.ellipse(0, 11, 15, 5).fill({ color: 0x000000, alpha: 0.35 });
-        marker.circle(0, 2, 15).fill({ color, alpha: 0.14 });
-        marker.ellipse(0, 6, 12, 6).fill({ color: 0x14170f, alpha: 0.95 })
-          .stroke({ color: 0x060704, width: 1.4, alpha: 0.8 });
-        const orbs = [[-5, 2, 3.4], [4.5, 1, 2.8], [0, -3.5, 3.8]];
-        for (const [ox, oy, or] of orbs) {
-          marker.circle(ox, oy, or * 1.9).fill({ color, alpha: 0.2 });
-          marker.circle(ox, oy, or).fill({ color, alpha: 0.85 });
-          marker.circle(ox - or * 0.3, oy - or * 0.35, or * 0.4).fill({ color: 0xfdf6dd, alpha: 0.8 });
-        }
+        return;
       }
 
       marker.position.set(position.x, position.y);
@@ -5370,6 +5418,30 @@ import * as dungeonUtils from './dungeon/utils.js';
     return state.events.find((event) => event.type === 'forsaken_shrine' && event.x === position.x && event.y === position.y) || null;
   }
 
+  function isDarknessPortalEvent(event) {
+    return event?.type === 'darkness-portal';
+  }
+
+  function getDarknessPortalSummonCost(event = {}) {
+    return getTileDistance(state.position, event) * getDarknessPortalSummonCostPerDistance(event);
+  }
+
+  function getDarknessPortalSummonCostPerDistance(event = {}) {
+    const cost = Number(event.summonCostPerDistance);
+    return Number.isFinite(cost) && cost >= 0
+      ? Math.floor(cost)
+      : DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE;
+  }
+
+  function getPlayerSoulBalance() {
+    const souls = Number(state.player?.souls);
+    return Number.isFinite(souls) ? Math.max(0, Math.floor(souls)) : null;
+  }
+
+  function getTileDistance(from = {}, to = {}) {
+    return Math.abs(Number(to.x) - Number(from.x)) + Math.abs(Number(to.y) - Number(from.y));
+  }
+
   function isBoundShrine(event) {
     return Boolean(event?.type === 'forsaken_shrine' && state.boundShrine && positionsEqual(event, state.boundShrine));
   }
@@ -5747,10 +5819,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function getEventLabel(type) {
-    if (type === 'boss') return 'Boss Fight';
-    if (type === 'soul-cache') return 'Soul Cache';
-    if (type === 'forsaken_shrine') return 'Forsaken Shrine';
-    if (type === 'dungeon-portal') return 'Dungeon Portal';
+    if (type === 'forsaken_shrine') return 'Respawn Point';
+    if (type === 'darkness-portal') return 'Darkness Portal';
     if (type === 'landmark') return 'Landmark';
     return 'Event';
   }
@@ -5819,9 +5889,11 @@ import * as dungeonUtils from './dungeon/utils.js';
     const tooltip = elements.worldTargetTooltip;
     const target = state.selectedTarget;
     const path = state.selectedPath || [];
+    const event = target ? getEventAt(target) : null;
+    const isPortalTarget = isDarknessPortalEvent(event);
     if (!tooltip) return;
 
-    if (!target || path.length < 2 || state.moving || !state.viewport || state.selectedEncounter) {
+    if (!target || (!isPortalTarget && path.length < 2) || state.moving || !state.viewport || state.selectedEncounter) {
       tooltip.classList.add('d-none');
       return;
     }
@@ -5832,6 +5904,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const y = state.viewport.y + center.y * scale;
 
     tooltip.innerHTML = renderTargetTooltipContent(target, path);
+    tooltip.classList.toggle('has-actions', isPortalTarget);
     tooltip.style.left = `${Math.round(x)}px`;
     tooltip.style.top = `${Math.round(y)}px`;
     tooltip.classList.remove('d-none');
@@ -5839,21 +5912,51 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function renderTargetTooltipContent(target, path) {
     const event = getEventAt(target);
-    const meta = escapeHtml(formatTravelMeta(target, getPathStepCount(path)));
+    const isPortalTarget = isDarknessPortalEvent(event);
+    const stepCount = isPortalTarget
+      ? getTileDistance(state.position, target)
+      : getPathStepCount(path);
+    const meta = escapeHtml(formatTravelMeta(target, stepCount));
     const header = `
-      <strong class="world-tooltip-title">Travel to</strong>
+      <strong class="world-tooltip-title">${isPortalTarget ? 'Teleport to' : 'Travel to'}</strong>
       <span class="world-tooltip-meta">${meta}</span>
     `;
-    const travelHint = '<span class="world-tooltip-hint">(Click again to travel)</span>';
+    const travelHint = isPortalTarget ? '' : '<span class="world-tooltip-hint">(Click again to travel)</span>';
 
     if (!event) return `${header}${travelHint}`;
+    const eventLabel = getEventLabel(event.type);
+    const eventTitle = String(event.title || '').trim();
+    const eventTitleMarkup = eventTitle && eventTitle !== eventLabel
+      ? `<span class="world-target-event-title">${escapeHtml(eventTitle)}</span>`
+      : '';
 
     return `
       ${header}
-      <span class="world-target-event-type">${escapeHtml(getEventLabel(event.type))}</span>
-      <span class="world-target-event-title">${escapeHtml(event.title || 'World Event')}</span>
+      <span class="world-target-event-type">${escapeHtml(eventLabel)}</span>
+      ${eventTitleMarkup}
       ${event.description ? `<span class="world-target-event-copy">${escapeHtml(event.description)}</span>` : ''}
+      ${isDarknessPortalEvent(event) ? renderDarknessPortalSummonAction(event) : ''}
       ${travelHint}
+    `;
+  }
+
+  function renderDarknessPortalSummonAction(event) {
+    const cost = getDarknessPortalSummonCost(event);
+    const souls = getPlayerSoulBalance();
+    const canAfford = souls === null || souls >= cost;
+    const disabled = state.summoningPortal || !canAfford;
+    const title = canAfford
+      ? `Summon to this Darkness Portal for ${formatSoulCount(cost)}.`
+      : `Summon costs ${formatSoulCount(cost)}.`;
+
+    return `
+      <span class="world-target-summon-cost">Cost: ${escapeHtml(formatSoulCount(cost))}</span>
+      <button class="btn btn-warning btn-sm world-target-summon-button" type="button"
+        data-summon-portal data-summon-portal-x="${escapeAttribute(event.x)}" data-summon-portal-y="${escapeAttribute(event.y)}"
+        title="${escapeAttribute(title)}" ${disabled ? 'disabled' : ''}>
+        ${renderIcon('sparkles')}
+        <span>Summon</span>
+      </button>
     `;
   }
 

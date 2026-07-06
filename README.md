@@ -191,6 +191,7 @@ All API routes are mounted under `/api`.
 | `GET` | `/world/state` | Return world map state, player position, visible objects, and the active Anchored Shrine |
 | `GET` | `/world/shrine` | Return the player's current bound Forsaken Shrine and whether they are standing on one |
 | `POST` | `/world/shrine/bind` | Bind the player's soul to the Forsaken Shrine under their current server-side position |
+| `POST` | `/world/portal/summon` | Spend Souls to teleport to a Darkness Portal |
 | `POST` | `/world/ambush-defeat` | Move the player to their Anchored Shrine after ambush defeat, or to spawn if none is bound |
 | `POST` | `/world/move` | Move along a validated world path and return travel events |
 

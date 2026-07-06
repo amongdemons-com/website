@@ -10,7 +10,7 @@
  *    weights.
  *  - Demon TYPE is zone-based — the map is split into angular wedges and each
  *    of the 11 types predominates in its own wedge, so areas feel themed.
- *  - Roads connect camps, lairs, shrines, and caches through meandering
+ *  - Roads connect camps, lairs, shrines, and portals through meandering
  *    orthogonal trails. Travel along a road is much less likely to be ambushed
  *    (see world.js).
  *
@@ -43,6 +43,9 @@ const BLOCK_TYPES = ['basalt', 'bone-spur', 'chasm', 'ruin'];
 const TYPE_COUNT = 11;
 const ZONE_START_RADIUS = 24;
 const ZONE_ROTATION = 0.045; // nudge wedge boundaries off the cardinal axes
+const DARKNESS_PORTAL_COUNT = 3;
+const DARKNESS_PORTAL_MIN_SPACING = 28;
+const DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
 // Swap adjacent signatures so type 4 owns the visual northeast corner.
 const ZONE_TYPE_REMAP = { 4: 5, 5: 4 };
 const PRIMARY_TYPE_CHANCE = 0.68; // odds a team member is the zone's signature type
@@ -347,7 +350,8 @@ function buildEncounter(id, x, y, usedTeamKeys) {
 }
 
 // Named landmarks give the road network and travel view anchors. Forsaken
-// Shrines are active world objects; the rest are visual anchors for now.
+// Shrines are active world objects; Darkness Portals are added after roads
+// exist so they can sit on the remote ends of the road network.
 const BASE_LANDMARKS = [
   {
     x: 0,
@@ -355,20 +359,6 @@ const BASE_LANDMARKS = [
     type: 'forsaken_shrine',
     title: 'Forsaken Shrine',
     description: 'A guarded shrine at the center of the wilds.'
-  },
-  {
-    x: 10,
-    y: -5,
-    type: 'dungeon-portal',
-    title: 'Ash Gate',
-    description: 'A cracked gate humming with dungeon heat.'
-  },
-  {
-    x: -12,
-    y: 9,
-    type: 'soul-cache',
-    title: 'Moonwell Cache',
-    description: 'Cold light pools around a sealed cache.'
   },
   {
     x: 27,
@@ -385,39 +375,11 @@ const BASE_LANDMARKS = [
     description: 'A blackened roadside shrine half-swallowed by old ash.'
   },
   {
-    x: -31,
-    y: 22,
-    type: 'boss',
-    title: 'Bone Spire',
-    description: 'A tower of ribs where a champion waits.'
-  },
-  {
-    x: 35,
-    y: -31,
-    type: 'boss',
-    title: 'Cinder Keep',
-    description: 'A burnt fortress surrounded by red dust.'
-  },
-  {
     x: -38,
     y: -28,
     type: 'landmark',
     title: 'Witch Road Ruins',
     description: 'Collapsed stones from an older road system.'
-  },
-  {
-    x: 43,
-    y: 5,
-    type: 'soul-cache',
-    title: 'Bright Hollow',
-    description: 'A soul-rich hollow watched by silent stones.'
-  },
-  {
-    x: -18,
-    y: -41,
-    type: 'dungeon-portal',
-    title: 'Sunken Door',
-    description: 'A half-buried threshold into deeper darkness.'
   },
   {
     x: 4,
@@ -426,6 +388,20 @@ const BASE_LANDMARKS = [
     title: 'Old Watch',
     description: 'A broken lookout over the southern reaches.'
   }
+];
+
+const BASE_ROAD_ANCHORS = [
+  { x: 0, y: 0 },
+  { x: 10, y: -5 },
+  { x: -12, y: 9 },
+  { x: 27, y: 16 },
+  { x: -15, y: -17 },
+  { x: -31, y: 22 },
+  { x: 35, y: -31 },
+  { x: -38, y: -28 },
+  { x: 43, y: 5 },
+  { x: -18, y: -41 },
+  { x: 4, y: 39 }
 ];
 
 // Every demon zone must hold a Forsaken Shrine so hunters can anchor their
@@ -478,6 +454,7 @@ function findZoneShrineSpot(sector, typeId, taken) {
 
 const ZONE_SHRINES = buildZoneShrines(BASE_LANDMARKS);
 const LANDMARKS = [...BASE_LANDMARKS, ...ZONE_SHRINES];
+const ROAD_LANDMARKS = [...BASE_ROAD_ANCHORS, ...ZONE_SHRINES];
 
 const ROAD_ROUTES = [
   [SPAWN, { x: 7, y: -4 }, { x: 10, y: -5 }, { x: 20, y: -15 }, { x: 35, y: -31 }],
@@ -509,8 +486,8 @@ function generateRoads(roadSet) {
   // Short branches make the network feel explored rather than purely optimal.
   addSideTrails(tiles);
 
-  LANDMARKS.forEach((event) => addRoadTile(tiles, event.x, event.y));
-  stripRoadSquares(tiles, new Set(LANDMARKS.map((event) => tileKey(event.x, event.y))));
+  ROAD_LANDMARKS.forEach((event) => addRoadTile(tiles, event.x, event.y));
+  stripRoadSquares(tiles, new Set(ROAD_LANDMARKS.map((event) => tileKey(event.x, event.y))));
   keepConnectedRoads(tiles, tileKey(SPAWN.x, SPAWN.y));
 
   tiles.forEach((key) => roadSet.add(key));
@@ -586,7 +563,7 @@ function clampRoadStep(position, target) {
 // Anchor every generated zone shrine to the road network via the nearest
 // already-connected landmark, so each respawn point has a road leading to it.
 function connectZoneShrines(tiles) {
-  const anchors = [SPAWN, ...BASE_LANDMARKS.map((event) => ({ x: event.x, y: event.y }))];
+  const anchors = [SPAWN, ...BASE_ROAD_ANCHORS.map((event) => ({ x: event.x, y: event.y }))];
 
   ZONE_SHRINES.forEach((shrine) => {
     const target = { x: shrine.x, y: shrine.y };
@@ -831,9 +808,46 @@ function hasNearbyEncounter(encounterTiles, x, y) {
   return false;
 }
 
-function generateEvents(occupied) {
-  LANDMARKS.forEach((event) => occupied.add(tileKey(event.x, event.y)));
-  return LANDMARKS.map((event) => ({ ...event }));
+function generateEvents(occupied, roadSet) {
+  const events = LANDMARKS.concat(buildDarknessPortals(roadSet, LANDMARKS));
+  ROAD_LANDMARKS.concat(events).forEach((event) => occupied.add(tileKey(event.x, event.y)));
+  return events.map((event) => ({ ...event }));
+}
+
+function buildDarknessPortals(roadSet, taken) {
+  const occupied = new Set(taken.map((event) => tileKey(event.x, event.y)));
+  const candidates = Array.from(roadSet)
+    .map((key) => {
+      const [x, y] = key.split(',').map(Number);
+      return { x, y, distance: distanceBetween({ x, y }, SPAWN) };
+    })
+    .filter((tile) => !occupied.has(tileKey(tile.x, tile.y)) && tile.distance > 0)
+    .sort((a, b) => (
+      b.distance - a.distance ||
+      Math.abs(b.x) + Math.abs(b.y) - (Math.abs(a.x) + Math.abs(a.y)) ||
+      a.x - b.x ||
+      a.y - b.y
+    ));
+
+  const selected = [];
+  for (const candidate of candidates) {
+    if (selected.some((portal) => distanceBetween(portal, candidate) < DARKNESS_PORTAL_MIN_SPACING)) continue;
+    selected.push(candidate);
+    if (selected.length === DARKNESS_PORTAL_COUNT) break;
+  }
+
+  if (selected.length !== DARKNESS_PORTAL_COUNT) {
+    throw new Error(`Could not place ${DARKNESS_PORTAL_COUNT} Darkness Portals on remote road tiles.`);
+  }
+
+  return selected.map((portal) => ({
+    x: portal.x,
+    y: portal.y,
+    type: 'darkness-portal',
+    title: 'Darkness Portal',
+    description: `Spend ${DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE} Souls per map step to teleport here instantly.`,
+    summonCostPerDistance: DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE
+  }));
 }
 
 // The neutral center and all 11 demon zones must each contain a Forsaken
@@ -867,7 +881,7 @@ function main() {
   const roadSet = new Set();
   generateRoads(roadSet);
   validateConnectedRoads(roadSet);
-  const events = generateEvents(occupied);
+  const events = generateEvents(occupied, roadSet);
   validateZoneShrines(events, roadSet);
 
   const blocks = generateStructures(occupied, roadSet);

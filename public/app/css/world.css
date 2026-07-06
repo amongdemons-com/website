@@ -225,6 +225,10 @@ body.is-world-side-collapsed .world-map-controls {
     pointer-events: none;
 }
 
+.world-target-tooltip.has-actions {
+    pointer-events: auto;
+}
+
 .world-encounter-tooltip {
     position: absolute;
     z-index: 5;
@@ -425,6 +429,30 @@ body.is-world-side-collapsed .world-map-controls {
     font-size: 0.7rem;
     font-weight: 700;
     line-height: 1.35;
+}
+
+.world-target-summon-cost {
+    margin-top: 0.28rem;
+    color: rgba(232,199,106,0.86);
+    font-size: 0.68rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.world-target-summon-button {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.32rem;
+    margin-top: 0.12rem;
+    pointer-events: auto;
+}
+
+.world-target-summon-button .ad-icon {
+    width: 0.86rem;
+    height: 0.86rem;
+    margin: 0;
 }
 
 .world-enc-demons {
