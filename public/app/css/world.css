@@ -117,8 +117,7 @@ body.world-page > .game-shell-nav {
     max-width: calc(100% - 1.5rem);
 }
 
-.world-map-status span,
-.world-position-button {
+.world-map-status > span {
     display: inline-flex;
     align-items: center;
     gap: 0.36rem;
@@ -136,24 +135,69 @@ body.world-page > .game-shell-nav {
     box-shadow: 0 10px 24px rgba(0,0,0,0.34);
 }
 
+.world-map-controls {
+    position: absolute;
+    top: calc(var(--game-nav-height, 3.6rem) + 0.85rem);
+    right: calc(min(23rem, calc(100vw - 1.7rem)) + 1.3rem);
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.45rem;
+    pointer-events: none;
+}
+
+body.is-world-side-collapsed .world-map-controls {
+    right: calc(min(14.5rem, calc(100vw - 1.7rem)) + 1.3rem);
+}
+
 .world-position-button {
-    border-color: rgba(232,199,106,0.28);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    min-width: 3rem;
+    min-height: 3rem;
+    border: 1px solid rgba(161,212,201,0.16);
+    border-radius: 7px;
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.1), rgba(255,255,255,0.02)),
+        rgba(3,8,11,0.9);
+    color: rgba(232,199,106,0.92);
+    padding: 0;
     font: inherit;
+    line-height: 1;
+    box-shadow:
+        0 14px 30px rgba(0,0,0,0.42),
+        inset 0 0 0 1px rgba(255,255,255,0.045);
     cursor: pointer;
+    pointer-events: auto;
+    text-transform: uppercase;
+    backdrop-filter: blur(10px);
 }
 
 .world-position-button:hover,
 .world-position-button:focus-visible {
-    border-color: rgba(232,199,106,0.62);
+    border-color: rgba(161,212,201,0.34);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.14), rgba(255,255,255,0.035)),
+        rgba(3,8,11,0.94);
     color: #fff3bd;
     outline: 0;
 }
 
-.world-map-status .ad-icon {
+.world-map-status .ad-icon,
+.world-position-button .ad-icon {
     width: 0.92rem;
     height: 0.92rem;
     margin: 0;
     color: var(--ad-gold, #e8c76a);
+}
+
+.world-position-button .ad-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+    color: currentColor;
 }
 
 .world-target-tooltip {
@@ -2100,6 +2144,14 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
         width: min(20rem, calc(100vw - 1.3rem));
     }
 
+.world-map-controls {
+        right: calc(min(20rem, calc(100vw - 1.3rem)) + 1.05rem);
+    }
+
+body.is-world-side-collapsed .world-map-controls {
+        right: calc(min(14.5rem, calc(100vw - 1.3rem)) + 1.05rem);
+    }
+
 .world-side-content {
         gap: 0.62rem;
     }
@@ -2133,6 +2185,25 @@ body.world-page {
 .world-map-status {
         top: calc(var(--game-nav-height, 3.6rem) + 0.65rem);
         bottom: auto;
+    }
+
+.world-map-controls {
+        top: auto;
+        right: 0.85rem;
+        bottom: calc(4.35rem + var(--nav-xp-progress-height, 0rem) + env(safe-area-inset-bottom, 0px));
+    }
+
+body.is-world-side-collapsed .world-map-controls {
+        right: calc(min(14.5rem, calc(100vw - 1.3rem)) + 1.05rem);
+        bottom: calc(0.8rem + var(--nav-xp-progress-height, 0rem) + env(safe-area-inset-bottom, 0px));
+    }
+
+.world-position-button {
+        width: 3rem;
+        min-width: 3rem;
+        min-height: 3rem;
+        border-radius: 7px;
+        padding: 0;
     }
 }
 
@@ -2209,6 +2280,16 @@ body.world-page {
         display: none;
     }
 
+.world-map-controls {
+        right: 0.65rem;
+        bottom: calc(var(--world-side-panel-height, 3rem) + 0.65rem);
+    }
+
+body.is-world-side-collapsed .world-map-controls {
+        right: 0.65rem;
+        bottom: calc(var(--world-side-panel-height, 3rem) + 1.15rem);
+    }
+
 .world-side-panel:not(.is-collapsed) .world-side-toggle .ad-icon {
         transform: rotate(180deg);
     }
@@ -2220,11 +2301,14 @@ body.world-page {
         gap: 0.3rem;
     }
 
-.world-map-status span,
-    .world-position-button {
+.world-map-status > span {
         min-height: 1.85rem;
         padding-inline: 0.46rem;
         font-size: 0.66rem;
+    }
+
+.world-map-controls {
+        right: 0.5rem;
     }
 
 .world-encounter-player {

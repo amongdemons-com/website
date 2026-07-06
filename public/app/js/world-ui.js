@@ -138,6 +138,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     hunterAvatarTexture: null,
     effectLayer: null,
     resizeObserver: null,
+    sidePanelResizeObserver: null,
     cleanup: [],
     position: { x: 0, y: 0 },
     bounds: { min: -WORLD_RADIUS, max: WORLD_RADIUS },
@@ -341,6 +342,13 @@ import * as dungeonUtils from './dungeon/utils.js';
       setWorldSidePanelExpanded(!state.sidePanelExpanded);
     });
 
+    if (typeof ResizeObserver === 'function') {
+      state.sidePanelResizeObserver = new ResizeObserver(() => queueWorldSidePanelMeasure());
+      state.sidePanelResizeObserver.observe(elements.worldSidePanel);
+    } else {
+      addListener(window, 'resize', queueWorldSidePanelMeasure);
+    }
+
     syncWorldSidePanel();
   }
 
@@ -357,10 +365,26 @@ import * as dungeonUtils from './dungeon/utils.js';
     const status = getWorldSidePanelStatus();
     panel.classList.add('is-sheet-mode');
     panel.classList.toggle('is-collapsed', !state.sidePanelExpanded);
+    document.body?.classList.toggle('is-world-side-collapsed', !state.sidePanelExpanded);
     panel.dataset.worldStatus = status.toLowerCase();
     toggle.setAttribute('aria-expanded', String(!panel.classList.contains('is-collapsed')));
     setText(elements.worldSideStatusLabel, `${status.toUpperCase()} \u00b7 Area ${formatCoords(state.position)}`);
     setText(elements.worldSideAreaLabel, '');
+    queueWorldSidePanelMeasure();
+  }
+
+  function queueWorldSidePanelMeasure() {
+    window.requestAnimationFrame?.(syncWorldSidePanelMetrics) || syncWorldSidePanelMetrics();
+  }
+
+  function syncWorldSidePanelMetrics() {
+    const panel = elements.worldSidePanel;
+    if (!panel) return;
+
+    const height = Math.ceil(panel.getBoundingClientRect().height);
+    if (height > 0) {
+      document.body?.style.setProperty('--world-side-panel-height', `${height}px`);
+    }
   }
 
   function getWorldSidePanelStatus() {
@@ -2391,8 +2415,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     });
   }
 
-  // The hunter as a grounded circular token: soft ground shadow, faint gold
-  // aura, dark disc with a gold ring, and the avatar clipped to a circle.
+  // The hunter token uses a player-only badge shape so a demon profile avatar
+  // does not read as another circular demon spot on the map.
   function drawHunter() {
     const layer = state.hunterLayer;
     const frame = state.hunterFrame;
@@ -2401,28 +2425,51 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const center = tileCenter(state.hunterRenderPosition || state.position);
     const hasAvatar = Boolean(avatar && state.hunterAvatarTexture);
-    const radius = 20;
+    const avatarRadius = 22;
+    const frameRadius = 25;
+    const soulAccent = 0x6fd6bd;
+    const brightEdge = 0xf7fbf5;
 
     frame.clear();
 
-    // Ground shadow + a quiet gold aura so the hunter reads at a glance.
-    frame.ellipse(center.x, center.y + radius + 2, radius - 3, 5.5).fill({ color: 0x000000, alpha: 0.4 });
-    frame.circle(center.x, center.y, radius + 7).fill({ color: BOARD_COLORS.selection, alpha: 0.09 });
+    frame.ellipse(center.x, center.y + frameRadius + 7, frameRadius + 4, 7).fill({ color: 0x000000, alpha: 0.42 });
+    frame.circle(center.x, center.y, frameRadius + 9).fill({ color: soulAccent, alpha: 0.09 });
+    frame.circle(center.x, center.y, frameRadius + 6).fill({ color: BOARD_COLORS.selection, alpha: 0.08 });
 
-    // Dark portrait disc with a dark outer rim under the gold ring.
-    frame.circle(center.x, center.y, radius + 1).fill({ color: 0x050b0e, alpha: 0.97 });
-    frame.circle(center.x, center.y, radius + 2).stroke({ color: 0x0a0705, width: 2.5, alpha: 0.85 });
-    frame.circle(center.x, center.y, radius).stroke({ color: BOARD_COLORS.selection, width: 2, alpha: 0.95 });
+    frame.poly([
+      center.x - 7, center.y + frameRadius - 1,
+      center.x + 7, center.y + frameRadius - 1,
+      center.x, center.y + frameRadius + 13
+    ])
+      .fill({ color: 0x050b0e, alpha: 0.98 })
+      .stroke({ color: soulAccent, width: 2.3, alpha: 0.92 });
+
+    frame.circle(center.x, center.y, frameRadius + 3).fill({ color: 0x050b0e, alpha: 0.98 });
+    frame.circle(center.x, center.y, frameRadius + 5).stroke({ color: 0x020607, width: 3.4, alpha: 0.96 });
+    frame.circle(center.x, center.y, frameRadius + 2).stroke({ color: soulAccent, width: 2.8, alpha: 0.95 });
+    frame.circle(center.x, center.y, frameRadius - 1).stroke({ color: BOARD_COLORS.selection, width: 1.8, alpha: 0.96 });
+    frame.circle(center.x, center.y, avatarRadius + 0.5).stroke({ color: brightEdge, width: 1.1, alpha: 0.62 });
+
+    frame.poly([
+      center.x - 8, center.y - frameRadius - 5,
+      center.x, center.y - frameRadius - 12,
+      center.x + 8, center.y - frameRadius - 5,
+      center.x + 4, center.y - frameRadius - 3,
+      center.x, center.y - frameRadius - 7,
+      center.x - 4, center.y - frameRadius - 3
+    ])
+      .fill({ color: BOARD_COLORS.selection, alpha: 0.96 })
+      .stroke({ color: 0x020607, width: 1.2, alpha: 0.75 });
 
     if (hasAvatar) {
       avatar.texture = state.hunterAvatarTexture;
       avatar.visible = true;
       avatar.position.set(center.x, center.y);
-      avatar.width = radius * 2;
-      avatar.height = radius * 2;
+      avatar.width = avatarRadius * 2;
+      avatar.height = avatarRadius * 2;
       if (state.hunterMask) {
         state.hunterMask.clear();
-        state.hunterMask.circle(center.x, center.y, radius - 1).fill({ color: 0xffffff });
+        state.hunterMask.circle(center.x, center.y, avatarRadius).fill({ color: 0xffffff });
       }
     } else {
       if (avatar) avatar.visible = false;
@@ -3122,6 +3169,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         ${activeParts.length ? activeParts.join('') : `<p class="world-empty-text">${emptyText}</p>`}
       </div>
     `;
+    queueWorldSidePanelMeasure();
   }
 
   function renderPveSidebarParts({ encounter, currentShrine }) {
@@ -5994,6 +6042,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.cleanup.splice(0).forEach((cleanup) => cleanup());
     state.resizeObserver?.disconnect();
     state.resizeObserver = null;
+    state.sidePanelResizeObserver?.disconnect();
+    state.sidePanelResizeObserver = null;
 
     state.app?.ticker?.remove(updatePathPulse);
     state.app?.ticker?.remove(updateShrineGlow);
