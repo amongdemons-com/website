@@ -1,57 +1,30 @@
 # Among Demons
 
-Among Demons is a Node.js/Express prototype for a server-authoritative demon collection and dungeon-run game. The frontend is static HTML/CSS/vanilla JavaScript served from `public/app`; the backend is an Express API backed by MySQL.
+Among Demons is a server-authoritative demon-collection game built with Node.js/Express and MySQL. The frontend is static HTML/CSS/vanilla JavaScript served from `public/app` (the world map renders with Pixi.js); public marketing/catalog pages are server-rendered for SEO. All gameplay outcomes — combat, RNG, rewards, XP, Souls, movement, and collection writes — are calculated on the server. The browser only displays state and stages player choices.
 
-The current loop is:
+## Game Overview
 
-1. Register or log in.
-2. Start a Dungeon with two demons chosen from six signed draft starters and/or your permanent collection.
-3. Arrange the active team into front/back positions.
-4. Run automatic server-simulated battles.
-5. Recruit defeated demons into the temporary Dungeon team, skip recruitment, extract between fights, or continue to the next floor.
-6. Seal Demonic Pacts after milestone wins, or recast the offered choices by spending Souls.
-7. Keep pushing through unlimited floors while enemy Terror rises from dungeon depth and active pacts.
-8. Extraction grants earned XP/Souls and optionally saves one eligible demon; losing grants 0 XP, 0 Souls, and 0 demons.
-9. Spend Souls in `/collection` to train saved demons toward their type-specific stat caps.
+The game has two connected play spaces plus permanent progression:
 
-Combat, RNG, reward generation, XP, Souls, run status, and collection writes are server-authoritative. The browser displays state and stages player choices, but it must not calculate gameplay outcomes.
+- **Dungeon runs** (`/dungeon`) — roguelite runs through unlimited floors. Draft two starting demons, auto-battle server-simulated fights, recruit defeated enemies, seal run-long Demonic Pacts, and extract with XP/Souls and one saved demon — or lose everything on defeat.
+- **World map** (`/world`) — a 101×101 tile overworld with roads, unpassable terrain, demon encounters, Forsaken Shrines, and Darkness Portals. Travel tile-by-tile (roads are far safer from ambushes), fight fixed encounter teams, leave a team passively hunting for Souls, and challenge other hunters standing on your tile to PvP.
+- **Permanent progression** — a demon collection with Soul-based training (`/collection`), an account skill tree fed by level-up stat points (`/skill-tree`), daily quests and a daily reward (`/camp`), public hunter profiles (`/hunter/:username`), and leaderboards (`/rankings`).
 
 ## Tech Stack
 
 | Area | Technology |
 | --- | --- |
 | Runtime | Node.js |
-| Server | Express 4 |
+| Server | Express 4, `compression` |
 | Database | MySQL via `mysql2/promise` |
 | Config | `dotenv` |
 | Frontend | Static HTML, vanilla JavaScript |
-| Styling | Bootstrap 5, Lucide icons, custom CSS |
+| World rendering | Pixi.js 8 (served from `/vendor/pixi`) |
+| Styling | Custom CSS (split per page), Lucide icon subset |
+| Tests | Node built-in test runner (`node --test`) |
+| Asset tooling | `sharp` (dev dependency, WebP generation) |
 
-## Project Structure
-
-```txt
-amongdemons.com/
-|-- public/
-|   |-- api/
-|   |   |-- account/          # Player progression endpoints
-|   |   |-- auth/             # Register, login, session profile
-|   |   |-- data/             # Source demon, asset, and Demonic Pact JSON
-|   |   |-- demons/           # Permanent collection endpoints
-|   |   |-- game/             # Public static game-data endpoints
-|   |   |-- lib/              # Shared backend game/auth/db modules
-|   |   `-- runs/             # Dungeon run endpoints
-|   `-- app/
-|       |-- css/
-|       |-- images/
-|       `-- js/
-|-- api.md                   # Older planning notes
-|-- idea.md                  # Original game design notes
-|-- package.json
-|-- README.md
-`-- server.js
-```
-
-## Install And Run
+## Getting Started
 
 Install dependencies:
 
@@ -70,21 +43,7 @@ DB_PASSWORD=your_password
 PORT=3000
 ```
 
-Optional OAuth providers can be enabled by adding their credentials. The callback URLs configured with each provider should be:
-
-```txt
-https://your-domain.com/api/auth/oauth/google/callback
-https://your-domain.com/api/auth/oauth/discord/callback
-```
-
-For local development, replace the domain with `http://localhost:3000`. Set `OAUTH_REDIRECT_ORIGIN` when the public callback origin differs from the request host.
-
-Provider app review screens may also ask for policy URLs:
-
-```txt
-Privacy Policy URL: https://amongdemons.com/privacy
-Terms URL: https://amongdemons.com/terms
-```
+Optional OAuth sign-in (Google, Discord) is enabled by adding credentials:
 
 ```txt
 OAUTH_REDIRECT_ORIGIN=https://amongdemons.com
@@ -96,19 +55,16 @@ DISCORD_CLIENT_ID=your_discord_client_id
 DISCORD_CLIENT_SECRET=your_discord_client_secret
 ```
 
-Start the server:
+The callback URLs registered with each provider should be `https://your-domain.com/api/auth/oauth/google/callback` and `https://your-domain.com/api/auth/oauth/discord/callback` (use `http://localhost:3000` for local development). Set `OAUTH_REDIRECT_ORIGIN` when the public callback origin differs from the request host. Provider review screens can use `https://amongdemons.com/privacy` and `https://amongdemons.com/terms` as policy URLs.
+
+Start the server and open `http://localhost:3000`:
 
 ```bash
-npm run dev
+npm run dev   # with nodemon restarts
+npm start     # plain node
 ```
 
-Or run without nodemon:
-
-```bash
-npm start
-```
-
-Open `http://localhost:3000`.
+The database schema is created automatically on first API use — `public/api/lib/schema.js` creates missing tables and performs additive schema checks against older local databases.
 
 ## NPM Scripts
 
@@ -116,53 +72,74 @@ Open `http://localhost:3000`.
 | --- | --- | --- |
 | `npm start` | `node server.js` | Start the Express server |
 | `npm run dev` | `nodemon server.js` | Start with automatic restarts |
+| `npm test` | `node --test test/*.test.js` | Run the unit test suite |
+
+## Project Structure
+
+```txt
+amongdemons.com/
+|-- server.js                 # Express app: SEO pages, app pages, static serving, caching
+|-- lib/
+|   `-- seo-pages.js          # Server-rendered home, demon catalog, sitemap, robots.txt
+|-- public/
+|   |-- api/                  # Express API (mounted at /api)
+|   |   |-- account/          # Profile, progression, skill-tree points, daily quests
+|   |   |-- auth/             # Register, login, OAuth, session profile
+|   |   |-- demons/           # Permanent collection list/show/train
+|   |   |-- runs/             # Dungeon run lifecycle endpoints
+|   |   |-- game/             # Public static game-data endpoints
+|   |   |-- world.js          # World map, movement, shrines, portals, hunting, PvP
+|   |   |-- hunters.js        # Public hunter profile endpoint
+|   |   |-- leaderboard.js    # Rankings endpoint
+|   |   |-- data/             # Source game data JSON (types, demons, pacts, world map)
+|   |   `-- lib/              # Shared backend modules (combat, rules, db, schema, ...)
+|   |-- app/                  # Static frontend (HTML pages, css/, js/, images/)
+|   |-- android/              # Capacitor Android wrapper (separate git repo, ignored)
+|   `-- steam/                # Electron Steam wrapper (separate git repo, ignored)
+|-- scripts/                  # Asset/data generators (world map, icons, WebP, CSS split)
+`-- test/                     # node:test unit tests
+```
+
+`public/android` and `public/steam` are separate wrapper repositories (Capacitor and Electron respectively) and are excluded from this repo via `.gitignore`; each has its own README.
 
 ## Web Routes
 
 | Route | Description |
 | --- | --- |
-| `/` | Public game landing page |
-| `/demons` | Public demon collection catalog |
-| `/demons/:slug` | Public demon detail guide |
-| `/camp` | Authenticated player camp for progression, current run briefing, and quick actions |
-| `/dungeon` | Main Dungeon run UI |
-| `/login` | Login page |
-| `/register` | Registration page |
-| `/privacy` | Privacy policy for account, OAuth, and gameplay data |
-| `/terms` | Terms of service for player accounts and gameplay |
-| `/collection` | Full authenticated collection browser with filters, sorting, missing slots, and Soul-based demon training |
-| `/summon` | Authenticated Souls/summon placeholder page |
-| `/rank` | Redirects to `/rankings` |
-| `/rankings` | Leaderboard sorted by highest conquered dungeon floor by default |
-| `/rankings/souls` | Leaderboard page using the Souls sort |
+| `/` | Server-rendered public landing page |
+| `/demons`, `/demons/:slug` | Server-rendered public demon catalog and per-demon guides |
+| `/camp` | Authenticated hub: progression, current run briefing, daily quests, quick actions |
+| `/world` | World map exploration (Pixi.js) |
+| `/dungeon` | Dungeon run UI |
+| `/collection` | Collection browser with filters, sorting, missing slots, and Soul training |
+| `/skill-tree` | Account stat-point skill tree |
+| `/settings` | Account settings (username, profile demon) |
+| `/hunter/:username` | Public hunter profile |
+| `/login`, `/register` | Auth pages |
+| `/rankings`, `/rankings/:sort` | Leaderboards; sorts: `floor`, `level`, `souls`, `pvp` (`/rank` and `/hunter` redirect here) |
+| `/privacy`, `/terms` | Policy pages |
+| `/robots.txt`, `/sitemap.xml` | Generated SEO endpoints |
+
+`server.js` also enforces the canonical host/HTTPS with 301 redirects and sets `X-Robots-Tag: noindex` on API routes and authenticated app pages.
 
 ## Authentication
 
-Most gameplay API endpoints require an authenticated player. Send either:
+Most gameplay endpoints require an authenticated player. Send either header:
 
 ```txt
 Authorization: Bearer <token>
-```
-
-or:
-
-```txt
 x-player-token: <token>
 ```
 
-`POST /api/auth/register` creates a new account. `POST /api/auth/login` logs in an existing account; for prototype convenience, it also creates an account when the username does not exist. Passwords use PBKDF2-SHA512 with per-user salts. Session tokens are stored in `player_sessions`.
+`POST /api/auth/register` creates an account; `POST /api/auth/login` logs in (and, for prototype convenience, creates the account when the username does not exist). Passwords use PBKDF2-SHA512 with per-user salts; session tokens live in `player_sessions`.
 
-Google and Discord sign-in use `/api/auth/oauth/:provider`. Provider identities are stored in `player_oauth_accounts`. If a provider returns a verified email matching an existing password account, the provider is linked to that account; otherwise a new player is created with a generated username.
+Google and Discord sign-in flow through `/api/auth/oauth/:provider`. Provider identities are stored in `player_oauth_accounts`; a verified provider email matching an existing password account links to it, otherwise a new player is created with a generated username.
 
-The frontend stores the token and cleaned player object in `localStorage` under:
-
-```txt
-amongdemons-session
-```
+The frontend stores the token and cleaned player object in `localStorage` under the key `amongdemons-session`.
 
 ## API Endpoints
 
-All API routes are mounted under `/api`.
+All routes are mounted under `/api`.
 
 ### Auth
 
@@ -170,215 +147,244 @@ All API routes are mounted under `/api`.
 | --- | --- | --- |
 | `POST` | `/auth/register` | Create a player account and session |
 | `POST` | `/auth/login` | Log in, or create a prototype account if missing |
-| `GET` | `/auth/oauth/providers` | Return OAuth provider availability for the login/register UI |
+| `GET` | `/auth/oauth/providers` | OAuth provider availability for the login/register UI |
 | `GET` | `/auth/oauth/:provider` | Start Google or Discord OAuth sign-in |
-| `GET/POST` | `/auth/oauth/:provider/callback` | Complete OAuth sign-in and create a player session |
+| `GET/POST` | `/auth/oauth/:provider/callback` | Complete OAuth sign-in and create a session |
 | `GET` | `/auth/me` | Return the authenticated player |
 
-### Account And Collection
+### Account
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `GET` | `/account/progression` | Return level, XP, Souls, and unlocks |
+| `PATCH` | `/account/profile` | Update username and/or profile demon |
+| `GET` | `/account/progression` | Level, XP, Souls, and unlocks |
+| `GET` | `/account/stat-points` | Skill-tree summary: points earned, allocations, node states |
+| `POST` | `/account/stat-points` | Allocate a stat point to a skill-tree node |
+| `POST` | `/account/stat-points/reset` | Refund all allocations for Souls (10 per spent point) |
+| `GET` | `/account/quests` | Daily quest and daily reward state |
+| `POST` | `/account/quests/:questId/claim` | Claim a completed daily quest |
+| `POST` | `/account/daily-reward/claim` | Claim the daily Souls reward |
+
+### Collection
+
+| Method | Route | Description |
+| --- | --- | --- |
 | `GET` | `/demons` | List owned permanent demons |
 | `GET` | `/demons/:id` | Return one owned permanent demon |
-| `POST` | `/demons/:id/train` | Spend Souls to train one owned permanent demon server-side |
-
-### World Exploration
-
-| Method | Route | Description |
-| --- | --- | --- |
-| `GET` | `/world/state` | Return world map state, player position, visible objects, and the active Anchored Shrine |
-| `GET` | `/world/shrine` | Return the player's current bound Forsaken Shrine and whether they are standing on one |
-| `POST` | `/world/shrine/bind` | Bind the player's soul to the Forsaken Shrine under their current server-side position |
-| `POST` | `/world/portal/summon` | Spend Souls to teleport to a Darkness Portal |
-| `POST` | `/world/ambush-defeat` | Move the player to their Anchored Shrine after ambush defeat, or to spawn if none is bound |
-| `POST` | `/world/move` | Move along a validated world path and return travel events |
+| `POST` | `/demons/:id/train` | Spend Souls to train one demon server-side |
 
 ### Dungeon Runs
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `GET` | `/runs/start-options` | Return six draft starters, a short-lived signed draft token, and the player's collection |
-| `POST` | `/runs/start` | Start a new Dungeon run from two draft or collection demons |
-| `GET` | `/runs/current` | Return the player's current active or defeated pending run |
-| `GET` | `/runs/:id` | Return one run state owned by the player |
+| `GET` | `/runs/start-options` | Six draft starters, a signed short-lived draft token, and the collection |
+| `POST` | `/runs/start` | Start a run from two draft or collection demons |
+| `GET` | `/runs/current` | The player's active or defeated-pending run |
+| `GET` | `/runs/:id` | One run owned by the player |
 | `POST` | `/runs/:id/formation` | Update front/back positions before battle |
 | `POST` | `/runs/:id/battle` | Simulate the next battle server-side |
-| `POST` | `/runs/:id/buff` | Choose one pending Demonic Pact for the run |
-| `POST` | `/runs/:id/buff/reroll` | Recast the current Demonic Pact choices for 10 Souls |
+| `POST` | `/runs/:id/buff` | Choose one pending Demonic Pact |
+| `POST` | `/runs/:id/buff/reroll` | Recast the pact choices for 10 Souls |
 | `POST` | `/runs/:id/reward` | Mark a reward as claimed |
-| `POST` | `/runs/:id/recruit` | Stage or commit recruitment choices and advance to the next floor |
-| `POST` | `/runs/:id/cashout` | Extract between fights, save one eligible demon, and claim earned XP/Souls |
+| `POST` | `/runs/:id/recruit` | Stage or commit recruitment and advance to the next floor |
+| `POST` | `/runs/:id/cashout` | Extract: save one eligible demon and claim earned XP/Souls |
 | `POST` | `/runs/:id/end` | Finalize a defeated run with zero payout |
 
-### Game Data And Rankings
+### World
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `GET` | `/game/demon-types` | Return demon type, role, stat, targeting, and ability data |
-| `GET` | `/game/demons` | Return demon asset mappings |
-| `GET` | `/leaderboard?sort=floor\|level\|xp\|souls` | Return up to 100 players sorted by highest floor, level, XP, or Souls |
+| `GET` | `/world/map` | Static map layout (immutable-cached, keyed by content hash) |
+| `GET` | `/world/state` | Per-player world state: position, team, shrine, hunt, players nearby |
+| `POST` | `/world/move` | Move along a validated path; returns travel events and ambushes |
+| `GET/POST` | `/world/team` | Read or save the active world team |
+| `GET` | `/world/shrine` | Current bound Forsaken Shrine and whether standing on one |
+| `POST` | `/world/shrine/bind` | Bind to the Forsaken Shrine at the current position |
+| `POST` | `/world/portal/summon` | Spend Souls to teleport to a Darkness Portal (cost scales with distance) |
+| `POST` | `/world/hunt/try` | Fight the encounter on the current tile |
+| `POST` | `/world/hunting/start` | Start passive hunting on a defeated encounter |
+| `POST` | `/world/hunting/stop` | Stop hunting and bank the accumulated Souls |
+| `GET` | `/world/hunting/status` | Current passive hunt progress |
+| `POST` | `/world/ambush-defeat` | Return to the Anchored Shrine (or spawn) after an ambush loss |
+| `GET` | `/world/players-at` | Other hunters standing on a tile |
+| `POST` | `/world/challenge` | Challenge another hunter on your tile to PvP (30 s cooldown) |
 
-## Dungeon Rules
+### Public Data and Rankings
 
-- Starting options are generated as six choices from starter type IDs `1`, `2`, and `3`, with `common`, `uncommon`, or `rare` rarity.
-- Draft starter choices are protected by an HMAC-signed token and expire after 15 minutes.
-- Starting a new run closes any open runs for that player.
-- New Dungeon runs start with exactly 2 demons.
-- The active Dungeon team can contain up to 6 demons.
-- The player can use permanent collection demons as starting Dungeon demons.
-- The player team starts at 2 demons, then can grow by 1 per floor until it caps at 6 on floor 5.
-- Floor 1 is an easier opener with 1 common enemy. Enemy teams are 3 demons on floor 2, 4 on floor 3, 5 on floor 4, and 6 from floor 5 onward. Only enemies continue scaling deeper: 7 enemies on floor 35, 8 on floor 40, and 9 on floor 45 onward.
-- Floors 1 through 3 use the starter type pool; later floors unlock more types based on floor.
-- Dungeons have no final floor; after each win the run pauses for recruitment/extraction, then advances to the next floor.
-- From floor 4 onward, enemy generation applies spawn pressure that biases later floors toward higher type IDs and higher rarities while keeping each type's base `spawnWeight`. Spawn pressure eventually caps, but floors continue indefinitely.
-- Enemy rarity bands tighten as floors deepen: legendary enemies start appearing on floor 10, mythic enemies start appearing on floor 15, and floor 30 onward rolls mythic enemies only.
-- After clearing floor 10, the player may call in one collection demon as a one-time reinforcement while editing the team for the next floor.
-- After every win, defeated enemies become recruit rewards.
-- After every third cleared floor, the run offers three Demonic Pact choices before the player can recruit, continue, or extract.
-- Between fights, the player may stage a whole team, recruit one demon, swap demons, skip recruitment, or extract.
-- Extracting between fights saves one eligible new demon and grants accumulated XP/Souls.
-- Losing immediately ends the run and grants 0 XP, 0 Souls, and 0 demons, regardless of rewards staged before the loss.
-- Account levels use total XP thresholds of `250 * (level - 1)^1.65`; payout updates never reduce an already stored level.
-- The permanent collection has one slot per demon type and rarity, for 66 total slots. Saving another demon with the same type and rarity replaces that slot.
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/game/demon-types` | Demon type, role, stat, targeting, and ability data |
+| `GET` | `/game/demons` | Demon asset mappings |
+| `GET` | `/hunters/:username` | Public hunter profile (level, floor, PvP record, position) |
+| `GET` | `/leaderboard?sort=floor\|level\|xp\|souls\|pvp` | Up to 100 ranked players |
 
-## Demonic Pacts And Enemy Terror
+## Game Systems
 
-Demonic Pacts are run-long modifiers loaded from `public/api/data/run-buffs.json` and managed by `public/api/lib/run-buffs.js`.
+### Dungeon Runs
 
-- Pact choices are generated with rarity weights of `common: 70`, `uncommon: 24`, and `rare: 6`.
-- Each offer contains unique choices, but active pacts are intentionally not de-duplicated. The same pact can appear again in a later offer, and duplicate active pacts stack through the same effect pipeline as different pacts.
-- Recasting a pending offer costs 10 Souls through `POST /api/runs/:id/buff/reroll`. The recast excludes the choices from the current offer and returns `409` if no alternate choices exist.
-- Pending pacts block battle, recruitment, and extraction until one offered pact is chosen.
-- Pact effects can modify run stats, direct damage, retaliation, AOE damage, poison, healing, shields, ally death triggers, enemy death splash, and temporary team size.
-- Run stat buffs keep original run base stats in `runBaseMaxHp`, `runBaseAtk`, and `runBaseSpeed` so recruited enemies and saved demons do not accidentally keep temporary enemy or run scaling.
+- Runs start with exactly 2 demons chosen from six HMAC-signed draft starters (token expires after 15 minutes) and/or the permanent collection. Starting a new run closes any open run.
+- The team limit is `min(6, floor + 1)`: 2 demons on floor 1, capped at 6 from floor 5 onward. Enemy teams keep scaling deeper.
+- After clearing floor 10, the player may call in one collection demon as a one-time reinforcement.
+- After every win, defeated enemies become recruit options; between fights the player can recruit, swap, skip, or extract.
+- From floor 4 onward, enemy generation applies spawn pressure biasing deeper floors toward higher type IDs and rarities. A permanent enemy scaling layer ("Terror") ramps enemy stats starting at floor 18.
+- Extraction grants accumulated XP/Souls and saves one eligible demon. Losing grants 0 XP, 0 Souls, 0 demons — regardless of staged rewards.
+- Account levels use total-XP thresholds of `250 * (level - 1)^1.65`; payouts never reduce a stored level.
 
-Enemy Terror is the permanent enemy scaling layer shown in the Dungeon UI near the enemy formation title as `Terror <level>`. Its tooltip uses the line `Demons grow stronger in darkness.` and lists each enemy stat bonus on its own line.
+### Demonic Pacts
 
-- Terror level is `max(0, floor - 18) + activePactCount`.
-- Enemy HP multiplier is `1 + max(0, floor - 18) * 0.045 + activePactCount * 0.07`.
-- Enemy Attack multiplier is `1 + max(0, floor - 18) * 0.04 + activePactCount * 0.055`.
-- Enemy Speed multiplier is `min(1.85, 1 + max(0, floor - 18) * 0.012 + activePactCount * 0.02)`.
-- Serialized runs include `enemyPressure` for the current floor and `nextEnemyPressure` for the next enemy preview.
-- Enemy Terror is applied only to generated enemy teams; if an enemy is recruited, `resetRunDemon` strips the enemy scaling fields before the demon joins the player team.
+Run-long modifiers defined in `public/api/data/combat-buffs.json` and managed by `public/api/lib/combat-buffs.js`:
 
-## Collection Training Rules
+- Every third cleared floor offers three rarity-weighted pact choices; a pending offer blocks battle, recruitment, and extraction until resolved.
+- Recasting an offer costs 10 Souls and excludes the current choices (`409` if no alternates exist).
+- The same pact can appear in later offers and duplicates stack through the same effect pipeline.
+- Effects cover run stats, direct/AOE damage, retaliation, poison, healing, shields, death triggers, and temporary team size. Original run base stats are preserved so recruited/saved demons never keep temporary scaling.
 
-- Training is available from `/collection` for owned permanent demons only.
-- Training is server-authoritative through `POST /api/demons/:id/train`; the route locks the player row and demon row in one transaction before checking cost, spending Souls, and updating stats.
-- Each training action can increase one trainable stat by `+1`. The stat is picked with weighted randomness from stats that are not capped, weighted by remaining room to grow.
-- Stat caps come from the matching type's `baseStats` maximum in `public/api/data/demon-types.json`. For example, if a type has `"hp": [58, 74]`, a saved demon of that type can train HP only up to `74`.
-- Training cost starts at 2 Souls and increases as the demon approaches its caps. The cost curve uses overall progress toward all stat caps plus a rarity multiplier.
-- The train button is hidden when all stats are maxed. The modal shows current/max stat progress, the next training cost, and a delayed particle/result animation when training completes.
+### World Exploration
 
-## Combat Rules
+The world is a generated 101×101 grid (coordinates −50..50) defined in `public/api/data/map.json`: roads, unpassable blocks, fixed demon-team encounters, and event objects (shrines, portals). The layout is identical for every player, so `/world/map` is served immutable-cached and keyed by a content hash; `/world/state` carries only per-player data.
 
-Combat is automatic and simulated in `public/api/lib/combat.js`.
+- Movement is validated server-side step by step (up to 256 steps per request). Off-road steps on empty tiles risk ambushes (~1 in 7); roads are much safer (~1 in 34).
+- World Terror rises one level per map ring beyond the safe center (starting ~10 tiles out, capped at level 40), scaling encounter difficulty with distance.
+- **Forsaken Shrines** — bind your soul at a shrine to respawn there after ambush defeats instead of at world spawn.
+- **Darkness Portals** — paid teleports; the Soul cost scales with distance.
+- **Passive hunting** — after defeating a tile's encounter you may leave your world team hunting there. Souls accumulate while away but are capped by your Soul Vessel (base 50, expanded through skill-tree nodes), so AFK income is bounded by investment, not time.
+- **PvP** — hunters on the same tile can challenge each other (server-simulated battle, 30-second cooldown); wins and losses feed the `pvp` leaderboard and hunter profiles.
 
-- Living demons gain `attackMeter += speed` each tick.
-- When `attackMeter >= 100`, the demon acts and the meter resets.
-- Battles stop when one side has no living demons, or after the 1000 tick safety limit.
-- Front-row targeting prefers living front-row enemies and falls back to any living enemy.
-- Chu Perk's `slow_crushing_attack` has a 1% chance on hit to shove the target one row behind. If that row is occupied, the two demons swap formation slots; if the target is already in the last row, nothing moves.
-- Team state is cloned for battle, then persisted from the simulator result.
-- The API returns both a combat log and before/after snapshots for UI replay.
-- Poison effects tick slowly over time, can stack without a per-target cap, and are cleared from teams between cleared floors.
-- Active Demonic Pacts are applied server-side during battle simulation; the browser only renders the serialized run state and combat replay.
+### Skill Tree
 
-Implemented ability kinds include:
+Players earn one stat point per account level (level − 1 total). Nodes are defined in `public/api/lib/account-stat-points.js`:
 
-| Ability | Behavior |
+- Branches for Health, Healing, Thorns, Speed, Attack, AOE, Poison, and Soul Vessel: a flat node (cap 5) unlocks a percent node (cap 5), which unlocks an uncapped "Endless" mastery node.
+- Allocations translate into pre-battle combat buffs applied server-side (`player-combat-buffs.js`).
+- A full reset refunds all points for 10 Souls per spent point.
+
+### Daily Quests
+
+Defined in `public/api/lib/daily-quests.js` with a UTC daily reset: win 3 dungeon fights, extract a demon, and "Trial of the Few" (win at floor 3+ with an open team slot), plus a claimable daily Souls reward. Rewards scale with account level.
+
+### Collection and Training
+
+- The permanent collection has one slot per demon type and rarity — 11 types × 6 rarities = 66 slots. Saving a duplicate type/rarity replaces that slot.
+- Training (`POST /api/demons/:id/train`) is transactional and server-authoritative: it locks the player and demon rows, checks cost, spends Souls, and raises one stat by +1, picked with weighted randomness from stats below their caps.
+- Stat caps come from the matching type's `baseStats` maxima in `demon-types.json`. Cost starts at 2 Souls and grows with overall progress toward the caps, multiplied by rarity.
+
+### Combat
+
+Combat is automatic and simulated in `public/api/lib/combat.js` (all battle types — dungeon, world encounter, ambush, PvP — share the same simulator):
+
+- Living demons gain `attackMeter += speed` per tick and act when the meter reaches 100; battles end when one side is wiped or after a 1000-tick safety limit.
+- Front-row targeting prefers living front-row enemies, falling back to any living enemy.
+- Ability kinds include `basic_attack`, `heavy_attack`, `ranged_execute`, `fast_execute`, `aoe_attack`, `slow_crushing_attack` (with a rare knockback that shoves the target one row back or swaps slots), stacking `poison`, `heal` (most-missing-HP ally), `retaliate` (thorns), and `chaotic_attack`.
+- Team state is cloned for simulation and persisted from the result; the API returns a combat log plus before/after snapshots for UI replay.
+
+## Static Data and Assets
+
+Files in `public/api/data` are source game data — API code reads them at runtime and must not mutate them.
+
+| File | Contents |
 | --- | --- |
-| `basic_attack`, `heavy_attack`, `ranged_execute`, `fast_execute`, `aoe_attack` | Damage using configured targeting rules |
-| `slow_crushing_attack` | Damage using configured targeting rules, with Chu Perk's rare one-row knockback and occupied-slot swap |
-| `poison` | Applies stacking poison to high-HP targets |
-| `heal` | Heals the living ally with the most missing HP |
-| `retaliate` | Does not proactively attack; returns configured thorns damage when hit |
-| `chaotic_attack` | Hits a random target from its configured pool for random damage |
+| `demon-types.json` | 11 demon types: roles, base stat ranges, targeting, abilities, spawn weights |
+| `demons.json` | 66 demon asset/species mappings |
+| `combat-buffs.json` | 20 Demonic Pact definitions |
+| `map.json` | Generated world map: bounds, spawn, roads, blocks, encounters, events |
 
-## Static Data And Assets
-
-- Demon type definitions live in `public/api/data/demon-types.json`.
-- Demon training caps use the upper value of each type's `baseStats.hp`, `baseStats.atk`, and `baseStats.speed` ranges.
-- Demon image mappings live in `public/api/data/demons.json`.
-- Demonic Pact definitions live in `public/api/data/run-buffs.json`.
-- Full demon images live in `public/app/images/demons`.
-- Thumbnail images live in `public/app/images/demons/thumbnails`.
-- Page/background/logo assets live in `public/app/images`.
-- There are 11 demon types and 6 rarity tiers: `common`, `uncommon`, `rare`, `epic`, `legendary`, `mythic`.
-
-Treat files in `public/api/data` as source game data. API code reads them at runtime but should not mutate them.
+Demon art lives in `public/app/images/demons` (full PNGs for battle cards, generated WebP variants for map tokens, thumbnails for lists). Rarity tiers are `common`, `uncommon`, `rare`, `epic`, `legendary`, `mythic`.
 
 ## Database
 
-The API initializes required tables on first API use. `public/api/lib/schema.js` creates missing tables and performs additive schema checks for older local databases.
+Tables are created on first API use by `public/api/lib/schema.js`:
 
 | Table | Purpose |
 | --- | --- |
-| `players` | Account credentials, level, XP, Souls, unlocks |
-| `player_sessions` | Bearer/session tokens and expiration support |
+| `players` | Credentials, level, XP, Souls, PvP record, profile demon, unlocks |
+| `player_sessions` | Bearer/session tokens with expiration |
+| `player_oauth_accounts` | Linked Google/Discord identities |
+| `oauth_states` | Short-lived OAuth CSRF state |
+| `player_stat_points` | Skill-tree allocations |
 | `player_demons` | Permanent owned demon collection |
-| `player_world_positions` | Current server-side world map coordinates |
-| `player_bound_world_shrines` | Active Forsaken Shrine return coordinates |
-| `runs` | Dungeon state, rewards, combat history, and status |
-
-Run state and rewards are stored as JSON text in the `runs` table.
+| `player_world_positions` | Server-side world coordinates |
+| `player_bound_world_shrines` | Anchored Forsaken Shrine return points |
+| `player_hunt_unlocks` | Encounters defeated at least once (hunting eligibility) |
+| `player_active_hunts` | Active passive-hunt snapshots |
+| `player_world_teams` | Saved world battle teams |
+| `player_daily_quests` | Per-day quest progress and claims |
+| `runs` | Dungeon state, rewards, combat history, status (state stored as JSON text) |
 
 ## Frontend Modules
 
 | File | Purpose |
 | --- | --- |
-| `public/app/js/session.js` | Shared session storage and authenticated API helper |
-| `public/app/js/navigation.js` | Public demon browser navigation |
-| `public/app/js/auth-ui.js` | Login and register forms |
-| `public/app/js/camp-ui.js` | Authenticated player camp, progression, current run briefing, objectives, and quick actions |
-| `public/app/js/collection-ui.js` | Full collection filters, sorting, missing-slot display, and training modal UI |
-| `public/app/js/summon-ui.js` | Authenticated Souls/summon placeholder state |
+| `public/app/js/session.js` | Session storage and authenticated API helper |
+| `public/app/js/api-config.js` | API base configuration |
+| `public/app/js/auth-ui.js` | Login and register forms (password + OAuth) |
+| `public/app/js/camp-ui.js` | Camp hub: progression, run briefing, daily quests, quick actions |
+| `public/app/js/world-ui.js` | Pixi.js world map: movement, shrines, portals, hunting, PvP |
+| `public/app/js/dungeon.js` + `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, pacts, rewards |
+| `public/app/js/collection-ui.js` | Collection filters, sorting, missing slots, training modal |
+| `public/app/js/skill-tree-ui.js` | Skill-tree allocation UI |
+| `public/app/js/settings-ui.js` | Username and profile demon settings |
+| `public/app/js/hunter-ui.js` | Public hunter profile page |
 | `public/app/js/rankings-ui.js` | Leaderboard UI |
-| `public/app/js/dungeon.js` and `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, extraction, Demonic Pacts, active pact tooltips, enemy Terror display, and responsive hand/reward controls |
 | `public/app/js/demon-cards.js` | Shared demon card rendering |
+| `public/app/js/navigation.js` | Shared navigation |
+| `public/app/js/lucide-subset.js` | Generated icon subset (see scripts) |
+
+CSS is split per page — `base.css` loads everywhere; `battle.css`, `camp.css`, `collection.css`, `skill-tree.css`, and `world.css` load only where needed.
 
 ## Backend Modules
 
 | File | Purpose |
 | --- | --- |
-| `public/api/lib/auth.js` | Password hashing, token creation, auth middleware |
-| `public/api/lib/async-errors.js` | Express async error forwarding |
-| `public/api/lib/collection-demons.js` | Permanent collection save helpers and stat normalization for extracted demons |
+| `public/api/lib/auth.js` | Password hashing, tokens, auth middleware |
+| `public/api/lib/oauth.js` | Google/Discord OAuth flows |
+| `public/api/lib/usernames.js` | Username validation/normalization and OAuth-safe candidates |
+| `public/api/lib/progression.js` | Account level/XP curve |
+| `public/api/lib/account-stat-points.js` | Skill-tree nodes, caps, Soul Vessel capacity, resets |
+| `public/api/lib/daily-quests.js` | Daily quest definitions, progress, rewards |
 | `public/api/lib/combat.js` | Server-side combat simulator |
-| `public/api/lib/db.js` | MySQL connection pool and `.env` loading |
+| `public/api/lib/combat-buffs.js` | Demonic Pact loading, stacking, rerolls, effect pipeline |
+| `public/api/lib/player-combat-buffs.js` | Skill-tree allocations → pre-battle combat buffs |
 | `public/api/lib/demon-factory.js` | Demon generation, rarity selection, stat rolls |
-| `public/api/lib/demon-training.js` | Collection training caps, costs, stat rolls, and training metadata enrichment |
-| `public/api/lib/dungeon-rules.js` | Shared Dungeon team-size and collection-reinforcement constants |
+| `public/api/lib/demon-training.js` | Training caps, costs, stat rolls |
+| `public/api/lib/dungeon-enemies.js` | Enemy pools, floor sizing, spawn pressure, scaling |
+| `public/api/lib/dungeon-rules.js` | Team-size and reinforcement constants |
+| `public/api/lib/world-combat.js` | World encounters, terror, hunts, ambushes, PvP simulation |
+| `public/api/lib/world-shrines.js` | Forsaken Shrine lookup, binding, ambush returns |
+| `public/api/lib/collection-demons.js` | Collection save helpers and stat normalization |
+| `public/api/lib/run-demons.js` / `run-rewards.js` / `run-serialization.js` / `runs.js` | Run normalization, payouts, response shaping, persistence |
 | `public/api/lib/game-data.js` | JSON game-data readers |
-| `public/api/lib/dungeon-enemies.js` | Dungeon enemy pool, floor sizing, spawn pressure, and enemy Terror multipliers |
-| `public/api/lib/rng.js` | Deterministic seeded RNG helpers |
-| `public/api/lib/run-buffs.js` | Demonic Pact loading, serialization, stacking, rerolls, and combat/stat modifiers |
-| `public/api/lib/run-demons.js` | Run demon normalization and reset helpers |
-| `public/api/lib/run-rewards.js` | Reward Soul staging, discarded reward settlement, and earned payout helpers |
-| `public/api/lib/run-serialization.js` | Serialized run response shape, previews, pacts, team limits, and enemy Terror previews |
-| `public/api/lib/runs.js` | Run loading, serialization, and persistence helpers |
-| `public/api/lib/schema.js` | Database initialization and additive schema checks |
-| `public/api/lib/world-shrines.js` | Forsaken Shrine lookup, bound shrine persistence, and ambush defeat return rules |
+| `public/api/lib/rng.js` | Deterministic seeded RNG |
+| `public/api/lib/db.js` | MySQL pool and `.env` loading |
+| `public/api/lib/schema.js` | Table creation and additive schema checks |
+| `public/api/lib/async-errors.js` | Express async error forwarding |
+| `lib/seo-pages.js` | Server-rendered home/catalog pages, sitemap, robots.txt, canonical host |
 
-## Development Checks
+## Maintenance Scripts
 
-Check the server entrypoint:
+| Script | Purpose |
+| --- | --- |
+| `scripts/generate-world-map.js` | Regenerates `public/api/data/map.json` (roads, blocks, encounters, events) |
+| `scripts/generate-lucide-subset.js` | Rebuilds `lucide-subset.js` from icons actually referenced in HTML/JS |
+| `scripts/generate-demon-map-variants.js` | Generates small WebP demon variants for map tokens and avatars |
+| `scripts/split-main-css.js` | Re-runnable splitter that produced the per-page CSS files |
+
+## Caching
+
+In production (`NODE_ENV=production`), static assets are served with one-year immutable caching; HTML always revalidates. Because of this, **every JS/CSS reference in HTML must carry a `?v=` stamp, and the stamp must be bumped whenever the file changes**. The world map payload and demon catalog images are also immutable-cached, keyed by content. Caching is disabled outside production so local iteration never fights the cache.
+
+## Testing and Development Checks
+
+Run the unit tests (combat knockback, run rewards, stat points, username validation, world ambush rules, nav UI):
 
 ```bash
+npm test
+```
+
+Syntax-check the server and all backend/frontend scripts (PowerShell):
+
+```powershell
 node --check server.js
-```
-
-Check backend API files in PowerShell:
-
-```powershell
 Get-ChildItem -Recurse -Filter *.js public\api | ForEach-Object { node --check $_.FullName }
-```
-
-Check frontend scripts in PowerShell:
-
-```powershell
 Get-ChildItem -Recurse -Filter *.js public\app\js | ForEach-Object { node --check $_.FullName }
 ```
 
@@ -391,5 +397,3 @@ node -e "require('./public/api/lib/schema').initializeSchema().then(() => { cons
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
-This license allows anyone to use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the code, as long as the copyright and license notice are included.
