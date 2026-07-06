@@ -9,7 +9,7 @@ import * as dungeonRewards from './dungeon/rewards.js';
 import * as dungeonPacts from './dungeon/pacts.js';
 import * as dungeonHand from './dungeon/hand.js';
 import * as dungeonRecruit from './dungeon/recruit.js';
-import * as dungeonModals from './dungeon/modals.js';
+import * as dungeonModals from './dungeon/modals.js?v=20260706-hide-potions-v1';
 import * as dungeonDragDrop from './dungeon/drag-drop.js';
 import * as dungeonCards from './dungeon/cards.js';
 import * as dungeonUtils from './dungeon/utils.js';

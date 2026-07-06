@@ -627,13 +627,14 @@ function getDefeatedEnemyCount(result = {}, fallbackEnemyTeam = []) {
   return 0;
 }
 
-// Hunts started before the Soul Vessel existed have no snapshotted capacity;
-// the caller passes the player's live capacity as the fallback.
-function getSnapshotSoulCapacity(snapshot = {}, fallback) {
+// Vessel points spent (or reset) mid-hunt apply immediately: the player's
+// live capacity wins over the value snapshotted at hunt start, which only
+// covers callers that don't pass a live capacity.
+function getSnapshotSoulCapacity(snapshot = {}, liveCapacity) {
+  const live = Number(liveCapacity);
+  if (Number.isFinite(live) && live > 0) return Math.floor(live);
   const snapshotted = Number(snapshot.soulCapacity);
   if (Number.isFinite(snapshotted) && snapshotted > 0) return Math.floor(snapshotted);
-  const fallbackCapacity = Number(fallback);
-  if (Number.isFinite(fallbackCapacity) && fallbackCapacity > 0) return Math.floor(fallbackCapacity);
   return Infinity;
 }
 

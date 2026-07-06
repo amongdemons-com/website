@@ -8,7 +8,7 @@ import * as rewards from './dungeon/rewards.js';
 import * as pacts from './dungeon/pacts.js';
 import * as hand from './dungeon/hand.js';
 import * as recruit from './dungeon/recruit.js';
-import * as modals from './dungeon/modals.js';
+import * as modals from './dungeon/modals.js?v=20260706-hide-potions-v1';
 import * as dragDrop from './dungeon/drag-drop.js';
 import * as cards from './dungeon/cards.js';
 import * as utils from './dungeon/utils.js';

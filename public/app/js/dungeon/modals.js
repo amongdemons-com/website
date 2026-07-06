@@ -230,14 +230,15 @@ function getDemonForDetailCard(card) {
 function getDungeonDetailActions() {
   const actions = [];
 
-  if (isStrategyPhase()) {
-    actions.push({
-      label: 'Potions',
-      icon: 'potion',
-      variant: 'success',
-      onClick: () => setMessage('Potions are not available yet.', 'warning')
-    });
-  }
+  // Potions hidden until the feature ships.
+  // if (isStrategyPhase()) {
+  //   actions.push({
+  //     label: 'Potions',
+  //     icon: 'potion',
+  //     variant: 'success',
+  //     onClick: () => setMessage('Potions are not available yet.', 'warning')
+  //   });
+  // }
 
   return actions;
 }

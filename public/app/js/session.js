@@ -678,7 +678,7 @@
       return {
         type: 'success',
         title: 'Hunt ended.',
-        message: `You earned ${huntEnded[1]} XP and ${huntEnded[2]} Souls.${vesselOverflow ? ` Your Soul Vessel overflowed — ${vesselOverflow[1]} Souls slipped into the dark.` : ''}`,
+        message: `You earned ${huntEnded[1]} XP and ${huntEnded[2]} Souls.${vesselOverflow ? ` ${vesselOverflow[1]} Souls slipped into the dark.` : ''}`,
         action: vesselOverflow
           ? 'Expand your Soul Vessel in the skill tree to bank more.'
           : 'Choose another hunt or return to camp.'

@@ -539,7 +539,7 @@ async function settleActiveHunt(player, options = {}) {
 
     if (huntRows.length) {
       const snapshot = parseHuntSnapshot(huntRows[0].snapshot);
-      // Fallback capacity for hunts snapshotted before the Soul Vessel existed.
+      // Live capacity so vessel points spent mid-hunt apply to the payout.
       const soulCapacity = getHuntSoulCapacity(await getPlayerStatPointSummary(player));
       rewards = await calculateHuntRewards(snapshot, new Date(), { soulCapacity });
 
@@ -606,10 +606,13 @@ async function getHuntState(playerId) {
     db.query('SELECT encounter_id AS encounterId, snapshot, started_at AS startedAt, enemy_respawn_seconds AS enemyRespawnSeconds FROM player_active_hunts WHERE player_id = ? LIMIT 1', [playerId])
   ]);
   const active = activeRows[0][0] || null;
+  const liveSoulCapacity = active
+    ? getHuntSoulCapacity(await getPlayerStatPointSummary({ id: playerId }))
+    : null;
 
   return {
     unlockedEncounterIds: unlockRows[0].map((row) => row.encounterId),
-    active: active ? serializeActiveHunt(active) : null
+    active: active ? serializeActiveHunt(active, liveSoulCapacity) : null
   };
 }
 
@@ -638,7 +641,7 @@ async function getActiveHunt(playerId) {
   return rows[0] || null;
 }
 
-function serializeActiveHunt(row) {
+function serializeActiveHunt(row, liveSoulCapacity = null) {
   const snapshot = parseHuntSnapshot(row.snapshot);
   const killSeconds = getSnapshotKillSeconds(snapshot, row.enemyRespawnSeconds);
   const difficulty = Math.max(1, Number(snapshot.encounter?.difficulty) || 1);
@@ -662,7 +665,9 @@ function serializeActiveHunt(row) {
   );
   const battleMetrics = snapshot.battleMetrics || {};
 
-  const soulCapacity = Number(snapshot.soulCapacity);
+  // Live capacity wins so vessel points spent mid-hunt show up immediately;
+  // the value snapshotted at hunt start only covers legacy snapshots.
+  const soulCapacity = Number(liveSoulCapacity ?? snapshot.soulCapacity);
 
   return {
     encounterId: row.encounterId,
