@@ -4128,20 +4128,6 @@
       "description": "A blackened roadside shrine half-swallowed by old ash."
     },
     {
-      "x": -38,
-      "y": -28,
-      "type": "landmark",
-      "title": "Witch Road Ruins",
-      "description": "Collapsed stones from an older road system."
-    },
-    {
-      "x": 4,
-      "y": 39,
-      "type": "landmark",
-      "title": "Old Watch",
-      "description": "A broken lookout over the southern reaches."
-    },
-    {
       "x": -34,
       "y": 0,
       "type": "forsaken_shrine",

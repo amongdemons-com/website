@@ -72,8 +72,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     selection: 0xd7b765,
     validMove: 0x6f8faa,
     road: 0x191d16,
-    roadGlow: 0x2b2a20,
-    landmark: 0x9fb3aa
+    roadGlow: 0x2b2a20
   };
   const FALLBACK_BLOCKED_TILES = [
     { x: 1, y: 1, type: 'basalt' },
@@ -93,8 +92,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   ];
   const EVENT_COLORS = {
     forsaken_shrine: BOARD_COLORS.shrineGlow,
-    'darkness-portal': BOARD_COLORS.portalGlow,
-    landmark: BOARD_COLORS.landmark
+    'darkness-portal': BOARD_COLORS.portalGlow
   };
   const RARITY_COLORS = {
     common: '#D1D5D8',
@@ -432,6 +430,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.pathLayer = new Pixi.Graphics();
     state.pathPulse = new Pixi.Graphics();     // animated destination ring
     state.shrineGlow = new Pixi.Graphics();    // animated soul smoke around forsaken shrines
+    state.portalGlow = new Pixi.Graphics();    // animated breathing aura around darkness portals
     state.puddleFx = new Pixi.Graphics();      // animated bubbles / embers over puddles
     state.markerLayer = new Pixi.Container();
     state.encounterLayer = new Pixi.Container();
@@ -457,6 +456,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.viewport.addChild(state.pathLayer);
     state.viewport.addChild(state.pathPulse);
     state.viewport.addChild(state.shrineGlow);
+    state.viewport.addChild(state.portalGlow);
     state.viewport.addChild(state.markerLayer);
     state.viewport.addChild(state.encounterLayer);
     state.viewport.addChild(state.hunterLayer);
@@ -465,6 +465,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     app.ticker.add(updatePathPulse);
     app.ticker.add(updateShrineGlow);
+    app.ticker.add(updatePortalGlow);
     app.ticker.add(updatePuddleFx);
 
     bindCanvasInput(canvas);
@@ -504,7 +505,10 @@ import * as dungeonUtils from './dungeon/utils.js';
     const map = await loadWorldMapData(payload.mapVersion);
     state.position = normalizePosition(payload.position);
     state.bounds = map.bounds || state.bounds;
-    state.events = Array.isArray(map.events) ? map.events : [];
+    // Plain landmarks were retired from the map; drop any still present in
+    // cached map data.
+    state.events = (Array.isArray(map.events) ? map.events : [])
+      .filter((event) => event.type !== 'landmark');
     state.roads = Array.isArray(map.roads) ? map.roads : [];
     state.roadKeys = new Set(state.roads.map((tile) => getTileKey(tile)));
     state.encounters = Array.isArray(map.encounters) ? map.encounters : [];
@@ -1101,6 +1105,10 @@ import * as dungeonUtils from './dungeon/utils.js';
         body: { position }
       });
 
+      // Same blackout as an ambush defeat: fade to black, relocate the hunter
+      // while the screen is dark, then fade back in (in the finally below).
+      await fadeWorldAmbushDefeatToBlack();
+
       if (payload.player) {
         state.player = {
           ...(state.player || {}),
@@ -1126,6 +1134,9 @@ import * as dungeonUtils from './dungeon/utils.js';
       setButtonBusy(button, false);
       renderWorld();
       renderPanels();
+      if (state.ambushDefeatBlackoutActive) {
+        await fadeWorldAmbushDefeatFromBlack();
+      }
     }
   }
 
@@ -2005,6 +2016,25 @@ import * as dungeonUtils from './dungeon/utils.js';
     return pts;
   }
 
+  // One dark angular boulder with a moonlit facet and a crack line.
+  function drawBoulder(g, x, y, r, rng, palette) {
+    const body = palette.stone[Math.floor(rng() * palette.stone.length)];
+    const pts = boulderPoints(x, y, r, rng);
+    g.poly(pts).fill({ color: body })
+      .stroke({ color: palette.stoneDark, width: 1.6, alpha: 0.85 });
+
+    // Moonlit facet on the upper-left of the boulder.
+    const litPts = boulderPoints(x - r * 0.18, y - r * 0.22, r * 0.55, rng);
+    g.poly(litPts).fill({ color: palette.stoneLight, alpha: 0.16 });
+
+    // A crack line falling from near the top.
+    const crackX = x + (rng() - 0.5) * r * 0.6;
+    g.moveTo(crackX, y - r * 0.55)
+      .lineTo(crackX + (rng() - 0.5) * 6, y - r * 0.1)
+      .lineTo(crackX + (rng() - 0.5) * 8, y + r * 0.4)
+      .stroke({ color: palette.stoneDark, width: 1.1, alpha: 0.6 });
+  }
+
   // Blocked tile: a cluster of ruined rock outcrops — dark angular boulders
   // with a moonlit top edge, rubble at the base and moss in the cracks.
   function drawObstacle(g, kind, rng, palette) {
@@ -2024,21 +2054,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     ];
     for (let i = 0; i < count; i += 1) {
       const { x, y, r } = spots[i];
-      const body = tone();
-      const pts = boulderPoints(x, y, r, rng);
-      g.poly(pts).fill({ color: body })
-        .stroke({ color: palette.stoneDark, width: 1.6, alpha: 0.85 });
-
-      // Moonlit facet on the upper-left of the boulder.
-      const litPts = boulderPoints(x - r * 0.18, y - r * 0.22, r * 0.55, rng);
-      g.poly(litPts).fill({ color: palette.stoneLight, alpha: 0.16 });
-
-      // A crack line falling from near the top.
-      const crackX = x + (rng() - 0.5) * r * 0.6;
-      g.moveTo(crackX, y - r * 0.55)
-        .lineTo(crackX + (rng() - 0.5) * 6, y - r * 0.1)
-        .lineTo(crackX + (rng() - 0.5) * 8, y + r * 0.4)
-        .stroke({ color: palette.stoneDark, width: 1.1, alpha: 0.6 });
+      drawBoulder(g, x, y, r, rng, palette);
     }
 
     // Rubble scatter at the base.
@@ -2060,6 +2076,110 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
   }
 
+  // A single merged rock formation spanning a connected cluster of blocked
+  // tiles (every zone without a bespoke obstacle style). Drawn in world
+  // coordinates so boulders straddle tile boundaries and the cluster reads as
+  // one outcrop. Blocking/pathing logic is unchanged — every tile stays blocked.
+  function drawGiantRockCluster(g, tiles, palette) {
+    const keySet = new Set(tiles.map(getTileKey));
+    const seedFor = (a, b, c) => (Math.imul(a | 0, 73856093) ^ Math.imul(b | 0, 19349663) ^ (c >>> 0)) >>> 0;
+
+    // Boulder nodes in three size bands, biggest placed first. Anything that
+    // would sit inside a bigger rock's footprint is dropped — a large rock
+    // replaces the small clutter instead of being surrounded by it — and the
+    // bands overlap in size so the mix reads small → medium → large.
+    const bigs = [];
+    for (const t of tiles) {
+      const right = getTileKey({ x: t.x + 1, y: t.y });
+      const down = getTileKey({ x: t.x, y: t.y + 1 });
+      const diag = { x: t.x + 1, y: t.y + 1 };
+      if (!keySet.has(right) || !keySet.has(down) || !keySet.has(getTileKey(diag))) continue;
+      const c = tileCenter(t);
+      const rng = seededRng(seedFor(t.x + diag.x, t.y + diag.y, 0xb5297a4d));
+      const node = {
+        x: c.x + TILE_SIZE / 2 + (rng() - 0.5) * 10,
+        y: c.y + TILE_SIZE / 2 + (rng() - 0.5) * 10,
+        r: TILE_SIZE * (0.55 + rng() * 0.17),
+        seed: seedFor(t.x + diag.x, t.y + diag.y, 0x27d4eb2f)
+      };
+      // Overlapping 2x2 chunks would pile big rocks on top of each other.
+      if (bigs.some((b) => Math.hypot(b.x - node.x, b.y - node.y) < TILE_SIZE * 1.1)) continue;
+      bigs.push(node);
+    }
+    const insideBig = (x, y, factor) => bigs.some((b) => Math.hypot(b.x - x, b.y - y) < b.r * factor);
+
+    const nodes = [...bigs];
+    // Medium boulders bridge each seam between neighbouring tiles.
+    for (const t of tiles) {
+      for (const d of [{ x: 1, y: 0 }, { x: 0, y: 1 }]) {
+        const n = { x: t.x + d.x, y: t.y + d.y };
+        if (!keySet.has(getTileKey(n))) continue;
+        const a = tileCenter(t);
+        const b = tileCenter(n);
+        const rng = seededRng(seedFor(t.x + n.x, t.y + n.y, 0x85ebca6b));
+        const x = (a.x + b.x) / 2 + (rng() - 0.5) * 8;
+        const y = (a.y + b.y) / 2 + (rng() - 0.5) * 8;
+        if (insideBig(x, y, 0.95)) continue;
+        nodes.push({
+          x,
+          y,
+          r: TILE_SIZE * (0.34 + rng() * 0.14),
+          seed: seedFor(t.x + n.x, t.y + n.y, 0x165667b1)
+        });
+      }
+    }
+    // Small boulders fill whatever ground the bigger rocks left open.
+    for (const t of tiles) {
+      const c = tileCenter(t);
+      const rng = seededRng(seedFor(t.x, t.y, 0x9e3779b1));
+      const count = 1 + (rng() < 0.35 ? 1 : 0);
+      for (let i = 0; i < count; i += 1) {
+        const x = c.x + (rng() - 0.5) * TILE_SIZE * 0.5;
+        const y = c.y + (rng() - 0.5) * TILE_SIZE * 0.5;
+        const r = TILE_SIZE * (0.2 + rng() * 0.18);
+        if (insideBig(x, y, 0.8)) continue;
+        nodes.push({ x, y, r, seed: seedFor(t.x, t.y, 0x6c62272e + i) });
+      }
+    }
+
+    // Shadows first (one shared pool of darkness), then all the boulders
+    // back-to-front so the overlaps stack naturally.
+    for (const node of nodes) {
+      g.ellipse(node.x + 2, node.y + 6, node.r * 1.35, node.r * 1.05)
+        .fill({ color: 0x000000, alpha: 0.28 });
+    }
+    nodes.sort((a, b) => (a.y - b.y) || (a.r - b.r));
+    for (const node of nodes) {
+      drawBoulder(g, node.x, node.y, node.r, seededRng(node.seed), palette);
+    }
+
+    // Rubble and moss scattered per tile so the formation stays weathered.
+    for (const t of tiles) {
+      const c = tileCenter(t);
+      const rng = seededRng(seedFor(t.x, t.y, 0x38495ab5));
+      const rubble = 2 + Math.floor(rng() * 3);
+      for (let i = 0; i < rubble; i += 1) {
+        const a = rng() * Math.PI * 2;
+        const dist = TILE_SIZE * (0.3 + rng() * 0.16);
+        const px = c.x + Math.cos(a) * dist;
+        const py = c.y + Math.sin(a) * dist * 0.8 + 4;
+        const s = 1.6 + rng() * 2.6;
+        if (insideBig(px, py, 0.9)) continue;
+        g.ellipse(px, py, s, s * 0.75)
+          .fill({ color: palette.stone[Math.floor(rng() * palette.stone.length)], alpha: 0.8 });
+      }
+      const mossBits = 1 + Math.floor(rng() * 2);
+      for (let i = 0; i < mossBits; i += 1) {
+        const mx = c.x + (rng() - 0.5) * TILE_SIZE * 0.5;
+        const my = c.y + (rng() - 0.2) * TILE_SIZE * 0.3;
+        const mw = 2.5 + rng() * 3.5;
+        const mh = 2 + rng() * 2.5;
+        if (insideBig(mx, my, 0.9)) continue;
+        g.ellipse(mx, my, mw, mh).fill({ color: palette.moss, alpha: 0.3 });
+      }
+    }
+  }
+
   // --- board assembly (runs once) ---------------------------------------------
 
   function buildBoard() {
@@ -2072,12 +2192,24 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     // Tiles in a connected cluster of 2+ blocked tiles get drawn together as one
     // merged shape below (poison puddle in zone 3, lava in zone 4, leaf mass in
-    // zone 8), so skip their per-tile obstacle art here.
+    // zone 8, rock formation everywhere else), so skip their per-tile obstacle
+    // art here.
     const puddleComponents = computeBlockedComponents(3);
     const lavaComponents = computeBlockedComponents(4);
     const leafComponents = computeBlockedComponents(8);
+    const rockZones = new Set();
+    for (const t of state.blockedTiles) {
+      const zone = zoneTypeIdForTile(t.x, t.y);
+      if (zone !== 3 && zone !== 4 && zone !== 8) rockZones.add(zone);
+    }
+    const rockComponents = [];
+    for (const zone of rockZones) {
+      for (const comp of computeBlockedComponents(zone)) {
+        rockComponents.push({ zone, tiles: comp });
+      }
+    }
     const mergedKeys = new Set();
-    for (const comps of [puddleComponents, lavaComponents, leafComponents]) {
+    for (const comps of [puddleComponents, lavaComponents, leafComponents, rockComponents.map((c) => c.tiles)]) {
       for (const comp of comps) {
         if (comp.length >= 2) for (const t of comp) mergedKeys.add(getTileKey(t));
       }
@@ -2145,6 +2277,12 @@ import * as dungeonUtils from './dungeon/utils.js';
       drawGiantLeafCluster(leaves, comp, ZONE_PALETTES[8] || DEFAULT_ZONE_PALETTE);
       state.groundLayer.addChild(leaves);
     }
+    for (const { zone, tiles } of rockComponents) {
+      if (tiles.length < 2) continue;
+      const rocks = new Pixi.Graphics();
+      drawGiantRockCluster(rocks, tiles, ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE);
+      state.groundLayer.addChild(rocks);
+    }
 
     // Broad soft light/dark pools across the whole board (crosses tile seams).
     const macro = new Pixi.Graphics();
@@ -2194,20 +2332,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!layer) return;
     layer.clear();
 
-
-    // Event tile glows plus the active tile outline. No fog of war is drawn.
-    state.events.forEach((event) => {
-      const cx = event.x * TILE_SIZE + TILE_SIZE / 2;
-      const cy = event.y * TILE_SIZE + TILE_SIZE / 2;
-      if (event.type === 'forsaken_shrine') {
-        // Soul-glow is drawn entirely by updateShrineGlow (above the roads), so the
-        // smoke isn't clipped by road tiles. Nothing to draw on the fog layer here.
-      } else if (event.type === 'darkness-portal') {
-        layer.circle(cx, cy, TILE_SIZE * 0.4).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.18 });
-      } else if (event.type === 'landmark') {
-        layer.circle(cx, cy, TILE_SIZE * 0.34).fill({ color: BOARD_COLORS.landmark, alpha: 0.12 });
-      }
-    });
+    // Event glows all animate on the ticker now (updateShrineGlow /
+    // updatePortalGlow), so only the active tile outline is drawn here.
 
     // Active tile: a faint gold ground-ring under the hunter token.
     const active = tileCenter(state.position);
@@ -2310,6 +2436,30 @@ import * as dungeonUtils from './dungeon/utils.js';
     });
   }
 
+  // Animated aura for darkness portals — a soft violet glow that slowly swells
+  // and shrinks in a loop (runs on the ticker).
+  function updatePortalGlow() {
+    const layer = state.portalGlow;
+    if (!layer) return;
+    layer.clear();
+
+    const portals = (state.events || []).filter((event) => isDarknessPortalEvent(event));
+    if (!portals.length) return;
+
+    const now = performance.now();
+    portals.forEach((event) => {
+      const c = tileCenter(event);
+      // Per-portal phase offset so the portals don't all pulse in sync.
+      const phase = event.x * 17 + event.y * 29;
+      const breath = (Math.sin(now / 900 + phase) + 1) / 2; // 0..1 loop, ~5.6s
+      const radius = TILE_SIZE * (0.34 + breath * 0.12);
+      layer.circle(c.x, c.y, radius)
+        .fill({ color: BOARD_COLORS.portalGlow, alpha: 0.12 + breath * 0.08 });
+      layer.circle(c.x, c.y, radius * 0.6)
+        .fill({ color: BOARD_COLORS.portalGlow, alpha: 0.1 + breath * 0.06 });
+    });
+  }
+
   function drawMarkers() {
     drawEventMarkers();
     drawHunter();
@@ -2329,9 +2479,9 @@ import * as dungeonUtils from './dungeon/utils.js';
       const rng = seededRng((Math.imul(event.x | 0, 48271) ^ Math.imul(event.y | 0, 16807)) >>> 0);
 
       if (event.type === 'darkness-portal') {
-        // A dark well with pale light swirling into it.
+        // A dark well with pale light swirling into it. The breathing aura is
+        // drawn by updatePortalGlow on the ticker, beneath this marker.
         marker.ellipse(0, 14, 17, 6).fill({ color: 0x000000, alpha: 0.38 });
-        marker.circle(0, 0, 24).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.2 });
         marker.circle(0, 0, 15).fill({ color: 0x0d0812, alpha: 0.95 })
           .stroke({ color, width: 2.5, alpha: 0.95 });
         for (let i = 0; i < 3; i += 1) {
@@ -2346,22 +2496,6 @@ import * as dungeonUtils from './dungeon/utils.js';
         const bound = isBoundShrine(event);
         const soul = BOARD_COLORS.shrineSoul;
         drawShrineMarker(marker, soul, bound, rng);
-      } else if (event.type === 'landmark') {
-        // A leaning waymarker monolith on a cairn of stones.
-        marker.ellipse(1, 15, 16, 5.5).fill({ color: 0x000000, alpha: 0.38 });
-        marker.poly([-5, 14, -8, -14, -2, -18, 5, -15, 7, 14])
-          .fill({ color: 0x1a201d, alpha: 0.96 })
-          .stroke({ color: 0x0b0f0d, width: 1.6, alpha: 0.9 });
-        marker.poly([-6.5, -4, -2.5, -16.5, 0.5, -17.5, 0, -4]).fill({ color: 0x39463f, alpha: 0.4 });
-        // Carved sigil, faintly lit in the event colour.
-        marker.moveTo(0, -11).lineTo(0, 6).stroke({ color, width: 1.4, alpha: 0.75 });
-        marker.moveTo(-4, -6).lineTo(4, -6).stroke({ color, width: 1.4, alpha: 0.75 });
-        marker.moveTo(-3, 1).lineTo(3, 1).stroke({ color, width: 1.2, alpha: 0.6 });
-        for (let i = 0; i < 3; i += 1) {
-          const sx = -8 + i * 7 + rng() * 2;
-          marker.ellipse(sx, 13, 3.4 + rng() * 1.4, 2.4 + rng()).fill({ color: 0x232b26, alpha: 0.95 })
-            .stroke({ color: 0x0b0f0d, width: 1, alpha: 0.7 });
-        }
       } else {
         return;
       }
@@ -5821,7 +5955,6 @@ import * as dungeonUtils from './dungeon/utils.js';
   function getEventLabel(type) {
     if (type === 'forsaken_shrine') return 'Respawn Point';
     if (type === 'darkness-portal') return 'Darkness Portal';
-    if (type === 'landmark') return 'Landmark';
     return 'Event';
   }
 
@@ -6150,6 +6283,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     state.app?.ticker?.remove(updatePathPulse);
     state.app?.ticker?.remove(updateShrineGlow);
+    state.app?.ticker?.remove(updatePortalGlow);
     state.app?.ticker?.remove(updatePuddleFx);
     state.tileTextures.forEach((texture) => texture?.destroy?.(true));
     state.tileTextures.clear();

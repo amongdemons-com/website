@@ -811,7 +811,11 @@ function hasNearbyEncounter(encounterTiles, x, y) {
 function generateEvents(occupied, roadSet) {
   const events = LANDMARKS.concat(buildDarknessPortals(roadSet, LANDMARKS));
   ROAD_LANDMARKS.concat(events).forEach((event) => occupied.add(tileKey(event.x, event.y)));
-  return events.map((event) => ({ ...event }));
+  // Plain landmarks still anchor the road network and reserve their tiles, but
+  // they no longer appear as map events.
+  return events
+    .filter((event) => event.type !== 'landmark')
+    .map((event) => ({ ...event }));
 }
 
 function buildDarknessPortals(roadSet, taken) {
