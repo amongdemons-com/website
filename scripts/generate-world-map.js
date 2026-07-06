@@ -112,13 +112,37 @@ function allowedRaritiesForMeter(meter) {
   return table[meter] || ['common'];
 }
 
+// Organic zone boundaries. The neutral border radius breathes with the angle
+// and the wedge borders meander with distance from spawn, so zones read as
+// natural regions instead of a circle sliced by straight rays. All theta
+// harmonics use integer frequencies so the field stays continuous across the
+// -PI/PI wrap. Keep in sync with zoneTypeIdForTile in public/app/js/world-ui.js.
+function neutralZoneRadius(theta) {
+  return ZONE_START_RADIUS +
+    Math.sin(theta * 3 + 1.7) * 3.4 +
+    Math.sin(theta * 5 + 0.6) * 2.1 +
+    Math.sin(theta * 9 + 4.1) * 1.2;
+}
+
+// Angular offset (in 0..1 turns) applied to wedge borders; ~0.02 turns peak,
+// which bends a border by roughly 3 tiles at the neutral rim and 6 at the map edge.
+function zoneBoundaryJitter(radius, theta) {
+  return (
+    Math.sin(radius * 0.31 + theta * 2) * 0.5 +
+    Math.sin(radius * 0.17 - theta * 3 + 2.3) * 0.35 +
+    Math.sin(radius * 0.53 + theta * 5 + 4.6) * 0.15
+  ) * 0.02;
+}
+
 // Outer map bands are themed by angular demon wedges. The center stays neutral
 // so zones do not visibly start at spawn.
 function zoneTypeId(x, y) {
-  if (distanceFromCenter(x, y) < ZONE_START_RADIUS) return null;
+  const radius = distanceFromCenter(x, y);
   const angle = Math.atan2(y - SPAWN.y, x - SPAWN.x); // -PI..PI
+  if (radius < neutralZoneRadius(angle)) return null;
   const normalized = (angle + Math.PI) / (2 * Math.PI); // 0..1
-  const sector = Math.floor(((normalized + ZONE_ROTATION) % 1) * TYPE_COUNT) % TYPE_COUNT;
+  const jittered = normalized + ZONE_ROTATION + zoneBoundaryJitter(radius, angle);
+  const sector = Math.floor((((jittered % 1) + 1) % 1) * TYPE_COUNT) % TYPE_COUNT;
   return remapZoneTypeId(sector + 1);
 }
 
@@ -324,7 +348,7 @@ function buildEncounter(id, x, y, usedTeamKeys) {
 
 // Named landmarks give the road network and travel view anchors. Forsaken
 // Shrines are active world objects; the rest are visual anchors for now.
-const LANDMARKS = [
+const BASE_LANDMARKS = [
   {
     x: 0,
     y: 0,
@@ -404,6 +428,57 @@ const LANDMARKS = [
   }
 ];
 
+// Every demon zone must hold a Forsaken Shrine so hunters can anchor their
+// souls deep in the wilds. Zones already covered by a hand-placed shrine keep
+// it; the rest get one generated near the middle of their wedge.
+function buildZoneShrines(existingLandmarks) {
+  const covered = new Set(
+    existingLandmarks
+      .filter((event) => event.type === 'forsaken_shrine')
+      .map((event) => zoneTypeId(event.x, event.y) || 0)
+  );
+  const shrines = [];
+
+  for (let sector = 0; sector < TYPE_COUNT; sector += 1) {
+    const typeId = remapZoneTypeId(sector + 1);
+    if (covered.has(typeId)) continue;
+    const spot = findZoneShrineSpot(sector, typeId, existingLandmarks.concat(shrines));
+    shrines.push({
+      x: spot.x,
+      y: spot.y,
+      type: 'forsaken_shrine',
+      title: 'Forsaken Shrine',
+      description: 'A weathered altar where hunters can anchor their souls.'
+    });
+  }
+
+  return shrines;
+}
+
+// Aim for the wedge's central angle at mid-depth, then widen the search until
+// the tile actually lands inside the zone (borders meander with the jitter).
+function findZoneShrineSpot(sector, typeId, taken) {
+  const centerTheta = (((sector + 0.5) / TYPE_COUNT) - ZONE_ROTATION) * 2 * Math.PI - Math.PI;
+  const angleOffsets = [0, 0.01, -0.01, 0.02, -0.02, 0.03, -0.03];
+
+  for (let radius = 34; radius <= 48; radius += 1) {
+    for (const offsetTurns of angleOffsets) {
+      const theta = centerTheta + offsetTurns * 2 * Math.PI;
+      const x = Math.round(Math.cos(theta) * radius);
+      const y = Math.round(Math.sin(theta) * radius);
+      if (!inBounds(x, y)) continue;
+      if (zoneTypeId(x, y) !== typeId) continue;
+      if (taken.some((event) => Math.abs(event.x - x) <= 2 && Math.abs(event.y - y) <= 2)) continue;
+      return { x, y };
+    }
+  }
+
+  throw new Error(`Could not place a Forsaken Shrine inside zone ${typeId}.`);
+}
+
+const ZONE_SHRINES = buildZoneShrines(BASE_LANDMARKS);
+const LANDMARKS = [...BASE_LANDMARKS, ...ZONE_SHRINES];
+
 const ROAD_ROUTES = [
   [SPAWN, { x: 7, y: -4 }, { x: 10, y: -5 }, { x: 20, y: -15 }, { x: 35, y: -31 }],
   [SPAWN, { x: -7, y: -2 }, { x: -15, y: -17 }, { x: -18, y: -41 }],
@@ -428,6 +503,8 @@ function generateRoads(roadSet) {
       carveRoadPath(tiles, route[index - 1], route[index]);
     }
   });
+
+  connectZoneShrines(tiles);
 
   // Short branches make the network feel explored rather than purely optimal.
   addSideTrails(tiles);
@@ -504,6 +581,21 @@ function clampRoadStep(position, target) {
   return Math.abs(target.x - x) >= Math.abs(target.y - y)
     ? { x, y: position.y }
     : { x: position.x, y };
+}
+
+// Anchor every generated zone shrine to the road network via the nearest
+// already-connected landmark, so each respawn point has a road leading to it.
+function connectZoneShrines(tiles) {
+  const anchors = [SPAWN, ...BASE_LANDMARKS.map((event) => ({ x: event.x, y: event.y }))];
+
+  ZONE_SHRINES.forEach((shrine) => {
+    const target = { x: shrine.x, y: shrine.y };
+    const nearest = anchors.reduce((best, anchor) => (
+      distanceBetween(anchor, target) < distanceBetween(best, target) ? anchor : best
+    ));
+    carveRoadPath(tiles, nearest, target);
+    anchors.push(target);
+  });
 }
 
 function addSideTrails(tiles) {
@@ -744,6 +836,25 @@ function generateEvents(occupied) {
   return LANDMARKS.map((event) => ({ ...event }));
 }
 
+// The neutral center and all 11 demon zones must each contain a Forsaken
+// Shrine, and every shrine tile must sit on the road network.
+function validateZoneShrines(events, roadSet) {
+  const shrines = events.filter((event) => event.type === 'forsaken_shrine');
+  const shrineZones = new Set(shrines.map((shrine) => zoneTypeId(shrine.x, shrine.y) || 0));
+
+  for (let typeId = 0; typeId <= TYPE_COUNT; typeId += 1) {
+    if (!shrineZones.has(typeId)) {
+      throw new Error(`Zone ${typeId} has no Forsaken Shrine.`);
+    }
+  }
+
+  shrines.forEach((shrine) => {
+    if (!roadSet.has(tileKey(shrine.x, shrine.y))) {
+      throw new Error(`Forsaken Shrine at ${shrine.x},${shrine.y} is not on the road network.`);
+    }
+  });
+}
+
 function main() {
   const occupied = new Set();
   // Reserve the spawn tile and its neighbors.
@@ -757,6 +868,7 @@ function main() {
   generateRoads(roadSet);
   validateConnectedRoads(roadSet);
   const events = generateEvents(occupied);
+  validateZoneShrines(events, roadSet);
 
   const blocks = generateStructures(occupied, roadSet);
   generateBlockClusters(blocks, occupied, roadSet);

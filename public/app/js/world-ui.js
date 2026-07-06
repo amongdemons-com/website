@@ -1161,11 +1161,34 @@ import * as dungeonUtils from './dungeon/utils.js';
     return (h >>> 0) / 4294967296;
   }
 
+  // Organic zone boundaries. The neutral border radius breathes with the angle
+  // and the wedge borders meander with distance from spawn. All theta harmonics
+  // use integer frequencies so the field stays continuous across the -PI/PI
+  // wrap. Keep in sync with zoneTypeId in scripts/generate-world-map.js.
+  function neutralZoneRadius(theta) {
+    return ZONE_START_RADIUS +
+      Math.sin(theta * 3 + 1.7) * 3.4 +
+      Math.sin(theta * 5 + 0.6) * 2.1 +
+      Math.sin(theta * 9 + 4.1) * 1.2;
+  }
+
+  // Angular offset (in 0..1 turns) applied to wedge borders; ~0.02 turns peak,
+  // which bends a border by roughly 3 tiles at the neutral rim and 6 at the map edge.
+  function zoneBoundaryJitter(radius, theta) {
+    return (
+      Math.sin(radius * 0.31 + theta * 2) * 0.5 +
+      Math.sin(radius * 0.17 - theta * 3 + 2.3) * 0.35 +
+      Math.sin(radius * 0.53 + theta * 5 + 4.6) * 0.15
+    ) * 0.02;
+  }
+
   function zoneTypeIdForTile(x, y) {
-    if (Math.hypot(x, y) < ZONE_START_RADIUS) return 0;
+    const radius = Math.hypot(x, y);
     const angle = Math.atan2(y, x);
+    if (radius < neutralZoneRadius(angle)) return 0;
     const normalized = (angle + Math.PI) / (2 * Math.PI);
-    const sector = Math.floor(((normalized + ZONE_ROTATION) % 1) * TYPE_COUNT) % TYPE_COUNT;
+    const jittered = normalized + ZONE_ROTATION + zoneBoundaryJitter(radius, angle);
+    const sector = Math.floor((((jittered % 1) + 1) % 1) * TYPE_COUNT) % TYPE_COUNT;
     return remapZoneTypeId(sector + 1);
   }
 
@@ -1732,42 +1755,12 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
   }
 
-  // Stroke one wobbling molten crack from (sx,sy) to (ex,ey). `pass` 0 is the
-  // wide soft halo, pass 1 the hot core — run both with the same rng seed.
-  function strokeLavaCrack(g, sx, sy, ex, ey, rng, colors, pass) {
-    const m1x = sx + (ex - sx) * 0.3 + (rng() - 0.5) * 30;
-    const m1y = sy + (ey - sy) * 0.3 + (rng() - 0.5) * 30;
-    const m2x = sx + (ex - sx) * 0.68 + (rng() - 0.5) * 30;
-    const m2y = sy + (ey - sy) * 0.68 + (rng() - 0.5) * 30;
-    g.moveTo(sx, sy)
-      .quadraticCurveTo(m1x, m1y, (m1x + m2x) / 2, (m1y + m2y) / 2)
-      .quadraticCurveTo(m2x, m2y, ex, ey);
-    if (pass === 0) g.stroke({ color: colors.fissure, width: 6.5, alpha: 0.2 });
-    else g.stroke({ color: colors.fissure, width: 1.3 + rng() * 1.2, alpha: 0.6 + rng() * 0.25 });
-  }
-
-  // Solo-tile lava surface: crust plates plus one crack across the pool.
-  function drawLavaDetails(g, cx, cy, radius, rng, colors) {
-    drawLavaCrust(g, cx, cy, radius, rng, colors);
-    const crackSeed = Math.floor(rng() * 0xffffffff);
-    const a = rng() * Math.PI * 2;
-    const b = a + Math.PI + (rng() - 0.5) * 0.9;
-    for (let pass = 0; pass < 2; pass += 1) {
-      strokeLavaCrack(
-        g,
-        cx + Math.cos(a) * radius * 0.9, cy + Math.sin(a) * radius * 0.8,
-        cx + Math.cos(b) * radius * 0.9, cy + Math.sin(b) * radius * 0.8,
-        seededRng(crackSeed), colors, pass
-      );
-    }
-  }
-
+  // Solo tiles and merged pools both keep just the crust plates and hot
+  // wells — no glowing crack lines.
   function drawLavaPuddle(g, rng, palette) {
-    drawPuddle(g, rng, palette, lavaPuddleColors, drawLavaDetails);
+    drawPuddle(g, rng, palette, lavaPuddleColors, drawLavaCrust);
   }
 
-  // Merged pools keep just the crust plates and hot wells — no crack lines
-  // running between tiles.
   function drawGiantLavaPuddle(g, tiles, palette) {
     drawGiantPuddle(g, tiles, palette, lavaPuddleColors, drawLavaCrust);
   }
