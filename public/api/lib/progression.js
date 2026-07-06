@@ -22,10 +22,18 @@ function getXpForAccountLevel(level) {
   return Math.ceil(ACCOUNT_LEVEL_BASE_XP * Math.pow(targetLevel - 1, ACCOUNT_LEVEL_EXPONENT));
 }
 
+// Collapses XP down to the floor of the level it already reached: the level
+// derived from the result always equals the level derived from the input, so
+// normalizing can trim progress toward the next level but never demote.
+function getNormalizedAccountXp(xp) {
+  return getXpForAccountLevel(getAccountLevelForXp(xp));
+}
+
 module.exports = {
   ACCOUNT_LEVEL_BASE_XP,
   ACCOUNT_LEVEL_EXPONENT,
   getAccountLevelForXp,
   getNextAccountLevel,
+  getNormalizedAccountXp,
   getXpForAccountLevel
 };

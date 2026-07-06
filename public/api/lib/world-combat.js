@@ -22,6 +22,11 @@ const WORLD_DISTANCE_REWARD_START = 8;
 const WORLD_DISTANCE_REWARD_CAP = 70;
 const WORLD_DISTANCE_XP_MULTIPLIER_BONUS = 2;
 const WORLD_TERROR_START_DISTANCE = 10;
+// Passive (AFK) hunting pays a fraction of the per-kill XP that an active
+// fight is worth. xpPerCycle keeps its distance/difficulty/Terror scaling, so
+// far encounters stay strictly better — they just accrue at a reduced rate.
+// Keep this in sync with PASSIVE_HUNT_XP_MULTIPLIER in public/app/js/world-ui.js.
+const PASSIVE_HUNT_XP_MULTIPLIER = 0.20;
 const WORLD_TERROR_MAX_LEVEL = 40;
 const DUNGEON_TERROR_START_FLOOR = 18;
 const WORLD_TEAM_LIMIT = 6;
@@ -444,7 +449,7 @@ async function calculateHuntRewards(snapshot, stoppedAt = new Date(), options = 
     xpPerCycle,
     soulsPerCycle,
     defeatedDemonsPerCycle,
-    xp: wins * xpPerCycle,
+    xp: wins > 0 ? Math.max(1, Math.floor(wins * xpPerCycle * PASSIVE_HUNT_XP_MULTIPLIER)) : 0,
     souls,
     soulCapacity: Number.isFinite(soulCapacity) ? soulCapacity : null,
     soulsLost: Math.max(0, uncappedSouls - souls),
@@ -810,6 +815,7 @@ function hashSeed(value) {
 }
 
 module.exports = {
+  PASSIVE_HUNT_XP_MULTIPLIER,
   calculateHuntRewards,
   createHuntSnapshot,
   getActiveWorldTeam,

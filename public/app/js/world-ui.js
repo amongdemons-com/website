@@ -46,6 +46,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   const WORLD_DISTANCE_REWARD_START = 8;
   const WORLD_DISTANCE_REWARD_CAP = 70;
   const WORLD_DISTANCE_XP_MULTIPLIER_BONUS = 2;
+  // Keep this in sync with PASSIVE_HUNT_XP_MULTIPLIER in public/api/lib/world-combat.js.
+  const PASSIVE_HUNT_XP_MULTIPLIER = 0.20;
   const WORLD_TERROR_START_DISTANCE = 10;
   const WORLD_TERROR_MAX_LEVEL = 40;
   const WORLD_AMBUSH_DEFEAT_FADE_MS = 900;
@@ -3673,12 +3675,15 @@ import * as dungeonUtils from './dungeon/utils.js';
   function renderHuntRewardLines(rate, progress) {
     const accruedXp = progress ? progress.accruedXp : 0;
     const accruedSouls = progress ? progress.accruedSouls : 0;
+    // Passive hunts pay reduced XP; show the reduced per-kill rate so the
+    // ticker matches what the server banks when the hunt ends.
+    const passiveXpPerKill = Math.max(1, Math.floor(rate.xpPerCycle * PASSIVE_HUNT_XP_MULTIPLIER));
 
     return `
       <span class="world-hunt-reward-lines">
         <span class="world-hunt-reward-row">
           <span class="world-hunt-reward-label">Per kill:</span>
-          <span class="world-hunt-reward-value world-hunt-xp-value">${formatNumber(rate.xpPerCycle)} XP</span>
+          <span class="world-hunt-reward-value world-hunt-xp-value">${formatNumber(passiveXpPerKill)} XP</span>
           <span class="world-hunt-reward-value world-hunt-souls-value">${formatSoulCount(rate.soulsPerCycle)}</span>
         </span>
         <span class="world-hunt-reward-row is-earned">
@@ -5923,7 +5928,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       cycles,
       xpPerCycle: rate.xpPerCycle,
       soulsPerCycle: rate.soulsPerCycle,
-      accruedXp: cycles * rate.xpPerCycle,
+      accruedXp: cycles > 0 ? Math.max(1, Math.floor(cycles * rate.xpPerCycle * PASSIVE_HUNT_XP_MULTIPLIER)) : 0,
       accruedSouls,
       soulCapacity: Number.isFinite(soulCapacity) ? soulCapacity : null,
       vesselFull: Number.isFinite(soulCapacity) && (uncappedSouls >= soulCapacity || accruedSouls >= soulCapacity),
