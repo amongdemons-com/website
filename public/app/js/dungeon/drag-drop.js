@@ -452,7 +452,7 @@ function startPointerDrag(event) {
   const payload = getPointerDragPayload(card);
   if (!payload) return;
 
-  trackPointerDrag(createDragSession(
+  const drag = createDragSession(
     card,
     payload,
     event.clientX,
@@ -462,7 +462,8 @@ function startPointerDrag(event) {
     'pointerup',
     'pointercancel',
     event.pointerId
-  ));
+  );
+  trackPointerDrag(drag);
 }
 
 function startMouseDrag(event) {
@@ -520,6 +521,25 @@ function createDragSession(card, payload, startX, startY, listenerTarget, moveEv
   };
 }
 
+function lockPointerDragViewport() {
+  if (!document.body?.classList.contains('dungeon-page')) return;
+
+  const viewportHeight = Math.max(
+    document.documentElement?.clientHeight || 0,
+    window.innerHeight || 0,
+    window.visualViewport?.height || 0
+  );
+  if (Number.isFinite(viewportHeight) && viewportHeight > 0) {
+    document.documentElement.style.setProperty('--dungeon-drag-viewport-height', `${Math.round(viewportHeight)}px`);
+  }
+  document.body.classList.add('is-dungeon-pointer-dragging');
+}
+
+function unlockPointerDragViewport() {
+  document.body?.classList.remove('is-dungeon-pointer-dragging');
+  document.documentElement.style.removeProperty('--dungeon-drag-viewport-height');
+}
+
 function movePointerDrag(event, drag) {
   if (drag.pointerId !== null && event.pointerId !== drag.pointerId) return;
 
@@ -540,6 +560,7 @@ function movePointerDrag(event, drag) {
 
 function activatePointerDrag(event, drag) {
   drag.active = true;
+  lockPointerDragViewport();
   drag.card.classList.add('is-dragging');
   drag.card.classList.add('is-pointer-dragging');
   drag.card.classList.add('suppress-detail-click');
@@ -559,10 +580,14 @@ function activatePointerDrag(event, drag) {
 
   drag.ghost = drag.card.cloneNode(true);
   drag.ghost.classList.add('pointer-drag-ghost');
+  drag.ghost.classList.remove('is-dragging', 'is-pointer-dragging', 'suppress-detail-click', 'is-drag-over');
   drag.ghost.removeAttribute('id');
   drag.ghost.removeAttribute('role');
   drag.ghost.removeAttribute('tabindex');
+  drag.ghost.setAttribute('aria-hidden', 'true');
   drag.ghost.style.width = `${drag.card.getBoundingClientRect().width}px`;
+  drag.ghost.style.opacity = '0.94';
+  drag.ghost.style.visibility = 'visible';
   document.body.appendChild(drag.ghost);
   const point = getDragPoint(event);
   if (point) positionPointerDragGhost(drag.ghost, point.clientX, point.clientY);
@@ -572,6 +597,7 @@ function finishPointerDrag(event, drag, onMove, onUp, onCancel) {
   cleanupPointerDragListeners(drag, onMove, onUp, onCancel);
   if (!drag.active) {
     clearDragState();
+    unlockPointerDragViewport();
     return;
   }
 
@@ -589,6 +615,9 @@ function cancelPointerDrag(event, drag, onMove, onUp, onCancel) {
   if (drag.active) {
     if (event.cancelable) event.preventDefault();
     cleanupPointerDrag(drag);
+  } else {
+    clearDragState();
+    unlockPointerDragViewport();
   }
 }
 
@@ -604,6 +633,7 @@ function cleanupPointerDrag(drag) {
   drag.ghost?.remove();
   setPointerDropTarget(drag, null);
   clearDragState();
+  unlockPointerDragViewport();
 
   window.setTimeout(() => {
     drag.card.classList.remove('suppress-detail-click');

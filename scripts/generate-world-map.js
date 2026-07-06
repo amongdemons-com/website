@@ -43,6 +43,8 @@ const BLOCK_TYPES = ['basalt', 'bone-spur', 'chasm', 'ruin'];
 const TYPE_COUNT = 11;
 const ZONE_START_RADIUS = 24;
 const ZONE_ROTATION = 0.045; // nudge wedge boundaries off the cardinal axes
+// Swap adjacent signatures so type 4 owns the visual northeast corner.
+const ZONE_TYPE_REMAP = { 4: 5, 5: 4 };
 const PRIMARY_TYPE_CHANCE = 0.68; // odds a team member is the zone's signature type
 const SUPPORT_ONLY_ROLES = new Set(['healer', 'counter_tank']);
 
@@ -117,7 +119,11 @@ function zoneTypeId(x, y) {
   const angle = Math.atan2(y - SPAWN.y, x - SPAWN.x); // -PI..PI
   const normalized = (angle + Math.PI) / (2 * Math.PI); // 0..1
   const sector = Math.floor(((normalized + ZONE_ROTATION) % 1) * TYPE_COUNT) % TYPE_COUNT;
-  return sector + 1;
+  return remapZoneTypeId(sector + 1);
+}
+
+function remapZoneTypeId(typeId) {
+  return ZONE_TYPE_REMAP[typeId] || typeId;
 }
 
 function mixedTypeId(x, y) {

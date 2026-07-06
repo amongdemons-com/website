@@ -390,6 +390,10 @@
     },
     {
       "x": -15,
+      "y": -17
+    },
+    {
+      "x": -15,
       "y": -18
     },
     {
@@ -3015,10 +3019,6 @@
     {
       "x": 3,
       "y": 39
-    },
-    {
-      "x": -15,
-      "y": -17
     },
     {
       "x": -27,
@@ -10006,59 +10006,59 @@
       "x": -3,
       "y": -50,
       "difficulty": 6,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
+        "imageUrl": "/app/images/demons/30.png"
       },
       "team": [
         {
           "instanceId": "enc-2-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/24.png",
+          "imageUrl": "/app/images/demons/30.png",
           "elite": true
         },
         {
           "instanceId": "enc-2-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png"
         },
         {
           "instanceId": "enc-2-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-2-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-2-m5",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -10067,32 +10067,32 @@
       "x": 0,
       "y": -50,
       "difficulty": 5,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
+        "imageUrl": "/app/images/demons/30.png"
       },
       "team": [
         {
           "instanceId": "enc-3-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png",
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png",
           "elite": true
         },
         {
           "instanceId": "enc-3-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-3-m3",
@@ -10105,21 +10105,21 @@
         },
         {
           "instanceId": "enc-3-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png"
         },
         {
           "instanceId": "enc-3-m5",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -10127,60 +10127,60 @@
       "id": "enc-4",
       "x": 3,
       "y": -50,
-      "difficulty": 6,
-      "zoneType": 4,
+      "difficulty": 7,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
+        "imageUrl": "/app/images/demons/30.png"
       },
       "team": [
         {
           "instanceId": "enc-4-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/24.png",
+          "imageUrl": "/app/images/demons/30.png",
           "elite": true
         },
         {
           "instanceId": "enc-4-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-4-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-4-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-4-m5",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png"
         },
         {
           "instanceId": "enc-4-m6",
@@ -10198,68 +10198,68 @@
       "x": 27,
       "y": -50,
       "difficulty": 8,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-5-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-5-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-5-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-5-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-5-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-5-m6",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -10268,22 +10268,22 @@
       "x": 30,
       "y": -50,
       "difficulty": 6,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-6-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
@@ -10297,12 +10297,12 @@
         },
         {
           "instanceId": "enc-6-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-6-m4",
@@ -10315,12 +10315,12 @@
         },
         {
           "instanceId": "enc-6-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -10329,59 +10329,59 @@
       "x": 33,
       "y": -50,
       "difficulty": 7,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-7-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-7-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-7-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-7-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-7-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -10389,51 +10389,51 @@
       "id": "enc-8",
       "x": 49,
       "y": -50,
-      "difficulty": 9,
-      "zoneType": 5,
+      "difficulty": 8,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-8-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-8-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-8-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-8-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-8-m5",
@@ -10446,12 +10446,12 @@
         },
         {
           "instanceId": "enc-8-m6",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -10661,22 +10661,22 @@
       "x": -6,
       "y": -49,
       "difficulty": 5,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
+        "imageUrl": "/app/images/demons/30.png"
       },
       "team": [
         {
           "instanceId": "enc-12-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png",
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png",
           "elite": true
         },
         {
@@ -10690,12 +10690,12 @@
         },
         {
           "instanceId": "enc-12-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png"
         },
         {
           "instanceId": "enc-12-m4",
@@ -10722,22 +10722,22 @@
       "x": 43,
       "y": -49,
       "difficulty": 7,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-13-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
@@ -10760,12 +10760,12 @@
         },
         {
           "instanceId": "enc-13-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-13-m5",
@@ -10792,32 +10792,32 @@
       "x": 45,
       "y": -49,
       "difficulty": 8,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-14-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-14-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-14-m3",
@@ -10830,12 +10830,12 @@
         },
         {
           "instanceId": "enc-14-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-14-m5",
@@ -10848,12 +10848,12 @@
         },
         {
           "instanceId": "enc-14-m6",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -10984,22 +10984,22 @@
       "x": -2,
       "y": -48,
       "difficulty": 5,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
+        "imageUrl": "/app/images/demons/30.png"
       },
       "team": [
         {
           "instanceId": "enc-17-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png",
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png",
           "elite": true
         },
         {
@@ -11036,22 +11036,22 @@
       "x": 32,
       "y": -48,
       "difficulty": 7,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-18-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
@@ -11065,12 +11065,12 @@
         },
         {
           "instanceId": "enc-18-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-18-m4",
@@ -11083,12 +11083,12 @@
         },
         {
           "instanceId": "enc-18-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -11097,41 +11097,41 @@
       "x": 34,
       "y": -48,
       "difficulty": 7,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-19-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-19-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-19-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-19-m4",
@@ -11144,12 +11144,12 @@
         },
         {
           "instanceId": "enc-19-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-19-m6",
@@ -11298,22 +11298,22 @@
       "x": -4,
       "y": -47,
       "difficulty": 6,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
+        "imageUrl": "/app/images/demons/30.png"
       },
       "team": [
         {
           "instanceId": "enc-22-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png",
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png",
           "elite": true
         },
         {
@@ -11327,21 +11327,21 @@
         },
         {
           "instanceId": "enc-22-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png"
         },
         {
           "instanceId": "enc-22-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png"
         },
         {
           "instanceId": "enc-22-m5",
@@ -11359,12 +11359,12 @@
       "x": 49,
       "y": -47,
       "difficulty": 8,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
@@ -11373,7 +11373,7 @@
           "species": "Gon G'ah",
           "role": "ranged",
           "rarity": "mythic",
-          "position": "back",
+          "position": "front",
           "imageUrl": "/app/images/demons/12.png"
         },
         {
@@ -11387,22 +11387,22 @@
         },
         {
           "instanceId": "enc-23-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-23-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-23-m5",
@@ -11415,12 +11415,12 @@
         },
         {
           "instanceId": "enc-23-m6",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -11569,32 +11569,32 @@
       "x": -2,
       "y": -46,
       "difficulty": 6,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
+        "imageUrl": "/app/images/demons/30.png"
       },
       "team": [
         {
           "instanceId": "enc-26-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/24.png",
+          "imageUrl": "/app/images/demons/30.png",
           "elite": true
         },
         {
           "instanceId": "enc-26-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-26-m3",
@@ -11607,12 +11607,12 @@
         },
         {
           "instanceId": "enc-26-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-26-m5",
@@ -11629,67 +11629,6 @@
       "id": "enc-27",
       "x": 14,
       "y": -46,
-      "difficulty": 5,
-      "zoneType": 4,
-      "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
-        "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
-      },
-      "team": [
-        {
-          "instanceId": "enc-27-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
-          "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/24.png",
-          "elite": true
-        },
-        {
-          "instanceId": "enc-27-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
-          "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
-        },
-        {
-          "instanceId": "enc-27-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
-          "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
-        },
-        {
-          "instanceId": "enc-27-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
-          "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
-        },
-        {
-          "instanceId": "enc-27-m5",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
-          "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
-        }
-      ]
-    },
-    {
-      "id": "enc-28",
-      "x": 26,
-      "y": -46,
       "difficulty": 6,
       "zoneType": 5,
       "keyDemon": {
@@ -11700,13 +11639,74 @@
       },
       "team": [
         {
-          "instanceId": "enc-28-m1",
+          "instanceId": "enc-27-m1",
           "typeId": 5,
           "species": "Vi'Zel",
           "role": "bruiser",
           "rarity": "mythic",
           "position": "front",
           "imageUrl": "/app/images/demons/30.png",
+          "elite": true
+        },
+        {
+          "instanceId": "enc-27-m2",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
+          "rarity": "legendary",
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
+        },
+        {
+          "instanceId": "enc-27-m3",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
+          "rarity": "legendary",
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
+        },
+        {
+          "instanceId": "enc-27-m4",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
+          "rarity": "epic",
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
+        },
+        {
+          "instanceId": "enc-27-m5",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
+          "rarity": "epic",
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
+        }
+      ]
+    },
+    {
+      "id": "enc-28",
+      "x": 26,
+      "y": -46,
+      "difficulty": 6,
+      "zoneType": 4,
+      "keyDemon": {
+        "typeId": 4,
+        "species": "Tor Tza",
+        "rarity": "mythic",
+        "imageUrl": "/app/images/demons/24.png"
+      },
+      "team": [
+        {
+          "instanceId": "enc-28-m1",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
+          "rarity": "mythic",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
@@ -11729,12 +11729,12 @@
         },
         {
           "instanceId": "enc-28-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-28-m5",
@@ -11752,22 +11752,22 @@
       "x": 37,
       "y": -46,
       "difficulty": 7,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-29-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
@@ -11781,21 +11781,21 @@
         },
         {
           "instanceId": "enc-29-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-29-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-29-m5",
@@ -12004,33 +12004,33 @@
       "id": "enc-33",
       "x": 23,
       "y": -45,
-      "difficulty": 7,
-      "zoneType": 5,
+      "difficulty": 6,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-33-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-33-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-33-m3",
@@ -12043,21 +12043,21 @@
         },
         {
           "instanceId": "enc-33-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-33-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         }
       ]
     },
@@ -12066,32 +12066,32 @@
       "x": 34,
       "y": -45,
       "difficulty": 6,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-34-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-34-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-34-m3",
@@ -12104,12 +12104,12 @@
         },
         {
           "instanceId": "enc-34-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-34-m5",
@@ -12292,32 +12292,32 @@
       "x": 1,
       "y": -44,
       "difficulty": 4,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-38-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-38-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-38-m3",
@@ -12330,12 +12330,12 @@
         },
         {
           "instanceId": "enc-38-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -12344,41 +12344,41 @@
       "x": 19,
       "y": -44,
       "difficulty": 6,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
+        "imageUrl": "/app/images/demons/30.png"
       },
       "team": [
         {
           "instanceId": "enc-39-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/24.png",
+          "imageUrl": "/app/images/demons/30.png",
           "elite": true
         },
         {
           "instanceId": "enc-39-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-39-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-39-m4",
@@ -12405,41 +12405,41 @@
       "x": 28,
       "y": -44,
       "difficulty": 7,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-40-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-40-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-40-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-40-m4",
@@ -12452,12 +12452,12 @@
         },
         {
           "instanceId": "enc-40-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -12597,41 +12597,41 @@
       "x": 9,
       "y": -43,
       "difficulty": 4,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-43-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-43-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-43-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-43-m4",
@@ -12658,22 +12658,22 @@
       "x": 15,
       "y": -43,
       "difficulty": 6,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/24.png"
+        "imageUrl": "/app/images/demons/30.png"
       },
       "team": [
         {
           "instanceId": "enc-44-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png",
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png",
           "elite": true
         },
         {
@@ -12687,12 +12687,12 @@
         },
         {
           "instanceId": "enc-44-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-44-m4",
@@ -12705,12 +12705,12 @@
         },
         {
           "instanceId": "enc-44-m5",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "mythic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/24.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/30.png"
         }
       ]
     },
@@ -12719,59 +12719,59 @@
       "x": 40,
       "y": -43,
       "difficulty": 8,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-45-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-45-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-45-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-45-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-45-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-45-m6",
@@ -12981,22 +12981,22 @@
       "x": 23,
       "y": -42,
       "difficulty": 5,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-49-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
@@ -13010,12 +13010,12 @@
         },
         {
           "instanceId": "enc-49-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-49-m4",
@@ -13028,12 +13028,12 @@
         },
         {
           "instanceId": "enc-49-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         }
       ]
     },
@@ -13042,22 +13042,22 @@
       "x": 28,
       "y": -42,
       "difficulty": 6,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-50-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
@@ -13071,21 +13071,21 @@
         },
         {
           "instanceId": "enc-50-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-50-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-50-m5",
@@ -13102,60 +13102,60 @@
       "id": "enc-51",
       "x": 31,
       "y": -42,
-      "difficulty": 7,
-      "zoneType": 5,
+      "difficulty": 6,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-51-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-51-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-51-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-51-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-51-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         }
       ]
     },
@@ -13164,22 +13164,22 @@
       "x": 2,
       "y": -41,
       "difficulty": 4,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-52-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
@@ -13193,21 +13193,21 @@
         },
         {
           "instanceId": "enc-52-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-52-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -13216,32 +13216,32 @@
       "x": 12,
       "y": -41,
       "difficulty": 4,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-53-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-53-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-53-m3",
@@ -13254,12 +13254,12 @@
         },
         {
           "instanceId": "enc-53-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         }
       ]
     },
@@ -13268,41 +13268,41 @@
       "x": 16,
       "y": -41,
       "difficulty": 5,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-54-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png",
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-54-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-54-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-54-m4",
@@ -13315,12 +13315,12 @@
         },
         {
           "instanceId": "enc-54-m5",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -13329,50 +13329,50 @@
       "x": 18,
       "y": -41,
       "difficulty": 5,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-55-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-55-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-55-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-55-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         }
       ]
     },
@@ -13503,32 +13503,32 @@
       "x": -1,
       "y": -40,
       "difficulty": 4,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-58-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-58-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-58-m3",
@@ -13541,12 +13541,12 @@
         },
         {
           "instanceId": "enc-58-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         }
       ]
     },
@@ -13555,32 +13555,32 @@
       "x": 5,
       "y": -39,
       "difficulty": 4,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-59-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-59-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-59-m3",
@@ -13593,12 +13593,12 @@
         },
         {
           "instanceId": "enc-59-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -13832,60 +13832,51 @@
       "id": "enc-64",
       "x": 11,
       "y": -38,
-      "difficulty": 5,
-      "zoneType": 4,
+      "difficulty": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-64-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-64-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-64-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-64-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
-        },
-        {
-          "instanceId": "enc-64-m5",
-          "typeId": 10,
-          "species": "Ba Be'aga",
-          "role": "healer",
-          "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/58.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -13894,32 +13885,32 @@
       "x": 16,
       "y": -38,
       "difficulty": 4,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-65-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-65-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-65-m3",
@@ -13932,12 +13923,12 @@
         },
         {
           "instanceId": "enc-65-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -14058,69 +14049,69 @@
       "id": "enc-68",
       "x": 50,
       "y": -37,
-      "difficulty": 9,
-      "zoneType": 5,
+      "difficulty": 8,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-68-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-68-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-68-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-68-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-68-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-68-m6",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -14190,41 +14181,41 @@
       "x": -3,
       "y": -36,
       "difficulty": 3,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-70-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png",
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-70-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-70-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "rare",
-          "position": "back",
-          "imageUrl": "/app/images/demons/21.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/27.png"
         },
         {
           "instanceId": "enc-70-m4",
@@ -14241,23 +14232,23 @@
       "id": "enc-71",
       "x": 17,
       "y": -36,
-      "difficulty": 5,
-      "zoneType": 5,
+      "difficulty": 4,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/29.png"
+        "imageUrl": "/app/images/demons/23.png"
       },
       "team": [
         {
           "instanceId": "enc-71-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png",
           "elite": true
         },
         {
@@ -14271,21 +14262,21 @@
         },
         {
           "instanceId": "enc-71-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-71-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         }
       ]
     },
@@ -14294,50 +14285,50 @@
       "x": 21,
       "y": -36,
       "difficulty": 4,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/29.png"
+        "imageUrl": "/app/images/demons/23.png"
       },
       "team": [
         {
           "instanceId": "enc-72-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/29.png",
+          "imageUrl": "/app/images/demons/23.png",
           "elite": true
         },
         {
           "instanceId": "enc-72-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-72-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-72-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         }
       ]
     },
@@ -14346,59 +14337,59 @@
       "x": 29,
       "y": -36,
       "difficulty": 7,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-73-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-73-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-73-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-73-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-73-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-73-m6",
@@ -14416,41 +14407,41 @@
       "x": 2,
       "y": -35,
       "difficulty": 3,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-74-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-74-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "rare",
-          "position": "back",
-          "imageUrl": "/app/images/demons/21.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/27.png"
         },
         {
           "instanceId": "enc-74-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -14459,41 +14450,41 @@
       "x": 6,
       "y": -35,
       "difficulty": 4,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-75-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-75-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "rare",
-          "position": "back",
-          "imageUrl": "/app/images/demons/21.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/27.png"
         },
         {
           "instanceId": "enc-75-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "rare",
-          "position": "back",
-          "imageUrl": "/app/images/demons/21.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/27.png"
         },
         {
           "instanceId": "enc-75-m4",
@@ -14511,22 +14502,22 @@
       "x": 11,
       "y": -35,
       "difficulty": 4,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-76-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png",
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
@@ -14563,50 +14554,50 @@
       "x": 14,
       "y": -35,
       "difficulty": 5,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/23.png"
+        "imageUrl": "/app/images/demons/29.png"
       },
       "team": [
         {
           "instanceId": "enc-77-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/23.png",
+          "imageUrl": "/app/images/demons/29.png",
           "elite": true
         },
         {
           "instanceId": "enc-77-m2",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         },
         {
           "instanceId": "enc-77-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-77-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "legendary",
-          "position": "back",
-          "imageUrl": "/app/images/demons/23.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/29.png"
         },
         {
           "instanceId": "enc-77-m5",
@@ -14624,59 +14615,59 @@
       "x": 36,
       "y": -35,
       "difficulty": 6,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-78-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-78-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-78-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-78-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-78-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -14685,41 +14676,41 @@
       "x": 46,
       "y": -35,
       "difficulty": 7,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-79-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-79-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-79-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-79-m4",
@@ -14732,21 +14723,21 @@
         },
         {
           "instanceId": "enc-79-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-79-m6",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -14929,22 +14920,22 @@
       "x": 31,
       "y": -34,
       "difficulty": 5,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-83-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
@@ -14958,12 +14949,12 @@
         },
         {
           "instanceId": "enc-83-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-83-m4",
@@ -15041,33 +15032,33 @@
       "id": "enc-85",
       "x": 21,
       "y": -33,
-      "difficulty": 4,
-      "zoneType": 5,
+      "difficulty": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/29.png"
+        "imageUrl": "/app/images/demons/23.png"
       },
       "team": [
         {
           "instanceId": "enc-85-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/29.png",
+          "imageUrl": "/app/images/demons/23.png",
           "elite": true
         },
         {
           "instanceId": "enc-85-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-85-m3",
@@ -15080,12 +15071,21 @@
         },
         {
           "instanceId": "enc-85-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
+        },
+        {
+          "instanceId": "enc-85-m5",
+          "typeId": 9,
+          "species": "Chu Perk",
+          "role": "juggernaut",
+          "rarity": "epic",
           "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "imageUrl": "/app/images/demons/52.png"
         }
       ]
     },
@@ -15094,22 +15094,22 @@
       "x": 25,
       "y": -33,
       "difficulty": 5,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/29.png"
+        "imageUrl": "/app/images/demons/23.png"
       },
       "team": [
         {
           "instanceId": "enc-86-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png",
           "elite": true
         },
         {
@@ -15123,12 +15123,12 @@
         },
         {
           "instanceId": "enc-86-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-86-m4",
@@ -15141,12 +15141,12 @@
         },
         {
           "instanceId": "enc-86-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         }
       ]
     },
@@ -15277,50 +15277,50 @@
       "x": 15,
       "y": -32,
       "difficulty": 4,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/29.png"
+        "imageUrl": "/app/images/demons/23.png"
       },
       "team": [
         {
           "instanceId": "enc-89-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/29.png",
+          "imageUrl": "/app/images/demons/23.png",
           "elite": true
         },
         {
           "instanceId": "enc-89-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png"
         },
         {
           "instanceId": "enc-89-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-89-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png"
         }
       ]
     },
@@ -15329,22 +15329,22 @@
       "x": 32,
       "y": -32,
       "difficulty": 4,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/29.png"
+        "imageUrl": "/app/images/demons/23.png"
       },
       "team": [
         {
           "instanceId": "enc-90-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png",
           "elite": true
         },
         {
@@ -15358,12 +15358,12 @@
         },
         {
           "instanceId": "enc-90-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-90-m4",
@@ -15876,22 +15876,22 @@
       "x": 5,
       "y": -29,
       "difficulty": 3,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "epic",
-        "imageUrl": "/app/images/demons/22.png"
+        "imageUrl": "/app/images/demons/28.png"
       },
       "team": [
         {
           "instanceId": "enc-100-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
           "position": "front",
-          "imageUrl": "/app/images/demons/22.png",
+          "imageUrl": "/app/images/demons/28.png",
           "elite": true
         },
         {
@@ -15905,21 +15905,21 @@
         },
         {
           "instanceId": "enc-100-m3",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "rare",
-          "position": "back",
-          "imageUrl": "/app/images/demons/21.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/27.png"
         },
         {
           "instanceId": "enc-100-m4",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png"
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png"
         }
       ]
     },
@@ -15928,50 +15928,50 @@
       "x": 40,
       "y": -29,
       "difficulty": 5,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-101-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-101-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-101-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-101-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-101-m5",
@@ -16050,22 +16050,22 @@
       "x": 18,
       "y": -28,
       "difficulty": 3,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/29.png"
+        "imageUrl": "/app/images/demons/23.png"
       },
       "team": [
         {
           "instanceId": "enc-103-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png",
           "elite": true
         },
         {
@@ -16079,21 +16079,21 @@
         },
         {
           "instanceId": "enc-103-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png"
         },
         {
           "instanceId": "enc-103-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         }
       ]
     },
@@ -16285,22 +16285,22 @@
       "x": 1,
       "y": -27,
       "difficulty": 3,
-      "zoneType": 4,
+      "zoneType": 5,
       "keyDemon": {
-        "typeId": 4,
-        "species": "Tor Tza",
+        "typeId": 5,
+        "species": "Vi'Zel",
         "rarity": "epic",
-        "imageUrl": "/app/images/demons/22.png"
+        "imageUrl": "/app/images/demons/28.png"
       },
       "team": [
         {
           "instanceId": "enc-107-m1",
-          "typeId": 4,
-          "species": "Tor Tza",
-          "role": "aoe",
+          "typeId": 5,
+          "species": "Vi'Zel",
+          "role": "bruiser",
           "rarity": "epic",
-          "position": "back",
-          "imageUrl": "/app/images/demons/22.png",
+          "position": "front",
+          "imageUrl": "/app/images/demons/28.png",
           "elite": true
         },
         {
@@ -16327,23 +16327,23 @@
       "id": "enc-108",
       "x": 38,
       "y": -27,
-      "difficulty": 6,
-      "zoneType": 5,
+      "difficulty": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-108-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
@@ -16366,12 +16366,12 @@
         },
         {
           "instanceId": "enc-108-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         }
       ]
     },
@@ -16432,32 +16432,32 @@
       "x": 14,
       "y": -26,
       "difficulty": 3,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "epic",
-        "imageUrl": "/app/images/demons/28.png"
+        "imageUrl": "/app/images/demons/22.png"
       },
       "team": [
         {
           "instanceId": "enc-110-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
           "position": "front",
-          "imageUrl": "/app/images/demons/28.png",
+          "imageUrl": "/app/images/demons/22.png",
           "elite": true
         },
         {
           "instanceId": "enc-110-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-110-m3",
@@ -16475,32 +16475,32 @@
       "x": 40,
       "y": -26,
       "difficulty": 6,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "mythic",
-        "imageUrl": "/app/images/demons/30.png"
+        "imageUrl": "/app/images/demons/24.png"
       },
       "team": [
         {
           "instanceId": "enc-111-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/30.png",
+          "imageUrl": "/app/images/demons/24.png",
           "elite": true
         },
         {
           "instanceId": "enc-111-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-111-m3",
@@ -16513,21 +16513,21 @@
         },
         {
           "instanceId": "enc-111-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-111-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         }
       ]
     },
@@ -16649,32 +16649,32 @@
       "x": 22,
       "y": -25,
       "difficulty": 3,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/29.png"
+        "imageUrl": "/app/images/demons/23.png"
       },
       "team": [
         {
           "instanceId": "enc-114-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png",
           "elite": true
         },
         {
           "instanceId": "enc-114-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-114-m3",
@@ -17126,22 +17126,22 @@
       "x": 31,
       "y": -21,
       "difficulty": 3,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "legendary",
-        "imageUrl": "/app/images/demons/29.png"
+        "imageUrl": "/app/images/demons/23.png"
       },
       "team": [
         {
           "instanceId": "enc-123-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png",
           "elite": true
         },
         {
@@ -17164,12 +17164,12 @@
         },
         {
           "instanceId": "enc-123-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         }
       ]
     },
@@ -17325,32 +17325,32 @@
       "x": 18,
       "y": -20,
       "difficulty": 3,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "epic",
-        "imageUrl": "/app/images/demons/28.png"
+        "imageUrl": "/app/images/demons/22.png"
       },
       "team": [
         {
           "instanceId": "enc-127-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
           "position": "front",
-          "imageUrl": "/app/images/demons/28.png",
+          "imageUrl": "/app/images/demons/22.png",
           "elite": true
         },
         {
           "instanceId": "enc-127-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-127-m3",
@@ -17644,41 +17644,41 @@
       "x": 15,
       "y": -19,
       "difficulty": 2,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "rare",
-        "imageUrl": "/app/images/demons/27.png"
+        "imageUrl": "/app/images/demons/21.png"
       },
       "team": [
         {
           "instanceId": "enc-134-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
           "position": "front",
-          "imageUrl": "/app/images/demons/27.png",
+          "imageUrl": "/app/images/demons/21.png",
           "elite": true
         },
         {
           "instanceId": "enc-134-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "uncommon",
-          "position": "front",
-          "imageUrl": "/app/images/demons/26.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/20.png"
         },
         {
           "instanceId": "enc-134-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "uncommon",
-          "position": "front",
-          "imageUrl": "/app/images/demons/26.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/20.png"
         }
       ]
     },
@@ -17687,22 +17687,22 @@
       "x": 21,
       "y": -19,
       "difficulty": 3,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "epic",
-        "imageUrl": "/app/images/demons/28.png"
+        "imageUrl": "/app/images/demons/22.png"
       },
       "team": [
         {
           "instanceId": "enc-135-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
           "position": "front",
-          "imageUrl": "/app/images/demons/28.png",
+          "imageUrl": "/app/images/demons/22.png",
           "elite": true
         },
         {
@@ -17716,12 +17716,12 @@
         },
         {
           "instanceId": "enc-135-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png"
         }
       ]
     },
@@ -17990,41 +17990,41 @@
       "x": 25,
       "y": -18,
       "difficulty": 3,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "epic",
-        "imageUrl": "/app/images/demons/28.png"
+        "imageUrl": "/app/images/demons/22.png"
       },
       "team": [
         {
           "instanceId": "enc-141-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
           "position": "front",
-          "imageUrl": "/app/images/demons/28.png",
+          "imageUrl": "/app/images/demons/22.png",
           "elite": true
         },
         {
           "instanceId": "enc-141-m2",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-141-m3",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png"
         }
       ]
     },
@@ -18205,22 +18205,22 @@
       "x": 18,
       "y": -17,
       "difficulty": 2,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "rare",
-        "imageUrl": "/app/images/demons/27.png"
+        "imageUrl": "/app/images/demons/21.png"
       },
       "team": [
         {
           "instanceId": "enc-146-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png",
           "elite": true
         },
         {
@@ -18619,22 +18619,22 @@
       "x": 20,
       "y": -14,
       "difficulty": 2,
-      "zoneType": 5,
+      "zoneType": 4,
       "keyDemon": {
-        "typeId": 5,
-        "species": "Vi'Zel",
+        "typeId": 4,
+        "species": "Tor Tza",
         "rarity": "rare",
-        "imageUrl": "/app/images/demons/27.png"
+        "imageUrl": "/app/images/demons/21.png"
       },
       "team": [
         {
           "instanceId": "enc-155-m1",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png",
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png",
           "elite": true
         },
         {

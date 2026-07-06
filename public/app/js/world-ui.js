@@ -28,6 +28,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   const ZONE_START_RADIUS = 24;
   const TYPE_COUNT = 11;
   const ZONE_ROTATION = 0.045;
+  // Keep terrain colors/effects aligned with the generated encounter zones.
+  const ZONE_TYPE_REMAP = { 4: 5, 5: 4 };
   const MIN_ZOOM = 0.55;
   const MAX_ZOOM = 2.15;
   const AVERAGE_TERRAIN_COST = 2;
@@ -1164,7 +1166,11 @@ import * as dungeonUtils from './dungeon/utils.js';
     const angle = Math.atan2(y, x);
     const normalized = (angle + Math.PI) / (2 * Math.PI);
     const sector = Math.floor(((normalized + ZONE_ROTATION) % 1) * TYPE_COUNT) % TYPE_COUNT;
-    return sector + 1;
+    return remapZoneTypeId(sector + 1);
+  }
+
+  function remapZoneTypeId(typeId) {
+    return ZONE_TYPE_REMAP[typeId] || typeId;
   }
 
   function zonePaletteForTile(x, y) {

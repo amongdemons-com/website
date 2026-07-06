@@ -18,6 +18,21 @@ body.dungeon-page {
     overscroll-behavior: none;
 }
 
+body.dungeon-page.is-dungeon-pointer-dragging {
+    height: var(--dungeon-drag-viewport-height, 100vh);
+    min-height: var(--dungeon-drag-viewport-height, 100vh);
+    max-height: var(--dungeon-drag-viewport-height, 100vh);
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+}
+
+body.dungeon-page.is-dungeon-pointer-dragging .dungeon-main,
+body.dungeon-page.is-dungeon-pointer-dragging .dungeon-battle-card {
+    height: 100%;
+    max-height: 100%;
+}
+
 body.dungeon-page .navbar {
     display: none;
 }
@@ -489,6 +504,18 @@ body:not(.dungeon-page) {
 
 .dungeon-demon-card.is-pointer-dragging {
     cursor: grabbing;
+}
+
+.dungeon-page .pointer-drag-ghost {
+    /* The ghost is a .dungeon-demon-card clone; that rule's position: relative
+       would otherwise win the cascade and push the page height mid-drag. */
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 3600;
+    opacity: 0.94;
+    visibility: visible;
+    pointer-events: none;
 }
 
 .dungeon-demon-card.is-drag-over {
