@@ -40,12 +40,12 @@ function getCurrentRecruitRewards() {
 
 function getRecruitPreviewTeam() {
   ensureRecruitDraft();
-  return cloneDemons(state.recruitDraftTeam || []).map(applyRunBuffStatPreviewToDemon);
+  return cloneDemons(state.recruitDraftTeam || []).map(applyDungeonCombatStatPreviewToDemon);
 }
 
 function getRecruitPreviewHand() {
   ensureRecruitDraft();
-  return cloneDemons(state.recruitDraftPool || []).map(applyRunBuffStatPreviewToDemon);
+  return cloneDemons(state.recruitDraftPool || []).map(applyDungeonCombatStatPreviewToDemon);
 }
 
 function getRecruitPreviewEnemyTeam() {
@@ -134,15 +134,23 @@ function shouldShowCollectionMissingTag(demon, options = {}) {
 
 function getFullHpDemon(demon) {
   const maxHp = Math.max(Number(demon.maxHp) || Number(demon.hp) || 1, 1);
-  return {
+  const next = {
     ...demon,
     maxHp,
     hp: maxHp
   };
+
+  delete next.accountStatsApplied;
+  delete next.accountStatsPreviewed;
+  delete next.battleBuffs;
+  delete next.deathBuffsHandled;
+  delete next.shield;
+
+  return next;
 }
 
 function applyRunBuffStatPreviewToDemon(demon = {}) {
-  if (!demon || demon.runBuffStatsApplied) return { ...demon };
+  if (!demon || demon.runBuffStatsApplied || demon.runBuffStatsPreviewed) return { ...demon };
 
   const maxHpMult = getRunBuffEffectMultiplier('max_hp_mult');
   const speedMult = getRunBuffEffectMultiplier('speed_mult');
@@ -167,7 +175,7 @@ function applyRunBuffStatPreviewToDemon(demon = {}) {
 function applyAccountStatBonusPreviewToDemon(demon = {}) {
   const bonuses = state.statPoints?.bonuses;
   // Battle replay snapshots already have account bonuses baked in server-side; never double-apply.
-  if (!demon || !bonuses || demon.accountStatsApplied) return { ...demon };
+  if (!demon || !bonuses || demon.accountStatsApplied || demon.accountStatsPreviewed) return { ...demon };
 
   const maxHpFlat = Math.max(0, Number(bonuses.maxHpFlat) || 0);
   const maxHpMult = 1 + getAccountBonusFraction(bonuses.maxHpPercent);
@@ -175,39 +183,95 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
   const attackMult = 1 + getAccountBonusFraction(bonuses.attackPercent);
   const speedFlat = Math.max(0, Number(bonuses.speedFlat) || 0);
   const speedMult = 1 + getAccountBonusFraction(bonuses.speedPercent);
+  const aoeDamageFlat = Math.max(0, Number(bonuses.aoeDamageFlat) || 0);
+  const aoeDamageMult = 1 + getAccountBonusFraction(bonuses.aoeDamagePercent);
 
   const hasHpBonus = maxHpFlat > 0 || maxHpMult !== 1;
   const hasAttackBonus = attackFlat > 0 || attackMult !== 1;
   const hasSpeedBonus = speedFlat > 0 || speedMult !== 1;
-  if (!hasHpBonus && !hasAttackBonus && !hasSpeedBonus) return { ...demon };
+  const hasAoeDamageBonus = aoeDamageFlat > 0 || aoeDamageMult !== 1;
+  if (!hasHpBonus && !hasAttackBonus && !hasSpeedBonus && !hasAoeDamageBonus) return { ...demon };
 
-  const next = { ...demon };
+  const next = {
+    ...demon,
+    accountStatsPreviewed: true
+  };
 
-  // Mirror server applyPreBattleBuffs account math: flat is added first, then percent multiplies.
+  // Skill-tree bonuses are sent to combat as playerBuffs, so mirror
+  // applyPreBattleBuffs: HP/speed percent first, then flat; attack flat first.
   if (hasHpBonus) {
-    const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
-    const hpRatio = Math.max(0, Math.min(1, (Number(next.hp) || baseMaxHp) / baseMaxHp));
-    const boostedMaxHp = Math.max(1, Math.round((baseMaxHp + maxHpFlat) * maxHpMult));
-    next.maxHp = boostedMaxHp;
-    next.hp = Math.max((Number(demon.hp) || 0) > 0 ? 1 : 0, Math.min(boostedMaxHp, Math.round(boostedMaxHp * hpRatio)));
+    if (maxHpMult !== 1) {
+      const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
+      const hpRatio = Math.max(0, Math.min(1, (Number(next.hp) || baseMaxHp) / baseMaxHp));
+      next.maxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
+      next.hp = Math.max((Number(next.hp) || 0) > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
+    }
+
+    if (maxHpFlat > 0) {
+      const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
+      const hpRatio = Math.max(0, Math.min(1, (Number(next.hp) || baseMaxHp) / baseMaxHp));
+      next.maxHp = Math.max(1, Math.round(baseMaxHp + maxHpFlat));
+      next.hp = Math.max((Number(next.hp) || 0) > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
+    }
   }
 
   if (hasAttackBonus) {
-    const baseAtk = Math.max(0, Number(next.atk) || 0);
-    if (baseAtk > 0) {
-      const boostedAtk = Math.max(1, Math.round((baseAtk + attackFlat) * attackMult));
-      const baseEffective = Number(next.effectiveAtk) > 0 ? Number(next.effectiveAtk) : baseAtk;
-      next.atk = boostedAtk;
-      next.effectiveAtk = Math.max(1, Math.round(baseEffective * (boostedAtk / baseAtk)));
+    if (attackFlat > 0) {
+      applyAttackStatPreviewChange(next, (atk) => Math.max(1, Math.round(atk + attackFlat)));
+    }
+
+    if (attackMult !== 1) {
+      applyAttackStatPreviewChange(next, (atk) => Math.max(1, Math.round(atk * attackMult)));
     }
   }
 
   if (hasSpeedBonus) {
-    const baseSpeed = Math.max(1, Number(next.speed) || 1);
-    next.speed = Math.max(1, Math.round((baseSpeed + speedFlat) * speedMult));
+    if (speedMult !== 1) {
+      next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * speedMult));
+    }
+
+    if (speedFlat > 0) {
+      next.speed = Math.max(1, Math.round((Number(next.speed) || 1) + speedFlat));
+    }
+  }
+
+  if (hasAttackBonus || hasAoeDamageBonus) {
+    applyDamageOutputStatPreview(next, {
+      directDamageMult: getRunBuffEffectMultiplier('direct_damage_mult'),
+      aoeDamageMult: getRunBuffEffectMultiplier('aoe_damage_mult') * aoeDamageMult,
+      aoeDamageFlat
+    });
   }
 
   return next;
+}
+
+function applyDungeonCombatStatPreviewToDemon(demon = {}) {
+  return applyAccountStatBonusPreviewToDemon(applyRunBuffStatPreviewToDemon(demon));
+}
+
+function applyAttackStatPreviewChange(demon, updateAtk) {
+  const previousAtk = Math.max(1, Number(demon.atk) || 1);
+  const previousEffectiveAtk = Number(demon.effectiveAtk);
+  const nextAtk = Math.max(1, Math.round(Number(updateAtk(previousAtk)) || previousAtk));
+  demon.atk = nextAtk;
+
+  if (Number.isFinite(previousEffectiveAtk) && previousEffectiveAtk > 0) {
+    demon.effectiveAtk = Math.max(1, Math.round(previousEffectiveAtk * (nextAtk / previousAtk)));
+  }
+}
+
+function applyDamageOutputStatPreview(demon, options = {}) {
+  const directDamageMult = Math.max(0, Number(options.directDamageMult) || 1);
+  const aoeDamageMult = Math.max(0, Number(options.aoeDamageMult) || 1);
+  const aoeDamageFlat = Math.max(0, Number(options.aoeDamageFlat) || 0);
+  const isAoe = isAoeDemon(demon);
+  const damageMult = directDamageMult * (isAoe ? aoeDamageMult : 1);
+  const damageFlat = isAoe ? aoeDamageFlat : 0;
+  if (damageMult === 1 && damageFlat <= 0) return;
+
+  const baseAtk = Math.max(1, Number(demon.atk) || 1);
+  demon.effectiveAtk = Math.max(1, Math.round((baseAtk * damageMult) + damageFlat));
 }
 
 function getAccountBonusFraction(value) {
@@ -240,6 +304,11 @@ function getCollectionStatPreviewDemon(demon = {}) {
   delete next.runBaseSpeed;
   delete next.runBuffStatsApplied;
   delete next.runBuffStatsPreviewed;
+  delete next.accountStatsApplied;
+  delete next.accountStatsPreviewed;
+  delete next.battleBuffs;
+  delete next.deathBuffsHandled;
+  delete next.shield;
   return next;
 }
 
@@ -406,6 +475,7 @@ export {
   getRewardExtractionChoicePayload,
   applyRunBuffStatPreviewToDemon,
   applyAccountStatBonusPreviewToDemon,
+  applyDungeonCombatStatPreviewToDemon,
   getCollectionStatPreviewDemon,
   getDraftPayloadSource,
   getSelectedCollectionReinforcement,

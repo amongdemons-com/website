@@ -41,6 +41,11 @@ function normalizeCollectionDemonStats(demon = {}) {
   delete normalized.runBaseSpeed;
   delete normalized.runBuffStatsApplied;
   delete normalized.runBuffStatsPreviewed;
+  delete normalized.accountStatsApplied;
+  delete normalized.accountStatsPreviewed;
+  delete normalized.battleBuffs;
+  delete normalized.deathBuffsHandled;
+  delete normalized.shield;
 
   return normalized;
 }

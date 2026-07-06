@@ -10,11 +10,12 @@ const battle = (...args) => dungeonActions.battle(...args);
 const ensureCollectionLoaded = (...args) => dungeonActions.ensureCollectionLoaded(...args);
 const findCollectionReplacement = (...args) => dungeonActions.findCollectionReplacement(...args);
 const getAvailableCollectionReinforcements = (...args) => dungeonActions.getAvailableCollectionReinforcements(...args);
+const getCollectionStatPreviewDemon = (...args) => dungeonActions.getCollectionStatPreviewDemon(...args);
 const getCollectionReinforcementLimit = (...args) => dungeonActions.getCollectionReinforcementLimit(...args);
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
-const applyAccountStatBonusPreviewToDemon = (...args) => dungeonActions.applyAccountStatBonusPreviewToDemon(...args);
+const applyDungeonCombatStatPreviewToDemon = (...args) => dungeonActions.applyDungeonCombatStatPreviewToDemon(...args);
 const getSelectedCollectionReinforcements = (...args) => dungeonActions.getSelectedCollectionReinforcements(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
 const markCollectionReinforcementPlaceholderInteracted = (...args) => dungeonActions.markCollectionReinforcementPlaceholderInteracted(...args);
@@ -82,8 +83,9 @@ function renderCollectionReinforcementModal(query = '') {
 function renderCollectionReinforcementChoice(demon) {
   const selected = getSelectedCollectionReinforcements()
     .some((item) => Number(item.collectionDemonId) === Number(demon.id));
+  const displayDemon = applyDungeonCombatStatPreviewToDemon(demon);
 
-  return renderDungeonDemonCard(demon, {
+  return renderDungeonDemonCard(displayDemon, {
     tag: 'button',
     className: 'dungeon-choice-card js-call-collection-reinforcement',
     active: selected,
@@ -216,13 +218,12 @@ function getDemonForDetailCard(card) {
   const selectedReward = getSelectedRewardCandidate();
 
   if (card.closest('#dungeonRewardGrid')) {
-    return selectedReward?.demon || null;
+    return selectedReward?.demon ? applyDungeonCombatStatPreviewToDemon(getCollectionStatPreviewDemon(selectedReward.demon)) : null;
   }
 
   return [
-    selectedReward?.demon,
-    ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []).map(applyAccountStatBonusPreviewToDemon),
-    ...(state.isRecruiting ? getRecruitPreviewHand() : state.battleHandPreview || []).map(applyAccountStatBonusPreviewToDemon),
+    ...(state.isRecruiting ? getRecruitPreviewTeam() : state.run?.team || []).map(applyDungeonCombatStatPreviewToDemon),
+    ...(state.isRecruiting ? getRecruitPreviewHand() : state.battleHandPreview || []).map(applyDungeonCombatStatPreviewToDemon),
     ...(state.isRecruiting ? getRecruitPreviewEnemyTeam() : state.run?.enemies || [])
   ].filter(Boolean).find((demon) => demon.instanceId === instanceId) || null;
 }

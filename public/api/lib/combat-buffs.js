@@ -177,6 +177,8 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
   const maxHpMult = (statsAlreadyApplied ? 1 : getEffectMultiplier(persistedState, 'max_hp_mult')) * getEffectMultiplier(transientState, 'max_hp_mult');
   const speedMult = (statsAlreadyApplied ? 1 : getEffectMultiplier(persistedState, 'speed_mult')) * getEffectMultiplier(transientState, 'speed_mult');
   const attackMult = getEffectMultiplier(state, 'attack_mult');
+  const directDamagePreviewMult = getEffectMultiplier(state, 'direct_damage_mult');
+  const aoeDamagePreviewMult = getEffectMultiplier(state, 'aoe_damage_mult');
   const maxHpFlat = getEffectSum(state, 'max_hp_flat');
   const attackFlat = getEffectSum(state, 'attack_flat');
   const speedFlat = getEffectSum(state, 'speed_flat');
@@ -232,7 +234,7 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
     }
 
     if (attackFlat > 0) {
-      next.atk = Math.max(1, Math.round((Number(next.atk) || 1) + attackFlat));
+      applyAttackStatPreviewChange(next, (atk) => Math.max(1, Math.round(atk + attackFlat)));
     }
 
     if (speedFlat > 0) {
@@ -240,7 +242,7 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
     }
 
     if (attackMult !== 1) {
-      next.atk = Math.max(1, Math.round((Number(next.atk) || 1) * attackMult));
+      applyAttackStatPreviewChange(next, (atk) => Math.max(1, Math.round(atk * attackMult)));
     }
 
     if (accountMaxHpFlat > 0) {
@@ -251,7 +253,7 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
     }
 
     if (accountAttackFlat > 0) {
-      next.atk = Math.max(1, Math.round((Number(next.atk) || 1) + accountAttackFlat));
+      applyAttackStatPreviewChange(next, (atk) => Math.max(1, Math.round(atk + accountAttackFlat)));
     }
 
     if (accountSpeedFlat > 0) {
@@ -266,15 +268,46 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
     }
 
     if (accountAttackMult !== 1) {
-      next.atk = Math.max(1, Math.round((Number(next.atk) || 1) * accountAttackMult));
+      applyAttackStatPreviewChange(next, (atk) => Math.max(1, Math.round(atk * accountAttackMult)));
     }
 
     if (accountSpeedMult !== 1) {
       next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * accountSpeedMult));
     }
 
+    applyDamageOutputStatPreview(next, {
+      directDamageMult: directDamagePreviewMult,
+      aoeDamageMult: aoeDamagePreviewMult * accountAoeDamageMult,
+      aoeDamageFlat: accountAoeDamageFlat + getEffectSum(state, 'aoe_damage_flat')
+    });
+
     return next;
   });
+}
+
+function applyAttackStatPreviewChange(demon, updateAtk) {
+  const previousAtk = Math.max(1, Number(demon.atk) || 1);
+  const previousEffectiveAtk = Number(demon.effectiveAtk);
+  const nextAtk = Math.max(1, Math.round(Number(updateAtk(previousAtk)) || previousAtk));
+  demon.atk = nextAtk;
+
+  if (Number.isFinite(previousEffectiveAtk) && previousEffectiveAtk > 0) {
+    demon.effectiveAtk = Math.max(1, Math.round(previousEffectiveAtk * (nextAtk / previousAtk)));
+  }
+}
+
+function applyDamageOutputStatPreview(demon, options = {}) {
+  const directDamageMult = positiveNumber(options.directDamageMult, 1);
+  const aoeDamageMult = positiveNumber(options.aoeDamageMult, 1);
+  const aoeDamageFlat = Math.max(0, Number(options.aoeDamageFlat) || 0);
+  const isAoe = isAoeDemon(demon);
+  const damageMult = directDamageMult * (isAoe ? aoeDamageMult : 1);
+  const damageFlat = isAoe ? aoeDamageFlat : 0;
+
+  if (damageMult === 1 && damageFlat <= 0) return;
+
+  const baseAtk = Math.max(1, Number(demon.atk) || 1);
+  demon.effectiveAtk = Math.max(1, Math.round((baseAtk * damageMult) + damageFlat));
 }
 
 function applyRunBuffStatModifiers(run) {

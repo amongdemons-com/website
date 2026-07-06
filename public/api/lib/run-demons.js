@@ -121,6 +121,11 @@ function resetRunDemon(demon, instanceId) {
   delete next.runBaseSpeed;
   delete next.runBuffStatsApplied;
   delete next.runBuffStatsPreviewed;
+  delete next.accountStatsApplied;
+  delete next.accountStatsPreviewed;
+  delete next.battleBuffs;
+  delete next.deathBuffsHandled;
+  delete next.shield;
 
   return next;
 }

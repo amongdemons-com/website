@@ -17,7 +17,7 @@ const formatBattleSpeed = (...args) => dungeonActions.formatBattleSpeed(...args)
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
-const applyAccountStatBonusPreviewToDemon = (...args) => dungeonActions.applyAccountStatBonusPreviewToDemon(...args);
+const applyDungeonCombatStatPreviewToDemon = (...args) => dungeonActions.applyDungeonCombatStatPreviewToDemon(...args);
 const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
 const groupCombatLog = (...args) => dungeonActions.groupCombatLog(...args);
 const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
@@ -100,10 +100,10 @@ function renderRun() {
   const hasPendingPacts = hasPendingBuffChoices(run);
   const isHandStrategy = Boolean(state.isRecruiting && run.awaitingRecruit);
   const arena = elements.runPanel?.querySelector('.dungeon-arena');
-  const team = (isHandStrategy ? getRecruitPreviewTeam() : run.team || []).map(applyAccountStatBonusPreviewToDemon);
+  const team = (isHandStrategy ? getRecruitPreviewTeam() : run.team || []).map(applyDungeonCombatStatPreviewToDemon);
   const enemies = isHandStrategy && state.isEnemyPreviewDeferred ? [] : (isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || []);
   const isBattleHandPlaceholder = Boolean(!isHandStrategy && state.isBattleAnimating);
-  const hand = (isHandStrategy ? getRecruitPreviewHand() : []).map(applyAccountStatBonusPreviewToDemon);
+  const hand = (isHandStrategy ? getRecruitPreviewHand() : []).map(applyDungeonCombatStatPreviewToDemon);
   const handMode = isBattleHandPlaceholder ? 'battle' : 'recruit';
   const showPacts = Boolean(hasPendingPacts && !state.isPactRevealPending && !state.isBattleAnimating && !state.isResultAnimating);
   const pactChoiceBlocksDrag = Boolean(hasPendingPacts || state.isPactRevealPending);

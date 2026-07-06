@@ -3,13 +3,13 @@ import { registerDungeonActions } from './dungeon/registry.js';
 import { state as dungeonState, elements as dungeonElements } from './dungeon/state.js';
 import * as dungeonDom from './dungeon/dom.js';
 import * as dungeonLifecycle from './dungeon/lifecycle.js';
-import * as dungeonRender from './dungeon/render.js';
+import * as dungeonRender from './dungeon/render.js?v=20260706-stat-preview-v1';
 import * as dungeonCombat from './dungeon/combat.js?v=20260627-fire-nova-v3';
 import * as dungeonRewards from './dungeon/rewards.js';
 import * as dungeonPacts from './dungeon/pacts.js';
-import * as dungeonHand from './dungeon/hand.js';
-import * as dungeonRecruit from './dungeon/recruit.js';
-import * as dungeonModals from './dungeon/modals.js?v=20260706-hide-potions-v1';
+import * as dungeonHand from './dungeon/hand.js?v=20260706-stat-preview-v4';
+import * as dungeonRecruit from './dungeon/recruit.js?v=20260706-stat-preview-v4';
+import * as dungeonModals from './dungeon/modals.js?v=20260706-stat-preview-v4';
 import * as dungeonDragDrop from './dungeon/drag-drop.js';
 import * as dungeonCards from './dungeon/cards.js';
 import * as dungeonUtils from './dungeon/utils.js';
@@ -5029,6 +5029,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const rawHp = Number(demon.hp);
     const hp = Math.max(0, Math.min(maxHp, Number.isFinite(rawHp) ? rawHp : maxHp));
     const formationRow = normalizeWorldDungeonFormationRow(demon.formationSlot ?? demon.formationRow ?? index);
+    const isPlayerSnapshot = side === 'player';
 
     return {
       ...demon,
@@ -5039,6 +5040,10 @@ import * as dungeonUtils from './dungeon/utils.js';
       position: demon.position === 'back' ? 'back' : (index > 0 ? 'back' : 'front'),
       formationRow,
       formationSlot: formationRow,
+      ...(isPlayerSnapshot ? {
+        accountStatsApplied: true,
+        runBuffStatsApplied: true
+      } : {}),
       statusEffects: {
         ...(demon.statusEffects || {}),
         poison: Array.isArray(demon.statusEffects?.poison)

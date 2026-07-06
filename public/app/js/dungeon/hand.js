@@ -9,6 +9,7 @@ const getPayoutPreview = (...args) => dungeonActions.getPayoutPreview(...args);
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
 const getCollectionStatPreviewDemon = (...args) => dungeonActions.getCollectionStatPreviewDemon(...args);
+const applyDungeonCombatStatPreviewToDemon = (...args) => dungeonActions.applyDungeonCombatStatPreviewToDemon(...args);
 const completeDeferredDemonicPactRevealAfter = (...args) => dungeonActions.completeDeferredDemonicPactRevealAfter(...args);
 const renderCollectionReinforcementPlaceholder = (...args) => dungeonActions.renderCollectionReinforcementPlaceholder(...args);
 const renderDemonCard = (...args) => dungeonActions.renderDemonCard(...args);
@@ -353,7 +354,7 @@ function renderRewardPayout(earned, canExtract = false) {
 
 function renderRewardBoxCard(candidate, isInteractive = false) {
   const demon = {
-    ...getCollectionStatPreviewDemon(candidate.demon),
+    ...applyDungeonCombatStatPreviewToDemon(getCollectionStatPreviewDemon(candidate.demon)),
     rewardCandidateKey: candidate.key
   };
 
