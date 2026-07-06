@@ -2289,6 +2289,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     drawMacroShading(macro);
     state.groundLayer.addChild(macro);
 
+    buildBorderRidge();
+
     drawGrid();
 
     state.roads.forEach((tile) => {
@@ -2304,6 +2306,117 @@ import * as dungeonUtils from './dungeon/utils.js';
     });
 
     state.terrainBuilt = true;
+  }
+
+  // --- border ridge -----------------------------------------------------------
+  // An impassable rocky ridge hems in the playable map and sinks into the
+  // darkness beyond. Purely cosmetic — pathing already clamps to the bounds —
+  // and derived from state.bounds, so it moves outward if the map ever grows.
+  const BORDER_RIDGE_DEPTH = 3;
+
+  // Continuous fade for the border ridge: 0 at the playable edge, ~0.92 at the
+  // outer rim, eased so the shore stays bright and the far rocks all but merge
+  // with the void. `dt` is distance beyond the edge in tiles.
+  function borderRidgeDarkness(dt) {
+    const k = clamp(dt / BORDER_RIDGE_DEPTH, 0, 1);
+    return k * k * (3 - 2 * k) * 0.92;
+  }
+
+  function buildBorderRidge() {
+    const Pixi = window.PIXI;
+    const min = state.bounds.min ?? -WORLD_RADIUS;
+    const max = state.bounds.max ?? WORLD_RADIUS;
+    const loPx = min * TILE_SIZE;
+    const hiPx = (max + 1) * TILE_SIZE;
+    // Distance (in tiles) of a world-pixel point beyond the playable edge.
+    const depthAt = (px, py) =>
+      Math.max(loPx - px, px - hiPx, loPx - py, py - hiPx, 0) / TILE_SIZE;
+    const shadeStone = (color, k) => rgbToColorNumber(mixRgb(colorNumberToRgb(color), [4, 8, 10], k));
+
+    const eachRingTile = (depth, visit) => {
+      const lo = min - depth;
+      const hi = max + depth;
+      for (let x = lo; x <= hi; x += 1) {
+        visit(x, lo);
+        visit(x, hi);
+      }
+      for (let y = lo + 1; y <= hi - 1; y += 1) {
+        visit(lo, y);
+        visit(hi, y);
+      }
+    };
+
+    // Ground first for every ring so no boulder overhang gets painted over,
+    // continuing each zone's terrain out under the rocks, at full brightness —
+    // the darkening comes from the smooth veil below, not per-tile tints.
+    for (let depth = 1; depth <= BORDER_RIDGE_DEPTH; depth += 1) {
+      eachRingTile(depth, (x, y) => {
+        const zone = zoneTypeIdForTile(x, y);
+        const ground = makeTileSprite(groundTexture(zone, Math.floor(hashTile(x, y, 21) * GROUND_VARIANTS)), x, y);
+        ground.rotation = Math.floor(hashTile(x, y, 22) * 4) * (Math.PI / 2);
+        state.groundLayer.addChild(ground);
+      });
+    }
+
+    // Darkness veil over the ring ground: thin concentric strips stepping the
+    // fade curve every few pixels, so the ground dims as one continuous
+    // gradient instead of tile-sized bands. Reaches full void at the rim (no
+    // outer seam) and sits under the rocks, which carry their own shading.
+    const veil = new Pixi.Graphics();
+    const VEIL_STEP = TILE_SIZE / 8;
+    const veilSteps = BORDER_RIDGE_DEPTH * 8;
+    for (let i = 0; i < veilSteps; i += 1) {
+      const inner = i * VEIL_STEP;
+      const outer = inner + VEIL_STEP;
+      const alpha = Math.min(1, borderRidgeDarkness((inner + VEIL_STEP / 2) / TILE_SIZE) * 1.15);
+      if (alpha <= 0) continue;
+      const x0 = loPx - outer;
+      const width = (hiPx + outer) - x0;
+      veil.rect(x0, loPx - outer, width, VEIL_STEP).fill({ color: 0x040a0d, alpha });
+      veil.rect(x0, hiPx + inner, width, VEIL_STEP).fill({ color: 0x040a0d, alpha });
+      veil.rect(x0, loPx - inner, VEIL_STEP, (hiPx + inner) - (loPx - inner)).fill({ color: 0x040a0d, alpha });
+      veil.rect(hiPx + inner, loPx - inner, VEIL_STEP, (hiPx + inner) - (loPx - inner)).fill({ color: 0x040a0d, alpha });
+    }
+    state.groundLayer.addChild(veil);
+
+    // Rocks outside-in so the innermost (brightest) boulders overlap the darker
+    // ones behind them. Every boulder is shaded by its own distance into the
+    // dark (plus noise), so the fade is a gradient, not stepped rings. The
+    // shore ring is a ragged mix of sizes; the outer rings pack solid large
+    // boulders.
+    const ridge = new Pixi.Graphics();
+    for (let depth = BORDER_RIDGE_DEPTH; depth >= 1; depth -= 1) {
+      eachRingTile(depth, (x, y) => {
+        const rng = seededRng((Math.imul(x | 0, 73856093) ^ Math.imul(y | 0, 19349663) ^ (0xa53a90 + depth)) >>> 0);
+        const palette = ZONE_PALETTES[zoneTypeIdForTile(x, y)] || DEFAULT_ZONE_PALETTE;
+        const c = tileCenter({ x, y });
+
+        // Occasional gap on the shore ring keeps the inner edge irregular.
+        if (depth === 1 && rng() < 0.12) return;
+
+        const big = depth > 1 || rng() < 0.35;
+        const r = TILE_SIZE * (big ? 0.5 + rng() * 0.2 : 0.34 + rng() * 0.14);
+        const bx = c.x + (rng() - 0.5) * TILE_SIZE * 0.7;
+        const by = c.y + (rng() - 0.5) * TILE_SIZE * 0.7;
+        const dark = clamp(borderRidgeDarkness(depthAt(bx, by)) + (rng() - 0.5) * 0.1, 0, 0.95);
+        const shaded = {
+          stone: palette.stone.map((tone) => shadeStone(tone, dark)),
+          stoneDark: shadeStone(palette.stoneDark, dark),
+          stoneLight: shadeStone(palette.stoneLight, dark)
+        };
+        ridge.ellipse(bx + 2, by + 6, r * 1.3, r).fill({ color: 0x000000, alpha: 0.3 * (1 - dark * 0.7) });
+        drawBoulder(ridge, bx, by, r, rng, shaded);
+
+        // A companion stone at the base of some boulders.
+        if (rng() < 0.4) {
+          const sr = TILE_SIZE * (0.16 + rng() * 0.12);
+          const sx = bx + (rng() - 0.5) * TILE_SIZE * 0.8;
+          const sy = by + (0.2 + rng() * 0.4) * TILE_SIZE * 0.6;
+          drawBoulder(ridge, sx, sy, sr, rng, shaded);
+        }
+      });
+    }
+    state.groundLayer.addChild(ridge);
   }
 
   // Faint static grid — barely visible by default; emphasis for the active /
