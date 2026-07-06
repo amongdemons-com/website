@@ -70,7 +70,7 @@
 
     document.title = `${username} | Hunter Profile | Among Demons`;
     updateCanonical(username);
-    setText(elements.name, username);
+    setHunterName(username);
     setText(elements.subline, `Level ${formatNumber(level)} \u00b7 ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`);
     setText(elements.stats.floor, formatNumber(hunter.highestFloor || 0));
     setText(elements.stats.coordinates, formatCoordinates(coordinates));
@@ -239,14 +239,14 @@
   }
 
   function setLoading(username) {
-    setText(elements.name, username);
+    setHunterName(username);
     setText(elements.subline, 'Loading public record...');
     if (elements.team) elements.team.innerHTML = renderFormationGrid([]);
     if (elements.buffs) elements.buffs.innerHTML = renderEmpty('Loading buffs...');
   }
 
   function showNotFound(username = '') {
-    setText(elements.name, username || 'Hunter');
+    setHunterName(username || 'Hunter');
     setText(elements.subline, 'No public record found.');
     Object.values(elements.stats).forEach((element) => setText(element, '-'));
     if (elements.avatar) elements.avatar.src = FALLBACK_AVATAR;
@@ -343,6 +343,21 @@
 
   function setText(element, value) {
     if (element) element.textContent = value;
+  }
+
+  function setHunterName(value) {
+    if (!elements.name) return;
+
+    const username = String(value || 'Hunter').trim() || 'Hunter';
+    const length = Array.from(username).length;
+    const isCompact = length > 18;
+    const isClamped = length > 34;
+
+    elements.name.textContent = username;
+    elements.name.title = isCompact ? username : '';
+    elements.name.setAttribute('aria-label', username);
+    elements.name.classList.toggle('is-compact-name', isCompact);
+    elements.name.classList.toggle('is-clamped-name', isClamped);
   }
 
   function escapeHtml(value) {
