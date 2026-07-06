@@ -26,6 +26,7 @@
     soul_capacity_mastery: { label: 'Endless Vessel', cap: Infinity, requires: [['soul_capacity_percent', 5]] }
   };
   const STAT_KEYS = Object.keys(NODE_DEFINITIONS);
+  const RESET_SOULS_PER_POINT = 10;
   const PAN_CLICK_THRESHOLD = 5;
   const state = {
     summary: null,
@@ -222,13 +223,22 @@
       elements.skillTreeSaveButton.textContent = state.busyAction === 'save' ? 'Saving...' : 'Save';
     }
     if (elements.skillTreeResetButton) {
-      elements.skillTreeResetButton.disabled = !ready || state.busy || spent <= 0 || !canAffordReset;
+      const canResetSavedAllocations = ready && savedSpent > 0;
+      const canClearUnsavedDraft = ready && dirty && spent > 0 && savedSpent <= 0;
+      const resetDeficit = Math.max(0, resetCost - playerSouls);
+      const resetUnaffordable = canResetSavedAllocations && !canAffordReset;
+      elements.skillTreeResetButton.disabled = (!canResetSavedAllocations && !canClearUnsavedDraft) || state.busy || (canResetSavedAllocations && !canAffordReset);
+      elements.skillTreeResetButton.classList.toggle('is-unaffordable', resetUnaffordable);
       elements.skillTreeResetButton.textContent = getResetButtonLabel({
         busy: state.busyAction === 'reset'
       });
-      elements.skillTreeResetButton.title = resetCost > 0
-        ? `Reset costs ${formatNumber(resetCost)} Soul${resetCost === 1 ? '' : 's'}.`
-        : 'Clear unsaved skill point changes.';
+      elements.skillTreeResetButton.title = canResetSavedAllocations
+        ? canAffordReset
+          ? `Reset costs ${formatNumber(resetCost)} Soul${resetCost === 1 ? '' : 's'}.`
+          : `Need ${formatNumber(resetDeficit)} more Soul${resetDeficit === 1 ? '' : 's'} to reset.`
+        : canClearUnsavedDraft
+          ? 'Clear unsaved skill point changes.'
+          : 'Allocate and save at least one point before resetting.';
     }
 
     renderResetCost({
@@ -345,7 +355,7 @@
   }
 
   function getResetCost() {
-    return Math.max(0, Number(state.summary?.resetCost) || getSpent(state.summary?.allocations));
+    return Math.max(0, Number(state.summary?.resetCost) || getSpent(state.summary?.allocations) * RESET_SOULS_PER_POINT);
   }
 
   function getPlayerSouls() {

@@ -76,6 +76,7 @@ body.skill-tree-page {
 }
 
 .ascension-viewport {
+    --ascension-action-clearance: clamp(5rem, 9vh, 7rem);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -83,6 +84,7 @@ body.skill-tree-page {
     min-height: 0;
     overflow: auto;
     outline: none;
+    scroll-padding-bottom: var(--ascension-action-clearance);
     touch-action: none;
     cursor: grab;
     user-select: none;
@@ -100,12 +102,14 @@ body.skill-tree-page {
 }
 
 .ascension-map {
+    --ascension-map-height: 72rem;
     position: relative;
     flex: 1 0 auto;
     min-width: 75rem;
-    min-height: 56rem;
+    min-height: calc(var(--ascension-map-height) + var(--ascension-action-clearance));
+    padding-bottom: var(--ascension-action-clearance);
     isolation: isolate;
-    overflow: hidden;
+    overflow: visible;
     background:
         radial-gradient(circle at 50% 50%, rgba(217, 185, 111, 0.09), transparent 8.5rem),
         radial-gradient(circle at 20% 50%, rgba(217, 109, 112, 0.055), transparent 24rem),
@@ -124,6 +128,13 @@ body.skill-tree-page {
     background:
         linear-gradient(90deg, transparent 49.94%, rgba(217, 185, 111, 0.035) 50%, transparent 50.06%),
         radial-gradient(circle at 50% 50%, transparent 0 18%, rgba(0, 0, 0, 0.08) 64%, rgba(0, 0, 0, 0.56) 100%);
+}
+
+.ascension-map-stage {
+    position: relative;
+    z-index: 1;
+    height: var(--ascension-map-height);
+    min-height: var(--ascension-map-height);
 }
 
 .ascension-connections {
@@ -399,6 +410,15 @@ body.skill-tree-page {
     opacity: 0.32;
 }
 
+.ascension-actions .ascension-reset.is-unaffordable:disabled {
+    border-color: rgba(223, 119, 121, 0.46);
+    background:
+        linear-gradient(180deg, rgba(223, 119, 121, 0.14), rgba(90, 23, 28, 0.14)),
+        rgba(13, 8, 10, 0.9);
+    color: rgba(255, 198, 198, 0.72);
+    opacity: 0.58;
+}
+
 .ascension-reset-cost {
     display: inline-flex;
     align-items: stretch;
@@ -446,7 +466,7 @@ body.skill-tree-page {
     }
 
     .ascension-map {
-        height: 56rem;
+        --ascension-map-height: 56rem;
     }
 
 }

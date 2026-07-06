@@ -44,6 +44,7 @@
   const LEVEL_UP_REDUCED_ANIMATION_MS = 1600;
   const LEVEL_UP_DISMISS_MS = 220;
   const LEVEL_UP_ANCHOR_ANIMATION_MS = 2200;
+  const LEVEL_UP_SEEN_STORAGE_PREFIX = 'amongdemons-level-up-seen';
   const alertTimers = new WeakMap();
   let navXpState = null;
   let levelUpAnimationSerial = 0;
@@ -286,8 +287,14 @@
     const tooltip = progress.querySelector('[data-nav-xp-tooltip]');
     if (tooltip) tooltip.innerHTML = tooltipHtml;
 
-    if (options.animate !== false && previousState && nextState.level > previousState.level) {
+    const shouldAnimateLevelUp = options.animate !== false &&
+      previousState &&
+      nextState.level > previousState.level &&
+      nextState.level > getSeenLevelUpLevel(data);
+
+    if (shouldAnimateLevelUp) {
       const view = root.defaultView || window;
+      rememberSeenLevelUpLevel(data, nextState.level);
       view.requestAnimationFrame(() => {
         triggerLevelUpAnimation({
           root,
@@ -317,6 +324,7 @@
       ? getLevelUpDetail({ level: previousLevel }, { level })
       : 'New power awakened');
     const serial = String(++levelUpAnimationSerial);
+    rememberSeenLevelUpLevel(currentState, level);
 
     animateLevelUpAnchors(root, serial, reducedMotion);
     if (typeof dismissActiveLevelUpAnimation === 'function') {
@@ -477,6 +485,33 @@
     return gained > 1
       ? `${formatNumber(gained)} levels gained`
       : 'New power awakened';
+  }
+
+  function getSeenLevelUpLevel(data = {}) {
+    try {
+      return Math.max(0, Math.floor(Number(localStorage.getItem(getLevelUpSeenStorageKey(data))) || 0));
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  function rememberSeenLevelUpLevel(data = {}, level = 0) {
+    const nextLevel = Math.max(0, Math.floor(Number(level) || 0));
+    if (nextLevel <= 0) return;
+
+    try {
+      const key = getLevelUpSeenStorageKey(data);
+      const previousLevel = Math.max(0, Math.floor(Number(localStorage.getItem(key)) || 0));
+      if (nextLevel > previousLevel) localStorage.setItem(key, String(nextLevel));
+    } catch (error) {}
+  }
+
+  function getLevelUpSeenStorageKey(data = {}) {
+    const sessionPlayer = typeof window.AmongDemons?.getSession === 'function'
+      ? window.AmongDemons.getSession()?.player
+      : null;
+    const accountId = data?.id || data?.playerId || data?.username || sessionPlayer?.id || sessionPlayer?.username || 'global';
+    return `${LEVEL_UP_SEEN_STORAGE_PREFIX}:${accountId}`;
   }
 
   function getNavXpProgressState() {

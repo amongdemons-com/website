@@ -164,18 +164,33 @@
     const candidate = getProgressionCandidate(payload, path);
     if (!candidate) return;
 
+    const options = { animate: shouldAnimateProgressionPayload(path) };
+
     if (candidate.kind === 'player' && typeof ui.updateNavAccount === 'function') {
-      ui.updateNavAccount(candidate.data);
+      ui.updateNavAccount(candidate.data, options);
       return;
     }
 
     if (typeof ui.updateNavProgression === 'function') {
-      ui.updateNavProgression(candidate.data);
+      ui.updateNavProgression(candidate.data, options);
       return;
     }
 
     if (typeof ui.updateNavXpProgress === 'function') {
-      ui.updateNavXpProgress(candidate.data);
+      ui.updateNavXpProgress(candidate.data, options);
+    }
+  }
+
+  function shouldAnimateProgressionPayload(path = '') {
+    const pathname = getPayloadPathname(path);
+    return !['/api/auth/me', '/api/account/progression'].includes(pathname);
+  }
+
+  function getPayloadPathname(path = '') {
+    try {
+      return new URL(String(path), window.location.origin).pathname.replace(/\/+$/, '');
+    } catch (error) {
+      return String(path).replace(/\/+$/, '');
     }
   }
 
@@ -211,11 +226,7 @@
   }
 
   function isProgressionEndpoint(path = '') {
-    try {
-      return new URL(String(path), window.location.origin).pathname.replace(/\/+$/, '') === '/api/account/progression';
-    } catch (error) {
-      return String(path).replace(/\/+$/, '') === '/api/account/progression';
-    }
+    return getPayloadPathname(path) === '/api/account/progression';
   }
 
   function normalizePayload(data) {

@@ -336,6 +336,20 @@ body.world-page > .game-shell-nav {
     white-space: nowrap;
 }
 
+.world-tooltip-hint {
+    justify-self: center;
+    margin-top: 0.12rem;
+    padding-top: 0.32rem;
+    width: 100%;
+    border-top: 1px solid rgba(177,132,63,0.2);
+    color: rgba(226,207,164,0.54);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
 .world-target-coords {
     color: rgba(226,207,164,0.74);
     font-size: 0.7rem;
@@ -1418,9 +1432,9 @@ body.world-page > .game-shell-nav {
 
 .world-hunt-reward-row {
     display: grid;
-    grid-template-columns: 4.25rem minmax(3.1rem, max-content) max-content;
+    grid-template-columns: 4.25rem 4.25rem minmax(7rem, 1fr);
     align-items: baseline;
-    column-gap: 0.58rem;
+    column-gap: 0.72rem;
     min-width: 0;
 }
 
@@ -1432,28 +1446,65 @@ body.world-page > .game-shell-nav {
 
 .world-hunt-reward-value {
     color: rgba(232,199,106,0.9);
+    justify-self: start;
+    text-align: left;
     white-space: nowrap;
+}
+
+.world-hunt-souls-value {
+    min-width: 0;
+}
+
+.world-hunt-reward-row.is-earned {
+    margin-top: 0.12rem;
 }
 
 .world-hunt-reward-row.is-earned .world-hunt-reward-value {
     color: rgba(220,232,229,0.72);
 }
 
-.world-hunt-vessel-row .world-hunt-reward-value {
-    color: rgba(143,167,255,0.88);
-}
-
-.world-hunt-vessel-row.is-vessel-full .world-hunt-reward-value {
-    color: rgba(223,119,121,0.92);
-}
-
-.world-hunt-vessel-full-note {
-    color: rgba(223,119,121,0.78);
-    font-size: 0.64rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
+.world-hunt-earned-souls {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.32rem;
     white-space: nowrap;
+}
+
+.world-hunt-reward-row.is-earned .world-hunt-earned-souls.is-vessel-full,
+.world-hunt-reward-row.is-earned .world-hunt-earned-souls.is-vessel-full .world-hunt-vessel-amount {
+    color: #ff8f8f;
+    text-shadow: 0 0 10px rgba(223,119,121,0.28);
+}
+
+.world-hunt-vessel-amount {
+    color: inherit;
+}
+
+.world-hunt-vessel-upgrade-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.26rem;
+    min-width: 1.26rem;
+    height: 1.26rem;
+    padding: 0;
+    border: 1px solid rgba(143,167,255,0.42);
+    border-radius: 999px;
+    background: rgba(143,167,255,0.1);
+    color: #d9e1ff;
+    font-size: 0.86rem;
+    font-weight: 900;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.world-hunt-vessel-upgrade-btn:hover,
+.world-hunt-vessel-upgrade-btn:focus-visible {
+    border-color: rgba(143,167,255,0.72);
+    background: rgba(143,167,255,0.2);
+    color: #fff;
+    outline: 0;
 }
 
 .world-hunt-progress {

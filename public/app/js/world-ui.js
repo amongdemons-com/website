@@ -3336,38 +3336,34 @@ import * as dungeonUtils from './dungeon/utils.js';
       <span class="world-hunt-reward-lines">
         <span class="world-hunt-reward-row">
           <span class="world-hunt-reward-label">Per kill:</span>
-          <span class="world-hunt-reward-value">${formatNumber(rate.xpPerCycle)} XP</span>
-          <span class="world-hunt-reward-value">${formatSoulCount(rate.soulsPerCycle)}</span>
+          <span class="world-hunt-reward-value world-hunt-xp-value">${formatNumber(rate.xpPerCycle)} XP</span>
+          <span class="world-hunt-reward-value world-hunt-souls-value">${formatSoulCount(rate.soulsPerCycle)}</span>
         </span>
         <span class="world-hunt-reward-row is-earned">
           <span class="world-hunt-reward-label">Earned:</span>
-          <span class="world-hunt-reward-value">${formatNumber(accruedXp)} XP</span>
-          <span class="world-hunt-reward-value">${formatSoulCount(accruedSouls)}</span>
+          <span class="world-hunt-reward-value world-hunt-xp-value">${formatNumber(accruedXp)} XP</span>
+          ${renderHuntEarnedSouls(progress, accruedSouls)}
         </span>
-        ${renderHuntVesselRow(progress)}
       </span>
     `;
   }
 
-  function renderHuntVesselRow(progress) {
+  function renderHuntEarnedSouls(progress, accruedSouls) {
     const capacity = Number(progress?.soulCapacity);
-    if (!Number.isFinite(capacity) || capacity <= 0) return '';
+    if (!Number.isFinite(capacity) || capacity <= 0) {
+      return `<span class="world-hunt-reward-value world-hunt-souls-value">${formatSoulCount(accruedSouls)}</span>`;
+    }
 
-    const full = Boolean(progress?.vesselFull);
+    const displayedSouls = Math.max(0, Number(accruedSouls) || 0);
+    const full = Boolean(progress?.vesselFull) || displayedSouls >= capacity;
     const tooltip = full
-      ? 'Your Soul Vessel is full. New kills grant XP, but their souls slip into the dark. End the hunt to bank them, or expand the vessel in the skill tree.'
+      ? 'Your Soul Vessel is full. End the hunt to bank souls, or expand the vessel in the skill tree.'
       : 'Souls banked while hunting are held in your Soul Vessel. When it fills, souls stop accruing until the hunt ends.';
 
     return `
-      <span class="world-hunt-reward-row world-hunt-vessel-row ${full ? 'is-vessel-full' : ''}" data-tooltip="${escapeAttribute(tooltip)}" tabindex="0" aria-label="${escapeAttribute(tooltip)}">
-        <span class="world-hunt-reward-label">Vessel:</span>
-        <span class="world-hunt-reward-value">${formatNumber(progress.accruedSouls)} / ${formatNumber(capacity)}</span>
-        ${full ? `
-          <span class="world-hunt-vessel-status">
-            <span class="world-hunt-vessel-full-note">Full</span>
-            <a class="world-hunt-vessel-upgrade-btn" href="${escapeAttribute(appUrl('/skill-tree'))}" aria-label="Expand your Soul Vessel in the skill tree">Upgrade</a>
-          </span>
-        ` : ''}
+      <span class="world-hunt-reward-value world-hunt-souls-value world-hunt-earned-souls ${full ? 'is-vessel-full' : ''}" data-tooltip="${escapeAttribute(tooltip)}" title="${escapeAttribute(tooltip)}" tabindex="0" aria-label="${escapeAttribute(tooltip)}">
+        <span class="world-hunt-vessel-amount">${formatNumber(displayedSouls)} / ${formatNumber(capacity)} Souls</span>
+        <a class="world-hunt-vessel-upgrade-btn" href="${escapeAttribute(appUrl('/skill-tree'))}" title="Expand Soul Vessel" aria-label="Expand your Soul Vessel in the skill tree"><span aria-hidden="true">+</span></a>
       </span>
     `;
   }
@@ -5559,7 +5555,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       accruedXp: cycles * rate.xpPerCycle,
       accruedSouls,
       soulCapacity: Number.isFinite(soulCapacity) ? soulCapacity : null,
-      vesselFull: Number.isFinite(soulCapacity) && uncappedSouls >= soulCapacity,
+      vesselFull: Number.isFinite(soulCapacity) && (uncappedSouls >= soulCapacity || accruedSouls >= soulCapacity),
       soulsLost: Math.max(0, uncappedSouls - accruedSouls),
       secondsToNext
     };
@@ -5801,14 +5797,16 @@ import * as dungeonUtils from './dungeon/utils.js';
       <strong class="world-tooltip-title">Travel to</strong>
       <span class="world-tooltip-meta">${meta}</span>
     `;
+    const travelHint = '<span class="world-tooltip-hint">(Click again to travel)</span>';
 
-    if (!event) return header;
+    if (!event) return `${header}${travelHint}`;
 
     return `
       ${header}
       <span class="world-target-event-type">${escapeHtml(getEventLabel(event.type))}</span>
       <span class="world-target-event-title">${escapeHtml(event.title || 'World Event')}</span>
       ${event.description ? `<span class="world-target-event-copy">${escapeHtml(event.description)}</span>` : ''}
+      ${travelHint}
     `;
   }
 
@@ -5848,6 +5846,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         <span class="world-enc-difficulty-label">Threat</span>
         <span class="world-enc-meter" aria-label="Threat ${difficulty} of 10">${meter}</span>
       </div>
+      <span class="world-tooltip-hint">(Click again to travel)</span>
     `;
   }
 
@@ -5930,9 +5929,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function renderHuntTooltipContent(progress) {
-    const next = progress.vesselFull
-      ? `Vessel full — XP only. Next kill in ${formatDuration(progress.secondsToNext)}`
-      : `Next kill in ${formatDuration(progress.secondsToNext)}`;
+    const next = `Next kill in ${formatDuration(progress.secondsToNext)}`;
 
     return `
       <strong class="world-tooltip-title">Hunting</strong>

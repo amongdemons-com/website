@@ -124,7 +124,7 @@
     if (!ctx) return;
 
     const soulImg = new Image();
-    soulImg.src = '/assets/soul.svg';
+    soulImg.src = '/app/images/assets/soul.svg';
 
     const W = 120;
     const H = 140;

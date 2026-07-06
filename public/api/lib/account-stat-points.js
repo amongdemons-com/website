@@ -31,6 +31,7 @@ const HUNT_SOUL_CAPACITY_BASE = 50;
 const HUNT_SOUL_CAPACITY_PER_RANK = 20;
 const HUNT_SOUL_CAPACITY_PERCENT_PER_RANK = 10;
 const HUNT_SOUL_CAPACITY_PER_MASTERY = 10;
+const SKILL_TREE_RESET_SOULS_PER_POINT = 10;
 
 const STAT_KEYS = Object.freeze(Object.keys(NODE_DEFINITIONS));
 const ZERO_ALLOCATIONS = Object.freeze(STAT_KEYS.reduce((allocations, key) => {
@@ -292,7 +293,7 @@ async function resetPlayerStatAllocations(player) {
       ...createStatPointSummary(updatedPlayerRows[0], ZERO_ALLOCATIONS),
       reset: {
         cost: resetCost,
-        usedPoints: resetCost
+        usedPoints: getSpentPoints(allocations)
       },
       player: cleanPlayer(updatedPlayerRows[0])
     };
@@ -307,7 +308,7 @@ async function resetPlayerStatAllocations(player) {
 }
 
 function getSkillTreeResetCost(allocations = {}) {
-  return getSpentPoints(normalizeStoredAllocations(allocations));
+  return getSpentPoints(normalizeStoredAllocations(allocations)) * SKILL_TREE_RESET_SOULS_PER_POINT;
 }
 
 function requirementsMet(allocations, requirements = []) {
@@ -331,6 +332,7 @@ function throwStatPointError(message) {
 module.exports = {
   HUNT_SOUL_CAPACITY_BASE,
   NODE_DEFINITIONS,
+  SKILL_TREE_RESET_SOULS_PER_POINT,
   STAT_KEYS,
   ZERO_ALLOCATIONS,
   getHuntSoulCapacity,
