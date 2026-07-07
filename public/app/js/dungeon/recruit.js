@@ -173,31 +173,32 @@ function applyRunBuffStatPreviewToDemon(demon = {}) {
 }
 
 function applyAccountStatBonusPreviewToDemon(demon = {}) {
-  const bonuses = state.statPoints?.bonuses;
-  // Battle replay snapshots already have account bonuses baked in server-side; never double-apply.
-  if (!demon || !bonuses || demon.accountStatsApplied || demon.accountStatsPreviewed) return { ...demon };
+  const bonuses = state.statPoints?.bonuses || {};
+  // Battle replay snapshots already have player combat buffs baked in server-side; never double-apply.
+  if (!demon || demon.accountStatsApplied || demon.accountStatsPreviewed) return { ...demon };
 
-  const maxHpFlat = Math.max(0, Number(bonuses.maxHpFlat) || 0);
-  const maxHpMult = 1 + getAccountBonusFraction(bonuses.maxHpPercent);
-  const attackFlat = Math.max(0, Number(bonuses.attackFlat) || 0);
-  const attackMult = 1 + getAccountBonusFraction(bonuses.attackPercent);
-  const speedFlat = Math.max(0, Number(bonuses.speedFlat) || 0);
-  const speedMult = 1 + getAccountBonusFraction(bonuses.speedPercent);
-  const aoeDamageFlat = Math.max(0, Number(bonuses.aoeDamageFlat) || 0);
-  const aoeDamageMult = 1 + getAccountBonusFraction(bonuses.aoeDamagePercent);
+  const maxHpFlat = Math.max(0, Number(bonuses.maxHpFlat) || 0) + getPlayerWorldBuffEffectSum('max_hp_flat');
+  const maxHpMult = (1 + getAccountBonusFraction(bonuses.maxHpPercent)) * getPlayerWorldBuffEffectMultiplier('max_hp_mult');
+  const attackFlat = Math.max(0, Number(bonuses.attackFlat) || 0) + getPlayerWorldBuffEffectSum('attack_flat');
+  const attackMult = (1 + getAccountBonusFraction(bonuses.attackPercent)) * getPlayerWorldBuffEffectMultiplier('attack_mult');
+  const speedFlat = Math.max(0, Number(bonuses.speedFlat) || 0) + getPlayerWorldBuffEffectSum('speed_flat');
+  const speedMult = (1 + getAccountBonusFraction(bonuses.speedPercent)) * getPlayerWorldBuffEffectMultiplier('speed_mult');
+  const directDamageMult = getPlayerWorldBuffEffectMultiplier('direct_damage_mult');
+  const aoeDamageFlat = Math.max(0, Number(bonuses.aoeDamageFlat) || 0) + getPlayerWorldBuffEffectSum('aoe_damage_flat');
+  const aoeDamageMult = (1 + getAccountBonusFraction(bonuses.aoeDamagePercent)) * getPlayerWorldBuffEffectMultiplier('aoe_damage_mult');
 
   const hasHpBonus = maxHpFlat > 0 || maxHpMult !== 1;
   const hasAttackBonus = attackFlat > 0 || attackMult !== 1;
   const hasSpeedBonus = speedFlat > 0 || speedMult !== 1;
-  const hasAoeDamageBonus = aoeDamageFlat > 0 || aoeDamageMult !== 1;
-  if (!hasHpBonus && !hasAttackBonus && !hasSpeedBonus && !hasAoeDamageBonus) return { ...demon };
+  const hasDamagePreviewBonus = directDamageMult !== 1 || aoeDamageFlat > 0 || aoeDamageMult !== 1;
+  if (!hasHpBonus && !hasAttackBonus && !hasSpeedBonus && !hasDamagePreviewBonus) return { ...demon };
 
   const next = {
     ...demon,
     accountStatsPreviewed: true
   };
 
-  // Skill-tree bonuses are sent to combat as playerBuffs, so mirror
+  // Skill-tree and world boss reward buffs are sent to combat as playerBuffs, so mirror
   // applyPreBattleBuffs: HP/speed percent first, then flat; attack flat first.
   if (hasHpBonus) {
     if (maxHpMult !== 1) {
@@ -235,9 +236,9 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
     }
   }
 
-  if (hasAttackBonus || hasAoeDamageBonus) {
+  if (hasAttackBonus || hasDamagePreviewBonus) {
     applyDamageOutputStatPreview(next, {
-      directDamageMult: getRunBuffEffectMultiplier('direct_damage_mult'),
+      directDamageMult: getRunBuffEffectMultiplier('direct_damage_mult') * directDamageMult,
       aoeDamageMult: getRunBuffEffectMultiplier('aoe_damage_mult') * aoeDamageMult,
       aoeDamageFlat
     });
@@ -313,8 +314,23 @@ function getCollectionStatPreviewDemon(demon = {}) {
 }
 
 function getRunBuffEffectMultiplier(type) {
-  const activeBuffs = state.run?.buffs?.activeBuffs || [];
-  return activeBuffs.reduce((multiplier, buff) => {
+  return getBuffEffectMultiplier(state.run?.buffs?.activeBuffs || [], type);
+}
+
+function getPlayerWorldBuffEffectMultiplier(type) {
+  return getBuffEffectMultiplier(getPlayerWorldBuffs(), type);
+}
+
+function getPlayerWorldBuffEffectSum(type) {
+  return getBuffEffectSum(getPlayerWorldBuffs(), type);
+}
+
+function getPlayerWorldBuffs() {
+  return Array.isArray(state.run?.worldBuffs) ? state.run.worldBuffs : [];
+}
+
+function getBuffEffectMultiplier(buffs = [], type) {
+  return (Array.isArray(buffs) ? buffs : []).reduce((multiplier, buff) => {
     const effects = Array.isArray(buff?.effects) ? buff.effects : [];
     return effects.reduce((nextMultiplier, effect) => {
       if (effect?.type !== type) return nextMultiplier;
@@ -322,6 +338,17 @@ function getRunBuffEffectMultiplier(type) {
       return Number.isFinite(value) && value > 0 ? nextMultiplier * value : nextMultiplier;
     }, multiplier);
   }, 1);
+}
+
+function getBuffEffectSum(buffs = [], type) {
+  return (Array.isArray(buffs) ? buffs : []).reduce((sum, buff) => {
+    const effects = Array.isArray(buff?.effects) ? buff.effects : [];
+    return effects.reduce((nextSum, effect) => {
+      if (effect?.type !== type) return nextSum;
+      const value = Number(effect.value);
+      return Number.isFinite(value) ? nextSum + value : nextSum;
+    }, sum);
+  }, 0);
 }
 
 function getRunBuffAttackPreviewMultiplier(demon) {

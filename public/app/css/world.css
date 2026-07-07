@@ -1331,6 +1331,15 @@ body.is-world-side-collapsed .world-map-controls {
         rgba(0,0,0,0.16);
 }
 
+.world-sidebar-card.world-boss-card {
+    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr);
+    border-color: rgba(242,195,94,0.22);
+    background:
+        linear-gradient(180deg, rgba(242,195,94,0.08), rgba(223,119,121,0.035)),
+        rgba(0,0,0,0.18);
+}
+
 .world-card-kicker {
     color: rgba(220,232,229,0.62);
     font-size: 0.58rem;
@@ -1466,6 +1475,153 @@ body.is-world-side-collapsed .world-map-controls {
 .world-card-action {
     justify-self: end;
     min-width: 4.5rem;
+}
+
+.world-boss-card .world-card-action {
+    align-self: center;
+    justify-self: center;
+    width: auto;
+    min-width: 6.25rem;
+    margin-top: 0.16rem;
+}
+
+.world-boss-title .world-encounter-rarity {
+    color: #f2c35e;
+}
+
+.world-boss-demons {
+    margin-top: 0.08rem;
+}
+
+.world-boss-buffs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.28rem;
+    min-width: 0;
+}
+
+.world-boss-buffs.is-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+}
+
+.world-boss-buff {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+    max-width: 100%;
+    border: 1px solid rgba(242,195,94,0.16);
+    border-radius: 999px;
+    background: rgba(0,0,0,0.2);
+    color: rgba(255,236,186,0.82);
+    font-size: 0.62rem;
+    font-weight: 900;
+    line-height: 1.1;
+    padding: 0.18rem 0.42rem;
+}
+
+.world-boss-buff[data-tooltip] {
+    cursor: help;
+}
+
+.world-boss-buff[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 0.42rem);
+    left: 0;
+    width: max-content;
+    max-width: min(18rem, 70vw);
+    border: 1px solid rgba(242,195,94,0.32);
+    border-radius: 8px;
+    background: rgba(3,9,11,0.96);
+    color: #f4f8f7;
+    box-shadow: 0 16px 34px rgba(0,0,0,0.42);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.28;
+    padding: 0.55rem 0.65rem;
+    pointer-events: none;
+    text-align: left;
+    text-transform: none;
+    white-space: pre-line;
+    opacity: 0;
+    transform: translateY(-0.16rem);
+    transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.world-boss-buff[data-tooltip]:hover::after,
+.world-boss-buff[data-tooltip]:focus::after,
+.world-boss-buff[data-tooltip]:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.world-boss-buff:focus-visible {
+    outline: 1px solid rgba(242,195,94,0.62);
+    outline-offset: 2px;
+}
+
+.world-boss-buffs.is-inline .world-boss-buff {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: rgba(255,236,186,0.86);
+    font-size: inherit;
+    line-height: inherit;
+    padding: 0;
+}
+
+.world-boss-buff .ad-icon {
+    width: 0.72rem;
+    height: 0.72rem;
+    flex: 0 0 auto;
+}
+
+.world-boss-buff span:last-child {
+    overflow: hidden;
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-boss-reward {
+    display: grid;
+    gap: 0.08rem;
+    min-width: 0;
+    border-left: 2px solid rgba(242,195,94,0.72);
+    color: rgba(220,232,229,0.68);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.2;
+    padding-left: 0.48rem;
+}
+
+.world-boss-reward > span {
+    color: rgba(242,195,94,0.82);
+    font-size: 0.56rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.world-boss-reward strong {
+    overflow: hidden;
+    color: #fff3bd;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-boss-reward small {
+    overflow: hidden;
+    color: rgba(220,232,229,0.62);
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .world-pvp-actions {

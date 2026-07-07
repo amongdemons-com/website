@@ -127,6 +127,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     pathPulse: null,
     markerLayer: null,
     encounterLayer: null,
+    bossLayer: null,
     hunterLayer: null,
     hunterFrame: null,
     hunterAvatar: null,
@@ -142,22 +143,28 @@ import * as dungeonUtils from './dungeon/utils.js';
     roads: [],
     roadKeys: new Set(),
     encounters: [],
+    bosses: [],
     encounterTextures: new Map(),
+    bossTextures: new Map(),
     tileTextures: new Map(),
     terrainBuilt: false,
     puddleFxTiles: [],
     puddleFxStyles: null,
     puddleFxLast: 0,
     selectedEncounter: null,
+    selectedBoss: null,
     player: null,
     playersAt: [],
     activeTeam: null,
     currentEvent: null,
     currentEncounter: null,
+    currentBoss: null,
     hunt: null,
     huntBusy: false,
+    bossBusy: false,
     huntTicker: null,
     huntStatusRefreshAt: 0,
+    bossRefreshTimer: null,
     boundShrine: null,
     bindingShrine: false,
     summoningPortal: false,
@@ -294,6 +301,11 @@ import * as dungeonUtils from './dungeon/utils.js';
       const challengeButton = target?.closest('[data-challenge-player]');
       if (challengeButton) {
         challengePlayer(challengeButton.dataset.challengePlayer, challengeButton);
+        return;
+      }
+      const challengeBossButton = target?.closest('[data-challenge-boss]');
+      if (challengeBossButton) {
+        challengeBoss(challengeBossButton.dataset.challengeBoss, challengeBossButton);
         return;
       }
       const replayButton = target?.closest('[data-view-world-battle]');
@@ -436,6 +448,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.puddleFx = new Pixi.Graphics();      // animated bubbles / embers over puddles
     state.markerLayer = new Pixi.Container();
     state.encounterLayer = new Pixi.Container();
+    state.bossLayer = new Pixi.Container();
     state.hunterLayer = new Pixi.Container();
     state.hunterFrame = new Pixi.Graphics();
     state.hunterAvatar = new Pixi.Sprite(Pixi.Texture.EMPTY);
@@ -461,6 +474,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.viewport.addChild(state.portalGlow);
     state.viewport.addChild(state.markerLayer);
     state.viewport.addChild(state.encounterLayer);
+    state.viewport.addChild(state.bossLayer);
     state.viewport.addChild(state.hunterLayer);
     state.viewport.addChild(state.effectLayer);
     app.stage.addChild(state.viewport);
@@ -514,6 +528,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.roads = Array.isArray(map.roads) ? map.roads : [];
     state.roadKeys = new Set(state.roads.map((tile) => getTileKey(tile)));
     state.encounters = Array.isArray(map.encounters) ? map.encounters : [];
+    setWorldBossState(payload, { deferArt: true });
     state.player = payload.player || state.player;
     state.blockedTiles = Array.isArray(map.blockedTiles) ? map.blockedTiles : FALLBACK_BLOCKED_TILES;
     state.blockedMap = new Map(state.blockedTiles.map((tile) => [getTileKey(tile), tile]));
@@ -523,6 +538,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.boundShrine = normalizeShrine(payload.boundShrine);
     state.currentEvent = payload.currentEvent || getEventAt(state.position);
     state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
+    state.currentBoss = payload.currentBoss || getBossAt(state.position);
 
     buildBoard();
     renderWorld();
@@ -552,10 +568,76 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   async function loadWorldArt() {
     try {
-      await Promise.all([loadHunterAvatar(), loadEncounterTextures()]);
+      await Promise.all([loadHunterAvatar(), loadEncounterTextures(), loadBossTextures()]);
     } finally {
       drawMarkers();
       drawEncounterMarkers();
+      drawBossMarkers();
+    }
+  }
+
+  function setWorldBossState(payload = {}, options = {}) {
+    const selectedBossId = state.selectedBoss?.id || null;
+    if (Array.isArray(payload.bosses)) {
+      state.bosses = payload.bosses.map(normalizeWorldBoss).filter(Boolean);
+    }
+    if (selectedBossId) {
+      state.selectedBoss = getBossById(selectedBossId);
+      if (!state.selectedBoss) elements.worldEncounterTooltip?.classList.add('d-none');
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, 'currentBoss')) {
+      state.currentBoss = normalizeWorldBoss(payload.currentBoss);
+    } else {
+      state.currentBoss = getBossAt(state.position);
+    }
+    scheduleWorldBossRefresh();
+
+    if (!options.deferArt) {
+      void loadBossTextures().finally(() => {
+        drawBossMarkers();
+        updateSelectedWorldActivityTooltip();
+      });
+    }
+  }
+
+  function scheduleWorldBossRefresh() {
+    if (state.bossRefreshTimer) {
+      window.clearTimeout(state.bossRefreshTimer);
+      state.bossRefreshTimer = null;
+    }
+
+    const nextMoveAt = (state.bosses || [])
+      .map((boss) => Date.parse(boss.movesAt || ''))
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b)[0];
+    if (!Number.isFinite(nextMoveAt)) return;
+
+    const delayMs = clamp(nextMoveAt - Date.now() + 1200, 5000, 3600000);
+    state.bossRefreshTimer = window.setTimeout(() => {
+      state.bossRefreshTimer = null;
+      void refreshWorldBossState();
+    }, delayMs);
+  }
+
+  async function refreshWorldBossState() {
+    if (state.moving) {
+      scheduleWorldBossRefresh();
+      return;
+    }
+
+    try {
+      const payload = await api('/api/world/state');
+      setWorldBossState(payload);
+      state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
+      state.currentEvent = payload.currentEvent || getEventAt(state.position);
+      state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
+      state.currentBoss = payload.currentBoss || getBossAt(state.position);
+      state.activeTeam = payload.activeTeam || state.activeTeam;
+      setHuntState(payload.hunt);
+      renderWorld();
+      renderPanels();
+    } catch (error) {
+      handleAuthError(error);
     }
   }
 
@@ -564,6 +646,18 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const target = normalizePosition(tile);
     if (!isInBounds(target)) return;
+
+    const boss = getBossAt(target);
+    if (boss && positionsEqual(target, state.position)) {
+      state.selectedTarget = target;
+      state.selectedPath = [];
+      state.travelStatus = 'idle';
+      state.recentStepEvent = null;
+      showBossTooltip(boss);
+      renderWorld();
+      renderTravelPanel();
+      return;
+    }
 
     if (positionsEqual(target, state.position)) {
       window.location.href = appUrl('/camp');
@@ -581,14 +675,14 @@ import * as dungeonUtils from './dungeon/utils.js';
       state.selectedPath = [];
       state.travelStatus = 'preview';
       state.recentStepEvent = null;
-      hideEncounterTooltip();
+      hideWorldActivityTooltip();
       renderWorld();
       renderTravelPanel();
       return;
     }
 
     if (state.selectedTarget && positionsEqual(target, state.selectedTarget) && state.selectedPath.length > 1) {
-      hideEncounterTooltip();
+      hideWorldActivityTooltip();
       travelSelectedPath();
       return;
     }
@@ -606,10 +700,12 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.recentStepEvent = null;
 
     const encounter = getEncounterAt(target);
-    if (encounter) {
+    if (boss) {
+      showBossTooltip(boss);
+    } else if (encounter) {
       showEncounterTooltip(encounter);
     } else {
-      hideEncounterTooltip();
+      hideWorldActivityTooltip();
     }
 
     renderWorld();
@@ -637,6 +733,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     let completedTravel = false;
     try {
       const payload = await commitTravelPath(path);
+      setWorldBossState(payload);
       const stepEvents = getTravelStepEvents(payload, path);
 
       let lostAmbush = false;
@@ -655,6 +752,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         state.travelLog.unshift(state.recentStepEvent);
         state.currentEvent = getEventAt(step);
         state.currentEncounter = getEncounterAt(step);
+        state.currentBoss = getBossAt(step);
         renderWorld();
         renderPanels();
         if (shouldShowAmbushBattleReplay(stepEvent.battle)) {
@@ -680,6 +778,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
         state.currentEvent = payload.currentEvent || getEventAt(state.position);
         state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
+        state.currentBoss = payload.currentBoss || getBossAt(state.position);
         clearRoutePreview('arrived', { keepLog: true });
         completedTravel = true;
         renderPanels();
@@ -735,6 +834,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   async function resolveAmbushDefeat(options = {}) {
     const recovery = await api('/api/world/ambush-defeat', { method: 'POST' });
     const returnPosition = normalizePosition(recovery.position || state.position);
+    setWorldBossState(recovery);
 
     state.boundShrine = normalizeShrine(recovery.boundShrine);
     state.position = returnPosition;
@@ -742,6 +842,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.playersAt = Array.isArray(recovery.playersAt) ? recovery.playersAt : [];
     state.currentEvent = recovery.currentEvent || getEventAt(returnPosition);
     state.currentEncounter = recovery.currentEncounter || getEncounterAt(returnPosition);
+    state.currentBoss = recovery.currentBoss || getBossAt(returnPosition);
 
     clearRoutePreview('arrived', { keepLog: true });
     centerOnHunter();
@@ -756,7 +857,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.selectedTarget = null;
     state.selectedPath = [];
     state.recentStepEvent = null;
-    hideEncounterTooltip();
+    hideWorldActivityTooltip();
     state.travelStatus = status;
     if (!options.keepLog && status !== 'arrived') {
       state.travelLog = [];
@@ -939,6 +1040,41 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
   }
 
+  async function challengeBoss(bossId, button) {
+    if (!bossId || state.bossBusy) return;
+    state.bossBusy = true;
+    setButtonBusy(button, true);
+
+    try {
+      const payload = await api('/api/world/boss/challenge', {
+        method: 'POST',
+        body: { bossId }
+      });
+      setWorldBossState(payload);
+      const battle = payload.battle || null;
+      const boss = payload.boss || battle?.boss || getBossById(bossId);
+      const rewardBuff = payload.rewardBuff || battle?.rewardBuff || boss?.rewardBuff || null;
+      const battleMeta = getWorldBattleMeta('world_boss', battle, {
+        boss,
+        rewardBuff
+      });
+      if (shouldShowWorldBattleReplay(battle)) {
+        await showWorldBattleReplay(battle, battleMeta);
+      }
+      const won = battle?.winner === 'player';
+      setMessage(
+        payload.message || getWorldBattleFallbackMessage(battle, battleMeta),
+        won ? 'success' : 'warning'
+      );
+    } catch (error) {
+      handleAuthError(error);
+    } finally {
+      state.bossBusy = false;
+      setButtonBusy(button, false);
+      renderEncounterPanel();
+    }
+  }
+
   async function tryHunt(encounterId, button) {
     if (!encounterId || state.huntBusy) return;
     state.huntBusy = true;
@@ -1110,6 +1246,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       // Same blackout as an ambush defeat: fade to black, relocate the hunter
       // while the screen is dark, then fade back in (in the finally below).
       await fadeWorldAmbushDefeatToBlack();
+      setWorldBossState(payload);
 
       if (payload.player) {
         state.player = {
@@ -1124,6 +1261,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
       state.currentEvent = payload.currentEvent || getEventAt(state.position);
       state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
+      state.currentBoss = payload.currentBoss || getBossAt(state.position);
 
       clearRoutePreview('arrived', { keepLog: true });
       centerOnHunter();
@@ -1148,6 +1286,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     drawPath();
     drawMarkers();
     drawEncounterMarkers();
+    drawBossMarkers();
     drawStepEffect();
     updateCameraStatus();
   }
@@ -2712,6 +2851,64 @@ import * as dungeonUtils from './dungeon/utils.js';
     });
   }
 
+  function drawBossMarkers() {
+    const layer = state.bossLayer;
+    const Pixi = window.PIXI;
+    if (!layer || !Pixi?.Graphics) return;
+
+    layer.removeChildren().forEach((child) => child.destroy({ children: true }));
+
+    state.bosses.forEach((boss) => {
+      const center = tileCenter(boss);
+      const selected = state.selectedBoss?.id === boss.id;
+      const ringColor = 0xf2c35e;
+      const ember = rarityHex(boss.keyDemon?.rarity) || 0xf2c35e;
+      const radius = 25;
+      const rng = seededRng((Math.imul(boss.x | 0, 110351) ^ Math.imul(boss.y | 0, 73471)) >>> 0);
+
+      const node = new Pixi.Container();
+      node.position.set(center.x, center.y);
+
+      const base = new Pixi.Graphics();
+      base.ellipse(0, radius + 6, radius + 5, 7).fill({ color: 0x000000, alpha: 0.42 });
+      base.circle(0, 0, radius + 11).fill({ color: ringColor, alpha: selected ? 0.18 : 0.1 });
+      base.circle(0, 0, radius + 7).fill({ color: ember, alpha: selected ? 0.14 : 0.08 });
+      for (let i = 0; i < 8; i += 1) {
+        const angle = (i / 8) * Math.PI * 2 + rng() * 0.16;
+        const inner = radius + 5;
+        const outer = radius + 9 + rng() * 3;
+        base.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner)
+          .lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer)
+          .stroke({ color: ringColor, width: selected ? 2 : 1.3, alpha: selected ? 0.8 : 0.52 });
+      }
+      base.circle(0, 0, radius + 3).fill({ color: 0x080604, alpha: 0.95 });
+      base.circle(0, 0, radius + 4.5).stroke({ color: 0x0a0705, width: 2.4, alpha: 0.75 });
+      base.circle(0, 0, radius + 2).stroke({ color: ringColor, width: selected ? 3 : 2, alpha: selected ? 1 : 0.78 });
+      base.poly([-8, -radius - 3, 0, -radius - 11, 8, -radius - 3, 4, -radius - 1, 0, -radius - 5, -4, -radius - 1])
+        .fill({ color: ringColor, alpha: 0.95 })
+        .stroke({ color: 0x060302, width: 1.2, alpha: 0.8 });
+      node.addChild(base);
+
+      const texture = state.bossTextures.get(boss.keyDemon?.imageUrl);
+      if (texture) {
+        const portrait = new Pixi.Sprite(texture);
+        portrait.anchor.set(0.5);
+        portrait.width = radius * 2;
+        portrait.height = radius * 2;
+
+        const mask = new Pixi.Graphics();
+        mask.circle(0, 0, radius).fill({ color: 0xffffff });
+        node.addChild(mask);
+        portrait.mask = mask;
+        node.addChild(portrait);
+      } else {
+        base.circle(0, 0, radius).fill({ color: ringColor, alpha: 0.22 });
+      }
+
+      layer.addChild(node);
+    });
+  }
+
   // The hunter token uses a player-only badge shape so a demon profile avatar
   // does not read as another circular demon spot on the map.
   function drawHunter() {
@@ -3448,8 +3645,9 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const players = (state.playersAt || []).filter(hasPvpTeamAssigned);
     const encounter = state.moving ? null : state.currentEncounter;
+    const boss = state.moving ? null : state.currentBoss;
     const currentShrine = state.moving ? null : getShrineAt(state.position);
-    const pveParts = renderPveSidebarParts({ encounter, currentShrine });
+    const pveParts = renderPveSidebarParts({ encounter, boss, currentShrine });
     const pvpParts = players.map(renderPvpPlayerCard);
 
     const activeTab = state.worldEncounterTab === 'pvp' ? 'pvp' : 'pve';
@@ -3469,7 +3667,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     queueWorldSidePanelMeasure();
   }
 
-  function renderPveSidebarParts({ encounter, currentShrine }) {
+  function renderPveSidebarParts({ encounter, boss, currentShrine }) {
     if (state.moving || state.travelStatus === 'moving') {
       return [renderTravelStatusCard()];
     }
@@ -3480,6 +3678,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     return [
       currentShrine ? renderShrineAnchorAction(currentShrine) : '',
+      boss ? renderCurrentBoss(boss) : '',
       encounter ? renderCurrentEncounter(encounter) : ''
     ].filter(Boolean);
   }
@@ -3551,6 +3750,97 @@ import * as dungeonUtils from './dungeon/utils.js';
         </span>
         ${action}
       </article>
+    `;
+  }
+
+  function renderCurrentBoss(boss) {
+    const enemyDemons = renderDemonPortraitGroup(boss.team, {
+      className: 'world-boss-demons',
+      label: 'Boss demons'
+    });
+    const enemyBuffSummary = renderBossEnemyBuffSummary(boss.enemyBuffs, { inline: true });
+
+    return `
+      <article class="world-sidebar-card world-boss-card">
+        <span class="world-card-copy">
+          <span class="world-card-kicker">Boss Fight</span>
+          ${renderBossTitle(boss)}
+          ${renderWorldCardMeta([
+            enemyBuffSummary,
+            `Threat ${formatNumber(boss.difficulty || 1)}`,
+            formatBossMoveMeta(boss)
+          ])}
+          ${enemyDemons}
+          ${renderBossRewardLine(boss.rewardBuff)}
+        </span>
+        <button class="btn btn-warning btn-sm world-card-action" type="button" data-challenge-boss="${escapeAttribute(boss.id)}" ${state.bossBusy ? 'disabled' : ''}>
+          Challenge
+        </button>
+      </article>
+    `;
+  }
+
+  function renderBossEnemyBuffSummary(enemyBuffs = [], options = {}) {
+    const buffs = (Array.isArray(enemyBuffs) ? enemyBuffs : []).filter(Boolean);
+    if (!buffs.length) return '';
+    const inlineClass = options.inline ? ' is-inline' : '';
+
+    return `
+      <span class="world-boss-buffs${inlineClass}" aria-label="Boss buffs">
+        ${buffs.slice(0, 2).map((buff) => `
+          <span class="world-boss-buff" tabindex="0" data-tooltip="${formatTooltipAttribute(getBossEnemyBuffTooltip(buff))}" aria-label="${formatTooltipAttribute(getBossEnemyBuffTooltip(buff))}">
+            ${renderIcon(buff.icon || 'sparkles')}
+            <span>${escapeHtml(buff.name || formatWorldBattleLabel(buff.id))}</span>
+          </span>
+        `).join('')}
+        ${buffs.length > 2 ? `<span class="world-boss-buff" tabindex="0" data-tooltip="${formatTooltipAttribute(getBossEnemyBuffOverflowTooltip(buffs.slice(2)))}" aria-label="${formatTooltipAttribute(getBossEnemyBuffOverflowTooltip(buffs.slice(2)))}">+${formatNumber(buffs.length - 2)}</span>` : ''}
+      </span>
+    `;
+  }
+
+  function getBossEnemyBuffTooltip(buff = {}) {
+    const name = buff.name || formatWorldBattleLabel(buff.id) || 'Boss Buff';
+    return [
+      name,
+      'Boss enemy buff',
+      buff.description || '',
+      'Applies to the boss team when you challenge this boss.'
+    ].filter(Boolean).join('\n');
+  }
+
+  function getBossEnemyBuffOverflowTooltip(buffs = []) {
+    const rows = (Array.isArray(buffs) ? buffs : [])
+      .map((buff) => [
+        buff.name || formatWorldBattleLabel(buff.id) || 'Boss Buff',
+        buff.description || ''
+      ].filter(Boolean).join(': '))
+      .filter(Boolean);
+
+    return ['More boss enemy buffs', ...rows].join('\n');
+  }
+
+  function renderBossRewardLine(buff, options = {}) {
+    if (!buff) return '';
+    const label = options.compact ? 'Win buff' : 'Battle buff';
+    const duration = formatBossBuffDuration(buff);
+    const description = buff.description || '';
+
+    return `
+      <span class="world-boss-reward" title="${escapeAttribute(description || buff.name || '')}">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(buff.name || formatWorldBattleLabel(buff.id))}</strong>
+        <small>${escapeHtml([duration, description].filter(Boolean).join(' - '))}</small>
+      </span>
+    `;
+  }
+
+  function renderBossTitle(boss, extraClass = '') {
+    const classes = ['world-encounter-title', 'world-boss-title', extraClass].filter(Boolean).join(' ');
+    return `
+      <strong class="${classes}">
+        <span class="world-encounter-rarity" style="--rarity-color:#f2c35e">Boss</span>
+        <span class="world-encounter-name">${escapeHtml(boss?.title || 'World Boss')}</span>
+      </strong>
     `;
   }
 
@@ -4745,11 +5035,14 @@ import * as dungeonUtils from './dungeon/utils.js';
     const won = battleState.winner === 'player';
     const lost = battleState.winner === 'enemy';
     const pvpTargetName = getWorldBattlePvpTargetName(battleState, overrides);
+    const bossName = getWorldBattleBossName(battleState, overrides);
     const title = normalizedType === 'try_hunt'
       ? won ? 'Fight Won' : 'Fight Failed'
       : normalizedType === 'pvp_challenge'
         ? won ? 'Challenge Won' : lost ? 'Challenge Lost' : 'Challenge'
-        : won ? 'Ambush Won' : lost ? 'Ambush Lost' : 'Ambush';
+        : normalizedType === 'world_boss'
+          ? won ? 'Boss Defeated' : lost ? 'Boss Failed' : 'Boss Fight'
+          : won ? 'Ambush Won' : lost ? 'Ambush Lost' : 'Ambush';
 
     return {
       type: normalizedType,
@@ -4757,29 +5050,41 @@ import * as dungeonUtils from './dungeon/utils.js';
         ? 'Fight'
         : normalizedType === 'pvp_challenge'
           ? 'PvP Challenge'
-          : 'World Ambush'),
+          : normalizedType === 'world_boss'
+            ? 'World Boss'
+            : 'World Ambush'),
       title: overrides.title || title,
       enemyLabel: overrides.enemyLabel || (normalizedType === 'try_hunt'
         ? getEncounterPlainLabel(battleState.encounter)
         : normalizedType === 'pvp_challenge'
           ? pvpTargetName
-          : 'Ambushers'),
+          : normalizedType === 'world_boss'
+            ? bossName
+            : 'Ambushers'),
       winText: overrides.winText || (normalizedType === 'try_hunt'
         ? 'Hunting unlocked'
         : normalizedType === 'pvp_challenge'
           ? `Defeated ${pvpTargetName}`
-          : 'Ambush cleared'),
+          : normalizedType === 'world_boss'
+            ? `Defeated ${bossName}${overrides.rewardBuff?.name ? ` - ${overrides.rewardBuff.name} active` : ''}`
+            : 'Ambush cleared'),
       lossText: overrides.lossText || (normalizedType === 'try_hunt'
         ? 'Hunting remains locked'
         : normalizedType === 'pvp_challenge'
           ? `${pvpTargetName} won`
-          : 'Ambush lost'),
+          : normalizedType === 'world_boss'
+            ? `${bossName} endured`
+            : 'Ambush lost'),
       neutralText: overrides.neutralText || 'Battle ended'
     };
   }
 
   function getWorldBattlePvpTargetName(battle = {}, overrides = {}) {
     return overrides.targetPlayer?.username || battle.targetPlayer?.username || 'Hunter';
+  }
+
+  function getWorldBattleBossName(battle = {}, overrides = {}) {
+    return overrides.boss?.title || battle.boss?.title || 'World Boss';
   }
 
   function getWorldBattleFallbackMessage(battle = {}, meta = {}) {
@@ -4944,6 +5249,9 @@ import * as dungeonUtils from './dungeon/utils.js';
       : null;
 
     const enemyPressure = getWorldBattleEnemyPressure(battle);
+    const enemyBuffs = isWorldBossBattle(battle, meta)
+      ? getWorldBattleEnemySideBuffs(battle)
+      : [];
 
     return {
       runId: `world-${meta.type || 'battle'}-${Date.now()}`,
@@ -4957,6 +5265,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       awaitingRecruit: true,
       enemyPressure,
       nextEnemyPressure: enemyPressure,
+      enemyBuffs,
+      nextEnemyBuffs: enemyBuffs,
       buffs: {
         activeBuffs: normalizeWorldDungeonBuffs(battle.playerBuffs),
         pendingChoices: []
@@ -5849,6 +6159,63 @@ import * as dungeonUtils from './dungeon/utils.js';
     return (state.encounters || []).find((encounter) => String(encounter.id) === id) || null;
   }
 
+  function isWorldBossBattle(battle = {}, meta = {}) {
+    return meta.type === 'world_boss'
+      || battle.combatType === 'world_boss'
+      || Boolean(battle.boss);
+  }
+
+  function getWorldBattleEnemySideBuffs(battle = {}) {
+    return normalizeWorldDungeonBuffs(battle.enemyBuffs)
+      .filter((buff) => !isWorldTerrorBuff(buff));
+  }
+
+  function normalizeWorldBoss(boss) {
+    if (!boss || typeof boss !== 'object') return null;
+    const position = normalizePosition(boss);
+    return {
+      ...boss,
+      ...position,
+      id: String(boss.id || ''),
+      title: boss.title || 'World Boss',
+      difficulty: Math.max(1, Number(boss.difficulty) || 1),
+      team: Array.isArray(boss.team) ? boss.team : [],
+      enemyBuffs: Array.isArray(boss.enemyBuffs) ? boss.enemyBuffs : [],
+      rewardBuff: boss.rewardBuff || null
+    };
+  }
+
+  function getBossAt(position) {
+    const target = normalizePosition(position);
+    return (state.bosses || []).find((boss) => positionsEqual(boss, target)) || null;
+  }
+
+  function getBossById(bossId) {
+    const id = String(bossId || '');
+    if (!id) return null;
+    return (state.bosses || []).find((boss) => String(boss.id) === id) || null;
+  }
+
+  function formatBossMoveMeta(boss = {}) {
+    const movesAt = Date.parse(boss.movesAt || '');
+    if (!Number.isFinite(movesAt)) return 'Moves hourly';
+    const remainingSeconds = Math.max(0, Math.ceil((movesAt - Date.now()) / 1000));
+    if (remainingSeconds <= 0) return 'Moves soon';
+    return `Moves in ${formatDuration(remainingSeconds)}`;
+  }
+
+  function formatBossBuffDuration(buff = {}) {
+    const hours = Number(buff.durationHours);
+    if (Number.isFinite(hours) && hours > 0) {
+      return hours % 1 === 0 ? `${formatNumber(hours)}h` : `${formatNumber(Math.round(hours * 10) / 10)}h`;
+    }
+    const seconds = Number(buff.durationSeconds);
+    if (Number.isFinite(seconds) && seconds > 0) {
+      return formatDuration(seconds);
+    }
+    return '24h';
+  }
+
   function getActiveHuntEncounter() {
     const active = state.hunt?.active;
     if (!active) return null;
@@ -6139,8 +6506,29 @@ import * as dungeonUtils from './dungeon/utils.js';
     }));
   }
 
+  async function loadBossTextures() {
+    const Pixi = window.PIXI;
+    if (!Pixi || !state.bosses.length) return;
+
+    const urls = Array.from(new Set(
+      state.bosses
+        .map((boss) => boss.keyDemon?.imageUrl)
+        .filter(Boolean)
+    ));
+
+    await Promise.all(urls.map(async (url) => {
+      if (state.bossTextures.has(url)) return;
+      try {
+        const texture = Pixi.Assets ? await Pixi.Assets.load(url) : Pixi.Texture.from(url);
+        state.bossTextures.set(url, texture);
+      } catch (error) {
+        state.bossTextures.set(url, null);
+      }
+    }));
+  }
+
   function updateTargetTooltip() {
-    updateEncounterTooltip();
+    updateSelectedWorldActivityTooltip();
 
     const tooltip = elements.worldTargetTooltip;
     const target = state.selectedTarget;
@@ -6149,7 +6537,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const isPortalTarget = isDarknessPortalEvent(event);
     if (!tooltip) return;
 
-    if (!target || (!isPortalTarget && path.length < 2) || state.moving || !state.viewport || state.selectedEncounter) {
+    if (!target || (!isPortalTarget && path.length < 2) || state.moving || !state.viewport || state.selectedEncounter || state.selectedBoss) {
       tooltip.classList.add('d-none');
       return;
     }
@@ -6218,6 +6606,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function showEncounterTooltip(encounter) {
     state.selectedEncounter = encounter;
+    state.selectedBoss = null;
     renderEncounterTooltip();
     updateEncounterTooltip();
   }
@@ -6225,7 +6614,34 @@ import * as dungeonUtils from './dungeon/utils.js';
   function hideEncounterTooltip() {
     if (!state.selectedEncounter) return;
     state.selectedEncounter = null;
+    if (!state.selectedBoss) elements.worldEncounterTooltip?.classList.add('d-none');
+  }
+
+  function showBossTooltip(boss) {
+    state.selectedBoss = boss;
+    state.selectedEncounter = null;
+    renderBossTooltip();
+    updateBossTooltip();
+  }
+
+  function hideBossTooltip() {
+    if (!state.selectedBoss) return;
+    state.selectedBoss = null;
+    if (!state.selectedEncounter) elements.worldEncounterTooltip?.classList.add('d-none');
+  }
+
+  function hideWorldActivityTooltip() {
+    state.selectedEncounter = null;
+    state.selectedBoss = null;
     elements.worldEncounterTooltip?.classList.add('d-none');
+  }
+
+  function updateSelectedWorldActivityTooltip() {
+    if (state.selectedBoss) {
+      updateBossTooltip();
+      return;
+    }
+    updateEncounterTooltip();
   }
 
   function renderEncounterTooltip() {
@@ -6256,6 +6672,40 @@ import * as dungeonUtils from './dungeon/utils.js';
     `;
   }
 
+  function renderBossTooltip() {
+    const tooltip = elements.worldEncounterTooltip;
+    const boss = state.selectedBoss;
+    if (!tooltip || !boss) return;
+
+    const team = Array.isArray(boss.team) ? boss.team : [];
+    const difficulty = Math.max(1, Math.min(10, Number(boss.difficulty) || 1));
+    const stepCount = positionsEqual(boss, state.position)
+      ? 0
+      : getPathStepCount(state.selectedPath || []);
+    const demons = team.map(renderDemonPortrait).join('');
+    const reward = renderBossRewardLine(boss.rewardBuff, { compact: true });
+    const meterTone = difficulty <= 3 ? 'easy' : (difficulty >= 8 ? 'hard' : 'medium');
+    const meter = Array.from({ length: 10 }, (item, index) => (
+      `<span class="world-enc-pip${index < difficulty ? ' is-on' : ''}"></span>`
+    )).join('');
+    const travelHint = positionsEqual(boss, state.position)
+      ? '<span class="world-tooltip-hint">Challenge from the sidebar.</span>'
+      : '<span class="world-tooltip-hint">(Click again to travel)</span>';
+
+    tooltip.innerHTML = `
+      ${renderBossTitle(boss, 'world-tooltip-title')}
+      <span class="world-tooltip-meta">${escapeHtml(formatTravelMeta(boss, stepCount))}</span>
+      ${boss.description ? `<span class="world-target-event-copy">${escapeHtml(boss.description)}</span>` : ''}
+      ${demons ? `<div class="world-enc-demons world-boss-demons">${demons}</div>` : ''}
+      <div class="world-enc-difficulty is-${meterTone}">
+        <span class="world-enc-difficulty-label">Boss Threat</span>
+        <span class="world-enc-meter" aria-label="Boss threat ${difficulty} of 10">${meter}</span>
+      </div>
+      ${reward}
+      ${travelHint}
+    `;
+  }
+
   function updateEncounterTooltip() {
     const tooltip = elements.worldEncounterTooltip;
     const encounter = state.selectedEncounter;
@@ -6267,6 +6717,26 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
 
     const center = tileCenter(encounter);
+    const scale = state.viewport.scale.x || 1;
+    const x = state.viewport.x + center.x * scale;
+    const y = state.viewport.y + (center.y - TILE_SIZE / 2) * scale;
+
+    tooltip.style.left = `${Math.round(x)}px`;
+    tooltip.style.top = `${Math.round(y)}px`;
+    tooltip.classList.remove('d-none');
+  }
+
+  function updateBossTooltip() {
+    const tooltip = elements.worldEncounterTooltip;
+    const boss = state.selectedBoss;
+    if (!tooltip) return;
+
+    if (!boss || state.moving || !state.viewport) {
+      tooltip.classList.add('d-none');
+      return;
+    }
+
+    const center = tileCenter(boss);
     const scale = state.viewport.scale.x || 1;
     const x = state.viewport.x + center.x * scale;
     const y = state.viewport.y + (center.y - TILE_SIZE / 2) * scale;
@@ -6399,6 +6869,10 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function destroyWorld() {
     state.cleanup.splice(0).forEach((cleanup) => cleanup());
+    if (state.bossRefreshTimer) {
+      window.clearTimeout(state.bossRefreshTimer);
+      state.bossRefreshTimer = null;
+    }
     state.resizeObserver?.disconnect();
     state.resizeObserver = null;
     state.sidePanelResizeObserver?.disconnect();
@@ -6410,6 +6884,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.app?.ticker?.remove(updatePuddleFx);
     state.tileTextures.forEach((texture) => texture?.destroy?.(true));
     state.tileTextures.clear();
+    state.bossTextures.forEach((texture) => texture?.destroy?.(true));
+    state.bossTextures.clear();
     state.puddleFxTiles = [];
     state.terrainBuilt = false;
 
@@ -6483,6 +6959,10 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function escapeAttribute(value) {
     return escapeHtml(value);
+  }
+
+  function formatTooltipAttribute(value) {
+    return escapeAttribute(value).replace(/\n/g, '&#10;');
   }
 
   function onReady(callback) {

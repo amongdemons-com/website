@@ -14,6 +14,12 @@ const {
 const { getEnemyPressureMultipliers } = require('./dungeon-enemies');
 const { createPlayerCombatBuffState, resolvePlayerCombatBuffState } = require('./player-combat-buffs');
 const { getHuntSoulCapacity, getPlayerStatPointSummary } = require('./account-stat-points');
+const {
+  createWorldBossEnemyBuffs,
+  getActiveWorldBossRewardBuffs,
+  getWorldBossRewardBuff,
+  serializeWorldBossForClient
+} = require('./world-bosses');
 
 const DEFAULT_ENEMY_RESPAWN_SECONDS = 300;
 // Keep this in sync with WORLD_BATTLE_REPLAY_STEP_MS in public/app/js/world-ui.js.
@@ -315,13 +321,57 @@ async function simulateWorldPvpChallenge(player, targetPlayer, options = {}) {
   };
 }
 
-async function createHuntSnapshot(player, encounter) {
-  const [playerTeam, statSummary, demonTypes] = await Promise.all([
+async function simulateWorldBossChallenge(player, boss, options = {}) {
+  const [playerTeam, playerBuffs, demonTypes] = await Promise.all([
     getActiveWorldTeam(player.id),
-    getPlayerStatPointSummary(player),
+    resolvePlayerCombatBuffState(player),
     getDemonTypes()
   ]);
-  const playerBuffs = createPlayerCombatBuffState(statSummary);
+
+  if (!playerTeam.length) {
+    const error = new Error('Choose a world team before challenging a boss.');
+    error.status = 409;
+    throw error;
+  }
+
+  if (!boss || !Array.isArray(boss.team) || !boss.team.length) {
+    const error = new Error('World boss is not configured with an enemy team.');
+    error.status = 500;
+    throw error;
+  }
+
+  const seed = options.seed || hashSeed(`world-boss:${player.id}:${boss.id}:${Date.now()}`);
+  const enemyTeam = materializeEncounterTeam(boss, demonTypes);
+  const enemyBuffs = normalizeCombatBuffState({
+    activeBuffs: [
+      ...createWorldTerrorBuffs(boss),
+      ...createWorldBossEnemyBuffs(boss)
+    ]
+  });
+  const result = simulateFight(createRng(seed), playerTeam, enemyTeam, {
+    demonTypes,
+    combatType: 'world_boss',
+    playerBuffs,
+    enemyBuffs
+  });
+
+  return {
+    combatType: 'world_boss',
+    boss: serializeWorldBossForClient(boss),
+    rewardBuff: getWorldBossRewardBuff(boss),
+    encounter: serializeEncounter(boss),
+    ...serializeWorldCombatResult(result, playerBuffs, enemyBuffs)
+  };
+}
+
+async function createHuntSnapshot(player, encounter) {
+  const [playerTeam, statSummary, demonTypes, activeBossBuffs] = await Promise.all([
+    getActiveWorldTeam(player.id),
+    getPlayerStatPointSummary(player),
+    getDemonTypes(),
+    getActiveWorldBossRewardBuffs(player)
+  ]);
+  const playerBuffs = createPlayerCombatBuffState(statSummary, { activeBuffs: activeBossBuffs });
   const soulCapacity = getHuntSoulCapacity(statSummary);
   const enemyTeam = materializeEncounterTeam(encounter, demonTypes);
   const enemyBuffs = normalizeCombatBuffState({
@@ -556,6 +606,12 @@ function materializeEncounterTeam(encounter, demonTypes = {}) {
       atk,
       speed,
       position: member.position || type.preferredPosition || (index === 0 ? 'front' : 'back'),
+      ...(normalizeWorldTeamSlot(member.formationSlot ?? member.formationRow) !== null
+        ? {
+          formationSlot: normalizeWorldTeamSlot(member.formationSlot ?? member.formationRow),
+          formationRow: normalizeWorldTeamSlot(member.formationSlot ?? member.formationRow)
+        }
+        : {}),
       attackMeter: 0,
       statusEffects: {
         poison: []
@@ -828,5 +884,6 @@ module.exports = {
   saveActiveWorldTeam,
   simulateTryHunt,
   simulateWorldAmbush,
+  simulateWorldBossChallenge,
   simulateWorldPvpChallenge
 };

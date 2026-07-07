@@ -2,11 +2,13 @@ const { createDungeonEnemies, getEnemyPressureMultipliers } = require('./dungeon
 const { createRng } = require('./rng');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('./dungeon-rules');
 const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, normalizeRunBuffState, serializeRunBuffState } = require('./run-buffs');
+const { getActiveWorldBossRewardBuffs } = require('./world-bosses');
 
-async function serializeRun(run) {
+async function serializeRun(run, options = {}) {
   applyRunBuffStatModifiers(run);
   const collectionReinforcementLimit = getCollectionReinforcementLimit(run);
   const collectionReinforcementAvailable = collectionReinforcementLimit > 0;
+  const worldBuffs = await getSerializedWorldBuffs(run, options);
 
   return {
     runId: run.id,
@@ -25,10 +27,19 @@ async function serializeRun(run) {
     collectionReinforcementLimit,
     teamLimit: getSerializedTeamLimit(run),
     buffs: serializeRunBuffState(run.state.buffs || {}),
+    worldBuffs,
     extractChoice: run.state.extractChoice || null,
     lastBattle: run.state.lastBattle || null,
     earned: run.state.earned || { xp: 0, souls: 0 }
   };
+}
+
+async function getSerializedWorldBuffs(run, options = {}) {
+  const activeBuffs = Array.isArray(options.worldBuffs)
+    ? options.worldBuffs
+    : await getActiveWorldBossRewardBuffs(run?.playerId);
+
+  return normalizeRunBuffState({ activeBuffs }).activeBuffs;
 }
 
 function getEnemyPressurePreview(run, floor) {

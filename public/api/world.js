@@ -21,8 +21,16 @@ const {
   saveActiveWorldTeam,
   simulateTryHunt,
   simulateWorldAmbush,
+  simulateWorldBossChallenge,
   simulateWorldPvpChallenge
 } = require('./lib/world-combat');
+const {
+  getActiveWorldBossById,
+  getActiveWorldBosses,
+  getWorldBossAtFromList,
+  grantWorldBossRewardBuff,
+  serializeWorldBossForClient
+} = require('./lib/world-bosses');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const { getHuntSoulCapacity, getPlayerStatPointSummary } = require('./lib/account-stat-points');
 const worldMap = require('./data/map.json');
@@ -72,6 +80,7 @@ router.get('/world/map', requireAuth, (req, res) => {
 
 router.get('/world/state', requireAuth, async (req, res) => {
   const position = await getOrCreatePosition(req.player.id);
+  const activeBosses = getActiveWorldBosses();
   const [playersAt, activeWorldTeam, boundShrine, hunt] = await Promise.all([
     getPlayersAt(position.x, position.y, req.player.id),
     getActiveWorldTeam(req.player.id),
@@ -87,6 +96,8 @@ router.get('/world/state', requireAuth, async (req, res) => {
     boundShrine,
     currentEvent: getEventAt(position.x, position.y),
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
+    currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
+    bosses: activeBosses.map(serializeWorldBossForClient),
     playersAt,
     activeTeam: serializeTeamSummaryForClient(getActiveWorldTeamSummary(activeWorldTeam)),
     hunt
@@ -170,6 +181,7 @@ router.post('/world/portal/summon', requireAuth, async (req, res) => {
 
   const result = await summonToDarknessPortal(req.player.id, portal);
   const position = result.position;
+  const activeBosses = getActiveWorldBosses();
 
   res.json({
     ok: true,
@@ -177,6 +189,8 @@ router.post('/world/portal/summon', requireAuth, async (req, res) => {
     player: getWorldPlayer(result.player),
     currentEvent: getEventAt(position.x, position.y),
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
+    currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
+    bosses: activeBosses.map(serializeWorldBossForClient),
     playersAt: await getPlayersAt(position.x, position.y, req.player.id),
     summonCost: result.summonCost,
     summonDistance: result.summonDistance,
@@ -188,8 +202,9 @@ router.post('/world/move', requireAuth, async (req, res) => {
   const currentPosition = await getOrCreatePosition(req.player.id);
   const position = normalizePosition(req.body?.position || req.body);
   const path = normalizeTravelPath(req.body?.path);
+  const activeBosses = getActiveWorldBosses();
   const travelEvents = path.length
-    ? validateTravelPath(currentPosition, position, path)
+    ? validateTravelPath(currentPosition, position, path, activeBosses)
     : [];
   const activeWorldTeam = await getActiveWorldTeam(req.player.id);
 
@@ -206,6 +221,8 @@ router.post('/world/move', requireAuth, async (req, res) => {
     position,
     currentEvent: getEventAt(position.x, position.y),
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
+    currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
+    bosses: activeBosses.map(serializeWorldBossForClient),
     playersAt,
     travelEvents: await resolveTravelEvents(req.player, travelEvents)
   });
@@ -276,6 +293,7 @@ router.get('/world/hunting/status', requireAuth, async (req, res) => {
 
 router.post('/world/ambush-defeat', requireAuth, async (req, res) => {
   const result = getAmbushDefeatReturn(await getBoundShrine(req.player.id));
+  const activeBosses = getActiveWorldBosses();
 
   await savePosition(req.player.id, result.position);
 
@@ -283,6 +301,8 @@ router.post('/world/ambush-defeat', requireAuth, async (req, res) => {
     ...result,
     currentEvent: getEventAt(result.position.x, result.position.y),
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(result.position.x, result.position.y)),
+    currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, result.position.x, result.position.y)),
+    bosses: activeBosses.map(serializeWorldBossForClient),
     playersAt: await getPlayersAt(result.position.x, result.position.y, req.player.id)
   });
 });
@@ -292,6 +312,54 @@ router.get('/world/players-at', requireAuth, async (req, res) => {
   res.json({
     position,
     playersAt: await getPlayersAt(position.x, position.y, req.player.id)
+  });
+});
+
+router.post('/world/boss/challenge', requireAuth, async (req, res) => {
+  const bossId = String(req.body?.bossId || '').trim();
+
+  if (!bossId) {
+    return res.status(400).json({ error: 'Choose a boss to challenge.' });
+  }
+
+  const [position, activeWorldTeam] = await Promise.all([
+    getOrCreatePosition(req.player.id),
+    getActiveWorldTeam(req.player.id)
+  ]);
+  const boss = getActiveWorldBossById(bossId);
+
+  if (!boss) {
+    return res.status(404).json({ error: 'World boss not found.' });
+  }
+
+  if (!positionsEqual(position, boss)) {
+    return res.status(409).json({ error: 'That boss has moved to another area.' });
+  }
+
+  if (!activeWorldTeam.length) {
+    return res.status(409).json({ error: 'Choose a world team before challenging a boss.' });
+  }
+
+  const battle = await simulateWorldBossChallenge(req.player, boss);
+  const rewardBuff = battle.winner === 'player'
+    ? await grantWorldBossRewardBuff(req.player.id, boss)
+    : null;
+  if (rewardBuff) battle.rewardBuff = rewardBuff;
+
+  const activeBosses = getActiveWorldBosses();
+  const serializedBoss = serializeWorldBossForClient(boss);
+
+  res.json({
+    ok: true,
+    status: 'resolved',
+    boss: serializedBoss,
+    currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
+    bosses: activeBosses.map(serializeWorldBossForClient),
+    rewardBuff,
+    battle,
+    message: battle.winner === 'player'
+      ? `You defeated ${boss.title}. ${rewardBuff ? `${rewardBuff.name} is active for ${formatDurationHours(rewardBuff.durationHours)}.` : ''}`.trim()
+      : `${boss.title} endured the challenge.`
   });
 });
 
@@ -912,6 +980,13 @@ function formatSoulCount(value) {
   return `${count} Soul${count === 1 ? '' : 's'}`;
 }
 
+function formatDurationHours(value) {
+  const hours = Math.max(0, Number(value) || 0);
+  if (!hours) return '24h';
+  if (hours % 1 === 0) return `${hours}h`;
+  return `${Math.round(hours * 10) / 10}h`;
+}
+
 function getEncounterAt(x, y) {
   return WORLD_ENCOUNTERS.find((encounter) => encounter.x === x && encounter.y === y) || null;
 }
@@ -936,7 +1011,7 @@ function normalizeTravelPath(value) {
   return value.map((position, index) => normalizePosition(position, { allowBlocked: index === 0 }));
 }
 
-function validateTravelPath(currentPosition, requestedPosition, path) {
+function validateTravelPath(currentPosition, requestedPosition, path, activeBosses = []) {
   if (path.length < 2) {
     throwWorldError('Travel path must include a start and destination.');
   }
@@ -958,13 +1033,13 @@ function validateTravelPath(currentPosition, requestedPosition, path) {
 
   // TODO: Replace deterministic placeholder rolls with persisted world-event results.
   return path.slice(1).map((position, index) => ({
-    ...resolveTravelStepEvent(position, index + 1),
+    ...resolveTravelStepEvent(position, index + 1, activeBosses),
     position
   }));
 }
 
-function resolveTravelStepEvent(position, stepIndex) {
-  if (!isAmbushEligibleTile(position.x, position.y)) {
+function resolveTravelStepEvent(position, stepIndex, activeBosses = []) {
+  if (!isAmbushEligibleTile(position.x, position.y, activeBosses)) {
     return { type: 'none', title: 'No Event' };
   }
 
@@ -979,8 +1054,8 @@ function getAmbushChanceForTile(x, y) {
   return isRoad(x, y) ? AMBUSH_CHANCE_ON_ROAD : AMBUSH_CHANCE_OFF_ROAD;
 }
 
-function isAmbushEligibleTile(x, y) {
-  return !getEventAt(x, y) && !getEncounterAt(x, y);
+function isAmbushEligibleTile(x, y, activeBosses = []) {
+  return !getEventAt(x, y) && !getEncounterAt(x, y) && !getWorldBossAtFromList(activeBosses, x, y);
 }
 
 function normalizePosition(value = {}, options = {}) {

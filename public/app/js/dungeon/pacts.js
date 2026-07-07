@@ -59,17 +59,18 @@ function renderDemonicPactCard(buff) {
 
 function renderActivePactIcon(buff) {
   const rarity = String(buff.rarity || 'common').toLowerCase();
-  const tooltip = buff.tooltip || `${buff.name || buff.id}: ${buff.description || ''}`;
+  const tooltip = getActivePactTooltip(buff);
   const escapedTooltip = escapeTooltipAttribute(tooltip);
   const tagName = buff.href ? 'a' : 'button';
   const linkAttributes = buff.href
     ? `href="${escapeHtml(buff.href)}"`
     : 'type="button"';
   const attentionClass = buff.attention ? 'is-level-power-attention' : '';
+  const temporaryClass = buff.expiresAt ? 'is-temporary' : '';
 
   return `
     <${tagName}
-      class="active-pact-chip is-${escapeHtml(rarity)} ${attentionClass}"
+      class="active-pact-chip is-${escapeHtml(rarity)} ${attentionClass} ${temporaryClass}"
       ${linkAttributes}
       data-active-pact-id="${escapeHtml(buff.id)}"
       data-tooltip="${escapedTooltip}"
@@ -80,6 +81,48 @@ function renderActivePactIcon(buff) {
       </span>
     </${tagName}>
   `;
+}
+
+function getActivePactTooltip(buff = {}) {
+  const baseTooltip = buff.tooltip || `${buff.name || buff.id}: ${buff.description || ''}`;
+  const expiryTooltip = getBuffExpiryTooltip(buff);
+  return [baseTooltip, expiryTooltip].filter(Boolean).join('\n');
+}
+
+function getBuffExpiryTooltip(buff = {}) {
+  const expiresAt = Date.parse(buff.expiresAt || '');
+  if (!Number.isFinite(expiresAt)) return '';
+
+  const timestamp = formatBuffExpiryTimestamp(expiresAt);
+  const remainingSeconds = Math.ceil((expiresAt - Date.now()) / 1000);
+  if (remainingSeconds <= 0) return timestamp ? `Expired (${timestamp})` : 'Expired';
+
+  return `Expires in ${formatBuffExpiryDuration(remainingSeconds)}${timestamp ? ` (${timestamp})` : ''}`;
+}
+
+function formatBuffExpiryDuration(totalSeconds) {
+  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m`;
+  return `${seconds}s`;
+}
+
+function formatBuffExpiryTimestamp(expiresAt) {
+  try {
+    return new Date(expiresAt).toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    return '';
+  }
 }
 
 function escapeTooltipAttribute(value) {
@@ -122,7 +165,10 @@ function getPactRerollCost() {
 }
 
 function getActiveBuffs(run = state.run) {
-  return (run?.buffs?.activeBuffs || [])
+  return [
+    ...(Array.isArray(run?.worldBuffs) ? run.worldBuffs : []),
+    ...(Array.isArray(run?.buffs?.activeBuffs) ? run.buffs.activeBuffs : [])
+  ]
     .map((buff) => typeof buff === 'string' ? { id: buff, name: buff, description: '', rarity: 'common', tags: [] } : buff)
     .filter((buff) => buff?.id);
 }

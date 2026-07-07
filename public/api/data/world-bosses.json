@@ -1,0 +1,464 @@
+{
+  "moveIntervalSeconds": 3600,
+  "rewardDurationHours": 24,
+  "bosses": [
+    {
+      "id": "neutral-ash-sentinel",
+      "zoneTypeId": 0,
+      "title": "Ash Sentinel",
+      "description": "An easy boss that patrols the neutral lands near the center.",
+      "difficulty": 2,
+      "minDistance": 5,
+      "maxDistance": 21,
+      "enemyBuffs": [
+        {
+          "id": "boss_neutral_guard",
+          "name": "Sentinel Guard",
+          "description": "Boss team HP 1000%.",
+          "rarity": "uncommon",
+          "icon": "shield",
+          "effects": [
+            { "type": "max_hp_mult", "value": 10 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_ash_resolve",
+        "name": "Ash Resolve",
+        "description": "Your demons gain +5% max HP.",
+        "rarity": "uncommon",
+        "icon": "shield",
+        "effects": [
+          { "type": "max_hp_mult", "value": 1.05 }
+        ]
+      },
+      "team": [
+        { "typeId": 5, "rarity": "uncommon", "formationSlot": 3 },
+        { "typeId": 1, "rarity": "uncommon", "formationSlot": 0 },
+        { "typeId": 2, "rarity": "common", "formationSlot": 8 }
+      ]
+    },
+    {
+      "id": "boss-boof-warbinder",
+      "zoneTypeId": 1,
+      "title": "Boof Warbinder",
+      "description": "The melee-zone boss drives a disciplined frontline.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_bulwark_hp",
+          "name": "Boss Bulwark",
+          "description": "Boss team HP +100%.",
+          "rarity": "rare",
+          "icon": "heart",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_warbinder_force",
+        "name": "Warbinder Force",
+        "description": "Your demons gain +8% attack.",
+        "rarity": "rare",
+        "icon": "swords",
+        "effects": [
+          { "type": "attack_mult", "value": 1.08 }
+        ]
+      },
+      "team": [
+        { "typeId": 1, "rarity": "legendary", "formationSlot": 3 },
+        { "typeId": 1, "rarity": "epic", "formationSlot": 0 },
+        { "typeId": 5, "rarity": "epic", "formationSlot": 6 },
+        { "typeId": 2, "rarity": "rare", "formationSlot": 8 },
+        { "typeId": 10, "rarity": "rare", "formationSlot": 5 },
+        { "typeId": 3, "rarity": "rare", "formationSlot": 2 }
+      ]
+    },
+    {
+      "id": "boss-gon-shadow-eye",
+      "zoneTypeId": 2,
+      "title": "Gon Shadow-Eye",
+      "description": "The ranged-zone boss picks apart fragile backlines.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_shadow_focus",
+          "name": "Shadow Focus",
+          "description": "Boss team HP +100% and attack +10%.",
+          "rarity": "rare",
+          "icon": "crosshair",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "attack_mult", "value": 1.1 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_shadow_focus",
+        "name": "Shadow Focus",
+        "description": "Your demons gain +6% attack and +4% speed.",
+        "rarity": "rare",
+        "icon": "crosshair",
+        "effects": [
+          { "type": "attack_mult", "value": 1.06 },
+          { "type": "speed_mult", "value": 1.04 }
+        ]
+      },
+      "team": [
+        { "typeId": 5, "rarity": "epic", "formationSlot": 3 },
+        { "typeId": 8, "rarity": "epic", "formationSlot": 0 },
+        { "typeId": 2, "rarity": "legendary", "formationSlot": 8 },
+        { "typeId": 2, "rarity": "epic", "formationSlot": 5 },
+        { "typeId": 6, "rarity": "rare", "formationSlot": 2 },
+        { "typeId": 10, "rarity": "rare", "formationSlot": 7 }
+      ]
+    },
+    {
+      "id": "boss-mazga-venom-root",
+      "zoneTypeId": 3,
+      "title": "Ma'Zga Venom Root",
+      "description": "The poison-zone boss wins long fights through attrition.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_venom_bloom",
+          "name": "Venom Bloom",
+          "description": "Boss team HP +100% and poison damage +20%.",
+          "rarity": "rare",
+          "icon": "flask-conical",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "poison_tick_damage_mult", "value": 1.2 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_venom_bloom",
+        "name": "Venom Bloom",
+        "description": "Your demons gain +12% poison damage.",
+        "rarity": "rare",
+        "icon": "flask-conical",
+        "effects": [
+          { "type": "poison_tick_damage_mult", "value": 1.12 }
+        ]
+      },
+      "team": [
+        { "typeId": 5, "rarity": "epic", "formationSlot": 3 },
+        { "typeId": 3, "rarity": "legendary", "formationSlot": 8 },
+        { "typeId": 3, "rarity": "epic", "formationSlot": 5 },
+        { "typeId": 3, "rarity": "epic", "formationSlot": 2 },
+        { "typeId": 10, "rarity": "rare", "formationSlot": 7 },
+        { "typeId": 1, "rarity": "rare", "formationSlot": 0 }
+      ]
+    },
+    {
+      "id": "boss-tor-cinder-choir",
+      "zoneTypeId": 4,
+      "title": "Tor Cinder Choir",
+      "description": "The AOE-zone boss burns whole teams at once.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_cinder_chorus",
+          "name": "Cinder Chorus",
+          "description": "Boss team HP +100% and area damage +15%.",
+          "rarity": "rare",
+          "icon": "flame",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "aoe_damage_mult", "value": 1.15 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_cinder_chorus",
+        "name": "Cinder Chorus",
+        "description": "Your demons gain +10% area damage.",
+        "rarity": "rare",
+        "icon": "flame",
+        "effects": [
+          { "type": "aoe_damage_mult", "value": 1.1 }
+        ]
+      },
+      "team": [
+        { "typeId": 8, "rarity": "epic", "formationSlot": 3 },
+        { "typeId": 4, "rarity": "legendary", "formationSlot": 8 },
+        { "typeId": 4, "rarity": "epic", "formationSlot": 5 },
+        { "typeId": 4, "rarity": "epic", "formationSlot": 2 },
+        { "typeId": 6, "rarity": "rare", "formationSlot": 7 },
+        { "typeId": 1, "rarity": "rare", "formationSlot": 0 }
+      ]
+    },
+    {
+      "id": "boss-vizel-iron-hide",
+      "zoneTypeId": 5,
+      "title": "Vi'Zel Iron Hide",
+      "description": "The bruiser-zone boss turns every lane into a brawl.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_iron_hide",
+          "name": "Iron Hide",
+          "description": "Boss team HP +100% and attack +8%.",
+          "rarity": "rare",
+          "icon": "shield",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "attack_mult", "value": 1.08 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_iron_hide",
+        "name": "Iron Hide",
+        "description": "Your demons gain +8% max HP and +4% attack.",
+        "rarity": "rare",
+        "icon": "shield",
+        "effects": [
+          { "type": "max_hp_mult", "value": 1.08 },
+          { "type": "attack_mult", "value": 1.04 }
+        ]
+      },
+      "team": [
+        { "typeId": 5, "rarity": "legendary", "formationSlot": 3 },
+        { "typeId": 5, "rarity": "epic", "formationSlot": 0 },
+        { "typeId": 7, "rarity": "epic", "formationSlot": 6 },
+        { "typeId": 10, "rarity": "rare", "formationSlot": 8 },
+        { "typeId": 2, "rarity": "rare", "formationSlot": 5 },
+        { "typeId": 4, "rarity": "rare", "formationSlot": 2 }
+      ]
+    },
+    {
+      "id": "boss-goh-night-knife",
+      "zoneTypeId": 6,
+      "title": "Goh Night Knife",
+      "description": "The assassin-zone boss deletes weakened targets.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_night_knife",
+          "name": "Night Knife",
+          "description": "Boss team HP +100% and speed +10%.",
+          "rarity": "rare",
+          "icon": "zap",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "speed_mult", "value": 1.1 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_night_knife",
+        "name": "Night Knife",
+        "description": "Your demons gain +8% speed.",
+        "rarity": "rare",
+        "icon": "zap",
+        "effects": [
+          { "type": "speed_mult", "value": 1.08 }
+        ]
+      },
+      "team": [
+        { "typeId": 1, "rarity": "epic", "formationSlot": 3 },
+        { "typeId": 6, "rarity": "legendary", "formationSlot": 8 },
+        { "typeId": 6, "rarity": "epic", "formationSlot": 5 },
+        { "typeId": 4, "rarity": "epic", "formationSlot": 2 },
+        { "typeId": 2, "rarity": "rare", "formationSlot": 7 },
+        { "typeId": 10, "rarity": "rare", "formationSlot": 0 }
+      ]
+    },
+    {
+      "id": "boss-baobaw-breaker",
+      "zoneTypeId": 7,
+      "title": "Baobaw Breaker",
+      "description": "The striker-zone boss cleaves through protected lines.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_breaker_surge",
+          "name": "Breaker Surge",
+          "description": "Boss team HP +100% and direct damage +10%.",
+          "rarity": "rare",
+          "icon": "swords",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "direct_damage_mult", "value": 1.1 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_breaker_surge",
+        "name": "Breaker Surge",
+        "description": "Your demons gain +8% direct damage.",
+        "rarity": "rare",
+        "icon": "swords",
+        "effects": [
+          { "type": "direct_damage_mult", "value": 1.08 }
+        ]
+      },
+      "team": [
+        { "typeId": 7, "rarity": "legendary", "formationSlot": 3 },
+        { "typeId": 7, "rarity": "epic", "formationSlot": 0 },
+        { "typeId": 5, "rarity": "epic", "formationSlot": 6 },
+        { "typeId": 4, "rarity": "rare", "formationSlot": 8 },
+        { "typeId": 2, "rarity": "rare", "formationSlot": 5 },
+        { "typeId": 10, "rarity": "rare", "formationSlot": 2 }
+      ]
+    },
+    {
+      "id": "boss-kopak-stone-back",
+      "zoneTypeId": 8,
+      "title": "Ko Pak Stone Back",
+      "description": "The counter-tank-zone boss punishes reckless direct hits.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_stone_back",
+          "name": "Stone Back",
+          "description": "Boss team HP +100% and thorns +8%.",
+          "rarity": "rare",
+          "icon": "shield",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "thorns_percent", "value": 8 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_stone_back",
+        "name": "Stone Back",
+        "description": "Your demons gain +8% thorns.",
+        "rarity": "rare",
+        "icon": "shield",
+        "effects": [
+          { "type": "thorns_percent", "value": 8 }
+        ]
+      },
+      "team": [
+        { "typeId": 8, "rarity": "legendary", "formationSlot": 3 },
+        { "typeId": 8, "rarity": "epic", "formationSlot": 0 },
+        { "typeId": 5, "rarity": "epic", "formationSlot": 6 },
+        { "typeId": 10, "rarity": "rare", "formationSlot": 8 },
+        { "typeId": 3, "rarity": "rare", "formationSlot": 5 },
+        { "typeId": 2, "rarity": "rare", "formationSlot": 2 }
+      ]
+    },
+    {
+      "id": "boss-chu-ruin-maul",
+      "zoneTypeId": 9,
+      "title": "Chu Ruin Maul",
+      "description": "The juggernaut-zone boss turns slow hits into disasters.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_ruin_maul",
+          "name": "Ruin Maul",
+          "description": "Boss team HP +100% and attack +15%.",
+          "rarity": "rare",
+          "icon": "hammer",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "attack_mult", "value": 1.15 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_ruin_maul",
+        "name": "Ruin Maul",
+        "description": "Your demons gain +10% attack.",
+        "rarity": "rare",
+        "icon": "hammer",
+        "effects": [
+          { "type": "attack_mult", "value": 1.1 }
+        ]
+      },
+      "team": [
+        { "typeId": 9, "rarity": "legendary", "formationSlot": 3 },
+        { "typeId": 9, "rarity": "epic", "formationSlot": 0 },
+        { "typeId": 8, "rarity": "epic", "formationSlot": 6 },
+        { "typeId": 10, "rarity": "rare", "formationSlot": 8 },
+        { "typeId": 4, "rarity": "rare", "formationSlot": 5 },
+        { "typeId": 3, "rarity": "rare", "formationSlot": 2 }
+      ]
+    },
+    {
+      "id": "boss-babeaga-life-thread",
+      "zoneTypeId": 10,
+      "title": "Ba Be'aga Life Thread",
+      "description": "The healer-zone boss outlasts careless assaults.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_life_thread",
+          "name": "Life Thread",
+          "description": "Boss team HP +100% and healing +20%.",
+          "rarity": "rare",
+          "icon": "heart-pulse",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "healing_mult", "value": 1.2 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_life_thread",
+        "name": "Life Thread",
+        "description": "Your demons gain +12% healing.",
+        "rarity": "rare",
+        "icon": "heart-pulse",
+        "effects": [
+          { "type": "healing_mult", "value": 1.12 }
+        ]
+      },
+      "team": [
+        { "typeId": 5, "rarity": "epic", "formationSlot": 3 },
+        { "typeId": 8, "rarity": "epic", "formationSlot": 0 },
+        { "typeId": 10, "rarity": "legendary", "formationSlot": 8 },
+        { "typeId": 10, "rarity": "epic", "formationSlot": 5 },
+        { "typeId": 3, "rarity": "rare", "formationSlot": 2 },
+        { "typeId": 2, "rarity": "rare", "formationSlot": 7 }
+      ]
+    },
+    {
+      "id": "boss-vee-chaos-glass",
+      "zoneTypeId": 11,
+      "title": "Vee Chaos Glass",
+      "description": "The chaotic-zone boss breaks predictable formations.",
+      "difficulty": 8,
+      "enemyBuffs": [
+        {
+          "id": "boss_chaos_glass",
+          "name": "Chaos Glass",
+          "description": "Boss team HP +100%, attack +8%, and speed +5%.",
+          "rarity": "rare",
+          "icon": "sparkles",
+          "effects": [
+            { "type": "max_hp_mult", "value": 2 },
+            { "type": "attack_mult", "value": 1.08 },
+            { "type": "speed_mult", "value": 1.05 }
+          ]
+        }
+      ],
+      "rewardBuff": {
+        "id": "boss_reward_chaos_glass",
+        "name": "Chaos Glass",
+        "description": "Your demons gain +5% attack, +5% max HP, and +5% speed.",
+        "rarity": "rare",
+        "icon": "sparkles",
+        "effects": [
+          { "type": "attack_mult", "value": 1.05 },
+          { "type": "max_hp_mult", "value": 1.05 },
+          { "type": "speed_mult", "value": 1.05 }
+        ]
+      },
+      "team": [
+        { "typeId": 8, "rarity": "epic", "formationSlot": 3 },
+        { "typeId": 5, "rarity": "epic", "formationSlot": 0 },
+        { "typeId": 11, "rarity": "legendary", "formationSlot": 8 },
+        { "typeId": 11, "rarity": "epic", "formationSlot": 5 },
+        { "typeId": 6, "rarity": "rare", "formationSlot": 2 },
+        { "typeId": 10, "rarity": "rare", "formationSlot": 7 }
+      ]
+    }
+  ]
+}

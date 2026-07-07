@@ -309,6 +309,24 @@ async function initializeSchema() {
   await normalizeUtf8Column('player_active_hunts', 'encounter_id', 'VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS player_world_boss_buffs (
+      player_id VARCHAR(255) NOT NULL,
+      boss_id VARCHAR(96) NOT NULL,
+      awarded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP NOT NULL,
+      PRIMARY KEY (player_id, boss_id),
+      INDEX idx_player_world_boss_buffs_expires (expires_at),
+      INDEX idx_player_world_boss_buffs_boss (boss_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await addColumnIfMissing('player_world_boss_buffs', 'awarded_at', '`awarded_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await addColumnIfMissing('player_world_boss_buffs', 'expires_at', '`expires_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await normalizeUtf8Column('player_world_boss_buffs', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_world_boss_buffs', 'boss_id', 'VARCHAR(96) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addIndexIfMissing('player_world_boss_buffs', 'idx_player_world_boss_buffs_expires', 'INDEX idx_player_world_boss_buffs_expires (expires_at)');
+  await addIndexIfMissing('player_world_boss_buffs', 'idx_player_world_boss_buffs_boss', 'INDEX idx_player_world_boss_buffs_boss (boss_id)');
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS player_demons (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
       player_id VARCHAR(255) NOT NULL,

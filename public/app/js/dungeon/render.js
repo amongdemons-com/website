@@ -139,7 +139,10 @@ function renderRun() {
   renderRewardBox(showHand, rewardInteractive, canExtract);
   renderDemonicPacts(showPacts);
   renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
-  renderEnemySideTitle(isHandStrategy ? run.nextEnemyPressure : run.enemyPressure);
+  renderEnemySideTitle(
+    isHandStrategy ? run.nextEnemyPressure : run.enemyPressure,
+    isHandStrategy ? run.nextEnemyBuffs : run.enemyBuffs
+  );
   updateDungeonJoiner();
   bindFormationDragAndDrop();
   bindRecruitDragAndDrop();
@@ -279,11 +282,11 @@ function renderTeamSideTitle(teamCount = null, teamLimit = null) {
   elements.teamSideTitle.innerHTML = `<span>Your Team</span>${countHtml ? ` ${countHtml}` : ''}`;
 }
 
-function renderEnemySideTitle(pressure = null) {
+function renderEnemySideTitle(pressure = null, buffs = []) {
   if (!elements.enemySideTitle) return;
 
   const label = state.run?.enemyLabel || 'Enemies';
-  elements.enemySideTitle.innerHTML = `<span>${escapeHtml(label)}</span>${renderEnemyPressureChip(pressure)}`;
+  elements.enemySideTitle.innerHTML = `<span>${escapeHtml(label)}</span>${renderEnemyPressureChip(pressure)}${renderEnemyBuffChips(buffs)}`;
 }
 
 function renderEnemyPressureChip(pressure = null) {
@@ -313,6 +316,32 @@ function renderEnemyPressureChip(pressure = null) {
     >
       <span>Terror</span>
       <strong>${escapeHtml(String(level))}</strong>
+    </span>
+  `;
+}
+
+function renderEnemyBuffChips(buffs = []) {
+  const activeBuffs = (Array.isArray(buffs) ? buffs : []).filter(Boolean);
+  if (!activeBuffs.length) return '';
+
+  return activeBuffs.map(renderEnemyBuffChip).join('');
+}
+
+function renderEnemyBuffChip(buff = {}) {
+  const name = String(buff.name || buff.id || 'Boss Buff');
+  const description = String(buff.description || '');
+  const tooltip = [name, description].filter(Boolean).join('\n');
+  const escapedTooltip = escapeTooltipAttribute(tooltip);
+
+  return `
+    <span
+      class="enemy-pressure-chip enemy-buff-chip"
+      tabindex="0"
+      data-tooltip="${escapedTooltip}"
+      aria-label="${escapedTooltip}"
+    >
+      ${renderIcon(buff.icon || 'sparkles')}
+      <span>${escapeHtml(name)}</span>
     </span>
   `;
 }
