@@ -452,10 +452,17 @@
     const current = clamp(Number(objective.current) || 0, 0, target);
     const percent = Math.round((current / target) * 100);
 
-    const tag = objective.claimable ? 'button' : (objective.claimed ? 'div' : 'a');
+    const requirements = renderQuestRequirements(objective.requirements);
+    const requirementsClass = requirements ? 'has-requirements' : '';
+
+    // Quests with requirement tags stay non-links so tapping a tag reveals its
+    // tooltip on touch devices instead of navigating away (these quests are
+    // locked until their requirements are met anyway).
+    const isLink = !objective.claimable && !objective.claimed && !requirements;
+    const tag = objective.claimable ? 'button' : (isLink ? 'a' : 'div');
     const attributes = objective.claimable
       ? `type="button" data-quest-claim="${escapeAttribute(objective.id)}"`
-      : (objective.claimed ? '' : `href="${escapeAttribute(objective.href || '/dungeon')}"`);
+      : (isLink ? `href="${escapeAttribute(objective.href || '/dungeon')}"` : '');
     const stateClass = objective.claimed
       ? 'is-claimed'
       : (objective.claimable ? 'is-claimable' : (objective.completed ? 'is-complete' : ''));
@@ -463,8 +470,6 @@
     const rewardMarkup = objective.claimed
       ? renderIcon('check')
       : renderQuestReward(objective.reward);
-    const requirements = renderQuestRequirements(objective.requirements);
-    const requirementsClass = requirements ? 'has-requirements' : '';
 
     return `
       <${tag} class="play-objective ${stateClass} ${requirementsClass}" ${attributes}>
@@ -493,12 +498,17 @@
 
     return `
       <span class="quest-requirements" aria-label="Quest requirements">
-        ${requirements.map((requirement) => `
-          <span class="quest-requirement">
+        ${requirements.map((requirement) => {
+          const tooltip = requirement.detail
+            ? ` tabindex="0" data-tooltip="${escapeAttribute(requirement.detail)}" aria-label="${escapeAttribute(`${requirement.label}: ${requirement.detail}`)}"`
+            : '';
+          return `
+          <span class="quest-requirement${requirement.detail ? ' has-tooltip' : ''}"${tooltip}>
             ${renderIcon(requirement.icon)}
             <span>${escapeHtml(requirement.label)}</span>
           </span>
-        `).join('')}
+        `;
+        }).join('')}
       </span>
     `;
   }

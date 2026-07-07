@@ -250,7 +250,7 @@ function getActiveWorldTeamSummary(team = []) {
   return {
     source: team.length ? 'active-world-team' : 'none',
     count: team.length,
-    members: team.slice(0, 4).map((demon) => ({
+    members: team.map((demon) => ({
       instanceId: demon.instanceId || demon.id || null,
       species: demon.species || 'Demon',
       rarity: demon.rarity || 'common',

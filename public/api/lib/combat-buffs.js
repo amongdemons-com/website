@@ -111,7 +111,7 @@ function normalizeCombatBuffDefinition(buff) {
 
   if (!effects.length) return null;
 
-  return {
+  const normalized = {
     id: String(buff.id || '').trim(),
     name: String(buff.name || buff.label || 'Combat Buff'),
     description: String(buff.description || ''),
@@ -121,6 +121,20 @@ function normalizeCombatBuffDefinition(buff) {
     tags: (Array.isArray(buff.tags) ? buff.tags : []).map((tag) => String(tag)).filter(Boolean),
     effects
   };
+
+  // Preserve the expiry timestamp for temporary buffs (e.g. world boss rewards)
+  // so the client can surface when they wear off.
+  const expiresAt = normalizeExpiresAt(buff.expiresAt);
+  if (expiresAt) normalized.expiresAt = expiresAt;
+
+  return normalized;
+}
+
+function normalizeExpiresAt(value) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  const time = date.getTime();
+  return Number.isFinite(time) ? date.toISOString() : null;
 }
 
 function generateBuffChoices(run, rng, count = 3, options = {}) {

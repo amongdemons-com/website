@@ -1114,12 +1114,53 @@ body.is-world-side-collapsed .world-map-controls {
 }
 
 .world-team-editor-collection {
+    position: relative;
     display: grid;
     grid-template-rows: minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
     border-left: 1px solid rgba(161,212,201,0.12);
     padding-left: 0.85rem;
+}
+
+.world-team-editor-scroll {
+    position: absolute;
+    top: 50%;
+    z-index: 4;
+    display: none;
+    place-items: center;
+    width: 2.1rem;
+    height: 3.6rem;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 1px solid rgba(161,212,201,0.3);
+    border-radius: 8px;
+    background: rgba(4,10,13,0.86);
+    color: rgba(220,232,229,0.92);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.42);
+}
+
+.world-team-editor-scroll:disabled {
+    opacity: 0.32;
+    pointer-events: none;
+}
+
+.world-team-editor-scroll .ad-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin: 0;
+}
+
+.world-team-editor-scroll-prev {
+    left: 0.18rem;
+}
+
+.world-team-editor-scroll-next {
+    right: 0.18rem;
+}
+
+.world-team-editor-collection.is-scrollable .world-team-editor-scroll {
+    display: grid;
 }
 
 .world-team-editor-collection-grid {
@@ -1491,6 +1532,17 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-boss-demons {
     margin-top: 0.08rem;
+}
+
+.world-boss-demons .world-enc-demon,
+.world-boss-demons .world-enc-demon-overflow {
+    width: 50px;
+    height: 50px;
+}
+
+.world-boss-demons .world-enc-demon img {
+    width: 100%;
+    height: 100%;
 }
 
 .world-boss-buffs {
@@ -2262,7 +2314,7 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
 
 .world-team-editor-layout {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto minmax(0, 1fr);
         gap: 0.62rem;
         padding: 0.62rem;
     }
@@ -2311,9 +2363,26 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
 .world-team-editor-board .battle-formation-grid .formation-slot:nth-child(9) { order: 2; }
 
 .world-team-editor-collection-grid {
-        grid-template-columns: repeat(auto-fill, minmax(5.3rem, 1fr));
+        --world-team-collection-card: clamp(5rem, 16vh, 7.2rem);
+        grid-auto-flow: column;
+        grid-template-columns: none;
+        grid-template-rows: repeat(2, var(--world-team-collection-card));
+        grid-auto-columns: var(--world-team-collection-card);
+        justify-content: start;
         gap: 0.42rem;
+        overflow: auto hidden;
+        overscroll-behavior-x: contain;
         padding: 0.42rem;
+        scroll-padding-inline: 2.5rem;
+    }
+
+.world-team-editor-collection-grid .world-empty-text {
+        grid-row: 1 / -1;
+        align-self: center;
+    }
+
+.world-team-editor-collection-card {
+        touch-action: pan-x;
     }
 }
 
@@ -2559,6 +2628,9 @@ body.is-world-side-collapsed .world-map-controls {
         font-size: 0.7rem;
     }
 
+}
+
+@media (max-width: 575.98px) and (orientation: landscape) {
 .world-team-editor-collection-grid {
         grid-template-columns: repeat(auto-fill, minmax(4.85rem, 1fr));
     }

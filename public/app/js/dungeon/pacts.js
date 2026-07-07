@@ -93,11 +93,10 @@ function getBuffExpiryTooltip(buff = {}) {
   const expiresAt = Date.parse(buff.expiresAt || '');
   if (!Number.isFinite(expiresAt)) return '';
 
-  const timestamp = formatBuffExpiryTimestamp(expiresAt);
   const remainingSeconds = Math.ceil((expiresAt - Date.now()) / 1000);
-  if (remainingSeconds <= 0) return timestamp ? `Expired (${timestamp})` : 'Expired';
+  if (remainingSeconds <= 0) return 'Expired';
 
-  return `Expires in ${formatBuffExpiryDuration(remainingSeconds)}${timestamp ? ` (${timestamp})` : ''}`;
+  return `Expires in ${formatBuffExpiryDuration(remainingSeconds)}`;
 }
 
 function formatBuffExpiryDuration(totalSeconds) {

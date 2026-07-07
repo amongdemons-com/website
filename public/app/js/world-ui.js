@@ -6,7 +6,7 @@ import * as dungeonLifecycle from './dungeon/lifecycle.js';
 import * as dungeonRender from './dungeon/render.js?v=20260706-stat-preview-v1';
 import * as dungeonCombat from './dungeon/combat.js?v=20260627-fire-nova-v3';
 import * as dungeonRewards from './dungeon/rewards.js';
-import * as dungeonPacts from './dungeon/pacts.js';
+import * as dungeonPacts from './dungeon/pacts.js?v=20260707-buff-expiry-v2';
 import * as dungeonHand from './dungeon/hand.js?v=20260706-stat-preview-v4';
 import * as dungeonRecruit from './dungeon/recruit.js?v=20260706-stat-preview-v4';
 import * as dungeonModals from './dungeon/modals.js?v=20260706-stat-preview-v4';
@@ -247,6 +247,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       'worldTeamEditorCount',
       'worldTeamEditorGrid',
       'worldTeamEditorCollection',
+      'worldTeamCollectionPrev',
+      'worldTeamCollectionNext',
       'worldTeamSaveButton',
       'worldShrinePanel',
       'worldEncounterHeading',
@@ -279,6 +281,11 @@ import * as dungeonUtils from './dungeon/utils.js';
     elements.worldTeamModal?.addEventListener('pointerdown', onWorldTeamEditorPointerDown);
     elements.worldTeamModal?.addEventListener('click', onWorldTeamEditorCardClick);
     elements.worldTeamModal?.addEventListener('keydown', onWorldTeamEditorCardKeydown);
+    elements.worldTeamCollectionPrev?.addEventListener('click', () => scrollWorldTeamEditorCollection(-1));
+    elements.worldTeamCollectionNext?.addEventListener('click', () => scrollWorldTeamEditorCollection(1));
+    elements.worldTeamEditorCollection?.addEventListener('scroll', updateWorldTeamEditorCollectionScroll, { passive: true });
+    window.addEventListener('resize', updateWorldTeamEditorCollectionScroll);
+    elements.worldTeamModal?.addEventListener('shown.bs.modal', updateWorldTeamEditorCollectionScroll);
     elements.worldTeamModal?.addEventListener('hidden.bs.modal', () => {
       cancelWorldTeamEditorDrag();
       setWorldTeamEditorStatus('');
@@ -445,6 +452,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.pathPulse = new Pixi.Graphics();     // animated destination ring
     state.shrineGlow = new Pixi.Graphics();    // animated soul smoke around forsaken shrines
     state.portalGlow = new Pixi.Graphics();    // animated breathing aura around darkness portals
+    state.bossAura = new Pixi.Graphics();      // animated pulsating aura beneath boss markers
     state.puddleFx = new Pixi.Graphics();      // animated bubbles / embers over puddles
     state.markerLayer = new Pixi.Container();
     state.encounterLayer = new Pixi.Container();
@@ -474,6 +482,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.viewport.addChild(state.portalGlow);
     state.viewport.addChild(state.markerLayer);
     state.viewport.addChild(state.encounterLayer);
+    state.viewport.addChild(state.bossAura);
     state.viewport.addChild(state.bossLayer);
     state.viewport.addChild(state.hunterLayer);
     state.viewport.addChild(state.effectLayer);
@@ -482,6 +491,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     app.ticker.add(updatePathPulse);
     app.ticker.add(updateShrineGlow);
     app.ticker.add(updatePortalGlow);
+    app.ticker.add(updateBossAura);
     app.ticker.add(updatePuddleFx);
 
     bindCanvasInput(canvas);
@@ -2714,6 +2724,41 @@ import * as dungeonUtils from './dungeon/utils.js';
     });
   }
 
+  // Animated pulsating aura beneath boss markers — a gold halo that swells and
+  // fades in a loop, with a second slower ring so the threat reads at a glance
+  // (runs on the ticker, drawn under the boss node in drawBossMarkers).
+  function updateBossAura() {
+    const layer = state.bossAura;
+    if (!layer) return;
+    layer.clear();
+
+    const bosses = state.bosses || [];
+    if (!bosses.length) return;
+
+    const now = performance.now();
+    const gold = 0xf2c35e;
+
+    bosses.forEach((boss) => {
+      const c = tileCenter(boss);
+      const selected = state.selectedBoss?.id === boss.id;
+      // Per-boss phase so multiple bosses don't pulse in lockstep.
+      const phase = boss.x * 19 + boss.y * 31;
+      const breath = (Math.sin(now / 780 + phase) + 1) / 2; // 0..1 loop, ~4.9s
+      const intensity = selected ? 1 : 0.7;
+
+      // Soft breathing halo.
+      layer.circle(c.x, c.y, TILE_SIZE * (0.58 + breath * 0.3))
+        .fill({ color: gold, alpha: (0.1 + breath * 0.1) * intensity });
+      layer.circle(c.x, c.y, TILE_SIZE * (0.36 + breath * 0.16))
+        .fill({ color: gold, alpha: (0.08 + breath * 0.08) * intensity });
+
+      // An outward pulse ring that expands and fades on a separate cadence.
+      const pulse = ((now / 1900) + phase * 0.01) % 1;
+      layer.circle(c.x, c.y, TILE_SIZE * (0.44 + pulse * 0.6))
+        .stroke({ color: gold, width: 2.4, alpha: (1 - pulse) * 0.42 * intensity });
+    });
+  }
+
   function drawMarkers() {
     drawEventMarkers();
     drawHunter();
@@ -3145,6 +3190,23 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
 
     replaceStaticIcons();
+    updateWorldTeamEditorCollectionScroll();
+  }
+
+  function scrollWorldTeamEditorCollection(direction) {
+    const grid = elements.worldTeamEditorCollection;
+    if (!grid) return;
+    grid.scrollBy({ left: direction * Math.max(grid.clientWidth * 0.8, 120), behavior: 'smooth' });
+  }
+
+  function updateWorldTeamEditorCollectionScroll() {
+    const grid = elements.worldTeamEditorCollection;
+    if (!grid) return;
+
+    const maxScroll = Math.max(0, grid.scrollWidth - grid.clientWidth);
+    grid.parentElement?.classList.toggle('is-scrollable', maxScroll > 4);
+    if (elements.worldTeamCollectionPrev) elements.worldTeamCollectionPrev.disabled = grid.scrollLeft <= 2;
+    if (elements.worldTeamCollectionNext) elements.worldTeamCollectionNext.disabled = grid.scrollLeft >= maxScroll - 2;
   }
 
   function renderWorldTeamEditorStatus() {
@@ -3479,7 +3541,6 @@ import * as dungeonUtils from './dungeon/utils.js';
     const sourceDemon = sourceEntry || getWorldTeamEditorCollectionDemon(demonId);
     if (!sourceDemon) return;
     if (!sourceEntry && !targetEntry && editor.team.length >= WORLD_TEAM_LIMIT) {
-      setWorldTeamEditorStatus(`Hunting team can hold up to ${WORLD_TEAM_LIMIT} demons.`, 'danger');
       return;
     }
 
@@ -3736,7 +3797,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     });
     const action = unlocked
       ? `<button class="btn btn-warning btn-sm world-card-action" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Hunt</button>`
-      : `<button class="btn btn-outline-light btn-sm world-card-action" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Fight</button>`;
+      : `<button class="btn btn-warning btn-sm world-card-action" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Fight</button>`;
 
     return `
       <article class="world-sidebar-card world-spot-card">
@@ -3802,9 +3863,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const name = buff.name || formatWorldBattleLabel(buff.id) || 'Boss Buff';
     return [
       name,
-      'Boss enemy buff',
-      buff.description || '',
-      'Applies to the boss team when you challenge this boss.'
+      buff.description || ''
     ].filter(Boolean).join('\n');
   }
 
@@ -6881,6 +6940,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.app?.ticker?.remove(updatePathPulse);
     state.app?.ticker?.remove(updateShrineGlow);
     state.app?.ticker?.remove(updatePortalGlow);
+    state.app?.ticker?.remove(updateBossAura);
     state.app?.ticker?.remove(updatePuddleFx);
     state.tileTextures.forEach((texture) => texture?.destroy?.(true));
     state.tileTextures.clear();

@@ -203,17 +203,63 @@
   function renderBuff(buff = {}) {
     const icon = renderIcon(buff.icon || 'sparkles');
     const effects = Array.isArray(buff.effects) ? buff.effects : [];
+    const expiry = renderBuffExpiry(buff);
 
     return `
-      <article class="hunter-buff">
+      <article class="hunter-buff${expiry ? ' is-temporary' : ''}">
         <span class="hunter-buff-icon" aria-hidden="true">${icon}</span>
         <span class="hunter-buff-copy">
           <strong>${escapeHtml(buff.name || formatLabel(buff.id) || 'Buff')}</strong>
           ${buff.description ? `<small>${escapeHtml(buff.description)}</small>` : ''}
           ${effects.length ? `<span class="hunter-buff-effects">${effects.map(renderEffect).join('')}</span>` : ''}
+          ${expiry}
         </span>
       </article>
     `;
+  }
+
+  function renderBuffExpiry(buff = {}) {
+    const expiresAt = Date.parse(buff.expiresAt || '');
+    if (!Number.isFinite(expiresAt)) return '';
+
+    const timestamp = formatBuffExpiryTimestamp(expiresAt);
+    const remainingSeconds = Math.ceil((expiresAt - Date.now()) / 1000);
+    const label = remainingSeconds <= 0
+      ? 'Expired'
+      : `Expires in ${formatBuffExpiryDuration(remainingSeconds)}`;
+    const title = timestamp ? `${label} (${timestamp})` : label;
+
+    return `
+      <span class="hunter-buff-expiry" title="${escapeHtml(title)}">
+        ${renderIcon('timer')}
+        <span>${escapeHtml(label)}</span>
+      </span>
+    `;
+  }
+
+  function formatBuffExpiryDuration(totalSeconds) {
+    const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (minutes > 0) return `${minutes}m`;
+    return `${seconds}s`;
+  }
+
+  function formatBuffExpiryTimestamp(expiresAt) {
+    try {
+      return new Date(expiresAt).toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return '';
+    }
   }
 
   function renderEffect(effect = {}) {

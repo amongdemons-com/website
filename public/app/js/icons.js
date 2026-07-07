@@ -709,7 +709,7 @@
 
     if (alert.classList.contains('d-none') || !alert.textContent.trim()) return;
 
-    const delay = alert.classList.contains('alert-danger') ? 8000 : 5500;
+    const delay = alert.classList.contains('alert-danger') ? 11000 : 8000;
     const timer = window.setTimeout(() => dismissGameAlert(alert), delay);
     alertTimers.set(alert, timer);
   }

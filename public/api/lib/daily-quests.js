@@ -34,8 +34,8 @@ const QUEST_DEFINITIONS = Object.freeze([
     progressKey: 'undermannedWins',
     target: 1,
     requirements: Object.freeze([
-      Object.freeze({ icon: 'layers', label: 'Floor 3+' }),
-      Object.freeze({ icon: 'user-minus', label: 'Open slot' })
+      Object.freeze({ icon: 'layers', label: 'Floor 3+', detail: 'The winning fight must be on dungeon floor 3 or higher.' }),
+      Object.freeze({ icon: 'user-minus', label: 'Open slot', detail: 'Enter the fight with at least one empty team slot - a full team does not count.' })
     ]),
     reward: Object.freeze({ type: 'souls', value: 25 }),
     href: '/dungeon'
