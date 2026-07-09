@@ -6470,6 +6470,25 @@ body .game-shell-nav .game-shell-auth-actions .btn {
     font-size: 0.72rem;
 }
 
+body .game-shell-nav .nav-account .nav-guest-save-btn {
+    height: 2.42rem;
+    min-height: 2.42rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.72rem;
+    line-height: 1;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+body .game-shell-nav .nav-account .nav-guest-save-btn .ad-icon {
+    width: 0.96rem;
+    height: 0.96rem;
+    margin: 0;
+}
+
 body .game-shell-nav .game-shell-auth-actions .btn-primary {
     border-color: rgba(231,138,85,0.72);
     background:
@@ -8913,4 +8932,168 @@ body.hunter-page {
 .hunter-stat {
         min-height: 4.25rem;
     }
+}
+
+/* Guest mode: nav "Save" call-to-action, homepage note, and profile share panel */
+.nav-guest-save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.nav-guest-save-btn .ad-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.seo-hero-note {
+    margin: 0.85rem 0 0;
+    color: rgba(237, 245, 242, 0.62);
+    font-size: 0.9rem;
+}
+
+[data-play-instantly].is-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Hunter hero right column: share icon bar above the stat grid */
+.hunter-hero-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.hunter-share-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.hunter-share-bar:empty {
+    display: none;
+}
+
+.hunter-share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    border: 1px solid rgba(161, 212, 201, 0.2);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.28);
+    color: rgba(237, 245, 242, 0.82);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.hunter-share-btn:hover,
+.hunter-share-btn:focus-visible {
+    border-color: rgba(232, 199, 106, 0.5);
+    color: #fff2bd;
+    background: rgba(232, 199, 106, 0.1);
+}
+
+.hunter-share-btn .ad-icon,
+.hunter-brand-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.hunter-copy-menu {
+    position: relative;
+    display: inline-flex;
+}
+
+.hunter-copy-dropdown {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    min-width: 12.5rem;
+    padding: 0.35rem;
+    border: 1px solid rgba(161, 212, 201, 0.2);
+    border-radius: 8px;
+    background: rgba(10, 16, 20, 0.98);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
+}
+
+.hunter-copy-dropdown[hidden] {
+    display: none;
+}
+
+.hunter-copy-dropdown button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(237, 245, 242, 0.85);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.hunter-copy-dropdown button:hover,
+.hunter-copy-dropdown button:focus-visible {
+    background: rgba(232, 199, 106, 0.12);
+    color: #fff2bd;
+}
+
+.hunter-copy-dropdown .ad-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Hunter content sidebar: viewer call-to-action above the buffs panel */
+.hunter-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.hunter-cta:empty {
+    display: none;
+}
+
+.hunter-cta-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    border: 1px solid rgba(232, 199, 106, 0.28);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, rgba(232, 199, 106, 0.08), rgba(8, 14, 18, 0.9)),
+        rgba(8, 14, 18, 0.94);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
+    padding: clamp(0.9rem, 2vw, 1.1rem);
+}
+
+.hunter-cta-card p {
+    margin: 0;
+    color: rgba(237, 245, 242, 0.82);
+    font-size: 0.92rem;
+}
+
+.hunter-cta-card .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+}
+
+.hunter-cta-card .btn .ad-icon {
+    width: 1.05rem;
+    height: 1.05rem;
 }

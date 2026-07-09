@@ -9,7 +9,49 @@
   function init() {
     markCurrentGameNav();
     bindDisabledLinks();
+    bindPlayInstantly();
     initAccountNav();
+  }
+
+  // "Play Instantly" opens a guest hunter (or reuses an existing session) and
+  // sends the visitor straight into the game — no email, username, or password.
+  // Capture phase so this runs before api-config's packaged-runtime link
+  // rewriter, which would otherwise navigate the anchor before the guest exists.
+  function bindPlayInstantly() {
+    document.addEventListener('click', async (event) => {
+      const trigger = event.target.closest('[data-play-instantly]');
+      if (!trigger) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      const auth = window.AmongDemons || {};
+      if (typeof auth.playAsGuest !== 'function') {
+        window.location.href = trigger.getAttribute('href') || '/camp';
+        return;
+      }
+
+      if (trigger.dataset.playInstantlyBusy === 'true') return;
+      trigger.dataset.playInstantlyBusy = 'true';
+      trigger.classList.add('is-loading');
+      trigger.setAttribute('aria-busy', 'true');
+
+      const destination = trigger.dataset.playDestination
+        || trigger.getAttribute('href')
+        || '/camp';
+
+      try {
+        await auth.playAsGuest();
+        window.location.href = destination;
+      } catch (error) {
+        console.error(error);
+        trigger.dataset.playInstantlyBusy = 'false';
+        trigger.classList.remove('is-loading');
+        trigger.removeAttribute('aria-busy');
+        if (typeof auth.showGameAlert === 'function') {
+          auth.showGameAlert(error, { context: 'guest' });
+        }
+      }
+    }, true);
   }
 
   function markCurrentGameNav() {

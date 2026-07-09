@@ -77,6 +77,48 @@
     return getSession().token || '';
   }
 
+  function getPlayer() {
+    return getSession().player || null;
+  }
+
+  function isGuest() {
+    return Boolean(getPlayer()?.isGuest);
+  }
+
+  // Open (or reuse) a guest hunter so a brand-new visitor can play with no
+  // sign-up. The row is a full player flagged is_guest = 1; every gameplay
+  // endpoint works unchanged and progress persists in this browser via the
+  // stored session token until the hunter is saved.
+  async function playAsGuest() {
+    const existing = getSession();
+    if (existing.token) return existing;
+
+    const payload = await api('/api/auth/guest', { method: 'POST', body: {} });
+    const session = { token: payload.token, player: payload.player };
+    setSession(session);
+    return session;
+  }
+
+  // Guarantee a playable session for pages that should never bounce a first-time
+  // visitor to the login gate (/world, /collection, /dungeon): reuse the current
+  // session if any, otherwise open a guest hunter.
+  async function ensurePlayableSession() {
+    if (getToken()) return getSession();
+    return playAsGuest();
+  }
+
+  // Convert the current guest hunter into a saved account without losing any
+  // progress. The session token is unchanged, so the player stays logged in.
+  async function claimGuest({ username, password, email } = {}) {
+    const payload = await api('/api/auth/claim', {
+      method: 'POST',
+      body: { username, password, ...(email ? { email } : {}) }
+    });
+    const session = { token: payload.token, player: payload.player };
+    setSession(session);
+    return session;
+  }
+
   async function api(path, options = {}) {
     const toApiUrl = window.AmongDemons?.apiUrl || ((value) => value);
     const url = toApiUrl(path);
@@ -874,6 +916,17 @@
       };
     }
 
+    if (/save your hunter/.test(lower) || meta?.payload?.guestBlocked) {
+      return {
+        type: 'warning',
+        title: 'Save your hunter first.',
+        message: /change its name/.test(lower)
+          ? 'Guest hunters rename themselves by saving.'
+          : 'Guest hunters cannot use this feature yet.',
+        action: 'Save your hunter to keep it forever.'
+      };
+    }
+
     if (requestedType !== 'success' && /you were defeated|your team was defeated|run ended in defeat|dragged back|anchored shrine/.test(lower)) {
       return {
         type: 'warning',
@@ -1053,9 +1106,14 @@
   window.AmongDemons = {
     ...(window.AmongDemons || {}),
     api,
+    claimGuest,
     clearSession,
+    ensurePlayableSession,
+    getPlayer,
     getSession,
     getToken,
+    isGuest,
+    playAsGuest,
     setSession,
     normalizeGameAlert,
     renderGameAlertHtml,

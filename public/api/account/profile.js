@@ -16,6 +16,14 @@ router.patch('/account/profile', requireAuth, async (req, res) => {
 
   const username = hasUsername ? normalizeUsername(body.username) : '';
   if (hasUsername) {
+    // Guests rename by saving (claiming) their hunter, not through settings.
+    if (req.player.isGuest && username !== req.player.username) {
+      return res.status(403).json({
+        error: 'Save your hunter to change its name.',
+        guestBlocked: true
+      });
+    }
+
     const usernameError = getUsernameValidationError(username);
     if (usernameError) {
       return res.status(400).json({ error: usernameError });

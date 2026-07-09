@@ -24,6 +24,8 @@ router.use(ensureSchema);
 
 router.use(require('./auth/register'));
 router.use(require('./auth/login'));
+router.use(require('./auth/guest'));
+router.use(require('./auth/claim'));
 router.use(require('./auth/oauth'));
 router.use(require('./auth/me'));
 router.use(require('./account/profile'));

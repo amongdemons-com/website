@@ -51,6 +51,8 @@
     elements.team = document.getElementById('hunterWorldTeam');
     elements.teamSummary = document.getElementById('hunterTeamSummary');
     elements.buffs = document.getElementById('hunterBuffs');
+    elements.share = document.querySelector('[data-hunter-share]');
+    elements.cta = document.querySelector('[data-hunter-cta]');
     elements.stats = {
       floor: document.querySelector('[data-hunter-stat="floor"]'),
       coordinates: document.querySelector('[data-hunter-stat="coordinates"]')
@@ -82,6 +84,208 @@
 
     renderWorldTeam(worldTeam);
     renderBuffs(buffs);
+    renderShare(hunter, worldTeam);
+    renderCta(hunter);
+  }
+
+  // Icon-only share controls that live in the hero's right column: quick links
+  // to X and Facebook, plus a copy button that opens a small dropdown offering
+  // the profile link or the pre-written share text.
+  function renderShare(hunter, worldTeam) {
+    const container = elements.share;
+    if (!container) return;
+
+    const username = hunter.username || 'Hunter';
+    const url = getProfileUrl(username);
+    const shareText = buildShareText(hunter, worldTeam);
+
+    container.innerHTML = `
+      <a class="hunter-share-btn" data-share-link href="${escapeAttribute(buildXIntent(shareText, url))}" target="_blank" rel="noopener" aria-label="Share on X" title="Share on X">${renderXIcon()}</a>
+      <a class="hunter-share-btn" data-share-link href="${escapeAttribute(buildFacebookShare(url))}" target="_blank" rel="noopener" aria-label="Share on Facebook" title="Share on Facebook">${renderFacebookIcon()}</a>
+      <div class="hunter-copy-menu" data-copy-menu>
+        <button type="button" class="hunter-share-btn" data-copy-toggle aria-haspopup="true" aria-expanded="false" aria-label="Copy" title="Copy">${renderIcon('copy')}</button>
+        <div class="hunter-copy-dropdown" data-copy-dropdown role="menu" hidden>
+          <button type="button" role="menuitem" data-copy-link>${renderIcon('link')}<span>Copy Profile Link</span></button>
+          <button type="button" role="menuitem" data-copy-text>${renderIcon('copy')}<span>Copy Share Text</span></button>
+        </div>
+      </div>
+    `;
+
+    bindShare(container, { url, shareText });
+  }
+
+  function renderCta(hunter) {
+    const container = elements.cta;
+    if (!container) return;
+
+    const viewer = getViewerContext(hunter.username || 'Hunter');
+
+    if (viewer.isOwnGuest) {
+      container.innerHTML = `
+        <div class="hunter-cta-card">
+          <p>This is your guest hunter. Save it to keep your demons and progress forever.</p>
+          <a class="btn btn-primary btn-lg" href="/register?claim=1">${renderIcon('save')}<span>Save Progress</span></a>
+        </div>
+      `;
+      return;
+    }
+
+    if (viewer.isLoggedOut) {
+      container.innerHTML = `
+        <div class="hunter-cta-card">
+          <p>Start your own hunter, no sign-up needed.</p>
+          <a class="btn btn-primary btn-lg" href="/camp" data-play-instantly data-play-destination="/camp">${renderIcon('play')}<span>Play Instantly</span></a>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = '';
+  }
+
+  function bindShare(container, { url, shareText }) {
+    const menu = container.querySelector('[data-copy-menu]');
+    const toggle = container.querySelector('[data-copy-toggle]');
+    const dropdown = container.querySelector('[data-copy-dropdown]');
+    const copyLinkButton = container.querySelector('[data-copy-link]');
+    const copyTextButton = container.querySelector('[data-copy-text]');
+
+    if (toggle && dropdown) {
+      toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setCopyMenuOpen(menu, toggle, dropdown, dropdown.hidden);
+      });
+
+      document.addEventListener('click', (event) => {
+        if (!menu.contains(event.target)) setCopyMenuOpen(menu, toggle, dropdown, false);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setCopyMenuOpen(menu, toggle, dropdown, false);
+      });
+    }
+
+    if (copyLinkButton) {
+      copyLinkButton.addEventListener('click', () => {
+        handleCopy(copyLinkButton, url, 'Profile link copied.');
+        setCopyMenuOpen(menu, toggle, dropdown, false);
+      });
+    }
+
+    if (copyTextButton) {
+      copyTextButton.addEventListener('click', () => {
+        handleCopy(copyTextButton, `${shareText} ${url}`, 'Share text copied.');
+        setCopyMenuOpen(menu, toggle, dropdown, false);
+      });
+    }
+  }
+
+  function setCopyMenuOpen(menu, toggle, dropdown, open) {
+    if (!menu || !toggle || !dropdown) return;
+    dropdown.hidden = !open;
+    menu.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  async function handleCopy(button, text, successTitle) {
+    const copied = await copyToClipboard(text);
+
+    if (copied) {
+      window.AmongDemons.showGameAlert?.({
+        type: 'success',
+        title: successTitle,
+        message: 'Share it anywhere to invite other hunters.',
+        action: 'Paste it into Discord, X, or a message.'
+      });
+    } else {
+      window.AmongDemons.showGameAlert?.({
+        type: 'warning',
+        title: 'Copy blocked.',
+        message: 'Your browser blocked the clipboard.',
+        action: 'Select the link and copy it manually.'
+      });
+    }
+  }
+
+  function renderXIcon() {
+    return '<svg class="hunter-brand-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+  }
+
+  function renderFacebookIcon() {
+    return '<svg class="hunter-brand-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.49 0-1.955.925-1.955 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>';
+  }
+
+  async function copyToClipboard(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (error) {
+      // Fall through to the legacy path below.
+    }
+
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const succeeded = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return succeeded;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function buildShareText(hunter, worldTeam = []) {
+    const floor = Math.max(0, Number(hunter.highestFloor) || 0);
+    const hasMythic = worldTeam.some((demon) => String(demon.rarity || '').toLowerCase() === 'mythic');
+
+    if (floor > 0) {
+      return `My hunter survived Floor ${floor} in Among Demons. Can your team go deeper?`;
+    }
+
+    if (hasMythic) {
+      return 'I found a Mythic demon in Among Demons.';
+    }
+
+    return 'My demon team is waiting in Among Demons.';
+  }
+
+  function getViewerContext(profileUsername) {
+    const auth = window.AmongDemons || {};
+    const token = typeof auth.getToken === 'function' ? auth.getToken() : '';
+    const player = typeof auth.getPlayer === 'function' ? auth.getPlayer() : null;
+    const isOwn = Boolean(player && normalizeName(player.username) === normalizeName(profileUsername));
+
+    return {
+      isLoggedOut: !token,
+      isOwn,
+      isOwnGuest: isOwn && Boolean(player && player.isGuest)
+    };
+  }
+
+  function normalizeName(value) {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function getProfileUrl(username) {
+    const origin = window.location.origin && window.location.origin !== 'null'
+      ? window.location.origin
+      : 'https://amongdemons.com';
+    return `${origin}/hunter/${encodeURIComponent(username)}`;
+  }
+
+  function buildXIntent(text, url) {
+    return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  }
+
+  function buildFacebookShare(url) {
+    return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
   }
 
   function renderWorldTeam(team = []) {
@@ -298,6 +502,8 @@
     if (elements.avatar) elements.avatar.src = FALLBACK_AVATAR;
     if (elements.team) elements.team.innerHTML = renderFormationGrid([]);
     if (elements.buffs) elements.buffs.innerHTML = renderEmpty('No active level buffs yet.');
+    if (elements.share) elements.share.innerHTML = '';
+    if (elements.cta) elements.cta.innerHTML = '';
   }
 
   function showMessage(text, type) {

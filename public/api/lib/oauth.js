@@ -67,7 +67,7 @@ async function fetchOAuthProfile(provider, options) {
   throw createOAuthError(`Unsupported OAuth provider: ${provider}`, 404);
 }
 
-async function findOrCreateOAuthPlayer(provider, profile) {
+async function findOrCreateOAuthPlayer(provider, profile, options = {}) {
   if (!profile || !profile.id) {
     throw createOAuthError('Provider profile did not include a stable user id.', 502);
   }
@@ -76,6 +76,7 @@ async function findOrCreateOAuthPlayer(provider, profile) {
   const email = normalizeEmail(profile.email);
   const verifiedEmail = profile.emailVerified && email ? email : null;
   const displayName = cleanText(profile.displayName || profile.username || email || '');
+  const claimPlayerId = options.claimPlayerId ? String(options.claimPlayerId) : null;
   const connection = await db.getConnection();
 
   try {
@@ -107,6 +108,24 @@ async function findOrCreateOAuthPlayer(provider, profile) {
     if (verifiedEmail) {
       const [emailRows] = await connection.query('SELECT * FROM players WHERE email = ? LIMIT 1 FOR UPDATE', [verifiedEmail]);
       player = emailRows[0] || null;
+    }
+
+    // The OAuth identity is brand-new and its email is not already an account,
+    // so a guest signing up here keeps their hunter: adopt the guest row in
+    // place instead of creating a fresh, empty account.
+    if (!player && claimPlayerId) {
+      const adopted = await adoptGuestForOAuth(connection, {
+        claimPlayerId,
+        provider,
+        providerUserId,
+        email: verifiedEmail,
+        displayName
+      });
+
+      if (adopted) {
+        await connection.commit();
+        return adopted;
+      }
     }
 
     if (!player) {
@@ -235,6 +254,37 @@ async function createOAuthPlayer(connection, options) {
   }
 
   throw createOAuthError('Could not create a unique player account.', 409);
+}
+
+// Claim a guest hunter through an OAuth provider: keep the same player id (and
+// all its demons/progress), attach the provider link + email, swap the
+// temporary name for a provider-derived one, and clear the guest flag.
+async function adoptGuestForOAuth(connection, options) {
+  const [guestRows] = await connection.query(
+    'SELECT * FROM players WHERE id = ? AND is_guest = 1 LIMIT 1 FOR UPDATE',
+    [options.claimPlayerId]
+  );
+
+  if (!guestRows.length) return null;
+
+  const guest = guestRows[0];
+  const baseUsername = buildUsernameCandidate(options.displayName || options.email, options.provider);
+  const username = await buildUniqueUsername(connection, baseUsername, 0);
+
+  await connection.query(
+    'UPDATE players SET username = ?, email = ?, is_guest = 0 WHERE id = ?',
+    [username, options.email || null, guest.id]
+  );
+
+  await connection.query(
+    `INSERT INTO player_oauth_accounts
+      (player_id, provider, provider_user_id, email, display_name)
+     VALUES (?, ?, ?, ?, ?)`,
+    [guest.id, options.provider, options.providerUserId, options.email, options.displayName || null]
+  );
+
+  const [rows] = await connection.query('SELECT * FROM players WHERE id = ? LIMIT 1', [guest.id]);
+  return rows[0] || null;
 }
 
 async function buildUniqueUsername(connection, baseUsername, attempt) {

@@ -209,8 +209,13 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   async function init() {
     if (!window.AmongDemons.getToken()) {
-      window.location.href = appUrl('/login');
-      return;
+      // First-time visitors play instantly as a guest instead of hitting a gate.
+      try {
+        await window.AmongDemons.ensurePlayableSession();
+      } catch (error) {
+        window.location.href = appUrl('/login');
+        return;
+      }
     }
 
     cacheElements();

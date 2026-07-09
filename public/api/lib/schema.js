@@ -119,6 +119,7 @@ async function initializeSchema() {
   await addColumnIfMissing('players', 'pvp_wins', '`pvp_wins` INT UNSIGNED NOT NULL DEFAULT 0');
   await addColumnIfMissing('players', 'pvp_losses', '`pvp_losses` INT UNSIGNED NOT NULL DEFAULT 0');
   await addColumnIfMissing('players', 'profile_demon_id', '`profile_demon_id` INT UNSIGNED NULL');
+  await addColumnIfMissing('players', 'is_guest', '`is_guest` TINYINT(1) NOT NULL DEFAULT 0');
   await normalizeUtf8Column('players', 'id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
   await normalizeUtf8Column('players', 'email', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
   await addIndexIfMissing('players', 'email', 'UNIQUE INDEX email (email)');
@@ -225,6 +226,7 @@ async function initializeSchema() {
   `);
   await addColumnIfMissing('oauth_states', 'mode', '`mode` VARCHAR(16) NOT NULL DEFAULT "login"');
   await addColumnIfMissing('oauth_states', 'redirect_path', '`redirect_path` VARCHAR(255) NOT NULL DEFAULT "/camp"');
+  await addColumnIfMissing('oauth_states', 'claim_player_id', '`claim_player_id` VARCHAR(255) NULL');
   await addColumnIfMissing('oauth_states', 'created_at', '`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
   await addColumnIfMissing('oauth_states', 'expires_at', '`expires_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
   await addColumnIfMissing('oauth_states', 'used_at', '`used_at` TIMESTAMP NULL');

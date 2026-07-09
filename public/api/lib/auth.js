@@ -33,8 +33,23 @@ function cleanPlayer(row) {
     pvpLosses: Math.max(0, Number(row.pvp_losses) || 0),
     profileDemonId: row.profile_demon_id ? Number(row.profile_demon_id) : null,
     profileDemonImageUrl: row.profile_demon_image_url || null,
+    isGuest: Boolean(Number(row.is_guest) || 0),
     unlocks: JSON.parse(row.unlocks || '[]')
   };
+}
+
+// Guest accounts are real player rows flagged with `is_guest = 1`. They may play
+// the core game but not touch abuse-sensitive features until they save (claim)
+// their hunter. This guard is the security boundary; the UI hint is cosmetic.
+function blockGuests(req, res, next) {
+  if (req.player && req.player.isGuest) {
+    return res.status(403).json({
+      error: 'Save your hunter to unlock this. Guest hunters cannot use this feature yet.',
+      guestBlocked: true
+    });
+  }
+
+  next();
 }
 
 async function requireAuth(req, res, next) {
@@ -68,6 +83,7 @@ async function requireAuth(req, res, next) {
 }
 
 module.exports = {
+  blockGuests,
   cleanPlayer,
   createSession,
   createToken,

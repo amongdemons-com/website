@@ -1,0 +1,22 @@
+const { createDemon } = require('./demon-factory');
+const { createRng } = require('./rng');
+const { saveCollectionDemon } = require('./collection-demons');
+
+const STARTER_TYPE_ID = 1;
+const STARTER_RARITY = 'common';
+
+// Every new hunter — guest or registered — starts with one common Type 1 demon
+// so the collection, world team, and dungeon are immediately playable instead of
+// opening on an empty roster. Best-effort: a starter failure must never block
+// account creation, so callers wrap this and swallow errors.
+async function grantStarterDemon(playerId) {
+  if (!playerId) return null;
+
+  const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+  const rng = createRng(seed);
+  const demon = await createDemon(rng, { typeId: STARTER_TYPE_ID, rarity: STARTER_RARITY });
+  await saveCollectionDemon(playerId, demon);
+  return demon;
+}
+
+module.exports = { STARTER_RARITY, STARTER_TYPE_ID, grantStarterDemon };

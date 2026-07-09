@@ -16,6 +16,7 @@ const {
   renderRobotsTxt,
   renderSitemap
 } = require('./lib/seo-pages');
+const { renderHunterPage } = require('./lib/hunter-page');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -162,8 +163,9 @@ app.get(['/hunter', '/hunter/'], (req, res) => {
   res.redirect(302, '/rankings');
 });
 
-app.get(['/hunter/:username', '/hunter/:username/'], (req, res) => {
-  sendAppPage(res, 'hunter.html');
+app.get(['/hunter/:username', '/hunter/:username/'], async (req, res) => {
+  const html = await renderHunterPage(req.params.username);
+  res.set('Cache-Control', 'no-cache').type('html').send(html);
 });
 
 app.get(['/rank', '/rank/'], (req, res) => {

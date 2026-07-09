@@ -1,7 +1,7 @@
 import { registerDungeonActions } from './dungeon/registry.js';
 import { onReady } from './dungeon/utils.js';
 import * as dom from './dungeon/dom.js';
-import * as lifecycle from './dungeon/lifecycle.js';
+import * as lifecycle from './dungeon/lifecycle.js?v=20260709-guest-mode-v1';
 import * as render from './dungeon/render.js?v=20260706-stat-preview-v1';
 import * as combat from './dungeon/combat.js?v=20260627-fire-nova-v3';
 import * as rewards from './dungeon/rewards.js';

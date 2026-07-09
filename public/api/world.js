@@ -1,6 +1,6 @@
 const express = require('express');
 const db = require('./lib/db');
-const { cleanPlayer, requireAuth } = require('./lib/auth');
+const { blockGuests, cleanPlayer, requireAuth } = require('./lib/auth');
 const { getNextAccountLevel } = require('./lib/progression');
 const {
   ANCHOR_SUCCESS_MESSAGE,
@@ -363,7 +363,7 @@ router.post('/world/boss/challenge', requireAuth, async (req, res) => {
   });
 });
 
-router.post('/world/challenge', requireAuth, async (req, res) => {
+router.post('/world/challenge', requireAuth, blockGuests, async (req, res) => {
   const targetPlayerId = String(req.body?.targetPlayerId || '').trim();
 
   if (!targetPlayerId) {
@@ -928,7 +928,8 @@ function getWorldPlayer(player) {
     level: Math.max(1, Number(player.level) || 1),
     souls: Math.max(0, Number(player.souls) || 0),
     ...getWorldPvpPlayerRecord(player),
-    profileDemonImageUrl: player.profileDemonImageUrl || null
+    profileDemonImageUrl: player.profileDemonImageUrl || null,
+    isGuest: Boolean(player.isGuest)
   };
 }
 

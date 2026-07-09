@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
+    <!--HUNTER_META_START-->
     <title>Hunter Profile | Among Demons</title>
     <meta name="description" content="View a public Among Demons hunter profile with level, PvP record, world team, coordinates, and active buffs.">
     <link rel="canonical" href="https://amongdemons.com/hunter">
-    <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <meta property="og:site_name" content="Among Demons">
     <meta property="og:type" content="profile">
     <meta property="og:title" content="Hunter Profile | Among Demons">
@@ -21,8 +21,10 @@
     <meta name="twitter:description" content="View a public Among Demons hunter profile with level, PvP record, world team, coordinates, and active buffs.">
     <meta name="twitter:image" content="https://amongdemons.com/app/images/amongdemons_logo_white_text_bottom_1000x1000.png">
     <meta name="twitter:image:alt" content="Among Demons logo">
+    <!--HUNTER_META_END-->
+    <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/app/css/base.css?v=20260707-buff-expiry-v3" rel="stylesheet">
+    <link href="/app/css/base.css?v=20260709-guest-mode-v2" rel="stylesheet">
     <link href="/app/css/battle.css?v=20260706-drag-ghost-fix" rel="stylesheet">
   </head>
   <body class="hunter-page">
@@ -81,14 +83,17 @@
             <p id="hunterSubline">Loading public record...</p>
           </div>
         </div>
-        <div class="hunter-stat-grid" aria-label="Hunter location and progress">
-          <div class="hunter-stat">
-            <span class="hunter-stat-value" data-hunter-stat="floor">-</span>
-            <span class="hunter-stat-label">Top Floor</span>
-          </div>
-          <div class="hunter-stat">
-            <span class="hunter-stat-value" data-hunter-stat="coordinates">-</span>
-            <span class="hunter-stat-label">Coordinates</span>
+        <div class="hunter-hero-aside">
+          <div class="hunter-share-bar" data-hunter-share aria-label="Share this hunter"></div>
+          <div class="hunter-stat-grid" aria-label="Hunter location and progress">
+            <div class="hunter-stat">
+              <span class="hunter-stat-value" data-hunter-stat="floor">-</span>
+              <span class="hunter-stat-label">Top Floor</span>
+            </div>
+            <div class="hunter-stat">
+              <span class="hunter-stat-value" data-hunter-stat="coordinates">-</span>
+              <span class="hunter-stat-label">Coordinates</span>
+            </div>
           </div>
         </div>
       </section>
@@ -105,26 +110,30 @@
           <div class="hunter-team-board battle-side battle-side-player" id="hunterWorldTeam" aria-live="polite"></div>
         </section>
 
-        <section class="hunter-panel hunter-buffs-panel" aria-labelledby="hunterBuffsHeading">
-          <div class="hunter-panel-head">
-            <div>
-              <h2 id="hunterBuffsHeading">Buffs</h2>
-              <p>Level power currently comes from allocated skill points.</p>
+        <div class="hunter-sidebar">
+          <div class="hunter-cta" data-hunter-cta></div>
+
+          <section class="hunter-panel hunter-buffs-panel" aria-labelledby="hunterBuffsHeading">
+            <div class="hunter-panel-head">
+              <div>
+                <h2 id="hunterBuffsHeading">Buffs</h2>
+                <p>Level power currently comes from allocated skill points.</p>
+              </div>
+              <span class="hunter-panel-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
             </div>
-            <span class="hunter-panel-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
-          </div>
-          <div class="hunter-buff-list" id="hunterBuffs" aria-live="polite"></div>
-        </section>
+            <div class="hunter-buff-list" id="hunterBuffs" aria-live="polite"></div>
+          </section>
+        </div>
       </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/app/js/lucide-subset.js?v=20260707-team-scroll-v1"></script>
-    <script src="/app/js/icons.js?v=20260707-alert-linger"></script>
+    <script src="/app/js/lucide-subset.js?v=20260709-guest-mode-v1"></script>
+    <script src="/app/js/icons.js?v=20260709-guest-mode-v2"></script>
     <script src="/app/js/api-config.js?v=20260704-cache-v1"></script>
-    <script src="/app/js/session.js?v=20260706-hunt-overflow-msg-v1"></script>
-    <script src="/app/js/navigation.js?v=20260704-cache-v1"></script>
+    <script src="/app/js/session.js?v=20260709-guest-mode-v1"></script>
+    <script src="/app/js/navigation.js?v=20260709-guest-mode-v1"></script>
     <script src="/app/js/demon-cards.js?v=20260701-hunter-profile-v1"></script>
-    <script src="/app/js/hunter-ui.js?v=20260707-buff-expiry"></script>
+    <script src="/app/js/hunter-ui.js?v=20260709-guest-mode-v2"></script>
   </body>
 </html>

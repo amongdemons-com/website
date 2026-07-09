@@ -31,8 +31,13 @@ const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelecti
 
   async function init() {
     if (!window.AmongDemons.getToken()) {
-      window.location.href = window.AmongDemons.appUrl('/login');
-      return;
+      // First-time visitors play instantly as a guest instead of hitting a gate.
+      try {
+        await window.AmongDemons.ensurePlayableSession();
+      } catch (error) {
+        window.location.href = window.AmongDemons.appUrl('/login');
+        return;
+      }
     }
 
   cacheElements();

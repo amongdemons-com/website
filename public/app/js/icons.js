@@ -126,11 +126,53 @@
       });
     }
     if (hasXpProgressSource(player)) updateNavXpProgress(player, { root, animate: options.animate });
+    applyGuestNav(accountElement, resolveNavIsGuest(player));
 
     return {
       username,
       souls: formattedSouls
     };
+  }
+
+  // Partial nav payloads (e.g. the world state player) may omit isGuest; fall
+  // back to the stored session so a guest never loses the Save control when a
+  // page refreshes the nav with a slimmer player object.
+  function resolveNavIsGuest(player) {
+    if (player && typeof player.isGuest === 'boolean') return player.isGuest;
+    const stored = window.AmongDemons?.getPlayer?.();
+    return Boolean(stored && stored.isGuest);
+  }
+
+  // Guest hunters swap the settings + logout controls for a single "Save"
+  // call-to-action while keeping their souls and identity visible. The button
+  // opens the register page in claim mode (see auth-ui.js).
+  function applyGuestNav(accountElement, isGuest) {
+    if (!accountElement) return;
+
+    accountElement.classList.toggle('is-guest', isGuest);
+    const settingsLink = accountElement.querySelector('.nav-settings-link');
+    const logoutButton = accountElement.querySelector('#logoutBtn, .nav-logout-btn');
+    if (settingsLink) settingsLink.classList.toggle('d-none', isGuest);
+    if (logoutButton) logoutButton.classList.toggle('d-none', isGuest);
+
+    let saveButton = accountElement.querySelector('[data-guest-save]');
+
+    if (!isGuest) {
+      if (saveButton) saveButton.classList.add('d-none');
+      return;
+    }
+
+    if (!saveButton) {
+      saveButton = document.createElement('a');
+      saveButton.className = 'btn btn-primary btn-sm nav-guest-save-btn';
+      saveButton.setAttribute('data-guest-save', '');
+      saveButton.href = '/register?claim=1';
+      saveButton.title = 'Save your hunter to keep your progress forever';
+      saveButton.innerHTML = `${renderIcon('save', { size: 16 })}<span>Save</span>`;
+      accountElement.appendChild(saveButton);
+    }
+
+    saveButton.classList.remove('d-none');
   }
 
   // The nav avatar renders at ~34px, so swap full-size demon art for the small

@@ -9,10 +9,17 @@
   const form = document.getElementById('authForm');
   const message = document.getElementById('authMessage');
   const oauthButtons = Array.from(document.querySelectorAll('[data-oauth-provider]'));
+  // A guest arriving at the register page is here to SAVE their existing hunter,
+  // not to open a second account — so we claim in place instead of registering.
+  const claimMode = mode === 'register' && Boolean(window.AmongDemons.isGuest?.());
 
   if (!form) return;
 
+  // The register page keeps its full UI (Google, Discord, password, switch link)
+  // in every mode. In claim mode the provider buttons carry the guest's token so
+  // signing up with Google/Discord claims the existing hunter in place.
   initOAuthButtons();
+  if (claimMode) applyClaimMode();
   initPasswordToggles();
   showOAuthQueryMessage();
 
@@ -50,6 +57,20 @@
         if (email) body.email = email;
       }
 
+      if (claimMode) {
+        await window.AmongDemons.claimGuest(body);
+        setMessage({
+          type: 'success',
+          title: 'Your hunter is saved.',
+          message: 'Your demons, progress, and profile are kept forever.',
+          action: 'Taking you to camp...'
+        }, 'success');
+        setTimeout(() => {
+          window.location.href = window.AmongDemons.appUrl('/camp');
+        }, 900);
+        return;
+      }
+
       const payload = await api(`/api/auth/${mode}`, {
         method: 'POST',
         body
@@ -71,7 +92,10 @@
   async function initOAuthButtons() {
     oauthButtons.forEach((button) => {
       const provider = button.dataset.oauthProvider;
-      button.href = apiUrl(`/api/auth/oauth/${encodeURIComponent(provider)}?mode=${encodeURIComponent(mode || 'login')}`);
+      const claimSuffix = claimMode
+        ? `&claimToken=${encodeURIComponent(window.AmongDemons.getToken() || '')}`
+        : '';
+      button.href = apiUrl(`/api/auth/oauth/${encodeURIComponent(provider)}?mode=${encodeURIComponent(mode || 'login')}${claimSuffix}`);
       button.addEventListener('click', (event) => {
         if (button.dataset.oauthEnabled === 'false') {
           event.preventDefault();
@@ -144,6 +168,27 @@
         button.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
       });
     });
+  }
+
+  function applyClaimMode() {
+    document.title = 'Save your hunter | Among Demons';
+
+    const title = document.querySelector('[data-auth-title]');
+    if (title) title.textContent = 'Save your hunter';
+
+    const subtitle = document.querySelector('[data-auth-subtitle]');
+    if (subtitle) {
+      subtitle.textContent = 'Create an account to keep your demons, progress, and profile forever.';
+      subtitle.hidden = false;
+    }
+
+    const submitLabel = document.querySelector('[data-auth-submit-label]');
+    if (submitLabel) submitLabel.textContent = 'Save Progress';
+
+    // The divider copy is nudged for claim context; Google/Discord and the
+    // switch link stay visible (provider sign-up claims the guest in place).
+    const divider = document.querySelector('[data-oauth-divider] span');
+    if (divider) divider.textContent = 'or save with password';
   }
 
   function setMessage(text, type) {

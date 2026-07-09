@@ -48,6 +48,14 @@
   async function init() {
     cacheElements();
     bindActions();
+    // First-time visitors browse the collection as a guest rather than empty-handed.
+    if (!window.AmongDemons.getToken()) {
+      try {
+        await window.AmongDemons.ensurePlayableSession();
+      } catch (error) {
+        // Fall back to the logged-out browse view if a guest cannot be opened.
+      }
+    }
     syncAuthenticatedUi();
     syncFiltersToggle();
     await refreshCollection();

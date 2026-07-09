@@ -28,12 +28,16 @@ router.get('/auth/oauth/:provider', async (req, res) => {
   const state = createToken();
   const redirectPath = normalizeRedirectPath(req.query.returnTo || req.query.redirect || '/camp');
   const redirectUri = getCallbackUrl(req, provider);
+  // When a guest signs up through an OAuth provider we claim their existing
+  // hunter in place instead of orphaning its progress. The guest is identified
+  // by their own session token, resolved to a player id and carried in the state.
+  const claimPlayerId = await resolveGuestClaimPlayerId(req.query.claimToken);
 
   await cleanupOAuthStates();
   await db.query(
-    `INSERT INTO oauth_states (state, provider, mode, redirect_path, expires_at)
-     VALUES (?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ${OAUTH_STATE_TTL_MINUTES} MINUTE))`,
-    [state, provider, mode, redirectPath]
+    `INSERT INTO oauth_states (state, provider, mode, redirect_path, claim_player_id, expires_at)
+     VALUES (?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ${OAUTH_STATE_TTL_MINUTES} MINUTE))`,
+    [state, provider, mode, redirectPath, claimPlayerId]
   );
 
   const authUrl = buildAuthorizationUrl(provider, {
@@ -76,7 +80,9 @@ async function handleOAuthCallback(req, res) {
       redirectUri,
       user: req.body?.user
     });
-    const player = await findOrCreateOAuthPlayer(provider, profile);
+    const player = await findOrCreateOAuthPlayer(provider, profile, {
+      claimPlayerId: oauthState.claim_player_id || null
+    });
     const token = await createSession(player.id);
 
     res.set('Cache-Control', 'no-store');
@@ -107,11 +113,32 @@ async function consumeOAuthState(state, provider) {
   if (!result.affectedRows) return null;
 
   const [rows] = await db.query(
-    'SELECT mode, redirect_path FROM oauth_states WHERE state = ? AND provider = ? LIMIT 1',
+    'SELECT mode, redirect_path, claim_player_id FROM oauth_states WHERE state = ? AND provider = ? LIMIT 1',
     [state, provider]
   );
 
   return rows[0] || null;
+}
+
+// Resolve a guest's session token to their player id, but only if the row is
+// still an unclaimed guest — so the state never carries a claim for a
+// real account or an expired session.
+async function resolveGuestClaimPlayerId(claimToken) {
+  const token = String(claimToken || '').trim();
+  if (!token) return null;
+
+  const [rows] = await db.query(
+    `SELECT p.id
+     FROM player_sessions s
+     INNER JOIN players p ON p.id = s.player_id
+     WHERE s.token = ?
+       AND p.is_guest = 1
+       AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP)
+     LIMIT 1`,
+    [token]
+  );
+
+  return rows.length ? rows[0].id : null;
 }
 
 async function cleanupOAuthStates() {
