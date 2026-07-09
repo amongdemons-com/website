@@ -19,6 +19,7 @@ function ensureSchema(req, res, next) {
 
 router.use(require('./game/demon-types'));
 router.use(require('./game/demons'));
+router.use(require('./og'));
 
 router.use(ensureSchema);
 

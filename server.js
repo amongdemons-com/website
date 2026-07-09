@@ -215,7 +215,10 @@ function enforceCanonicalHost(req, res, next) {
 
 function applyRobotsHeaders(req, res, next) {
   const normalizedPath = normalizePath(req.path);
-  if (normalizedPath === '/api' || normalizedPath.startsWith('/api/') || noindexPaths.has(normalizedPath)) {
+  const isPublicOgImage = normalizedPath.startsWith('/api/og/');
+  if ((normalizedPath === '/api' || normalizedPath.startsWith('/api/')) && !isPublicOgImage) {
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+  } else if (noindexPaths.has(normalizedPath)) {
     res.set('X-Robots-Tag', 'noindex, nofollow');
   }
 
