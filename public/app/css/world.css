@@ -1240,6 +1240,75 @@ body.is-world-side-collapsed .world-map-controls {
         rgba(0,0,0,0.2);
 }
 
+/* Shortcut card at the end of the team-editor collection, matched to a demon
+   card's square footprint, with a subtle pulsating blue glow. */
+.world-team-extract-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+    padding: 0.5rem;
+    border: 2px solid rgba(96,165,250,0.5);
+    border-radius: 6px;
+    background:
+        radial-gradient(circle at 50% 35%, rgba(96,165,250,0.16), rgba(8,16,30,0.5) 70%),
+        rgba(8,16,30,0.5);
+    color: #d6e6ff;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    animation: worldTeamExtractPulse 2.6s ease-in-out infinite;
+}
+
+.world-team-extract-card:hover,
+.world-team-extract-card:focus-visible {
+    border-color: rgba(147,197,253,0.85);
+    color: #ffffff;
+    outline: none;
+}
+
+.world-team-extract-icon {
+    display: grid;
+    place-items: center;
+    color: #93c5fd;
+}
+
+.world-team-extract-icon .ad-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.world-team-extract-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+}
+
+@keyframes worldTeamExtractPulse {
+    0%, 100% {
+        border-color: rgba(96,165,250,0.42);
+        box-shadow:
+            0 0 0 1px rgba(96,165,250,0.2),
+            0 0 10px rgba(80,150,255,0.22);
+    }
+    50% {
+        border-color: rgba(147,197,253,0.8);
+        box-shadow:
+            0 0 0 1px rgba(147,197,253,0.4),
+            0 0 20px rgba(96,165,250,0.5);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .world-team-extract-card {
+        animation: none;
+    }
+}
+
 .world-team-drag-ghost {
     z-index: 3200;
     width: clamp(5.4rem, 9vw, 7.2rem);

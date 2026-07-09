@@ -3276,9 +3276,23 @@ import * as dungeonUtils from './dungeon/utils.js';
   function renderWorldTeamEditorCollection() {
     const editor = state.worldTeamEditor;
     if (editor.loading) return '<p class="world-empty-text">Gathering bound demons...</p>';
-    if (!editor.collection.length) return '<p class="world-empty-text">No bound demons available. Extract one from the dungeon first.</p>';
 
-    return editor.collection.map((demon) => renderWorldTeamEditorDemonCard(demon, 'collection')).join('');
+    const extractCard = renderWorldTeamExtractCard();
+    if (!editor.collection.length) {
+      return `<p class="world-empty-text">No bound demons available. Extract one from the dungeon first.</p>${extractCard}`;
+    }
+
+    // The extract shortcut sits at the end of the collected demons.
+    return `${editor.collection.map((demon) => renderWorldTeamEditorDemonCard(demon, 'collection')).join('')}${extractCard}`;
+  }
+
+  function renderWorldTeamExtractCard() {
+    return `
+      <a class="world-team-extract-card" href="${appUrl('/dungeon')}" data-world-team-extract aria-label="Extract from Dungeon" title="Extract more demons from the dungeon">
+        <span class="world-team-extract-icon" aria-hidden="true">${renderIcon('swords')}</span>
+        <span class="world-team-extract-label">Extract from Dungeon</span>
+      </a>
+    `;
   }
 
   function renderWorldTeamEditorDemonCard(demon, zone, slot = null) {

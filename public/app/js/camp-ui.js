@@ -43,6 +43,7 @@
       'navPlayerLevel',
       'navProfileImage',
       'campPlayerName',
+      'campPlayerNameLink',
       'playerHudName',
       'playerTitle',
       'welcomeText',
@@ -353,7 +354,17 @@
 
     setText(elements.navPlayerName, player.username || '');
     setText(elements.navPlayerLevel, `Level ${formatNumber(level)}`);
-    setText(elements.campPlayerName, username);
+    // The camp name links to the player's own public profile once it exists.
+    if (elements.campPlayerNameLink) {
+      elements.campPlayerNameLink.textContent = username;
+      if (player.username) {
+        elements.campPlayerNameLink.setAttribute('href', `/hunter/${encodeURIComponent(player.username)}`);
+      } else {
+        elements.campPlayerNameLink.removeAttribute('href');
+      }
+    } else {
+      setText(elements.campPlayerName, username);
+    }
     setText(elements.playerHudName, username);
     setText(elements.welcomeText, player.username
       ? 'Rest, plan, and push deeper.'
