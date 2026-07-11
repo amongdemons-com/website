@@ -1614,6 +1614,52 @@ body.is-world-side-collapsed .world-map-controls {
     height: 100%;
 }
 
+.world-boss-formation {
+    display: grid;
+    place-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin: 0.1rem 0;
+    padding-block: 0.12rem;
+}
+
+.world-boss-formation::before,
+.world-boss-formation::after {
+    content: "";
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,199,106,0.18) 18%, rgba(232,199,106,0.18) 82%, transparent);
+}
+
+.world-boss-formation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(3, 48px);
+}
+
+.world-boss-formation-cell {
+    display: grid;
+    place-items: center;
+    border-right: 1px solid rgba(220,232,229,0.13);
+    border-bottom: 1px solid rgba(220,232,229,0.13);
+}
+
+.world-boss-formation-cell:nth-child(3n) {
+    border-right: 0;
+}
+
+.world-boss-formation-cell:nth-child(n + 7) {
+    border-bottom: 0;
+}
+
+.world-boss-formation-cell .world-enc-demon {
+    width: 42px;
+    height: 42px;
+    border-width: 1px;
+    padding: 1px;
+    box-shadow: 0 0 6px color-mix(in srgb, var(--rarity-color, #D1D5D8) 28%, transparent);
+}
+
 .world-boss-buffs {
     display: flex;
     flex-wrap: wrap;
@@ -1719,6 +1765,13 @@ body.is-world-side-collapsed .world-map-controls {
     font-weight: 800;
     line-height: 1.2;
     padding-left: 0.48rem;
+}
+
+.world-encounter-tooltip .world-boss-reward {
+    justify-self: stretch;
+    width: 100%;
+    border-left: 0;
+    padding-inline: 0;
 }
 
 .world-boss-reward > span {

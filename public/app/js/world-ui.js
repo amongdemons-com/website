@@ -3924,7 +3924,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function renderBossRewardLine(buff, options = {}) {
     if (!buff) return '';
-    const label = options.compact ? 'Win buff' : 'Battle buff';
+    const label = options.compact ? 'Victory reward' : 'Battle buff';
     const duration = formatBossBuffDuration(buff);
     const description = buff.description || '';
 
@@ -6782,16 +6782,11 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!tooltip || !boss) return;
 
     const team = Array.isArray(boss.team) ? boss.team : [];
-    const difficulty = Math.max(1, Math.min(10, Number(boss.difficulty) || 1));
     const stepCount = positionsEqual(boss, state.position)
       ? 0
       : getPathStepCount(state.selectedPath || []);
-    const demons = team.map(renderDemonPortrait).join('');
+    const formation = renderBossFormationPreview(team);
     const reward = renderBossRewardLine(boss.rewardBuff, { compact: true });
-    const meterTone = difficulty <= 3 ? 'easy' : (difficulty >= 8 ? 'hard' : 'medium');
-    const meter = Array.from({ length: 10 }, (item, index) => (
-      `<span class="world-enc-pip${index < difficulty ? ' is-on' : ''}"></span>`
-    )).join('');
     const travelHint = positionsEqual(boss, state.position)
       ? '<span class="world-tooltip-hint">Challenge from the sidebar.</span>'
       : '<span class="world-tooltip-hint">(Click again to travel)</span>';
@@ -6799,14 +6794,33 @@ import * as dungeonUtils from './dungeon/utils.js';
     tooltip.innerHTML = `
       ${renderBossTitle(boss, 'world-tooltip-title')}
       <span class="world-tooltip-meta">${escapeHtml(formatTravelMeta(boss, stepCount))}</span>
-      ${boss.description ? `<span class="world-target-event-copy">${escapeHtml(boss.description)}</span>` : ''}
-      ${demons ? `<div class="world-enc-demons world-boss-demons">${demons}</div>` : ''}
-      <div class="world-enc-difficulty is-${meterTone}">
-        <span class="world-enc-difficulty-label">Boss Threat</span>
-        <span class="world-enc-meter" aria-label="Boss threat ${difficulty} of 10">${meter}</span>
-      </div>
+      ${formation}
       ${reward}
       ${travelHint}
+    `;
+  }
+
+  function renderBossFormationPreview(team = []) {
+    const assignments = getWorldBattleFormationAssignments(team, 'enemy');
+    if (!assignments.size) return '';
+
+    const displayAssignments = new Map();
+    assignments.forEach((demon, slot) => {
+      const row = Math.floor(slot / FORMATION_GRID_COLUMNS);
+      const column = slot % FORMATION_GRID_COLUMNS;
+      const mirroredSlot = row * FORMATION_GRID_COLUMNS + (FORMATION_GRID_COLUMNS - 1 - column);
+      displayAssignments.set(mirroredSlot, demon);
+    });
+
+    return `
+      <div class="world-boss-formation" role="group" aria-label="Boss formation; front row is on the right">
+        <div class="world-boss-formation-grid">
+          ${Array.from({ length: FORMATION_GRID_SIZE }, (item, slot) => {
+            const demon = displayAssignments.get(slot);
+            return `<span class="world-boss-formation-cell${demon ? ' has-demon' : ''}">${demon ? renderDemonPortrait(demon) : ''}</span>`;
+          }).join('')}
+        </div>
+      </div>
     `;
   }
 
