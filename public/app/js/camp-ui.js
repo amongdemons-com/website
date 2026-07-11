@@ -455,7 +455,25 @@
 
   function renderObjectives() {
     const objectives = state.questData?.quests || [];
-    setHtml(elements.objectiveList, objectives.map(renderObjective).join(''));
+    const visibleObjectives = objectives.filter((objective) => !objective.claimed);
+    setHtml(
+      elements.objectiveList,
+      visibleObjectives.length
+        ? visibleObjectives.map(renderObjective).join('')
+        : renderCompletedQuestsMessage()
+    );
+  }
+
+  function renderCompletedQuestsMessage() {
+    return `
+      <div class="camp-quests-complete" role="status">
+        <span class="camp-quests-complete-icon" aria-hidden="true">${renderIcon('check')}</span>
+        <span>
+          <strong>All quests complete</strong>
+          <small>You finished today's quests. More arrive at the daily reset.</small>
+        </span>
+      </div>
+    `;
   }
 
   function renderObjective(objective) {
