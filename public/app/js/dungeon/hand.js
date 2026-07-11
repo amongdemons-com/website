@@ -19,6 +19,7 @@ const getActiveBuffs = (...args) => dungeonActions.getActiveBuffs(...args);
 const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
 const renderActivePactIcon = (...args) => dungeonActions.renderActivePactIcon(...args);
 const shouldShowCollectionReinforcementHandPlaceholder = (...args) => dungeonActions.shouldShowCollectionReinforcementHandPlaceholder(...args);
+const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
 let handTabEventsBound = false;
 let handScrollEventsBound = false;
 let handScrollResizeEventsBound = false;
@@ -269,10 +270,15 @@ function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
     ? renderCollectionReinforcementPlaceholder('hand')
     : '';
   const modeClass = mode === 'battle' ? 'is-battle' : 'is-recruit';
-  const cardHtml = demons.map((demon) => renderDemonCard(demon, {
-    side: 'hand',
-    allowRecruitDrag: isInteractive && mode === 'recruit'
-  })).join('');
+  const team = shouldHighlightHandUpgrades(isInteractive, mode) ? getRecruitPreviewTeam() : [];
+  const cardHtml = demons.map((demon) => {
+    const upgradeFor = findWeakerTeamDemon(demon, team);
+    return renderDemonCard(demon, {
+      side: 'hand',
+      allowRecruitDrag: isInteractive && mode === 'recruit',
+      isTeamUpgrade: Boolean(upgradeFor)
+    });
+  }).join('');
 
   return `
     <div class="dungeon-hand-scroll-shell">
@@ -289,6 +295,56 @@ function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
       </button>
     </div>
   `;
+}
+
+function shouldHighlightHandUpgrades(isInteractive, mode) {
+  return Boolean(
+    isInteractive &&
+    mode === 'recruit' &&
+    state.run?.awaitingRecruit &&
+    Number(state.run?.currentFloor) > 0
+  );
+}
+
+function findWeakerTeamDemon(candidate, team = []) {
+  const candidateTypeId = Number(candidate?.typeId || candidate?.type_id || candidate?.type);
+  if (!candidateTypeId) return null;
+
+  return team.find((teamDemon) => (
+    Number(teamDemon?.typeId || teamDemon?.type_id || teamDemon?.type) === candidateTypeId &&
+    isBetterDemon(candidate, teamDemon)
+  )) || null;
+}
+
+function isBetterDemon(candidate, current) {
+  const candidateRarity = getUpgradeRarityRank(candidate?.rarity);
+  const currentRarity = getUpgradeRarityRank(current?.rarity);
+  if (candidateRarity !== currentRarity) return candidateRarity > currentRarity;
+
+  const ratios = [
+    [candidate?.maxHp || candidate?.hp, current?.maxHp || current?.hp],
+    [candidate?.atk, current?.atk],
+    [candidate?.speed, current?.speed]
+  ]
+    .map(([next, previous]) => [Number(next), Number(previous)])
+    .filter(([, previous]) => Number.isFinite(previous) && previous > 0);
+  if (!ratios.length) return false;
+
+  const relativePower = ratios.reduce((sum, [next, previous]) => (
+    sum + (Number.isFinite(next) ? next / previous : 0)
+  ), 0) / ratios.length;
+  return relativePower > 1.000001;
+}
+
+function getUpgradeRarityRank(rarity) {
+  return {
+    common: 1,
+    uncommon: 2,
+    rare: 3,
+    epic: 4,
+    legendary: 5,
+    mythic: 6
+  }[String(rarity || '').toLowerCase()] || 0;
 }
 
 function renderEmptyHand(mode = 'recruit') {
@@ -536,6 +592,10 @@ export {
   bindHandTabs,
   renderHandPactTags,
   renderHandCards,
+  shouldHighlightHandUpgrades,
+  findWeakerTeamDemon,
+  isBetterDemon,
+  getUpgradeRarityRank,
   renderEmptyHand,
   renderRewardBox,
   renderRewardPayout,

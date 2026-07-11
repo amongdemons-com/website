@@ -206,6 +206,7 @@ function renderDemonCard(demon, options) {
     'dungeon-demon-card',
     isRecruitPoolDemon ? 'is-recruit-draggable' : '',
     isRewardDraggable ? 'is-reward-draggable' : '',
+    options.isTeamUpgrade ? 'is-team-upgrade' : '',
     demon.recruitSource === 'collection' && !state.collectionReinforcementStagedInteracted ? 'is-collection-reinforcement-attention' : '',
     canDropRecruit ? 'is-recruit-drop-target' : '',
     hasPoisonStatus(demon) ? 'is-poisoned' : '',

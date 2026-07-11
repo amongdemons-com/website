@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { normalizeCollectionDemonStats, saveCollectionDemon } = require('../lib/collection-demons');
+const { weakenDemonToMinimumStats } = require('../lib/demon-factory');
 const { getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { hasPendingBuffChoices } = require('../lib/run-buffs');
@@ -31,7 +32,8 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
   }
 
   const demon = getCashoutDemon(run, req.body || {});
-  const saved = await saveCollectionDemon(req.player.id, demon);
+  const extractedDemon = await weakenDemonToMinimumStats(demon);
+  const saved = await saveCollectionDemon(req.player.id, extractedDemon);
 
   settleDiscardedSoulRewards(run);
   const earned = getEarnedForPayout(run);

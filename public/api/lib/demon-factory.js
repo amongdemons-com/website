@@ -55,6 +55,36 @@ function rollStats(rng, typeData, rarity) {
   };
 }
 
+function getMinimumStats(typeData, rarity) {
+  const multiplier = typeData?.rarityMultiplier?.[rarity] || 1;
+
+  return {
+    hp: Math.round(Number(typeData?.baseStats?.hp?.[0]) * multiplier),
+    atk: Math.round(Number(typeData?.baseStats?.atk?.[0]) * multiplier),
+    speed: Math.round(Number(typeData?.baseStats?.speed?.[0]) * multiplier)
+  };
+}
+
+async function weakenDemonToMinimumStats(demon = {}) {
+  const types = await getDemonTypes();
+  const typeId = Number(demon.typeId || demon.type_id || demon.type);
+  const typeData = types[String(typeId)];
+  if (!typeData) {
+    const error = new Error('Demon type not found.');
+    error.status = 400;
+    throw error;
+  }
+
+  const stats = getMinimumStats(typeData, String(demon.rarity || '').toLowerCase());
+  return {
+    ...demon,
+    maxHp: stats.hp,
+    hp: stats.hp,
+    atk: stats.atk,
+    speed: stats.speed
+  };
+}
+
 async function createDemon(rng, options = {}) {
   const [assets, types] = await Promise.all([getDemonAssets(), getDemonTypes()]);
   const typeIds = options.allowedTypeIds && options.allowedTypeIds.length
@@ -113,5 +143,7 @@ async function createTeam(rng, size, options = {}) {
 
 module.exports = {
   createDemon,
-  createTeam
+  createTeam,
+  getMinimumStats,
+  weakenDemonToMinimumStats
 };

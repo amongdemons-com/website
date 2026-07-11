@@ -23,6 +23,7 @@ const markCollectionReinforcementStagedInteracted = (...args) => dungeonActions.
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const renderEmptyText = (...args) => dungeonActions.renderEmptyText(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
+let pendingCollectionReinforcementIds = new Set();
 
 async function openCollectionReinforcementModal() {
   if (!state.run?.collectionReinforcementAvailable) return;
@@ -30,6 +31,7 @@ async function openCollectionReinforcementModal() {
   try {
     await ensureCollectionLoaded();
     markCollectionReinforcementPlaceholderInteracted();
+    pendingCollectionReinforcementIds = new Set();
     renderCollectionReinforcementModal('');
     elements.teamChoiceModal.classList.add('is-collection-reinforcement-modal');
     elements.teamChoiceModal.addEventListener('hidden.bs.modal', () => {
@@ -44,6 +46,9 @@ async function openCollectionReinforcementModal() {
 function renderCollectionReinforcementModal(query = '') {
   setTeamChoiceModalFullscreen(false);
   const limit = getCollectionReinforcementLimit();
+  const alreadySelectedCount = getSelectedCollectionReinforcements().length;
+  const remaining = Math.max(0, limit - alreadySelectedCount);
+  const selectedCount = pendingCollectionReinforcementIds.size;
   const normalizedQuery = query.trim().toLowerCase();
   const candidates = getAvailableCollectionReinforcements()
     .filter((demon) => !normalizedQuery || [
@@ -54,7 +59,9 @@ function renderCollectionReinforcementModal(query = '') {
     .sort(compareCollectionReinforcementDemons);
 
   elements.teamChoiceModalTitle.textContent = 'Demon Collection';
-  elements.teamChoiceModalSubtitle.textContent = `Add a card to your hand.`;
+  elements.teamChoiceModalSubtitle.textContent = remaining === 1
+    ? 'Choose one demon to add to your hand.'
+    : `Choose up to ${remaining} demons to add to your hand.`;
   elements.teamChoiceModalBody.innerHTML = `
     <div class="collection-reinforcement-toolbar">
       <input class="form-control form-control-sm" id="collectionReinforcementSearch" type="search" value="${escapeHtml(query)}" placeholder="Search collection">
@@ -64,7 +71,10 @@ function renderCollectionReinforcementModal(query = '') {
     </div>
   `;
   elements.teamChoiceModalFooter.innerHTML = `
-    <button type="button" class="btn btn-glass-muted" data-bs-dismiss="modal">Done</button>
+    <button type="button" class="btn btn-glass-muted" data-bs-dismiss="modal">Cancel</button>
+    <button type="button" class="btn btn-glass-gold" id="addCollectionReinforcementsBtn" ${selectedCount ? '' : 'disabled'}>
+      ${selectedCount ? `Add ${selectedCount} Demon${selectedCount === 1 ? '' : 's'}` : 'Select Demons'}
+    </button>
   `;
 
   document.getElementById('collectionReinforcementSearch')?.addEventListener('input', (event) => {
@@ -74,15 +84,27 @@ function renderCollectionReinforcementModal(query = '') {
     input?.setSelectionRange(input.value.length, input.value.length);
   });
   bindClicks('.js-call-collection-reinforcement', (button) => {
-    addCollectionReinforcementToPool(Number(button.dataset.demonId));
+    const demonId = Number(button.dataset.demonId);
+    if (pendingCollectionReinforcementIds.has(demonId)) {
+      pendingCollectionReinforcementIds.delete(demonId);
+    } else if (pendingCollectionReinforcementIds.size < remaining) {
+      pendingCollectionReinforcementIds.add(demonId);
+    }
+    renderCollectionReinforcementModal(query);
+  }, elements.teamChoiceModalBody);
+  bindClick(document.getElementById('addCollectionReinforcementsBtn'), () => {
+    pendingCollectionReinforcementIds.forEach((demonId) => addCollectionReinforcementToPool(demonId));
+    pendingCollectionReinforcementIds = new Set();
     getModal(elements.teamChoiceModal).hide();
     renderRun();
   });
 }
 
 function renderCollectionReinforcementChoice(demon) {
-  const selected = getSelectedCollectionReinforcements()
-    .some((item) => Number(item.collectionDemonId) === Number(demon.id));
+  const demonId = Number(demon.id);
+  const selected = pendingCollectionReinforcementIds.has(demonId);
+  const remaining = Math.max(0, getCollectionReinforcementLimit() - getSelectedCollectionReinforcements().length);
+  const selectionFull = pendingCollectionReinforcementIds.size >= remaining;
   const displayDemon = applyDungeonCombatStatPreviewToDemon(demon);
 
   return renderDungeonDemonCard(displayDemon, {
@@ -93,7 +115,8 @@ function renderCollectionReinforcementChoice(demon) {
     attributes: {
       type: 'button',
       'data-demon-id': demon.id,
-      disabled: selected
+      'aria-pressed': selected,
+      disabled: selectionFull && !selected
     }
   });
 }

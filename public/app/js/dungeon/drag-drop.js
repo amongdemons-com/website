@@ -957,6 +957,7 @@ function addPoolDemonToTeam(poolInstanceId, position, insertIndex = null, rowInd
 }
 
 function swapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
+  const wasHighlightedUpgrade = isHighlightedTeamUpgrade(poolInstanceId);
   const targetIndex = (state.recruitDraftTeam || []).findIndex((demon) => demon.instanceId === teamInstanceId);
   const poolIndex = getDraftPoolIndex(poolInstanceId);
   const currentTeamDemon = state.recruitDraftTeam?.[targetIndex];
@@ -986,13 +987,16 @@ function swapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
     formationRow: poolRow,
     formationSlot: poolRow
   });
-  state.recruitSwapEffectIds = [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
+  state.recruitSwapEffectIds = wasHighlightedUpgrade
+    ? []
+    : [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
   refreshRecruitDraftOrder();
   refreshRecruitDraftPoolOrder();
   syncRecruitDraftSelection();
 }
 
 function swapTeamDemonIntoPool(teamInstanceId, poolInstanceId) {
+  const wasHighlightedUpgrade = isHighlightedTeamUpgrade(poolInstanceId);
   const teamIndex = getDraftTeamIndex(teamInstanceId);
   const poolIndex = getDraftPoolIndex(poolInstanceId);
   const currentTeamDemon = state.recruitDraftTeam?.[teamIndex];
@@ -1019,10 +1023,19 @@ function swapTeamDemonIntoPool(teamInstanceId, poolInstanceId) {
     formationRow: poolRow,
     formationSlot: poolRow
   });
-  state.recruitSwapEffectIds = [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
+  state.recruitSwapEffectIds = wasHighlightedUpgrade
+    ? []
+    : [poolDemon.instanceId, teamDemon.instanceId].filter(Boolean);
   refreshRecruitDraftOrder();
   refreshRecruitDraftPoolOrder();
   syncRecruitDraftSelection();
+}
+
+function isHighlightedTeamUpgrade(instanceId) {
+  if (!instanceId) return false;
+  return Boolean(document.querySelector(
+    `#dungeonHandGrid .dungeon-demon-card.is-team-upgrade[data-instance-id="${cssEscape(instanceId)}"]`
+  ));
 }
 
 function playRecruitSwapEffect() {
