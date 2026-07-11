@@ -92,14 +92,15 @@
   function initAccountNav() {
     const accountElement = document.querySelector('[data-nav-account]');
     const authElement = document.querySelector('[data-nav-auth-actions]');
+    const auth = window.AmongDemons || {};
+    const session = typeof auth.getSession === 'function' ? auth.getSession() : getStoredSession();
+    const token = typeof auth.getToken === 'function' ? auth.getToken() : session.token;
+
+    updateBrandDestination(Boolean(token));
 
     if (!accountElement && !authElement) return;
 
     bindLogout();
-
-    const auth = window.AmongDemons || {};
-    const session = typeof auth.getSession === 'function' ? auth.getSession() : getStoredSession();
-    const token = typeof auth.getToken === 'function' ? auth.getToken() : session.token;
 
     if (!token) {
       clearAccountNav();
@@ -187,6 +188,8 @@
   }
 
   function clearAccountNav() {
+    updateBrandDestination(false);
+
     const clearer = window.AmongDemons?.ui?.clearNavAccount;
     if (typeof clearer === 'function') {
       clearer();
@@ -195,6 +198,17 @@
 
     document.querySelector('[data-nav-account]')?.classList.add('d-none');
     document.querySelector('[data-nav-auth-actions]')?.classList.remove('d-none');
+  }
+
+  function updateBrandDestination(hasSession) {
+    const brandLink = document.querySelector('.game-shell-brand');
+    if (!brandLink) return;
+
+    const destination = hasSession ? '/camp' : '/';
+    brandLink.href = typeof window.AmongDemons?.appUrl === 'function'
+      ? window.AmongDemons.appUrl(destination)
+      : destination;
+    brandLink.setAttribute('aria-label', hasSession ? 'Among Demons camp' : 'Among Demons home');
   }
 
   function getStoredSession() {
