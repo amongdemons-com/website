@@ -2969,12 +2969,13 @@ body.is-world-side-collapsed .world-map-controls {
 
     .world-boss-dialog-portrait-frame {
         width: clamp(9rem, 42vw, 12rem);
-        margin-bottom: -0.9rem;
-        z-index: 1;
+        margin-bottom: -1.4rem;
     }
 
+    /* The nameplate tucks over the portrait's bottom edge, not under it. */
     .world-boss-dialog-copy {
         width: 100%;
+        z-index: 1;
     }
 
     .world-boss-dialog-nameplate {
