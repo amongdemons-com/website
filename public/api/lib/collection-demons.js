@@ -1,4 +1,5 @@
 const db = require('./db');
+const { weakenDemonToMinimumStats } = require('./demon-factory');
 const { enrichCollectionDemonsWithTraining } = require('./demon-training');
 
 function getCollectionDemonRow(demon = {}) {
@@ -51,7 +52,8 @@ function normalizeCollectionDemonStats(demon = {}) {
 }
 
 async function saveCollectionDemon(playerId, demon) {
-  const row = getCollectionDemonRow(demon);
+  const minimumDemon = await weakenDemonToMinimumStats(demon);
+  const row = getCollectionDemonRow(minimumDemon);
 
   if (!playerId || !row.sourceDemonId || !row.typeId || !row.rarity || !row.species || !row.imageUrl) {
     const error = new Error('Demon is missing required collection data.');

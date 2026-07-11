@@ -56,12 +56,31 @@ function rollStats(rng, typeData, rarity) {
 }
 
 function getMinimumStats(typeData, rarity) {
+  const bounds = getStatBounds(typeData, rarity);
+
+  return {
+    hp: bounds.hp.min,
+    atk: bounds.atk.min,
+    speed: bounds.speed.min
+  };
+}
+
+function getStatBounds(typeData, rarity) {
   const multiplier = typeData?.rarityMultiplier?.[rarity] || 1;
 
   return {
-    hp: Math.round(Number(typeData?.baseStats?.hp?.[0]) * multiplier),
-    atk: Math.round(Number(typeData?.baseStats?.atk?.[0]) * multiplier),
-    speed: Math.round(Number(typeData?.baseStats?.speed?.[0]) * multiplier)
+    hp: {
+      min: Math.round(Number(typeData?.baseStats?.hp?.[0]) * multiplier),
+      max: Math.round(Number(typeData?.baseStats?.hp?.[1]) * multiplier)
+    },
+    atk: {
+      min: Math.round(Number(typeData?.baseStats?.atk?.[0]) * multiplier),
+      max: Math.round(Number(typeData?.baseStats?.atk?.[1]) * multiplier)
+    },
+    speed: {
+      min: Math.round(Number(typeData?.baseStats?.speed?.[0]) * multiplier),
+      max: Math.round(Number(typeData?.baseStats?.speed?.[1]) * multiplier)
+    }
   };
 }
 
@@ -145,5 +164,6 @@ module.exports = {
   createDemon,
   createTeam,
   getMinimumStats,
+  getStatBounds,
   weakenDemonToMinimumStats
 };

@@ -1,4 +1,8 @@
 const db = require('./db');
+const { getMinimumStats } = require('./demon-factory');
+const { getDemonTypes } = require('./game-data');
+
+const MINIMUM_PLAYER_DEMON_STATS_MIGRATION = '20260711_minimum_player_demon_stats_v1';
 
 async function getColumns(tableName) {
   const [rows] = await db.query(`SHOW COLUMNS FROM \`${tableName}\``);
@@ -91,7 +95,40 @@ async function dedupePlayerDemonSlots() {
   `);
 }
 
+async function runMigrationOnce(migrationId, migrate) {
+  const [existing] = await db.query('SELECT id FROM schema_migrations WHERE id = ? LIMIT 1', [migrationId]);
+  if (existing.length) return false;
+
+  await migrate();
+  await db.query('INSERT INTO schema_migrations (id) VALUES (?)', [migrationId]);
+  return true;
+}
+
+async function normalizePlayerDemonMinimumStats() {
+  const types = await getDemonTypes();
+  const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+
+  for (const [typeId, typeData] of Object.entries(types)) {
+    for (const rarity of rarities) {
+      const stats = getMinimumStats(typeData, rarity);
+      await db.query(
+        `UPDATE player_demons
+         SET hp = ?, atk = ?, speed = ?
+         WHERE type_id = ? AND LOWER(rarity) = ?`,
+        [stats.hp, stats.atk, stats.speed, Number(typeId), rarity]
+      );
+    }
+  }
+}
+
 async function initializeSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      id VARCHAR(128) NOT NULL PRIMARY KEY,
+      applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
   await db.query(`
     CREATE TABLE IF NOT EXISTS players (
       id VARCHAR(255) NOT NULL PRIMARY KEY,
@@ -351,6 +388,7 @@ async function initializeSchema() {
     'uniq_player_demons_slot',
     'UNIQUE INDEX uniq_player_demons_slot (player_id, type_id, rarity)'
   );
+  await runMigrationOnce(MINIMUM_PLAYER_DEMON_STATS_MIGRATION, normalizePlayerDemonMinimumStats);
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_world_teams (

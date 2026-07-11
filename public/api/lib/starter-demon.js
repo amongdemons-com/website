@@ -15,8 +15,8 @@ async function grantStarterDemon(playerId) {
   const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
   const rng = createRng(seed);
   const demon = await createDemon(rng, { typeId: STARTER_TYPE_ID, rarity: STARTER_RARITY });
-  await saveCollectionDemon(playerId, demon);
-  return demon;
+  const saved = await saveCollectionDemon(playerId, demon);
+  return saved.demon;
 }
 
 module.exports = { STARTER_RARITY, STARTER_TYPE_ID, grantStarterDemon };

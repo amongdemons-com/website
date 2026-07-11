@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { getStatBounds } = require('./demon-factory');
 const { getDemonTypes } = require('./game-data');
 const { enrichDemonPreferredPositions } = require('./run-demons');
 
@@ -20,15 +21,15 @@ const RARITY_COST_MULTIPLIER = {
 
 function getDemonTrainingInfo(demon = {}, types = {}) {
   const typeData = types[String(demon.type_id || demon.typeId || demon.type)] || {};
+  const statBounds = getStatBounds(typeData, String(demon.rarity || '').toLowerCase());
   const stats = {};
   let totalRange = 0;
   let totalProgress = 0;
   let totalRemaining = 0;
 
   STAT_KEYS.forEach((key) => {
-    const statRange = Array.isArray(typeData.baseStats?.[key]) ? typeData.baseStats[key] : [];
-    const min = positiveInteger(statRange[0], 1);
-    const max = Math.max(min, positiveInteger(statRange[1], min));
+    const min = positiveInteger(statBounds[key]?.min, 1);
+    const max = Math.max(min, positiveInteger(statBounds[key]?.max, min));
     const current = Math.max(0, Math.floor(Number(demon[key]) || 0));
     const range = Math.max(1, max - min);
     const progress = Math.max(0, Math.min(range, current - min));
