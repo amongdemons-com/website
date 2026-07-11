@@ -82,6 +82,7 @@ function serializeWorldBossForClient(boss) {
     id: boss.id,
     title: boss.title,
     description: boss.description,
+    taunts: Array.isArray(boss.taunts) ? boss.taunts : [],
     zoneTypeId: boss.zoneTypeId,
     x: Number(boss.x) || 0,
     y: Number(boss.y) || 0,
@@ -182,6 +183,9 @@ function normalizeBossDefinition(source = {}, index, defaults) {
     zoneTypeId,
     title: String(source.title || source.name || formatBossTitle(id)),
     description: String(source.description || ''),
+    // Intro taunts shown by the world boss dialog; personality notes for the
+    // voice of each boss live alongside them in world-bosses.json.
+    taunts: normalizeBossTaunts(source.taunts),
     difficulty: getPositiveInteger(source.difficulty, zoneTypeId === 0 ? 2 : 8),
     minDistance: getNonNegativeNumber(source.minDistance, zoneTypeId === 0 ? 4 : 0),
     maxDistance: getPositiveNumber(source.maxDistance, Number.POSITIVE_INFINITY),
@@ -193,6 +197,12 @@ function normalizeBossDefinition(source = {}, index, defaults) {
     enemyBuffs: normalizeBossBuffs(source.enemyBuffs, id, 'enemy'),
     rewardBuff
   };
+}
+
+function normalizeBossTaunts(taunts) {
+  return (Array.isArray(taunts) ? taunts : [])
+    .map((line) => String(line || '').trim())
+    .filter(Boolean);
 }
 
 function normalizeBossZoneTypeId(value) {

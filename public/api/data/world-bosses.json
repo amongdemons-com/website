@@ -7,6 +7,12 @@
       "zoneTypeId": 0,
       "title": "Ash Sentinel",
       "description": "An easy boss that patrols the neutral lands near the center.",
+      "personality": "Weary immortal sentry of the neutral ash — solemn, almost pitying warnings.",
+      "taunts": [
+        "Another hunter wanders into the ash... Turn back, little ember, before the wind scatters you too.",
+        "I have watched a thousand hunters pass this way. The ash remembers none of them.",
+        "Go home, hunter. The ash keeps its dead, and I keep the ash."
+      ],
       "difficulty": 2,
       "minDistance": 5,
       "maxDistance": 21,
@@ -18,7 +24,10 @@
           "rarity": "uncommon",
           "icon": "shield",
           "effects": [
-            { "type": "max_hp_mult", "value": 10 }
+            {
+              "type": "max_hp_mult",
+              "value": 10
+            }
           ]
         }
       ],
@@ -29,13 +38,28 @@
         "rarity": "uncommon",
         "icon": "shield",
         "effects": [
-          { "type": "max_hp_mult", "value": 1.05 }
+          {
+            "type": "max_hp_mult",
+            "value": 1.05
+          }
         ]
       },
       "team": [
-        { "typeId": 5, "rarity": "uncommon", "formationSlot": 3 },
-        { "typeId": 1, "rarity": "uncommon", "formationSlot": 0 },
-        { "typeId": 2, "rarity": "common", "formationSlot": 8 }
+        {
+          "typeId": 5,
+          "rarity": "uncommon",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 1,
+          "rarity": "uncommon",
+          "formationSlot": 0
+        },
+        {
+          "typeId": 2,
+          "rarity": "common",
+          "formationSlot": 8
+        }
       ]
     },
     {
@@ -43,6 +67,12 @@
       "zoneTypeId": 1,
       "title": "Boof Warbinder",
       "description": "The melee-zone boss drives a disciplined frontline.",
+      "personality": "Drill-sergeant warlord (melee) — barks about ranks, footing and discipline.",
+      "taunts": [
+        "You march into MY warlands? Form your line, hunter — I will break it rank by rank.",
+        "Sloppy footing. Loose formation. My frontline will eat you before the horns finish sounding.",
+        "Discipline wins wars, hunter. Your rabble of demons has none. Mine has nothing else."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -52,7 +82,10 @@
           "rarity": "rare",
           "icon": "heart",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            }
           ]
         }
       ],
@@ -63,16 +96,43 @@
         "rarity": "rare",
         "icon": "swords",
         "effects": [
-          { "type": "attack_mult", "value": 1.08 }
+          {
+            "type": "attack_mult",
+            "value": 1.08
+          }
         ]
       },
       "team": [
-        { "typeId": 1, "rarity": "legendary", "formationSlot": 3 },
-        { "typeId": 1, "rarity": "epic", "formationSlot": 0 },
-        { "typeId": 5, "rarity": "epic", "formationSlot": 6 },
-        { "typeId": 2, "rarity": "rare", "formationSlot": 8 },
-        { "typeId": 10, "rarity": "rare", "formationSlot": 5 },
-        { "typeId": 3, "rarity": "rare", "formationSlot": 2 }
+        {
+          "typeId": 1,
+          "rarity": "legendary",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 1,
+          "rarity": "epic",
+          "formationSlot": 0
+        },
+        {
+          "typeId": 5,
+          "rarity": "epic",
+          "formationSlot": 6
+        },
+        {
+          "typeId": 2,
+          "rarity": "rare",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 10,
+          "rarity": "rare",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 3,
+          "rarity": "rare",
+          "formationSlot": 2
+        }
       ]
     },
     {
@@ -80,6 +140,12 @@
       "zoneTypeId": 2,
       "title": "Gon Shadow-Eye",
       "description": "The ranged-zone boss picks apart fragile backlines.",
+      "personality": "Cold sniper (ranged) — patient, all-seeing, speaks in measurements.",
+      "taunts": [
+        "I saw you the moment you set foot in this world, hunter. Nothing escapes the Shadow-Eye.",
+        "Keep walking. Every step you take is one I have already measured.",
+        "Your backline is soft, hunter. I counted its heartbeats from three zones away."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -89,8 +155,14 @@
           "rarity": "rare",
           "icon": "crosshair",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "attack_mult", "value": 1.1 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "attack_mult",
+              "value": 1.1
+            }
           ]
         }
       ],
@@ -101,17 +173,47 @@
         "rarity": "rare",
         "icon": "crosshair",
         "effects": [
-          { "type": "attack_mult", "value": 1.06 },
-          { "type": "speed_mult", "value": 1.04 }
+          {
+            "type": "attack_mult",
+            "value": 1.06
+          },
+          {
+            "type": "speed_mult",
+            "value": 1.04
+          }
         ]
       },
       "team": [
-        { "typeId": 5, "rarity": "epic", "formationSlot": 3 },
-        { "typeId": 8, "rarity": "epic", "formationSlot": 0 },
-        { "typeId": 2, "rarity": "legendary", "formationSlot": 8 },
-        { "typeId": 2, "rarity": "epic", "formationSlot": 5 },
-        { "typeId": 6, "rarity": "rare", "formationSlot": 2 },
-        { "typeId": 10, "rarity": "rare", "formationSlot": 7 }
+        {
+          "typeId": 5,
+          "rarity": "epic",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 8,
+          "rarity": "epic",
+          "formationSlot": 0
+        },
+        {
+          "typeId": 2,
+          "rarity": "legendary",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 2,
+          "rarity": "epic",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 6,
+          "rarity": "rare",
+          "formationSlot": 2
+        },
+        {
+          "typeId": 10,
+          "rarity": "rare",
+          "formationSlot": 7
+        }
       ]
     },
     {
@@ -119,6 +221,12 @@
       "zoneTypeId": 3,
       "title": "Ma'Zga Venom Root",
       "description": "The poison-zone boss wins long fights through attrition.",
+      "personality": "Creeping rot-gardener (poison) — whispery, unhurried, savors decay.",
+      "taunts": [
+        "Breathe deep, hunter. My roots are already beneath your feet... the rot does the rest.",
+        "No need to hurry... the venom is patient, and so am I.",
+        "You are already wilting, little sprout. You simply have not noticed yet."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -128,8 +236,14 @@
           "rarity": "rare",
           "icon": "flask-conical",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "poison_tick_damage_mult", "value": 1.2 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "poison_tick_damage_mult",
+              "value": 1.2
+            }
           ]
         }
       ],
@@ -140,16 +254,43 @@
         "rarity": "rare",
         "icon": "flask-conical",
         "effects": [
-          { "type": "poison_tick_damage_mult", "value": 1.12 }
+          {
+            "type": "poison_tick_damage_mult",
+            "value": 1.12
+          }
         ]
       },
       "team": [
-        { "typeId": 5, "rarity": "epic", "formationSlot": 3 },
-        { "typeId": 3, "rarity": "legendary", "formationSlot": 8 },
-        { "typeId": 3, "rarity": "epic", "formationSlot": 5 },
-        { "typeId": 3, "rarity": "epic", "formationSlot": 2 },
-        { "typeId": 10, "rarity": "rare", "formationSlot": 7 },
-        { "typeId": 1, "rarity": "rare", "formationSlot": 0 }
+        {
+          "typeId": 5,
+          "rarity": "epic",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 3,
+          "rarity": "legendary",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 3,
+          "rarity": "epic",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 3,
+          "rarity": "epic",
+          "formationSlot": 2
+        },
+        {
+          "typeId": 10,
+          "rarity": "rare",
+          "formationSlot": 7
+        },
+        {
+          "typeId": 1,
+          "rarity": "rare",
+          "formationSlot": 0
+        }
       ]
     },
     {
@@ -157,6 +298,12 @@
       "zoneTypeId": 4,
       "title": "Tor Cinder Choir",
       "description": "The AOE-zone boss burns whole teams at once.",
+      "personality": "Theatrical conductor (AOE) — grandiose fire zealot, everything is a performance.",
+      "taunts": [
+        "Do you hear the choir, hunter? Every voice is a flame — and they are singing for you.",
+        "One spark is a whisper. A thousand are a hymn. Come, be our audience... and our kindling.",
+        "Tonight’s performance: your whole team, burning in unison. There are no bad seats."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -166,8 +313,14 @@
           "rarity": "rare",
           "icon": "flame",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "aoe_damage_mult", "value": 1.15 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "aoe_damage_mult",
+              "value": 1.15
+            }
           ]
         }
       ],
@@ -178,16 +331,43 @@
         "rarity": "rare",
         "icon": "flame",
         "effects": [
-          { "type": "aoe_damage_mult", "value": 1.1 }
+          {
+            "type": "aoe_damage_mult",
+            "value": 1.1
+          }
         ]
       },
       "team": [
-        { "typeId": 8, "rarity": "epic", "formationSlot": 3 },
-        { "typeId": 4, "rarity": "legendary", "formationSlot": 8 },
-        { "typeId": 4, "rarity": "epic", "formationSlot": 5 },
-        { "typeId": 4, "rarity": "epic", "formationSlot": 2 },
-        { "typeId": 6, "rarity": "rare", "formationSlot": 7 },
-        { "typeId": 1, "rarity": "rare", "formationSlot": 0 }
+        {
+          "typeId": 8,
+          "rarity": "epic",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 4,
+          "rarity": "legendary",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 4,
+          "rarity": "epic",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 4,
+          "rarity": "epic",
+          "formationSlot": 2
+        },
+        {
+          "typeId": 6,
+          "rarity": "rare",
+          "formationSlot": 7
+        },
+        {
+          "typeId": 1,
+          "rarity": "rare",
+          "formationSlot": 0
+        }
       ]
     },
     {
@@ -195,6 +375,12 @@
       "zoneTypeId": 5,
       "title": "Vi'Zel Iron Hide",
       "description": "The bruiser-zone boss turns every lane into a brawl.",
+      "personality": "Boastful brawler (bruiser) — loud, loves taking hits, mocks weak blows.",
+      "taunts": [
+        "Hah! Swing until your arms give out, hunter. Iron does not bruise.",
+        "A brawl! Finally! Bring every demon you own — I’ll take the lot bare-handed.",
+        "Hit me harder than the last one did, hunter. I’m still trying to feel something."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -204,8 +390,14 @@
           "rarity": "rare",
           "icon": "shield",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "attack_mult", "value": 1.08 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "attack_mult",
+              "value": 1.08
+            }
           ]
         }
       ],
@@ -216,17 +408,47 @@
         "rarity": "rare",
         "icon": "shield",
         "effects": [
-          { "type": "max_hp_mult", "value": 1.08 },
-          { "type": "attack_mult", "value": 1.04 }
+          {
+            "type": "max_hp_mult",
+            "value": 1.08
+          },
+          {
+            "type": "attack_mult",
+            "value": 1.04
+          }
         ]
       },
       "team": [
-        { "typeId": 5, "rarity": "legendary", "formationSlot": 3 },
-        { "typeId": 5, "rarity": "epic", "formationSlot": 0 },
-        { "typeId": 7, "rarity": "epic", "formationSlot": 6 },
-        { "typeId": 10, "rarity": "rare", "formationSlot": 8 },
-        { "typeId": 2, "rarity": "rare", "formationSlot": 5 },
-        { "typeId": 4, "rarity": "rare", "formationSlot": 2 }
+        {
+          "typeId": 5,
+          "rarity": "legendary",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 5,
+          "rarity": "epic",
+          "formationSlot": 0
+        },
+        {
+          "typeId": 7,
+          "rarity": "epic",
+          "formationSlot": 6
+        },
+        {
+          "typeId": 10,
+          "rarity": "rare",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 2,
+          "rarity": "rare",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 4,
+          "rarity": "rare",
+          "formationSlot": 2
+        }
       ]
     },
     {
@@ -234,6 +456,12 @@
       "zoneTypeId": 6,
       "title": "Goh Night Knife",
       "description": "The assassin-zone boss deletes weakened targets.",
+      "personality": "Soft-spoken intimate menace (assassin) — short lines from the dark.",
+      "taunts": [
+        "Careless... you never watch the dark behind you. That is where I live.",
+        "Shhh. Do not turn around. It ruins the surprise.",
+        "I already chose which of your demons dies first. Care to guess?"
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -243,8 +471,14 @@
           "rarity": "rare",
           "icon": "zap",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "speed_mult", "value": 1.1 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "speed_mult",
+              "value": 1.1
+            }
           ]
         }
       ],
@@ -255,16 +489,43 @@
         "rarity": "rare",
         "icon": "zap",
         "effects": [
-          { "type": "speed_mult", "value": 1.08 }
+          {
+            "type": "speed_mult",
+            "value": 1.08
+          }
         ]
       },
       "team": [
-        { "typeId": 1, "rarity": "epic", "formationSlot": 3 },
-        { "typeId": 6, "rarity": "legendary", "formationSlot": 8 },
-        { "typeId": 6, "rarity": "epic", "formationSlot": 5 },
-        { "typeId": 4, "rarity": "epic", "formationSlot": 2 },
-        { "typeId": 2, "rarity": "rare", "formationSlot": 7 },
-        { "typeId": 10, "rarity": "rare", "formationSlot": 0 }
+        {
+          "typeId": 1,
+          "rarity": "epic",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 6,
+          "rarity": "legendary",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 6,
+          "rarity": "epic",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 4,
+          "rarity": "epic",
+          "formationSlot": 2
+        },
+        {
+          "typeId": 2,
+          "rarity": "rare",
+          "formationSlot": 7
+        },
+        {
+          "typeId": 10,
+          "rarity": "rare",
+          "formationSlot": 0
+        }
       ]
     },
     {
@@ -272,6 +533,12 @@
       "zoneTypeId": 7,
       "title": "Baobaw Breaker",
       "description": "The striker-zone boss cleaves through protected lines.",
+      "personality": "Blunt demolisher (striker) — pure contempt for walls, tanks and defenses.",
+      "taunts": [
+        "Walls, shields, formations — I have shattered them all. What will YOU hide behind?",
+        "Put your tank in front. Please. I enjoy going through things more than around them.",
+        "Everything breaks, hunter. The only question I bring is how loudly."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -281,8 +548,14 @@
           "rarity": "rare",
           "icon": "swords",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "direct_damage_mult", "value": 1.1 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "direct_damage_mult",
+              "value": 1.1
+            }
           ]
         }
       ],
@@ -293,16 +566,43 @@
         "rarity": "rare",
         "icon": "swords",
         "effects": [
-          { "type": "direct_damage_mult", "value": 1.08 }
+          {
+            "type": "direct_damage_mult",
+            "value": 1.08
+          }
         ]
       },
       "team": [
-        { "typeId": 7, "rarity": "legendary", "formationSlot": 3 },
-        { "typeId": 7, "rarity": "epic", "formationSlot": 0 },
-        { "typeId": 5, "rarity": "epic", "formationSlot": 6 },
-        { "typeId": 4, "rarity": "rare", "formationSlot": 8 },
-        { "typeId": 2, "rarity": "rare", "formationSlot": 5 },
-        { "typeId": 10, "rarity": "rare", "formationSlot": 2 }
+        {
+          "typeId": 7,
+          "rarity": "legendary",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 7,
+          "rarity": "epic",
+          "formationSlot": 0
+        },
+        {
+          "typeId": 5,
+          "rarity": "epic",
+          "formationSlot": 6
+        },
+        {
+          "typeId": 4,
+          "rarity": "rare",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 2,
+          "rarity": "rare",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 10,
+          "rarity": "rare",
+          "formationSlot": 2
+        }
       ]
     },
     {
@@ -310,6 +610,12 @@
       "zoneTypeId": 8,
       "title": "Ko Pak Stone Back",
       "description": "The counter-tank-zone boss punishes reckless direct hits.",
+      "personality": "Stoic stone (counter-tank) — slow proverbs, politely invites attacks.",
+      "taunts": [
+        "Strike me, hunter. Please. Every wound you deal me, you keep.",
+        "The river beats the stone for a thousand years. The stone is still here. The river is not.",
+        "I do not attack, little hunter. I simply return what is given — with interest."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -319,8 +625,14 @@
           "rarity": "rare",
           "icon": "shield",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "thorns_percent", "value": 8 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "thorns_percent",
+              "value": 8
+            }
           ]
         }
       ],
@@ -331,16 +643,43 @@
         "rarity": "rare",
         "icon": "shield",
         "effects": [
-          { "type": "thorns_percent", "value": 8 }
+          {
+            "type": "thorns_percent",
+            "value": 8
+          }
         ]
       },
       "team": [
-        { "typeId": 8, "rarity": "legendary", "formationSlot": 3 },
-        { "typeId": 8, "rarity": "epic", "formationSlot": 0 },
-        { "typeId": 5, "rarity": "epic", "formationSlot": 6 },
-        { "typeId": 10, "rarity": "rare", "formationSlot": 8 },
-        { "typeId": 3, "rarity": "rare", "formationSlot": 5 },
-        { "typeId": 2, "rarity": "rare", "formationSlot": 2 }
+        {
+          "typeId": 8,
+          "rarity": "legendary",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 8,
+          "rarity": "epic",
+          "formationSlot": 0
+        },
+        {
+          "typeId": 5,
+          "rarity": "epic",
+          "formationSlot": 6
+        },
+        {
+          "typeId": 10,
+          "rarity": "rare",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 3,
+          "rarity": "rare",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 2,
+          "rarity": "rare",
+          "formationSlot": 2
+        }
       ]
     },
     {
@@ -348,6 +687,12 @@
       "zoneTypeId": 9,
       "title": "Chu Ruin Maul",
       "description": "The juggernaut-zone boss turns slow hits into disasters.",
+      "personality": "Slow inevitability (juggernaut) — few, heavy words.",
+      "taunts": [
+        "Slow? Perhaps. But I only need to hit you once.",
+        "Run if you like. I am in no hurry. Ruin never is.",
+        "Count my steps, hunter. When they stop, so do you."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -357,8 +702,14 @@
           "rarity": "rare",
           "icon": "hammer",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "attack_mult", "value": 1.15 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "attack_mult",
+              "value": 1.15
+            }
           ]
         }
       ],
@@ -369,16 +720,43 @@
         "rarity": "rare",
         "icon": "hammer",
         "effects": [
-          { "type": "attack_mult", "value": 1.1 }
+          {
+            "type": "attack_mult",
+            "value": 1.1
+          }
         ]
       },
       "team": [
-        { "typeId": 9, "rarity": "legendary", "formationSlot": 3 },
-        { "typeId": 9, "rarity": "epic", "formationSlot": 0 },
-        { "typeId": 8, "rarity": "epic", "formationSlot": 6 },
-        { "typeId": 10, "rarity": "rare", "formationSlot": 8 },
-        { "typeId": 4, "rarity": "rare", "formationSlot": 5 },
-        { "typeId": 3, "rarity": "rare", "formationSlot": 2 }
+        {
+          "typeId": 9,
+          "rarity": "legendary",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 9,
+          "rarity": "epic",
+          "formationSlot": 0
+        },
+        {
+          "typeId": 8,
+          "rarity": "epic",
+          "formationSlot": 6
+        },
+        {
+          "typeId": 10,
+          "rarity": "rare",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 4,
+          "rarity": "rare",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 3,
+          "rarity": "rare",
+          "formationSlot": 2
+        }
       ]
     },
     {
@@ -386,6 +764,12 @@
       "zoneTypeId": 10,
       "title": "Ba Be'aga Life Thread",
       "description": "The healer-zone boss outlasts careless assaults.",
+      "personality": "Grandmotherly weaver (healer) — unsettling kindness, endless patience.",
+      "taunts": [
+        "Cut the thread all you like, hunter. I simply... weave it back.",
+        "Come closer, dear. Exhaust yourself. Grandmother has all the time in the world.",
+        "Such fragile little demons you keep. Mine never stay broken — I mend them so."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -395,8 +779,14 @@
           "rarity": "rare",
           "icon": "heart-pulse",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "healing_mult", "value": 1.2 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "healing_mult",
+              "value": 1.2
+            }
           ]
         }
       ],
@@ -407,16 +797,43 @@
         "rarity": "rare",
         "icon": "heart-pulse",
         "effects": [
-          { "type": "healing_mult", "value": 1.12 }
+          {
+            "type": "healing_mult",
+            "value": 1.12
+          }
         ]
       },
       "team": [
-        { "typeId": 5, "rarity": "epic", "formationSlot": 3 },
-        { "typeId": 8, "rarity": "epic", "formationSlot": 0 },
-        { "typeId": 10, "rarity": "legendary", "formationSlot": 8 },
-        { "typeId": 10, "rarity": "epic", "formationSlot": 5 },
-        { "typeId": 3, "rarity": "rare", "formationSlot": 2 },
-        { "typeId": 2, "rarity": "rare", "formationSlot": 7 }
+        {
+          "typeId": 5,
+          "rarity": "epic",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 8,
+          "rarity": "epic",
+          "formationSlot": 0
+        },
+        {
+          "typeId": 10,
+          "rarity": "legendary",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 10,
+          "rarity": "epic",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 3,
+          "rarity": "rare",
+          "formationSlot": 2
+        },
+        {
+          "typeId": 2,
+          "rarity": "rare",
+          "formationSlot": 7
+        }
       ]
     },
     {
@@ -424,6 +841,12 @@
       "zoneTypeId": 11,
       "title": "Vee Chaos Glass",
       "description": "The chaotic-zone boss breaks predictable formations.",
+      "personality": "Giggling trickster (chaotic) — delighted by broken plans.",
+      "taunts": [
+        "Plans, formations, order... how dull. Come closer — let me rearrange you.",
+        "I shuffled your future, hunter! Want to see which piece breaks first?",
+        "Heehee... you brought a strategy? I brought dice made of broken mirrors."
+      ],
       "difficulty": 8,
       "enemyBuffs": [
         {
@@ -433,9 +856,18 @@
           "rarity": "rare",
           "icon": "sparkles",
           "effects": [
-            { "type": "max_hp_mult", "value": 2 },
-            { "type": "attack_mult", "value": 1.08 },
-            { "type": "speed_mult", "value": 1.05 }
+            {
+              "type": "max_hp_mult",
+              "value": 2
+            },
+            {
+              "type": "attack_mult",
+              "value": 1.08
+            },
+            {
+              "type": "speed_mult",
+              "value": 1.05
+            }
           ]
         }
       ],
@@ -446,18 +878,51 @@
         "rarity": "rare",
         "icon": "sparkles",
         "effects": [
-          { "type": "attack_mult", "value": 1.05 },
-          { "type": "max_hp_mult", "value": 1.05 },
-          { "type": "speed_mult", "value": 1.05 }
+          {
+            "type": "attack_mult",
+            "value": 1.05
+          },
+          {
+            "type": "max_hp_mult",
+            "value": 1.05
+          },
+          {
+            "type": "speed_mult",
+            "value": 1.05
+          }
         ]
       },
       "team": [
-        { "typeId": 8, "rarity": "epic", "formationSlot": 3 },
-        { "typeId": 5, "rarity": "epic", "formationSlot": 0 },
-        { "typeId": 11, "rarity": "legendary", "formationSlot": 8 },
-        { "typeId": 11, "rarity": "epic", "formationSlot": 5 },
-        { "typeId": 6, "rarity": "rare", "formationSlot": 2 },
-        { "typeId": 10, "rarity": "rare", "formationSlot": 7 }
+        {
+          "typeId": 8,
+          "rarity": "epic",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 5,
+          "rarity": "epic",
+          "formationSlot": 0
+        },
+        {
+          "typeId": 11,
+          "rarity": "legendary",
+          "formationSlot": 8
+        },
+        {
+          "typeId": 11,
+          "rarity": "epic",
+          "formationSlot": 5
+        },
+        {
+          "typeId": 6,
+          "rarity": "rare",
+          "formationSlot": 2
+        },
+        {
+          "typeId": 10,
+          "rarity": "rare",
+          "formationSlot": 7
+        }
       ]
     }
   ]

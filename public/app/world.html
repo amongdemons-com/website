@@ -21,7 +21,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/base.css?v=20260709-guest-mode-v2" rel="stylesheet">
     <link href="/app/css/battle.css?v=20260706-drag-ghost-fix" rel="stylesheet">
-    <link href="/app/css/world.css?v=20260709-guest-mode-v3" rel="stylesheet">
+    <link href="/app/css/world.css?v=20260711-boss-dialog-v6" rel="stylesheet">
   </head>
   <body class="world-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -253,6 +253,31 @@
       </div>
     </div>
 
+    <section class="world-boss-dialog d-none" id="worldBossDialog" role="dialog" aria-modal="true" aria-labelledby="worldBossDialogName" aria-describedby="worldBossDialogText">
+      <div class="world-boss-dialog-stage">
+        <span class="world-boss-dialog-portrait-frame">
+          <img class="world-boss-dialog-portrait" id="worldBossDialogPortrait" alt="" decoding="async">
+        </span>
+        <div class="world-boss-dialog-copy">
+          <div class="world-boss-dialog-nameplate">
+            <span class="world-boss-dialog-name" id="worldBossDialogName">????</span>
+            <span class="world-boss-dialog-demon" id="worldBossDialogDemon"></span>
+          </div>
+          <div class="world-boss-dialog-panel">
+            <p class="world-boss-dialog-text" id="worldBossDialogText"></p>
+            <label class="world-boss-dialog-mute">
+              <input type="checkbox" id="worldBossDialogMute">
+              <span>Mute for 24h</span>
+            </label>
+            <button class="world-boss-dialog-continue" id="worldBossDialogContinue" type="button">
+              <span>Continue</span>
+              <span class="world-boss-dialog-gem" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/app/js/lucide-subset.js?v=20260709-guest-mode-v1"></script>
     <script src="/app/js/icons.js?v=20260709-guest-mode-v2"></script>
@@ -261,6 +286,6 @@
     <script src="/app/js/session.js?v=20260709-guest-mode-v1"></script>
     <script src="/app/js/navigation.js?v=20260709-guest-mode-v1"></script>
     <script src="/vendor/pixi/pixi.min.js"></script>
-    <script type="module" src="/app/js/world-ui.js?v=20260709-guest-mode-v3"></script>
+    <script type="module" src="/app/js/world-ui.js?v=20260711-boss-dialog-v6"></script>
   </body>
 </html>

@@ -55,6 +55,18 @@ import * as dungeonUtils from './dungeon/utils.js';
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
+  // World boss intro dialog: a random boss taunts the hunter when they enter
+  // the world. Currently shown on every visit while the feature is tuned;
+  // gate it behind sessionStorage once the novelty should wear off.
+  // Taunt lines and each boss's personality live in
+  // public/api/data/world-bosses.json and arrive on the boss payload.
+  const WORLD_BOSS_INTRO_TYPE_MS = 24;
+  // "Mute for 24h" checkbox in the dialog stores an expiry timestamp here.
+  const WORLD_BOSS_INTRO_MUTE_KEY = 'amongdemons-world-boss-mute';
+  const WORLD_BOSS_INTRO_MUTE_MS = 24 * 60 * 60 * 1000;
+  const WORLD_BOSS_INTRO_FALLBACK_LINES = [
+    'So... another hunter dares to walk among demons. This world is ours. Prove you belong in it.'
+  ];
   const BOARD_COLORS = {
     background: 0x070806,
     tileNormal: 0x121814,
@@ -153,6 +165,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     puddleFxLast: 0,
     selectedEncounter: null,
     selectedBoss: null,
+    bossIntro: null,
     player: null,
     playersAt: [],
     activeTeam: null,
@@ -227,6 +240,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       await initPixi();
       await loadWorld(await statePromise);
       hideLoading();
+      maybeShowWorldBossIntro();
     } catch (error) {
       handleAuthError(error);
     }
@@ -263,7 +277,14 @@ import * as dungeonUtils from './dungeon/utils.js';
       'worldSideToggle',
       'worldSideStatusLabel',
       'worldSideAreaLabel',
-      'worldBattleModal'
+      'worldBattleModal',
+      'worldBossDialog',
+      'worldBossDialogPortrait',
+      'worldBossDialogName',
+      'worldBossDialogDemon',
+      'worldBossDialogText',
+      'worldBossDialogContinue',
+      'worldBossDialogMute'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -295,6 +316,10 @@ import * as dungeonUtils from './dungeon/utils.js';
       cancelWorldTeamEditorDrag();
       setWorldTeamEditorStatus('');
     });
+    elements.worldBossDialogMute?.addEventListener('change', (event) => {
+      setWorldBossIntroMuted(Boolean(event.target?.checked));
+    });
+    elements.worldBossDialogContinue?.addEventListener('click', onWorldBossIntroAdvance);
     bindWorldSidePanel();
 
     elements.worldEncounterList?.addEventListener('click', (event) => {
@@ -6256,6 +6281,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       ...position,
       id: String(boss.id || ''),
       title: boss.title || 'World Boss',
+      taunts: Array.isArray(boss.taunts) ? boss.taunts.filter(Boolean) : [],
       difficulty: Math.max(1, Number(boss.difficulty) || 1),
       team: Array.isArray(boss.team) ? boss.team : [],
       enemyBuffs: Array.isArray(boss.enemyBuffs) ? boss.enemyBuffs : [],
@@ -6905,6 +6931,149 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function hideLoading() {
     elements.worldLoading?.classList.add('d-none');
+  }
+
+  function maybeShowWorldBossIntro() {
+    if (!elements.worldBossDialog || isWorldBossIntroMuted()) return;
+    const bosses = state.bosses || [];
+    if (!bosses.length) return;
+    const boss = bosses[Math.floor(Math.random() * bosses.length)];
+    showWorldBossIntro(boss);
+  }
+
+  function isWorldBossIntroMuted() {
+    try {
+      const mutedUntil = Number(window.localStorage.getItem(WORLD_BOSS_INTRO_MUTE_KEY));
+      if (Number.isFinite(mutedUntil) && Date.now() < mutedUntil) return true;
+      if (mutedUntil) window.localStorage.removeItem(WORLD_BOSS_INTRO_MUTE_KEY);
+    } catch (error) {
+      /* Storage unavailable: treat as unmuted. */
+    }
+    return false;
+  }
+
+  function setWorldBossIntroMuted(muted) {
+    try {
+      if (muted) {
+        window.localStorage.setItem(WORLD_BOSS_INTRO_MUTE_KEY, String(Date.now() + WORLD_BOSS_INTRO_MUTE_MS));
+      } else {
+        window.localStorage.removeItem(WORLD_BOSS_INTRO_MUTE_KEY);
+      }
+    } catch (error) {
+      /* Storage unavailable: the mute simply won't persist. */
+    }
+  }
+
+  function showWorldBossIntro(boss) {
+    const dialog = elements.worldBossDialog;
+    if (!dialog) return;
+
+    const lines = boss.taunts?.length ? boss.taunts : WORLD_BOSS_INTRO_FALLBACK_LINES;
+    const line = lines[Math.floor(Math.random() * lines.length)];
+    setText(elements.worldBossDialogName, boss.title || 'World Boss');
+
+    const keyDemon = boss.keyDemon || (Array.isArray(boss.team) ? boss.team[0] : null);
+    const demonLabel = elements.worldBossDialogDemon;
+    if (demonLabel) {
+      const rarity = String(keyDemon?.rarity || '').toLowerCase();
+      const species = keyDemon?.species || keyDemon?.typeName || keyDemon?.name || '';
+      if (rarity && species) {
+        demonLabel.innerHTML = `<span class="world-boss-dialog-rarity" style="color:${rarityCss(rarity)}">${escapeHtml(capitalize(rarity))}</span> ${escapeHtml(species)}`;
+        demonLabel.classList.remove('d-none');
+      } else {
+        demonLabel.innerHTML = '';
+        demonLabel.classList.add('d-none');
+      }
+    }
+
+    const portrait = elements.worldBossDialogPortrait;
+    if (portrait) {
+      const mapUrl = keyDemon?.imageUrl || '';
+      portrait.onerror = () => {
+        portrait.onerror = null;
+        if (mapUrl) portrait.src = mapUrl;
+      };
+      portrait.src = toDemonPortraitUrl(mapUrl) || DEFAULT_PROFILE_IMAGE_URL;
+    }
+
+    state.bossIntro = { line, index: 0, timer: null };
+    if (elements.worldBossDialogMute) elements.worldBossDialogMute.checked = false;
+    setText(elements.worldBossDialogText, '');
+    dialog.classList.remove('d-none', 'is-ready');
+    dialog.classList.add('is-typing');
+    document.addEventListener('keydown', onWorldBossIntroKeydown);
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) {
+      completeWorldBossIntroTyping();
+      return;
+    }
+
+    state.bossIntro.timer = window.setInterval(() => {
+      const intro = state.bossIntro;
+      if (!intro) return;
+      intro.index += 1;
+      setText(elements.worldBossDialogText, intro.line.slice(0, intro.index));
+      if (intro.index >= intro.line.length) completeWorldBossIntroTyping();
+    }, WORLD_BOSS_INTRO_TYPE_MS);
+  }
+
+  function completeWorldBossIntroTyping() {
+    const intro = state.bossIntro;
+    if (!intro) return;
+    if (intro.timer) {
+      window.clearInterval(intro.timer);
+      intro.timer = null;
+    }
+    intro.index = intro.line.length;
+    setText(elements.worldBossDialogText, intro.line);
+    elements.worldBossDialog?.classList.remove('is-typing');
+    elements.worldBossDialog?.classList.add('is-ready');
+    elements.worldBossDialogContinue?.focus?.({ preventScroll: true });
+  }
+
+  function dismissWorldBossIntro() {
+    const dialog = elements.worldBossDialog;
+    if (state.bossIntro?.timer) window.clearInterval(state.bossIntro.timer);
+    state.bossIntro = null;
+    dialog?.classList.add('d-none');
+    dialog?.classList.remove('is-typing', 'is-ready');
+    document.removeEventListener('keydown', onWorldBossIntroKeydown);
+  }
+
+  // Advance = finish the typewriter if it's still running, dismiss otherwise.
+  // Only the Continue button and the keyboard trigger this; clicks elsewhere
+  // on the overlay deliberately do nothing.
+  function onWorldBossIntroAdvance() {
+    const intro = state.bossIntro;
+    if (!intro) return;
+    if (intro.index < intro.line.length) {
+      completeWorldBossIntroTyping();
+      return;
+    }
+    dismissWorldBossIntro();
+  }
+
+  function onWorldBossIntroKeydown(event) {
+    if (!state.bossIntro) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      dismissWorldBossIntro();
+      return;
+    }
+    // Leave Space alone on the checkbox so the keyboard can toggle it.
+    if (event.target === elements.worldBossDialogMute) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onWorldBossIntroAdvance();
+    }
+  }
+
+  // Dialog portraits want more pixels than the tiny world-map tokens, so swap
+  // the map WebP for the 512px portrait variant when the URL matches.
+  function toDemonPortraitUrl(url) {
+    const match = /^\/app\/images\/demons\/map\/(\d+)\.webp$/.exec(String(url || ''));
+    return match ? `/app/images/demons/portrait/${match[1]}.webp` : url;
   }
 
   function delay(ms) {

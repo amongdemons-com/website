@@ -2704,3 +2704,306 @@ body.is-world-side-collapsed .world-map-controls {
         grid-template-columns: repeat(auto-fill, minmax(4.85rem, 1fr));
     }
 }
+
+/* World boss intro dialog — visual-novel style overlay shown on entering the
+   world. Framed demon portrait on the left (the art has its own painted
+   background, so it gets a gold-rimmed card instead of a cutout), teal glass
+   panel and gold trim matching the site palette. */
+.world-boss-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 22% 82%, rgba(111,214,189,0.1), transparent 28rem),
+        radial-gradient(circle at 80% 10%, rgba(156,122,200,0.08), transparent 24rem),
+        linear-gradient(rgba(3,8,10,0.6), rgba(3,8,10,0.82));
+    animation: worldBossDialogFade 260ms ease-out both;
+}
+
+@keyframes worldBossDialogFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.world-boss-dialog-stage {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5rem;
+    width: min(56rem, 94vw);
+    margin: 0 auto clamp(1.2rem, 6vh, 3.6rem);
+}
+
+.world-boss-dialog-portrait-frame {
+    position: relative;
+    flex: none;
+    width: clamp(11rem, 22vw, 15rem);
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border: 2px solid rgba(232,199,106,0.62);
+    border-radius: 0.9rem;
+    background: var(--ad-bg-soft, #0d191d);
+    box-shadow:
+        inset 0 0 0 2px rgba(7,16,19,0.9),
+        inset 0 0 2.4rem rgba(3,8,10,0.55),
+        0 0 1.6rem rgba(232,199,106,0.22),
+        0 1rem 2.4rem rgba(0,0,0,0.6);
+    animation: worldBossPortraitRise 420ms cubic-bezier(0.18, 0.9, 0.32, 1.08) both;
+}
+
+/* Soft teal vignette so the painted art blends into the frame edges. */
+.world-boss-dialog-portrait-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        linear-gradient(180deg, rgba(3,8,10,0.28), transparent 26%, transparent 72%, rgba(3,8,10,0.42)),
+        radial-gradient(circle at 50% 42%, transparent 58%, rgba(7,16,19,0.4));
+    pointer-events: none;
+}
+
+@keyframes worldBossPortraitRise {
+    from { transform: translateY(9%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.world-boss-dialog-portrait {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+}
+
+.world-boss-dialog-copy {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    animation: worldBossPanelRise 360ms 90ms cubic-bezier(0.2, 0.85, 0.3, 1.05) both;
+}
+
+@keyframes worldBossPanelRise {
+    from { transform: translateY(1.4rem); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.world-boss-dialog-nameplate {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    min-width: 13rem;
+    margin: 0 0 -1.1rem 1.6rem;
+    padding: 0.5rem 2.3rem 0.55rem;
+    border: 2px solid rgba(232,199,106,0.55);
+    border-radius: 1.4rem;
+    background: linear-gradient(180deg, rgba(38,72,80,0.97) 0%, rgba(22,46,52,0.97) 55%, rgba(12,27,31,0.97) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        0 0.35rem 0.9rem rgba(0,0,0,0.55);
+    text-align: center;
+}
+
+.world-boss-dialog-name {
+    color: var(--ad-text, #eef8f5);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.world-boss-dialog-demon {
+    color: var(--ad-muted, #9fb6b2);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.world-boss-dialog-rarity {
+    font-weight: 700;
+}
+
+.world-boss-dialog-panel {
+    position: relative;
+    min-height: clamp(9rem, 22vh, 12.5rem);
+    padding: 1.7rem 1.8rem 3.1rem;
+    border: 2px solid rgba(232,199,106,0.55);
+    border-radius: 1rem;
+    background:
+        radial-gradient(circle at 10% 0%, rgba(111,214,189,0.12), transparent 18rem),
+        linear-gradient(180deg, rgba(17,34,39,0.96) 0%, rgba(10,21,25,0.97) 55%, rgba(6,13,16,0.98) 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(161,212,201,0.14),
+        inset 0 0 2.6rem rgba(3,8,10,0.5),
+        0 1.1rem 2.6rem rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+}
+
+.world-boss-dialog-text {
+    margin: 0;
+    color: var(--ad-text, #eef8f5);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.05rem, 1.05rem + 0.4vw, 1.4rem);
+    line-height: 1.55;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.55);
+}
+
+/* Blinking caret while the line types itself out. */
+.world-boss-dialog.is-typing .world-boss-dialog-text::after {
+    content: "";
+    display: inline-block;
+    width: 0.55em;
+    height: 1em;
+    margin-left: 0.18em;
+    vertical-align: -0.14em;
+    background: rgba(111,214,189,0.8);
+    animation: worldBossCaretBlink 900ms steps(2, start) infinite;
+}
+
+@keyframes worldBossCaretBlink {
+    to { visibility: hidden; }
+}
+
+.world-boss-dialog-mute {
+    position: absolute;
+    left: 1.5rem;
+    bottom: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.25rem 0.2rem;
+    color: var(--ad-muted, #9fb6b2);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.55);
+    cursor: pointer;
+    user-select: none;
+}
+
+.world-boss-dialog-mute:hover {
+    color: var(--ad-text, #eef8f5);
+}
+
+.world-boss-dialog-mute input {
+    width: 0.9rem;
+    height: 0.9rem;
+    margin: 0;
+    accent-color: var(--ad-gold, #e8c76a);
+    cursor: pointer;
+}
+
+.world-boss-dialog-continue {
+    position: absolute;
+    right: 1.5rem;
+    bottom: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.4rem;
+    border: 0;
+    background: none;
+    color: var(--ad-gold, #e8c76a);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.55);
+    cursor: pointer;
+    opacity: 0;
+    /* Continue only becomes clickable once the line is fully typed. */
+    pointer-events: none;
+    transition: opacity 200ms ease;
+}
+
+.world-boss-dialog.is-ready .world-boss-dialog-continue {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.world-boss-dialog-continue:hover,
+.world-boss-dialog-continue:focus-visible {
+    color: var(--gold-rim, #f6dd9a);
+}
+
+.world-boss-dialog-gem {
+    display: inline-block;
+    width: 0.85rem;
+    height: 0.85rem;
+    border: 2px solid rgba(138,90,23,0.9);
+    border-radius: 0.2rem;
+    background: linear-gradient(135deg, var(--gold-top, #f3cf78) 0%, var(--gold-mid, #e3a838) 60%, var(--gold-bottom, #c8861f) 100%);
+    box-shadow: 0 0 0.45rem var(--gold-glow, rgba(232,176,74,0.4));
+    animation: worldBossGemPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes worldBossGemPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0.35rem var(--gold-glow, rgba(232,176,74,0.4)); }
+    50% { transform: scale(1.15); box-shadow: 0 0 0.75rem rgba(246,221,154,0.75); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .world-boss-dialog,
+    .world-boss-dialog-portrait-frame,
+    .world-boss-dialog-copy,
+    .world-boss-dialog-gem {
+        animation: none;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .world-boss-dialog-stage {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        margin-bottom: 1rem;
+    }
+
+    .world-boss-dialog-portrait-frame {
+        width: clamp(9rem, 42vw, 12rem);
+        margin-bottom: -0.9rem;
+        z-index: 1;
+    }
+
+    .world-boss-dialog-copy {
+        width: 100%;
+    }
+
+    .world-boss-dialog-nameplate {
+        display: flex;
+        min-width: 0;
+        width: fit-content;
+        max-width: 92%;
+        margin: 0 auto -1.1rem;
+        padding: 0.42rem 1.6rem 0.48rem;
+    }
+
+    .world-boss-dialog-name {
+        font-size: 0.98rem;
+    }
+
+    .world-boss-dialog-panel {
+        min-height: 8.5rem;
+        padding: 1.5rem 1.15rem 2.7rem;
+    }
+
+    .world-boss-dialog-mute {
+        left: 1.05rem;
+        bottom: 0.7rem;
+        font-size: 0.72rem;
+    }
+
+    .world-boss-dialog-continue {
+        right: 1.05rem;
+        bottom: 0.7rem;
+        font-size: 1rem;
+    }
+}
