@@ -14,6 +14,7 @@ const completeDeferredDemonicPactRevealAfter = (...args) => dungeonActions.compl
 const ensureRecruitDraft = (...args) => dungeonActions.ensureRecruitDraft(...args);
 const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
 const getDemonsForFormationRow = (...args) => dungeonActions.getDemonsForFormationRow(...args);
+const findWeakerTeamDemon = (...args) => dungeonActions.findWeakerTeamDemon(...args);
 const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
 const getRewardCandidateByKey = (...args) => dungeonActions.getRewardCandidateByKey(...args);
 const getRewardCandidateFromPayload = (...args) => dungeonActions.getRewardCandidateFromPayload(...args);
@@ -957,11 +958,11 @@ function addPoolDemonToTeam(poolInstanceId, position, insertIndex = null, rowInd
 }
 
 function swapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
-  const wasHighlightedUpgrade = isHighlightedTeamUpgrade(poolInstanceId);
   const targetIndex = (state.recruitDraftTeam || []).findIndex((demon) => demon.instanceId === teamInstanceId);
   const poolIndex = getDraftPoolIndex(poolInstanceId);
   const currentTeamDemon = state.recruitDraftTeam?.[targetIndex];
   const currentPoolDemon = state.recruitDraftPool?.[poolIndex];
+  const wasHighlightedUpgrade = isSuggestedTeamUpgrade(currentPoolDemon);
   const targetRow = getDemonFormationRow(currentTeamDemon, state.recruitDraftTeam, targetIndex);
   const poolRow = getDemonFormationRow(currentPoolDemon, state.recruitDraftPool, poolIndex);
   const poolDemon = removeDraftDemon(state.recruitDraftPool, poolInstanceId);
@@ -985,7 +986,8 @@ function swapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
     draftOrder: getDraftOrder(poolDemon),
     position: getDemonPosition(poolDemon),
     formationRow: poolRow,
-    formationSlot: poolRow
+    formationSlot: poolRow,
+    suppressUpgradeHighlight: Boolean(teamDemon.suppressUpgradeHighlight || wasHighlightedUpgrade)
   });
   state.recruitSwapEffectIds = wasHighlightedUpgrade
     ? []
@@ -996,11 +998,11 @@ function swapPoolDemonIntoTeam(poolInstanceId, teamInstanceId) {
 }
 
 function swapTeamDemonIntoPool(teamInstanceId, poolInstanceId) {
-  const wasHighlightedUpgrade = isHighlightedTeamUpgrade(poolInstanceId);
   const teamIndex = getDraftTeamIndex(teamInstanceId);
   const poolIndex = getDraftPoolIndex(poolInstanceId);
   const currentTeamDemon = state.recruitDraftTeam?.[teamIndex];
   const currentPoolDemon = state.recruitDraftPool?.[poolIndex];
+  const wasHighlightedUpgrade = isSuggestedTeamUpgrade(currentPoolDemon);
   const teamRow = getDemonFormationRow(currentTeamDemon, state.recruitDraftTeam, teamIndex);
   const poolRow = getDemonFormationRow(currentPoolDemon, state.recruitDraftPool, poolIndex);
   const teamDemon = removeDraftDemon(state.recruitDraftTeam, teamInstanceId);
@@ -1021,7 +1023,8 @@ function swapTeamDemonIntoPool(teamInstanceId, poolInstanceId) {
     ...teamDemon,
     position: getDemonPosition(poolDemon),
     formationRow: poolRow,
-    formationSlot: poolRow
+    formationSlot: poolRow,
+    suppressUpgradeHighlight: Boolean(teamDemon.suppressUpgradeHighlight || wasHighlightedUpgrade)
   });
   state.recruitSwapEffectIds = wasHighlightedUpgrade
     ? []
@@ -1031,11 +1034,12 @@ function swapTeamDemonIntoPool(teamInstanceId, poolInstanceId) {
   syncRecruitDraftSelection();
 }
 
-function isHighlightedTeamUpgrade(instanceId) {
-  if (!instanceId) return false;
-  return Boolean(document.querySelector(
-    `#dungeonHandGrid .dungeon-demon-card.is-team-upgrade[data-instance-id="${cssEscape(instanceId)}"]`
-  ));
+function isSuggestedTeamUpgrade(demon) {
+  return Boolean(
+    demon &&
+    !demon.suppressUpgradeHighlight &&
+    findWeakerTeamDemon(demon, state.recruitDraftTeam || [])
+  );
 }
 
 function playRecruitSwapEffect() {

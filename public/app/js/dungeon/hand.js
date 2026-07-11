@@ -272,7 +272,7 @@ function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
   const modeClass = mode === 'battle' ? 'is-battle' : 'is-recruit';
   const team = shouldHighlightHandUpgrades(isInteractive, mode) ? getRecruitPreviewTeam() : [];
   const cardHtml = demons.map((demon) => {
-    const upgradeFor = findWeakerTeamDemon(demon, team);
+    const upgradeFor = demon.suppressUpgradeHighlight ? null : findWeakerTeamDemon(demon, team);
     return renderDemonCard(demon, {
       side: 'hand',
       allowRecruitDrag: isInteractive && mode === 'recruit',

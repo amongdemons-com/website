@@ -194,9 +194,15 @@ function renderDungeonEndScreen() {
             ${renderIcon('replay')}
           </button>
         ` : ''}
+        ${!isDefeat ? `
+          <a class="btn btn-glass-muted" id="trainDemonsBtn" href="/collection">
+            ${renderIcon('collection')}
+            Train Demons
+          </a>
+        ` : ''}
         <button class="btn btn-glass-gold" id="startNewDungeonBtn" type="button">
           ${renderIcon('play')}
-          Start New Dungeon
+          New Dungeon
         </button>
       </div>
     </div>
