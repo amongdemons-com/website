@@ -450,6 +450,8 @@ async function initializeSchema() {
       dungeon_wins INT UNSIGNED NOT NULL DEFAULT 0,
       demons_extracted INT UNSIGNED NOT NULL DEFAULT 0,
       undermanned_wins INT UNSIGNED NOT NULL DEFAULT 0,
+      pvp_wins INT UNSIGNED NOT NULL DEFAULT 0,
+      hunts_started INT UNSIGNED NOT NULL DEFAULT 0,
       highest_floor INT UNSIGNED NOT NULL DEFAULT 0,
       claimed_quests LONGTEXT NOT NULL,
       daily_reward_claimed TINYINT(1) NOT NULL DEFAULT 0,
@@ -461,6 +463,8 @@ async function initializeSchema() {
   `);
   await normalizeUtf8Column('player_daily_quests', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
   await addColumnIfMissing('player_daily_quests', 'undermanned_wins', '`undermanned_wins` INT UNSIGNED NOT NULL DEFAULT 0');
+  await addColumnIfMissing('player_daily_quests', 'pvp_wins', '`pvp_wins` INT UNSIGNED NOT NULL DEFAULT 0');
+  await addColumnIfMissing('player_daily_quests', 'hunts_started', '`hunts_started` INT UNSIGNED NOT NULL DEFAULT 0');
   await backfillHighestFloors();
 }
 

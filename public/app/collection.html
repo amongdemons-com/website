@@ -25,7 +25,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/base.css?v=20260709-guest-mode-v2" rel="stylesheet">
     <link href="/app/css/battle.css?v=20260706-drag-ghost-fix" rel="stylesheet">
-    <link href="/app/css/collection.css?v=20260704-css-split-v1" rel="stylesheet">
+    <link href="/app/css/collection.css?v=20260711-auto-train-v3" rel="stylesheet">
   </head>
   <body class="collection-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -121,6 +121,56 @@
       </section>
     </main>
 
+    <div class="modal fade collection-auto-train-modal" id="autoTrainModal" tabindex="-1" aria-labelledby="autoTrainModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div>
+              <p class="collection-auto-train-kicker mb-1">Soul ritual</p>
+              <h2 class="modal-title h4" id="autoTrainModalTitle">Auto Train <span class="collection-auto-train-rarity" id="autoTrainDemonRarity"></span> <span class="collection-auto-train-demon-name" id="autoTrainDemonName"></span></h2>
+            </div>
+            <button type="button" class="btn-close" data-auto-train-close data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="collection-auto-train-balance">
+              <span>Available Souls</span>
+              <strong id="autoTrainSoulBalance">0</strong>
+            </div>
+
+            <div class="collection-auto-train-picker">
+              <div class="collection-auto-train-selected">
+                <label for="autoTrainSoulSlider">Maximum to spend</label>
+                <strong><span id="autoTrainSoulSelected">0</span> Souls</strong>
+              </div>
+              <input class="form-range" id="autoTrainSoulSlider" type="range" min="0" max="0" step="1" value="0" aria-describedby="autoTrainBudgetHint">
+              <div class="collection-auto-train-percentages" aria-label="Choose a percentage of available Souls">
+                <button class="btn btn-sm btn-outline-light" type="button" data-auto-train-percent="25">25%</button>
+                <button class="btn btn-sm btn-outline-light" type="button" data-auto-train-percent="50">50%</button>
+                <button class="btn btn-sm btn-outline-light" type="button" data-auto-train-percent="75">75%</button>
+                <button class="btn btn-sm btn-outline-light" type="button" data-auto-train-percent="100">100%</button>
+              </div>
+              <p class="collection-auto-train-hint mb-0" id="autoTrainBudgetHint">Choose how many Souls the server may spend. It can spend less if the demon reaches its maximum stats.</p>
+            </div>
+
+            <button class="btn btn-success btn-glass-gold collection-auto-train-submit" id="autoTrainSubmitBtn" type="button" disabled>
+              <i data-lucide="stars"></i>
+              <span>Auto Train</span>
+            </button>
+
+            <section class="collection-auto-train-results" aria-labelledby="autoTrainLogTitle">
+              <div class="collection-auto-train-results-head">
+                <h3 class="h6 mb-0" id="autoTrainLogTitle">Attempt log</h3>
+                <span id="autoTrainSummary" role="status" aria-live="polite"></span>
+              </div>
+              <div class="collection-auto-train-log" id="autoTrainLog" aria-live="polite">
+                <p class="collection-auto-train-empty mb-0">Training attempts will appear here.</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/app/js/lucide-subset.js?v=20260709-guest-mode-v1"></script>
     <script src="/app/js/icons.js?v=20260709-guest-mode-v2"></script>
@@ -128,7 +178,7 @@
     <script src="/app/js/session.js?v=20260709-guest-mode-v1"></script>
     <script src="/app/js/navigation.js?v=20260711-brand-camp-v1"></script>
     <script src="/app/js/demon-cards.js?v=20260704-cache-v1"></script>
-    <script src="/app/js/collection-ui.js?v=20260709-guest-mode-v1"></script>
+    <script src="/app/js/collection-ui.js?v=20260711-auto-train-v2"></script>
   </body>
 </html>
 

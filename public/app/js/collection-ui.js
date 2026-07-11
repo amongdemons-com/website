@@ -6,6 +6,7 @@
   const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
   const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => `${value} Souls`);
+  const getRarityColor = window.AmongDemons.ui.getRarityColor || (() => '#d1d5d8');
   const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const clearNavAccount = window.AmongDemons.ui.clearNavAccount || (() => {});
   const TRAINING_STATS = [
@@ -39,7 +40,9 @@
     },
     filtersOpen: false,
     trainingDemonId: null,
-    trainingResultTimer: null
+    trainingResultTimer: null,
+    autoTrainDemonId: null,
+    autoTrainRunning: false
   };
   const elements = {};
 
@@ -72,7 +75,17 @@
       'sortOrder',
       'hideMissingFilter',
       'filtersToggleBtn',
-      'collectionControlsPanel'
+      'collectionControlsPanel',
+      'autoTrainModal',
+      'autoTrainDemonRarity',
+      'autoTrainDemonName',
+      'autoTrainSoulBalance',
+      'autoTrainSoulSlider',
+      'autoTrainSoulSelected',
+      'autoTrainBudgetHint',
+      'autoTrainSubmitBtn',
+      'autoTrainSummary',
+      'autoTrainLog'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -109,6 +122,23 @@
     elements.hideMissingFilter.addEventListener('change', () => {
       state.filters.hideMissing = elements.hideMissingFilter.checked;
       renderCollection();
+    });
+
+    elements.autoTrainSoulSlider.addEventListener('input', syncAutoTrainBudget);
+    elements.autoTrainModal.querySelectorAll('[data-auto-train-percent]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const percentage = Math.max(0, Math.min(100, Number(button.dataset.autoTrainPercent) || 0));
+        const availableSouls = Math.max(0, Number(elements.autoTrainSoulSlider.max) || 0);
+        elements.autoTrainSoulSlider.value = String(Math.floor(availableSouls * percentage / 100));
+        syncAutoTrainBudget();
+      });
+    });
+    elements.autoTrainSubmitBtn.addEventListener('click', autoTrainDemon);
+    elements.autoTrainModal.addEventListener('hide.bs.modal', (event) => {
+      if (state.autoTrainRunning) event.preventDefault();
+    });
+    elements.autoTrainModal.addEventListener('hidden.bs.modal', () => {
+      state.autoTrainDemonId = null;
     });
 
     elements.collectionGrid.addEventListener('click', (event) => {
@@ -394,7 +424,7 @@
         title: canAfford
           ? 'Auto-train keeps trying automatically.'
           : unavailableTitle,
-        onClick: (modalDemon, button) => trainDemon(demon.id, button, 'max')
+        onClick: () => openAutoTrainModal(demon.id)
       },
       {
         label: 'Train',
@@ -469,6 +499,185 @@
     const current = Number(stat.current) || 0;
     const max = Math.max(current, Number(stat.max) || current || 1);
     return stat.maxed ? `${max}` : `${current} / ${max}`;
+  }
+
+  function openAutoTrainModal(demonId) {
+    const demon = state.collection.find((item) => Number(item.id) === Number(demonId));
+    if (!demon || demon.training?.maxed || state.autoTrainRunning) return;
+
+    const availableSouls = Math.max(0, Math.floor(Number(state.player?.souls) || 0));
+    state.autoTrainDemonId = Number(demon.id);
+    elements.autoTrainDemonRarity.textContent = capitalize(demon.rarity || 'common');
+    elements.autoTrainDemonName.textContent = demon.species || getTypeName(demon.typeId) || 'Demon';
+    elements.autoTrainModal.style.setProperty('--auto-train-rarity-color', getRarityColor(demon.rarity));
+    elements.autoTrainSoulBalance.innerHTML = renderSoulAmount(formatNumber(availableSouls), {
+      className: 'soul-chip collection-auto-train-souls',
+      ariaLabel: `${formatNumber(availableSouls)} Souls available`
+    });
+    elements.autoTrainSoulSlider.max = String(availableSouls);
+    elements.autoTrainSoulSlider.value = '0';
+    elements.autoTrainSummary.textContent = '';
+    elements.autoTrainLog.innerHTML = '<p class="collection-auto-train-empty mb-0">Training attempts will appear here.</p>';
+    syncAutoTrainBudget();
+
+    const showAutoTrainModal = () => {
+      bootstrap.Modal.getOrCreateInstance(elements.autoTrainModal).show();
+    };
+    const detailModal = document.getElementById('demonDetailModal');
+    if (detailModal?.classList.contains('show')) {
+      detailModal.addEventListener('hidden.bs.modal', showAutoTrainModal, { once: true });
+      bootstrap.Modal.getOrCreateInstance(detailModal).hide();
+      return;
+    }
+
+    showAutoTrainModal();
+  }
+
+  function syncAutoTrainBudget() {
+    const demon = getAutoTrainDemon();
+    const selectedSouls = Math.max(0, Math.floor(Number(elements.autoTrainSoulSlider.value) || 0));
+    const availableSouls = Math.max(0, Math.floor(Number(elements.autoTrainSoulSlider.max) || 0));
+    const cost = Math.max(0, Number(demon?.training?.cost) || 0);
+    const canTrain = Boolean(demon) && !demon.training?.maxed && cost > 0 && selectedSouls >= cost;
+
+    elements.autoTrainSoulSelected.textContent = formatNumber(selectedSouls);
+    elements.autoTrainSubmitBtn.disabled = state.autoTrainRunning || !canTrain;
+    elements.autoTrainSoulSlider.disabled = state.autoTrainRunning || !demon || demon.training?.maxed;
+    elements.autoTrainBudgetHint.textContent = demon?.training?.maxed
+      ? 'This demon has reached its maximum stats.'
+      : selectedSouls < cost
+        ? `Choose at least ${formatNumber(cost)} Souls for one attempt.`
+        : `The server may spend up to ${formatNumber(selectedSouls)} Souls and will never exceed this amount.`;
+
+    elements.autoTrainModal.querySelectorAll('[data-auto-train-percent]').forEach((button) => {
+      const buttonSouls = Math.floor(availableSouls * (Number(button.dataset.autoTrainPercent) || 0) / 100);
+      button.disabled = state.autoTrainRunning || availableSouls <= 0 || demon?.training?.maxed;
+      button.classList.toggle('active', selectedSouls === buttonSouls);
+      button.setAttribute('aria-pressed', String(selectedSouls === buttonSouls));
+    });
+  }
+
+  function getAutoTrainDemon() {
+    return state.collection.find((item) => Number(item.id) === Number(state.autoTrainDemonId)) || null;
+  }
+
+  async function autoTrainDemon() {
+    const demon = getAutoTrainDemon();
+    const maxSouls = Math.max(0, Math.floor(Number(elements.autoTrainSoulSlider.value) || 0));
+    const cost = Math.max(0, Number(demon?.training?.cost) || 0);
+    if (!demon || state.autoTrainRunning || demon.training?.maxed || maxSouls < cost) return;
+
+    state.autoTrainRunning = true;
+    state.trainingDemonId = Number(demon.id);
+    elements.autoTrainSummary.textContent = 'Training in progress...';
+    elements.autoTrainLog.innerHTML = '<p class="collection-auto-train-empty mb-0">The server is resolving each attempt...</p>';
+    setAutoTrainRunning(true);
+
+    try {
+      const result = await api(`/api/demons/${encodeURIComponent(demon.id)}/train`, {
+        method: 'POST',
+        body: { mode: 'max', maxSouls }
+      });
+
+      replaceCollectionDemon(result.demon);
+      syncPlayer(result.player);
+      renderCollection();
+      renderAutoTrainResult(result.training || {});
+      syncAutoTrainBalance(result.player);
+    } catch (error) {
+      if (error.status === 401) {
+        await handleCollectionError(error);
+      }
+      renderAutoTrainError(error);
+    } finally {
+      state.autoTrainRunning = false;
+      state.trainingDemonId = null;
+      setAutoTrainRunning(false);
+      syncAutoTrainBudget();
+    }
+  }
+
+  function setAutoTrainRunning(running) {
+    setTrainingButtonBusy(elements.autoTrainSubmitBtn, running);
+    elements.autoTrainModal.querySelectorAll('[data-auto-train-close]').forEach((button) => {
+      button.disabled = running;
+    });
+    syncAutoTrainBudget();
+  }
+
+  function syncAutoTrainBalance(player) {
+    const availableSouls = Math.max(0, Math.floor(Number(player?.souls) || 0));
+    elements.autoTrainSoulBalance.innerHTML = renderSoulAmount(formatNumber(availableSouls), {
+      className: 'soul-chip collection-auto-train-souls',
+      ariaLabel: `${formatNumber(availableSouls)} Souls available`
+    });
+    elements.autoTrainSoulSlider.max = String(availableSouls);
+    elements.autoTrainSoulSlider.value = '0';
+  }
+
+  function renderAutoTrainResult(training = {}) {
+    const attempts = Array.isArray(training.attemptLog) ? training.attemptLog : [];
+    const succeededCount = Math.max(0, Number(training.succeededCount) || 0);
+    const spent = Math.max(0, Number(training.spent) || 0);
+    const attemptLabel = `${attempts.length} attempt${attempts.length === 1 ? '' : 's'}`;
+    const successLabel = `${succeededCount} successful`;
+    elements.autoTrainSummary.textContent = `${attemptLabel} · ${successLabel} · ${formatNumber(spent)} Souls spent · ${formatAutoTrainStopReason(training.stoppedReason)}`;
+
+    elements.autoTrainLog.innerHTML = attempts.length
+      ? attempts.map((attempt, index) => renderAutoTrainAttempt(attempt, index)).join('')
+      : '<p class="collection-auto-train-empty mb-0">No attempts were completed.</p>';
+    elements.autoTrainLog.scrollTop = 0;
+  }
+
+  function renderAutoTrainAttempt(attempt = {}, index = 0) {
+    const succeeded = attempt.succeeded === true;
+    const chance = formatChance(attempt.successChance);
+    const stats = attempt.stats || {};
+    const attemptNumber = Math.max(1, Number(attempt.number) || index + 1);
+
+    return `
+      <article class="collection-auto-train-attempt ${succeeded ? 'is-success' : 'is-failure'}">
+        <div class="collection-auto-train-attempt-head">
+          <strong>#${escapeHtml(attemptNumber)} ${succeeded ? 'Success' : 'Failed'}</strong>
+          <span>-${escapeHtml(formatNumber(attempt.spent))} Souls</span>
+        </div>
+        <div class="collection-auto-train-attempt-info">
+          <span>${succeeded ? renderAutoTrainIncreases(attempt.increases) : 'No stat gained'}</span>
+          ${chance ? `<span>${escapeHtml(chance)} chance</span>` : ''}
+        </div>
+        <div class="collection-auto-train-attempt-stats" aria-label="Stats after attempt ${escapeHtml(attemptNumber)}">
+          <span>HP ${escapeHtml(formatNumber(stats.hp))}</span>
+          <span>ATK ${escapeHtml(formatNumber(stats.atk))}</span>
+          <span>SPD ${escapeHtml(formatNumber(stats.speed))}</span>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderAutoTrainIncreases(increases = {}) {
+    const labels = Object.entries(increases)
+      .filter(([, amount]) => Number(amount) > 0)
+      .map(([key, amount]) => {
+        const [, label] = TRAINING_STATS.find(([statKey]) => statKey === key) || [key, key];
+        return `+${formatNumber(amount)} ${label}`;
+      });
+    return labels.length ? labels.map(escapeHtml).join(', ') : 'Ritual succeeded';
+  }
+
+  function formatAutoTrainStopReason(reason) {
+    const labels = {
+      maxed: 'Demon maxed out',
+      budget_exhausted: 'Budget reached',
+      out_of_souls: 'Soul balance reached',
+      attempt_limit: 'Attempt limit reached'
+    };
+    return labels[reason] || 'Training complete';
+  }
+
+  function renderAutoTrainError(error) {
+    const message = error?.message || error?.error || 'Auto training failed.';
+    elements.autoTrainSummary.textContent = 'Auto training failed';
+    elements.autoTrainLog.innerHTML = `<div class="collection-auto-train-error" role="alert">${escapeHtml(message)}</div>`;
   }
 
   async function trainDemon(demonId, button, mode = 'once') {

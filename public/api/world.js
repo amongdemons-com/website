@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('./lib/db');
 const { blockGuests, cleanPlayer, requireAuth } = require('./lib/auth');
 const { getNextAccountLevel } = require('./lib/progression');
+const { recordDailyQuestProgress } = require('./lib/daily-quests');
 const {
   ANCHOR_SUCCESS_MESSAGE,
   getAmbushDefeatReturn,
@@ -276,6 +277,7 @@ router.post('/world/hunting/start', requireAuth, async (req, res) => {
       snapshot.killSeconds ?? snapshot.enemyRespawnSeconds
     ]
   );
+  await recordDailyQuestProgress(req.player.id, { huntsStarted: 1 });
 
   res.json({
     ok: true,
@@ -400,6 +402,9 @@ router.post('/world/challenge', requireAuth, blockGuests, async (req, res) => {
 
   const battle = await simulateWorldPvpChallenge(req.player, targetPlayer);
   const pvpResult = await recordPvpChallengeResult(req.player.id, targetPlayer.id, battle.winner);
+  if (battle.winner === 'player') {
+    await recordDailyQuestProgress(req.player.id, { pvpWins: 1 });
+  }
   const nextCooldownUntil = Date.now() + CHALLENGE_COOLDOWN_MS;
   challengeCooldowns.set(cooldownKey, nextCooldownUntil);
   const updatedPlayer = pvpResult.players.get(String(req.player.id)) || req.player;

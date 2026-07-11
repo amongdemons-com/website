@@ -39,6 +39,26 @@ const QUEST_DEFINITIONS = Object.freeze([
     ]),
     reward: Object.freeze({ type: 'souls', value: 25 }),
     href: '/dungeon'
+  }),
+  Object.freeze({
+    id: 'pvp-victory',
+    icon: 'users',
+    title: 'Win a PvP challenge',
+    meta: 'Defeat another hunter in a world challenge.',
+    progressKey: 'pvpWins',
+    target: 1,
+    reward: Object.freeze({ type: 'souls', value: 30 }),
+    href: '/world'
+  }),
+  Object.freeze({
+    id: 'world-hunt',
+    icon: 'crosshair',
+    title: 'Start a world hunt',
+    meta: 'Leave your team hunting at a conquered demon spot.',
+    progressKey: 'huntsStarted',
+    target: 1,
+    reward: Object.freeze({ type: 'xp', value: 25 }),
+    href: '/world'
   })
 ]);
 
@@ -61,6 +81,8 @@ async function getDailyQuestStateForPlayer(player, queryable = db, now = new Dat
     `SELECT dungeon_wins AS dungeonWins,
             demons_extracted AS demonsExtracted,
             undermanned_wins AS undermannedWins,
+            pvp_wins AS pvpWins,
+            hunts_started AS huntsStarted,
             claimed_quests AS claimedQuests,
             daily_reward_claimed AS dailyRewardClaimed
      FROM player_daily_quests
@@ -77,16 +99,20 @@ async function recordDailyQuestProgress(playerId, progress = {}, queryable = db,
   const dungeonWins = toPositiveInteger(progress.dungeonWins);
   const demonsExtracted = toPositiveInteger(progress.demonsExtracted);
   const undermannedWins = toPositiveInteger(progress.undermannedWins);
+  const pvpWins = toPositiveInteger(progress.pvpWins);
+  const huntsStarted = toPositiveInteger(progress.huntsStarted);
 
   await queryable.query(
     `INSERT INTO player_daily_quests
-       (player_id, quest_date, dungeon_wins, demons_extracted, undermanned_wins, claimed_quests)
-     VALUES (?, ?, ?, ?, ?, '[]')
+       (player_id, quest_date, dungeon_wins, demons_extracted, undermanned_wins, pvp_wins, hunts_started, claimed_quests)
+     VALUES (?, ?, ?, ?, ?, ?, ?, '[]')
      ON DUPLICATE KEY UPDATE
        dungeon_wins = dungeon_wins + VALUES(dungeon_wins),
        demons_extracted = demons_extracted + VALUES(demons_extracted),
-       undermanned_wins = undermanned_wins + VALUES(undermanned_wins)`,
-    [playerId, questDate, dungeonWins, demonsExtracted, undermannedWins]
+       undermanned_wins = undermanned_wins + VALUES(undermanned_wins),
+       pvp_wins = pvp_wins + VALUES(pvp_wins),
+       hunts_started = hunts_started + VALUES(hunts_started)`,
+    [playerId, questDate, dungeonWins, demonsExtracted, undermannedWins, pvpWins, huntsStarted]
   );
 }
 
@@ -175,6 +201,8 @@ async function lockDailyQuestRow(connection, playerId, questDate) {
     `SELECT dungeon_wins AS dungeonWins,
             demons_extracted AS demonsExtracted,
             undermanned_wins AS undermannedWins,
+            pvp_wins AS pvpWins,
+            hunts_started AS huntsStarted,
             claimed_quests AS claimedQuests,
             daily_reward_claimed AS dailyRewardClaimed
      FROM player_daily_quests

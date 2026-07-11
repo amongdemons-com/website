@@ -260,7 +260,7 @@ Players earn one stat point per account level (level − 1 total). Nodes are def
 
 ### Daily Quests
 
-Defined in `public/api/lib/daily-quests.js` with a UTC daily reset: win 3 dungeon fights, extract a demon, and "Trial of the Few" (win at floor 3+ with an open team slot), plus a claimable daily Souls reward. Rewards scale with account level.
+Defined in `public/api/lib/daily-quests.js` with a UTC daily reset: win 3 dungeon fights, extract a demon, complete "Trial of the Few" (win at floor 3+ with an open team slot), win a PvP challenge, and start a world hunt, plus a claimable daily Souls reward. Rewards scale with account level.
 
 ### Collection and Training
 

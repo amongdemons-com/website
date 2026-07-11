@@ -55,8 +55,13 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
     const trainMode = req.body?.mode === TRAIN_MAX_MODE || req.body?.max === true
       ? TRAIN_MAX_MODE
       : 'once';
-    const trainingResult = runTrainingSeries(demon, types, Number(playerRows[0].souls) || 0, {
-      max: trainMode === TRAIN_MAX_MODE
+    const playerSouls = Math.max(0, Math.floor(Number(playerRows[0].souls) || 0));
+    const soulBudget = trainMode === TRAIN_MAX_MODE
+      ? normalizeSoulBudget(req.body?.maxSouls, playerSouls)
+      : playerSouls;
+    const trainingResult = runTrainingSeries(demon, types, playerSouls, {
+      max: trainMode === TRAIN_MAX_MODE,
+      soulBudget
     });
     const nextStats = trainingResult.stats;
 
@@ -100,7 +105,8 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
         increases: trainingResult.increases,
         maxed: updatedDemon.training.maxed,
         nextCost: updatedDemon.training.cost,
-        stoppedReason: trainingResult.stoppedReason
+        stoppedReason: trainingResult.stoppedReason,
+        attemptLog: trainingResult.attempts
       }
     });
   } catch (error) {
@@ -115,6 +121,14 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
 
 function runTrainingSeries(demon, types, souls, options = {}) {
   const trainMax = Boolean(options.max);
+  const totalSouls = Math.max(0, Math.floor(Number(souls) || 0));
+  const configuredBudget = options.soulBudget === undefined
+    ? totalSouls
+    : Math.max(0, Math.floor(Number(options.soulBudget) || 0));
+  const soulBudget = trainMax ? Math.min(totalSouls, configuredBudget) : totalSouls;
+  const rollAttempt = typeof options.rollAttempt === 'function'
+    ? options.rollAttempt
+    : rollTrainingAttempt;
   const current = {
     ...demon,
     hp: Math.max(1, Number(demon.hp) || 1),
@@ -128,7 +142,7 @@ function runTrainingSeries(demon, types, souls, options = {}) {
   };
   const attempts = [];
   const increases = { hp: 0, atk: 0, speed: 0 };
-  let availableSouls = Math.max(0, Math.floor(Number(souls) || 0));
+  let availableSouls = soulBudget;
   let spent = 0;
   let succeededCount = 0;
   let stoppedReason = trainMax ? 'attempt_limit' : 'once';
@@ -144,12 +158,17 @@ function runTrainingSeries(demon, types, souls, options = {}) {
 
     const cost = Number(training.cost) || 0;
     if (availableSouls < cost) {
-      if (!attempts.length) throwTrainingError(`Training costs ${cost} Souls.`, 400);
-      stoppedReason = 'out_of_souls';
+      if (!attempts.length) {
+        const message = trainMax && soulBudget < totalSouls
+          ? `Choose at least ${cost} Souls for auto training.`
+          : `Training costs ${cost} Souls.`;
+        throwTrainingError(message, 400);
+      }
+      stoppedReason = soulBudget < totalSouls ? 'budget_exhausted' : 'out_of_souls';
       break;
     }
 
-    const attempt = rollTrainingAttempt(training);
+    const attempt = rollAttempt(training, attempts.length);
     lastSuccessChance = attempt.successChance;
     if (attempt.succeeded && !Object.keys(attempt.increases).length) {
       if (!attempts.length) throwTrainingError('This demon is already maxed out.', 409);
@@ -170,10 +189,16 @@ function runTrainingSeries(demon, types, souls, options = {}) {
     }
 
     attempts.push({
+      number: attempts.length + 1,
       succeeded: attempt.succeeded,
       spent: cost,
       successChance: attempt.successChance,
-      increases: attempt.increases
+      increases: attempt.increases,
+      stats: {
+        hp: current.hp,
+        atk: current.atk,
+        speed: current.speed
+      }
     });
 
     if (!trainMax) {
@@ -202,10 +227,27 @@ function runTrainingSeries(demon, types, souls, options = {}) {
   };
 }
 
+function normalizeSoulBudget(value, playerSouls) {
+  const availableSouls = Math.max(0, Math.floor(Number(playerSouls) || 0));
+  if (value === undefined || value === null || value === '') return availableSouls;
+
+  const requested = Number(value);
+  if (!Number.isSafeInteger(requested) || requested < 0) {
+    throwTrainingError('Auto training Souls must be a non-negative whole number.', 400);
+  }
+
+  return Math.min(requested, availableSouls);
+}
+
 function throwTrainingError(message, status) {
   const error = new Error(message);
   error.status = status;
   throw error;
 }
+
+router._test = {
+  normalizeSoulBudget,
+  runTrainingSeries
+};
 
 module.exports = router;
