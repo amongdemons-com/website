@@ -81,7 +81,6 @@ function serializeWorldBossForClient(boss) {
   return {
     id: boss.id,
     title: boss.title,
-    description: boss.description,
     taunts: Array.isArray(boss.taunts) ? boss.taunts : [],
     zoneTypeId: boss.zoneTypeId,
     x: Number(boss.x) || 0,
@@ -182,7 +181,6 @@ function normalizeBossDefinition(source = {}, index, defaults) {
     id,
     zoneTypeId,
     title: String(source.title || source.name || formatBossTitle(id)),
-    description: String(source.description || ''),
     // Intro taunts shown by the world boss dialog; personality notes for the
     // voice of each boss live alongside them in world-bosses.json.
     taunts: normalizeBossTaunts(source.taunts),
