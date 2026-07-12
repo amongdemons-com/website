@@ -16,6 +16,7 @@ const {
   createHuntSnapshot,
   getActiveWorldTeam,
   getActiveWorldTeamSummary,
+  getBuffedHuntSoulCapacity,
   getWorldSoulReward,
   getWorldTerrorPreview,
   getWorldXpReward,
@@ -28,12 +29,13 @@ const {
 const {
   getActiveWorldBossById,
   getActiveWorldBosses,
+  getActiveWorldBossRewardBuffs,
   getWorldBossAtFromList,
   grantWorldBossRewardBuff,
   serializeWorldBossForClient
 } = require('./lib/world-bosses');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
-const { getHuntSoulCapacity, getPlayerStatPointSummary } = require('./lib/account-stat-points');
+const { getPlayerStatPointSummary } = require('./lib/account-stat-points');
 const worldMap = require('./data/map.json');
 
 const router = express.Router();
@@ -710,7 +712,7 @@ async function settleActiveHunt(player, options = {}) {
     if (huntRows.length) {
       const snapshot = parseHuntSnapshot(huntRows[0].snapshot);
       // Live capacity so vessel points spent mid-hunt apply to the payout.
-      const soulCapacity = getHuntSoulCapacity(await getPlayerStatPointSummary(player));
+      const soulCapacity = await getLiveHuntSoulCapacity(player);
       rewards = await calculateHuntRewards(snapshot, new Date(), { soulCapacity });
 
       const [lockedRows] = await connection.query(
@@ -777,13 +779,21 @@ async function getHuntState(playerId) {
   ]);
   const active = activeRows[0][0] || null;
   const liveSoulCapacity = active
-    ? getHuntSoulCapacity(await getPlayerStatPointSummary({ id: playerId }))
+    ? await getLiveHuntSoulCapacity({ id: playerId })
     : null;
 
   return {
     unlockedEncounterIds: unlockRows[0].map((row) => row.encounterId),
     active: active ? serializeActiveHunt(active, liveSoulCapacity) : null
   };
+}
+
+async function getLiveHuntSoulCapacity(player) {
+  const [statSummary, activeBossBuffs] = await Promise.all([
+    getPlayerStatPointSummary(player),
+    getActiveWorldBossRewardBuffs(player)
+  ]);
+  return getBuffedHuntSoulCapacity(statSummary, activeBossBuffs);
 }
 
 async function isHuntUnlocked(playerId, encounterId) {

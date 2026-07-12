@@ -14,6 +14,7 @@
     max_hp_mult: 'Max HP',
     poison_damage_flat: 'Poison Damage',
     poison_tick_damage_mult: 'Poison Damage',
+    soul_capacity_mult: 'Soul Vessel',
     speed_flat: 'Speed',
     speed_mult: 'Speed',
     thorns_flat: 'Thorns',

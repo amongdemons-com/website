@@ -372,7 +372,7 @@ async function createHuntSnapshot(player, encounter) {
     getActiveWorldBossRewardBuffs(player)
   ]);
   const playerBuffs = createPlayerCombatBuffState(statSummary, { activeBuffs: activeBossBuffs });
-  const soulCapacity = getHuntSoulCapacity(statSummary);
+  const soulCapacity = getBuffedHuntSoulCapacity(statSummary, activeBossBuffs);
   const enemyTeam = materializeEncounterTeam(encounter, demonTypes);
   const enemyBuffs = normalizeCombatBuffState({
     activeBuffs: createWorldTerrorBuffs(encounter)
@@ -431,6 +431,21 @@ async function createHuntSnapshot(player, encounter) {
     battleMetrics,
     seed
   };
+}
+
+// World-boss rewards can temporarily expand the Soul Vessel. Multipliers
+// stack multiplicatively, matching the rest of the combat-buff system.
+function getBuffedHuntSoulCapacity(statSummary = {}, buffs = []) {
+  const baseCapacity = getHuntSoulCapacity(statSummary);
+  const state = normalizeCombatBuffState(Array.isArray(buffs)
+    ? { activeBuffs: buffs }
+    : buffs);
+  const multiplier = state.activeBuffs
+    .flatMap((buff) => buff.effects || [])
+    .filter((effect) => effect.type === 'soul_capacity_mult')
+    .reduce((product, effect) => product * positiveNumber(effect.value, 1), 1);
+
+  return Math.max(1, Math.floor(baseCapacity * multiplier));
 }
 
 async function calculateHuntRewards(snapshot, stoppedAt = new Date(), options = {}) {
@@ -876,6 +891,7 @@ module.exports = {
   createHuntSnapshot,
   getActiveWorldTeam,
   getActiveWorldTeamSummary,
+  getBuffedHuntSoulCapacity,
   getEnemyRespawnSeconds,
   getWorldSoulReward,
   getWorldTerrorPreview,
