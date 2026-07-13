@@ -4121,11 +4121,11 @@ import * as dungeonUtils from './dungeon/utils.js';
     const username = player.username || 'Unknown Hunter';
     const hunterHref = getHunterProfileHref(player);
     const hunterName = hunterHref
-      ? `<a class="world-hunter-profile-link" href="${escapeAttribute(hunterHref)}" target="_blank" rel="noopener">${escapeHtml(username)}</a>`
+      ? `<a class="world-hunter-profile-link" href="${escapeAttribute(hunterHref)}">${escapeHtml(username)}</a>`
       : escapeHtml(username);
     const scoutAction = hunterHref
       ? `
-        <a class="btn btn-outline-light btn-sm world-scout-action" href="${escapeAttribute(hunterHref)}" target="_blank" rel="noopener" title="Scout ${escapeAttribute(username)}" aria-label="Scout ${escapeAttribute(username)}">
+        <a class="btn btn-outline-light btn-sm world-scout-action" href="${escapeAttribute(hunterHref)}" title="Scout ${escapeAttribute(username)}" aria-label="Scout ${escapeAttribute(username)}">
           ${renderIcon('search', { size: 15 })}
         </a>
       `
@@ -4279,7 +4279,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const label = `${identity.rarityLabel} ${identity.name} Spot`;
 
     return `
-      <a class="${classes}" href="${escapeAttribute(href)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeAttribute(label)} demon guide">
+      <a class="${classes}" href="${escapeAttribute(href)}" aria-label="Open ${escapeAttribute(label)} demon guide">
         <span class="world-encounter-rarity" style="--rarity-color:${identity.color}">${escapeHtml(identity.rarityLabel)}</span>
         <span class="world-encounter-name">${escapeHtml(`${identity.name} Spot`)}</span>
       </a>

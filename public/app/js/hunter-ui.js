@@ -101,8 +101,8 @@
     const shareText = buildShareText(hunter, worldTeam);
 
     container.innerHTML = `
-      <a class="hunter-share-btn" data-share-link href="${escapeAttribute(buildXIntent(shareText, url))}" target="_blank" rel="noopener" aria-label="Share on X" title="Share on X">${renderXIcon()}</a>
-      <a class="hunter-share-btn" data-share-link href="${escapeAttribute(buildFacebookShare(url))}" target="_blank" rel="noopener" aria-label="Share on Facebook" title="Share on Facebook">${renderFacebookIcon()}</a>
+      <a class="hunter-share-btn" data-share-link href="${escapeAttribute(buildXIntent(shareText, url))}" target="_blank" rel="noopener noreferrer" aria-label="Share on X (opens in a new tab)" title="Share on X">${renderXIcon()}</a>
+      <a class="hunter-share-btn" data-share-link href="${escapeAttribute(buildFacebookShare(url))}" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook (opens in a new tab)" title="Share on Facebook">${renderFacebookIcon()}</a>
       <div class="hunter-copy-menu" data-copy-menu>
         <button type="button" class="hunter-share-btn" data-copy-toggle aria-haspopup="true" aria-expanded="false" aria-label="Copy" title="Copy">${renderIcon('copy')}</button>
         <div class="hunter-copy-dropdown" data-copy-dropdown role="menu" hidden>
@@ -334,11 +334,7 @@
     const renderDemonCard = window.AmongDemons?.ui?.renderDemonCard;
     const href = getDemonPageHref(demon);
     const attributes = href
-      ? {
-          href,
-          target: '_blank',
-          rel: 'noopener'
-        }
+      ? { href }
       : {};
 
     if (typeof renderDemonCard === 'function') {
@@ -352,7 +348,7 @@
     }
 
     return `
-      <${href ? 'a' : 'article'} class="hunter-fallback-demon" ${href ? `href="${escapeAttribute(href)}" target="_blank" rel="noopener"` : ''}>
+      <${href ? 'a' : 'article'} class="hunter-fallback-demon" ${href ? `href="${escapeAttribute(href)}"` : ''}>
         <img src="${escapeAttribute(demon.imageUrl || FALLBACK_AVATAR)}" alt="" width="96" height="96" loading="lazy">
         <strong>${escapeHtml(demon.species || 'Demon')}</strong>
       </${href ? 'a' : 'article'}>
