@@ -2819,6 +2819,51 @@ body.is-world-side-collapsed .world-map-controls {
     pointer-events: none;
 }
 
+.world-boss-dialog-crest {
+    position: absolute;
+    z-index: 2;
+    bottom: 0;
+    left: 50%;
+    width: 88%;
+    height: 0.95rem;
+    pointer-events: none;
+    transform: translateX(-50%);
+}
+
+.world-boss-dialog-crest::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0.42rem;
+    background:
+        linear-gradient(90deg,
+            transparent 0 4%,
+            var(--rarity-color, #e25041) 16% 43%,
+            transparent 43% 57%,
+            var(--rarity-color, #e25041) 57% 84%,
+            transparent 96% 100%);
+    clip-path: polygon(0 100%, 8% 36%, 40% 36%, 44% 100%, 56% 100%, 60% 36%, 92% 36%, 100% 100%);
+    filter: drop-shadow(0 0 0.3rem var(--rarity-color, #e25041));
+    opacity: 0.95;
+}
+
+.world-boss-dialog-crest::after {
+    content: "";
+    position: absolute;
+    bottom: 0.16rem;
+    left: 50%;
+    width: 0.66rem;
+    height: 0.66rem;
+    border: 1px solid rgba(255,255,255,0.76);
+    background: var(--rarity-color, #e25041);
+    box-shadow:
+        0 0 0 2px rgba(4,10,12,0.78),
+        0 0 0.7rem var(--rarity-color, #e25041);
+    transform: translateX(-50%) rotate(45deg);
+}
+
 @keyframes worldBossPortraitRise {
     from { transform: translateY(9%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }

@@ -3704,6 +3704,49 @@ body.seo-page {
         rgba(0,0,0,0.42);
 }
 
+.boss-key-demon-art {
+    position: relative;
+    isolation: isolate;
+}
+
+.boss-key-demon-art::before,
+.boss-key-demon-art::after {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    pointer-events: none;
+}
+
+.boss-key-demon-art::before {
+    bottom: 0;
+    width: 88%;
+    height: 0.42rem;
+    background:
+        linear-gradient(90deg,
+            transparent 0 4%,
+            var(--rarity-color, #e25041) 16% 43%,
+            transparent 43% 57%,
+            var(--rarity-color, #e25041) 57% 84%,
+            transparent 96% 100%);
+    clip-path: polygon(0 100%, 8% 36%, 40% 36%, 44% 100%, 56% 100%, 60% 36%, 92% 36%, 100% 100%);
+    filter: drop-shadow(0 0 0.3rem var(--rarity-color, #e25041));
+    opacity: 0.95;
+    transform: translateX(-50%);
+}
+
+.boss-key-demon-art::after {
+    bottom: 0.16rem;
+    width: 0.66rem;
+    height: 0.66rem;
+    border: 1px solid rgba(255,255,255,0.76);
+    background: var(--rarity-color, #e25041);
+    box-shadow:
+        0 0 0 2px rgba(4,10,12,0.78),
+        0 0 0.7rem var(--rarity-color, #e25041);
+    transform: translateX(-50%) rotate(45deg);
+}
+
 .seo-boss-advantages strong {
     color: rgba(245,213,109,0.94);
 }

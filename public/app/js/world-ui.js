@@ -6987,12 +6987,12 @@ import * as dungeonUtils from './dungeon/utils.js';
     setText(elements.worldBossDialogName, boss.title || 'World Boss');
 
     const keyDemon = boss.keyDemon || (Array.isArray(boss.team) ? boss.team[0] : null);
+    const keyDemonRarity = String(keyDemon?.rarity || 'common').toLowerCase();
     const demonLabel = elements.worldBossDialogDemon;
     if (demonLabel) {
-      const rarity = String(keyDemon?.rarity || '').toLowerCase();
       const species = keyDemon?.species || keyDemon?.typeName || keyDemon?.name || '';
-      if (rarity && species) {
-        demonLabel.innerHTML = `<span class="world-boss-dialog-rarity" style="color:${rarityCss(rarity)}">${escapeHtml(capitalize(rarity))}</span> ${escapeHtml(species)}`;
+      if (keyDemonRarity && species) {
+        demonLabel.innerHTML = `<span class="world-boss-dialog-rarity" style="color:${rarityCss(keyDemonRarity)}">${escapeHtml(capitalize(keyDemonRarity))}</span> ${escapeHtml(species)}`;
         demonLabel.classList.remove('d-none');
       } else {
         demonLabel.innerHTML = '';
@@ -7002,6 +7002,8 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const portrait = elements.worldBossDialogPortrait;
     if (portrait) {
+      portrait.closest('.world-boss-dialog-portrait-frame')
+        ?.style.setProperty('--rarity-color', rarityCss(keyDemonRarity));
       const mapUrl = keyDemon?.imageUrl || '';
       portrait.onerror = () => {
         portrait.onerror = null;
