@@ -27,6 +27,8 @@ const OUTPUT_PATH = path.join(DATA_DIR, 'map.json');
 const BOUNDS = { min: -50, max: 50 };
 const SPAWN = { x: 0, y: 0 };
 const SAFE_RADIUS = 3; // no blocks/encounters this close to spawn
+const MIN_ENCOUNTER_TEAM_SIZE = 3;
+const MAX_ENCOUNTER_TEAM_SIZE = 6;
 const MAX_DISTANCE = Math.hypot(50, 50); // farthest corner from center
 
 const RARITY_RANK = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
@@ -39,7 +41,9 @@ const RARITY_DIFFICULTY_SCORE = {
   mythic: 3.7
 };
 const FRONT_TYPE_IDS = [1, 5, 7, 8, 9];
-const BLOCK_TYPES = ['basalt', 'bone-spur', 'chasm', 'ruin'];
+// Block layout variants are kept internal so this schema change preserves the
+// generator's existing RNG sequence and, therefore, every current map tile.
+const BLOCK_LAYOUT_VARIANT_COUNT = 4;
 const TYPE_COUNT = 11;
 const ZONE_START_RADIUS = 24;
 const ZONE_ROTATION = 0.045; // nudge wedge boundaries off the cardinal axes
@@ -149,6 +153,13 @@ function zoneTypeId(x, y) {
   return remapZoneTypeId(sector + 1);
 }
 
+function blockTypeForTile(x, y) {
+  const zoneType = zoneTypeId(x, y);
+  if (zoneType === 3) return 'poison';
+  if (zoneType === 4) return 'lava';
+  return 'rocks';
+}
+
 function remapZoneTypeId(typeId) {
   return ZONE_TYPE_REMAP[typeId] || typeId;
 }
@@ -158,8 +169,11 @@ function mixedTypeId(x, y) {
   return (noise % TYPE_COUNT) + 1;
 }
 
-function teamSizeForFactor(t) {
-  return Math.max(1, Math.min(6, 1 + Math.floor(t * 5 + rng() * 0.9)));
+// Preserve the original size roll because it is part of the shared map RNG
+// sequence. Teams below the current minimum are filled from an encounter-local
+// RNG after their original unique composition has been generated.
+function rolledTeamSizeForFactor(t) {
+  return Math.max(1, Math.min(MAX_ENCOUNTER_TEAM_SIZE, 1 + Math.floor(t * 5 + rng() * 0.9)));
 }
 
 function assetFor(typeId, rarity) {
@@ -192,11 +206,12 @@ function typeDifficultyMultiplier(typeId) {
 function weightedTypeId(options = {}) {
   const excludedRoles = options.excludedRoles || new Set();
   const excludedTypes = options.excludedTypes || new Set();
+  const random = options.random || rng;
   const candidates = Array.from({ length: TYPE_COUNT }, (item, index) => index + 1)
     .filter((typeId) => !excludedTypes.has(typeId) && !excludedRoles.has(roleForType(typeId)));
   const fallback = candidates.length ? candidates : Array.from({ length: TYPE_COUNT }, (item, index) => index + 1);
   const total = fallback.reduce((sum, typeId) => sum + typeWeight(typeId), 0);
-  let roll = rng() * total;
+  let roll = random() * total;
 
   for (const typeId of fallback) {
     roll -= typeWeight(typeId);
@@ -309,19 +324,66 @@ function makeUniqueTeam(members, id, idNumber, rarities, usedTeamKeys) {
   throw new Error(`Could not create a unique enemy team for ${id}.`);
 }
 
-function buildEncounter(id, x, y, usedTeamKeys) {
+function fillMinimumTeamSize(members, id, idNumber, x, y, primaryType, primaryTypeChance, rarities) {
+  const seed = (
+    0x5445414d ^
+    Math.imul(idNumber, 2654435761) ^
+    Math.imul(x, 73856093) ^
+    Math.imul(y, 19349663)
+  ) >>> 0;
+  const random = mulberry32(seed);
+
+  while (members.length < MIN_ENCOUNTER_TEAM_SIZE) {
+    const typeId = random() < primaryTypeChance ? primaryType : weightedTypeId({ random });
+    const rarity = rarities[Math.floor(random() * rarities.length)];
+    members.push(buildMember(typeId, rarity, `${id}-m${members.length + 1}`, preferredPosition(typeId)));
+  }
+
+  ensureFrontLine(members);
+  return members;
+}
+
+// The legacy uniqueness pass above deliberately remains unchanged to preserve
+// the shared RNG sequence and existing spot coordinates. This second pass only
+// resolves the unlikely case where filling a short team duplicates another
+// final 3-6 member composition; it never consumes the shared map RNG.
+function makeFinalTeamUnique(members, id, idNumber, rarities, usedTeamKeys) {
+  for (let attempt = 0; attempt < 700; attempt += 1) {
+    ensureFrontLine(members);
+    const key = teamKey(members);
+    if (!usedTeamKeys.has(key)) {
+      usedTeamKeys.add(key);
+      return members;
+    }
+
+    const nextType = ((idNumber + attempt) % TYPE_COUNT) + 1;
+    const nextRarity = rarities[Math.floor(attempt / TYPE_COUNT) % rarities.length];
+    if (members.length < MAX_ENCOUNTER_TEAM_SIZE && attempt % 5 === 0) {
+      members.push(buildMember(nextType, nextRarity, `${id}-m${members.length + 1}`, preferredPosition(nextType)));
+    } else {
+      const index = attempt % members.length;
+      members[index] = buildMember(nextType, nextRarity, `${id}-m${index + 1}`, preferredPosition(nextType));
+    }
+  }
+
+  throw new Error(`Could not create a unique final enemy team for ${id}.`);
+}
+
+function buildEncounter(id, x, y, legacyTeamKeys, finalTeamKeys) {
   const t = difficultyFactor(x, y);
   const distanceMeter = difficultyMeter(t);
   const rarities = allowedRaritiesForMeter(distanceMeter);
   const rarestAllowed = rarities[rarities.length - 1];
-  const size = teamSizeForFactor(t);
+  const rolledSize = rolledTeamSizeForFactor(t);
   const zoneType = zoneTypeId(x, y);
   const primaryType = zoneType || mixedTypeId(x, y);
   const primaryTypeChance = zoneType ? PRIMARY_TYPE_CHANCE : 0.34;
   const idNumber = Number(id.match(/\d+/)?.[0]) || 1;
 
-  let members = buildTeamMembers(id, size, primaryType, primaryTypeChance, rarities, rarestAllowed);
-  members = makeUniqueTeam(members, id, idNumber, rarities, usedTeamKeys);
+  let members = buildTeamMembers(id, rolledSize, primaryType, primaryTypeChance, rarities, rarestAllowed);
+  members = makeUniqueTeam(members, id, idNumber, rarities, legacyTeamKeys);
+  members = fillMinimumTeamSize(members, id, idNumber, x, y, primaryType, primaryTypeChance, rarities);
+  members = makeFinalTeamUnique(members, id, idNumber, rarities, finalTeamKeys);
 
   // Key demon: highest rarity, prefer the zone's signature type, then type id.
   const keyDemon = members
@@ -699,7 +761,7 @@ function generateStructures(occupied, roadSet) {
     const h = randInt(2, 4);
     const left = randInt(BOUNDS.min, BOUNDS.max - w);
     const top = randInt(BOUNDS.min, BOUNDS.max - h);
-    const type = rng() < 0.6 ? 'ruin' : pick(BLOCK_TYPES);
+    const variant = rng() < 0.6 ? 0 : randInt(0, BLOCK_LAYOUT_VARIANT_COUNT - 1);
 
     for (let y = top; y < top + h; y += 1) {
       for (let x = left; x < left + w; x += 1) {
@@ -709,7 +771,7 @@ function generateStructures(occupied, roadSet) {
         if (!isEdge) continue;
         if (rng() < 0.18) continue; // doorway gap
 
-        if (placeBlock(blocks, occupied, roadSet, x, y, type)) {
+        if (placeBlock(blocks, occupied, roadSet, x, y, variant)) {
           // placed
         }
       }
@@ -723,13 +785,13 @@ function generateBlockClusters(blocks, occupied, roadSet) {
   const clusterCount = 260;
 
   for (let cluster = 0; cluster < clusterCount; cluster += 1) {
-    const type = pick(BLOCK_TYPES);
+    const variant = randInt(0, BLOCK_LAYOUT_VARIANT_COUNT - 1);
     let x = randInt(BOUNDS.min, BOUNDS.max);
     let y = randInt(BOUNDS.min, BOUNDS.max);
     const length = randInt(3, 8);
 
     for (let step = 0; step < length; step += 1) {
-      placeBlock(blocks, occupied, roadSet, x, y, type);
+      placeBlock(blocks, occupied, roadSet, x, y, variant);
 
       // Random-walk the cluster into an organic shape.
       const dir = randInt(0, 3);
@@ -741,20 +803,21 @@ function generateBlockClusters(blocks, occupied, roadSet) {
   }
 }
 
-function placeBlock(blocks, occupied, roadSet, x, y, type) {
+function placeBlock(blocks, occupied, roadSet, x, y, variant) {
   if (!inBounds(x, y)) return false;
   if (distanceFromCenter(x, y) <= SAFE_RADIUS) return false;
   if (occupied.has(tileKey(x, y)) || roadSet.has(tileKey(x, y))) return false;
 
   occupied.add(tileKey(x, y));
-  blocks.push({ x, y, type });
+  blocks.push({ x, y, variant });
   return true;
 }
 
 function generateEncounters(occupied, roadSet) {
   const encounters = [];
   const encounterTiles = new Set();
-  const usedTeamKeys = new Set();
+  const legacyTeamKeys = new Set();
+  const finalTeamKeys = new Set();
   let id = 1;
 
   for (let y = BOUNDS.min; y <= BOUNDS.max; y += 1) {
@@ -773,7 +836,7 @@ function generateEncounters(occupied, roadSet) {
 
       occupied.add(tileKey(x, y));
       encounterTiles.add(tileKey(x, y));
-      encounters.push(buildEncounter(`enc-${id}`, x, y, usedTeamKeys));
+      encounters.push(buildEncounter(`enc-${id}`, x, y, legacyTeamKeys, finalTeamKeys));
       id += 1;
     }
   }
@@ -786,6 +849,10 @@ function validateEncounterTeams(encounters) {
   const keys = new Map();
 
   encounters.forEach((encounter) => {
+    if (encounter.team.length < MIN_ENCOUNTER_TEAM_SIZE || encounter.team.length > MAX_ENCOUNTER_TEAM_SIZE) {
+      throw new Error(`Invalid enemy team size for ${encounter.id}: ${encounter.team.length}`);
+    }
+
     const key = teamKey(encounter.team);
     if (keys.has(key)) {
       throw new Error(`Duplicate enemy team composition: ${keys.get(key)} and ${encounter.id}`);
@@ -794,6 +861,14 @@ function validateEncounterTeams(encounters) {
 
     if (encounter.team.every((member) => SUPPORT_ONLY_ROLES.has(member.role))) {
       throw new Error(`Support-only enemy team generated: ${encounter.id}`);
+    }
+
+    const calculatedDifficulty = teamDifficulty(encounter.team);
+    if (encounter.difficulty !== calculatedDifficulty) {
+      throw new Error(
+        `Incorrect enemy team difficulty for ${encounter.id}: ` +
+        `${encounter.difficulty} (expected ${calculatedDifficulty})`
+      );
     }
   });
 }
@@ -890,6 +965,7 @@ function main() {
 
   const blocks = generateStructures(occupied, roadSet);
   generateBlockClusters(blocks, occupied, roadSet);
+  const typedBlocks = blocks.map(({ x, y }) => ({ x, y, type: blockTypeForTile(x, y) }));
 
   const encounters = generateEncounters(occupied, roadSet);
   const roads = Array.from(roadSet).map((key) => {
@@ -902,7 +978,7 @@ function main() {
     spawn: SPAWN,
     roads,
     events,
-    blocks,
+    blocks: typedBlocks,
     encounters
   };
 
@@ -920,7 +996,7 @@ function main() {
   console.log(`Wrote ${OUTPUT_PATH}`);
   console.log(`  roads: ${roads.length}`);
   console.log(`  events: ${events.length}`);
-  console.log(`  blocks: ${blocks.length}`);
+  console.log(`  blocks: ${typedBlocks.length}`);
   console.log(`  encounters: ${encounters.length}`);
   console.log('  difficulty distribution:', difficultyCounts);
   console.log('  encounters per zone type:', zoneCounts);

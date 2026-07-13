@@ -89,20 +89,20 @@ import * as dungeonUtils from './dungeon/utils.js';
     roadGlow: 0x2b2a20
   };
   const FALLBACK_BLOCKED_TILES = [
-    { x: 1, y: 1, type: 'basalt' },
-    { x: 1, y: 2, type: 'basalt' },
-    { x: 1, y: 3, type: 'basalt' },
-    { x: 2, y: 3, type: 'basalt' },
-    { x: 3, y: 3, type: 'basalt' },
-    { x: -1, y: -2, type: 'bone-spur' },
-    { x: -2, y: -2, type: 'bone-spur' },
-    { x: -3, y: -2, type: 'bone-spur' },
-    { x: -5, y: 0, type: 'chasm' },
-    { x: -5, y: 1, type: 'chasm' },
-    { x: -5, y: 2, type: 'chasm' },
-    { x: 5, y: 1, type: 'ruin' },
-    { x: 6, y: 1, type: 'ruin' },
-    { x: 6, y: 0, type: 'ruin' }
+    { x: 1, y: 1, type: 'rocks' },
+    { x: 1, y: 2, type: 'rocks' },
+    { x: 1, y: 3, type: 'rocks' },
+    { x: 2, y: 3, type: 'rocks' },
+    { x: 3, y: 3, type: 'rocks' },
+    { x: -1, y: -2, type: 'rocks' },
+    { x: -2, y: -2, type: 'rocks' },
+    { x: -3, y: -2, type: 'rocks' },
+    { x: -5, y: 0, type: 'rocks' },
+    { x: -5, y: 1, type: 'rocks' },
+    { x: -5, y: 2, type: 'rocks' },
+    { x: 5, y: 1, type: 'rocks' },
+    { x: 6, y: 1, type: 'rocks' },
+    { x: 6, y: 0, type: 'rocks' }
   ];
   const EVENT_COLORS = {
     forsaken_shrine: BOARD_COLORS.shrineGlow,
@@ -570,7 +570,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.encounters = Array.isArray(map.encounters) ? map.encounters : [];
     setWorldBossState(payload, { deferArt: true });
     state.player = payload.player || state.player;
-    state.blockedTiles = Array.isArray(map.blockedTiles) ? map.blockedTiles : FALLBACK_BLOCKED_TILES;
+    const blockedTiles = Array.isArray(map.blockedTiles) ? map.blockedTiles : FALLBACK_BLOCKED_TILES;
+    state.blockedTiles = blockedTiles.map((tile) => ({ ...tile, type: getBlockedTileType(tile) }));
     state.blockedMap = new Map(state.blockedTiles.map((tile) => [getTileKey(tile), tile]));
     state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
     state.activeTeam = payload.activeTeam || null;
@@ -1704,19 +1705,15 @@ import * as dungeonUtils from './dungeon/utils.js';
     });
   }
 
-  function obstacleTexture(kind, variant, zone) {
-    return getTileTexture(`obs:${zone}:${kind}:${variant}`, (g) => {
+  function obstacleTexture(kind, variant, zone, blockType) {
+    return getTileTexture(`obs:${zone}:${blockType}:${kind}:${variant}`, (g) => {
       const rng = seededRng((OBSTACLE_KINDS.indexOf(kind) + 1) * 4099 + variant * 131 + 3);
       const palette = ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE;
-      if (zone === 8) {
-        drawTreeObstacle(g, rng, palette);
-        return;
-      }
-      if (zone === 3) {
+      if (blockType === 'poison') {
         drawPoisonPuddle(g, rng, palette);
         return;
       }
-      if (zone === 4) {
+      if (blockType === 'lava') {
         drawLavaPuddle(g, rng, palette);
         return;
       }
@@ -2146,13 +2143,14 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
   }
 
-  // Group blocked tiles of a given zone into orthogonally-connected clusters so
-  // adjacent ones can be rendered as one merged shape (giant puddle / leaf mass).
-  function computeBlockedComponents(zoneId) {
+  // Group blocked tiles of a given explicit type into orthogonally-connected
+  // clusters so adjacent ones can be rendered as one merged shape.
+  function computeBlockedComponents(blockType, zoneId = undefined) {
     const set = new Set();
     const byKey = new Map();
     for (const t of state.blockedTiles) {
-      if (!isInBounds(t) || zoneTypeIdForTile(t.x, t.y) !== zoneId) continue;
+      if (!isInBounds(t) || getBlockedTileType(t) !== blockType) continue;
+      if (zoneId !== undefined && zoneTypeIdForTile(t.x, t.y) !== zoneId) continue;
       const k = getTileKey(t);
       set.add(k);
       byKey.set(k, { x: t.x, y: t.y });
@@ -2372,35 +2370,35 @@ import * as dungeonUtils from './dungeon/utils.js';
     const max = state.bounds.max ?? WORLD_RADIUS;
 
     // Tiles in a connected cluster of 2+ blocked tiles get drawn together as one
-    // merged shape below (poison puddle in zone 3, lava in zone 4, leaf mass in
-    // zone 8, rock formation everywhere else), so skip their per-tile obstacle
-    // art here.
-    const puddleComponents = computeBlockedComponents(3);
-    const lavaComponents = computeBlockedComponents(4);
-    const leafComponents = computeBlockedComponents(8);
+    // merged shape below (poison puddle, lava pool, or rock formation), so skip
+    // their per-tile obstacle art here. The block's type, not its zone, selects
+    // the obstacle style.
+    const poisonComponents = computeBlockedComponents('poison');
+    const lavaComponents = computeBlockedComponents('lava');
     const rockZones = new Set();
     for (const t of state.blockedTiles) {
+      if (getBlockedTileType(t) !== 'rocks') continue;
       const zone = zoneTypeIdForTile(t.x, t.y);
-      if (zone !== 3 && zone !== 4 && zone !== 8) rockZones.add(zone);
+      rockZones.add(zone);
     }
     const rockComponents = [];
     for (const zone of rockZones) {
-      for (const comp of computeBlockedComponents(zone)) {
+      for (const comp of computeBlockedComponents('rocks', zone)) {
         rockComponents.push({ zone, tiles: comp });
       }
     }
     const mergedKeys = new Set();
-    for (const comps of [puddleComponents, lavaComponents, leafComponents, rockComponents.map((c) => c.tiles)]) {
+    for (const comps of [poisonComponents, lavaComponents, rockComponents.map((c) => c.tiles)]) {
       for (const comp of comps) {
         if (comp.length >= 2) for (const t of comp) mergedKeys.add(getTileKey(t));
       }
     }
 
-    // Every blocked puddle tile (poison zone 3, lava zone 4) emits animated
-    // particles on the ticker, whether it renders solo or as part of a merge.
+    // Every poison/lava tile emits animated particles on the ticker, whether it
+    // renders solo or as part of a merge.
     state.puddleFxStyles = buildPuddleFxStyles();
     state.puddleFxTiles = [];
-    const PUDDLE_FX_ZONES = { 3: 'poison', 4: 'lava' };
+    const PUDDLE_FX_TYPES = { poison: 'poison', lava: 'lava' };
 
     for (let y = min; y <= max; y += 1) {
       for (let x = min; x <= max; x += 1) {
@@ -2412,7 +2410,8 @@ import * as dungeonUtils from './dungeon/utils.js';
 
         const blocked = getBlockedTile({ x, y });
         if (blocked) {
-          const fxStyle = PUDDLE_FX_ZONES[zone];
+          const blockType = getBlockedTileType(blocked);
+          const fxStyle = PUDDLE_FX_TYPES[blockType];
           if (fxStyle) {
             const c = tileCenter({ x, y });
             state.puddleFxTiles.push({
@@ -2426,7 +2425,7 @@ import * as dungeonUtils from './dungeon/utils.js';
             // Part of a merged cluster drawn after this loop.
           } else {
             const kind = OBSTACLE_KINDS[Math.floor(hashTile(x, y, 1) * OBSTACLE_KINDS.length)];
-            const obstacle = makeTileSprite(obstacleTexture(kind, Math.floor(hashTile(x, y, 2) * OBSTACLE_VARIANTS), zone), x, y);
+            const obstacle = makeTileSprite(obstacleTexture(kind, Math.floor(hashTile(x, y, 2) * OBSTACLE_VARIANTS), zone, blockType), x, y);
             if (hashTile(x, y, 5) < 0.5) obstacle.scale.x = -1;
             state.groundLayer.addChild(obstacle);
           }
@@ -2440,7 +2439,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
 
     // Merged clusters: one Graphics per connected component, in world coordinates.
-    for (const comp of puddleComponents) {
+    for (const comp of poisonComponents) {
       if (comp.length < 2) continue;
       const puddle = new Pixi.Graphics();
       drawGiantPoisonPuddle(puddle, comp, ZONE_PALETTES[3] || DEFAULT_ZONE_PALETTE);
@@ -2451,12 +2450,6 @@ import * as dungeonUtils from './dungeon/utils.js';
       const lava = new Pixi.Graphics();
       drawGiantLavaPuddle(lava, comp, ZONE_PALETTES[4] || DEFAULT_ZONE_PALETTE);
       state.groundLayer.addChild(lava);
-    }
-    for (const comp of leafComponents) {
-      if (comp.length < 2) continue;
-      const leaves = new Pixi.Graphics();
-      drawGiantLeafCluster(leaves, comp, ZONE_PALETTES[8] || DEFAULT_ZONE_PALETTE);
-      state.groundLayer.addChild(leaves);
     }
     for (const { zone, tiles } of rockComponents) {
       if (tiles.length < 2) continue;
@@ -6153,6 +6146,11 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function getBlockedTile(position) {
     return state.blockedMap.get(getTileKey(position)) || null;
+  }
+
+  function getBlockedTileType(tile) {
+    const type = String(tile?.type || '').trim().toLowerCase();
+    return type === 'poison' || type === 'lava' ? type : 'rocks';
   }
 
   function isRoadTile(position) {

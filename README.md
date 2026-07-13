@@ -242,7 +242,9 @@ Run-long modifiers defined in `public/api/data/combat-buffs.json` and managed by
 
 ### World Exploration
 
-The world is a generated 101×101 grid (coordinates −50..50) defined in `public/api/data/map.json`: roads, unpassable blocks, fixed demon-team encounters, and event objects (shrines, portals). The layout is identical for every player, so `/world/map` is served immutable-cached and keyed by a content hash; `/world/state` carries only per-player data.
+The world is a generated 101×101 grid (coordinates −50..50) defined in `public/api/data/map.json`: roads, typed unpassable blocks (`rocks`, `poison`, or `lava`), fixed demon-team encounters, and event objects (shrines, portals). The layout is identical for every player, so `/world/map` is served immutable-cached and keyed by a content hash; `/world/state` carries only per-player data.
+
+Each fixed monster spot has a unique 3–6 demon composition. Its displayed difficulty is calculated from the final team size, demon rarities, and type weights.
 
 - Movement is validated server-side step by step (up to 256 steps per request). Off-road steps on empty tiles risk ambushes (~1 in 7); roads are much safer (~1 in 34).
 - World Terror rises one level per map ring beyond the safe center (starting ~10 tiles out, capped at level 40), scaling encounter difficulty with distance.
