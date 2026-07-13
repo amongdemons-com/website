@@ -1002,11 +1002,24 @@
     return `
       ${icon ? `<span class="game-alert-icon" aria-hidden="true">${icon}</span>` : ''}
       <span class="game-alert-copy">
-        <strong class="game-alert-title">${escapeHtml(alert.title)}</strong>
-        <span class="game-alert-message">${escapeHtml(alert.message)}</span>
-        <span class="game-alert-action">${escapeHtml(alert.action)}</span>
+        <strong class="game-alert-title">${renderGameAlertText(alert.title)}</strong>
+        <span class="game-alert-message">${renderGameAlertText(alert.message)}</span>
+        <span class="game-alert-action">${renderGameAlertText(alert.action)}</span>
       </span>
     `;
+  }
+
+  function renderGameAlertText(text) {
+    return escapeHtml(text).replace(
+      /([+-]?\d[\d,]*(?:\.\d+)?)\s*(XP|Souls?)\b/gi,
+      (match, amount, unit) => {
+        if (String(unit).toLowerCase() === 'xp') {
+          return `<span class="game-alert-reward-amount game-alert-xp-amount">${amount} XP</span>`;
+        }
+
+        return `<span class="game-alert-reward-amount game-alert-souls-amount"><img src="/app/images/assets/soul.svg" class="soul-icon" alt="" width="16" height="16" aria-hidden="true"><span class="game-alert-souls-value">${amount}</span> <span class="game-alert-souls-label">${unit}</span></span>`;
+      }
+    );
   }
 
   function renderAlertIcon(icon, type) {

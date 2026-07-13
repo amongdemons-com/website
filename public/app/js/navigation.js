@@ -3,14 +3,57 @@
 
   const ME_API = '/api/auth/me';
   const PROGRESSION_API = '/api/account/progression';
+  const GLOBAL_PAGE_SHORTCUTS = new Map([
+    ['m', '/world'],
+    ['c', '/camp'],
+    ['t', '/skill-tree']
+  ]);
 
   onReady(init);
 
   function init() {
+    moveGuidesAfterRankings();
     markCurrentGameNav();
     bindDisabledLinks();
+    bindGlobalPageShortcuts();
     bindPlayInstantly();
     initAccountNav();
+  }
+
+  function moveGuidesAfterRankings() {
+    document.querySelectorAll('.game-shell-tabs').forEach((nav) => {
+      const guides = nav.querySelector('.game-nav-dropdown');
+      const rankings = nav.querySelector('[data-game-route="rankings"]')?.parentElement;
+      if (!guides || !rankings || rankings.nextElementSibling === guides) return;
+      rankings.after(guides);
+    });
+  }
+
+  function bindGlobalPageShortcuts() {
+    document.addEventListener('keydown', (event) => {
+      if (event.defaultPrevented || event.repeat || event.isComposing) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (isEditableShortcutTarget(event.target)) return;
+
+      const path = GLOBAL_PAGE_SHORTCUTS.get(String(event.key || '').toLowerCase());
+      if (!path) return;
+
+      event.preventDefault();
+      const destination = typeof window.AmongDemons?.appUrl === 'function'
+        ? window.AmongDemons.appUrl(path)
+        : path;
+      const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+      const destinationPath = new URL(destination, window.location.href).pathname.replace(/\/+$/, '') || '/';
+      if (currentPath === destinationPath) return;
+      window.location.href = destination;
+    });
+  }
+
+  function isEditableShortcutTarget(target) {
+    if (!(target instanceof Element)) return false;
+    return Boolean(
+      target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]')
+    );
   }
 
   // "Play Instantly" opens a guest hunter (or reuses an existing session) and

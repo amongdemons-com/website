@@ -8850,6 +8850,28 @@ body.skill-tree-page {
     font-weight: 650;
 }
 
+.game-alert-reward-amount {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2em;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.game-alert-xp-amount {
+    color: var(--ad-gold, #e8c76a);
+}
+
+.game-alert-souls-amount .soul-icon {
+    width: 1em;
+    height: 1em;
+    filter: drop-shadow(0 0 5px rgba(85,255,255,0.38));
+}
+
+.game-alert-souls-value {
+    color: #fff;
+}
+
 .game-alert-action {
     color: var(--game-alert-action);
     font-size: 0.77rem;

@@ -6,7 +6,7 @@
       "id": "neutral-ash-sentinel",
       "zoneTypeId": 0,
       "title": "Ash Sentinel",
-      "personality": "Weary immortal sentry of the neutral ash - solemn, almost pitying warnings.",
+      "personality": "Weary immortal sentry of the neutral ash — solemn, almost pitying warnings.",
       "taunts": [
         "When the wind rises, it will carry what is left of your name.",
         "Walk softly. The dead beneath you are easily awakened.",
@@ -125,7 +125,7 @@
       "id": "boss-gon-shadow-eye",
       "zoneTypeId": 2,
       "title": "Void Ranger",
-      "personality": "Cold sniper (ranged) - patient, all-seeing, speaks in measurements.",
+      "personality": "Cold sniper (ranged) — patient, all-seeing, speaks in measurements.",
       "taunts": [
         "I have already chosen the eye that closes first.",
         "I can see the pulse behind your eyes.",
@@ -194,7 +194,7 @@
       "id": "boss-mazga-venom-root",
       "zoneTypeId": 3,
       "title": "The Corruptor",
-      "personality": "Creeping poison - whispery, unhurried, savors decay.",
+      "personality": "Creeping poison — whispery, unhurried, savors decay.",
       "taunts": [
         "Decay is a long conversation with death. I have all the time in the world.",
         "Do not fear the sting. Fear what blooms after.",
@@ -268,7 +268,7 @@
       "id": "boss-tor-cinder-choir",
       "zoneTypeId": 4,
       "title": "Fire Dancer",
-      "personality": "Theatrical conductor (AOE) - grandiose fire zealot, everything is a performance.",
+      "personality": "Theatrical conductor (AOE) — grandiose fire zealot, everything is a performance.",
       "taunts": [
         "Burn slowly. Nobody likes a rushed performance.",
         "Your bones will glow long after your voice is gone.",
@@ -338,7 +338,7 @@
       "id": "boss-vizel-iron-hide",
       "zoneTypeId": 5,
       "title": "Iron Vanguard",
-      "personality": "Boastful brawler (bruiser) - loud, loves taking hits, mocks weak blows.",
+      "personality": "Boastful brawler (bruiser) — loud, loves taking hits, mocks weak blows.",
       "taunts": [
         "Hah! Swing until your arms give out, hunter.",
         "Pain knocked once. I invited it to stay.",
@@ -448,23 +448,38 @@
       },
       "keyDemon": {
         "typeId": 6,
-        "rarity": "mythic"
+        "rarity": "legendary"
       },
       "team": [
         {
           "typeId": 6,
-          "rarity": "mythic",
+          "rarity": "legendary",
+          "formationSlot": 3
+        },
+        {
+          "typeId": 6,
+          "rarity": "legendary",
           "formationSlot": 1
         },
         {
           "typeId": 6,
-          "rarity": "mythic",
+          "rarity": "legendary",
           "formationSlot": 4
         },
         {
           "typeId": 6,
-          "rarity": "mythic",
+          "rarity": "legendary",
           "formationSlot": 7
+        },
+        {
+          "typeId": 6,
+          "rarity": "legendary",
+          "formationSlot": 2
+        },
+        {
+          "typeId": 6,
+          "rarity": "legendary",
+          "formationSlot": 8
         }
       ]
     },
@@ -542,7 +557,7 @@
       "id": "boss-kopak-stone-back",
       "zoneTypeId": 8,
       "title": "The Withered King",
-      "personality": "Stoic stone (counter-tank) - slow proverbs, politely invites attacks.",
+      "personality": "Stoic stone (counter-tank) — slow proverbs, politely invites attacks.",
       "taunts": [
         "The forest warned you with silence.",
         "You mistook stillness for mercy.",
@@ -672,7 +687,7 @@
       "id": "boss-babeaga-life-thread",
       "zoneTypeId": 10,
       "title": "Threadmother",
-      "personality": "Grandmotherly weaver (healer) - unsettling kindness, endless patience.",
+      "personality": "Grandmotherly weaver (healer) — unsettling kindness, endless patience.",
       "taunts": [
         "Do not be afraid, dear. I can stitch agony back into useful shapes.",
         "I have mended things kinder than you into worse things than me.",
@@ -742,7 +757,7 @@
       "id": "boss-vee-chaos-glass",
       "zoneTypeId": 11,
       "title": "Storm Portal",
-      "personality": "Giggling trickster (chaotic) - delighted by broken plans.",
+      "personality": "Giggling trickster (chaotic) — delighted by broken plans.",
       "taunts": [
         "When I am done, every piece of you will remember a different death.",
         "I adore the sound a mind makes when order leaves.",

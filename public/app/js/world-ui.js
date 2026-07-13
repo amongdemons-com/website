@@ -3932,7 +3932,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       <span class="world-boss-reward" title="${escapeAttribute(description || buff.name || '')}">
         <span>${escapeHtml(label)}</span>
         <strong>${escapeHtml(buff.name || formatWorldBattleLabel(buff.id))}</strong>
-        <small>${escapeHtml([duration, description].filter(Boolean).join(' - '))}</small>
+        <small>${escapeHtml([description, duration].filter(Boolean).join(' · '))}</small>
       </span>
     `;
   }
