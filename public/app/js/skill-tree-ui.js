@@ -4,26 +4,26 @@
   const api = window.AmongDemons.api;
   const renderSoulAmount = window.AmongDemons.ui?.renderSoulAmount || ((value) => String(value ?? '-'));
   const NODE_DEFINITIONS = {
-    health_flat: { label: 'Max Health', cap: 5, requires: [] },
-    health_percent: { label: 'Greater Health', cap: 5, requires: [['health_flat', 5]] },
-    health_mastery: { label: 'Endless Health', cap: Infinity, requires: [['health_percent', 5]] },
-    healing_percent: { label: 'Healing', cap: 5, requires: [['health_flat', 5]] },
-    healing_mastery: { label: 'Endless Healing', cap: Infinity, requires: [['healing_percent', 5]] },
-    thorns_percent: { label: 'Thorns', cap: 5, requires: [['health_flat', 5]] },
-    thorns_mastery: { label: 'Endless Thorns', cap: Infinity, requires: [['thorns_percent', 5]] },
-    speed_flat: { label: 'Speed', cap: 5, requires: [] },
-    speed_percent: { label: 'Momentum', cap: 5, requires: [['speed_flat', 5]] },
-    speed_mastery: { label: 'Endless Speed', cap: Infinity, requires: [['speed_percent', 5]] },
-    attack_percent: { label: 'Brutal Force', cap: 5, requires: [['speed_flat', 5]] },
-    attack_mastery: { label: 'Endless Force', cap: Infinity, requires: [['attack_percent', 5]] },
-    aoe_percent: { label: 'Wide Ruin', cap: 5, requires: [['speed_flat', 5]] },
-    aoe_mastery: { label: 'Endless Ruin', cap: Infinity, requires: [['aoe_percent', 5]] },
-    poison_flat: { label: 'Poison Damage', cap: 5, requires: [] },
-    poison_percent: { label: 'Virulent Poison', cap: 5, requires: [['poison_flat', 5]] },
-    poison_mastery: { label: 'Endless Poison', cap: Infinity, requires: [['poison_percent', 5]] },
-    soul_capacity: { label: 'Soul Vessel', cap: 5, requires: [] },
-    soul_capacity_percent: { label: 'Greater Vessel', cap: 5, requires: [['soul_capacity', 5]] },
-    soul_capacity_mastery: { label: 'Endless Vessel', cap: Infinity, requires: [['soul_capacity_percent', 5]] }
+    health_flat: { label: 'Max Health', help: 'Adds 5 maximum Health to every demon on your team per point.', cap: 5, requires: [] },
+    health_percent: { label: 'Greater Health', help: 'Increases every demon\'s maximum Health by 3% per point.', cap: 5, requires: [['health_flat', 5]] },
+    health_mastery: { label: 'Endless Health', help: 'Adds 5 maximum Health per point with no rank limit.', cap: Infinity, requires: [['health_percent', 5]] },
+    healing_percent: { label: 'Healing', help: 'Increases all healing performed by your demons by 3% per point.', cap: 5, requires: [['health_flat', 5]] },
+    healing_mastery: { label: 'Endless Healing', help: 'Adds 1 Health to every heal per point, after percentage bonuses, with no rank limit.', cap: Infinity, requires: [['healing_percent', 5]] },
+    thorns_percent: { label: 'Thorns', help: 'Reflects an extra 5% of received damage back at attackers per point.', cap: 5, requires: [['health_flat', 5]] },
+    thorns_mastery: { label: 'Endless Thorns', help: 'Adds 1 damage to every Thorns retaliation per point, with no rank limit.', cap: Infinity, requires: [['thorns_percent', 5]] },
+    speed_flat: { label: 'Speed', help: 'Adds 1 Speed to every demon on your team per point.', cap: 5, requires: [] },
+    speed_percent: { label: 'Momentum', help: 'Increases every demon\'s Speed by 2% per point.', cap: 5, requires: [['speed_flat', 5]] },
+    speed_mastery: { label: 'Endless Speed', help: 'Adds 1 Speed per point with no rank limit.', cap: Infinity, requires: [['speed_percent', 5]] },
+    attack_percent: { label: 'Brutal Force', help: 'Increases every demon\'s Attack by 3% per point.', cap: 5, requires: [['speed_flat', 5]] },
+    attack_mastery: { label: 'Endless Force', help: 'Adds 1 Attack per point with no rank limit.', cap: Infinity, requires: [['attack_percent', 5]] },
+    aoe_percent: { label: 'Wide Ruin', help: 'Increases damage from attacks that hit multiple targets by 2% per point.', cap: 5, requires: [['speed_flat', 5]] },
+    aoe_mastery: { label: 'Endless Ruin', help: 'Adds 1 damage to attacks that hit multiple targets per point, with no rank limit.', cap: Infinity, requires: [['aoe_percent', 5]] },
+    poison_flat: { label: 'Poison Damage', help: 'Adds 1 damage to every poison tick per point.', cap: 5, requires: [] },
+    poison_percent: { label: 'Virulent Poison', help: 'Increases the damage of every poison tick by 3% per point.', cap: 5, requires: [['poison_flat', 5]] },
+    poison_mastery: { label: 'Endless Poison', help: 'Adds 1 damage to every poison tick per point, with no rank limit.', cap: Infinity, requires: [['poison_percent', 5]] },
+    soul_capacity: { label: 'Soul Vessel', help: 'Increases passive-hunt Soul capacity by 20 per point from a base of 50. Soul gain pauses when full; XP continues.', cap: 5, requires: [] },
+    soul_capacity_percent: { label: 'Greater Vessel', help: 'Increases total Soul Vessel capacity by 10% per point. Soul gain pauses when full; XP continues.', cap: 5, requires: [['soul_capacity', 5]] },
+    soul_capacity_mastery: { label: 'Endless Vessel', help: 'Adds 10 Soul Vessel capacity per point with no rank limit. Soul gain pauses when full; XP continues.', cap: Infinity, requires: [['soul_capacity_percent', 5]] }
   };
   const STAT_KEYS = Object.keys(NODE_DEFINITIONS);
   const RESET_SOULS_PER_POINT = 10;
@@ -36,7 +36,9 @@
     busyAction: '',
     viewportCenterScheduled: false,
     viewportPointer: null,
-    suppressNextClick: false
+    suppressNextClick: false,
+    visibleTooltipTrigger: null,
+    tooltipPinned: false
   };
   const elements = {};
 
@@ -77,7 +79,10 @@
       'skillTreeStatus',
       'skillTreeSaveButton',
       'skillTreeResetButton',
-      'skillTreeResetCost'
+      'skillTreeResetCost',
+      'skillTreeNodeTooltip',
+      'skillTreeNodeTooltipTitle',
+      'skillTreeNodeTooltipBody'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -96,11 +101,26 @@
         return;
       }
 
+      const tooltipTrigger = getSkillHelpTrigger(event.target);
+      if (tooltipTrigger) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (state.tooltipPinned && state.visibleTooltipTrigger === tooltipTrigger) {
+          hideSkillTooltip({ force: true });
+        } else {
+          showSkillTooltip(tooltipTrigger, { pinned: true });
+        }
+        return;
+      }
+
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
       const node = target?.closest('[data-stat-point-key]');
       if (!node || state.busy) return;
       updateDraft(node.dataset.statPointKey);
     });
+
+    elements.skillTreeGrid?.addEventListener('mouseover', onTooltipPointerOver);
+    elements.skillTreeGrid?.addEventListener('mouseout', onTooltipPointerOut);
 
     elements.skillTreeGrid?.addEventListener('keydown', (event) => {
       if (!['Enter', ' '].includes(event.key)) return;
@@ -127,7 +147,14 @@
 
     elements.skillTreeViewport?.addEventListener('pointerdown', onViewportPointerDown);
     elements.skillTreeViewport?.addEventListener('wheel', onViewportWheel, { passive: false });
-    window.addEventListener('blur', clearViewportPointer);
+    elements.skillTreeViewport?.addEventListener('scroll', positionVisibleTooltip, { passive: true });
+    document.addEventListener('pointerdown', onDocumentPointerDown);
+    document.addEventListener('keydown', onTooltipKeyDown);
+    window.addEventListener('resize', positionVisibleTooltip);
+    window.addEventListener('blur', () => {
+      clearViewportPointer();
+      hideSkillTooltip({ force: true });
+    });
   }
 
   function updateDraft(key) {
@@ -202,7 +229,7 @@
       node.classList.toggle('is-maxed', complete);
       node.classList.toggle('is-disabled', unlocked && !investable && !complete);
       node.setAttribute('aria-disabled', String(!investable));
-      node.setAttribute('aria-label', `${definition.label}: ${formatNumber(rank)}${Number.isFinite(definition.cap) ? ` of ${definition.cap}` : ' points'}. ${investable ? 'Activate to invest one point.' : complete ? 'Complete.' : !unlocked ? 'Locked.' : 'No points available.'}`);
+      node.setAttribute('aria-label', `${definition.label}: ${formatNumber(rank)}${Number.isFinite(definition.cap) ? ` of ${definition.cap}` : ' points'}. ${definition.help} ${investable ? 'Activate to invest one point.' : complete ? 'Complete.' : !unlocked ? 'Locked.' : 'No points available.'}`);
       node.tabIndex = unlocked ? 0 : -1;
     });
 
@@ -467,12 +494,7 @@
     const pointer = state.viewportPointer;
     if (!viewport || !pointer || pointer.id !== event.pointerId) return;
 
-    if (pointer.dragging) {
-      state.suppressNextClick = true;
-      window.setTimeout(() => {
-        state.suppressNextClick = false;
-      }, 100);
-    }
+    if (pointer.dragging) suppressNextNodeClick();
 
     clearViewportPointer();
   }
@@ -483,6 +505,87 @@
     document.removeEventListener('pointercancel', onViewportPointerUp);
     elements.skillTreeViewport?.classList.remove('is-panning');
     state.viewportPointer = null;
+  }
+
+  function suppressNextNodeClick() {
+    state.suppressNextClick = true;
+    window.setTimeout(() => {
+      state.suppressNextClick = false;
+    }, 250);
+  }
+
+  function onTooltipPointerOver(event) {
+    if (state.tooltipPinned) return;
+    const trigger = getSkillHelpTrigger(event.target);
+    if (!trigger || trigger.contains(event.relatedTarget)) return;
+    showSkillTooltip(trigger);
+  }
+
+  function onTooltipPointerOut(event) {
+    if (state.tooltipPinned) return;
+    const trigger = getSkillHelpTrigger(event.target);
+    if (!trigger || trigger.contains(event.relatedTarget)) return;
+    hideSkillTooltip();
+  }
+
+  function onDocumentPointerDown(event) {
+    if (!state.tooltipPinned) return;
+    const trigger = getSkillHelpTrigger(event.target);
+    if (trigger !== state.visibleTooltipTrigger) hideSkillTooltip({ force: true });
+  }
+
+  function onTooltipKeyDown(event) {
+    if (event.key === 'Escape') hideSkillTooltip({ force: true });
+  }
+
+  function getSkillHelpTrigger(target) {
+    const element = target instanceof Element ? target : target?.parentElement;
+    return element?.closest('[data-skill-help]') || null;
+  }
+
+  function showSkillTooltip(trigger, { pinned = false } = {}) {
+    const tooltip = elements.skillTreeNodeTooltip;
+    const node = trigger?.closest('[data-stat-point-key]');
+    const definition = NODE_DEFINITIONS[node?.dataset.statPointKey];
+    if (!tooltip || !node || !definition) return;
+
+    state.visibleTooltipTrigger = trigger;
+    state.tooltipPinned = pinned;
+    setText(elements.skillTreeNodeTooltipTitle, definition.label);
+    setText(elements.skillTreeNodeTooltipBody, definition.help);
+    const accent = window.getComputedStyle(node).getPropertyValue('--path-accent').trim();
+    if (accent) tooltip.style.setProperty('--ascension-tooltip-accent', accent);
+    positionVisibleTooltip();
+    tooltip.classList.add('is-visible');
+  }
+
+  function hideSkillTooltip({ force = false } = {}) {
+    if (state.tooltipPinned && !force) return;
+    elements.skillTreeNodeTooltip?.classList.remove('is-visible', 'is-below');
+    state.visibleTooltipTrigger = null;
+    state.tooltipPinned = false;
+  }
+
+  function positionVisibleTooltip() {
+    const tooltip = elements.skillTreeNodeTooltip;
+    const trigger = state.visibleTooltipTrigger;
+    if (!tooltip || !trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const tooltipWidth = Math.min(tooltip.offsetWidth || 320, window.innerWidth - 16);
+    const tooltipHeight = tooltip.offsetHeight || 116;
+    const halfWidth = tooltipWidth / 2;
+    const left = clamp(rect.left + rect.width / 2, halfWidth + 8, window.innerWidth - halfWidth - 8);
+    const showBelow = rect.top < tooltipHeight + 16;
+    const top = showBelow ? rect.bottom + 10 : rect.top - 10;
+
+    tooltip.style.setProperty('--ascension-tooltip-left', `${Math.round(left)}px`);
+    tooltip.style.setProperty('--ascension-tooltip-top', `${Math.round(top)}px`);
+    tooltip.classList.toggle('is-below', showBelow);
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, Number(value) || 0));
   }
 
   function onViewportWheel(event) {

@@ -103,10 +103,12 @@ body.skill-tree-page {
 
 .ascension-map {
     --ascension-map-height: 72rem;
+    --ascension-map-top-clearance: clamp(3rem, 7vh, 5rem);
     position: relative;
     flex: 1 0 auto;
     min-width: 75rem;
-    min-height: calc(var(--ascension-map-height) + var(--ascension-action-clearance));
+    min-height: calc(var(--ascension-map-top-clearance) + var(--ascension-map-height) + var(--ascension-action-clearance));
+    padding-top: var(--ascension-map-top-clearance);
     padding-bottom: var(--ascension-action-clearance);
     isolation: isolate;
     overflow: visible;
@@ -352,6 +354,41 @@ body.skill-tree-page {
     text-shadow: 0 2px 7px #000;
 }
 
+[data-stat-point-key="soul_capacity"] .ascension-node-label {
+    bottom: calc(100% + 0.9rem);
+}
+
+[data-stat-point-key="soul_capacity"] .ascension-node-help-trigger {
+    padding-inline: 0.22rem;
+    border-radius: 3px;
+    background: rgba(3, 9, 11, 0.92);
+    box-shadow: 0 0 0.4rem 0.22rem rgba(3, 9, 11, 0.88);
+}
+
+.ascension-node-help-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: help;
+    touch-action: manipulation;
+}
+
+.ascension-node-info-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-left: 0.28rem;
+    border: 1px solid color-mix(in srgb, var(--path-accent) 58%, transparent);
+    border-radius: 50%;
+    color: color-mix(in srgb, var(--path-accent) 82%, #fff4d5);
+    font-family: system-ui, sans-serif;
+    font-size: 0.57rem;
+    font-weight: 900;
+    line-height: 1;
+    vertical-align: 0.08rem;
+}
+
 .ascension-node-progress {
     position: absolute;
     top: calc(100% + 0.4rem);
@@ -364,6 +401,55 @@ body.skill-tree-page {
     letter-spacing: 0.06em;
     text-align: center;
     text-shadow: 0 2px 7px #000;
+}
+
+.ascension-node-tooltip {
+    --ascension-tooltip-accent: #8fa7ff;
+    --ascension-tooltip-left: 50vw;
+    --ascension-tooltip-top: 50vh;
+    position: fixed;
+    top: var(--ascension-tooltip-top);
+    left: var(--ascension-tooltip-left);
+    z-index: 30;
+    display: grid;
+    gap: 0.32rem;
+    width: min(20rem, calc(100vw - 1rem));
+    padding: 0.7rem 0.78rem;
+    border: 1px solid color-mix(in srgb, var(--ascension-tooltip-accent) 52%, transparent);
+    border-radius: 6px;
+    background:
+        linear-gradient(145deg, color-mix(in srgb, var(--ascension-tooltip-accent) 14%, transparent), transparent 48%),
+        rgba(3, 9, 12, 0.98);
+    color: #edf2ff;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.52), 0 0 24px color-mix(in srgb, var(--ascension-tooltip-accent) 14%, transparent);
+    font-size: 0.72rem;
+    line-height: 1.38;
+    text-align: left;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, calc(-100% + 0.28rem));
+    transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+}
+
+.ascension-node-tooltip.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -100%);
+}
+
+.ascension-node-tooltip.is-below {
+    transform: translate(-50%, -0.28rem);
+}
+
+.ascension-node-tooltip.is-visible.is-below {
+    transform: translate(-50%, 0);
+}
+
+.ascension-node-tooltip strong {
+    color: color-mix(in srgb, var(--ascension-tooltip-accent) 72%, #fff4d5);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.88rem;
 }
 
 .ascension-actions {
