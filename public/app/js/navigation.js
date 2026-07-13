@@ -58,8 +58,7 @@
 
   // "Play Instantly" opens a guest hunter (or reuses an existing session) and
   // sends the visitor straight into the game — no email, username, or password.
-  // Capture phase so this runs before api-config's packaged-runtime link
-  // rewriter, which would otherwise navigate the anchor before the guest exists.
+  // Capture phase prevents the anchor from navigating before the guest exists.
   function bindPlayInstantly() {
     document.addEventListener('click', async (event) => {
       const trigger = event.target.closest('[data-play-instantly]');
