@@ -5,6 +5,7 @@ const { createRng } = require('../lib/rng');
 const { getRunForPlayer, parseRun, saveRun } = require('../lib/runs');
 const { ensureRunBuffState, generateBuffChoices, getBuffById, hasPendingBuffChoices, PACT_REROLL_SOUL_COST, selectRunBuff } = require('../lib/run-buffs');
 const { serializeRun } = require('../lib/run-serialization');
+const achievements = require('../lib/achievements');
 
 const router = express.Router();
 
@@ -113,6 +114,7 @@ router.post('/runs/:id/buff', requireAuth, async (req, res) => {
 
   selectRunBuff(run, buffId);
   await saveRun(run);
+  await achievements.grantAchievements(req.player.id, ['pactbound']);
 
   res.json(await serializeRun(run));
 });

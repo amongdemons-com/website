@@ -12,6 +12,7 @@ const { assignFormationSlots, mergeBattleTeamForRun, resetRunDemon } = require('
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
+const achievements = require('../lib/achievements');
 
 const router = express.Router();
 
@@ -100,11 +101,19 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   }
 
   await saveRun(run);
+  if (teamSizeAtBattleStart >= 6) {
+    await achievements.grantAchievements(req.player.id, ['six-deep']);
+  }
   if (result.winner === 'player') {
     await recordDailyQuestProgress(req.player.id, {
       dungeonWins: 1,
       undermannedWins: isUndermannedAttempt ? 1 : 0
     });
+    await achievements.grantAchievements(req.player.id, [
+      'first-blood',
+      ...(isUndermannedAttempt ? ['trial-of-the-few'] : [])
+    ]);
+    await achievements.checkDungeonFloor(req.player.id, run.floor);
   }
 
   res.json({

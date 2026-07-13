@@ -16,6 +16,7 @@ const {
 const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, hasPendingBuffChoices } = require('../lib/run-buffs');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { clearPendingRewardSoul, settleDiscardedSoulRewards } = require('../lib/run-rewards');
+const achievements = require('../lib/achievements');
 
 const router = express.Router();
 
@@ -74,6 +75,9 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
         clearPendingRewardSoul(reward);
       }
     });
+    const usedCollectionReinforcement = Number(run.floor) !== 0
+      && stagedTeam.some((item) => item && item.source === 'collection');
+    const recruitedDefeatedEnemy = recruitedRewardIds.size > 0;
     if (stagedTeam.some((item) => item && item.source === 'collection')) {
       run.state.collectionReinforcementUsed = Number(run.floor) !== 0;
     }
@@ -85,6 +89,10 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     }
 
     await saveRun(run);
+    await achievements.grantAchievements(req.player.id, [
+      ...(recruitedDefeatedEnemy ? ['fresh-blood'] : []),
+      ...(usedCollectionReinforcement ? ['call-from-camp'] : [])
+    ]);
     return res.json({ team: run.state.team });
   }
 
@@ -132,6 +140,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   }
 
   await saveRun(run);
+  await achievements.grantAchievements(req.player.id, ['fresh-blood']);
   res.json({ team: run.state.team, reward });
 });
 

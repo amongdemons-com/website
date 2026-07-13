@@ -4,6 +4,7 @@ const { requireAuth } = require('../lib/auth');
 const { getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { getDefeatPayout } = require('../lib/run-rewards');
+const achievements = require('../lib/achievements');
 
 const router = express.Router();
 
@@ -36,6 +37,7 @@ router.post('/runs/:id/end', requireAuth, async (req, res) => {
   run.status = 'ended';
   run.endedAt = new Date();
   await saveRun(run);
+  await achievements.checkAccountLevel(req.player.id, nextLevel);
 
   res.json({
     xp: earned.xp,

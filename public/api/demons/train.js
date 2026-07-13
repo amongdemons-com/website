@@ -8,8 +8,10 @@ const {
   rollTrainingAttempt
 } = require('../lib/demon-training');
 const { getDemonTypes } = require('../lib/game-data');
+const achievements = require('../lib/achievements');
 
 const router = express.Router();
+const RELENTLESS_TRAINING_COUNT = 25;
 const TRAIN_MAX_MODE = 'max';
 const TRAINING_ATTEMPT_LIMIT = 1000;
 
@@ -76,6 +78,14 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
       'UPDATE players SET souls = souls - ? WHERE id = ?',
       [trainingResult.spent, req.player.id]
     );
+    await connection.query(
+      'UPDATE player_demons SET times_trained = times_trained + ? WHERE id = ? AND player_id = ?',
+      [trainingResult.attempts.length, demon.id, req.player.id]
+    );
+    const [trainedRows] = await connection.query(
+      'SELECT times_trained AS timesTrained FROM player_demons WHERE id = ? AND player_id = ? LIMIT 1',
+      [demon.id, req.player.id]
+    );
 
     const [updatedPlayerRows] = await connection.query(
       'SELECT * FROM players WHERE id = ? LIMIT 1',
@@ -91,6 +101,12 @@ router.post('/demons/:id/train', requireAuth, async (req, res) => {
       speed: nextStats.speed
     }]);
     const player = cleanPlayer(updatedPlayerRows[0]);
+
+    await achievements.grantAchievements(req.player.id, [
+      'soulforged',
+      ...(Number(trainedRows[0]?.timesTrained) >= RELENTLESS_TRAINING_COUNT ? ['relentless'] : []),
+      ...(updatedDemon.training.maxed ? ['perfect-vessel'] : [])
+    ]);
 
     res.json({
       demon: updatedDemon,

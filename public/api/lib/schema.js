@@ -465,6 +465,23 @@ async function initializeSchema() {
   await addColumnIfMissing('player_daily_quests', 'undermanned_wins', '`undermanned_wins` INT UNSIGNED NOT NULL DEFAULT 0');
   await addColumnIfMissing('player_daily_quests', 'pvp_wins', '`pvp_wins` INT UNSIGNED NOT NULL DEFAULT 0');
   await addColumnIfMissing('player_daily_quests', 'hunts_started', '`hunts_started` INT UNSIGNED NOT NULL DEFAULT 0');
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_achievements (
+      player_id VARCHAR(255) NOT NULL,
+      achievement_id VARCHAR(64) NOT NULL,
+      unlocked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      steam_synced_at TIMESTAMP NULL,
+      PRIMARY KEY (player_id, achievement_id),
+      INDEX idx_player_achievements_unsynced (player_id, steam_synced_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column('player_achievements', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_achievements', 'achievement_id', 'VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+
+  // Lifetime training attempt counter per collection demon (Relentless achievement).
+  await addColumnIfMissing('player_demons', 'times_trained', '`times_trained` INT UNSIGNED NOT NULL DEFAULT 0');
+
   await backfillHighestFloors();
 }
 

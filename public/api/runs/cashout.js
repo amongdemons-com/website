@@ -7,6 +7,7 @@ const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { hasPendingBuffChoices } = require('../lib/run-buffs');
 const { clearPendingRewardSoul, getEarnedWithPendingDiscardedSouls, settleDiscardedSoulRewards } = require('../lib/run-rewards');
 const { recordDailyQuestProgress } = require('../lib/daily-quests');
+const achievements = require('../lib/achievements');
 
 const router = express.Router();
 
@@ -55,6 +56,9 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
   };
   await saveRun(run);
   await recordDailyQuestProgress(req.player.id, { demonsExtracted: 1 });
+  await achievements.grantAchievements(req.player.id, ['a-way-out']);
+  await achievements.checkCollection(req.player.id);
+  await achievements.checkAccountLevel(req.player.id, nextLevel);
 
   res.status(saved.replaced ? 200 : 201).json({
     demon: saved.demon,
@@ -87,6 +91,7 @@ async function endRunWithoutDemon(run, playerId, res) {
     souls: earned.souls || 0
   };
   await saveRun(run);
+  await achievements.checkAccountLevel(playerId, nextLevel);
 
   return res.json({
     demon: null,

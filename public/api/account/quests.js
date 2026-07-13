@@ -5,6 +5,7 @@ const {
   claimDailyReward,
   getDailyQuestStateForPlayer
 } = require('../lib/daily-quests');
+const achievements = require('../lib/achievements');
 
 const router = express.Router();
 
@@ -13,11 +14,15 @@ router.get('/account/quests', requireAuth, async (req, res) => {
 });
 
 router.post('/account/quests/:questId/claim', requireAuth, async (req, res) => {
-  res.json(await claimDailyQuest(req.player.id, String(req.params.questId || '')));
+  const payload = await claimDailyQuest(req.player.id, String(req.params.questId || ''));
+  await achievements.checkAccountLevel(req.player.id, payload.progression?.level);
+  res.json(payload);
 });
 
 router.post('/account/daily-reward/claim', requireAuth, async (req, res) => {
-  res.json(await claimDailyReward(req.player.id));
+  const payload = await claimDailyReward(req.player.id);
+  await achievements.checkAccountLevel(req.player.id, payload.progression?.level);
+  res.json(payload);
 });
 
 module.exports = router;

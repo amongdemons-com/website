@@ -36,6 +36,7 @@ const {
 } = require('./lib/world-bosses');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const { getPlayerStatPointSummary } = require('./lib/account-stat-points');
+const achievements = require('./lib/achievements');
 const worldMap = require('./data/map.json');
 
 const router = express.Router();
@@ -168,6 +169,7 @@ router.post('/world/shrine/bind', requireAuth, async (req, res) => {
   }
 
   const boundShrine = await saveBoundShrine(req.player.id, shrine);
+  await achievements.grantAchievements(req.player.id, ['anchored']);
 
   res.json({
     ok: true,
@@ -187,6 +189,7 @@ router.post('/world/portal/summon', requireAuth, async (req, res) => {
   }
 
   const result = await summonToDarknessPortal(req.player.id, portal);
+  await achievements.grantAchievements(req.player.id, ['through-darkness']);
   const position = result.position;
   const activeBosses = getActiveWorldBosses();
 
@@ -222,6 +225,9 @@ router.post('/world/move', requireAuth, async (req, res) => {
   }
 
   await savePosition(req.player.id, position);
+  if ([WORLD_MIN, WORLD_MAX].includes(position.x) || [WORLD_MIN, WORLD_MAX].includes(position.y)) {
+    await achievements.grantAchievements(req.player.id, ['edgewalker']);
+  }
 
   const playersAt = await getPlayersAt(position.x, position.y, req.player.id);
   res.json({
@@ -246,6 +252,10 @@ router.post('/world/hunt/try', requireAuth, async (req, res) => {
 
   if (unlocked) {
     await unlockHunt(req.player.id, encounter.id);
+    await achievements.grantAchievements(req.player.id, [
+      'hunters-ground',
+      ...(getWorldTerrorPreview(encounter).level >= 20 ? ['far-from-the-fire'] : [])
+    ]);
   }
 
   res.json({
@@ -284,6 +294,7 @@ router.post('/world/hunting/start', requireAuth, async (req, res) => {
     ]
   );
   await recordDailyQuestProgress(req.player.id, { huntsStarted: 1 });
+  await achievements.grantAchievements(req.player.id, ['the-long-hunt']);
 
   res.json({
     ok: true,
@@ -304,6 +315,7 @@ router.post('/world/ambush-defeat', requireAuth, async (req, res) => {
   const activeBosses = getActiveWorldBosses();
 
   await savePosition(req.player.id, result.position);
+  await achievements.grantAchievements(req.player.id, ['death-has-an-address']);
 
   res.json({
     ...result,
@@ -353,6 +365,9 @@ router.post('/world/boss/challenge', requireAuth, async (req, res) => {
     ? await grantWorldBossRewardBuff(req.player.id, boss)
     : null;
   if (rewardBuff) battle.rewardBuff = rewardBuff;
+  if (battle.winner === 'player') {
+    await achievements.grantBossDefeat(req.player.id, boss.id);
+  }
 
   const activeBosses = getActiveWorldBosses();
   const serializedBoss = serializeWorldBossForClient(boss);
@@ -415,6 +430,18 @@ router.post('/world/challenge', requireAuth, blockGuests, async (req, res) => {
   challengeCooldowns.set(cooldownKey, nextCooldownUntil);
   const updatedPlayer = pvpResult.players.get(String(req.player.id)) || req.player;
   const updatedTargetPlayer = pvpResult.players.get(String(targetPlayer.id)) || targetPlayer;
+  if (battle.winner === 'player') {
+    await achievements.checkPvpWins(req.player.id, updatedPlayer.pvpWins);
+    const flawless = Array.isArray(battle.playerTeamAfter)
+      && battle.playerTeamAfter.every((demon) => Number(demon.hp) > 0);
+    if (flawless) {
+      await achievements.grantAchievements(req.player.id, ['untouchable']);
+    }
+  } else {
+    // The defender's win counter also moved; their threshold achievements
+    // unlock the next time either side is checked.
+    await achievements.checkPvpWins(targetPlayer.id, updatedTargetPlayer.pvpWins);
+  }
   battle.targetPlayer = {
     ...battle.targetPlayer,
     ...getWorldPvpPlayerRecord(updatedTargetPlayer)
@@ -685,6 +712,9 @@ async function resolveTravelEvents(player, travelEvents = []) {
         error: error.message
       };
     }
+    if (battle?.winner === 'player' && !isRoad(event.position.x, event.position.y)) {
+      await achievements.grantAchievements(player.id, ['road-less-travelled']);
+    }
     resolved.push({
       ...event,
       battle
@@ -701,6 +731,7 @@ async function settleActiveHunt(player, options = {}) {
   let rewards = createEmptyHuntRewards();
   let stoppedHunt = false;
   let clearedUnlocks = 0;
+  let settledLevel = null;
   // `player` is req.player, which requireAuth already passed through cleanPlayer.
   // The DB row fetched below is the raw shape that still needs cleaning.
   let playerPayload = player;
@@ -738,6 +769,7 @@ async function settleActiveHunt(player, options = {}) {
       );
 
       stoppedHunt = true;
+      settledLevel = nextLevel;
     }
 
     if (clearUnlocks) {
@@ -763,6 +795,14 @@ async function settleActiveHunt(player, options = {}) {
     throw error;
   } finally {
     connection.release();
+  }
+
+  if (stoppedHunt) {
+    const soulCapacity = Number(rewards.soulCapacity) || 0;
+    if (soulCapacity > 0 && Number(rewards.souls) >= soulCapacity) {
+      await achievements.grantAchievements(player.id, ['vessel-brimming']);
+    }
+    await achievements.checkAccountLevel(player.id, settledLevel);
   }
 
   return {
