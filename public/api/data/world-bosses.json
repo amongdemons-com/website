@@ -6,7 +6,7 @@
       "id": "neutral-ash-sentinel",
       "zoneTypeId": 0,
       "title": "Ash Sentinel",
-      "personality": "Weary immortal sentry of the neutral ash — solemn, almost pitying warnings.",
+      "personality": "Weary immortal sentry of the neutral ash - solemn, almost pitying warnings.",
       "taunts": [
         "When the wind rises, it will carry what is left of your name.",
         "Walk softly. The dead beneath you are easily awakened.",
@@ -64,7 +64,7 @@
       "id": "boss-boof-warbinder",
       "zoneTypeId": 1,
       "title": "Warden",
-      "personality": "Drill-sergeant warlord (melee) — barks about ranks, footing and discipline.",
+      "personality": "Drill-sergeant warlord (melee) - barks about ranks, footing and discipline.",
       "taunts": [
         "Hold your line. I want the bones stacked neatly.",
         "Stand straight. Die properly.",
@@ -125,7 +125,7 @@
       "id": "boss-gon-shadow-eye",
       "zoneTypeId": 2,
       "title": "Void Ranger",
-      "personality": "Cold sniper (ranged) — patient, all-seeing, speaks in measurements.",
+      "personality": "Cold sniper (ranged) - patient, all-seeing, speaks in measurements.",
       "taunts": [
         "I have already chosen the eye that closes first.",
         "I can see the pulse behind your eyes.",
@@ -194,7 +194,7 @@
       "id": "boss-mazga-venom-root",
       "zoneTypeId": 3,
       "title": "The Corruptor",
-      "personality": "Creeping poison — whispery, unhurried, savors decay.",
+      "personality": "Creeping poison - whispery, unhurried, savors decay.",
       "taunts": [
         "Decay is a long conversation with death. I have all the time in the world.",
         "Do not fear the sting. Fear what blooms after.",
@@ -268,7 +268,7 @@
       "id": "boss-tor-cinder-choir",
       "zoneTypeId": 4,
       "title": "Fire Dancer",
-      "personality": "Theatrical conductor (AOE) — grandiose fire zealot, everything is a performance.",
+      "personality": "Theatrical conductor (AOE) - grandiose fire zealot, everything is a performance.",
       "taunts": [
         "Burn slowly. Nobody likes a rushed performance.",
         "Your bones will glow long after your voice is gone.",
@@ -338,7 +338,7 @@
       "id": "boss-vizel-iron-hide",
       "zoneTypeId": 5,
       "title": "Iron Vanguard",
-      "personality": "Boastful brawler (bruiser) — loud, loves taking hits, mocks weak blows.",
+      "personality": "Boastful brawler (bruiser) - loud, loves taking hits, mocks weak blows.",
       "taunts": [
         "Hah! Swing until your arms give out, hunter.",
         "Pain knocked once. I invited it to stay.",
@@ -407,7 +407,7 @@
       "id": "boss-goh-night-knife",
       "zoneTypeId": 6,
       "title": "The Last Whisper",
-      "personality": "Soft-spoken intimate menace (assassin) — short lines from the dark.",
+      "personality": "Soft-spoken intimate menace (assassin) - short lines from the dark.",
       "taunts": [
         "Careless... you never watch the dark behind you. That is where I live.",
         "Shhh. Do not turn around. It ruins the surprise.",
@@ -487,9 +487,9 @@
       "id": "boss-baobaw-breaker",
       "zoneTypeId": 7,
       "title": "The Linebreaker",
-      "personality": "Blunt demolisher (striker) — pure contempt for walls, tanks and defenses.",
+      "personality": "Blunt demolisher (striker) - pure contempt for walls, tanks and defenses.",
       "taunts": [
-        "Walls, shields, formations — I have shattered them all. What will YOU hide behind?",
+        "Walls, shields, formations - I have shattered them all. What will YOU hide behind?",
         "Put your tank in front. Please. I enjoy going through things more than around them.",
         "Everything breaks, hunter. The only question I bring is how loudly."
       ],
@@ -557,7 +557,7 @@
       "id": "boss-kopak-stone-back",
       "zoneTypeId": 8,
       "title": "The Withered King",
-      "personality": "Stoic stone (counter-tank) — slow proverbs, politely invites attacks.",
+      "personality": "Stoic stone (counter-tank) - slow proverbs, politely invites attacks.",
       "taunts": [
         "The forest warned you with silence.",
         "You mistook stillness for mercy.",
@@ -632,7 +632,7 @@
       "id": "boss-chu-ruin-maul",
       "zoneTypeId": 9,
       "title": "The Colossus",
-      "personality": "Slow inevitability (juggernaut) — few, heavy words.",
+      "personality": "Slow inevitability (juggernaut) - few, heavy words.",
       "taunts": [
         "Slow? Perhaps. But I only need to hit you once.",
         "Run if you like. I am in no hurry. Ruin never is.",
@@ -687,7 +687,7 @@
       "id": "boss-babeaga-life-thread",
       "zoneTypeId": 10,
       "title": "Threadmother",
-      "personality": "Grandmotherly weaver (healer) — unsettling kindness, endless patience.",
+      "personality": "Grandmotherly weaver (healer) - unsettling kindness, endless patience.",
       "taunts": [
         "Do not be afraid, dear. I can stitch agony back into useful shapes.",
         "I have mended things kinder than you into worse things than me.",
@@ -757,7 +757,7 @@
       "id": "boss-vee-chaos-glass",
       "zoneTypeId": 11,
       "title": "Storm Portal",
-      "personality": "Giggling trickster (chaotic) — delighted by broken plans.",
+      "personality": "Giggling trickster (chaotic) - delighted by broken plans.",
       "taunts": [
         "When I am done, every piece of you will remember a different death.",
         "I adore the sound a mind makes when order leaves.",

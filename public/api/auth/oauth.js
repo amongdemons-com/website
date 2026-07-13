@@ -192,7 +192,7 @@ function renderOAuthCompletePage(options) {
     <meta name="robots" content="noindex, nofollow">
     <title>Signing In | Among Demons</title>
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
-    <link href="/app/css/base.css?v=20260713-nav-alerts-v2" rel="stylesheet">
+    <link href="/app/css/base.css?v=20260713-alert-alignment-v1" rel="stylesheet">
   </head>
   <body>
     <main class="container my-4 auth-shell d-flex align-items-center justify-content-center text-center">

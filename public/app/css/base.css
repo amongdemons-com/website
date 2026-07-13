@@ -8851,9 +8851,7 @@ body.skill-tree-page {
 }
 
 .game-alert-reward-amount {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.2em;
+    display: inline;
     font-weight: 900;
     white-space: nowrap;
 }
@@ -8865,6 +8863,8 @@ body.skill-tree-page {
 .game-alert-souls-amount .soul-icon {
     width: 1em;
     height: 1em;
+    margin-right: 0.2em;
+    vertical-align: -0.125em;
     filter: drop-shadow(0 0 5px rgba(85,255,255,0.38));
 }
 
