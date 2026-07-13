@@ -34,6 +34,7 @@
     { icon: 'search', pattern: /not found|found|hidden|veiled|load|loading|choose another/ },
     { icon: 'settings', pattern: /setting|adjust|change a field/ }
   ];
+  const ALERT_DEMON_RARITY_PATTERN = /\b(Common|Uncommon|Rare|Epic|Legendary|Mythic)\b(\s+(?:[^\s.!?<>]+\s+){0,3}demons?\b)/gi;
   const DEFAULT_ALERTS = {
     error: {
       title: 'The ritual misfired.',
@@ -1010,7 +1011,7 @@
   }
 
   function renderGameAlertText(text) {
-    return escapeHtml(text).replace(
+    const rewardText = escapeHtml(text).replace(
       /([+-]?\d[\d,]*(?:\.\d+)?)\s*(XP|Souls?)\b/gi,
       (match, amount, unit) => {
         if (String(unit).toLowerCase() === 'xp') {
@@ -1019,6 +1020,11 @@
 
         return `<span class="game-alert-reward-amount game-alert-souls-amount"><img src="/app/images/assets/soul.svg" class="soul-icon" alt="" width="16" height="16" aria-hidden="true"><span class="game-alert-souls-value">${amount}</span> <span class="game-alert-souls-label">${unit}</span></span>`;
       }
+    );
+
+    return rewardText.replace(
+      ALERT_DEMON_RARITY_PATTERN,
+      (match, rarity, demonLabel) => `<span class="game-alert-demon-identity"><span class="game-alert-demon-rarity ad-${String(rarity).toLowerCase()}">${rarity}</span> <span class="game-alert-demon-name">${demonLabel.trimStart()}</span></span>`
     );
   }
 

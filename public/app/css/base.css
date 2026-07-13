@@ -8872,6 +8872,18 @@ body.skill-tree-page {
     color: #fff;
 }
 
+.game-alert-demon-identity {
+    white-space: nowrap;
+}
+
+.game-alert-demon-rarity {
+    font-weight: 900;
+}
+
+.game-alert-demon-name {
+    color: #fff;
+}
+
 .game-alert-action {
     color: var(--game-alert-action);
     font-size: 0.77rem;
