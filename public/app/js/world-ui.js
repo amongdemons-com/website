@@ -254,6 +254,9 @@ import * as dungeonUtils from './dungeon/utils.js';
       'worldPositionButton',
       'worldPositionChip',
       'worldZoomChip',
+      'worldHoverCoordinates',
+      'worldHoverCoordinateX',
+      'worldHoverCoordinateY',
       'worldTargetTooltip',
       'worldEncounterTooltip',
       'worldHuntTooltip',
@@ -539,6 +542,9 @@ import * as dungeonUtils from './dungeon/utils.js';
     addListener(canvas, 'pointerup', onPointerUp);
     addListener(canvas, 'pointercancel', clearPointer);
     addListener(canvas, 'pointerleave', onPointerLeave);
+    addListener(document, 'pointermove', (event) => {
+      if (event.target !== canvas) clearHover();
+    }, { passive: true });
     addListener(canvas, 'wheel', onWheel, { passive: false });
     addListener(window, 'pagehide', destroyWorld);
   }
@@ -2631,12 +2637,59 @@ import * as dungeonUtils from './dungeon/utils.js';
     const layer = state.hoverLayer;
     if (!layer) return;
     layer.clear();
-    if (!state.hoverTile || state.moving) return;
-    if (positionsEqual(state.hoverTile, state.position)) return;
-    // A quiet ring on the ground instead of a grid box.
-    const c = tileCenter(state.hoverTile);
-    layer.circle(c.x, c.y, 21).stroke({ color: PATH_GLOW, width: 1.6, alpha: 0.6 });
-    layer.circle(c.x, c.y, 21).fill({ color: PATH_GLOW, alpha: 0.08 });
+    if (!state.hoverTile || state.moving || positionsEqual(state.hoverTile, state.position)) {
+      updateHoverCoordinates();
+      return;
+    }
+
+    // Corner brackets identify the exact tile without covering its terrain.
+    const inset = 7;
+    const cornerLength = 11;
+    const left = state.hoverTile.x * TILE_SIZE + inset;
+    const top = state.hoverTile.y * TILE_SIZE + inset;
+    const right = (state.hoverTile.x + 1) * TILE_SIZE - inset;
+    const bottom = (state.hoverTile.y + 1) * TILE_SIZE - inset;
+
+    layer.rect(left, top, right - left, bottom - top).fill({ color: PATH_GLOW, alpha: 0.045 });
+    layer.moveTo(left, top + cornerLength).lineTo(left, top).lineTo(left + cornerLength, top);
+    layer.moveTo(right - cornerLength, top).lineTo(right, top).lineTo(right, top + cornerLength);
+    layer.moveTo(right, bottom - cornerLength).lineTo(right, bottom).lineTo(right - cornerLength, bottom);
+    layer.moveTo(left + cornerLength, bottom).lineTo(left, bottom).lineTo(left, bottom - cornerLength);
+    layer.stroke({ color: PATH_GLOW, width: 1.8, alpha: 0.72 });
+    updateHoverCoordinates(state.hoverTile);
+  }
+
+  function updateHoverCoordinates(tile = null) {
+    const badge = elements.worldHoverCoordinates;
+    if (!badge) return;
+
+    const hoverTile = tile || state.hoverTile;
+    if (!hoverTile || state.moving || !state.viewport || positionsEqual(hoverTile, state.position)) {
+      badge.classList.add('d-none');
+      return;
+    }
+
+    const scale = state.viewport.scale.x || 1;
+    const center = tileCenter(hoverTile);
+    const tileTop = state.viewport.y + hoverTile.y * TILE_SIZE * scale;
+    const tileBottom = state.viewport.y + (hoverTile.y + 1) * TILE_SIZE * scale;
+    const x = state.viewport.x + center.x * scale;
+    const navBottom = document.querySelector('.game-shell-nav')?.getBoundingClientRect().bottom || 0;
+    const placeBelow = tileTop < navBottom + 30;
+
+    setText(elements.worldHoverCoordinateX, formatNumber(hoverTile.x));
+    setText(elements.worldHoverCoordinateY, formatNumber(hoverTile.y));
+    badge.classList.toggle('is-below', placeBelow);
+    badge.classList.remove('d-none');
+
+    const hostWidth = elements.worldCanvasHost?.clientWidth || state.app?.screen?.width || 0;
+    const horizontalInset = badge.offsetWidth / 2 + 8;
+    const clampedX = hostWidth > horizontalInset * 2
+      ? clamp(x, horizontalInset, hostWidth - horizontalInset)
+      : x;
+
+    badge.style.left = `${Math.round(clampedX)}px`;
+    badge.style.top = `${Math.round(placeBelow ? tileBottom : tileTop)}px`;
   }
 
   function drawPath() {
@@ -5830,7 +5883,10 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function clearHover() {
-    if (!state.hoverTile) return;
+    if (!state.hoverTile) {
+      updateHoverCoordinates();
+      return;
+    }
     state.hoverTile = null;
     drawHover();
   }
@@ -6568,6 +6624,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   function updateCameraStatus() {
     const scale = state.viewport?.scale.x || 1;
     setText(elements.worldZoomChip, `${Math.round(scale * 100)}%`);
+    updateHoverCoordinates();
     updateTargetTooltip();
     updateHuntTooltip();
   }

@@ -506,29 +506,266 @@ main {
     text-decoration: underline;
 }
 
-.site-footer p {
-    margin-bottom: 0.35rem;
+.site-footer {
+    --site-footer-accent: #ff6b2c;
+    position: relative;
+    overflow: hidden;
+    margin-top: clamp(3rem, 7vw, 6rem);
+    border-top: 1px solid rgba(255,107,44,0.22);
+    background:
+        radial-gradient(circle at 11% -35%, rgba(255,107,44,0.2), transparent 25rem),
+        radial-gradient(circle at 84% 135%, rgba(111,214,189,0.1), transparent 24rem),
+        linear-gradient(145deg, #081216 0%, #050b0e 62%, #080d11 100%);
+    color: rgba(224,236,233,0.78);
+}
+
+.site-footer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 5%, rgba(255,107,44,0.78) 30%, rgba(245,197,28,0.52) 50%, rgba(111,214,189,0.42) 70%, transparent 95%);
+}
+
+.site-footer::after {
+    content: "";
+    position: absolute;
+    right: -8rem;
+    bottom: -12rem;
+    width: 28rem;
+    height: 28rem;
+    border: 1px solid rgba(111,214,189,0.07);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4rem rgba(111,214,189,0.025), 0 0 0 8rem rgba(111,214,189,0.018);
+    pointer-events: none;
+}
+
+.site-footer > .container {
+    position: relative;
+    z-index: 1;
+}
+
+.site-footer-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(19rem, 0.9fr);
+    gap: clamp(2.5rem, 7vw, 7rem);
+    align-items: end;
+    padding: clamp(2.7rem, 6vw, 4.8rem) 0 clamp(2.25rem, 5vw, 3.5rem);
+}
+
+.site-footer-brand {
+    min-width: 0;
+}
+
+.site-footer-logo {
+    display: inline-block;
+    width: min(100%, 24rem);
+    border-radius: 10px;
+    transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.site-footer-logo:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.site-footer-logo:focus-visible,
+.site-footer-github:focus-visible,
+.footer-links a:focus-visible {
+    outline: 2px solid rgba(245,197,28,0.9);
+    outline-offset: 4px;
+}
+
+.site-footer-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 12px 24px rgba(0,0,0,0.32));
+}
+
+.site-footer-tagline {
+    max-width: 34rem;
+    margin: 1rem 0 0;
+    color: rgba(224,236,233,0.66);
+    font-size: clamp(0.88rem, 1.5vw, 1rem);
+    font-weight: 650;
+    letter-spacing: 0.015em;
+    line-height: 1.65;
+}
+
+.site-footer-community {
+    min-width: 0;
+    padding-left: clamp(1.5rem, 3vw, 2.5rem);
+    border-left: 1px solid rgba(161,212,201,0.14);
+}
+
+.site-footer-eyebrow {
+    margin: 0 0 0.75rem;
+    color: rgba(245,197,28,0.88);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.site-footer-github {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.85rem;
+    align-items: center;
+    min-height: 4.8rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid rgba(161,212,201,0.2);
+    border-radius: 12px;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
+        rgba(3,10,13,0.72);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.035), 0 14px 34px rgba(0,0,0,0.2);
+    color: #f4f8f7;
+    text-decoration: none;
+    transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.site-footer-github:hover {
+    border-color: rgba(255,107,44,0.55);
+    background-color: rgba(255,107,44,0.045);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.site-footer-github-icon {
+    display: grid;
+    place-items: center;
+    width: 2.7rem;
+    height: 2.7rem;
+    border: 1px solid rgba(255,107,44,0.3);
+    border-radius: 9px;
+    background: rgba(255,107,44,0.1);
+    color: #ff8a59;
+}
+
+.site-footer-github-icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.site-footer-github-copy {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.site-footer-github-copy strong {
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.site-footer-github-copy span {
+    overflow-wrap: anywhere;
+    color: rgba(224,236,233,0.62);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.site-footer-external-icon {
+    width: 1rem;
+    height: 1rem;
+    color: rgba(224,236,233,0.42);
+}
+
+.site-footer-community-copy {
+    margin: 0.7rem 0 0;
+    color: rgba(224,236,233,0.54);
+    font-size: 0.75rem;
+    line-height: 1.55;
+}
+
+.site-footer-bottom {
+    display: flex;
+    gap: 1rem 2rem;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 4.3rem;
+    padding: 0.9rem 0;
+    border-top: 1px solid rgba(161,212,201,0.12);
+}
+
+.site-footer-copyright {
+    margin: 0;
+    color: rgba(224,236,233,0.48);
+    font-size: 0.72rem;
+    font-weight: 650;
 }
 
 .footer-links {
-    display: inline-flex;
+    display: flex;
     flex-wrap: wrap;
+    gap: 0.6rem 1.2rem;
     align-items: center;
-    justify-content: center;
-    gap: 0.45rem 0.9rem;
-    font-size: 0.82rem;
+    justify-content: flex-end;
+    font-size: 0.72rem;
 }
 
 .footer-links a {
-    color: rgba(220,232,229,0.72);
-    font-weight: 700;
+    color: rgba(224,236,233,0.66);
+    font-weight: 750;
     text-decoration: none;
+    transition: color 150ms ease;
 }
 
-.footer-links a:hover,
-.footer-links a:focus-visible {
-    color: #f5d56d;
-    text-decoration: underline;
+.footer-links a:hover {
+    color: #f5c51c;
+}
+
+@media (max-width: 767.98px) {
+    .site-footer-main {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .site-footer-logo {
+        width: min(100%, 21rem);
+    }
+
+    .site-footer-community {
+        padding-top: 1.75rem;
+        padding-left: 0;
+        border-top: 1px solid rgba(161,212,201,0.12);
+        border-left: 0;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .site-footer {
+        margin-top: 3rem;
+    }
+
+    .site-footer-main {
+        padding-top: 2.5rem;
+        padding-bottom: 2rem;
+    }
+
+    .site-footer-github {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .site-footer-external-icon {
+        display: none;
+    }
+
+    .site-footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.15rem 0;
+    }
+
+    .footer-links {
+        justify-content: flex-start;
+    }
 }
 
 .legal-page {

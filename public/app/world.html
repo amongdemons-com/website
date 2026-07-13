@@ -21,7 +21,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/base.css?v=20260713-alert-demon-rarity-v1" rel="stylesheet">
     <link href="/app/css/battle.css?v=20260706-drag-ghost-fix" rel="stylesheet">
-    <link href="/app/css/world.css?v=20260713-boss-crest-v2" rel="stylesheet">
+    <link href="/app/css/world.css?v=20260713-hover-coordinates-v3" rel="stylesheet">
   </head>
   <body class="world-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -69,6 +69,11 @@
     <main class="world-shell" aria-label="Hunter world">
       <section class="world-map-panel" aria-label="World map">
         <div class="world-canvas-host" id="worldCanvasHost" tabindex="0" aria-label="World map"></div>
+        <div class="world-hover-coordinates d-none" id="worldHoverCoordinates" aria-hidden="true">
+          <span class="world-hover-coordinate world-hover-coordinate-x" id="worldHoverCoordinateX"></span>
+          <span class="world-hover-coordinate-dot">&middot;</span>
+          <span class="world-hover-coordinate world-hover-coordinate-y" id="worldHoverCoordinateY"></span>
+        </div>
         <div class="world-map-status" aria-live="polite">
           <span class="world-position-readout" aria-label="Hunter position">
             <i data-lucide="map"></i>
@@ -290,6 +295,6 @@
     <script src="/app/js/session.js?v=20260713-alert-demon-rarity-v1"></script>
     <script src="/app/js/navigation.js?v=20260713-global-shortcuts-v2"></script>
     <script src="/vendor/pixi/pixi.min.js"></script>
-    <script type="module" src="/app/js/world-ui.js?v=20260713-block-types-v1"></script>
+    <script type="module" src="/app/js/world-ui.js?v=20260713-hover-coordinates-v2"></script>
   </body>
 </html>

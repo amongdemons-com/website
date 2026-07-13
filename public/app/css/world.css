@@ -106,6 +106,46 @@ body.world-page > .game-shell-nav {
     height: 100%;
 }
 
+.world-hover-coordinates {
+    position: absolute;
+    z-index: 4;
+    display: grid;
+    grid-template-columns: 3ch 1.2ch 3ch;
+    align-items: center;
+    width: max-content;
+    color: rgba(185, 215, 239, 0.78);
+    padding: 0.08rem 0.12rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    transform: translate(-50%, -100%) translateY(0.08rem);
+    pointer-events: none;
+    user-select: none;
+}
+
+.world-hover-coordinate {
+    white-space: nowrap;
+}
+
+.world-hover-coordinate-x {
+    text-align: right;
+}
+
+.world-hover-coordinate-y {
+    text-align: left;
+}
+
+.world-hover-coordinate-dot {
+    color: rgba(111, 143, 170, 0.9);
+    text-align: center;
+}
+
+.world-hover-coordinates.is-below {
+    transform: translate(-50%, 0) translateY(-0.08rem);
+}
+
 .world-map-status {
     position: absolute;
     left: 0.85rem;
