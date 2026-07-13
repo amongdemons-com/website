@@ -48,14 +48,18 @@ const challengeCooldowns = new Map();
 const DARKNESS_PORTAL_TYPE = 'darkness-portal';
 const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
 
-// World elements (events/objects, unpassable blocks, and demon-team encounters) live in
-// data/map.json so the map can be regenerated without touching this route.
+// World elements (events/objects, terrain blocks, passable signs, and demon-team
+// encounters) live in data/map.json so the map can be regenerated without touching this route.
 const WORLD_BLOCKS = Array.isArray(worldMap.blocks) ? worldMap.blocks : [];
 const WORLD_ENCOUNTERS = Array.isArray(worldMap.encounters) ? worldMap.encounters : [];
 const WORLD_EVENTS = Array.isArray(worldMap.events) ? worldMap.events : [];
 const WORLD_ROADS = Array.isArray(worldMap.roads) ? worldMap.roads : [];
 const ROAD_TILES = new Set(WORLD_ROADS.map((tile) => `${tile.x},${tile.y}`));
-const BLOCKED_TILES = new Set(WORLD_BLOCKS.map((tile) => `${tile.x},${tile.y}`));
+const BLOCKED_TILES = new Set(
+  WORLD_BLOCKS
+    .filter((tile) => !isSignBlock(tile))
+    .map((tile) => `${tile.x},${tile.y}`)
+);
 const AMBUSH_CHANCE_OFF_ROAD = 7; // 1-in-N chance to be ambushed per eligible off-road step
 const AMBUSH_CHANCE_ON_ROAD = 34; // roads are watched but far safer to travel
 
@@ -959,6 +963,16 @@ function getEventAt(x, y) {
   return WORLD_EVENTS.find((event) => event.x === x && event.y === y) || null;
 }
 
+function getSignAt(x, y) {
+  return WORLD_BLOCKS.find((block) => (
+    block.x === x && block.y === y && isSignBlock(block)
+  )) || null;
+}
+
+function isSignBlock(block) {
+  return String(block?.type || '').trim().toLowerCase() === 'sign';
+}
+
 function getDarknessPortalAt(x, y) {
   const event = getEventAt(x, y);
   return event?.type === DARKNESS_PORTAL_TYPE ? event : null;
@@ -1071,7 +1085,10 @@ function getAmbushChanceForTile(x, y) {
 }
 
 function isAmbushEligibleTile(x, y, activeBosses = []) {
-  return !getEventAt(x, y) && !getEncounterAt(x, y) && !getWorldBossAtFromList(activeBosses, x, y);
+  return !getEventAt(x, y) &&
+    !getSignAt(x, y) &&
+    !getEncounterAt(x, y) &&
+    !getWorldBossAtFromList(activeBosses, x, y);
 }
 
 function normalizePosition(value = {}, options = {}) {
@@ -1127,7 +1144,9 @@ function throwWorldError(message, status = 400) {
 router._test = {
   getDarknessPortalAt,
   getDarknessPortalSummonCost,
+  getSignAt,
   getAmbushChanceForTile,
+  isBlocked,
   isAmbushEligibleTile,
   resolveTravelStepEvent
 };

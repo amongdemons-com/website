@@ -174,6 +174,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     currentBoss: null,
     hunt: null,
     huntBusy: false,
+    huntBusyAction: null,
     bossBusy: false,
     huntTicker: null,
     huntStatusRefreshAt: 0,
@@ -694,6 +695,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     const target = normalizePosition(tile);
     if (!isInBounds(target)) return;
 
+    const sign = getSignAt(target);
+
     const boss = getBossAt(target);
     if (boss && positionsEqual(target, state.position)) {
       state.selectedTarget = target;
@@ -707,6 +710,17 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
 
     if (positionsEqual(target, state.position)) {
+      if (sign) {
+        state.selectedTarget = target;
+        state.selectedPath = [];
+        state.travelStatus = 'idle';
+        state.recentStepEvent = null;
+        hideWorldActivityTooltip();
+        renderWorld();
+        renderTravelPanel();
+        renderEncounterPanel();
+        return;
+      }
       window.location.href = appUrl('/camp');
       return;
     }
@@ -1125,7 +1139,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   async function tryHunt(encounterId, button) {
     if (!encounterId || state.huntBusy) return;
     state.huntBusy = true;
-    setButtonBusy(button, true);
+    state.huntBusyAction = 'fight';
+    setButtonBusy(button, true, 'Fighting…');
 
     try {
       const payload = await api('/api/world/hunt/try', {
@@ -1142,6 +1157,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       handleAuthError(error);
     } finally {
       state.huntBusy = false;
+      state.huntBusyAction = null;
       setButtonBusy(button, false);
       renderEncounterPanel();
     }
@@ -1150,7 +1166,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   async function startHunting(encounterId, button) {
     if (!encounterId || state.huntBusy) return;
     state.huntBusy = true;
-    setButtonBusy(button, true);
+    state.huntBusyAction = 'start';
+    setButtonBusy(button, true, 'Starting…');
 
     try {
       const payload = await api('/api/world/hunting/start', {
@@ -1163,6 +1180,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       handleAuthError(error);
     } finally {
       state.huntBusy = false;
+      state.huntBusyAction = null;
       setButtonBusy(button, false);
       renderEncounterPanel();
       syncHuntTicker();
@@ -1193,7 +1211,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   async function finishActiveHunt(options = {}) {
     if (state.huntBusy) return false;
     state.huntBusy = true;
-    setButtonBusy(options.button, true);
+    state.huntBusyAction = 'end';
+    setButtonBusy(options.button, true, 'Ending…');
 
     try {
       const payload = await api('/api/world/hunting/stop', { method: 'POST' });
@@ -1233,6 +1252,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       }
     } finally {
       state.huntBusy = false;
+      state.huntBusyAction = null;
       setButtonBusy(options.button, false);
       if (options.render !== false) {
         renderEncounterPanel();
@@ -2427,7 +2447,10 @@ import * as dungeonUtils from './dungeon/utils.js';
               styleKey: fxStyle
             });
           }
-          if (mergedKeys.has(getTileKey({ x, y }))) {
+          if (blockType === 'sign') {
+            // Signs are passable world markers, drawn above roads with the
+            // other interactive objects in drawEventMarkers().
+          } else if (mergedKeys.has(getTileKey({ x, y }))) {
             // Part of a merged cluster drawn after this loop.
           } else {
             const kind = OBSTACLE_KINDS[Math.floor(hashTile(x, y, 1) * OBSTACLE_KINDS.length)];
@@ -2878,6 +2901,61 @@ import * as dungeonUtils from './dungeon/utils.js';
       marker.position.set(position.x, position.y);
       layer.addChild(marker);
     });
+
+    state.blockedTiles
+      .filter((block) => getBlockedTileType(block) === 'sign')
+      .forEach((sign) => {
+        if (!isInBounds(sign)) return;
+        const marker = new Pixi.Graphics();
+        const position = tileCenter(sign);
+        const rng = seededRng((Math.imul(sign.x | 0, 74131) ^ Math.imul(sign.y | 0, 31337)) >>> 0);
+        drawSignMarker(marker, rng);
+        marker.scale.set(0.8);
+        marker.position.set(position.x, position.y);
+        layer.addChild(marker);
+      });
+  }
+
+  // A hand-built wooden trail sign. Uneven planks, iron nails and wood grain
+  // keep it readable as a sign even when the map is zoomed out.
+  function drawSignMarker(g, rng) {
+    const woodDark = 0x2a160c;
+    const wood = 0x754622;
+    const woodLight = 0xb47a3f;
+    const iron = 0x171716;
+
+    // Ground shadow and a slightly crooked, sharpened post.
+    g.ellipse(2, 23, 17, 5).fill({ color: 0x000000, alpha: 0.42 });
+    g.poly([-4, -3, 4, -3, 3, 23, 0, 28, -3, 23])
+      .fill({ color: woodDark, alpha: 0.98 })
+      .stroke({ color: 0x110904, width: 1.5, alpha: 0.92 });
+    g.poly([-2.5, -2, 0, -2, -0.5, 22, -2, 24])
+      .fill({ color: woodLight, alpha: 0.36 });
+
+    // Two mismatched boards lashed to the post, with chipped corners.
+    g.poly([-25, -24, 20, -22, 25, -17, 21, -8, -23, -9, -27, -14])
+      .fill({ color: wood, alpha: 0.99 })
+      .stroke({ color: woodDark, width: 2, alpha: 0.98 });
+    g.poly([-21, -8, 24, -7, 27, -2, 22, 6, -24, 4, -27, -1])
+      .fill({ color: 0x68401f, alpha: 0.99 })
+      .stroke({ color: woodDark, width: 1.8, alpha: 0.98 });
+
+    // Grain, old blade marks and two iron nails.
+    g.moveTo(-19, -18).bezierCurveTo(-8, -21, 5, -16, 17, -19)
+      .stroke({ color: woodLight, width: 1, alpha: 0.38 });
+    g.moveTo(-17, -3).bezierCurveTo(-5, 0, 8, -5, 19, -2)
+      .stroke({ color: woodLight, width: 1, alpha: 0.3 });
+    for (let i = 0; i < 3; i += 1) {
+      const x = -15 + rng() * 32;
+      const y = -14 + rng() * 10;
+      g.moveTo(x, y).lineTo(x + 3 + rng() * 4, y + (rng() - 0.5) * 2)
+        .stroke({ color: woodDark, width: 0.8, alpha: 0.55 });
+    }
+    g.circle(-19, -16, 1.7).fill({ color: iron, alpha: 0.95 });
+    g.circle(19, -2, 1.7).fill({ color: iron, alpha: 0.95 });
+    g.circle(-19.4, -16.4, 0.55).fill({ color: 0x9a8d73, alpha: 0.7 });
+    g.circle(18.6, -2.4, 0.55).fill({ color: 0x9a8d73, alpha: 0.7 });
+
   }
 
   // A forsaken shrine: a cracked standing stone on a slab, its carved rune
@@ -3798,7 +3876,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     const encounter = state.moving ? null : state.currentEncounter;
     const boss = state.moving ? null : state.currentBoss;
     const currentShrine = state.moving ? null : getShrineAt(state.position);
-    const pveParts = renderPveSidebarParts({ encounter, boss, currentShrine });
+    const currentSign = state.moving ? null : getSignAt(state.position);
+    const pveParts = renderPveSidebarParts({ encounter, boss, currentShrine, currentSign });
     const pvpParts = players.map(renderPvpPlayerCard);
 
     const activeTab = state.worldEncounterTab === 'pvp' ? 'pvp' : 'pve';
@@ -3818,7 +3897,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     queueWorldSidePanelMeasure();
   }
 
-  function renderPveSidebarParts({ encounter, boss, currentShrine }) {
+  function renderPveSidebarParts({ encounter, boss, currentShrine, currentSign }) {
     if (state.moving || state.travelStatus === 'moving') {
       return [renderTravelStatusCard()];
     }
@@ -3828,6 +3907,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
 
     return [
+      currentSign ? renderCurrentSign(currentSign) : '',
       currentShrine ? renderShrineAnchorAction(currentShrine) : '',
       boss ? renderCurrentBoss(boss) : '',
       encounter ? renderCurrentEncounter(encounter) : ''
@@ -3878,6 +3958,17 @@ import * as dungeonUtils from './dungeon/utils.js';
     `;
   }
 
+  function renderCurrentSign(sign) {
+    return `
+      <article class="world-sidebar-card world-sign-card">
+        <span class="world-card-copy">
+          <span class="world-card-kicker">Trail Sign</span>
+          <span class="world-card-meta world-sign-message">${escapeHtml(getSignMessage(sign))}</span>
+        </span>
+      </article>
+    `;
+  }
+
   function renderCurrentEncounter(encounter) {
     const unlocked = isEncounterUnlocked(encounter.id);
     const terror = getEncounterTerror(encounter);
@@ -3886,8 +3977,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       label: 'Enemy demons'
     });
     const action = unlocked
-      ? `<button class="btn btn-warning btn-sm world-card-action" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Hunt</button>`
-      : `<button class="btn btn-warning btn-sm world-card-action" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled' : ''}>Fight</button>`;
+      ? `<button class="btn btn-warning btn-sm world-card-action ${state.huntBusyAction === 'start' ? 'is-busy' : ''}" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'start' ? 'Starting…' : 'Hunt'}</button>`
+      : `<button class="btn btn-warning btn-sm world-card-action ${state.huntBusyAction === 'fight' ? 'is-busy' : ''}" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'fight' ? 'Fighting…' : 'Fight'}</button>`;
 
     return `
       <article class="world-sidebar-card world-spot-card">
@@ -4016,7 +4107,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         ${huntingDemons || '<p class="world-empty-text">No hunted demons visible.</p>'}
         ${renderHuntProgress(progress, rate)}
         ${renderHuntRewardLines(rate, progress)}
-        <button class="btn btn-outline-light btn-sm world-card-action world-end-hunt-action" type="button" data-stop-hunting ${state.huntBusy ? 'disabled' : ''}>End Hunt</button>
+        <button class="btn btn-outline-light btn-sm world-card-action world-end-hunt-action ${state.huntBusyAction === 'end' ? 'is-busy' : ''}" type="button" data-stop-hunting ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'end' ? 'Ending…' : 'End Hunt'}</button>
       </article>
     `;
   }
@@ -6192,6 +6283,15 @@ import * as dungeonUtils from './dungeon/utils.js';
     return `${identity.rarityLabel} ${identity.name} demons`;
   }
 
+  function getSignAt(position) {
+    const block = getBlockedTile(position);
+    return getBlockedTileType(block) === 'sign' ? block : null;
+  }
+
+  function getSignMessage(sign = {}) {
+    return String(sign.message || sign.description || 'The weathered lettering has worn away.').trim();
+  }
+
   function rarityCss(rarity) {
     return RARITY_COLORS[rarity] || RARITY_COLORS.common;
   }
@@ -6206,7 +6306,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function getBlockedTileType(tile) {
     const type = String(tile?.type || '').trim().toLowerCase();
-    return type === 'poison' || type === 'lava' ? type : 'rocks';
+    return type === 'poison' || type === 'lava' || type === 'sign' ? type : 'rocks';
   }
 
   function isRoadTile(position) {
@@ -6214,7 +6314,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function isBlocked(position) {
-    return Boolean(getBlockedTile(position));
+    const block = getBlockedTile(position);
+    return Boolean(block && getBlockedTileType(block) !== 'sign');
   }
 
   function positionsEqual(a, b) {
@@ -6693,10 +6794,11 @@ import * as dungeonUtils from './dungeon/utils.js';
     const target = state.selectedTarget;
     const path = state.selectedPath || [];
     const event = target ? getEventAt(target) : null;
+    const sign = target ? getSignAt(target) : null;
     const isPortalTarget = isDarknessPortalEvent(event);
     if (!tooltip) return;
 
-    if (!target || (!isPortalTarget && path.length < 2) || state.moving || !state.viewport || state.selectedEncounter || state.selectedBoss) {
+    if (!target || (!isPortalTarget && !sign && path.length < 2) || state.moving || !state.viewport || state.selectedEncounter || state.selectedBoss) {
       tooltip.classList.add('d-none');
       return;
     }
@@ -6715,16 +6817,27 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function renderTargetTooltipContent(target, path) {
     const event = getEventAt(target);
+    const sign = getSignAt(target);
     const isPortalTarget = isDarknessPortalEvent(event);
+    const isCurrentSign = Boolean(sign && positionsEqual(target, state.position));
     const stepCount = isPortalTarget
       ? getTileDistance(state.position, target)
       : getPathStepCount(path);
     const meta = escapeHtml(formatTravelMeta(target, stepCount));
     const header = `
-      <strong class="world-tooltip-title">${isPortalTarget ? 'Teleport to' : 'Travel to'}</strong>
+      <strong class="world-tooltip-title">${isCurrentSign ? 'Trail Sign' : (isPortalTarget ? 'Teleport to' : 'Travel to')}</strong>
       <span class="world-tooltip-meta">${meta}</span>
     `;
-    const travelHint = isPortalTarget ? '' : '<span class="world-tooltip-hint">(Click again to travel)</span>';
+    const travelHint = isPortalTarget || isCurrentSign ? '' : '<span class="world-tooltip-hint">(Click again to travel)</span>';
+
+    if (sign) {
+      return `
+        ${header}
+        ${isCurrentSign ? '' : '<span class="world-target-event-type">Trail Sign</span>'}
+        <span class="world-target-event-copy">${escapeHtml(getSignMessage(sign))}</span>
+        ${travelHint}
+      `;
+    }
 
     if (!event) return `${header}${travelHint}`;
     const eventLabel = getEventLabel(event.type);
@@ -7163,10 +7276,26 @@ import * as dungeonUtils from './dungeon/utils.js';
     window.setTimeout(() => renderEncounterPanel(), Math.max(0, expiresAt - Date.now()) + 50);
   }
 
-  function setButtonBusy(button, busy) {
+  function setButtonBusy(button, busy, busyText = '') {
     if (!button) return;
+
+    if (busy && busyText) {
+      if (!Object.prototype.hasOwnProperty.call(button.dataset, 'busyOriginalHtml')) {
+        button.dataset.busyOriginalHtml = button.innerHTML;
+      }
+      button.textContent = busyText;
+    } else if (!busy && Object.prototype.hasOwnProperty.call(button.dataset, 'busyOriginalHtml')) {
+      button.innerHTML = button.dataset.busyOriginalHtml;
+      delete button.dataset.busyOriginalHtml;
+    }
+
     button.disabled = busy;
     button.classList.toggle('is-busy', busy);
+    if (busy) {
+      button.setAttribute('aria-busy', 'true');
+    } else {
+      button.removeAttribute('aria-busy');
+    }
   }
 
   function setMessage(text, type) {

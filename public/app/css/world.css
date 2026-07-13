@@ -1490,6 +1490,34 @@ body.is-world-side-collapsed .world-map-controls {
         rgba(0,0,0,0.18);
 }
 
+.world-sidebar-card.world-sign-card {
+    grid-template-columns: minmax(0, 1fr);
+    border-color: rgba(180,122,63,0.28);
+    background:
+        linear-gradient(135deg, rgba(180,122,63,0.1), rgba(71,41,19,0.035)),
+        rgba(0,0,0,0.18);
+}
+
+.world-sign-card .world-card-kicker {
+    color: rgba(229,201,138,0.72);
+}
+
+.world-sign-card .world-sign-message {
+    overflow: visible;
+    color: rgba(239,226,196,0.74);
+    font-family: "Lora", serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.45;
+    text-overflow: clip;
+    white-space: normal;
+}
+
+.world-side-panel .world-card-action.is-busy {
+    cursor: wait;
+    opacity: 0.68;
+}
+
 .world-card-kicker {
     color: rgba(220,232,229,0.62);
     font-size: 0.58rem;

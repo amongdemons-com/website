@@ -2,7 +2,8 @@
 
 /**
  * Generates public/api/data/map.json: a 101x101 world (-50..50 on each axis)
- * built from roads, unpassable blocks/structures, and demon-team encounters.
+ * built from roads, map blocks/structures (including passable signs), and
+ * demon-team encounters.
  *
  * Layout rules:
  *  - Distance from the center (0, 0) controls team size and rarity bands.
@@ -50,6 +51,32 @@ const ZONE_ROTATION = 0.045; // nudge wedge boundaries off the cardinal axes
 const DARKNESS_PORTAL_COUNT = 3;
 const DARKNESS_PORTAL_MIN_SPACING = 28;
 const DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
+const SIGN_BLOCKS = [
+  {
+    x: 2,
+    y: 0,
+    type: 'sign',
+    message: 'Follow the worn roads when you can. The wilds are quieter there, but never truly safe.'
+  },
+  {
+    x: -8,
+    y: -6,
+    type: 'sign',
+    message: 'Pray at a Forsaken Shrine to anchor your soul. Defeat will drag you back to your last anchor.'
+  },
+  {
+    x: 16,
+    y: 12,
+    type: 'sign',
+    message: 'Defeat a demon pack once to prove your strength. After that, you can hunt the area for rewards.'
+  },
+  {
+    x: -24,
+    y: 18,
+    type: 'sign',
+    message: 'Darkness Portals cross the world in an instant, but every step they swallow must be paid for in Souls.'
+  }
+];
 // Swap adjacent signatures so type 4 owns the visual northeast corner.
 const ZONE_TYPE_REMAP = { 4: 5, 5: 4 };
 const PRIMARY_TYPE_CHANCE = 0.68; // odds a team member is the zone's signature type
@@ -948,6 +975,24 @@ function validateZoneShrines(events, roadSet) {
   });
 }
 
+function validateSigns(signs, roadSet, occupiedTiles) {
+  signs.forEach((sign) => {
+    const key = tileKey(sign.x, sign.y);
+    if (!inBounds(sign.x, sign.y)) {
+      throw new Error(`Sign at ${key} is outside the world bounds.`);
+    }
+    if (!roadSet.has(key)) {
+      throw new Error(`Sign at ${key} is not on the road network.`);
+    }
+    if (occupiedTiles.has(key)) {
+      throw new Error(`Sign at ${key} overlaps another world object.`);
+    }
+    if (!String(sign.message || '').trim()) {
+      throw new Error(`Sign at ${key} has no message.`);
+    }
+  });
+}
+
 function main() {
   const occupied = new Set();
   // Reserve the spawn tile and its neighbors.
@@ -972,13 +1017,18 @@ function main() {
     const [x, y] = key.split(',').map(Number);
     return { x, y };
   });
+  validateSigns(
+    SIGN_BLOCKS,
+    roadSet,
+    new Set([...typedBlocks, ...events, ...encounters].map((tile) => tileKey(tile.x, tile.y)))
+  );
 
   const map = {
     bounds: BOUNDS,
     spawn: SPAWN,
     roads,
     events,
-    blocks: typedBlocks,
+    blocks: typedBlocks.concat(SIGN_BLOCKS),
     encounters
   };
 
@@ -996,7 +1046,7 @@ function main() {
   console.log(`Wrote ${OUTPUT_PATH}`);
   console.log(`  roads: ${roads.length}`);
   console.log(`  events: ${events.length}`);
-  console.log(`  blocks: ${typedBlocks.length}`);
+  console.log(`  blocks: ${map.blocks.length} (${SIGN_BLOCKS.length} passable signs)`);
   console.log(`  encounters: ${encounters.length}`);
   console.log('  difficulty distribution:', difficultyCounts);
   console.log('  encounters per zone type:', zoneCounts);
