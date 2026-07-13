@@ -3,13 +3,18 @@ const compression = require('compression');
 const path = require('path');
 require('./public/api/lib/async-errors');
 const apiRoutes = require('./public/api');
-const { getFullDemonCatalog } = require('./public/api/lib/game-data');
+const { getFullBossCatalog, getFullDemonCatalog } = require('./public/api/lib/game-data');
 const {
   CANONICAL_HOST,
   CANONICAL_ORIGIN,
+  findBossBySlug,
   findDemonBySlug,
+  getBossPagePath,
   getDemonImageFilePath,
+  getRelatedBosses,
   getRelatedDemons,
+  renderBossPage,
+  renderBossesPage,
   renderDemonPage,
   renderDemonsPage,
   renderHomePage,
@@ -22,6 +27,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const appDir = path.join(__dirname, 'public', 'app');
 let catalogPromise;
+let bossCatalogPromise;
 const noindexPaths = new Set([
   '/login',
   '/register',
@@ -75,8 +81,8 @@ app.get('/robots.txt', (req, res) => {
 });
 
 app.get('/sitemap.xml', async (req, res) => {
-  const catalog = await loadDemonCatalog();
-  res.type('application/xml').send(renderSitemap(catalog));
+  const [catalog, bosses] = await Promise.all([loadDemonCatalog(), loadBossCatalog()]);
+  res.type('application/xml').send(renderSitemap(catalog, bosses));
 });
 
 app.get('/app/images/demons/:imageName', async (req, res, next) => {
@@ -116,6 +122,24 @@ app.get(['/demons/:slug', '/demons/:slug/'], async (req, res, next) => {
   if (!demon) return next();
 
   res.send(renderDemonPage(demon, getRelatedDemons(catalog, demon)));
+});
+
+app.get(['/bosses', '/bosses/'], async (req, res) => {
+  const bosses = await loadBossCatalog();
+  res.send(renderBossesPage(bosses));
+});
+
+app.get(['/bosses/:slug', '/bosses/:slug/'], async (req, res, next) => {
+  const bosses = await loadBossCatalog();
+  const boss = findBossBySlug(bosses, req.params.slug);
+  if (!boss) return next();
+
+  const canonicalPath = getBossPagePath(boss);
+  if (req.path.replace(/\/+$/, '') !== canonicalPath) {
+    return res.redirect(301, canonicalPath);
+  }
+
+  res.send(renderBossPage(boss, getRelatedBosses(bosses, boss)));
 });
 
 app.get(['/camp', '/camp/'], (req, res) => {
@@ -236,6 +260,14 @@ function loadDemonCatalog() {
   }
 
   return catalogPromise;
+}
+
+function loadBossCatalog() {
+  if (!bossCatalogPromise) {
+    bossCatalogPromise = getFullBossCatalog();
+  }
+
+  return bossCatalogPromise;
 }
 
 module.exports = app;

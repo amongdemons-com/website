@@ -64,16 +64,21 @@
           ? 'dungeon'
           : pathname.startsWith('/demons')
             ? 'demons'
-            : pathname.startsWith('/collection')
-              ? 'collection'
-              : pathname.startsWith('/rank')
-                ? 'rankings'
-                : '';
+            : pathname.startsWith('/bosses')
+              ? 'bosses'
+              : pathname.startsWith('/collection')
+                ? 'collection'
+                : pathname.startsWith('/rank')
+                  ? 'rankings'
+                  : '';
 
-    document.querySelectorAll('[data-game-route]').forEach((link) => {
-      const isActive = Boolean(section && link.dataset.gameRoute === section);
+    document.querySelectorAll('[data-game-route], [data-game-sections]').forEach((link) => {
+      const sections = String(link.dataset.gameSections || link.dataset.gameRoute || '')
+        .split(/\s+/)
+        .filter(Boolean);
+      const isActive = Boolean(section && sections.includes(section));
       link.classList.toggle('active', isActive);
-      if (isActive) {
+      if (isActive && link.dataset.gameRoute) {
         link.setAttribute('aria-current', 'page');
       } else {
         link.removeAttribute('aria-current');

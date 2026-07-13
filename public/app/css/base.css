@@ -3515,9 +3515,18 @@ body.seo-page {
         linear-gradient(90deg, rgba(5,10,12,0.78), rgba(5,10,12,0.5), rgba(5,10,12,0.72));
 }
 
+.seo-bosses-hero {
+    background:
+        radial-gradient(circle at 78% 26%, rgba(226,80,65,0.16), transparent 22rem),
+        radial-gradient(circle at 62% 70%, rgba(250,197,28,0.09), transparent 18rem),
+        radial-gradient(circle at 90% 68%, rgba(147,101,184,0.09), transparent 16rem),
+        linear-gradient(90deg, rgba(5,10,12,0.8), rgba(5,10,12,0.52), rgba(5,10,12,0.74));
+}
+
 .seo-hero-copy,
 .seo-section,
-.seo-demon-detail {
+.seo-demon-detail,
+.seo-boss-priority {
     width: min(1160px, calc(100% - 2rem));
     margin: 0 auto;
 }
@@ -3537,7 +3546,8 @@ body.seo-page {
 }
 
 .seo-hero h1,
-.seo-demon-detail h1 {
+.seo-demon-detail h1,
+.seo-boss-priority h1 {
     max-width: 12ch;
     margin: 0.35rem 0 0.75rem;
     color: #fff;
@@ -3624,7 +3634,9 @@ body.seo-page {
 }
 
 .seo-demons-page .seo-demon-grid,
-.seo-demon-page .seo-demon-grid {
+.seo-demon-page .seo-demon-grid,
+.seo-bosses-page .seo-boss-grid,
+.seo-boss-page .seo-boss-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -3674,6 +3686,231 @@ body.seo-page {
 .seo-demons-page .seo-demon-card p {
     font-size: 0.82rem;
     line-height: 1.35;
+}
+
+.seo-boss-card p {
+    font-size: 0.84rem;
+    line-height: 1.4;
+}
+
+.seo-boss-card .seo-demon-card-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.seo-boss-card .seo-demon-card-art,
+.seo-boss-detail-art {
+    background:
+        radial-gradient(circle at 50% 40%, rgba(226,80,65,0.12), transparent 58%),
+        rgba(0,0,0,0.42);
+}
+
+.seo-boss-advantages strong {
+    color: rgba(245,213,109,0.94);
+}
+
+.seo-boss-priority {
+    padding: clamp(1.6rem, 4vw, 3.25rem) 0 clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.seo-boss-priority-heading {
+    display: grid;
+    grid-template-columns: clamp(8rem, 13vw, 10.5rem) minmax(0, 1fr);
+    gap: clamp(1rem, 2.5vw, 1.75rem);
+    align-items: center;
+    max-width: none;
+    margin-bottom: 1.35rem;
+}
+
+.seo-boss-priority-copy {
+    min-width: 0;
+}
+
+.seo-boss-priority-heading h1 {
+    max-width: none;
+    margin-bottom: 0.65rem;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    white-space: nowrap;
+}
+
+.seo-boss-priority-heading p,
+.seo-boss-formation-intro > p,
+.seo-boss-reward-panel > p {
+    color: var(--ad-muted, #b8c2c8);
+}
+
+.seo-boss-priority-heading p {
+    max-width: 48rem;
+    margin: 0;
+    font-size: clamp(0.98rem, 2vw, 1.16rem);
+}
+
+.seo-boss-priority-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(17rem, 0.8fr);
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.seo-boss-formation-panel,
+.seo-boss-reward-panel,
+.seo-boss-summary-panel {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 9px;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.035), transparent 36%),
+        rgba(6,16,19,0.9);
+    box-shadow: 0 18px 42px rgba(0,0,0,0.3);
+}
+
+.seo-boss-formation-panel {
+    display: grid;
+    grid-template-columns: minmax(13rem, 0.68fr) minmax(18rem, 1fr);
+    grid-row: span 2;
+    gap: clamp(1rem, 2.5vw, 1.6rem);
+    align-items: center;
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.seo-boss-formation-panel h2,
+.seo-boss-reward-panel h2 {
+    margin: 0.22rem 0 0.42rem;
+    color: #fff;
+    font-size: clamp(1.45rem, 3vw, 2.15rem);
+    font-weight: 900;
+}
+
+.seo-boss-formation-intro > p,
+.seo-boss-reward-panel > p {
+    margin: 0;
+}
+
+.seo-boss-advantages {
+    margin-top: 1.15rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 1rem;
+}
+
+.seo-boss-advantages .seo-kicker {
+    color: #f5d56d;
+}
+
+.seo-boss-advantages ul {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.seo-boss-advantages li {
+    color: var(--ad-muted, #b8c2c8);
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.seo-boss-advantages strong {
+    display: block;
+    margin-bottom: 0.1rem;
+}
+
+.seo-boss-formation-layout {
+    width: min(100%, 20.75rem);
+    margin-inline: auto;
+}
+
+.seo-boss-formation-axis {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 0 0.38rem;
+    color: rgba(220,232,229,0.52);
+    font-size: 0.68rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.seo-boss-formation-axis span:last-child {
+    color: rgba(245,213,109,0.86);
+}
+
+.seo-boss-formation-panel .seo-boss-team-board.hunter-team-board.battle-side .battle-formation-grid {
+    width: 100%;
+    max-width: 20.75rem;
+    gap: clamp(0.28rem, 0.65vw, 0.48rem);
+    padding: clamp(0.35rem, 0.7vw, 0.52rem);
+}
+
+.seo-boss-reward-panel {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(250,197,28,0.3);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(250,197,28,0.15), transparent 17rem),
+        linear-gradient(180deg, rgba(232,199,106,0.08), transparent 60%),
+        rgba(12,17,16,0.94);
+    box-shadow: 0 18px 42px rgba(0,0,0,0.32);
+    padding: clamp(1rem, 2.5vw, 1.35rem);
+}
+
+.seo-boss-reward-panel .seo-kicker {
+    color: #f5d56d;
+}
+
+.seo-boss-reward-duration {
+    display: inline-flex;
+    margin-top: 1rem;
+    border: 1px solid rgba(250,197,28,0.26);
+    border-radius: 999px;
+    background: rgba(250,197,28,0.08);
+    color: #f7df88;
+    font-size: 0.76rem;
+    padding: 0.38rem 0.65rem;
+    text-transform: uppercase;
+}
+
+.seo-boss-summary-panel {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    padding: 0.8rem;
+}
+
+.seo-boss-summary-art {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border: 1px solid var(--rarity-color, rgba(255,255,255,0.14));
+    border-radius: 7px;
+    background: rgba(0,0,0,0.4);
+    box-shadow: 0 18px 42px rgba(0,0,0,0.3);
+}
+
+.seo-boss-summary-art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.seo-boss-summary-panel .seo-stat-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin: 0;
+}
+
+.seo-boss-summary-panel .seo-stat-list > div {
+    padding: 0.46rem 0.6rem;
+}
+
+.seo-boss-summary-panel .seo-action-row {
+    grid-column: 1 / -1;
+    margin-top: 0;
+}
+
+.seo-boss-summary-panel .btn {
+    flex: 1 1 auto;
+}
+
+.seo-boss-taunts-grid {
+    grid-template-columns: 1fr;
 }
 
 .seo-demon-card-meta {
@@ -3758,8 +3995,23 @@ body.seo-page {
         grid-template-columns: 1fr;
     }
 
+.seo-boss-priority-grid {
+        grid-template-columns: 1fr;
+        align-items: start;
+    }
+
+.seo-boss-formation-panel {
+        grid-row: auto;
+    }
+
+.seo-boss-priority-heading h1 {
+        font-size: clamp(2rem, 5.5vw, 3.5rem);
+    }
+
 .seo-demons-page .seo-demon-grid,
-    .seo-demon-page .seo-demon-grid {
+    .seo-demon-page .seo-demon-grid,
+    .seo-bosses-page .seo-boss-grid,
+    .seo-boss-page .seo-boss-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
@@ -3782,17 +4034,51 @@ body.seo-page {
         grid-template-columns: 1fr;
     }
 
-.seo-demons-page .seo-demon-grid {
+.seo-boss-priority-heading {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+.seo-boss-priority-heading .seo-boss-summary-art {
+        width: 6rem;
+    }
+
+.seo-boss-priority-heading h1 {
+    font-size: clamp(1.5rem, 7.25vw, 2.5rem);
+        letter-spacing: -0.025em;
+    }
+
+.seo-boss-summary-panel {
+        grid-template-columns: 1fr;
+    }
+
+.seo-boss-formation-panel {
+        grid-template-columns: 1fr;
+    }
+
+.seo-boss-formation-layout {
+        width: min(100%, 20.75rem);
+    }
+
+.seo-boss-formation-axis {
+        display: none;
+    }
+
+.seo-demons-page .seo-demon-grid,
+    .seo-bosses-page .seo-boss-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-.seo-demon-page .seo-demon-grid {
+.seo-demon-page .seo-demon-grid,
+    .seo-boss-page .seo-boss-grid {
         grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 390px) {
-.seo-demons-page .seo-demon-grid {
+.seo-demons-page .seo-demon-grid,
+    .seo-bosses-page .seo-boss-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -6361,6 +6647,71 @@ body .game-shell-nav .game-nav-link.is-locked {
     cursor: not-allowed;
 }
 
+.game-nav-dropdown {
+    position: relative;
+}
+
+body .game-shell-nav .game-nav-dropdown-toggle {
+    appearance: none;
+    width: 100%;
+}
+
+body .game-shell-nav .game-nav-caret {
+    width: 0.72rem;
+    height: 0.72rem;
+    margin: 0 0 0 0.08rem;
+    color: rgba(220,232,229,0.52);
+    transition: transform 150ms ease;
+}
+
+body .game-shell-nav .game-nav-dropdown-toggle[aria-expanded="true"] .game-nav-caret {
+    transform: rotate(180deg);
+}
+
+body .game-shell-nav .game-nav-dropdown-menu {
+    min-width: 11rem;
+    margin: 0;
+    border: 1px solid rgba(161,212,201,0.2);
+    border-radius: 0 0 7px 7px;
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.055), transparent 56%),
+        rgba(5,13,16,0.98);
+    box-shadow: 0 18px 36px rgba(0,0,0,0.46);
+    padding: 0.38rem;
+}
+
+body .game-shell-nav .game-nav-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.48rem;
+    min-height: 2.35rem;
+    border-radius: 4px;
+    color: rgba(220,232,229,0.78);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+body .game-shell-nav .game-nav-dropdown-item .ad-icon {
+    width: 0.92rem;
+    height: 0.92rem;
+    color: rgba(111,214,189,0.78);
+}
+
+body .game-shell-nav .game-nav-dropdown-item:hover,
+body .game-shell-nav .game-nav-dropdown-item:focus-visible {
+    background: rgba(111,214,189,0.1);
+    color: #f8fbf9;
+}
+
+body .game-shell-nav .game-nav-dropdown-item.active,
+body .game-shell-nav .game-nav-dropdown-item.active:hover,
+body .game-shell-nav .game-nav-dropdown-item.active:focus-visible {
+    background: linear-gradient(90deg, rgba(231,138,85,0.16), rgba(232,199,106,0.08));
+    color: #f3dc93;
+}
+
 body .game-shell-nav .nav-account,
 body .game-shell-nav .nav-auth-actions {
     align-items: center;
@@ -7052,6 +7403,18 @@ body .game-shell-nav .game-nav-link {
         width: 100%;
         min-height: 2.35rem;
         border: 1px solid rgba(161,212,201,0.1);
+        border-radius: 4px;
+    }
+
+body .game-shell-nav .game-nav-dropdown {
+        min-width: 0;
+        flex-direction: column;
+    }
+
+body .game-shell-nav .game-nav-dropdown-menu {
+        width: 100%;
+        min-width: 0;
+        margin-top: 0.28rem;
         border-radius: 4px;
     }
 

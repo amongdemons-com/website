@@ -108,6 +108,7 @@ amongdemons.com/
 | --- | --- |
 | `/` | Server-rendered public landing page |
 | `/demons`, `/demons/:slug` | Server-rendered public demon catalog and per-demon guides |
+| `/bosses`, `/bosses/:id` | Server-rendered world boss catalog and JSON-backed encounter guides |
 | `/camp` | Authenticated hub: progression, current run briefing, daily quests, quick actions |
 | `/world` | World map exploration (Pixi.js) |
 | `/dungeon` | Dungeon run UI |
@@ -285,6 +286,7 @@ Files in `public/api/data` are source game data — API code reads them at runti
 | --- | --- |
 | `demon-types.json` | 11 demon types: roles, base stat ranges, targeting, abilities, spawn weights |
 | `demons.json` | 66 demon asset/species mappings |
+| `world-bosses.json` | World boss identities, teams, taunts, battle buffs, and rewards |
 | `combat-buffs.json` | 20 Demonic Pact definitions |
 | `map.json` | Generated world map: bounds, spawn, roads, blocks, encounters, events |
 
