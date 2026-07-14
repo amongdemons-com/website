@@ -5,6 +5,8 @@ import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMN
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount, getRarityColor } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
+const audio = window.AmongDemons.audio;
+
 const battle = (...args) => dungeonActions.battle(...args);
 const canAddDemonToFormationLane = (...args) => dungeonActions.canAddDemonToFormationLane(...args);
 const confirmCollectionReplacement = (...args) => dungeonActions.confirmCollectionReplacement(...args);
@@ -616,6 +618,7 @@ async function cashOut({ button, body, clearCollection = false }) {
 async function finishCashout(result, options = {}) {
   const skippedDemon = Boolean(options.skippedDemon);
   const demonMessage = skippedDemon ? '' : getCashoutDemonMessage(result);
+  audio?.play('sfx.dungeon.extract', { volume: 0.94 });
 
   clearCurrentRun();
   if (options.clearCollection) state.collectionDemons = null;

@@ -367,6 +367,7 @@
       : 'New power awakened');
     const serial = String(++levelUpAnimationSerial);
     rememberSeenLevelUpLevel(currentState, level);
+    window.AmongDemons.audio?.play('sfx.progression.levelUp', { volume: 0.96 });
 
     animateLevelUpAnchors(root, serial, reducedMotion);
     if (typeof dismissActiveLevelUpAnimation === 'function') {

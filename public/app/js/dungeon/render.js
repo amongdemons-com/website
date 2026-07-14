@@ -5,6 +5,8 @@ import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMN
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, setElementHtml, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
+const audio = window.AmongDemons.audio;
+
 const battle = (...args) => dungeonActions.battle(...args);
 const bindCollectionReinforcementPlaceholders = (...args) => dungeonActions.bindCollectionReinforcementPlaceholders(...args);
 const bindDemonDetailCards = (...args) => dungeonActions.bindDemonDetailCards(...args);
@@ -251,6 +253,7 @@ function showBattleResultOverlay(type) {
   const existing = document.querySelector('.battle-result-burst');
   if (existing) existing.remove();
   state.isResultAnimating = true;
+  audio?.play(type === 'victory' ? 'sfx.battle.victory' : 'sfx.battle.defeat', { volume: 0.96 });
   renderFightLogActions();
   syncActionButtons();
 

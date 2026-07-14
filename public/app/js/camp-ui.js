@@ -2,6 +2,7 @@
   'use strict';
 
   const api = window.AmongDemons.api;
+  const audio = window.AmongDemons.audio;
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const session = window.AmongDemons.getSession();
@@ -29,6 +30,7 @@
       return;
     }
 
+    audio?.setScene({ music: 'music.default' });
     cacheElements();
     startDailySoulAnimation();
     bindDisabledLinks();
@@ -597,6 +599,7 @@
         method: 'POST'
       });
       applyQuestPayload(payload);
+      audio?.play('sfx.progression.questComplete', { volume: 0.9 });
       setMessage('Quest reward claimed.', 'success');
     } catch (error) {
       showError(error);
@@ -616,6 +619,7 @@
     try {
       const payload = await api('/api/account/daily-reward/claim', { method: 'POST' });
       applyQuestPayload(payload);
+      audio?.play('sfx.progression.dailyReward', { volume: 0.92 });
       setMessage('Lost Souls claimed.', 'success');
     } catch (error) {
       showError(error);

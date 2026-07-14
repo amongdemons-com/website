@@ -2,6 +2,7 @@
   'use strict';
 
   const api = window.AmongDemons.api;
+  const audio = window.AmongDemons.audio;
   const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
   const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
   const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
@@ -49,6 +50,7 @@
   onReady(init);
 
   async function init() {
+    audio?.setScene({ music: 'music.default' });
     cacheElements();
     bindActions();
     // First-time visitors browse the collection as a guest rather than empty-handed.
@@ -572,6 +574,7 @@
     elements.autoTrainSummary.textContent = 'Training in progress...';
     elements.autoTrainLog.innerHTML = '<p class="collection-auto-train-empty mb-0">The server is resolving each attempt...</p>';
     setAutoTrainRunning(true);
+    audio?.play('sfx.progression.trainingAttempt', { volume: 0.75 });
 
     try {
       const result = await api(`/api/demons/${encodeURIComponent(demon.id)}/train`, {
@@ -583,6 +586,12 @@
       syncPlayer(result.player);
       renderCollection();
       renderAutoTrainResult(result.training || {});
+      audio?.play(
+        Number(result.training?.succeededCount) > 0
+          ? 'sfx.progression.trainingSuccess'
+          : 'sfx.progression.trainingFailure',
+        { volume: 0.88 }
+      );
       syncAutoTrainBalance(result.player);
     } catch (error) {
       if (error.status === 401) {
@@ -691,6 +700,7 @@
     clearTrainingFeedbackArtifacts();
     syncModalTrainingAction(demon);
     setTrainingButtonBusy(button, true);
+    audio?.play('sfx.progression.trainingAttempt', { volume: 0.75 });
 
     let revealPending = false;
     try {
@@ -812,6 +822,12 @@
     state.trainingResultTimer = null;
     state.trainingDemonId = null;
     setTrainingButtonBusy(outcome.button, false);
+    audio?.play(
+      training.succeeded === false
+        ? 'sfx.progression.trainingFailure'
+        : 'sfx.progression.trainingSuccess',
+      { volume: 0.88 }
+    );
 
     if (outcome.updatedDemon) {
       replaceCollectionDemon(outcome.updatedDemon);

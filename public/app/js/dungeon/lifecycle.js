@@ -5,6 +5,8 @@ import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMN
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
+const audio = window.AmongDemons.audio;
+
 const applyBattleSpeed = (...args) => dungeonActions.applyBattleSpeed(...args);
 const beginDeferredDemonicPactReveal = (...args) => dungeonActions.beginDeferredDemonicPactReveal(...args);
 const bindActions = (...args) => dungeonActions.bindActions(...args);
@@ -28,6 +30,7 @@ const setDungeonLoading = (...args) => dungeonActions.setDungeonLoading(...args)
 const showBattleResultOverlay = (...args) => dungeonActions.showBattleResultOverlay(...args);
 const showCombatPanel = (...args) => dungeonActions.showCombatPanel(...args);
 const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelectionFromRun(...args);
+let announcedFloor = null;
 
   async function init() {
     if (!window.AmongDemons.getToken()) {
@@ -40,6 +43,7 @@ const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelecti
       }
     }
 
+  audio?.setScene({ music: 'music.dungeon' });
   cacheElements();
   bindActions();
   applyBattleSpeed();
@@ -108,6 +112,7 @@ async function loadCurrentRun() {
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
     renderRun();
+    announceDungeonFloor();
     return true;
   } catch (error) {
     if (error.status === 404) return false;
@@ -131,6 +136,7 @@ async function startRun() {
     state.battleHandPreview = null;
     clearRewardSelection();
     state.startOptions = null;
+    announcedFloor = null;
     storeCurrentRun(payload.runId);
     await loadRun(payload.runId);
   } catch (error) {
@@ -175,6 +181,7 @@ async function loadRun(runId) {
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
     renderRun();
+    announceDungeonFloor();
   } catch (error) {
     clearCurrentRun();
     state.run = null;
@@ -202,6 +209,8 @@ async function battle() {
       elements.fightLog.classList.remove('text-muted');
       await playCombatLog(result);
       if (result.winner === 'enemy') {
+        audio?.play('sfx.battle.defeat', { volume: 0.96 });
+        window.setTimeout(() => audio?.play('sfx.dungeon.runLost', { volume: 0.88 }), 850);
         state.run.status = 'defeated';
         state.run.lastBattle = result.lastBattle || state.run.lastBattle;
         state.battleHandPreview = null;
@@ -341,6 +350,12 @@ async function confirmRecruitReward() {
       method: 'POST',
       body
     });
+    audio?.play(
+      state.selectedRecruitRewardId || body.rewardId
+        ? 'sfx.dungeon.demonRecruit'
+        : 'sfx.dungeon.reinforcement',
+      { volume: 0.86 }
+    );
     clearRecruitSelection();
     state.isRecruiting = false;
     clearDragState();
@@ -405,6 +420,13 @@ async function finishRun(message, summary = {}) {
   } catch (error) {
     showError(error);
   }
+}
+
+function announceDungeonFloor() {
+  const floor = Math.max(0, Number(state.run?.currentFloor) || 0);
+  if (!floor || floor === announcedFloor) return;
+  announcedFloor = floor;
+  audio?.play('sfx.dungeon.floorEnter', { volume: 0.82, queueUntilUnlock: true });
 }
 
 function renderEarnedNoticeHtml(message, result) {

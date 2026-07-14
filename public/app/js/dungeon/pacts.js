@@ -4,6 +4,8 @@ import { api, activeRunPath } from './api.js';
 import { clearRecruitDrafts, setMessage, withBusy, bindClick, bindClicks, capitalize, escapeHtml, sleep } from './utils.js';
 import { renderIcon, renderSoulAmount } from './shared-ui.js';
 
+const audio = window.AmongDemons.audio;
+
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
 const prepareRecruitStrategyState = (...args) => dungeonActions.prepareRecruitStrategyState(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
@@ -262,6 +264,7 @@ function completeDeferredDemonicPactRevealAfter(delay = 0) {
     } else {
       clearRecruitDrafts();
     }
+    audio?.play('sfx.dungeon.pactReveal', { volume: 0.88 });
     renderRun();
   }, Math.max(0, Number(delay) || 0) + 180);
 }
@@ -288,6 +291,7 @@ async function chooseDemonicPact(buffId, button = null) {
         clearRecruitDrafts();
       }
       renderRun();
+      audio?.play('sfx.dungeon.pactChoose', { volume: 0.9 });
       setMessage(`${chosen?.name || 'Demonic Pact'} sealed.`, 'success');
     } catch (error) {
       console.error(error);
@@ -314,6 +318,7 @@ async function rerollDemonicPacts(button = null) {
       state.isPactRevealPending = false;
       beginDemonicPactRecastIn();
       renderRun();
+      audio?.play('sfx.dungeon.pactReroll', { volume: 0.86 });
       setMessage(`Demonic Pacts recast for ${cost} Souls.`, 'success');
     } catch (error) {
       clearDemonicPactRecastAnimation();

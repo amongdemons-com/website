@@ -5,6 +5,8 @@ import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMN
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
+const audio = window.AmongDemons.audio;
+
 const applyRewardBoxDrop = (...args) => dungeonActions.applyRewardBoxDrop(...args);
 const canDropOnRewardBox = (...args) => dungeonActions.canDropOnRewardBox(...args);
 const canExtractRun = (...args) => dungeonActions.canExtractRun(...args);

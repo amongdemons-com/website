@@ -3,6 +3,7 @@
 
   const api = window.AmongDemons.api;
   const usernames = window.AmongDemons.usernames;
+  const audio = window.AmongDemons.audio;
   // Keep in sync with the battle-feel keys in js/dungeon/config.js.
   const BATTLE_SCREEN_SHAKE_KEY = 'amongdemons-battle-screen-shake';
   const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
@@ -17,9 +18,11 @@
       return;
     }
 
+    audio?.setScene({ music: 'music.default' });
     cacheElements();
     elements.form.addEventListener('submit', saveUsername);
     initBattleToggles();
+    initAudioControls();
 
     try {
       const payload = await api('/api/auth/me');
@@ -45,11 +48,45 @@
     elements.submitLabel = document.getElementById('saveUsernameLabel');
     elements.screenShake = document.getElementById('settingsScreenShake');
     elements.cardShake = document.getElementById('settingsCardShake');
+    elements.audioMuted = document.getElementById('settingsAudioMuted');
+    elements.masterVolume = document.getElementById('settingsMasterVolume');
+    elements.masterVolumeValue = document.getElementById('settingsMasterVolumeValue');
+    elements.musicVolume = document.getElementById('settingsMusicVolume');
+    elements.musicVolumeValue = document.getElementById('settingsMusicVolumeValue');
+    elements.sfxVolume = document.getElementById('settingsSfxVolume');
+    elements.sfxVolumeValue = document.getElementById('settingsSfxVolumeValue');
   }
 
   function initBattleToggles() {
     bindPreferenceToggle(elements.screenShake, BATTLE_SCREEN_SHAKE_KEY);
     bindPreferenceToggle(elements.cardShake, BATTLE_CARD_SHAKE_KEY);
+  }
+
+  function initAudioControls() {
+    if (!audio) return;
+
+    const current = audio.getVolumes();
+    elements.audioMuted.checked = audio.isMuted();
+    elements.audioMuted.addEventListener('change', () => audio.setMuted(elements.audioMuted.checked));
+    bindVolumeControl(elements.masterVolume, elements.masterVolumeValue, 'master', current.master);
+    bindVolumeControl(elements.musicVolume, elements.musicVolumeValue, 'music', current.music);
+    bindVolumeControl(elements.sfxVolume, elements.sfxVolumeValue, 'sfx', current.sfx);
+  }
+
+  function bindVolumeControl(input, output, name, initialValue) {
+    if (!input || !output) return;
+
+    const initialPercent = Math.round((Number(initialValue) || 0) * 100);
+    input.value = String(initialPercent);
+    output.value = `${initialPercent}%`;
+    output.textContent = `${initialPercent}%`;
+
+    input.addEventListener('input', () => {
+      const percent = Math.max(0, Math.min(100, Number(input.value) || 0));
+      output.value = `${percent}%`;
+      output.textContent = `${percent}%`;
+      audio.setVolumes({ [name]: percent / 100 });
+    });
   }
 
   function bindPreferenceToggle(toggle, key) {

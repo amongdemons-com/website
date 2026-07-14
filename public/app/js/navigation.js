@@ -8,16 +8,23 @@
     ['c', '/camp'],
     ['t', '/skill-tree']
   ]);
+  const DEFAULT_MUSIC_ROUTE = /^\/(?:demons|bosses|rankings|hunter)(?:\/|$)/;
 
   onReady(init);
 
   function init() {
+    initDefaultMusic();
     moveGuidesAfterRankings();
     markCurrentGameNav();
     bindDisabledLinks();
     bindGlobalPageShortcuts();
     bindPlayInstantly();
     initAccountNav();
+  }
+
+  function initDefaultMusic() {
+    if (!DEFAULT_MUSIC_ROUTE.test(window.location.pathname)) return;
+    window.AmongDemons?.audio?.setScene({ music: 'music.default' });
   }
 
   function moveGuidesAfterRankings() {

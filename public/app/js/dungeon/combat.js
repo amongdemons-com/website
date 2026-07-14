@@ -5,6 +5,8 @@ import { RUN_KEY, BATTLE_SPEED_KEY, BATTLE_SCREEN_SHAKE_KEY, BATTLE_CARD_SHAKE_K
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
+const audio = window.AmongDemons.audio;
+
 const battle = (...args) => dungeonActions.battle(...args);
 const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
 const renderDemonStatus = (...args) => dungeonActions.renderDemonStatus(...args);
@@ -15,6 +17,7 @@ const renderRun = (...args) => dungeonActions.renderRun(...args);
 async function playCombatLog() {
   if (!state.run) return;
 
+  audio?.play('sfx.battle.battleStart', { volume: 0.9 });
   const steps = groupCombatLog(state.combatLog);
   state.combatPlayback = {
     currentIndex: 0,
@@ -87,6 +90,7 @@ function applyCombatStep(step, index = -1, options = {}) {
   setActiveLogRow(index);
   const attackerSide = getDemonSide(step.attacker);
   const isAoe = Boolean(step.isAoe) || (step.entries || []).length > 1;
+  playCombatStepSound(step);
   if (step.primaryEffect !== 'poison') {
     animateAttackerCard(step.attacker, step.primaryEffect, step.entries[0]?.target);
   }
@@ -100,6 +104,36 @@ function applyCombatStep(step, index = -1, options = {}) {
   step.entries.forEach((entry, entryIndex) => {
     animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGroup);
   });
+}
+
+function playCombatStepSound(step) {
+  const primaryEntry = step.entries?.[0] || {};
+  const effect = step.primaryEffect || primaryEntry.effect;
+  if (effect === 'poison' || effect === 'heal' || effect === 'last_breath' || effect === 'shared_pain') return;
+
+  let key = null;
+  if (effect === 'poison_apply') {
+    key = 'sfx.battle.abilities.poisonApply';
+  } else if (effect === 'retaliate' || effect === 'thorns') {
+    key = 'sfx.battle.abilities.thornsRetaliate';
+  } else {
+    const typeId = Number(getCombatDemon(step.attacker)?.typeId);
+    key = ({
+      1: 'sfx.battle.abilities.meleeSwing',
+      2: 'sfx.battle.abilities.rangedProjectile',
+      3: 'sfx.battle.abilities.poisonApply',
+      4: 'sfx.battle.abilities.fireAoe',
+      5: 'sfx.battle.abilities.bruiserStrike',
+      6: 'sfx.battle.abilities.assassinStrike',
+      7: 'sfx.battle.abilities.cleave',
+      8: 'sfx.battle.abilities.thornsRetaliate',
+      9: 'sfx.battle.abilities.juggernautSlam',
+      10: 'sfx.battle.abilities.heal',
+      11: 'sfx.battle.abilities.chaosAttack'
+    })[typeId] || 'sfx.battle.abilities.meleeSwing';
+  }
+
+  audio?.play(key, { volume: 0.72, minInterval: 55 });
 }
 
 // Damage effects that route through the standard projectile branch (everything that isn't a
@@ -133,6 +167,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
 
   if (entry.effect === 'poison') {
     scheduleImpact(160, () => {
+      if (entryIndex === 0) audio?.play('sfx.battle.abilities.poisonTick', { volume: 0.66, minInterval: 80 });
       if (entryIndex === 0) {
         showFloatingDamage(entry.target, getPoisonBurstDamage(step), 'poison', entry.attacker, entry.effect, {
           burstCount: step.entries.length
@@ -148,6 +183,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
   if (entry.effect === 'heal') {
     if (!reduced) drawHealEffect(entry.attacker, entry.target);
     scheduleImpact(200, () => {
+      audio?.play('sfx.battle.abilities.heal', { volume: 0.7, minInterval: 80 });
       updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing });
       showFloatingDamage(entry.target, entry.healing, 'heal', entry.attacker, entry.effect);
       healTargetCard(entry.target);
@@ -189,6 +225,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
     ? fireGroup.travel + fireGroup.lead + entryIndex * 50
     : profile.travel + (isAoe ? entryIndex * 70 : 0);
   scheduleImpact(impactDelay, () => {
+    audio?.playImpact({ heavy: profile.heavy });
     updateTargetCard(entry.target, entry.targetHp, attackerSide);
     if (Number(entry.dmg) > 0) {
       showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
@@ -647,9 +684,11 @@ function triggerScreenShake() {
 }
 
 function maybePlayDeath(targetId, hp) {
-  if (Number(hp) > 0 || prefersReducedMotion()) return;
+  if (Number(hp) > 0) return;
   const card = findDemonCard(targetId);
   if (!card || card.classList.contains('is-dying')) return;
+  audio?.playDeath();
+  if (prefersReducedMotion()) return;
   playTemporaryCardClass(card, 'is-dying', 620);
 }
 

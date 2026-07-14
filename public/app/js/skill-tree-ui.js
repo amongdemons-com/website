@@ -2,6 +2,7 @@
   'use strict';
 
   const api = window.AmongDemons.api;
+  const audio = window.AmongDemons.audio;
   const renderSoulAmount = window.AmongDemons.ui?.renderSoulAmount || ((value) => String(value ?? '-'));
   const NODE_DEFINITIONS = {
     health_flat: { label: 'Max Health', help: 'Adds 5 maximum Health to every demon on your team per point.', cap: 5, requires: [] },
@@ -50,6 +51,7 @@
       return;
     }
 
+    audio?.setScene({ music: 'music.default' });
     cacheElements();
     bindControls();
 
@@ -312,6 +314,7 @@
         method: 'POST',
         body: { allocations: state.draft }
       }));
+      audio?.play('sfx.progression.skillUnlock', { volume: 0.9 });
       setMessage('Constellation sealed. Your skill bonuses are active.', 'success');
     } catch (error) {
       handleError(error);
@@ -340,6 +343,7 @@
       applyPlayer(payload.player);
       applySummary(payload);
       const cost = Math.max(0, Number(payload.reset?.cost ?? payload.resetCost) || 0);
+      audio?.play('sfx.progression.skillReset', { volume: 0.9 });
       setMessage(`All constellation bindings were released for ${formatNumber(cost)} Soul${cost === 1 ? '' : 's'}.`, 'success');
     } catch (error) {
       handleError(error);

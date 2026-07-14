@@ -2,15 +2,15 @@ import { BATTLE_SPEED_KEY, BATTLE_SPEED_OPTIONS, COMBAT_THEMES, FORMATION_GRID_C
 import { registerDungeonActions } from './dungeon/registry.js';
 import { state as dungeonState, elements as dungeonElements } from './dungeon/state.js';
 import * as dungeonDom from './dungeon/dom.js';
-import * as dungeonLifecycle from './dungeon/lifecycle.js';
-import * as dungeonRender from './dungeon/render.js?v=20260706-stat-preview-v1';
-import * as dungeonCombat from './dungeon/combat.js?v=20260627-fire-nova-v3';
-import * as dungeonRewards from './dungeon/rewards.js';
-import * as dungeonPacts from './dungeon/pacts.js?v=20260707-buff-expiry-v2';
+import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260714-audio-v3';
+import * as dungeonRender from './dungeon/render.js?v=20260714-audio-v1';
+import * as dungeonCombat from './dungeon/combat.js?v=20260714-audio-v1';
+import * as dungeonRewards from './dungeon/rewards.js?v=20260714-audio-v1';
+import * as dungeonPacts from './dungeon/pacts.js?v=20260714-audio-v1';
 import * as dungeonHand from './dungeon/hand.js?v=20260706-stat-preview-v4';
 import * as dungeonRecruit from './dungeon/recruit.js?v=20260706-stat-preview-v4';
 import * as dungeonModals from './dungeon/modals.js?v=20260706-stat-preview-v4';
-import * as dungeonDragDrop from './dungeon/drag-drop.js';
+import * as dungeonDragDrop from './dungeon/drag-drop.js?v=20260714-audio-v2';
 import * as dungeonCards from './dungeon/cards.js';
 import * as dungeonUtils from './dungeon/utils.js';
 
@@ -18,6 +18,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   'use strict';
 
   const api = window.AmongDemons.api;
+  const audio = window.AmongDemons.audio;
   const appUrl = window.AmongDemons.appUrl || ((value) => value);
   const renderIcon = window.AmongDemons?.ui?.renderIcon || (() => '');
   const renderDemonCard = window.AmongDemons?.ui?.renderDemonCard || (() => '');
@@ -232,6 +233,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       }
     }
 
+    audio?.setScene({ music: 'music.default' });
     cacheElements();
     bindDomControls();
 
@@ -726,12 +728,14 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
 
     if (isBlocked(target)) {
+      audio?.play('sfx.world.moveBlocked', { volume: 0.68 });
       clearRoutePreview('blocked');
       return;
     }
 
     const event = getEventAt(target);
     if (isDarknessPortalEvent(event)) {
+      audio?.play('sfx.world.pathSelect', { volume: 0.66 });
       state.selectedTarget = target;
       state.selectedPath = [];
       state.travelStatus = 'preview';
@@ -750,6 +754,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const path = findPath(state.position, target);
     if (path.length < 2) {
+      audio?.play('sfx.world.moveBlocked', { volume: 0.68 });
       clearRoutePreview('blocked');
       setMessage('No passable route found.', 'warning');
       return;
@@ -757,6 +762,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     state.selectedTarget = target;
     state.selectedPath = path;
+    audio?.play('sfx.world.pathSelect', { volume: 0.66 });
     state.travelStatus = 'preview';
     state.recentStepEvent = null;
 
@@ -803,6 +809,10 @@ import * as dungeonUtils from './dungeon/utils.js';
         state.selectedPath = path.slice(index - 1);
         renderWorld();
         await animateHunterStep(step);
+        audio?.play(index % 2 ? 'sfx.world.move01' : 'sfx.world.move02', {
+          volume: 0.54,
+          minInterval: Math.max(80, getStepDelay() - 20)
+        });
 
         state.selectedPath = path.slice(index);
         const stepEvent = stepEvents[index - 1] || { type: 'none', title: 'No Event', position: step };
@@ -816,6 +826,13 @@ import * as dungeonUtils from './dungeon/utils.js';
         state.currentBoss = getBossAt(step);
         renderWorld();
         renderPanels();
+        const successfulAmbush = stepEvent.type === 'ambush' && stepEvent.battle?.winner === 'enemy';
+        if (stepEvent.type !== 'none' && stepEvent.type !== 'ambush') {
+          audio?.play('sfx.world.encounterReveal', { volume: 0.7 });
+        }
+        if (successfulAmbush) {
+          audio?.play('sfx.world.ambush', { volume: 0.9 });
+        }
         if (shouldShowAmbushBattleReplay(stepEvent.battle)) {
           await showWorldBattleReplay(stepEvent.battle, getWorldBattleMeta('ambush', stepEvent.battle));
         } else if (stepEvent.type === 'ambush' && stepEvent.battle?.error) {
@@ -904,6 +921,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.currentEvent = recovery.currentEvent || getEventAt(returnPosition);
     state.currentEncounter = recovery.currentEncounter || getEncounterAt(returnPosition);
     state.currentBoss = recovery.currentBoss || getBossAt(returnPosition);
+    audio?.play('sfx.world.respawn', { volume: 0.88 });
 
     clearRoutePreview('arrived', { keepLog: true });
     centerOnHunter();
@@ -1062,6 +1080,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
 
     setButtonBusy(button, true);
+    audio?.play('sfx.world.pvpChallenge', { volume: 0.88 });
 
     try {
       const payload = await api('/api/world/challenge', {
@@ -1105,6 +1124,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!bossId || state.bossBusy) return;
     state.bossBusy = true;
     setButtonBusy(button, true);
+    audio?.play('sfx.world.bossReveal', { volume: 0.94 });
+    audio?.setScene({ music: 'music.worldBoss' });
 
     try {
       const payload = await api('/api/world/boss/challenge', {
@@ -1123,6 +1144,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         await showWorldBattleReplay(battle, battleMeta);
       }
       const won = battle?.winner === 'player';
+      if (won) audio?.play('sfx.bosses.defeated', { volume: 0.96 });
       setMessage(
         payload.message || getWorldBattleFallbackMessage(battle, battleMeta),
         won ? 'success' : 'warning'
@@ -1130,6 +1152,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     } catch (error) {
       handleAuthError(error);
     } finally {
+      audio?.setScene({ music: 'music.default' });
       state.bossBusy = false;
       setButtonBusy(button, false);
       renderEncounterPanel();
@@ -1175,6 +1198,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         body: { encounterId }
       });
       setHuntState(payload.hunt);
+      audio?.play('sfx.world.huntStart', { volume: 0.84 });
       setMessage(`You started hunting ${getEncounterHuntTargetLabel(getEncounterById(encounterId))}.`, 'success');
     } catch (error) {
       handleAuthError(error);
@@ -1225,6 +1249,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         window.AmongDemons.ui?.updateNavAccount?.(payload.player);
       }
       const rewards = payload.rewards || {};
+      if (!payload.alreadyStopped) audio?.play('sfx.world.huntStop', { volume: 0.78 });
       setMessage(
         payload.alreadyStopped
           ? (options.alreadyStoppedMessage || 'Hunting already stopped.')
@@ -1275,6 +1300,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
       state.boundShrine = normalizeShrine(payload.boundShrine);
       state.currentEvent = payload.currentShrine || getEventAt(state.position);
+      audio?.play('sfx.world.shrineBind', { volume: 0.92 });
       setMessage(
         payload.message || 'Soul anchored. You will return to this Forsaken Shrine if defeated.',
         'success'
@@ -1309,6 +1335,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         method: 'POST',
         body: { position }
       });
+      audio?.play('sfx.world.portalOpen', { volume: 0.94 });
 
       // Same blackout as an ambush defeat: fade to black, relocate the hunter
       // while the screen is dark, then fade back in (in the finally below).
@@ -1325,6 +1352,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
       state.position = normalizePosition(payload.position || position);
       state.hunterRenderPosition = null;
+      audio?.play('sfx.world.teleport', { volume: 0.92 });
       state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
       state.currentEvent = payload.currentEvent || getEventAt(state.position);
       state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
@@ -7232,6 +7260,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!dialog) return;
 
     const lines = boss.taunts?.length ? boss.taunts : WORLD_BOSS_INTRO_FALLBACK_LINES;
+    audio?.play('sfx.bosses.introStinger', { volume: 0.9, queueUntilUnlock: true });
     const line = lines[Math.floor(Math.random() * lines.length)];
     setText(elements.worldBossDialogName, boss.title || 'World Boss');
 
