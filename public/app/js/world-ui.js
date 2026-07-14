@@ -4246,16 +4246,24 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function renderHuntProgress(progress, rate) {
-    const totalSeconds = Math.max(1, Number(progress?.killSeconds || rate.killSeconds) || HUNT_DEFAULT_KILL_SECONDS);
-    const remainingSeconds = progress ? progress.secondsToNext : totalSeconds;
-    const progressPercent = clamp(((totalSeconds - remainingSeconds) / totalSeconds) * 100, 0, 100);
-    const roundedProgress = Math.round(progressPercent);
+    const { progressPercent, roundedProgress } = getHuntProgressDisplay(progress, rate);
 
     return `
       <span class="world-hunt-progress" role="progressbar" aria-label="Reward progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${roundedProgress}">
         <span class="world-hunt-progress-fill" style="--hunt-progress:${progressPercent.toFixed(2)}%"></span>
       </span>
     `;
+  }
+
+  function getHuntProgressDisplay(progress, rate) {
+    const totalSeconds = Math.max(1, Number(progress?.killSeconds || rate.killSeconds) || HUNT_DEFAULT_KILL_SECONDS);
+    const remainingSeconds = progress ? progress.secondsToNext : totalSeconds;
+    const progressPercent = clamp(((totalSeconds - remainingSeconds) / totalSeconds) * 100, 0, 100);
+
+    return {
+      progressPercent,
+      roundedProgress: Math.round(progressPercent)
+    };
   }
 
   function renderEncounterTitle(encounter, extraClass = '') {
@@ -7063,9 +7071,82 @@ import * as dungeonUtils from './dungeon/utils.js';
       syncHuntTicker();
       return;
     }
-    void refreshHuntStatus().catch(() => {});
+
+    // Keep the interactive card stable while its live values tick. Replacing
+    // the whole sidebar here used to detach the End Hunt button once a second,
+    // which could swallow clicks that straddled a refresh.
+    updateActiveHuntReadout();
     updateHuntTooltip();
-    renderEncounterPanel();
+    void refreshHuntStatus({ render: false })
+      .then(() => {
+        if (!isHuntActive()) {
+          renderEncounterPanel();
+          syncHuntTicker();
+          return;
+        }
+        updateActiveHuntReadout();
+      })
+      .catch(() => {});
+  }
+
+  function updateActiveHuntReadout() {
+    const card = elements.worldEncounterList?.querySelector('.world-active-hunt-card');
+    if (!card) return;
+
+    const progress = computeHuntProgress();
+    if (!progress) return;
+
+    const rate = computeHuntRate(getActiveHuntEncounter());
+    const progressElement = card.querySelector('.world-hunt-progress');
+    const progressFill = progressElement?.querySelector('.world-hunt-progress-fill');
+    const rewardRows = card.querySelectorAll('.world-hunt-reward-row');
+    const perKillRow = rewardRows[0];
+    const earnedRow = rewardRows[1];
+
+    if (progressElement && progressFill) {
+      const { progressPercent, roundedProgress } = getHuntProgressDisplay(progress, rate);
+      progressElement.setAttribute('aria-valuenow', String(roundedProgress));
+      progressFill.style.setProperty('--hunt-progress', `${progressPercent.toFixed(2)}%`);
+    }
+
+    const passiveXpPerKill = Math.max(1, Math.floor(rate.xpPerCycle * PASSIVE_HUNT_XP_MULTIPLIER));
+    setText(perKillRow?.querySelector('.world-hunt-xp-value'), `${formatNumber(passiveXpPerKill)} XP`);
+    setText(perKillRow?.querySelector('.world-hunt-souls-value'), formatSoulCount(rate.soulsPerCycle));
+    setText(earnedRow?.querySelector('.world-hunt-xp-value'), `${formatNumber(progress.accruedXp)} XP`);
+    updateHuntEarnedSouls(earnedRow?.querySelector('.world-hunt-souls-value'), progress);
+  }
+
+  function updateHuntEarnedSouls(element, progress) {
+    if (!element) return;
+
+    const capacity = Number(progress?.soulCapacity);
+    const displayedSouls = Math.max(0, Number(progress?.accruedSouls) || 0);
+    const vesselAmount = element.querySelector('.world-hunt-vessel-amount');
+
+    if (!Number.isFinite(capacity) || capacity <= 0) {
+      if (vesselAmount) {
+        element.outerHTML = renderHuntEarnedSouls(progress, displayedSouls);
+      } else {
+        setText(element, formatSoulCount(displayedSouls));
+      }
+      return;
+    }
+
+    if (!vesselAmount) {
+      element.outerHTML = renderHuntEarnedSouls(progress, displayedSouls);
+      return;
+    }
+
+    const full = Boolean(progress?.vesselFull) || displayedSouls >= capacity;
+    const tooltip = full
+      ? 'Your Soul Vessel is full. End the hunt to bank souls, or expand the vessel in the skill tree.'
+      : 'Souls banked while hunting are held in your Soul Vessel. When it fills, souls stop accruing until the hunt ends.';
+
+    element.classList.toggle('is-vessel-full', full);
+    element.dataset.tooltip = tooltip;
+    element.title = tooltip;
+    element.setAttribute('aria-label', tooltip);
+    setText(vesselAmount, `${formatNumber(displayedSouls)} / ${formatNumber(capacity)} Souls`);
   }
 
   function updateHuntTooltip() {
