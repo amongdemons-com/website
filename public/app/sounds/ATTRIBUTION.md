@@ -7,7 +7,7 @@ The downloaded source audio was renamed and converted to OGG Vorbis. All playabl
 ## Kenney
 
 - [RPG Audio](https://kenney.nl/assets/rpg-audio) — leather interaction sounds.
-- [Impact Sounds](https://kenney.nl/assets/impact-sounds) — light/heavy impacts and ambush sounds.
+- [Impact Sounds](https://kenney.nl/assets/impact-sounds) — ambush sounds.
 - [Music Jingles](https://kenney.nl/assets/music-jingles) — encounter, hunt, challenge, battle-start, reinforcement, and boss stingers.
 
 ## OpenGameArt
@@ -26,12 +26,12 @@ The downloaded source audio was renamed and converted to OGG Vorbis. All playabl
 
 These configured ability effects now use the six pre-existing `type_*` assets. The WAV sources were converted to OGG Vorbis; the existing OGG sources were renamed into the semantic catalog. Their license and original source predate this sound pass and are not established by the download links above.
 
-- `type_1.wav` → `sfx/battle/abilities/melee_swing.ogg`
-- `type_4.ogg` → `sfx/battle/abilities/fire_aoe.ogg`
-- `type_5.wav` → `sfx/battle/abilities/bruiser_strike.ogg`
-- `type_6.wav` → `sfx/battle/abilities/assassin_strike.ogg`
-- `type_7.ogg` → `sfx/battle/abilities/cleave.ogg`
-- `type_9.ogg` → `sfx/battle/abilities/juggernaut_slam.ogg`
+- `type_1.wav` → `sfx/battle/abilities/type_1.ogg`
+- `type_4.ogg` → `sfx/battle/abilities/type_4.ogg`
+- `type_5.wav` → `sfx/battle/abilities/type_5.ogg`
+- `type_6.wav` → `sfx/battle/abilities/type_6.ogg`
+- `type_7.ogg` → `sfx/battle/abilities/type_7.ogg`
+- `type_9.ogg` → `sfx/battle/abilities/type_9.ogg`
 
 ## User-provided audio
 

@@ -39,27 +39,23 @@
     },
     "battle": {
       "battleStart": "sfx/battle/battle_start.ogg",
-      "impactLight01": "sfx/battle/impact_light_01.ogg",
-      "impactLight02": "sfx/battle/impact_light_02.ogg",
-      "impactHeavy01": "sfx/battle/impact_heavy_01.ogg",
-      "impactHeavy02": "sfx/battle/impact_heavy_02.ogg",
       "demonDeath01": "sfx/battle/demon_death_01.ogg",
       "demonDeath02": "sfx/battle/demon_death_02.ogg",
       "victory": "sfx/battle/victory.ogg",
       "defeat": "sfx/battle/defeat.ogg",
       "abilities": {
-        "meleeSwing": "sfx/battle/abilities/melee_swing.ogg",
-        "rangedProjectile": "sfx/battle/abilities/ranged_projectile.ogg",
-        "poisonApply": "sfx/battle/abilities/poison_apply.ogg",
+        "meleeSwing": "sfx/battle/abilities/type_1.ogg",
+        "rangedProjectile": "sfx/battle/abilities/type_2.ogg",
+        "poisonApply": "sfx/battle/abilities/type_3.ogg",
         "poisonTick": "sfx/battle/abilities/poison_tick.ogg",
-        "fireAoe": "sfx/battle/abilities/fire_aoe.ogg",
-        "bruiserStrike": "sfx/battle/abilities/bruiser_strike.ogg",
-        "assassinStrike": "sfx/battle/abilities/assassin_strike.ogg",
-        "cleave": "sfx/battle/abilities/cleave.ogg",
-        "thornsRetaliate": "sfx/battle/abilities/thorns_retaliate.ogg",
-        "juggernautSlam": "sfx/battle/abilities/juggernaut_slam.ogg",
-        "heal": "sfx/battle/abilities/heal.ogg",
-        "chaosAttack": "sfx/battle/abilities/chaos_attack.ogg"
+        "fireAoe": "sfx/battle/abilities/type_4.ogg",
+        "bruiserStrike": "sfx/battle/abilities/type_5.ogg",
+        "assassinStrike": "sfx/battle/abilities/type_6.ogg",
+        "cleave": "sfx/battle/abilities/type_7.ogg",
+        "thornsRetaliate": "sfx/battle/abilities/type_8.ogg",
+        "juggernautSlam": "sfx/battle/abilities/type_9.ogg",
+        "heal": "sfx/battle/abilities/type_10.ogg",
+        "chaosAttack": "sfx/battle/abilities/type_11.ogg"
       }
     },
     "dungeon": {

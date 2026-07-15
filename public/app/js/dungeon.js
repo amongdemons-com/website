@@ -3,7 +3,7 @@ import { onReady } from './dungeon/utils.js';
 import * as dom from './dungeon/dom.js';
 import * as lifecycle from './dungeon/lifecycle.js?v=20260715-audio-v4';
 import * as render from './dungeon/render.js?v=20260714-audio-v1';
-import * as combat from './dungeon/combat.js?v=20260715-audio-v5';
+import * as combat from './dungeon/combat.js?v=20260715-audio-v6';
 import * as rewards from './dungeon/rewards.js?v=20260714-audio-v1';
 import * as pacts from './dungeon/pacts.js?v=20260714-audio-v1';
 import * as hand from './dungeon/hand.js?v=20260711-upgrade-swap-v2';

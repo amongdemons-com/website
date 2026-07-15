@@ -235,7 +235,6 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
     ? fireGroup.travel + fireGroup.lead + entryIndex * 50
     : profile.travel + (isAoe ? entryIndex * 70 : 0);
   scheduleImpact(impactDelay, () => {
-    audio?.playImpact({ heavy: profile.heavy });
     updateTargetCard(entry.target, entry.targetHp, attackerSide);
     if (Number(entry.dmg) > 0) {
       showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);

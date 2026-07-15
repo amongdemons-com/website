@@ -4,7 +4,7 @@ import { state as dungeonState, elements as dungeonElements } from './dungeon/st
 import * as dungeonDom from './dungeon/dom.js';
 import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260715-audio-v4';
 import * as dungeonRender from './dungeon/render.js?v=20260714-audio-v1';
-import * as dungeonCombat from './dungeon/combat.js?v=20260715-audio-v5';
+import * as dungeonCombat from './dungeon/combat.js?v=20260715-audio-v6';
 import * as dungeonRewards from './dungeon/rewards.js?v=20260714-audio-v1';
 import * as dungeonPacts from './dungeon/pacts.js?v=20260714-audio-v1';
 import * as dungeonHand from './dungeon/hand.js?v=20260706-stat-preview-v4';

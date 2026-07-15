@@ -38,7 +38,6 @@
   let muted = readMuted();
   let audioUnlocked = Boolean(window.navigator?.userActivation?.hasBeenActive);
   let deathVariant = 0;
-  let impactVariant = 0;
 
   bindAudioUnlock();
   bindVisibilityPlayback();
@@ -372,15 +371,6 @@
     });
   }
 
-  function playImpact(options = {}) {
-    const heavy = Boolean(options.heavy);
-    impactVariant = (impactVariant + 1) % 2;
-    const key = heavy
-      ? `sfx.battle.impactHeavy0${impactVariant + 1}`
-      : `sfx.battle.impactLight0${impactVariant + 1}`;
-    return play(key, { volume: heavy ? 0.88 : 0.66, minInterval: 45 });
-  }
-
   function playDeath() {
     deathVariant = (deathVariant + 1) % 2;
     return play(`sfx.battle.demonDeath0${deathVariant + 1}`, { volume: 0.78, minInterval: 100 });
@@ -503,7 +493,6 @@
     setScene,
     stopScene,
     play,
-    playImpact,
     playDeath,
     unlock: unlockAudio
   };
