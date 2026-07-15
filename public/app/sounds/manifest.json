@@ -59,7 +59,6 @@
       }
     },
     "dungeon": {
-      "floorEnter": "sfx/dungeon/floor_enter.ogg",
       "pactReveal": "sfx/dungeon/pact_reveal.ogg",
       "pactChoose": "sfx/dungeon/pact_choose.ogg",
       "pactReroll": "sfx/dungeon/pact_reroll.ogg",

@@ -30,7 +30,6 @@ const setDungeonLoading = (...args) => dungeonActions.setDungeonLoading(...args)
 const showBattleResultOverlay = (...args) => dungeonActions.showBattleResultOverlay(...args);
 const showCombatPanel = (...args) => dungeonActions.showCombatPanel(...args);
 const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelectionFromRun(...args);
-let announcedFloor = null;
 
   async function init() {
     if (!window.AmongDemons.getToken()) {
@@ -112,7 +111,6 @@ async function loadCurrentRun() {
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
     renderRun();
-    announceDungeonFloor();
     return true;
   } catch (error) {
     if (error.status === 404) return false;
@@ -136,7 +134,6 @@ async function startRun() {
     state.battleHandPreview = null;
     clearRewardSelection();
     state.startOptions = null;
-    announcedFloor = null;
     storeCurrentRun(payload.runId);
     await loadRun(payload.runId);
   } catch (error) {
@@ -181,7 +178,6 @@ async function loadRun(runId) {
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
     renderRun();
-    announceDungeonFloor();
   } catch (error) {
     clearCurrentRun();
     state.run = null;
@@ -421,13 +417,6 @@ async function finishRun(message, summary = {}) {
   } catch (error) {
     showError(error);
   }
-}
-
-function announceDungeonFloor() {
-  const floor = Math.max(0, Number(state.run?.currentFloor) || 0);
-  if (!floor || floor === announcedFloor) return;
-  announcedFloor = floor;
-  audio?.play('sfx.dungeon.floorEnter', { volume: 0.82, queueUntilUnlock: true });
 }
 
 function renderEarnedNoticeHtml(message, result) {
