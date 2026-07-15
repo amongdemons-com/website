@@ -11,6 +11,7 @@ const BATTLE_INTRO_COMPLETE_EVENT = 'amongdemons:battle-intro-complete';
 const battle = (...args) => dungeonActions.battle(...args);
 const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
 const renderDemonStatus = (...args) => dungeonActions.renderDemonStatus(...args);
+const renderDungeonCenterActions = (...args) => dungeonActions.renderDungeonCenterActions(...args);
 const renderFightLog = (...args) => dungeonActions.renderFightLog(...args);
 const renderFightLogActions = (...args) => dungeonActions.renderFightLogActions(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
@@ -30,6 +31,7 @@ async function playCombatLog(options = {}) {
   state.combatPlayback = combatPlayback;
   state.isBattleAnimating = true;
   if (options.waitForBattleIntro) {
+    renderDungeonCenterActions({ canFight: true, isFighting: true });
     await audio?.play('sfx.battle.battleStart', {
       volume: 0.9,
       waitForEnd: true,

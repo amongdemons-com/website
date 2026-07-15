@@ -209,11 +209,12 @@ async function battle() {
       elements.fightLog.classList.remove('text-muted');
       await playCombatLog(result);
       if (result.winner === 'enemy') {
-        audio?.play('sfx.battle.defeat', { volume: 0.96 });
-        window.setTimeout(() => audio?.play('sfx.dungeon.runLost', { volume: 0.88 }), 850);
         state.run.status = 'defeated';
         state.run.lastBattle = result.lastBattle || state.run.lastBattle;
         state.battleHandPreview = null;
+        const resultOverlay = showBattleResultOverlay('defeat');
+        window.setTimeout(() => audio?.play('sfx.dungeon.runLost', { volume: 0.88 }), 1050);
+        await resultOverlay;
         await finishRun(getDefeatMessage(result), { defeated: true });
       } else {
         const handFlowSources = captureEnemyHandFlowSources();

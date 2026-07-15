@@ -252,6 +252,9 @@ function renderFightLog() {
 function showBattleResultOverlay(type) {
   const existing = document.querySelector('.battle-result-burst');
   if (existing) existing.remove();
+  const isDefeat = type === 'defeat';
+  const reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  const duration = reducedMotion ? 900 : (isDefeat ? 3000 : 2200);
   state.isResultAnimating = true;
   audio?.play(type === 'victory' ? 'sfx.battle.victory' : 'sfx.battle.defeat', { volume: 0.96 });
   renderFightLogActions();
@@ -259,13 +262,16 @@ function showBattleResultOverlay(type) {
 
   const overlay = document.createElement('div');
   overlay.className = `battle-result-burst is-${type}`;
+  overlay.style.setProperty('--battle-result-duration', `${duration}ms`);
   overlay.setAttribute('role', 'status');
   overlay.setAttribute('aria-live', 'polite');
   overlay.innerHTML = `
     <div class="battle-result-burst-ring" aria-hidden="true"></div>
+    ${isDefeat ? '<div class="battle-result-burst-wound" aria-hidden="true"></div>' : ''}
     <div class="battle-result-burst-text">${type === 'victory' ? 'Victory' : 'Defeat'}</div>
+    ${isDefeat ? '<div class="battle-result-burst-subtitle">Your demons have fallen</div>' : ''}
     <div class="battle-result-burst-sparks" aria-hidden="true">
-      ${Array.from({ length: 10 }, () => '<span></span>').join('')}
+      ${Array.from({ length: isDefeat ? 16 : 10 }, () => '<span></span>').join('')}
     </div>
   `;
   document.body.appendChild(overlay);
@@ -277,7 +283,7 @@ function showBattleResultOverlay(type) {
       renderFightLogActions();
       syncActionButtons();
       resolve();
-    }, 2200);
+    }, duration);
   });
 }
 
