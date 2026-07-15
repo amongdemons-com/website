@@ -143,16 +143,16 @@
     return Boolean(stored && stored.isGuest);
   }
 
-  // Guest hunters swap the settings + logout controls for a single "Save"
-  // call-to-action while keeping their souls and identity visible. The button
-  // opens the register page in claim mode (see auth-ui.js).
+  // Guest hunters keep settings available, replace logout with a "Save"
+  // call-to-action, and retain their souls and identity. The button opens the
+  // register page in claim mode (see auth-ui.js).
   function applyGuestNav(accountElement, isGuest) {
     if (!accountElement) return;
 
     accountElement.classList.toggle('is-guest', isGuest);
     const settingsLink = accountElement.querySelector('.nav-settings-link');
     const logoutButton = accountElement.querySelector('#logoutBtn, .nav-logout-btn');
-    if (settingsLink) settingsLink.classList.toggle('d-none', isGuest);
+    if (settingsLink) settingsLink.classList.remove('d-none');
     if (logoutButton) logoutButton.classList.toggle('d-none', isGuest);
 
     let saveButton = accountElement.querySelector('[data-guest-save]');
