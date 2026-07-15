@@ -6,7 +6,7 @@ The downloaded source audio was renamed and converted to OGG Vorbis. All playabl
 
 ## Kenney
 
-- [RPG Audio](https://kenney.nl/assets/rpg-audio) — footsteps and leather interaction sounds.
+- [RPG Audio](https://kenney.nl/assets/rpg-audio) — leather interaction sounds.
 - [Impact Sounds](https://kenney.nl/assets/impact-sounds) — light/heavy impacts and ambush sounds.
 - [Music Jingles](https://kenney.nl/assets/music-jingles) — encounter, hunt, challenge, battle-start, reinforcement, and boss stingers.
 
@@ -32,3 +32,7 @@ These configured ability effects now use the six pre-existing `type_*` assets. T
 - `type_6.wav` → `sfx/battle/abilities/assassin_strike.ogg`
 - `type_7.ogg` → `sfx/battle/abilities/cleave.ogg`
 - `type_9.ogg` → `sfx/battle/abilities/juggernaut_slam.ogg`
+
+## User-provided audio
+
+The ten `sfx/world/footstep_dirt_*.ogg` movement variants were converted from the user-provided `Fantasy Sound Library/Mp3/Footsteps/Footstep_Dirt_00.mp3` through `Footstep_Dirt_09.mp3` files. Their source-library license is separate from the CC0 assets listed above.

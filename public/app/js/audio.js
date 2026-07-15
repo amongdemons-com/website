@@ -31,6 +31,7 @@
   const scenePendingKeys = { music: null };
   const sceneTokens = { music: 0 };
   const lastPlayedAt = new Map();
+  const lastSoundUrlByKey = new Map();
   const pendingUnlockSounds = new Map();
   const activeSfx = new Set();
   let volumes = readVolumes();
@@ -331,7 +332,7 @@
       player.playbackRate = clamp(Number(options.playbackRate), 0.5, 2);
     }
     if (options.loop) player.loop = true;
-    safePlay(player);
+    const playbackPromise = safePlay(player);
     if (Number(options.durationMs) > 0) {
       window.setTimeout(() => {
         releasePlayer();
@@ -342,7 +343,33 @@
     } else if (!options.loop) {
       window.setTimeout(releasePlayer, 30000);
     }
+    if (options.waitForEnd && !options.loop) {
+      try {
+        if (playbackPromise?.then) await playbackPromise;
+      } catch (error) {
+        releasePlayer();
+        return null;
+      }
+      await waitForPlaybackEnd(player, options.maxWaitMs);
+    }
     return player;
+  }
+
+  function waitForPlaybackEnd(player, maxWaitMs) {
+    if (!player || player.ended) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      const events = ['ended', 'error', 'abort', 'emptied'];
+      const timeoutMs = Math.max(1000, Number(maxWaitMs) || 30000);
+      let timeoutId = null;
+      const finish = () => {
+        events.forEach((eventName) => player.removeEventListener(eventName, finish));
+        if (timeoutId !== null) window.clearTimeout(timeoutId);
+        resolve();
+      };
+      events.forEach((eventName) => player.addEventListener(eventName, finish, { once: true }));
+      timeoutId = window.setTimeout(finish, timeoutMs);
+    });
   }
 
   function playImpact(options = {}) {
@@ -373,7 +400,14 @@
 
   async function resolveSoundUrl(key) {
     const urls = await resolveSoundUrls(key);
-    return urls[0] || null;
+    if (!urls.length) return null;
+    const previousUrl = lastSoundUrlByKey.get(key);
+    const candidates = urls.length > 1
+      ? urls.filter((url) => url !== previousUrl)
+      : urls;
+    const url = candidates[Math.floor(Math.random() * candidates.length)] || urls[0];
+    lastSoundUrlByKey.set(key, url);
+    return url;
   }
 
   function getEffectiveVolume(category, level = 1) {

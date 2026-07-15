@@ -2,9 +2,9 @@ import { BATTLE_SPEED_KEY, BATTLE_SPEED_OPTIONS, COMBAT_THEMES, FORMATION_GRID_C
 import { registerDungeonActions } from './dungeon/registry.js';
 import { state as dungeonState, elements as dungeonElements } from './dungeon/state.js';
 import * as dungeonDom from './dungeon/dom.js';
-import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260714-audio-v3';
+import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260715-audio-v4';
 import * as dungeonRender from './dungeon/render.js?v=20260714-audio-v1';
-import * as dungeonCombat from './dungeon/combat.js?v=20260714-audio-v1';
+import * as dungeonCombat from './dungeon/combat.js?v=20260715-audio-v5';
 import * as dungeonRewards from './dungeon/rewards.js?v=20260714-audio-v1';
 import * as dungeonPacts from './dungeon/pacts.js?v=20260714-audio-v1';
 import * as dungeonHand from './dungeon/hand.js?v=20260706-stat-preview-v4';
@@ -809,7 +809,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         state.selectedPath = path.slice(index - 1);
         renderWorld();
         await animateHunterStep(step);
-        audio?.play(index % 2 ? 'sfx.world.move01' : 'sfx.world.move02', {
+        audio?.play('sfx.world.move', {
           volume: 0.54,
           minInterval: Math.max(80, getStepDelay() - 20)
         });
@@ -1124,8 +1124,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!bossId || state.bossBusy) return;
     state.bossBusy = true;
     setButtonBusy(button, true);
-    audio?.play('sfx.world.bossReveal', { volume: 0.94 });
-    audio?.setScene({ music: 'music.worldBoss' });
+    const startBossMusic = () => audio?.setScene({ music: 'music.worldBoss' });
+    window.addEventListener('amongdemons:battle-intro-complete', startBossMusic, { once: true });
 
     try {
       const payload = await api('/api/world/boss/challenge', {
@@ -1152,6 +1152,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     } catch (error) {
       handleAuthError(error);
     } finally {
+      window.removeEventListener('amongdemons:battle-intro-complete', startBossMusic);
       audio?.setScene({ music: 'music.default' });
       state.bossBusy = false;
       setButtonBusy(button, false);
@@ -5447,7 +5448,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (state.worldBattleReplayToken !== token) return hiddenPromise;
 
     try {
-      await dungeonLifecycle.replayFight();
+      await dungeonLifecycle.replayFight({ waitForBattleIntro: true });
       const resultType = getWorldDungeonBattleResultType(battle);
       if (state.worldBattleReplayToken === token && resultType) {
         await showWorldDungeonBattleResultOverlay(resultType);
@@ -5723,7 +5724,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     dungeonRender.setBattlePanel('combat');
 
     try {
-      await dungeonLifecycle.replayFight();
+      await dungeonLifecycle.replayFight({ waitForBattleIntro: true });
       const resultType = getWorldDungeonBattleResultType(battle);
       if (resultType) {
         await showWorldDungeonBattleResultOverlay(resultType);

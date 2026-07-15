@@ -6,6 +6,7 @@ import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, 
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const audio = window.AmongDemons.audio;
+const BATTLE_INTRO_COMPLETE_EVENT = 'amongdemons:battle-intro-complete';
 
 const battle = (...args) => dungeonActions.battle(...args);
 const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
@@ -14,12 +15,11 @@ const renderFightLog = (...args) => dungeonActions.renderFightLog(...args);
 const renderFightLogActions = (...args) => dungeonActions.renderFightLogActions(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
 
-async function playCombatLog() {
+async function playCombatLog(options = {}) {
   if (!state.run) return;
 
-  audio?.play('sfx.battle.battleStart', { volume: 0.9 });
   const steps = groupCombatLog(state.combatLog);
-  state.combatPlayback = {
+  const combatPlayback = {
     currentIndex: 0,
     isPaused: false,
     stepDirection: 0,
@@ -27,7 +27,17 @@ async function playCombatLog() {
     totalSteps: steps.length,
     waitResolve: null
   };
+  state.combatPlayback = combatPlayback;
   state.isBattleAnimating = true;
+  if (options.waitForBattleIntro) {
+    await audio?.play('sfx.battle.battleStart', {
+      volume: 0.9,
+      waitForEnd: true,
+      maxWaitMs: 2000
+    });
+    if (!state.run || state.combatPlayback !== combatPlayback) return;
+    window.dispatchEvent(new CustomEvent(BATTLE_INTRO_COMPLETE_EVENT));
+  }
   renderRun();
   renderFightLog();
 

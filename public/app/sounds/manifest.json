@@ -14,8 +14,18 @@
   "sfx": {
     "world": {
       "pathSelect": "sfx/world/path_select.ogg",
-      "move01": "sfx/world/move_01.ogg",
-      "move02": "sfx/world/move_02.ogg",
+      "move": [
+        "sfx/world/footstep_dirt_00.ogg",
+        "sfx/world/footstep_dirt_01.ogg",
+        "sfx/world/footstep_dirt_02.ogg",
+        "sfx/world/footstep_dirt_03.ogg",
+        "sfx/world/footstep_dirt_04.ogg",
+        "sfx/world/footstep_dirt_05.ogg",
+        "sfx/world/footstep_dirt_06.ogg",
+        "sfx/world/footstep_dirt_07.ogg",
+        "sfx/world/footstep_dirt_08.ogg",
+        "sfx/world/footstep_dirt_09.ogg"
+      ],
       "moveBlocked": "sfx/world/move_blocked.ogg",
       "encounterReveal": "sfx/world/encounter_reveal.ogg",
       "ambush": "sfx/world/ambush.ogg",
@@ -25,8 +35,7 @@
       "teleport": "sfx/world/teleport.ogg",
       "huntStart": "sfx/world/hunt_start.ogg",
       "huntStop": "sfx/world/hunt_stop.ogg",
-      "pvpChallenge": "sfx/world/pvp_challenge.ogg",
-      "bossReveal": "sfx/world/boss_reveal.ogg"
+      "pvpChallenge": "sfx/world/pvp_challenge.ogg"
     },
     "battle": {
       "battleStart": "sfx/battle/battle_start.ogg",

@@ -447,7 +447,7 @@ async function startNewDungeonAfterDefeat() {
   await startRun();
 }
 
-async function replayFight() {
+async function replayFight(options = {}) {
   const replayingEndedRun = !state.run && Boolean(state.endedReplayRun);
   const activeRun = state.run || state.endedReplayRun;
   const lastBattle = activeRun?.lastBattle;
@@ -486,7 +486,7 @@ async function replayFight() {
   elements.fightLog.innerHTML = '';
   elements.fightLog.classList.remove('text-muted');
   try {
-    await playCombatLog();
+    await playCombatLog({ waitForBattleIntro: Boolean(options.waitForBattleIntro) });
     state.run.team = cloneDemons(lastBattle.playerTeamAfter || state.run.team || []);
     state.run.enemies = cloneDemons(lastBattle.enemyTeamAfter || state.run.enemies || []);
     renderRun();
