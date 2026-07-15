@@ -61,8 +61,6 @@
       "pactReveal": "sfx/dungeon/pact_reveal.ogg",
       "pactChoose": "sfx/dungeon/pact_choose.ogg",
       "pactReroll": "sfx/dungeon/pact_reroll.ogg",
-      "demonRecruit": "sfx/dungeon/demon_recruit.ogg",
-      "reinforcement": "sfx/dungeon/reinforcement.ogg",
       "extract": "sfx/dungeon/extract.ogg",
       "runLost": "sfx/dungeon/run_lost.ogg"
     },

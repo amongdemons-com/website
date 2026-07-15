@@ -347,12 +347,6 @@ async function confirmRecruitReward() {
       method: 'POST',
       body
     });
-    audio?.play(
-      state.selectedRecruitRewardId || body.rewardId
-        ? 'sfx.dungeon.demonRecruit'
-        : 'sfx.dungeon.reinforcement',
-      { volume: 0.86 }
-    );
     clearRecruitSelection();
     state.isRecruiting = false;
     clearDragState();
