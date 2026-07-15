@@ -574,7 +574,6 @@
     elements.autoTrainSummary.textContent = 'Training in progress...';
     elements.autoTrainLog.innerHTML = '<p class="collection-auto-train-empty mb-0">The server is resolving each attempt...</p>';
     setAutoTrainRunning(true);
-    audio?.play('sfx.progression.trainingAttempt', { volume: 0.75 });
 
     try {
       const result = await api(`/api/demons/${encodeURIComponent(demon.id)}/train`, {

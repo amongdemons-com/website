@@ -8,7 +8,7 @@ The downloaded source audio was renamed and converted to OGG Vorbis. All playabl
 
 - [RPG Audio](https://kenney.nl/assets/rpg-audio) — leather interaction sounds.
 - [Impact Sounds](https://kenney.nl/assets/impact-sounds) — ambush sounds.
-- [Music Jingles](https://kenney.nl/assets/music-jingles) — encounter, hunt, challenge, battle-start, reinforcement, and boss stingers.
+- [Music Jingles](https://kenney.nl/assets/music-jingles) — hunt, challenge, battle-start, reinforcement, and boss stingers.
 
 ## OpenGameArt
 

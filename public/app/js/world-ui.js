@@ -827,9 +827,6 @@ import * as dungeonUtils from './dungeon/utils.js';
         renderWorld();
         renderPanels();
         const successfulAmbush = stepEvent.type === 'ambush' && stepEvent.battle?.winner === 'enemy';
-        if (stepEvent.type !== 'none' && stepEvent.type !== 'ambush') {
-          audio?.play('sfx.world.encounterReveal', { volume: 0.7 });
-        }
         if (successfulAmbush) {
           audio?.play('sfx.world.ambush', { volume: 0.9 });
         }

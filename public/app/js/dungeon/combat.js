@@ -34,8 +34,7 @@ async function playCombatLog(options = {}) {
     renderDungeonCenterActions({ canFight: true, isFighting: true });
     await audio?.play('sfx.battle.battleStart', {
       volume: 0.9,
-      waitForEnd: true,
-      maxWaitMs: 2000
+      waitForEnd: true
     });
     if (!state.run || state.combatPlayback !== combatPlayback) return;
     window.dispatchEvent(new CustomEvent(BATTLE_INTRO_COMPLETE_EVENT));

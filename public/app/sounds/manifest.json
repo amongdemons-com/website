@@ -27,7 +27,6 @@
         "sfx/world/footstep_dirt_09.ogg"
       ],
       "moveBlocked": "sfx/world/move_blocked.ogg",
-      "encounterReveal": "sfx/world/encounter_reveal.ogg",
       "ambush": "sfx/world/ambush.ogg",
       "shrineBind": "sfx/world/shrine_bind.ogg",
       "respawn": "sfx/world/respawn.ogg",
