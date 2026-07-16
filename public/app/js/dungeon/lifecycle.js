@@ -470,7 +470,10 @@ async function replayFight(options = {}) {
   elements.fightLog.innerHTML = '';
   elements.fightLog.classList.remove('text-muted');
   try {
-    await playCombatLog({ waitForBattleIntro: Boolean(options.waitForBattleIntro) });
+    await playCombatLog({
+      waitForBattleIntro: Boolean(options.waitForBattleIntro),
+      combatPlayback: options.combatPlayback
+    });
     state.run.team = cloneDemons(lastBattle.playerTeamAfter || state.run.team || []);
     state.run.enemies = cloneDemons(lastBattle.enemyTeamAfter || state.run.enemies || []);
     renderRun();

@@ -16,8 +16,8 @@ const renderFightLog = (...args) => dungeonActions.renderFightLog(...args);
 const renderFightLogActions = (...args) => dungeonActions.renderFightLogActions(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
 
-async function playCombatLog(options = {}) {
-  if (!state.run) return;
+function prepareCombatPlayback(options = {}) {
+  if (!state.run) return null;
 
   const steps = groupCombatLog(state.combatLog);
   const combatPlayback = {
@@ -30,6 +30,31 @@ async function playCombatLog(options = {}) {
   };
   state.combatPlayback = combatPlayback;
   state.isBattleAnimating = true;
+
+  if (options.render !== false) {
+    renderRun();
+    renderFightLog();
+  }
+
+  return combatPlayback;
+}
+
+async function playCombatLog(options = {}) {
+  if (!state.run) return;
+
+  const preparedPlayback = options.combatPlayback;
+  const combatPlayback = preparedPlayback && state.combatPlayback === preparedPlayback
+    ? preparedPlayback
+    : prepareCombatPlayback({ render: false });
+  if (!combatPlayback) return;
+
+  const steps = combatPlayback.steps || [];
+  state.isBattleAnimating = true;
+  // Render battle mode immediately. Replay-only battles can spend the next
+  // moment waiting for their intro sound, but their preparation/hand UI is not
+  // relevant and playback controls should already be available.
+  renderRun();
+  renderFightLog();
   if (options.waitForBattleIntro) {
     renderDungeonCenterActions({ canFight: true, isFighting: true });
     await audio?.play('sfx.battle.battleStart', {
@@ -327,6 +352,17 @@ function stepCombatPlayback(direction) {
   setCombatPlaybackPausedClass(true);
   resolveCombatPlaybackWait();
   renderFightLogActions();
+}
+
+function skipCombatPlayback() {
+  const playback = state.combatPlayback;
+  if (!state.run || !playback || !state.isBattleAnimating) return;
+
+  playback.isPaused = false;
+  playback.stepDirection = 0;
+  renderCombatPlaybackFrame(playback.totalSteps);
+  setCombatPlaybackPausedClass(false);
+  resolveCombatPlaybackWait();
 }
 
 function resolveCombatPlaybackWait() {
@@ -1380,10 +1416,12 @@ function renderFightLogDemonName(instanceId) {
 }
 
 export {
+  prepareCombatPlayback,
   playCombatLog,
   pauseCombatPlayback,
   resumeCombatPlayback,
   stepCombatPlayback,
+  skipCombatPlayback,
   updateTeamHp,
   syncCombatHpCards,
   setActiveLogRow,

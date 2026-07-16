@@ -7,6 +7,8 @@
   // Keep in sync with the battle-feel keys in js/dungeon/config.js.
   const BATTLE_SCREEN_SHAKE_KEY = 'amongdemons-battle-screen-shake';
   const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
+  // Keep in sync with the world ambush preference in world-ui.js.
+  const HIDE_WINNING_AMBUSHES_KEY = 'amongdemons-hide-winning-ambushes';
   const elements = {};
   let currentUsername = '';
 
@@ -48,6 +50,7 @@
     elements.submitLabel = document.getElementById('saveUsernameLabel');
     elements.screenShake = document.getElementById('settingsScreenShake');
     elements.cardShake = document.getElementById('settingsCardShake');
+    elements.hideWinningAmbushes = document.getElementById('settingsHideWinningAmbushes');
     elements.audioMuted = document.getElementById('settingsAudioMuted');
     elements.masterVolume = document.getElementById('settingsMasterVolume');
     elements.masterVolumeValue = document.getElementById('settingsMasterVolumeValue');
@@ -60,6 +63,7 @@
   function initBattleToggles() {
     bindPreferenceToggle(elements.screenShake, BATTLE_SCREEN_SHAKE_KEY);
     bindPreferenceToggle(elements.cardShake, BATTLE_CARD_SHAKE_KEY);
+    bindPreferenceToggle(elements.hideWinningAmbushes, HIDE_WINNING_AMBUSHES_KEY, false);
   }
 
   function initAudioControls() {
@@ -89,18 +93,19 @@
     });
   }
 
-  function bindPreferenceToggle(toggle, key) {
+  function bindPreferenceToggle(toggle, key, defaultEnabled = true) {
     if (!toggle) return;
 
-    toggle.checked = isPreferenceEnabled(key);
+    toggle.checked = isPreferenceEnabled(key, defaultEnabled);
     toggle.addEventListener('change', () => setPreferenceEnabled(key, toggle.checked));
   }
 
-  function isPreferenceEnabled(key) {
+  function isPreferenceEnabled(key, defaultEnabled = true) {
     try {
-      return localStorage.getItem(key) !== '0';
+      const stored = localStorage.getItem(key);
+      return stored === null ? defaultEnabled : stored !== '0';
     } catch (error) {
-      return true;
+      return defaultEnabled;
     }
   }
 

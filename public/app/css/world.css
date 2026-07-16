@@ -2277,6 +2277,10 @@ body.is-world-side-collapsed .world-map-controls {
     height: 100%;
 }
 
+.world-battle-modal .dungeon-battle-body {
+    position: relative;
+}
+
 .world-battle-modal .dungeon-reward-strip,
 .world-battle-modal .dungeon-replaylog-box,
 .world-battle-modal .dungeon-reward-box,
@@ -2356,16 +2360,18 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
 }
 
 .world-dungeon-result-layer {
-    position: fixed;
-    left: 50%;
-    bottom: clamp(1rem, 4vh, 2.4rem);
+    position: absolute;
+    top: var(--world-dungeon-result-top, 70%);
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 2604;
     display: grid;
     place-items: center;
-    width: min(34rem, calc(100vw - 2rem));
+    width: 100%;
     min-width: 0;
-    transform: translateX(-50%);
-    pointer-events: auto;
+    padding: 1rem;
+    pointer-events: none;
 }
 
 .world-dungeon-result {
@@ -2375,9 +2381,10 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     justify-content: center;
     justify-items: center;
     gap: 0.48rem;
-    width: 100%;
+    width: min(34rem, 100%);
     min-width: 0;
     text-align: center;
+    pointer-events: auto;
 }
 
 .world-dungeon-result strong {
@@ -2397,6 +2404,34 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
 .world-dungeon-result.is-defeat strong {
     color: #ff7770;
     text-shadow: 0 0 18px rgba(255,119,112,0.42), 0 2px 12px rgba(0,0,0,0.82);
+}
+
+.world-dungeon-winning-ambush-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.42rem;
+    margin: 0;
+    padding: 0.12rem 0;
+    border: 0;
+    background: transparent;
+    color: rgba(226,242,236,0.82);
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.15;
+    cursor: pointer;
+}
+
+.world-dungeon-winning-ambush-toggle:hover {
+    color: #f0fff8;
+}
+
+.world-dungeon-winning-ambush-toggle input {
+    width: 0.95rem;
+    height: 0.95rem;
+    margin: 0;
+    accent-color: var(--ad-teal, #6fd6bd);
+    cursor: pointer;
 }
 
 .world-dungeon-result-actions {

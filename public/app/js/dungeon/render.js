@@ -43,6 +43,7 @@ const replayFight = (...args) => dungeonActions.replayFight(...args);
 const requestRecruitContinue = (...args) => dungeonActions.requestRecruitContinue(...args);
 const resumeCombatPlayback = (...args) => dungeonActions.resumeCombatPlayback(...args);
 const setBattleSpeed = (...args) => dungeonActions.setBattleSpeed(...args);
+const skipCombatPlayback = (...args) => dungeonActions.skipCombatPlayback(...args);
 const startNewDungeonAfterDefeat = (...args) => dungeonActions.startNewDungeonAfterDefeat(...args);
 const startRun = (...args) => dungeonActions.startRun(...args);
 const stepCombatPlayback = (...args) => dungeonActions.stepCombatPlayback(...args);
@@ -104,11 +105,16 @@ function renderRun() {
   const arena = elements.runPanel?.querySelector('.dungeon-arena');
   const team = (isHandStrategy ? getRecruitPreviewTeam() : run.team || []).map(applyDungeonCombatStatPreviewToDemon);
   const enemies = isHandStrategy && state.isEnemyPreviewDeferred ? [] : (isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || []);
-  const isBattleHandPlaceholder = Boolean(!isHandStrategy && state.isBattleAnimating);
+  const isReplayOnly = Boolean(run.replayOnly);
+  const isBattleLayoutActive = Boolean(state.isBattleAnimating || isReplayOnly);
+  const isBattleHandPlaceholder = Boolean(!isHandStrategy && isBattleLayoutActive);
   const hand = (isHandStrategy ? getRecruitPreviewHand() : []).map(applyDungeonCombatStatPreviewToDemon);
   const handMode = isBattleHandPlaceholder ? 'battle' : 'recruit';
   const showPacts = Boolean(hasPendingPacts && !state.isPactRevealPending && !state.isBattleAnimating && !state.isResultAnimating);
   const pactChoiceBlocksDrag = Boolean(hasPendingPacts || state.isPactRevealPending);
+  // Replay-only battles keep the transparent battle-controls row reserved for
+  // their whole lifecycle. This prevents the arena from resizing when playback
+  // ends while still suppressing all hand/recruit preparation content.
   const showHand = true;
   const handInteractive = Boolean(isHandStrategy && !pactChoiceBlocksDrag);
   const rewardInteractive = handInteractive;
@@ -124,7 +130,7 @@ function renderRun() {
 
   elements.dungeonBottomPanel?.classList.toggle('d-none', !showHand);
   if (!canExtract || state.isBattleAnimating || state.isResultAnimating) state.isMobileRewardBoxOpen = false;
-  elements.dungeonBottomPanel?.classList.toggle('is-battle-active', Boolean(state.isBattleAnimating));
+  elements.dungeonBottomPanel?.classList.toggle('is-battle-active', isBattleLayoutActive);
   elements.dungeonBottomPanel?.classList.toggle('is-mobile-reward-open', Boolean(state.isMobileRewardBoxOpen && canExtract && !state.isBattleAnimating));
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
   setElementHtml(elements.teamGrid, renderDemonCards(team, {
@@ -588,7 +594,9 @@ function renderFightLogActions() {
   renderDungeonCenterActions(actionOptions);
   const mobileFightChanged = renderDungeonMobileFightBox(actionOptions);
 
-  const battleControlsHtml = canShowSpeedControl ? `${renderBattlePlaybackControls()}${renderBattleSpeedControl()}` : '';
+  const battleControlsHtml = canShowSpeedControl
+    ? `${renderBattlePlaybackControls()}${renderBattleSpeedControl()}${renderBattleSkipControl()}`
+    : '';
   const overlayChanged = renderBattleControlsOverlay(battleControlsHtml);
   const boxChanged = renderReplayLogBox(canReplay, canViewLog);
 
@@ -603,6 +611,7 @@ function renderFightLogActions() {
     }
   });
   bindClicks('[data-battle-step]', (button) => stepCombatPlayback(Number(button.dataset.battleStep)));
+  bindClick(document.getElementById('battlePlaybackSkipBtn'), skipCombatPlayback);
   bindClick(document.getElementById('fightLogReplayBtn'), replayFight);
   bindClick(document.getElementById('fightLogToggleBtn'), toggleFightLogPanel);
 }
@@ -840,6 +849,22 @@ function renderBattleSpeedControl() {
   `;
 }
 
+function renderBattleSkipControl() {
+  return `
+    <div class="battle-playback-control battle-skip-control">
+      <button
+        class="battle-playback-btn battle-skip-btn"
+        id="battlePlaybackSkipBtn"
+        type="button"
+        title="Skip to result"
+        aria-label="Skip to result"
+      >
+        ${renderIcon('x')}
+      </button>
+    </div>
+  `;
+}
+
 function bindPathButtons() {
   [document.getElementById('dungeonFightBtn'), document.getElementById('dungeonMobileFightBtn')].forEach((button) => {
     if (!button || button.dataset.dungeonFightBound === 'true') return;
@@ -873,5 +898,6 @@ export {
   renderDungeonMobileFightBox,
   renderBattlePlaybackControls,
   renderBattleSpeedControl,
+  renderBattleSkipControl,
   bindPathButtons
 };

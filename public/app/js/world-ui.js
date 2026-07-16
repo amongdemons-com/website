@@ -2,9 +2,9 @@ import { BATTLE_SPEED_KEY, BATTLE_SPEED_OPTIONS, COMBAT_THEMES, FORMATION_GRID_C
 import { registerDungeonActions } from './dungeon/registry.js';
 import { state as dungeonState, elements as dungeonElements } from './dungeon/state.js';
 import * as dungeonDom from './dungeon/dom.js';
-import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260715-grim-defeat-v1';
-import * as dungeonRender from './dungeon/render.js?v=20260716-primary-replay-controls-v1';
-import * as dungeonCombat from './dungeon/combat.js?v=20260715-fight-intro-controls-v1';
+import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260716-replay-only-controls-v1';
+import * as dungeonRender from './dungeon/render.js?v=20260716-replay-only-controls-v2';
+import * as dungeonCombat from './dungeon/combat.js?v=20260716-replay-only-controls-v1';
 import * as dungeonRewards from './dungeon/rewards.js?v=20260714-audio-v1';
 import * as dungeonPacts from './dungeon/pacts.js?v=20260716-primary-replay-controls-v1';
 import * as dungeonHand from './dungeon/hand.js?v=20260706-stat-preview-v4';
@@ -65,6 +65,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   // "Mute for 24h" checkbox in the dialog stores an expiry timestamp here.
   const WORLD_BOSS_INTRO_MUTE_KEY = 'amongdemons-world-boss-mute';
   const WORLD_BOSS_INTRO_MUTE_MS = 24 * 60 * 60 * 1000;
+  // Keep in sync with the matching toggle in settings-ui.js.
+  const HIDE_WINNING_AMBUSHES_KEY = 'amongdemons-hide-winning-ambushes';
   const WORLD_BOSS_INTRO_FALLBACK_LINES = [
     'So... another hunter dares to walk among demons. This world is ours. Prove you belong in it.'
   ];
@@ -317,6 +319,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     elements.worldTeamCollectionNext?.addEventListener('click', () => scrollWorldTeamEditorCollection(1));
     elements.worldTeamEditorCollection?.addEventListener('scroll', updateWorldTeamEditorCollectionScroll, { passive: true });
     window.addEventListener('resize', updateWorldTeamEditorCollectionScroll);
+    window.addEventListener('resize', positionWorldDungeonBattleResultLayer);
     elements.worldTeamModal?.addEventListener('shown.bs.modal', updateWorldTeamEditorCollectionScroll);
     elements.worldTeamModal?.addEventListener('hidden.bs.modal', () => {
       cancelWorldTeamEditorDrag();
@@ -354,7 +357,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       const replayButton = target?.closest('[data-view-world-battle]');
       if (replayButton) {
         const entry = state.travelLog[Number(replayButton.dataset.viewWorldBattle)];
-        if (shouldShowAmbushBattleReplay(entry?.battle)) {
+        if (canReplayAmbushBattle(entry?.battle)) {
           showWorldBattleReplay(entry.battle, getWorldBattleMeta('ambush', entry.battle));
         }
         return;
@@ -380,7 +383,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       const replayButton = target?.closest('[data-view-world-battle]');
       if (!replayButton) return;
       const entry = state.travelLog[Number(replayButton.dataset.viewWorldBattle)];
-      if (shouldShowAmbushBattleReplay(entry?.battle)) {
+      if (canReplayAmbushBattle(entry?.battle)) {
         showWorldBattleReplay(entry.battle, getWorldBattleMeta('ambush', entry.battle));
       }
     });
@@ -830,7 +833,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         if (successfulAmbush) {
           audio?.play('sfx.world.ambush', { volume: 0.9 });
         }
-        if (shouldShowAmbushBattleReplay(stepEvent.battle)) {
+        if (shouldAutoShowAmbushBattle(stepEvent.battle)) {
           await showWorldBattleReplay(stepEvent.battle, getWorldBattleMeta('ambush', stepEvent.battle));
         } else if (stepEvent.type === 'ambush' && stepEvent.battle?.error) {
           setMessage(stepEvent.battle.error, 'warning');
@@ -4442,7 +4445,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   function renderTravelLogItem(entry, index = 0) {
     const isAmbush = entry.type === 'ambush';
     const battleWinner = entry.battle?.winner;
-    const canReplay = isAmbush && shouldShowAmbushBattleReplay(entry.battle);
+    const canReplay = isAmbush && canReplayAmbushBattle(entry.battle);
     const title = isAmbush
       ? battleWinner === 'player'
         ? 'Ambush Won'
@@ -4472,8 +4475,14 @@ import * as dungeonUtils from './dungeon/utils.js';
     return Boolean(battle && Array.isArray(battle.combatLog) && battle.combatLog.length);
   }
 
-  function shouldShowAmbushBattleReplay(battle) {
-    return battle?.winner === 'enemy' && shouldShowWorldBattleReplay(battle);
+  function canReplayAmbushBattle(battle) {
+    return shouldShowWorldBattleReplay(battle);
+  }
+
+  function shouldAutoShowAmbushBattle(battle) {
+    if (!canReplayAmbushBattle(battle)) return false;
+    if (battle.winner === 'enemy') return true;
+    return battle.winner === 'player' && !areWinningAmbushesHidden();
   }
 
   function showWorldBattleReplay(battle, meta = {}) {
@@ -5426,6 +5435,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     state.activeWorldBattleMeta = normalizeWorldBattleMeta(meta.type, battle, meta);
     document.body.classList.add('dungeon-page', 'is-world-battle-open');
     prepareWorldDungeonBattleReplay(battle, state.activeWorldBattleMeta);
+    const combatPlayback = dungeonCombat.prepareCombatPlayback();
 
     const modal = modalApi.getOrCreateInstance(modalElement);
     const shownPromise = modalElement.classList.contains('show')
@@ -5445,7 +5455,10 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (state.worldBattleReplayToken !== token) return hiddenPromise;
 
     try {
-      await dungeonLifecycle.replayFight({ waitForBattleIntro: true });
+      await dungeonLifecycle.replayFight({
+        waitForBattleIntro: true,
+        combatPlayback
+      });
       const resultType = getWorldDungeonBattleResultType(battle);
       if (state.worldBattleReplayToken === token && resultType) {
         await showWorldDungeonBattleResultOverlay(resultType);
@@ -5530,13 +5543,14 @@ import * as dungeonUtils from './dungeon/utils.js';
     return {
       runId: `world-${meta.type || 'battle'}-${Date.now()}`,
       status: 'active',
+      replayOnly: true,
       currentFloor,
       team: playerBefore,
       enemies: enemyBefore,
       enemyLabel: meta.enemyLabel || 'Enemies',
       rewards: [],
       recruitRewards: [],
-      awaitingRecruit: true,
+      awaitingRecruit: false,
       enemyPressure,
       nextEnemyPressure: enemyPressure,
       enemyBuffs,
@@ -5685,6 +5699,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const label = won ? 'VICTORY' : lost ? 'DEFEAT' : 'BATTLE ENDED';
     const tone = won ? 'is-victory' : lost ? 'is-defeat' : 'is-neutral';
     const canReplay = shouldShowWorldBattleReplay(battle);
+    const canHideWinningAmbushes = isWinningAmbushBattle(battle, state.activeWorldBattleMeta);
 
     setWorldDungeonBattleResultMode(true);
     resultLayer.innerHTML = `
@@ -5701,6 +5716,12 @@ import * as dungeonUtils from './dungeon/utils.js';
             Continue
           </button>
         </span>
+        ${canHideWinningAmbushes ? `
+          <label class="world-dungeon-winning-ambush-toggle">
+            <input type="checkbox" data-world-hide-winning-ambushes ${areWinningAmbushesHidden() ? 'checked' : ''}>
+            <span>Do not show winning ambushes</span>
+          </label>
+        ` : ''}
       </div>
     `;
     resultLayer.querySelector('.world-dungeon-result-continue')?.addEventListener('click', closeWorldBattleModal, { once: true });
@@ -5710,6 +5731,11 @@ import * as dungeonUtils from './dungeon/utils.js';
     resultLayer.querySelector('[data-world-dungeon-result-log]')?.addEventListener('click', (event) => {
       toggleWorldDungeonBattleLogFromResult(event.currentTarget);
     });
+    resultLayer.querySelector('[data-world-hide-winning-ambushes]')?.addEventListener('change', (event) => {
+      setWinningAmbushesHidden(Boolean(event.currentTarget?.checked));
+    });
+    positionWorldDungeonBattleResultLayer();
+    window.requestAnimationFrame?.(positionWorldDungeonBattleResultLayer);
   }
 
   async function replayWorldDungeonBattleFromResult(button) {
@@ -5766,16 +5792,38 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function getWorldDungeonBattleResultLayer() {
-    const modalBody = elements.worldBattleModal?.querySelector('.modal-body');
-    if (!modalBody) return null;
+    const modal = elements.worldBattleModal;
+    if (!modal) return null;
 
-    const existing = modalBody.querySelector('.world-dungeon-result-layer');
+    const existing = modal.querySelector('.world-dungeon-result-layer');
     if (existing) return existing;
+
+    const resultHost = modal.querySelector('.dungeon-battle-body')
+      || modal.querySelector('.modal-body');
+    if (!resultHost) return null;
 
     const layer = document.createElement('div');
     layer.className = 'world-dungeon-result-layer';
-    modalBody.appendChild(layer);
+    resultHost.appendChild(layer);
     return layer;
+  }
+
+  function positionWorldDungeonBattleResultLayer() {
+    const modal = elements.worldBattleModal;
+    const layer = modal?.querySelector('.world-dungeon-result-layer');
+    const resultHost = layer?.parentElement;
+    if (!layer || !resultHost) return;
+
+    const hostRect = resultHost.getBoundingClientRect();
+    const formationGrids = [
+      modal.querySelector('#teamGrid .battle-formation-grid'),
+      modal.querySelector('#enemyGrid .battle-formation-grid')
+    ].filter(Boolean);
+    if (!formationGrids.length || hostRect.height <= 0) return;
+
+    const gridBottom = Math.max(...formationGrids.map((grid) => grid.getBoundingClientRect().bottom));
+    const top = clamp(Math.ceil(gridBottom - hostRect.top + 8), 0, hostRect.height);
+    layer.style.setProperty('--world-dungeon-result-top', `${top}px`);
   }
 
   function setWorldDungeonBattleResultAnimation(enabled) {
@@ -5839,8 +5887,28 @@ import * as dungeonUtils from './dungeon/utils.js';
     return meta?.type === 'ambush' && battle?.winner === 'enemy';
   }
 
+  function isWinningAmbushBattle(battle = {}, meta = {}) {
+    return meta?.type === 'ambush' && battle?.winner === 'player';
+  }
+
   function isLostPvpChallenge(battle = {}, meta = {}) {
     return meta?.type === 'pvp_challenge' && battle?.winner === 'enemy';
+  }
+
+  function areWinningAmbushesHidden() {
+    try {
+      return window.localStorage.getItem(HIDE_WINNING_AMBUSHES_KEY) === '1';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function setWinningAmbushesHidden(hidden) {
+    try {
+      window.localStorage.setItem(HIDE_WINNING_AMBUSHES_KEY, hidden ? '1' : '0');
+    } catch (error) {
+      // Storage can be unavailable in privacy-restricted browsing contexts.
+    }
   }
 
   async function waitForWorldBattleBackdropClear() {
