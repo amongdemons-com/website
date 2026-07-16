@@ -466,10 +466,7 @@ body.skill-tree-page {
 
 .ascension-actions button {
     min-height: 2.35rem;
-    border: 1px solid rgba(204, 181, 124, 0.25);
     border-radius: 2px;
-    background: rgba(8, 15, 16, 0.9);
-    color: rgba(230, 233, 224, 0.72);
     padding: 0.46rem 0.8rem;
     font-size: 0.61rem;
     font-weight: 900;
@@ -477,21 +474,24 @@ body.skill-tree-page {
     text-transform: uppercase;
 }
 
-.ascension-actions .ascension-save {
-    border-color: rgba(217, 185, 111, 0.62);
-    background: linear-gradient(180deg, rgba(217, 185, 111, 0.21), rgba(119, 81, 35, 0.2));
-    color: #ffedba;
+.ascension-actions button:not(.ad-primary-action) {
+    border: 1px solid rgba(111, 214, 189, 0.28);
+    background: rgba(8, 15, 16, 0.9);
+    color: rgba(220, 244, 238, 0.76);
 }
 
-.ascension-actions button:not(:disabled):hover,
-.ascension-actions button:not(:disabled):focus-visible {
-    border-color: rgba(255, 226, 157, 0.78);
-    color: #fff4d5;
-    box-shadow: 0 0 18px rgba(217, 185, 111, 0.11);
+.ascension-actions button:not(.ad-primary-action, :disabled):hover,
+.ascension-actions button:not(.ad-primary-action, :disabled):focus-visible {
+    border-color: rgba(111, 214, 189, 0.62);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.15), rgba(3,9,11,0.18)),
+        rgba(8, 20, 22, 0.94);
+    color: #effffc;
+    box-shadow: 0 0 18px rgba(111,214,189,0.13);
     outline: 0;
 }
 
-.ascension-actions button:disabled {
+.ascension-actions button:not(.ad-primary-action):disabled {
     cursor: not-allowed;
     opacity: 0.32;
 }

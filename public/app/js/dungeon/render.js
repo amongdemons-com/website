@@ -192,7 +192,7 @@ function renderDungeonEndScreen() {
       <div class="dungeon-end-actions">
         <a class="btn btn-glass-muted" href="/camp">Leave</a>
         ${state.endedReplayRun?.lastBattle?.combatLog?.length ? `
-          <button class="btn btn-glass-gold btn-icon-only" id="replayEndedDungeonBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
+          <button class="btn btn-glass-muted btn-icon-only" id="replayEndedDungeonBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
             ${renderIcon('replay')}
           </button>
         ` : ''}
@@ -202,7 +202,7 @@ function renderDungeonEndScreen() {
             Train Demons
           </a>
         ` : ''}
-        <button class="btn btn-glass-gold" id="startNewDungeonBtn" type="button">
+        <button class="btn btn-primary" id="startNewDungeonBtn" type="button">
           ${renderIcon('play')}
           New Dungeon
         </button>
@@ -215,7 +215,7 @@ function renderDungeonStartPrompt() {
   return `
     <img src="/app/images/demons/1.png" alt="Boof Nitza demon preparing for a dungeon run" width="1024" height="1024" loading="lazy" decoding="async">
     <p class="mb-0 text-muted">Ready to descend into the dungeon?</p>
-    <button class="btn btn-glass-gold dungeon-start-prompt-btn" id="startNewDungeonBtn" type="button">
+    <button class="btn btn-primary dungeon-start-prompt-btn" id="startNewDungeonBtn" type="button">
       ${renderIcon('play')}
       Start Dungeon
     </button>
@@ -536,7 +536,7 @@ function renderBattleControlsOverlay(html) {
 function renderReplayLogBox(canReplay, canViewLog) {
   if (!elements.dungeonReplayLogBox) return false;
   return setElementHtml(elements.dungeonReplayLogBox, `
-    <button class="btn btn-glass-gold btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight" ${canReplay ? '' : 'disabled'}>
+    <button class="btn btn-glass-muted btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight" ${canReplay ? '' : 'disabled'}>
       ${renderIcon('replay')}
     </button>
     <button class="btn btn-glass-muted btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log" ${canViewLog ? '' : 'disabled'}>
@@ -613,7 +613,7 @@ function renderDungeonCenterActions(options = {}) {
   if (canStart) {
     const startChanged = setElementHtml(elements.dungeonCenterActions, `
       <div class="dungeon-center-action-stack">
-        <button class="btn btn-glass-gold dungeon-fight-btn dungeon-center-start-btn" id="dungeonCenterStartBtn" type="button" title="${isDefeated ? 'Start a new dungeon' : 'Start the dungeon'}">
+        <button class="btn btn-primary dungeon-fight-btn dungeon-center-start-btn" id="dungeonCenterStartBtn" type="button" title="${isDefeated ? 'Start a new dungeon' : 'Start the dungeon'}">
           ${renderIcon('play')}
           <span>${isDefeated ? 'New Dungeon' : 'Start Dungeon'}</span>
         </button>
@@ -638,7 +638,7 @@ function renderDungeonCenterActions(options = {}) {
     <div class="dungeon-center-action-stack">
       <span class="dungeon-fight-mark" aria-hidden="true">${renderButtonMeleeIcon()}</span>
       <button
-        class="btn btn-glass-gold dungeon-fight-btn ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
+        class="btn btn-primary dungeon-fight-btn ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
         id="dungeonFightBtn"
         type="button"
         title="${title}"
@@ -739,7 +739,7 @@ function renderDungeonMobileFightBox(options = {}) {
       <span class="visually-hidden">Extract</span>
     </button>
     <button
-      class="dungeon-mobile-nav-btn dungeon-fight-btn dungeon-mobile-fight-btn ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
+      class="dungeon-mobile-nav-btn dungeon-fight-btn dungeon-mobile-fight-btn ad-primary-action ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
       id="dungeonMobileFightBtn"
       type="button"
       title="${title}"
@@ -800,7 +800,7 @@ function renderBattlePlaybackControls() {
         ${renderIcon('last-attack')}
       </button>
       <button
-        class="battle-playback-btn is-primary"
+        class="battle-playback-btn ad-primary-action"
         id="battlePlaybackToggleBtn"
         type="button"
         title="${isPaused ? 'Play' : 'Pause'}"
@@ -827,7 +827,7 @@ function renderBattleSpeedControl() {
     <div class="battle-speed-control" role="group" aria-label="Battle animation speed">
       ${BATTLE_SPEED_OPTIONS.map((speed) => `
         <button
-          class="battle-speed-option ${state.battleSpeed === speed ? 'active' : ''}"
+          class="battle-speed-option ${state.battleSpeed === speed ? 'active ad-primary-action' : ''}"
           type="button"
           data-battle-speed="${speed}"
           aria-pressed="${state.battleSpeed === speed ? 'true' : 'false'}"

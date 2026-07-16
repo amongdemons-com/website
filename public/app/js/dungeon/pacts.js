@@ -141,7 +141,7 @@ function renderDemonicPactActions() {
   return `
     <div class="demonic-pact-reroll-cluster ${canAfford ? '' : 'is-disabled'}">
       <button
-        class="btn demonic-pact-reroll-btn"
+        class="btn btn-primary demonic-pact-reroll-btn"
         id="demonicPactRerollBtn"
         type="button"
         ${canAfford ? '' : 'disabled'}

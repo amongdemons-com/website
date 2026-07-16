@@ -72,20 +72,6 @@
     white-space: normal;
 }
 
-.collection-train-max-action {
-    border-color: rgba(161,212,201,0.26);
-    background:
-        linear-gradient(180deg, rgba(19,32,34,0.74), rgba(6,13,15,0.7)),
-        rgba(6,13,15,0.82);
-    color: rgba(226,244,239,0.9);
-}
-
-.collection-train-max-action:not(:disabled):hover,
-.collection-train-max-action:not(:disabled):focus-visible {
-    border-color: rgba(85,255,255,0.46);
-    color: #f5ffff;
-}
-
 .collection-train-action .ad-icon,
 .collection-train-action-icon {
     width: 1.18rem;
@@ -218,9 +204,9 @@
 }
 
 .collection-auto-train-percentages .btn.active {
-    border-color: rgba(85,255,255,0.66);
-    background: rgba(85,255,255,0.15);
-    color: #d9ffff;
+    border-color: var(--secondary-active-border);
+    background: var(--secondary-active-bg);
+    color: var(--secondary-active-text);
 }
 
 .collection-auto-train-hint,

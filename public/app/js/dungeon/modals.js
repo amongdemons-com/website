@@ -72,7 +72,7 @@ function renderCollectionReinforcementModal(query = '') {
   `;
   elements.teamChoiceModalFooter.innerHTML = `
     <button type="button" class="btn btn-glass-muted" data-bs-dismiss="modal">Cancel</button>
-    <button type="button" class="btn btn-glass-gold" id="addCollectionReinforcementsBtn" ${selectedCount ? '' : 'disabled'}>
+    <button type="button" class="btn btn-primary" id="addCollectionReinforcementsBtn" ${selectedCount ? '' : 'disabled'}>
       ${selectedCount ? `Add ${selectedCount} Demon${selectedCount === 1 ? '' : 's'}` : 'Select Demons'}
     </button>
   `;

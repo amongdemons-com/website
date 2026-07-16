@@ -3,10 +3,10 @@ import { registerDungeonActions } from './dungeon/registry.js';
 import { state as dungeonState, elements as dungeonElements } from './dungeon/state.js';
 import * as dungeonDom from './dungeon/dom.js';
 import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260715-grim-defeat-v1';
-import * as dungeonRender from './dungeon/render.js?v=20260715-grim-defeat-v1';
+import * as dungeonRender from './dungeon/render.js?v=20260716-primary-replay-controls-v1';
 import * as dungeonCombat from './dungeon/combat.js?v=20260715-fight-intro-controls-v1';
 import * as dungeonRewards from './dungeon/rewards.js?v=20260714-audio-v1';
-import * as dungeonPacts from './dungeon/pacts.js?v=20260714-audio-v1';
+import * as dungeonPacts from './dungeon/pacts.js?v=20260716-primary-replay-controls-v1';
 import * as dungeonHand from './dungeon/hand.js?v=20260706-stat-preview-v4';
 import * as dungeonRecruit from './dungeon/recruit.js?v=20260706-stat-preview-v4';
 import * as dungeonModals from './dungeon/modals.js?v=20260706-stat-preview-v4';
@@ -3967,7 +3967,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     const action = isCurrentAnchor
       ? ''
       : `
-        <button class="btn btn-warning btn-sm world-card-action" type="button" data-anchor-soul ${state.bindingShrine ? 'disabled' : ''}>
+        <button class="btn btn-primary btn-sm world-card-action" type="button" data-anchor-soul ${state.bindingShrine ? 'disabled' : ''}>
           ${renderIcon('hand-heart')}
           <span>Pray</span>
         </button>
@@ -4003,8 +4003,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       label: 'Enemy demons'
     });
     const action = unlocked
-      ? `<button class="btn btn-warning btn-sm world-card-action ${state.huntBusyAction === 'start' ? 'is-busy' : ''}" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'start' ? 'Starting…' : 'Hunt'}</button>`
-      : `<button class="btn btn-warning btn-sm world-card-action ${state.huntBusyAction === 'fight' ? 'is-busy' : ''}" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'fight' ? 'Fighting…' : 'Fight'}</button>`;
+      ? `<button class="btn btn-primary btn-sm world-card-action ${state.huntBusyAction === 'start' ? 'is-busy' : ''}" type="button" data-start-hunting="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'start' ? 'Starting…' : 'Hunt'}</button>`
+      : `<button class="btn btn-primary btn-sm world-card-action ${state.huntBusyAction === 'fight' ? 'is-busy' : ''}" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'fight' ? 'Fighting…' : 'Fight'}</button>`;
 
     return `
       <article class="world-sidebar-card world-spot-card">
@@ -4041,7 +4041,7 @@ import * as dungeonUtils from './dungeon/utils.js';
           ${enemyDemons}
           ${renderBossRewardLine(boss.rewardBuff)}
         </span>
-        <button class="btn btn-warning btn-sm world-card-action" type="button" data-challenge-boss="${escapeAttribute(boss.id)}" ${state.bossBusy ? 'disabled' : ''}>
+        <button class="btn btn-primary btn-sm world-card-action" type="button" data-challenge-boss="${escapeAttribute(boss.id)}" ${state.bossBusy ? 'disabled' : ''}>
           Challenge
         </button>
       </article>
@@ -4165,7 +4165,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         </span>
         <span class="world-pvp-actions">
           ${scoutAction}
-          <button class="btn btn-warning btn-sm world-card-action" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
+          <button class="btn btn-primary btn-sm world-card-action" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
         </span>
       </article>
     `;
@@ -4833,7 +4833,7 @@ import * as dungeonUtils from './dungeon/utils.js';
           <button class="battle-playback-btn" type="button" data-world-battle-step="-1" title="Last attack" aria-label="Last attack" ${canStepBack ? '' : 'disabled'}>
             ${renderIcon('last-attack')}
           </button>
-          <button class="battle-playback-btn is-primary" type="button" data-world-battle-toggle-play title="${isPaused ? 'Play' : 'Pause'}" aria-label="${isPaused ? 'Play' : 'Pause'}" ${total ? '' : 'disabled'}>
+          <button class="battle-playback-btn ad-primary-action" type="button" data-world-battle-toggle-play title="${isPaused ? 'Play' : 'Pause'}" aria-label="${isPaused ? 'Play' : 'Pause'}" ${total ? '' : 'disabled'}>
             ${renderIcon(isPaused ? 'play' : 'pause')}
           </button>
           <button class="battle-playback-btn" type="button" data-world-battle-step="1" title="Next attack" aria-label="Next attack" ${canStepForward ? '' : 'disabled'}>
@@ -4845,17 +4845,17 @@ import * as dungeonUtils from './dungeon/utils.js';
         </div>
         <div class="battle-speed-control" role="group" aria-label="Battle animation speed">
           ${BATTLE_SPEED_OPTIONS.map((speed) => `
-            <button class="battle-speed-option ${state.worldBattleSpeed === speed ? 'active' : ''}" type="button" data-world-battle-speed="${speed}" aria-pressed="${state.worldBattleSpeed === speed ? 'true' : 'false'}" title="${formatWorldBattleSpeed(speed)} battle speed">
+            <button class="battle-speed-option ${state.worldBattleSpeed === speed ? 'active ad-primary-action' : ''}" type="button" data-world-battle-speed="${speed}" aria-pressed="${state.worldBattleSpeed === speed ? 'true' : 'false'}" title="${formatWorldBattleSpeed(speed)} battle speed">
               ${formatWorldBattleSpeed(speed)}
             </button>
           `).join('')}
         </div>
       </div>
       <div class="world-battle-toolbar-group">
-        <button class="battle-playback-btn ${state.worldBattleBuffsOpen ? 'is-primary' : ''}" type="button" data-world-battle-toggle-buffs title="Buffs" aria-label="Buffs" aria-pressed="${state.worldBattleBuffsOpen ? 'true' : 'false'}">
+        <button class="battle-playback-btn ${state.worldBattleBuffsOpen ? 'is-active' : ''}" type="button" data-world-battle-toggle-buffs title="Buffs" aria-label="Buffs" aria-pressed="${state.worldBattleBuffsOpen ? 'true' : 'false'}">
           ${renderIcon('stars')}
         </button>
-        <button class="battle-playback-btn ${state.worldBattleLogOpen ? 'is-primary' : ''}" type="button" data-world-battle-toggle-log title="Fight Log" aria-label="Fight Log" aria-pressed="${state.worldBattleLogOpen ? 'true' : 'false'}">
+        <button class="battle-playback-btn ${state.worldBattleLogOpen ? 'is-active' : ''}" type="button" data-world-battle-toggle-log title="Fight Log" aria-label="Fight Log" aria-pressed="${state.worldBattleLogOpen ? 'true' : 'false'}">
           ${renderIcon('log')}
         </button>
         <small class="world-battle-step-count">${formatNumber(current)} / ${formatNumber(total)}</small>
@@ -5697,7 +5697,7 @@ import * as dungeonUtils from './dungeon/utils.js';
           <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-log title="Fight Log" aria-label="Fight Log" aria-pressed="false" ${canReplay ? '' : 'disabled'}>
             ${renderIcon('log')}
           </button>
-          <button class="btn btn-glass-gold world-dungeon-result-continue" type="button">
+          <button class="btn btn-primary world-dungeon-result-continue" type="button">
             Continue
           </button>
         </span>
@@ -5747,7 +5747,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   function toggleWorldDungeonBattleLogFromResult(button) {
     dungeonRender.toggleFightLogPanel();
     const isLogActive = Boolean(elements.worldBattleModal?.querySelector('#battleLogPanel')?.classList.contains('show'));
-    button?.classList.toggle('is-primary', isLogActive);
+    button?.classList.toggle('is-active', isLogActive);
     button?.setAttribute('aria-pressed', String(isLogActive));
   }
 
@@ -6901,7 +6901,7 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     return `
       <span class="world-target-summon-cost">Cost: ${escapeHtml(formatSoulCount(cost))}</span>
-      <button class="btn btn-warning btn-sm world-target-summon-button" type="button"
+      <button class="btn btn-primary btn-sm world-target-summon-button" type="button"
         data-summon-portal data-summon-portal-x="${escapeAttribute(event.x)}" data-summon-portal-y="${escapeAttribute(event.y)}"
         title="${escapeAttribute(title)}" ${disabled ? 'disabled' : ''}>
         ${renderIcon('sparkles')}

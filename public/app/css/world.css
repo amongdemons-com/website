@@ -203,7 +203,7 @@ body.is-world-side-collapsed .world-map-controls {
     background:
         linear-gradient(180deg, rgba(111,214,189,0.1), rgba(255,255,255,0.02)),
         rgba(3,8,11,0.9);
-    color: rgba(232,199,106,0.92);
+    color: rgba(143,239,225,0.9);
     padding: 0;
     font: inherit;
     line-height: 1;
@@ -218,11 +218,15 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-position-button:hover,
 .world-position-button:focus-visible {
-    border-color: rgba(161,212,201,0.34);
+    border-color: rgba(111,214,189,0.52);
     background:
         linear-gradient(180deg, rgba(111,214,189,0.14), rgba(255,255,255,0.035)),
         rgba(3,8,11,0.94);
-    color: #fff3bd;
+    color: #effffc;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.05),
+        0 0 16px rgba(111,214,189,0.16),
+        0 14px 30px rgba(0,0,0,0.42);
     outline: 0;
 }
 
@@ -637,7 +641,7 @@ body.is-world-side-collapsed .world-map-controls {
     background:
         linear-gradient(180deg, rgba(111,214,189,0.1), rgba(255,255,255,0.02)),
         rgba(3,8,11,0.9);
-    color: rgba(232,199,106,0.92);
+    color: rgba(143,239,225,0.86);
     padding: 0.72rem 0.95rem;
     font-size: 0.72rem;
     font-weight: 900;
@@ -647,7 +651,7 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-side-toggle:hover,
 .world-side-toggle:focus-visible {
-    color: #fff3bd;
+    color: #effffc;
     outline: 0;
 }
 
@@ -778,8 +782,9 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-icon-button:hover,
 .world-icon-button:focus-visible {
-    border-color: rgba(232,199,106,0.48);
-    color: #fff3bd;
+    border-color: rgba(111,214,189,0.48);
+    background: rgba(111,214,189,0.1);
+    color: #effffc;
     outline: 0;
 }
 
@@ -799,7 +804,7 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-panel-link:hover,
 .world-panel-link:focus-visible {
-    color: #fff3bd;
+    color: #a5ead9;
     text-decoration: none;
 }
 
@@ -818,7 +823,6 @@ body.is-world-side-collapsed .world-map-controls {
     gap: 0.34rem;
     min-height: 2rem;
     border-radius: 5px;
-    box-shadow: none;
     font-size: 0.66rem;
     font-weight: 900;
     line-height: 1;
@@ -828,50 +832,6 @@ body.is-world-side-collapsed .world-map-controls {
     width: 0.82rem;
     height: 0.82rem;
     margin: 0;
-}
-
-.world-side-panel .btn-warning {
-    border-color: rgba(232,199,106,0.54);
-    background:
-        linear-gradient(180deg, rgba(245,213,109,0.95), rgba(177,132,63,0.9));
-    color: #1c1306;
-}
-
-.world-side-panel .btn-outline-light {
-    border-color: rgba(161,212,201,0.22);
-    background: rgba(0,0,0,0.12);
-    color: rgba(220,232,229,0.78);
-}
-
-.world-side-panel .btn-warning:hover,
-.world-side-panel .btn-warning:focus-visible {
-    border-color: rgba(255,239,177,0.72);
-    background:
-        linear-gradient(180deg, rgba(255,231,145,0.98), rgba(202,155,75,0.94));
-    color: #120c04;
-}
-
-.world-side-panel .btn-outline-light:hover,
-.world-side-panel .btn-outline-light:focus-visible {
-    border-color: rgba(232,199,106,0.44);
-    color: #fff3bd;
-}
-
-.world-side-panel .world-end-hunt-action {
-    border-color: rgba(232,199,106,0.34);
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0.025), rgba(0,0,0,0.08)),
-        rgba(3,8,11,0.38);
-    color: rgba(245,231,197,0.84);
-}
-
-.world-side-panel .world-end-hunt-action:hover,
-.world-side-panel .world-end-hunt-action:focus-visible,
-.world-side-panel .world-end-hunt-action:active {
-    border-color: rgba(255,239,177,0.68);
-    background:
-        linear-gradient(180deg, rgba(245,213,109,0.95), rgba(177,132,63,0.9));
-    color: #160e05;
 }
 
 .world-side-panel[data-world-status="hunting"] #worldTeamHeading {
@@ -1086,8 +1046,9 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-team-editor-close:hover,
 .world-team-editor-close:focus-visible {
-    border-color: rgba(232,199,106,0.48);
-    color: #fff3bd;
+    border-color: rgba(111,214,189,0.48);
+    background: rgba(111,214,189,0.1);
+    color: #effffc;
     outline: 0;
 }
 
@@ -1183,6 +1144,19 @@ body.is-world-side-collapsed .world-map-controls {
 .world-team-editor-scroll:disabled {
     opacity: 0.32;
     pointer-events: none;
+}
+
+.world-team-editor-scroll:not(:disabled):hover,
+.world-team-editor-scroll:not(:disabled):focus-visible {
+    border-color: rgba(111,214,189,0.56);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.16), rgba(3,9,11,0.18)),
+        rgba(4,16,17,0.92);
+    color: #effffc;
+    box-shadow:
+        0 10px 22px rgba(0,0,0,0.42),
+        0 0 14px rgba(111,214,189,0.14);
+    outline: 0;
 }
 
 .world-team-editor-scroll .ad-icon {
@@ -1440,11 +1414,12 @@ body.is-world-side-collapsed .world-map-controls {
 .world-encounter-tab:hover,
 .world-encounter-tab:focus-visible,
 .world-encounter-tab.is-active {
-    border-color: rgba(232,199,106,0.44);
+    border-color: rgba(111,214,189,0.46);
     background:
-        linear-gradient(180deg, rgba(232,199,106,0.1), rgba(0,0,0,0.08)),
+        linear-gradient(180deg, rgba(111,214,189,0.12), rgba(0,0,0,0.08)),
         rgba(0,0,0,0.2);
-    color: #fff3bd;
+    color: #effffc;
+    box-shadow: 0 0 12px rgba(111,214,189,0.12);
     outline: 0;
 }
 
@@ -2270,8 +2245,6 @@ body.is-world-side-collapsed .world-map-controls {
     min-width: 0;
     min-height: 1.85rem;
     padding: 0.22rem 0.38rem;
-    border-color: rgba(232,199,106,0.32);
-    color: rgba(255,244,194,0.88);
     font-size: 0.62rem;
     font-weight: 900;
     line-height: 1;
@@ -2460,7 +2433,7 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     z-index: 2605;
     width: 2.1rem;
     height: 2.1rem;
-    border: 1px solid rgba(232,199,106,0.32);
+    border: 1px solid rgba(111,214,189,0.3);
     border-radius: 6px;
     background-color: rgba(7,18,20,0.74);
     box-shadow: 0 10px 24px rgba(0,0,0,0.32);
@@ -2470,6 +2443,7 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
 
 .world-battle-close:hover,
 .world-battle-close:focus-visible {
+    border-color: rgba(111,214,189,0.58);
     opacity: 1;
 }
 
@@ -2679,7 +2653,7 @@ body.is-world-side-collapsed .world-map-controls {
         background:
             linear-gradient(180deg, rgba(111,214,189,0.1), rgba(255,255,255,0.02)),
             rgba(3,8,11,0.9);
-        color: rgba(232,199,106,0.92);
+        color: rgba(143,239,225,0.86);
         padding: 0.72rem 0.95rem;
         font-size: 0.72rem;
         font-weight: 900;
@@ -2689,7 +2663,7 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-side-toggle:hover,
     .world-side-toggle:focus-visible {
-        color: #fff3bd;
+        color: #effffc;
         outline: 0;
     }
 

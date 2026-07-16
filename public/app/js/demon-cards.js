@@ -243,7 +243,6 @@
     const normalized = String(variant || '').toLowerCase();
     if (normalized.includes('danger')) return 'btn-glass-danger';
     if (normalized.startsWith('outline-')) return 'btn-glass-muted';
-    if (['primary', 'success', 'warning'].includes(normalized)) return 'btn-glass-gold';
     if (normalized.includes('secondary') || normalized.includes('light')) return 'btn-glass-muted';
     return '';
   }

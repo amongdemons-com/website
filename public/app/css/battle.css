@@ -394,12 +394,12 @@ body:not(.dungeon-page) {
     min-width: 2rem;
     width: 2rem;
     height: 1.75rem;
-    border: 1px solid rgba(232,199,106,0.28);
+    border: 1px solid rgba(111,214,189,0.28);
     border-radius: 4px;
     background:
-        linear-gradient(180deg, rgba(232,199,106,0.22), rgba(232,199,106,0.1)),
+        linear-gradient(180deg, rgba(111,214,189,0.14), rgba(111,214,189,0.05)),
         #142026;
-    color: #fff4c2;
+    color: rgba(220,244,238,0.86);
     line-height: 1;
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.04),
@@ -408,23 +408,27 @@ body:not(.dungeon-page) {
 
 .battle-playback-btn:hover,
 .battle-playback-btn:focus-visible {
-    border-color: rgba(232,199,106,0.58);
+    border-color: rgba(111,214,189,0.58);
     background:
-        linear-gradient(180deg, rgba(232,199,106,0.34), rgba(232,199,106,0.16)),
+        linear-gradient(180deg, rgba(111,214,189,0.24), rgba(111,214,189,0.1)),
         #172a30;
-    color: #fff9d4;
+    color: #effffc;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.05),
+        0 0 14px rgba(111,214,189,0.16);
+    outline: 0;
 }
 
-.battle-playback-btn.is-primary {
-    border-color: rgba(232,199,106,0.82);
+.battle-playback-btn.is-active {
+    border-color: rgba(111,214,189,0.72);
     background:
-        linear-gradient(180deg, #ffe482, #dcae38),
-        #f5d56d;
-    color: #071214;
+        linear-gradient(180deg, rgba(143,239,225,0.92), rgba(111,214,189,0.82)),
+        var(--ad-teal, #6fd6bd);
+    color: #06110f;
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.4),
-        inset 0 -1px 0 rgba(71,46,6,0.28),
-        0 0 16px rgba(232,199,106,0.18);
+        inset 0 1px 0 rgba(255,255,255,0.36),
+        inset 0 -1px 0 rgba(5,61,52,0.24),
+        0 0 16px rgba(111,214,189,0.2);
 }
 
 .battle-playback-btn:disabled {
@@ -460,14 +464,15 @@ body:not(.dungeon-page) {
 }
 
 .battle-speed-option.active {
-    border: 1px solid rgba(232,199,106,0.82);
+    border: 1px solid rgba(111,214,189,0.72);
     background:
-        linear-gradient(180deg, #ffe482, #dcae38),
-        #f5d56d;
-    color: #071214;
+        linear-gradient(180deg, rgba(143,239,225,0.92), rgba(111,214,189,0.82)),
+        var(--ad-teal, #6fd6bd);
+    color: #06110f;
     box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.34),
-        inset 0 -1px 0 rgba(71,46,6,0.24);
+        inset 0 -1px 0 rgba(5,61,52,0.24),
+        0 0 12px rgba(111,214,189,0.14);
 }
 
 .is-combat-paused .dungeon-demon-card.is-attacking,
@@ -1569,7 +1574,7 @@ body:not(.dungeon-page) {
     flex: 1 1 0;
     width: 100%;
     min-height: 0;
-    border: 1px solid rgba(232,199,106,0.18);
+    border: 1px solid rgba(111,214,189,0.2);
     border-radius: 6px;
     background: rgba(3,9,11,0.38);
     color: rgba(220,232,229,0.7);
@@ -1586,17 +1591,20 @@ body:not(.dungeon-page) {
 .dungeon-hand-tab:hover,
 .dungeon-hand-tab:focus,
 .dungeon-hand-tab:focus-visible {
-    border-color: rgba(232,199,106,0.38);
-    color: #f5d56d;
+    border-color: rgba(111,214,189,0.46);
+    color: #a5ead9;
+    outline: 0;
 }
 
 .dungeon-hand-tab.active {
-    border-color: rgba(232,199,106,0.56);
+    border-color: rgba(111,214,189,0.58);
     background:
-        linear-gradient(180deg, rgba(232,199,106,0.16), rgba(232,199,106,0.06)),
+        linear-gradient(180deg, rgba(111,214,189,0.16), rgba(111,214,189,0.06)),
         rgba(3,9,11,0.62);
-    color: #fff4c2;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    color: #effffc;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.04),
+        0 0 12px rgba(111,214,189,0.14);
 }
 
 .dungeon-hand-grid {
@@ -3277,46 +3285,30 @@ body:not(.dungeon-page) > .navbar {
 
 body.dungeon-page {
     --dungeon-btn-radius: 6px;
-    --dungeon-btn-border: rgba(232,199,106,0.24);
-    --dungeon-btn-border-strong: rgba(232,199,106,0.56);
-    --dungeon-btn-text: rgba(255,244,194,0.88);
-    --dungeon-btn-text-strong: #fff4c2;
+    --dungeon-btn-border: rgba(111,214,189,0.24);
+    --dungeon-btn-border-strong: rgba(111,214,189,0.56);
+    --dungeon-btn-text: rgba(220,244,238,0.82);
+    --dungeon-btn-text-strong: #effffc;
     --dungeon-btn-dark-bg:
-        linear-gradient(180deg, rgba(232,199,106,0.1), rgba(3,9,11,0.24)),
+        linear-gradient(180deg, rgba(111,214,189,0.1), rgba(3,9,11,0.24)),
         rgba(3,9,11,0.54);
     --dungeon-btn-dark-bg-active:
-        linear-gradient(180deg, rgba(232,199,106,0.18), rgba(3,9,11,0.2)),
-        rgba(24,28,16,0.7);
-    --dungeon-btn-action-bg:
-        linear-gradient(180deg, var(--gold-top) 0%, var(--gold-mid) 52%, var(--gold-bottom) 100%);
-    --dungeon-btn-action-bg-active:
-        linear-gradient(180deg, var(--gold-top) 0%, var(--gold-mid) 52%, var(--gold-bottom) 100%);
-    --dungeon-btn-action-text: var(--gold-text);
-    --dungeon-btn-action-border: var(--gold-rim);
-    --dungeon-btn-action-shadow:
-        0 0 18px var(--gold-glow),
-        inset 0 1px 0 rgba(255,245,210,0.55),
-        inset 0 -2px 7px rgba(120,70,10,0.5),
-        0 0 0 1px rgba(90,55,8,0.6);
-    --dungeon-btn-action-shadow-hover:
-        0 0 26px rgba(232,176,74,0.55),
-        inset 0 1px 0 rgba(255,245,210,0.55),
-        inset 0 -2px 7px rgba(120,70,10,0.5),
-        0 0 0 1px rgba(90,55,8,0.6);
-    --dungeon-btn-ghost-bg:
-        linear-gradient(180deg, rgba(40,52,55,0.9), rgba(18,28,31,0.95));
-    --dungeon-btn-ghost-border: rgba(232,176,74,0.45);
-    --dungeon-btn-ghost-border-strong: rgba(232,176,74,0.7);
-    --dungeon-btn-ghost-text: #e8b04a;
-    --dungeon-btn-ghost-text-strong: var(--gold-top);
-    --dungeon-btn-ghost-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.06),
-        0 0 10px rgba(232,176,74,0.12);
+        linear-gradient(180deg, rgba(111,214,189,0.18), rgba(3,9,11,0.2)),
+        rgba(8,24,24,0.72);
+    --dungeon-btn-action-bg: var(--primary-gradient);
+    --dungeon-btn-action-bg-hover: var(--primary-hover-gradient);
+    --dungeon-btn-action-bg-active: var(--primary-active-gradient);
+    --dungeon-btn-action-text: var(--primary-label);
+    --dungeon-btn-action-border: var(--primary-frame);
+    --dungeon-btn-action-shadow: var(--primary-shadow);
+    --dungeon-btn-action-shadow-hover: var(--primary-hover-shadow);
+    --dungeon-btn-action-shadow-active: var(--primary-active-shadow);
+    --dungeon-btn-action-shadow-focus: var(--primary-focus-shadow);
 }
 
-body.dungeon-page main .btn:not(.btn-glass-gold):not(.btn-glass-muted):not(.btn-glass-danger),
-body.dungeon-page .dungeon-modal .btn:not(.btn-glass-gold):not(.btn-glass-muted):not(.btn-glass-danger),
-body.dungeon-page .demon-detail-modal .btn:not(.btn-glass-gold):not(.btn-glass-muted):not(.btn-glass-danger),
+body.dungeon-page main .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger),
+body.dungeon-page .dungeon-modal .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger),
+body.dungeon-page .demon-detail-modal .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger),
 body.dungeon-page .demonic-pact-reroll-btn,
 body.dungeon-page .battle-playback-btn,
 body.dungeon-page .battle-speed-option,
@@ -3334,12 +3326,12 @@ body.dungeon-page .dungeon-hand-scroll-btn {
     transition: background 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 }
 
-body.dungeon-page main .btn:not(.btn-glass-gold):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):hover,
-body.dungeon-page main .btn:not(.btn-glass-gold):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):focus-visible,
-body.dungeon-page .dungeon-modal .btn:not(.btn-glass-gold):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):hover,
-body.dungeon-page .dungeon-modal .btn:not(.btn-glass-gold):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):focus-visible,
-body.dungeon-page .demon-detail-modal .btn:not(.btn-glass-gold):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):hover,
-body.dungeon-page .demon-detail-modal .btn:not(.btn-glass-gold):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):focus-visible,
+body.dungeon-page main .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):hover,
+body.dungeon-page main .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):focus-visible,
+body.dungeon-page .dungeon-modal .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):hover,
+body.dungeon-page .dungeon-modal .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):focus-visible,
+body.dungeon-page .demon-detail-modal .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):hover,
+body.dungeon-page .demon-detail-modal .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger):not(:disabled):focus-visible,
 body.dungeon-page .demonic-pact-reroll-btn:not(:disabled):hover,
 body.dungeon-page .demonic-pact-reroll-btn:not(:disabled):focus-visible,
 body.dungeon-page .battle-playback-btn:not(:disabled):hover,
@@ -3355,13 +3347,18 @@ body.dungeon-page .dungeon-hand-scroll-btn:not(:disabled):focus-visible {
     color: var(--dungeon-btn-text-strong);
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.06),
-        0 0 0 2px rgba(232,199,106,0.12);
+        0 0 0 2px rgba(111,214,189,0.12);
 }
 
-body.dungeon-page .dungeon-hand-tab.active {
+body.dungeon-page .dungeon-hand-tab.active,
+body.dungeon-page .battle-playback-btn.is-active,
+body.dungeon-page .battle-speed-option.active {
     border-color: var(--dungeon-btn-border-strong);
     background: var(--dungeon-btn-dark-bg-active);
     color: var(--dungeon-btn-text-strong);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 0 14px rgba(111,214,189,0.16);
 }
 
 body.dungeon-page main .btn:focus-visible,
@@ -3376,111 +3373,63 @@ body.dungeon-page .dungeon-hand-scroll-btn:focus-visible {
 }
 
 body.dungeon-page main .btn-primary,
-body.dungeon-page main .btn-warning,
-body.dungeon-page main .btn-success,
-body.dungeon-page main .btn-glass-gold,
+body.dungeon-page main .ad-primary-action,
 body.dungeon-page main .dungeon-fight-btn,
 body.dungeon-page main .dungeon-reward-extract-btn,
 body.dungeon-page .dungeon-modal .btn-primary,
-body.dungeon-page .dungeon-modal .btn-warning,
-body.dungeon-page .dungeon-modal .btn-success,
-body.dungeon-page .dungeon-modal .btn-glass-gold,
 body.dungeon-page .demon-detail-modal .btn-primary,
-body.dungeon-page .demon-detail-modal .btn-warning,
-body.dungeon-page .demon-detail-modal .btn-success,
-body.dungeon-page .demon-detail-modal .btn-glass-gold,
-body.dungeon-page .demonic-pact-overlay .btn-glass-gold,
-body.dungeon-page .battle-playback-btn.is-primary,
-body.dungeon-page .battle-speed-option.active {
+body.dungeon-page .demonic-pact-overlay .btn-primary {
     border: 1px solid var(--dungeon-btn-action-border);
     background: var(--dungeon-btn-action-bg);
     color: var(--dungeon-btn-action-text);
     box-shadow: var(--dungeon-btn-action-shadow);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.96);
 }
 
 body.dungeon-page main .btn-primary:not(:disabled):hover,
-body.dungeon-page main .btn-primary:not(:disabled):focus-visible,
-body.dungeon-page main .btn-warning:not(:disabled):hover,
-body.dungeon-page main .btn-warning:not(:disabled):focus-visible,
-body.dungeon-page main .btn-success:not(:disabled):hover,
-body.dungeon-page main .btn-success:not(:disabled):focus-visible,
-body.dungeon-page main .btn-glass-gold:not(:disabled):hover,
-body.dungeon-page main .btn-glass-gold:not(:disabled):focus-visible,
+body.dungeon-page main .ad-primary-action:not(:disabled):hover,
 body.dungeon-page main .dungeon-fight-btn:not(:disabled):hover,
-body.dungeon-page main .dungeon-fight-btn:not(:disabled):focus-visible,
 body.dungeon-page main .dungeon-reward-extract-btn:not(:disabled):hover,
-body.dungeon-page main .dungeon-reward-extract-btn:not(:disabled):focus-visible,
 body.dungeon-page .dungeon-modal .btn-primary:not(:disabled):hover,
-body.dungeon-page .dungeon-modal .btn-primary:not(:disabled):focus-visible,
-body.dungeon-page .dungeon-modal .btn-warning:not(:disabled):hover,
-body.dungeon-page .dungeon-modal .btn-warning:not(:disabled):focus-visible,
-body.dungeon-page .dungeon-modal .btn-success:not(:disabled):hover,
-body.dungeon-page .dungeon-modal .btn-success:not(:disabled):focus-visible,
-body.dungeon-page .dungeon-modal .btn-glass-gold:not(:disabled):hover,
-body.dungeon-page .dungeon-modal .btn-glass-gold:not(:disabled):focus-visible,
 body.dungeon-page .demon-detail-modal .btn-primary:not(:disabled):hover,
-body.dungeon-page .demon-detail-modal .btn-primary:not(:disabled):focus-visible,
-body.dungeon-page .demon-detail-modal .btn-warning:not(:disabled):hover,
-body.dungeon-page .demon-detail-modal .btn-warning:not(:disabled):focus-visible,
-body.dungeon-page .demon-detail-modal .btn-success:not(:disabled):hover,
-body.dungeon-page .demon-detail-modal .btn-success:not(:disabled):focus-visible,
-body.dungeon-page .demon-detail-modal .btn-glass-gold:not(:disabled):hover,
-body.dungeon-page .demon-detail-modal .btn-glass-gold:not(:disabled):focus-visible,
-body.dungeon-page .demonic-pact-overlay .btn-glass-gold:not(:disabled):hover,
-body.dungeon-page .demonic-pact-overlay .btn-glass-gold:not(:disabled):focus-visible,
-body.dungeon-page .battle-playback-btn.is-primary:not(:disabled):hover,
-body.dungeon-page .battle-playback-btn.is-primary:not(:disabled):focus-visible,
-body.dungeon-page .battle-speed-option.active:not(:disabled):hover,
-body.dungeon-page .battle-speed-option.active:not(:disabled):focus-visible {
-    border-color: var(--dungeon-btn-action-border);
-    background: var(--dungeon-btn-action-bg-active);
+body.dungeon-page .demonic-pact-overlay .btn-primary:not(:disabled):hover {
+    border-color: var(--primary-hover-border);
+    background: var(--dungeon-btn-action-bg-hover);
     color: var(--dungeon-btn-action-text);
     box-shadow: var(--dungeon-btn-action-shadow-hover);
-    filter: brightness(1.08);
 }
 
-body.dungeon-page main .btn-glass-gold:not(:disabled):active,
+body.dungeon-page main .btn-primary:focus-visible,
+body.dungeon-page main .ad-primary-action:focus-visible,
+body.dungeon-page main .dungeon-fight-btn:focus-visible,
+body.dungeon-page main .dungeon-reward-extract-btn:focus-visible,
+body.dungeon-page .dungeon-modal .btn-primary:focus-visible,
+body.dungeon-page .demon-detail-modal .btn-primary:focus-visible,
+body.dungeon-page .demonic-pact-overlay .btn-primary:focus-visible {
+    border-color: var(--primary-focus-border);
+    background: var(--dungeon-btn-action-bg-hover);
+    color: var(--dungeon-btn-action-text);
+    box-shadow: var(--dungeon-btn-action-shadow-focus);
+    outline: 2px solid var(--primary-focus-outline);
+    outline-offset: 2px;
+}
+
+body.dungeon-page main .btn-primary:not(:disabled):active,
+body.dungeon-page main .ad-primary-action:not(:disabled):active,
 body.dungeon-page main .dungeon-fight-btn:not(:disabled):active,
 body.dungeon-page main .dungeon-reward-extract-btn:not(:disabled):active,
-body.dungeon-page .dungeon-modal .btn-glass-gold:not(:disabled):active,
-body.dungeon-page .demon-detail-modal .btn-glass-gold:not(:disabled):active,
-body.dungeon-page .demonic-pact-overlay .btn-glass-gold:not(:disabled):active {
-    filter: brightness(0.96);
+body.dungeon-page .dungeon-modal .btn-primary:not(:disabled):active,
+body.dungeon-page .demon-detail-modal .btn-primary:not(:disabled):active,
+body.dungeon-page .demonic-pact-overlay .btn-primary:not(:disabled):active {
+    border-color: var(--primary-active-border);
+    background: var(--dungeon-btn-action-bg-active);
+    color: var(--dungeon-btn-action-text);
+    box-shadow: var(--dungeon-btn-action-shadow-active);
 }
 
-/* Secondary / utility (ghost) buttons: dark fill, gold outline + gold label/icon */
-body.dungeon-page main .btn-glass-muted,
-body.dungeon-page .dungeon-modal .btn-glass-muted,
-body.dungeon-page .demon-detail-modal .btn-glass-muted,
-body.dungeon-page .demonic-pact-overlay .btn-glass-muted {
-    --bs-btn-color: var(--dungeon-btn-ghost-text);
-    --bs-btn-hover-color: var(--dungeon-btn-ghost-text-strong);
-    --bs-btn-active-color: var(--dungeon-btn-ghost-text-strong);
-    border: 1px solid var(--dungeon-btn-ghost-border);
-    background: var(--dungeon-btn-ghost-bg);
-    color: var(--dungeon-btn-ghost-text);
-    box-shadow: var(--dungeon-btn-ghost-shadow);
-}
-
-body.dungeon-page main .btn-glass-muted:not(:disabled):hover,
-body.dungeon-page main .btn-glass-muted:not(:disabled):focus-visible,
-body.dungeon-page .dungeon-modal .btn-glass-muted:not(:disabled):hover,
-body.dungeon-page .dungeon-modal .btn-glass-muted:not(:disabled):focus-visible,
-body.dungeon-page .demon-detail-modal .btn-glass-muted:not(:disabled):hover,
-body.dungeon-page .demon-detail-modal .btn-glass-muted:not(:disabled):focus-visible,
-body.dungeon-page .demonic-pact-overlay .btn-glass-muted:not(:disabled):hover,
-body.dungeon-page .demonic-pact-overlay .btn-glass-muted:not(:disabled):focus-visible {
-    border-color: var(--dungeon-btn-ghost-border-strong);
-    background: var(--dungeon-btn-ghost-bg);
-    color: var(--dungeon-btn-ghost-text-strong);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.06),
-        0 0 14px rgba(232,176,74,0.2);
-}
-
-body.dungeon-page main .btn:disabled,
-body.dungeon-page .dungeon-modal .btn:disabled,
-body.dungeon-page .demon-detail-modal .btn:disabled,
+body.dungeon-page main .btn:not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):disabled,
+body.dungeon-page .dungeon-modal .btn:not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):disabled,
+body.dungeon-page .demon-detail-modal .btn:not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):disabled,
 body.dungeon-page .demonic-pact-reroll-btn:disabled,
 body.dungeon-page .battle-playback-btn:disabled,
 body.dungeon-page .battle-speed-option:disabled,
@@ -3493,6 +3442,65 @@ body.dungeon-page .dungeon-hand-scroll-btn:disabled {
     color: rgba(220,232,229,0.44);
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
     opacity: 0.62;
+}
+
+body.dungeon-page main .btn-primary:disabled,
+body.dungeon-page main .ad-primary-action:disabled,
+body.dungeon-page main .dungeon-fight-btn:disabled,
+body.dungeon-page main .dungeon-reward-extract-btn:disabled,
+body.dungeon-page .dungeon-modal .btn-primary:disabled,
+body.dungeon-page .demon-detail-modal .btn-primary:disabled,
+body.dungeon-page .demonic-pact-overlay .btn-primary:disabled {
+    border-color: var(--primary-disabled-border);
+    background: var(--primary-disabled-gradient);
+    color: var(--primary-disabled-text);
+    box-shadow: var(--primary-disabled-shadow);
+    opacity: 0.58;
+}
+
+body .battle-playback-btn.ad-primary-action,
+body .battle-speed-option.ad-primary-action,
+body .battle-speed-option.active.ad-primary-action {
+    border: 1px solid var(--primary-frame);
+    background: var(--primary-gradient);
+    color: var(--primary-label);
+    box-shadow: var(--primary-shadow);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.96);
+}
+
+body .battle-playback-btn.ad-primary-action:not(:disabled):hover,
+body .battle-speed-option.ad-primary-action:not(:disabled):hover {
+    border-color: var(--primary-hover-border);
+    background: var(--primary-hover-gradient);
+    color: var(--primary-label-hover);
+    box-shadow: var(--primary-hover-shadow);
+}
+
+body .battle-playback-btn.ad-primary-action:focus-visible,
+body .battle-speed-option.ad-primary-action:focus-visible {
+    border-color: var(--primary-focus-border);
+    background: var(--primary-hover-gradient);
+    color: var(--primary-label-hover);
+    box-shadow: var(--primary-focus-shadow);
+    outline: 2px solid var(--primary-focus-outline);
+    outline-offset: 2px;
+}
+
+body .battle-playback-btn.ad-primary-action:not(:disabled):active,
+body .battle-speed-option.ad-primary-action:not(:disabled):active {
+    border-color: var(--primary-active-border);
+    background: var(--primary-active-gradient);
+    color: var(--primary-label);
+    box-shadow: var(--primary-active-shadow);
+}
+
+body .battle-playback-btn.ad-primary-action:disabled,
+body .battle-speed-option.ad-primary-action:disabled {
+    border-color: var(--primary-disabled-border);
+    background: var(--primary-disabled-gradient);
+    color: var(--primary-disabled-text);
+    box-shadow: var(--primary-disabled-shadow);
+    opacity: 0.58;
 }
 
 .dungeon-fight-btn {
@@ -4267,12 +4275,12 @@ body.dungeon-page .dungeon-hand-scroll-btn:disabled {
         min-width: 0;
         height: 100%;
         min-height: 0;
-        border: 1px solid rgba(232,199,106,0.24);
+        border: 1px solid rgba(111,214,189,0.22);
         border-radius: 6px;
         background:
-            linear-gradient(180deg, rgba(232,199,106,0.1), rgba(3,9,11,0.24)),
+            linear-gradient(180deg, rgba(111,214,189,0.1), rgba(3,9,11,0.24)),
             rgba(3,9,11,0.54);
-        color: rgba(255,244,194,0.88);
+        color: rgba(220,244,238,0.84);
         padding: 0;
         box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
     }
@@ -4283,8 +4291,12 @@ body.dungeon-page .dungeon-hand-scroll-btn:disabled {
 
 .dungeon-hand-scroll-btn:active,
     .dungeon-hand-scroll-btn:focus-visible {
-        border-color: rgba(232,199,106,0.52);
-        color: #fff4c2;
+        border-color: rgba(111,214,189,0.56);
+        background:
+            linear-gradient(180deg, rgba(111,214,189,0.18), rgba(3,9,11,0.2)),
+            rgba(8,24,24,0.72);
+        color: #effffc;
+        box-shadow: 0 0 12px rgba(111,214,189,0.14);
         outline: 0;
     }
 
@@ -4633,12 +4645,12 @@ body.dungeon-page .dungeon-hand-scroll-btn:disabled {
         height: 100%;
         min-width: 0;
         min-height: 0;
-        border: 1px solid rgba(232,199,106,0.24);
+        border: 1px solid rgba(111,214,189,0.24);
         border-radius: 6px;
         background:
-            linear-gradient(180deg, rgba(232,199,106,0.1), rgba(3,9,11,0.24)),
+            linear-gradient(180deg, rgba(111,214,189,0.1), rgba(3,9,11,0.24)),
             rgba(3,9,11,0.54);
-        color: rgba(255,244,194,0.86);
+        color: rgba(220,244,238,0.82);
         line-height: 1;
         margin: 0;
         padding: 0;
@@ -4647,12 +4659,15 @@ body.dungeon-page .dungeon-hand-scroll-btn:disabled {
 
 .dungeon-mobile-nav-btn.active,
     .dungeon-mobile-nav-btn:not(:disabled):active,
-    .dungeon-mobile-nav-btn:focus-visible {
-        border-color: rgba(232,199,106,0.56);
+.dungeon-mobile-nav-btn:focus-visible {
+        border-color: rgba(111,214,189,0.56);
         background:
-            linear-gradient(180deg, rgba(232,199,106,0.18), rgba(3,9,11,0.2)),
-            rgba(24,28,16,0.7);
-        color: #fff4c2;
+            linear-gradient(180deg, rgba(111,214,189,0.18), rgba(3,9,11,0.2)),
+            rgba(8,24,24,0.72);
+        color: #effffc;
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.08),
+            0 0 12px rgba(111,214,189,0.14);
         outline: 0;
     }
 
@@ -4674,18 +4689,28 @@ body.dungeon-page .dungeon-hand-scroll-btn:disabled {
         cursor: wait;
     }
 
-.dungeon-mobile-fight-btn:not(:disabled):active,
-    .dungeon-mobile-fight-btn:focus-visible {
-        border-color: var(--dungeon-btn-action-border);
+.dungeon-mobile-fight-btn:not(:disabled):active {
+        border-color: var(--primary-active-border);
         background: var(--dungeon-btn-action-bg-active);
         color: var(--dungeon-btn-action-text);
-        box-shadow: var(--dungeon-btn-action-shadow-hover);
-        filter: brightness(1.08);
+        box-shadow: var(--dungeon-btn-action-shadow-active);
+    }
+
+.dungeon-mobile-fight-btn:focus-visible {
+        border-color: var(--primary-focus-border);
+        background: var(--dungeon-btn-action-bg-hover);
+        color: var(--dungeon-btn-action-text);
+        box-shadow: var(--dungeon-btn-action-shadow-focus);
+        outline: 2px solid var(--primary-focus-outline);
+        outline-offset: 2px;
     }
 
 .dungeon-mobile-fight-btn:disabled {
-        color: rgba(7,18,20,0.68);
-        opacity: 0.72;
+        border-color: var(--primary-disabled-border);
+        background: var(--primary-disabled-gradient);
+        color: var(--primary-disabled-text);
+        box-shadow: var(--primary-disabled-shadow);
+        opacity: 0.58;
     }
 
 .dungeon-mobile-fight-btn .button-melee-icon,

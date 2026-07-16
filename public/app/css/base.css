@@ -1960,7 +1960,10 @@ body:has(#demonDetailModal.show) .modal-backdrop {
 }
 
 .demon-detail-actions .btn.is-training {
-    box-shadow: 0 0 0 2px rgba(85,255,255,0.2), 0 0 20px rgba(85,255,255,0.18);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.35),
+        0 0 0 2px rgba(255,154,107,0.28),
+        0 0 20px var(--primary-glow, rgba(255,110,47,0.28));
 }
 
 @media (max-width: 767.98px) {
@@ -3274,12 +3277,73 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     --ad-ember: #e78a55;
     --ad-ember-soft: rgba(231,138,85,0.16);
     --ad-gold: #e8c76a;
-    /* Torch-gold button treatment (warm, dimensional gold for the dungeon) */
+    --secondary-border: rgba(161,212,201,0.2);
+    --secondary-bg: rgba(8,18,21,0.72);
+    --secondary-text: rgba(237,245,242,0.82);
+    --secondary-hover-border: rgba(111,214,189,0.5);
+    --secondary-hover-bg: rgba(111,214,189,0.1);
+    --secondary-hover-text: #effffc;
+    --secondary-active-border: rgba(111,214,189,0.58);
+    --secondary-active-bg: rgba(111,214,189,0.14);
+    --secondary-active-text: #effffc;
+    --secondary-focus-shadow: rgba(111,214,189,0.2);
+    --secondary-disabled-border: rgba(161,212,201,0.11);
+    --secondary-disabled-bg: rgba(8,18,21,0.46);
+    --secondary-disabled-text: rgba(237,245,242,0.42);
+    --primary: #ff6e2f;
+    --primary-hover: #ff8248;
+    --primary-active: #e95620;
+    --primary-border: #ff9a6b;
+    --primary-text: #160c08;
+    --primary-glow: rgba(255, 110, 47, 0.28);
+    --primary-label: #cdbe91;
+    --primary-label-hover: #e2d5a9;
+    --primary-frame: #a98549;
+    --primary-hover-border: #b99758;
+    --primary-focus-border: #c8aa6d;
+    --primary-active-border: #8b692f;
+    --primary-focus-outline: rgba(200,170,109,0.46);
+    --primary-disabled-border: rgba(169,133,73,0.42);
+    --primary-disabled-text: rgba(205,190,145,0.58);
+    --primary-radius: 0;
+    --primary-frame-gradient:
+        linear-gradient(180deg, #c8aa6d 0%, #c8a04a 36%, #c3983b 50%, #795c29 100%);
+    --primary-hover-frame-gradient:
+        linear-gradient(180deg, #dcc185 0%, #d9af5d 36%, #cda54d 50%, #8d6c32 100%);
+    --primary-active-frame-gradient:
+        linear-gradient(180deg, #ad8f58 0%, #a77c38 42%, #604820 100%);
+    --primary-disabled-frame-gradient:
+        linear-gradient(180deg, rgba(169,146,99,0.48), rgba(100,77,39,0.46));
+    --primary-inner-keyline: #050d16;
+    --primary-gradient:
+        linear-gradient(180deg, #5b4120, #332718);
+    --primary-hover-gradient:
+        linear-gradient(180deg, #684d27, #40301a);
+    --primary-active-gradient:
+        linear-gradient(180deg, #493419, #2b2015);
+    --primary-disabled-gradient:
+        linear-gradient(180deg, rgba(73,57,34,0.72), rgba(45,35,24,0.7));
+    --primary-shadow:
+        0 0 0 1px rgba(3,11,21,0.96),
+        0 2px 4px rgba(0,0,0,0.5);
+    --primary-hover-shadow:
+        0 0 0 1px rgba(3,11,21,0.96),
+        0 3px 6px rgba(0,0,0,0.54);
+    --primary-active-shadow:
+        inset 0 2px 4px rgba(0,0,0,0.48),
+        0 0 0 1px rgba(3,11,21,0.98),
+        0 1px 2px rgba(0,0,0,0.52);
+    --primary-focus-shadow:
+        0 0 0 1px rgba(3,11,21,0.96),
+        0 2px 4px rgba(0,0,0,0.5),
+        0 0 0 0.16rem rgba(200,170,109,0.22);
+    --primary-disabled-shadow:
+        0 0 0 1px rgba(3,11,21,0.68);
+    /* Warm gold remains reserved for currencies, rewards, rarity and decoration. */
     --gold-top: #f3cf78;
     --gold-mid: #e3a838;
     --gold-bottom: #c8861f;
     --gold-rim: #f6dd9a;
-    --gold-text: #2a1d04;
     --gold-glow: rgba(232,176,74,0.40);
     --ad-soul: #55FFFF;
     --ad-danger: #e4685e;
@@ -3515,7 +3579,6 @@ a:hover {
     font-weight: 700;
 }
 
-.btn-glass-gold,
 .btn-warning {
     --bs-btn-color: #071214;
     --bs-btn-bg: #f5d56d;
@@ -3537,8 +3600,6 @@ a:hover {
         0 0 16px rgba(232,199,106,0.18);
 }
 
-.btn-glass-gold:not(:disabled):hover,
-.btn-glass-gold:not(:disabled):focus-visible,
 .btn-warning:not(:disabled):hover,
 .btn-warning:not(:disabled):focus-visible {
     border-color: rgba(255,228,130,0.96);
@@ -3548,31 +3609,75 @@ a:hover {
     color: #071214;
 }
 
+.btn-secondary,
+.btn-outline-light,
 .btn-glass-muted {
-    --bs-btn-color: rgba(220,232,229,0.82);
-    --bs-btn-bg: rgba(3,9,11,0.54);
-    --bs-btn-border-color: rgba(161,212,201,0.26);
-    --bs-btn-hover-color: #f2f7f5;
-    --bs-btn-hover-bg: rgba(13,29,32,0.74);
-    --bs-btn-hover-border-color: rgba(161,212,201,0.46);
-    --bs-btn-active-color: #f2f7f5;
-    --bs-btn-active-bg: rgba(18,39,42,0.82);
-    --bs-btn-active-border-color: rgba(161,212,201,0.54);
-    border-color: rgba(161,212,201,0.26);
-    background:
-        linear-gradient(180deg, rgba(161,212,201,0.08), rgba(3,9,11,0.22)),
-        rgba(3,9,11,0.54);
-    color: rgba(220,232,229,0.82);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    --bs-btn-color: var(--secondary-text);
+    --bs-btn-bg: var(--secondary-bg);
+    --bs-btn-border-color: var(--secondary-border);
+    --bs-btn-hover-color: var(--secondary-hover-text);
+    --bs-btn-hover-bg: var(--secondary-hover-bg);
+    --bs-btn-hover-border-color: var(--secondary-hover-border);
+    --bs-btn-focus-shadow-rgb: 111, 214, 189;
+    --bs-btn-active-color: var(--secondary-active-text);
+    --bs-btn-active-bg: var(--secondary-active-bg);
+    --bs-btn-active-border-color: var(--secondary-active-border);
+    --bs-btn-disabled-color: var(--secondary-disabled-text);
+    --bs-btn-disabled-bg: var(--secondary-disabled-bg);
+    --bs-btn-disabled-border-color: var(--secondary-disabled-border);
+    border-color: var(--secondary-border);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
+    box-shadow: none;
+    text-shadow: none;
 }
 
-.btn-glass-muted:not(:disabled):hover,
-.btn-glass-muted:not(:disabled):focus-visible {
-    border-color: rgba(161,212,201,0.46);
-    background:
-        linear-gradient(180deg, rgba(161,212,201,0.14), rgba(3,9,11,0.24)),
-        rgba(13,29,32,0.74);
-    color: #f2f7f5;
+.btn-secondary:not(:disabled, .disabled, [aria-disabled="true"]):hover,
+.btn-outline-light:not(:disabled, .disabled, [aria-disabled="true"]):hover,
+.btn-glass-muted:not(:disabled, .disabled, [aria-disabled="true"]):hover {
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
+    box-shadow: none;
+}
+
+.btn-secondary:not(:disabled, .disabled, [aria-disabled="true"]):focus-visible,
+.btn-outline-light:not(:disabled, .disabled, [aria-disabled="true"]):focus-visible,
+.btn-glass-muted:not(:disabled, .disabled, [aria-disabled="true"]):focus-visible {
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
+    box-shadow: 0 0 0 0.14rem var(--secondary-focus-shadow);
+    outline: 0;
+}
+
+.btn-secondary:not(:disabled, .disabled, [aria-disabled="true"]):active,
+.btn-secondary.active:not(.disabled),
+.btn-outline-light:not(:disabled, .disabled, [aria-disabled="true"]):active,
+.btn-outline-light.active:not(.disabled),
+.btn-glass-muted:not(:disabled, .disabled, [aria-disabled="true"]):active,
+.btn-glass-muted.active:not(.disabled) {
+    border-color: var(--secondary-active-border);
+    background: var(--secondary-active-bg);
+    color: var(--secondary-active-text);
+    box-shadow: none;
+}
+
+.btn-secondary:disabled,
+.btn-secondary.disabled,
+.btn-secondary[aria-disabled="true"],
+.btn-outline-light:disabled,
+.btn-outline-light.disabled,
+.btn-outline-light[aria-disabled="true"],
+.btn-glass-muted:disabled,
+.btn-glass-muted.disabled,
+.btn-glass-muted[aria-disabled="true"] {
+    border-color: var(--secondary-disabled-border);
+    background: var(--secondary-disabled-bg);
+    color: var(--secondary-disabled-text);
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.58;
 }
 
 .btn-glass-danger,
@@ -3652,16 +3757,107 @@ a:hover {
     outline: 0;
 }
 
-.btn-primary {
-    --bs-btn-color: #04100f;
-    --bs-btn-bg: var(--ad-teal);
-    --bs-btn-border-color: var(--ad-teal);
-    --bs-btn-hover-color: #03100e;
-    --bs-btn-hover-bg: #8be4d0;
-    --bs-btn-hover-border-color: #8be4d0;
-    --bs-btn-active-color: #03100e;
-    --bs-btn-active-bg: #5fc7af;
-    --bs-btn-active-border-color: #5fc7af;
+.btn-primary,
+.ad-primary-action,
+.level-points-save,
+.skill-tree-save {
+    --primary-current-frame-gradient: var(--primary-frame-gradient);
+    --bs-btn-color: var(--primary-label);
+    --bs-btn-bg: #47341c;
+    --bs-btn-border-color: var(--primary-frame);
+    --bs-btn-hover-color: var(--primary-label-hover);
+    --bs-btn-hover-bg: #533d20;
+    --bs-btn-hover-border-color: var(--primary-hover-border);
+    --bs-btn-focus-shadow-rgb: 200, 170, 109;
+    --bs-btn-active-color: var(--primary-label);
+    --bs-btn-active-bg: #372718;
+    --bs-btn-active-border-color: var(--primary-active-border);
+    --bs-btn-disabled-color: var(--primary-disabled-text);
+    --bs-btn-disabled-bg: #3a2d1d;
+    --bs-btn-disabled-border-color: var(--primary-disabled-border);
+    box-sizing: border-box;
+    position: relative;
+    border: 1px solid var(--primary-frame);
+    border-image: var(--primary-current-frame-gradient) 1 !important;
+    border-radius: var(--primary-radius) !important;
+    background: var(--primary-gradient);
+    color: var(--primary-label);
+    box-shadow: var(--primary-shadow);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.96);
+    transition:
+        background 140ms ease,
+        border-color 140ms ease,
+        color 140ms ease,
+        box-shadow 140ms ease,
+        opacity 140ms ease;
+}
+
+.btn-primary::before,
+.ad-primary-action::before,
+.level-points-save::before,
+.skill-tree-save::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    border-image: var(--primary-current-frame-gradient) 1;
+    box-shadow:
+        inset 0 0 0 1px var(--primary-inner-keyline),
+        inset 0 0 3px 1px rgba(0,0,0,0.68);
+    pointer-events: none;
+}
+
+.btn-primary:not(:disabled, .disabled):hover,
+.ad-primary-action:not(:disabled, [aria-disabled="true"]):hover,
+.level-points-save:not(:disabled):hover,
+.skill-tree-save:not(:disabled):hover {
+    --primary-current-frame-gradient: var(--primary-hover-frame-gradient);
+    border-color: var(--primary-hover-border);
+    background: var(--primary-hover-gradient);
+    color: var(--primary-label-hover);
+    box-shadow: var(--primary-hover-shadow);
+}
+
+.btn-primary:focus-visible,
+.ad-primary-action:focus-visible,
+.level-points-save:focus-visible,
+.skill-tree-save:focus-visible {
+    --primary-current-frame-gradient: var(--primary-hover-frame-gradient);
+    border-color: var(--primary-focus-border);
+    background: var(--primary-hover-gradient);
+    color: var(--primary-label-hover);
+    box-shadow: var(--primary-focus-shadow);
+    outline: 2px solid var(--primary-focus-outline);
+    outline-offset: 2px;
+}
+
+.btn-primary:not(:disabled, .disabled):active,
+.btn-primary.active:not(.disabled),
+.btn-primary.show,
+.ad-primary-action:not(:disabled, [aria-disabled="true"]):active,
+.level-points-save:not(:disabled):active,
+.skill-tree-save:not(:disabled):active {
+    --primary-current-frame-gradient: var(--primary-active-frame-gradient);
+    border-color: var(--primary-active-border);
+    background: var(--primary-active-gradient);
+    color: var(--primary-label);
+    box-shadow: var(--primary-active-shadow);
+}
+
+.btn-primary:disabled,
+.btn-primary.disabled,
+.ad-primary-action:disabled,
+.ad-primary-action[aria-disabled="true"],
+.level-points-save:disabled,
+.skill-tree-save:disabled {
+    --primary-current-frame-gradient: var(--primary-disabled-frame-gradient);
+    border-color: var(--primary-disabled-border);
+    background: var(--primary-disabled-gradient);
+    color: var(--primary-disabled-text);
+    box-shadow: var(--primary-disabled-shadow);
+    cursor: not-allowed;
+    opacity: 0.58;
 }
 
 .btn-success {
@@ -3680,14 +3876,6 @@ a:hover {
 .btn-danger,
 .btn-outline-danger:hover {
     font-weight: 800;
-}
-
-.btn-outline-light {
-    --bs-btn-color: var(--ad-text);
-    --bs-btn-border-color: var(--ad-border-strong);
-    --bs-btn-hover-color: #06110f;
-    --bs-btn-hover-bg: var(--ad-teal);
-    --bs-btn-hover-border-color: var(--ad-teal);
 }
 
 #pagination .page-link,
@@ -4823,10 +5011,10 @@ body.rankings-page {
     align-items: center;
     justify-content: center;
     min-height: 2.28rem;
-    border: 1px solid rgba(161,212,201,0.18);
+    border: 1px solid var(--secondary-border);
     border-radius: 999px;
-    background: rgba(8,18,21,0.72);
-    color: var(--ad-muted);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
     font-size: 0.86rem;
     font-weight: 800;
     line-height: 1;
@@ -4836,9 +5024,9 @@ body.rankings-page {
 
 .rankings-page .rank-sort-link:hover,
 .rankings-page .rank-sort-link.active {
-    border-color: rgba(111,214,189,0.54);
-    background: rgba(111,214,189,0.14);
-    color: var(--ad-text);
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
     text-decoration: none;
 }
 
@@ -6301,13 +6489,13 @@ body.rankings-page {
     width: 100%;
     min-width: 0;
     min-height: 2.85rem;
-    border: 1px solid rgba(232,199,106,0.52);
+    border: 1px solid rgba(111,214,189,0.46);
     border-radius: 6px;
     background:
-        linear-gradient(135deg, rgba(232,199,106,0.14), transparent 38%),
-        linear-gradient(180deg, rgba(232,199,106,0.11), rgba(232,199,106,0.035)),
+        linear-gradient(135deg, rgba(111,214,189,0.14), transparent 38%),
+        linear-gradient(180deg, rgba(111,214,189,0.11), rgba(111,214,189,0.035)),
         rgba(3,9,11,0.64);
-    color: #fff4c2;
+    color: rgba(220,244,238,0.88);
     font-size: 1.05rem;
     font-weight: 900;
     letter-spacing: 0;
@@ -6319,12 +6507,13 @@ body.rankings-page {
 
 .demonic-pact-reroll-btn:hover,
 .demonic-pact-reroll-btn:focus-visible {
-    border-color: rgba(232,199,106,0.74);
-    color: #fff8d8;
+    border-color: rgba(111,214,189,0.72);
+    color: #effffc;
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.08),
-        0 0 0 2px rgba(232,199,106,0.16),
+        0 0 0 2px rgba(111,214,189,0.16),
         0 18px 38px rgba(0,0,0,0.42);
+    outline: 0;
 }
 
 .demonic-pact-reroll-btn:disabled {
@@ -7121,20 +7310,42 @@ body .game-shell-nav .nav-account .nav-guest-save-btn .ad-icon {
 }
 
 body .game-shell-nav .game-shell-auth-actions .btn-primary {
-    border-color: rgba(231,138,85,0.72);
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0.16), transparent),
-        #d97845;
-    color: #140906;
+    border-color: var(--primary-frame);
+    background: var(--primary-gradient);
+    color: var(--primary-label);
+    box-shadow: var(--primary-shadow);
 }
 
-body .game-shell-nav .game-shell-auth-actions .btn-primary:hover,
+body .game-shell-nav .game-shell-auth-actions .btn-primary:not(:disabled, .disabled):hover {
+    border-color: var(--primary-hover-border);
+    background: var(--primary-hover-gradient);
+    color: var(--primary-label-hover);
+    box-shadow: var(--primary-hover-shadow);
+}
+
 body .game-shell-nav .game-shell-auth-actions .btn-primary:focus-visible {
-    border-color: #f1b35f;
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0.2), transparent),
-        #e78a55;
-    color: #100604;
+    border-color: var(--primary-focus-border);
+    background: var(--primary-hover-gradient);
+    color: var(--primary-label-hover);
+    box-shadow: var(--primary-focus-shadow);
+    outline: 2px solid var(--primary-focus-outline);
+    outline-offset: 2px;
+}
+
+body .game-shell-nav .game-shell-auth-actions .btn-primary:not(:disabled, .disabled):active {
+    border-color: var(--primary-active-border);
+    background: var(--primary-active-gradient);
+    color: var(--primary-label);
+    box-shadow: var(--primary-active-shadow);
+}
+
+body .game-shell-nav .game-shell-auth-actions .btn-primary:disabled,
+body .game-shell-nav .game-shell-auth-actions .btn-primary.disabled {
+    border-color: var(--primary-disabled-border);
+    background: var(--primary-disabled-gradient);
+    color: var(--primary-disabled-text);
+    box-shadow: var(--primary-disabled-shadow);
+    opacity: 0.58;
 }
 
 .game-shell-toggle {
@@ -8289,29 +8500,27 @@ body.settings-page .game-shell-nav .nav-settings-link {
 
 .level-points-actions button {
     min-height: 1.65rem;
-    border: 1px solid rgba(161,212,201,0.22);
     border-radius: 3px;
-    background: rgba(4,10,13,0.62);
-    color: rgba(220,232,229,0.78);
     font-size: 0.62rem;
     font-weight: 900;
     text-transform: uppercase;
 }
 
-.level-points-actions .level-points-save {
-    border-color: rgba(232,199,106,0.52);
-    background: linear-gradient(180deg, rgba(232,199,106,0.15), rgba(231,138,85,0.12));
-    color: #f3dc93;
+.level-points-actions button:not(.level-points-save) {
+    border: 1px solid rgba(161,212,201,0.22);
+    background: rgba(4,10,13,0.62);
+    color: rgba(220,232,229,0.78);
 }
 
-.level-points-actions button:not(:disabled):hover,
-.level-points-actions button:not(:disabled):focus-visible {
-    border-color: rgba(232,199,106,0.72);
-    color: #fff3bd;
+.level-points-actions button:not(.level-points-save, :disabled):hover,
+.level-points-actions button:not(.level-points-save, :disabled):focus-visible {
+    border-color: rgba(111,214,189,0.56);
+    background: rgba(111,214,189,0.1);
+    color: #effffc;
     outline: 0;
 }
 
-.level-points-actions button:disabled {
+.level-points-actions button:not(.level-points-save):disabled {
     cursor: not-allowed;
     opacity: 0.36;
 }
@@ -8947,31 +9156,28 @@ body.skill-tree-page {
 
 .skill-tree-actions button {
     min-height: 2.45rem;
-    border: 1px solid rgba(161,212,201,0.24);
     border-radius: 4px;
-    background: rgba(4,10,13,0.7);
-    color: rgba(220,232,229,0.78);
     padding: 0.48rem 0.8rem;
     font-size: 0.68rem;
     font-weight: 900;
     text-transform: uppercase;
 }
 
-.skill-tree-actions .skill-tree-save {
-    border-color: rgba(232,199,106,0.58);
-    background: linear-gradient(180deg, rgba(232,199,106,0.2), rgba(231,138,85,0.16));
-    color: #fff3bd;
+.skill-tree-actions button:not(.skill-tree-save) {
+    border: 1px solid rgba(161,212,201,0.24);
+    background: rgba(4,10,13,0.7);
+    color: rgba(220,232,229,0.78);
 }
 
-.skill-tree-actions button:not(:disabled):hover,
-.skill-tree-actions button:not(:disabled):focus-visible {
-    border-color: rgba(232,199,106,0.78);
-    color: #fff3bd;
-    box-shadow: 0 0 18px rgba(232,199,106,0.1);
+.skill-tree-actions button:not(.skill-tree-save, :disabled):hover,
+.skill-tree-actions button:not(.skill-tree-save, :disabled):focus-visible {
+    border-color: rgba(111,214,189,0.56);
+    background: rgba(111,214,189,0.1);
+    color: #effffc;
     outline: 0;
 }
 
-.skill-tree-actions button:disabled {
+.skill-tree-actions button:not(.skill-tree-save):disabled {
     cursor: not-allowed;
     opacity: 0.36;
 }
@@ -9789,19 +9995,20 @@ body.hunter-page {
     width: 2.4rem;
     height: 2.4rem;
     padding: 0;
-    border: 1px solid rgba(161, 212, 201, 0.2);
+    border: 1px solid var(--secondary-border);
     border-radius: 8px;
-    background: rgba(0, 0, 0, 0.28);
-    color: rgba(237, 245, 242, 0.82);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
     cursor: pointer;
     transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
 .hunter-share-btn:hover,
 .hunter-share-btn:focus-visible {
-    border-color: rgba(232, 199, 106, 0.5);
-    color: #fff2bd;
-    background: rgba(232, 199, 106, 0.1);
+    border-color: var(--secondary-hover-border);
+    color: var(--secondary-hover-text);
+    background: var(--secondary-hover-bg);
+    outline: 0;
 }
 
 .hunter-share-btn .ad-icon,
@@ -9851,8 +10058,9 @@ body.hunter-page {
 
 .hunter-copy-dropdown button:hover,
 .hunter-copy-dropdown button:focus-visible {
-    background: rgba(232, 199, 106, 0.12);
-    color: #fff2bd;
+    background: rgba(111,214,189,0.12);
+    color: #effffc;
+    outline: 0;
 }
 
 .hunter-copy-dropdown .ad-icon {

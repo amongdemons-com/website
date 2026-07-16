@@ -421,7 +421,7 @@
         icon: 'stars',
         iconOptions,
         className: 'collection-train-action collection-train-max-action',
-        variant: canAfford ? 'outline-light' : 'outline-danger',
+        variant: 'secondary',
         disabled,
         title: canAfford
           ? 'Auto-train keeps trying automatically.'
@@ -433,7 +433,7 @@
         icon: 'book-plus',
         iconOptions,
         className: 'collection-train-action collection-train-once-action',
-        variant: canAfford ? 'success' : 'outline-danger',
+        variant: canAfford ? 'primary' : 'outline-danger',
         disabled,
         title: canAfford ? attemptTitle : unavailableTitle,
         onClick: (modalDemon, button) => trainDemon(demon.id, button, 'once')
@@ -928,9 +928,9 @@
     const normalized = String(variant || '').toLowerCase();
     const glassClass = normalized.includes('danger')
       ? 'btn-glass-danger'
-      : ['primary', 'success', 'warning'].includes(normalized)
-        ? 'btn-glass-gold'
-        : 'btn-glass-muted';
+      : normalized.startsWith('outline-') || normalized.includes('secondary') || normalized.includes('light')
+        ? 'btn-glass-muted'
+        : '';
     return ['btn', `btn-${variant}`, glassClass, action.className || 'collection-train-action'].filter(Boolean).join(' ');
   }
 
