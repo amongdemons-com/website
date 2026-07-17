@@ -7,6 +7,14 @@
   const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const session = window.AmongDemons.getSession();
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
+  const PROFILE_DEMON_RARITY_ORDER = {
+    common: 1,
+    uncommon: 2,
+    rare: 3,
+    epic: 4,
+    legendary: 5,
+    mythic: 6
+  };
   const state = {
     player: session.player || null,
     progression: null,
@@ -229,7 +237,7 @@
   }
 
   function renderProfilePicker() {
-    const demons = state.collection || [];
+    const demons = [...(state.collection || [])].sort(compareProfileDemons);
     const selectedId = Number(state.player?.profileDemonId) || 0;
 
     if (!elements.profileDemonGrid) return;
@@ -259,6 +267,17 @@
     setText(elements.profileDemonPickerStatus, 'Choose one bound demon for your camp portrait.');
     setHtml(elements.profileDemonGrid, demons.map((demon) => renderProfileDemonOption(demon, selectedId)).join(''));
     replaceStaticIcons();
+  }
+
+  function compareProfileDemons(a, b) {
+    return (Number(a?.typeId ?? a?.type) || 0) - (Number(b?.typeId ?? b?.type) || 0)
+      || getProfileDemonRarityRank(a?.rarity) - getProfileDemonRarityRank(b?.rarity)
+      || String(a?.species || '').localeCompare(String(b?.species || ''))
+      || (Number(a?.id) || 0) - (Number(b?.id) || 0);
+  }
+
+  function getProfileDemonRarityRank(rarity) {
+    return PROFILE_DEMON_RARITY_ORDER[String(rarity || '').toLowerCase()] || 0;
   }
 
   function renderProfileDemonOption(demon, selectedId) {

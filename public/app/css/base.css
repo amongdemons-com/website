@@ -5976,9 +5976,12 @@ body.rankings-page {
     position: relative;
     z-index: 1;
     display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
     gap: 0.9rem;
     width: min(46rem, 100%);
-    max-height: min(42rem, calc(100vh - 2rem));
+    max-height: min(42rem, calc(100vh - clamp(2rem, 8vw, 4rem)));
+    max-height: min(42rem, calc(100dvh - clamp(2rem, 8vw, 4rem)));
+    overflow: hidden;
     border: 1px solid rgba(161,212,201,0.24);
     border-radius: 8px;
     background:
@@ -6035,8 +6038,13 @@ body.rankings-page {
     grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
     gap: 0.65rem;
     min-height: 0;
-    overflow: auto;
-    padding-right: 0.15rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: rgba(111,214,189,0.42) rgba(255,255,255,0.05);
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    padding-right: 0.35rem;
 }
 
 .profile-demon-option {

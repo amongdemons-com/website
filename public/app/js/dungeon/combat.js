@@ -77,8 +77,11 @@ async function playCombatLog(options = {}) {
         continue;
       }
 
+      // Pause waits asynchronously. Skip can move currentIndex to the end while
+      // that wait is waking up, so re-check the boundary before applying a step.
       const index = state.combatPlayback.currentIndex;
       const step = steps[index];
+      if (!step) break;
       setCombatPlaybackPausedClass(false);
       applyCombatStep(step, index, { animate: true });
       state.combatPlayback.currentIndex = index + 1;
