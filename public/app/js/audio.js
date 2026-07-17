@@ -12,8 +12,11 @@
   const MUSIC_HANDOFF_KEY = 'amongdemons-audio-music-handoff';
   const MUSIC_HANDOFF_MAX_AGE_MS = 15000;
   const DEFAULT_VOLUMES = Object.freeze({ master: 0.6, music: 0.5, sfx: 0.75 });
-  const DEFAULT_MUTED = true;
+  const DEFAULT_MUTED = false;
   const CHANNEL_LEVELS = Object.freeze({ music: 0.72 });
+  const SFX_MIXES = Object.freeze({
+    'sfx.battle.victory': Object.freeze({ gain: 1.35, musicDuck: 0.2, musicDuckMs: 2500 })
+  });
 
   const manifestPromise = fetch(MANIFEST_URL, { cache: 'no-cache' })
     .then((response) => {
@@ -38,6 +41,8 @@
   let muted = readMuted();
   let audioUnlocked = Boolean(window.navigator?.userActivation?.hasBeenActive);
   let deathVariant = 0;
+  let musicDuckLevel = 1;
+  let musicDuckTimeoutId = null;
 
   bindAudioUnlock();
   bindVisibilityPlayback();
@@ -155,7 +160,7 @@
 
     const current = scenePlayers[channel];
     if (current?.dataset.soundKey === key) {
-      current.volume = getEffectiveVolume(channel, CHANNEL_LEVELS[channel]);
+      current.volume = getEffectiveVolume(channel, getSceneChannelLevel(channel));
       if (!muted && audioUnlocked && !document.hidden && current.paused) safePlay(current);
       return;
     }
@@ -193,7 +198,7 @@
     player.dataset.soundTrackUrl = url;
     player.loop = trackUrls.length === 1;
     player.preload = 'auto';
-    player.volume = getEffectiveVolume(channel, CHANNEL_LEVELS[channel]);
+    player.volume = getEffectiveVolume(channel, getSceneChannelLevel(channel));
     if (Number(options.position) > 0) restorePlaybackPosition(player, Number(options.position));
     if (!player.loop) {
       player.addEventListener('ended', () => {
@@ -227,8 +232,24 @@
 
   function updateSceneVolumes() {
     Object.entries(scenePlayers).forEach(([channel, player]) => {
-      if (player) player.volume = getEffectiveVolume(channel, CHANNEL_LEVELS[channel]);
+      if (player) player.volume = getEffectiveVolume(channel, getSceneChannelLevel(channel));
     });
+  }
+
+  function getSceneChannelLevel(channel) {
+    const duckLevel = channel === 'music' ? musicDuckLevel : 1;
+    return (CHANNEL_LEVELS[channel] ?? 1) * duckLevel;
+  }
+
+  function duckMusic(level, durationMs) {
+    if (musicDuckTimeoutId !== null) window.clearTimeout(musicDuckTimeoutId);
+    musicDuckLevel = clamp(level, 0, 1);
+    updateSceneVolumes();
+    musicDuckTimeoutId = window.setTimeout(() => {
+      musicDuckTimeoutId = null;
+      musicDuckLevel = 1;
+      updateSceneVolumes();
+    }, Math.max(0, Number(durationMs) || 0));
   }
 
   function saveMusicHandoff() {
@@ -311,7 +332,8 @@
       pendingUnlockSounds.set(key, { ...options, queueUntilUnlock: false });
       return null;
     }
-    if (!key || getEffectiveVolume('sfx', options.volume ?? 1) <= 0) return null;
+    const mix = SFX_MIXES[key] || {};
+    if (!key || getEffectiveVolume('sfx', options.volume ?? 1, mix.gain) <= 0) return null;
     const minInterval = Math.max(0, Number(options.minInterval) || defaultMinInterval(key));
     const now = window.performance?.now?.() ?? Date.now();
     if (now - (lastPlayedAt.get(key) || 0) < minInterval) return null;
@@ -322,7 +344,7 @@
 
     const player = new Audio(url);
     player.preload = 'auto';
-    player.volume = getEffectiveVolume('sfx', options.volume ?? 1);
+    player.volume = getEffectiveVolume('sfx', options.volume ?? 1, mix.gain);
     activeSfx.add(player);
     const releasePlayer = () => activeSfx.delete(player);
     player.addEventListener('ended', releasePlayer, { once: true });
@@ -331,6 +353,7 @@
       player.playbackRate = clamp(Number(options.playbackRate), 0.5, 2);
     }
     if (options.loop) player.loop = true;
+    if (Number(mix.musicDuck) < 1) duckMusic(mix.musicDuck, mix.musicDuckMs);
     const playbackPromise = safePlay(player);
     if (Number(options.durationMs) > 0) {
       window.setTimeout(() => {
@@ -400,12 +423,13 @@
     return url;
   }
 
-  function getEffectiveVolume(category, level = 1) {
+  function getEffectiveVolume(category, level = 1, gain = 1) {
     if (muted) return 0;
     const categoryVolume = category === 'music'
       ? volumes.music
       : volumes.sfx;
-    return clamp(volumes.master * categoryVolume * normalizeVolume(level, 1), 0, 1);
+    const normalizedGain = Number.isFinite(Number(gain)) ? Math.max(0, Number(gain)) : 1;
+    return clamp(volumes.master * categoryVolume * normalizeVolume(level, 1) * normalizedGain, 0, 1);
   }
 
   function unlockAudio() {
