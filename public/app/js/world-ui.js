@@ -188,6 +188,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     blockedTiles: FALLBACK_BLOCKED_TILES,
     blockedMap: new Map(),
     selectedPath: [],
+    pathGeometry: null,
     selectedTarget: null,
     travelLog: [],
     travelStatus: 'idle',
@@ -1428,6 +1429,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   const PROP_CHANCE = 0.05; // rare, subtle stone decals on open ground
   const PATH_CORE = 0xd8f3ff;
   const PATH_GLOW = 0x58c7f0;
+  const PATH_CURVE_STEPS_PER_TILE = 12;
 
   function createZonePalette(typeId) {
     const accent = zoneAccentForType(typeId);
@@ -2749,39 +2751,177 @@ import * as dungeonUtils from './dungeon/utils.js';
     layer.clear();
 
     const path = state.selectedPath || [];
-    if (path.length < 2) return;
+    if (path.length < 2) {
+      state.pathGeometry = null;
+      return;
+    }
 
-    // A trail of drifting pale-blue motes — jittered off the tile centres so the
-    // route reads as a wandering trace, not a grid. The destination glow is
-    // handled by the animated pulse.
-    path.forEach((tile, index) => {
-      if (index === 0) return;
-      const c = tileCenter(tile);
-      const isTarget = index === path.length - 1;
-      if (isTarget) {
-        layer.circle(c.x, c.y, 12).fill({ color: PATH_GLOW, alpha: 0.12 });
-        return;
-      }
-      const jx = (hashTile(tile.x, tile.y, 41) - 0.5) * 16;
-      const jy = (hashTile(tile.x, tile.y, 42) - 0.5) * 16;
-      layer.circle(c.x + jx, c.y + jy, 4.5).fill({ color: PATH_GLOW, alpha: 0.14 });
-      layer.circle(c.x + jx, c.y + jy, 1.8).fill({ color: PATH_CORE, alpha: 0.75 });
-      // A smaller trailing spark between this mote and the previous tile.
-      const prev = tileCenter(path[index - 1]);
-      const mx = (c.x + jx + prev.x) / 2 + (hashTile(tile.x, tile.y, 43) - 0.5) * 10;
-      const my = (c.y + jy + prev.y) / 2 + (hashTile(tile.x, tile.y, 44) - 0.5) * 10;
-      layer.circle(mx, my, 1.1).fill({ color: PATH_CORE, alpha: 0.4 });
-    });
+    // Smooth the tile-by-tile route into a soft curve, then sample that curve by
+    // distance so every dash has consistent spacing through bends. The broad
+    // translucent passes give the route a neon bloom without changing the
+    // world's established pale-blue path color.
+    const geometry = getStablePathGeometry(path);
+    const dashes = buildPathDashes(geometry.curve, geometry.cumulative, geometry.visibleFromDistance);
+    drawPathDashPass(layer, dashes, { color: PATH_GLOW, width: 14, alpha: 0.08 });
+    drawPathDashPass(layer, dashes, { color: PATH_GLOW, width: 7, alpha: 0.2 });
+    drawPathDashPass(layer, dashes, { color: PATH_CORE, width: 3.2, alpha: 0.9 });
   }
 
-  // Animated destination marker — a pulsing pale-blue ring (runs on the ticker).
+  function getStablePathGeometry(path) {
+    // Travel replaces selectedPath with a shorter suffix after every step. Keep
+    // the original curve and dash phase, and only advance the visible start, so
+    // the unfinished route never shifts under the moving hunter.
+    const cached = state.pathGeometry;
+    const suffixOffset = cached ? cached.tiles.length - path.length : -1;
+    const followsCachedRoute = suffixOffset >= 0 && path.every((tile, index) => (
+      positionsEqual(tile, cached.tiles[suffixOffset + index])
+    ));
+
+    if (followsCachedRoute) {
+      const curveIndex = Math.min(
+        suffixOffset * PATH_CURVE_STEPS_PER_TILE,
+        cached.cumulative.length - 1
+      );
+      return {
+        ...cached,
+        visibleFromDistance: cached.cumulative[curveIndex]
+      };
+    }
+
+    const curve = buildPathCurve(path);
+    const cumulative = measurePathCurve(curve);
+    state.pathGeometry = {
+      tiles: path.map((tile) => ({ x: tile.x, y: tile.y })),
+      curve,
+      cumulative
+    };
+    return {
+      ...state.pathGeometry,
+      visibleFromDistance: 0
+    };
+  }
+
+  function buildPathCurve(path) {
+    const controlPoints = path.map((tile, index) => {
+      const center = tileCenter(tile);
+      if (index === 0 || index === path.length - 1) return center;
+
+      // A tiny deterministic drift keeps long straight stretches from feeling
+      // mechanically perfect while still tracking the real passable route.
+      return {
+        x: center.x + (hashTile(tile.x, tile.y, 41) - 0.5) * 7,
+        y: center.y + (hashTile(tile.x, tile.y, 42) - 0.5) * 7
+      };
+    });
+    const curve = [];
+
+    for (let index = 0; index < controlPoints.length - 1; index += 1) {
+      const p0 = controlPoints[Math.max(0, index - 1)];
+      const p1 = controlPoints[index];
+      const p2 = controlPoints[index + 1];
+      const p3 = controlPoints[Math.min(controlPoints.length - 1, index + 2)];
+
+      for (let step = 0; step < PATH_CURVE_STEPS_PER_TILE; step += 1) {
+        curve.push(catmullRomPoint(p0, p1, p2, p3, step / PATH_CURVE_STEPS_PER_TILE));
+      }
+    }
+
+    curve.push(controlPoints[controlPoints.length - 1]);
+    return curve;
+  }
+
+  function catmullRomPoint(p0, p1, p2, p3, t) {
+    const t2 = t * t;
+    const t3 = t2 * t;
+    return {
+      x: 0.5 * (
+        (2 * p1.x)
+        + (-p0.x + p2.x) * t
+        + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2
+        + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3
+      ),
+      y: 0.5 * (
+        (2 * p1.y)
+        + (-p0.y + p2.y) * t
+        + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2
+        + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3
+      )
+    };
+  }
+
+  function measurePathCurve(curve) {
+    const cumulative = [0];
+    for (let index = 1; index < curve.length; index += 1) {
+      const previous = curve[index - 1];
+      const current = curve[index];
+      cumulative.push(cumulative[index - 1] + Math.hypot(current.x - previous.x, current.y - previous.y));
+    }
+    return cumulative;
+  }
+
+  function buildPathDashes(curve, cumulative, visibleFromDistance = 0) {
+    if (curve.length < 2) return [];
+
+    const totalLength = cumulative[cumulative.length - 1];
+    const startPadding = TILE_SIZE * 0.42;
+    const endPadding = TILE_SIZE * 0.3;
+    const dashLength = 12;
+    const dashStride = 24;
+    const finalDistance = totalLength - endPadding;
+    const visibleStart = visibleFromDistance + startPadding;
+    const dashes = [];
+
+    for (let distance = startPadding; distance < finalDistance; distance += dashStride) {
+      const endDistance = Math.min(distance + dashLength, finalDistance);
+      if (endDistance <= visibleStart) continue;
+
+      const visibleDashStart = Math.max(distance, visibleStart);
+      if (endDistance - visibleDashStart < 4) continue;
+      dashes.push({
+        start: pointAlongPathCurve(curve, cumulative, visibleDashStart),
+        end: pointAlongPathCurve(curve, cumulative, endDistance)
+      });
+    }
+
+    return dashes;
+  }
+
+  function pointAlongPathCurve(curve, cumulative, distance) {
+    const clampedDistance = clamp(distance, 0, cumulative[cumulative.length - 1]);
+    let low = 1;
+    let high = cumulative.length - 1;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (cumulative[middle] < clampedDistance) low = middle + 1;
+      else high = middle;
+    }
+
+    const index = low;
+    const startDistance = cumulative[index - 1];
+    const segmentLength = cumulative[index] - startDistance;
+    const progress = segmentLength > 0 ? (clampedDistance - startDistance) / segmentLength : 0;
+    return {
+      x: curve[index - 1].x + (curve[index].x - curve[index - 1].x) * progress,
+      y: curve[index - 1].y + (curve[index].y - curve[index - 1].y) * progress
+    };
+  }
+
+  function drawPathDashPass(layer, dashes, style) {
+    if (!dashes.length) return;
+    dashes.forEach((dash) => {
+      layer.moveTo(dash.start.x, dash.start.y).lineTo(dash.end.x, dash.end.y);
+    });
+    layer.stroke({ ...style, cap: 'round', join: 'round' });
+  }
+
+  // Animated destination marker — stays visible throughout preview and travel.
   function updatePathPulse() {
     const layer = state.pathPulse;
     if (!layer) return;
     layer.clear();
 
     const path = state.selectedPath || [];
-    if (path.length < 2 || state.moving) return;
+    if (path.length < 2) return;
 
     const c = tileCenter(path[path.length - 1]);
     const phase = (performance.now() % 1600) / 1600;

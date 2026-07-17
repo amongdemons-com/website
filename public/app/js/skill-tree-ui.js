@@ -167,6 +167,7 @@
       ...state.draft,
       [key]: Math.max(0, Number(state.draft[key]) || 0) + 1
     };
+    audio?.play('sfx.progression.skillAdd', { volume: 0.9 });
     render();
   }
 
