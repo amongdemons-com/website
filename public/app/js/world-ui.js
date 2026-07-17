@@ -56,9 +56,9 @@ import * as dungeonUtils from './dungeon/utils.js';
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
-  // World boss intro dialog: a random boss taunts the hunter when they enter
-  // the world. Currently shown on every visit while the feature is tuned;
-  // gate it behind sessionStorage once the novelty should wear off.
+  // World boss intro dialog: a random boss taunts the hunter after their first
+  // click in the world, allowing that click's original action to continue.
+  // Gate it behind sessionStorage once the novelty should wear off.
   // Taunt lines and each boss's personality live in
   // public/api/data/world-bosses.json and arrive on the boss payload.
   const WORLD_BOSS_INTRO_TYPE_MS = 24;
@@ -245,7 +245,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       await initPixi();
       await loadWorld(await statePromise);
       hideLoading();
-      maybeShowWorldBossIntro();
+      armWorldBossIntro();
     } catch (error) {
       handleAuthError(error);
     }
@@ -1080,7 +1080,6 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
 
     setButtonBusy(button, true);
-    audio?.play('sfx.world.pvpChallenge', { volume: 0.88 });
 
     try {
       const payload = await api('/api/world/challenge', {
@@ -7290,12 +7289,16 @@ import * as dungeonUtils from './dungeon/utils.js';
     elements.worldLoading?.classList.add('d-none');
   }
 
-  function maybeShowWorldBossIntro() {
+  function armWorldBossIntro() {
     if (!elements.worldBossDialog || isWorldBossIntroMuted()) return;
     const bosses = state.bosses || [];
     if (!bosses.length) return;
     const boss = bosses[Math.floor(Math.random() * bosses.length)];
-    showWorldBossIntro(boss);
+    const showAfterClick = () => {
+      document.removeEventListener('click', showAfterClick, true);
+      window.setTimeout(() => showWorldBossIntro(boss), 0);
+    };
+    addListener(document, 'click', showAfterClick, true);
   }
 
   function isWorldBossIntroMuted() {
@@ -7326,7 +7329,6 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (!dialog) return;
 
     const lines = boss.taunts?.length ? boss.taunts : WORLD_BOSS_INTRO_FALLBACK_LINES;
-    audio?.play('sfx.bosses.introStinger', { volume: 0.9, queueUntilUnlock: true });
     const line = lines[Math.floor(Math.random() * lines.length)];
     setText(elements.worldBossDialogName, boss.title || 'World Boss');
 
@@ -7361,6 +7363,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     setText(elements.worldBossDialogText, '');
     dialog.classList.remove('d-none', 'is-ready');
     dialog.classList.add('is-typing');
+    audio?.play('sfx.bosses.introStinger', { volume: 0.9 });
     document.addEventListener('keydown', onWorldBossIntroKeydown);
 
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;

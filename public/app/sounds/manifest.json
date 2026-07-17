@@ -33,8 +33,7 @@
       "portalOpen": "sfx/world/portal_open.ogg",
       "teleport": "sfx/world/teleport.ogg",
       "huntStart": "sfx/world/hunt_start.ogg",
-      "huntStop": "sfx/world/hunt_stop.ogg",
-      "pvpChallenge": "sfx/world/pvp_challenge.ogg"
+      "huntStop": "sfx/world/hunt_stop.ogg"
     },
     "battle": {
       "battleStart": "sfx/battle/battle_start.ogg",
