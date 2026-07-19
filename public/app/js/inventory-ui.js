@@ -14,6 +14,8 @@
   };
   const getRarityColor = window.AmongDemons.ui.getRarityColor
     || ((rarity) => RARITY_COLORS[String(rarity || '').toLowerCase()] || RARITY_COLORS.common);
+  const renderItemVisual = window.AmongDemons.inventoryVisuals?.renderItemVisual
+    || (() => '<span class="inventory-item-renderer inventory-unknown-visual" aria-hidden="true"></span>');
   const RARITY_RANK = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5, mythic: 6 };
   const state = {
     items: [],
@@ -201,10 +203,10 @@
     const aria = `${capitalize(rarity)} ${item.species} Echo, quantity ${item.quantity}. ${status}.`;
 
     return `
-      <button class="inventory-slot inventory-item ${item.summonReady ? 'is-ready' : ''} ${state.inspectedKey === item.itemKey ? 'is-inspecting' : ''}" type="button" data-inventory-key="${escapeHtml(item.itemKey)}" style="--item-rarity: ${escapeHtml(color)}" aria-label="${escapeHtml(aria)}">
+      <button class="inventory-slot inventory-item inventory-item-kind-${escapeHtml(normalizeItemType(item.itemType))} ${item.summonReady ? 'is-ready' : ''} ${state.inspectedKey === item.itemKey ? 'is-inspecting' : ''}" type="button" data-inventory-key="${escapeHtml(item.itemKey)}" style="--item-rarity: ${escapeHtml(color)}" aria-label="${escapeHtml(aria)}">
         <span class="inventory-rarity-diamond" aria-hidden="true"></span>
         <span class="inventory-item-visual">
-          <img class="inventory-item-image" src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy">
+          ${renderItemVisual(item, { context: 'slot' })}
           <span class="inventory-item-count">x${escapeHtml(formatNumber(item.quantity))}</span>
         </span>
       </button>
@@ -242,12 +244,12 @@
     elements.inventoryDetailContent.style.setProperty('--item-rarity', color);
     elements.inventoryDetailContent.innerHTML = `
       <div class="inventory-detail-head">
-        <img class="inventory-detail-portrait" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(`${capitalize(rarity)} ${item.species}`)}">
+        <div class="inventory-detail-visual">${renderItemVisual(item, { context: 'detail' })}</div>
         <div>
           <span class="inventory-detail-rarity">${escapeHtml(capitalize(rarity))} Demon Echo</span>
           <h2 class="h4 mb-1" id="inventoryDetailTitle">${escapeHtml(item.species)}</h2>
-          <span class="text-muted">${escapeHtml(item.role || 'Demon')} - ${escapeHtml(item.preferredPosition || 'front')} line</span>
-          <span class="inventory-detail-discovery">${renderIcon(item.naturallyDiscovered ? 'check' : 'info')}${escapeHtml(discoveryCopy)}</span>
+          <span class="text-muted">${escapeHtml(capitalize(item.role || 'Demon'))} - ${escapeHtml(item.preferredPosition || 'front')} line</span>
+          <span class="inventory-detail-discovery">${renderIcon(item.naturallyDiscovered ? 'check' : 'info')}<span>Source: ${escapeHtml(discoveryCopy)}</span></span>
         </div>
         <button type="button" class="btn-close inventory-detail-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -434,6 +436,7 @@
     tooltip.innerHTML = `
       <span class="inventory-tooltip-rarity">${escapeHtml(capitalize(rarity))} Echo</span>
       <strong class="inventory-tooltip-title">${escapeHtml(item.species)}</strong>
+      <span class="inventory-tooltip-meta">${escapeHtml(capitalize(item.role || 'Demon'))} - x${escapeHtml(formatNumber(item.quantity))}</span>
       <span class="inventory-tooltip-meta">${escapeHtml(getItemStatus(item))}</span>
       <button class="inventory-tooltip-action" type="button" data-inventory-tooltip-open="${escapeHtml(itemKey)}">View details</button>
     `;
@@ -519,6 +522,10 @@
   function normalizeRarity(value) {
     const rarity = String(value || 'common').toLowerCase();
     return RARITY_RANK[rarity] ? rarity : 'common';
+  }
+
+  function normalizeItemType(value) {
+    return String(value || 'other').toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'other';
   }
 
   function capitalize(value) {
