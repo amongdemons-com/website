@@ -670,6 +670,28 @@ body.is-world-side-collapsed .world-map-controls {
     white-space: nowrap;
 }
 
+.world-side-status-copy > .world-side-status-line {
+    display: flex;
+    align-items: center;
+}
+
+.world-side-status-state {
+    color: rgba(220,232,229,0.72);
+}
+
+.world-side-status-separator {
+    flex: 0 0 auto;
+    margin: 0 0.35rem;
+    color: rgba(220,232,229,0.48);
+}
+
+.world-side-status-area {
+    min-width: 0;
+    overflow: hidden;
+    color: rgba(226,207,164,0.74);
+    text-overflow: ellipsis;
+}
+
 .world-side-status-copy > small {
     display: none;
     color: rgba(220,232,229,0.62);

@@ -433,8 +433,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     document.body?.classList.toggle('is-world-side-collapsed', !state.sidePanelExpanded);
     panel.dataset.worldStatus = status.toLowerCase();
     toggle.setAttribute('aria-expanded', String(!panel.classList.contains('is-collapsed')));
-    setText(elements.worldSideStatusLabel, `${status.toUpperCase()} \u00b7 Area ${formatCoords(state.position)}`);
-    setText(elements.worldSideAreaLabel, '');
+    setText(elements.worldSideStatusLabel, status.toUpperCase());
+    setText(elements.worldSideAreaLabel, `Area ${formatCoords(state.position)}`);
     queueWorldSidePanelMeasure();
   }
 
