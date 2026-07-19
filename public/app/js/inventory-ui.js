@@ -17,17 +17,20 @@
   const renderItemVisual = window.AmongDemons.inventoryVisuals?.renderItemVisual
     || (() => '<span class="inventory-item-renderer inventory-unknown-visual" aria-hidden="true"></span>');
   const RARITY_RANK = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5, mythic: 6 };
+  const SUMMON_REVEAL_DELAY_MS = 3000;
   const state = {
     items: [],
     config: {},
     selectedKey: null,
     pending: false,
+    pendingAction: null,
     filter: 'all',
     sort: 'ready',
     inspectedKey: null,
     lastPointerType: 'mouse',
     slotCapacity: 24,
-    slotColumns: 4
+    slotColumns: 4,
+    detailError: ''
   };
   const elements = {};
   let resizeFrame = 0;
@@ -53,7 +56,7 @@
   }
 
   function cacheElements() {
-    ['inventoryCount', 'inventoryFilter', 'inventorySort', 'inventoryLoading', 'inventoryGridViewport', 'inventoryGrid', 'inventoryItemTooltip', 'inventoryDetailModal', 'inventoryDetailContent', 'inventorySummonCelebration']
+    ['inventoryCount', 'inventoryFilter', 'inventorySort', 'inventoryLoading', 'inventoryGridViewport', 'inventoryGrid', 'inventoryItemTooltip', 'inventoryDetailModal', 'inventoryDetailContent', 'inventorySummonModal', 'inventorySummonContent', 'inventoryRefineModal', 'inventoryRefineContent']
       .forEach((id) => { elements[id] = document.getElementById(id); });
   }
 
@@ -136,7 +139,6 @@
       showItemTooltip(state.inspectedKey, item);
     }, { passive: true });
     elements.inventoryDetailContent.addEventListener('click', handleDetailAction);
-    elements.inventorySummonCelebration.addEventListener('click', dismissCelebration);
 
     const resizeObserver = new ResizeObserver(scheduleSlotMeasurement);
     resizeObserver.observe(elements.inventoryGridViewport);
@@ -221,6 +223,7 @@
     const item = state.items.find((candidate) => candidate.itemKey === itemKey);
     if (!item) return;
     state.inspectedKey = null;
+    state.detailError = '';
     hideItemTooltip();
     state.selectedKey = itemKey;
     renderItemDetail(item);
@@ -263,18 +266,19 @@
           ${item.owned ? '' : `
             <div class="d-flex justify-content-between small mb-1"><span>Echo progress</span><strong>${escapeHtml(`${item.summonProgress}/${item.summonRequirement}`)}</strong></div>
             <div class="inventory-progress-track" aria-label="${escapeHtml(`${progress}% of Echoes gathered`)}"><div class="inventory-progress-fill" style="width: ${progress}%"></div></div>
+            ${item.summonReady ? `
+              <button class="btn btn-sm btn-primary inventory-summon-action" type="button" data-inventory-action="summon" ${state.pending ? 'disabled' : ''}>
+                ${state.pendingAction === 'summon' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
+                <span>${state.pendingAction === 'summon' ? 'Summoning...' : 'Summon Demon'}</span>
+              </button>
+            ` : ''}
           `}
         </section>
         ${renderRefinementPanel(item)}
       </div>
       <div class="inventory-detail-actions">
         <button class="btn btn-glass-muted" type="button" data-bs-dismiss="modal">Close</button>
-        ${item.owned ? `<a class="btn btn-glass-muted" href="/collection">View Collection</a>` : `
-          <button class="btn btn-glass-muted" type="button" data-inventory-action="summon" ${item.summonReady && !state.pending ? '' : 'disabled'}>
-            ${state.pending ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
-            <span>${item.summonReady ? 'Summon Demon' : `Need ${Math.max(0, item.summonRequirement - item.quantity)} More`}</span>
-          </button>
-        `}
+        ${item.owned ? '<a class="btn btn-glass-muted" href="/collection">View Collection</a>' : ''}
       </div>
     `;
   }
@@ -307,9 +311,10 @@
           <div class="inventory-recipe-item"><strong>x1</strong><small class="d-block inventory-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.nextRarity))}">${escapeHtml(capitalize(item.nextRarity))}</small></div>
         </div>
         <p class="small text-muted">${escapeHtml(lockedCopy)}</p>
+        ${state.detailError ? `<div class="inventory-action-error mb-3" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
         <button class="btn btn-sm btn-primary inventory-refine-action" type="button" data-inventory-action="refine" ${item.canRefine && !state.pending ? '' : 'disabled'}>
-          ${state.pending ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
-          <span>Refine Echo</span>
+          ${state.pendingAction === 'refine' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
+          <span>${state.pendingAction === 'refine' ? 'Refining...' : 'Refine Echo'}</span>
         </button>
       </section>
     `;
@@ -323,40 +328,50 @@
     const action = button.dataset.inventoryAction;
 
     if (action === 'refine') {
-      const message = `Refine ${item.refinementCost} ${capitalize(item.rarity)} ${item.species} Echoes into 1 ${capitalize(item.nextRarity)} Echo?`;
-      if (!window.confirm(message)) return;
       await performAction('/api/inventory/echoes/refine', item, 'refine');
     }
     if (action === 'summon') {
-      const message = `Consume ${item.summonRequirement} Echoes to permanently summon ${capitalize(item.rarity)} ${item.species}?`;
-      if (!window.confirm(message)) return;
       await performAction('/api/inventory/echoes/summon', item, 'summon');
     }
   }
 
   async function performAction(endpoint, item, action) {
     state.pending = true;
+    state.pendingAction = action;
+    state.detailError = '';
     renderItemDetail(item);
+    const summonDelay = action === 'summon' ? startSummonRitual() : 0;
     try {
-      const payload = await api(endpoint, {
+      const request = api(endpoint, {
         method: 'POST',
         body: { typeId: item.typeId, rarity: item.rarity }
       });
+      const payload = action === 'summon'
+        ? (await Promise.all([request, wait(summonDelay)]))[0]
+        : await request;
       if (action === 'summon') {
-        bootstrap.Modal.getOrCreateInstance(elements.inventoryDetailModal).hide();
-        showSummonCelebration(payload.demon || item);
+        stopSummonRitual();
+        applyPayload(payload);
+        showSummonResult(payload.demon || item);
       } else {
-        audio?.play('sfx.progression.levelUp', { volume: 0.72 });
+        audio?.play('sfx.progression.refineSuccess', { volume: 0.72 });
         const sourceStillExists = (payload.items || []).some((candidate) => candidate.itemKey === item.itemKey);
         if (!sourceStillExists && payload.refinement?.targetRarity) {
           state.selectedKey = `echo:${item.typeId}:${payload.refinement.targetRarity}`;
         }
+        applyPayload(payload);
+        showRefineResult(item, payload);
       }
-      applyPayload(payload);
     } catch (error) {
-      showError(error);
+      stopSummonRitual();
+      if (action === 'refine') {
+        state.detailError = error?.message || 'Refinement failed. Please try again.';
+      } else {
+        showError(error);
+      }
     } finally {
       state.pending = false;
+      state.pendingAction = null;
       const selected = getSelectedItem();
       if (selected && elements.inventoryDetailModal.classList.contains('show')) {
         renderItemDetail(selected);
@@ -366,32 +381,139 @@
     }
   }
 
-  function showSummonCelebration(demon) {
-    const rarity = normalizeRarity(demon.rarity);
-    elements.inventorySummonCelebration.hidden = false;
-    elements.inventorySummonCelebration.style.setProperty('--item-rarity', getRarityColor(rarity));
-    elements.inventorySummonCelebration.innerHTML = `
-      <div class="inventory-summon-card">
-        <span class="inventory-kicker">Summoning complete</span>
-        <img src="${escapeHtml(demon.imageUrl || demon.image_url || '')}" alt="${escapeHtml(`${capitalize(rarity)} ${demon.species || 'demon'}`)}">
-        <h2>${escapeHtml(`${capitalize(rarity)} ${demon.species || 'Demon'}`)}</h2>
-        <p>This demon now lives in your permanent Collection.</p>
-        <div class="d-flex justify-content-center gap-2">
-          <button class="btn btn-outline-light" type="button" data-celebration-close>Return to Inventory</button>
-          <a class="btn btn-primary" href="/collection">View Collection</a>
+  function showRefineResult(sourceItem, payload = {}) {
+    const targetItem = getRefinementTargetItem(sourceItem, payload);
+    const targetRarity = normalizeRarity(targetItem.rarity);
+    const targetSpecies = targetItem.species || sourceItem.species;
+    elements.inventoryRefineContent.style.setProperty('--item-rarity', getRarityColor(targetRarity));
+    elements.inventoryRefineContent.innerHTML = `
+      <div class="modal-header">
+        <div>
+          <p class="inventory-action-kicker mb-1">Refinement complete</p>
+          <h2 class="modal-title h4" id="inventoryRefineTitle"><span class="inventory-action-title-rarity">${escapeHtml(capitalize(targetRarity))}</span> ${escapeHtml(targetSpecies)} Echo</h2>
         </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body inventory-action-result-body">
+        <div class="inventory-action-echo-result">${renderItemVisual(targetItem, { context: 'detail' })}</div>
+        <p class="inventory-action-description" id="inventoryRefineDescription">Your refined Echo has been added to Inventory.</p>
       </div>
     `;
-    audio?.play('sfx.progression.levelUp', { volume: 0.92 });
-    elements.inventorySummonCelebration.querySelector('[data-celebration-close]')?.focus();
+    transitionBetweenModals(elements.inventoryDetailModal, elements.inventoryRefineModal);
   }
 
-  function dismissCelebration(event) {
-    if (event.target.closest('a')) return;
-    if (event.target === elements.inventorySummonCelebration || event.target.closest('[data-celebration-close]')) {
-      elements.inventorySummonCelebration.hidden = true;
-      elements.inventorySummonCelebration.innerHTML = '';
+  function getRefinementTargetItem(sourceItem, payload = {}) {
+    const targetRarity = normalizeRarity(payload.refinement?.targetRarity || sourceItem.nextRarity);
+    const itemKey = `echo:${sourceItem.typeId}:${targetRarity}`;
+    return (payload.items || []).find((item) => item.itemKey === itemKey) || {
+      ...sourceItem,
+      itemKey,
+      rarity: targetRarity,
+      quantity: Math.max(1, Number(payload.refinement?.quantity) || 1)
+    };
+  }
+
+  function transitionBetweenModals(fromElement, toElement, beforeShow) {
+    const reveal = () => {
+      beforeShow?.();
+      bootstrap.Modal.getOrCreateInstance(toElement).show();
+    };
+    if (fromElement.classList.contains('show')) {
+      fromElement.addEventListener('hidden.bs.modal', reveal, { once: true });
+      const fromModal = bootstrap.Modal.getOrCreateInstance(fromElement);
+      if (fromModal._isTransitioning) {
+        fromElement.addEventListener('shown.bs.modal', () => fromModal.hide(), { once: true });
+      } else {
+        fromModal.hide();
+      }
+    } else {
+      reveal();
     }
+  }
+
+  function startSummonRitual() {
+    stopSummonRitual();
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return 0;
+
+    const target = elements.inventoryDetailContent;
+    const action = target?.querySelector('.inventory-summon-action');
+    if (!target || !action) return 0;
+
+    const actionRect = action.getBoundingClientRect();
+    const viewportRect = { width: window.innerWidth, height: window.innerHeight };
+    const coreX = actionRect.left + (actionRect.width / 2);
+    const coreY = actionRect.top + (actionRect.height / 2);
+    const ritual = document.createElement('div');
+    ritual.className = 'inventory-summon-ritual';
+    ritual.setAttribute('aria-hidden', 'true');
+    ritual.style.setProperty('--item-rarity', target.style.getPropertyValue('--item-rarity'));
+    ritual.style.setProperty('--summon-core-x', `${coreX.toFixed(1)}px`);
+    ritual.style.setProperty('--summon-core-y', `${coreY.toFixed(1)}px`);
+    ritual.innerHTML = `
+      <div class="inventory-summon-vortex">${renderSummonParticles(viewportRect)}</div>
+      <div class="inventory-summon-core"></div>
+    `;
+
+    action.classList.add('is-summoning');
+    document.body.appendChild(ritual);
+    audio?.play('sfx.progression.summonAttempt', { volume: 0.86 });
+    return SUMMON_REVEAL_DELAY_MS;
+  }
+
+  function stopSummonRitual() {
+    elements.inventoryDetailContent?.querySelector('.inventory-summon-action.is-summoning')?.classList.remove('is-summoning');
+    document.querySelectorAll('body > .inventory-summon-ritual').forEach((ritual) => ritual.remove());
+  }
+
+  function renderSummonParticles(rect) {
+    const width = Math.max(360, Number(rect?.width) || 480);
+    const height = Math.max(440, Number(rect?.height) || 620);
+    const count = 78;
+
+    return Array.from({ length: count }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = randomBetween(0.52, 0.82);
+      const sx = Math.cos(angle) * width * radius;
+      const sy = Math.sin(angle) * height * radius;
+      const delay = randomBetween(0, 560);
+      const duration = (SUMMON_REVEAL_DELAY_MS - delay) / 0.68;
+      const size = randomBetween(0.55, 1.18);
+      const spin = randomBetween(-260, 260);
+      return `<span class="inventory-summon-particle" style="--sx:${sx.toFixed(1)}px;--sy:${sy.toFixed(1)}px;--delay:${delay.toFixed(0)}ms;--duration:${duration.toFixed(0)}ms;--size:${size.toFixed(2)};--spin:${spin.toFixed(0)}deg"></span>`;
+    }).join('');
+  }
+
+  function wait(milliseconds) {
+    const delay = Math.max(0, Number(milliseconds) || 0);
+    return delay ? new Promise((resolve) => window.setTimeout(resolve, delay)) : Promise.resolve();
+  }
+
+  function randomBetween(minimum, maximum) {
+    return minimum + (Math.random() * (maximum - minimum));
+  }
+
+  function showSummonResult(demon) {
+    const rarity = normalizeRarity(demon.rarity);
+    elements.inventorySummonContent.style.setProperty('--item-rarity', getRarityColor(rarity));
+    elements.inventorySummonContent.innerHTML = `
+      <div class="modal-header">
+        <div>
+          <p class="inventory-action-kicker mb-1">Summoning complete</p>
+          <h2 class="modal-title h4" id="inventorySummonTitle">${escapeHtml(`${capitalize(rarity)} ${demon.species || 'Demon'}`)}</h2>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body inventory-action-result-body">
+        <img class="inventory-summon-portrait" src="${escapeHtml(demon.imageUrl || demon.image_url || '')}" alt="${escapeHtml(`${capitalize(rarity)} ${demon.species || 'demon'}`)}">
+        <p class="inventory-action-description" id="inventorySummonDescription">Your summon has joined your permanent Collection.</p>
+      </div>
+      <div class="modal-footer inventory-action-footer-centered">
+        <a class="btn btn-primary" href="/collection">View Collection</a>
+      </div>
+    `;
+
+    transitionBetweenModals(elements.inventoryDetailModal, elements.inventorySummonModal);
+    audio?.play('sfx.progression.summonSuccess', { volume: 0.92 });
   }
 
   function getSelectedItem() {

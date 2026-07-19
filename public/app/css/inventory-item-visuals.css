@@ -1,21 +1,20 @@
 .echo-item-visual {
     --echo-glow-size: 7px;
     --echo-aura-opacity: 0.12;
-    --echo-accent-opacity: 0.06;
     --echo-ornament-opacity: 0;
     --echo-shell-brightness: 0.9;
     --echo-shell-saturation: 0.92;
     --echo-fill-polish: 0.2;
+    --echo-essence-color: #D1D5D8;
     position: relative;
     isolation: isolate;
-    width: 100%;
-    height: 100%;
+    width: 75%;
+    height: 75%;
 }
 
 .echo-item-shell,
 .echo-rarity-aura,
-.echo-rarity-fill,
-.echo-rarity-accent,
+.echo-essence-fill,
 .echo-rarity-ornament {
     position: absolute;
     inset: 0;
@@ -30,13 +29,11 @@
     filter:
         brightness(var(--echo-shell-brightness))
         saturate(var(--echo-shell-saturation))
-        drop-shadow(0 5px 4px rgba(0, 0, 0, 0.62))
-        drop-shadow(0 0 var(--echo-glow-size) color-mix(in srgb, var(--item-rarity) 52%, transparent));
+        drop-shadow(0 5px 4px rgba(0, 0, 0, 0.62));
     transition: filter 0.18s ease;
 }
 
-.echo-rarity-aura,
-.echo-rarity-accent {
+.echo-rarity-aura {
     background: var(--item-rarity);
     -webkit-mask-image: var(--echo-shell-mask);
     mask-image: var(--echo-shell-mask);
@@ -55,15 +52,15 @@
     transform: scale(1.025);
 }
 
-.echo-rarity-fill {
-    z-index: 1;
+.echo-essence-fill {
+    z-index: 2;
     overflow: hidden;
     background:
         linear-gradient(
             180deg,
-            color-mix(in srgb, var(--item-rarity) 62%, white) 0%,
-            var(--item-rarity) 48%,
-            color-mix(in srgb, var(--item-rarity) 68%, #020809) 100%
+            color-mix(in srgb, var(--echo-essence-color) 62%, white) 0%,
+            var(--echo-essence-color) 48%,
+            color-mix(in srgb, var(--echo-essence-color) 68%, #020809) 100%
         );
     -webkit-mask-image: var(--echo-fill-mask);
     mask-image: var(--echo-fill-mask);
@@ -81,23 +78,16 @@
     display: block;
     opacity: calc(0.52 + var(--echo-fill-polish));
     background:
-        radial-gradient(circle at 32% 78%, color-mix(in srgb, var(--item-rarity) 42%, white) 0 5%, transparent 18%),
-        radial-gradient(circle at 68% 42%, color-mix(in srgb, var(--item-rarity) 32%, white) 0 4%, transparent 16%),
-        linear-gradient(145deg, transparent 28%, color-mix(in srgb, var(--item-rarity) 45%, white) 48%, transparent 68%);
+        radial-gradient(circle at 32% 78%, color-mix(in srgb, var(--echo-essence-color) 42%, white) 0 5%, transparent 18%),
+        radial-gradient(circle at 68% 42%, color-mix(in srgb, var(--echo-essence-color) 32%, white) 0 4%, transparent 16%),
+        linear-gradient(145deg, transparent 28%, color-mix(in srgb, var(--echo-essence-color) 45%, white) 48%, transparent 68%);
     mix-blend-mode: screen;
     transform-box: fill-box;
     transform-origin: center;
 }
 
-.echo-rarity-accent {
-    z-index: 5;
-    opacity: var(--echo-accent-opacity);
-    clip-path: inset(0 0 68% 0);
-    mix-blend-mode: color;
-}
-
 .echo-rarity-ornament {
-    z-index: 2;
+    z-index: 1;
     inset: 8%;
     width: 84%;
     height: 84%;
@@ -145,7 +135,6 @@
 .echo-item-visual[data-rarity="uncommon"] {
     --echo-glow-size: 9px;
     --echo-aura-opacity: 0.15;
-    --echo-accent-opacity: 0.12;
     --echo-ornament-opacity: 0.08;
     --echo-shell-brightness: 0.94;
     --echo-shell-saturation: 0.98;
@@ -155,7 +144,6 @@
 .echo-item-visual[data-rarity="rare"] {
     --echo-glow-size: 11px;
     --echo-aura-opacity: 0.19;
-    --echo-accent-opacity: 0.2;
     --echo-ornament-opacity: 0.2;
     --echo-shell-brightness: 0.98;
     --echo-shell-saturation: 1.02;
@@ -165,7 +153,6 @@
 .echo-item-visual[data-rarity="epic"] {
     --echo-glow-size: 13px;
     --echo-aura-opacity: 0.23;
-    --echo-accent-opacity: 0.3;
     --echo-ornament-opacity: 0.36;
     --echo-shell-brightness: 1.03;
     --echo-shell-saturation: 1.06;
@@ -175,7 +162,6 @@
 .echo-item-visual[data-rarity="legendary"] {
     --echo-glow-size: 16px;
     --echo-aura-opacity: 0.3;
-    --echo-accent-opacity: 0.42;
     --echo-ornament-opacity: 0.62;
     --echo-shell-brightness: 1.09;
     --echo-shell-saturation: 1.1;
@@ -185,7 +171,6 @@
 .echo-item-visual[data-rarity="mythic"] {
     --echo-glow-size: 19px;
     --echo-aura-opacity: 0.36;
-    --echo-accent-opacity: 0.56;
     --echo-ornament-opacity: 0.88;
     --echo-shell-brightness: 1.14;
     --echo-shell-saturation: 1.16;
@@ -194,54 +179,54 @@
 
 .echo-type-ranged .echo-fill-surface {
     background:
-        linear-gradient(90deg, transparent 42%, color-mix(in srgb, var(--item-rarity) 36%, white) 48% 52%, transparent 58%),
-        radial-gradient(ellipse at center, transparent 0 16%, color-mix(in srgb, var(--item-rarity) 42%, white) 18% 22%, transparent 25%);
+        linear-gradient(90deg, transparent 42%, color-mix(in srgb, var(--echo-essence-color) 36%, white) 48% 52%, transparent 58%),
+        radial-gradient(ellipse at center, transparent 0 16%, color-mix(in srgb, var(--echo-essence-color) 42%, white) 18% 22%, transparent 25%);
 }
 
 .echo-type-poisoner .echo-fill-surface {
     background:
-        radial-gradient(circle at 34% 76%, color-mix(in srgb, var(--item-rarity) 45%, white) 0 4%, transparent 5%),
-        radial-gradient(circle at 65% 58%, color-mix(in srgb, var(--item-rarity) 40%, white) 0 3%, transparent 4%),
-        radial-gradient(circle at 48% 35%, color-mix(in srgb, var(--item-rarity) 35%, white) 0 2.5%, transparent 3.5%);
+        radial-gradient(circle at 34% 76%, color-mix(in srgb, var(--echo-essence-color) 45%, white) 0 4%, transparent 5%),
+        radial-gradient(circle at 65% 58%, color-mix(in srgb, var(--echo-essence-color) 40%, white) 0 3%, transparent 4%),
+        radial-gradient(circle at 48% 35%, color-mix(in srgb, var(--echo-essence-color) 35%, white) 0 2.5%, transparent 3.5%);
 }
 
 .echo-type-aoe .echo-fill-surface {
-    background: repeating-radial-gradient(circle at center, color-mix(in srgb, var(--item-rarity) 42%, white) 0 3%, transparent 5% 14%);
+    background: repeating-radial-gradient(circle at center, color-mix(in srgb, var(--echo-essence-color) 42%, white) 0 3%, transparent 5% 14%);
 }
 
 .echo-type-bruiser .echo-fill-surface {
-    background: repeating-linear-gradient(0deg, color-mix(in srgb, var(--item-rarity) 30%, white) 0 6%, transparent 8% 20%);
+    background: repeating-linear-gradient(0deg, color-mix(in srgb, var(--echo-essence-color) 30%, white) 0 6%, transparent 8% 20%);
 }
 
 .echo-type-assassin .echo-fill-surface {
-    background: linear-gradient(145deg, transparent 36%, color-mix(in srgb, var(--item-rarity) 55%, white) 42% 48%, transparent 54%);
+    background: linear-gradient(145deg, transparent 36%, color-mix(in srgb, var(--echo-essence-color) 55%, white) 42% 48%, transparent 54%);
 }
 
 .echo-type-striker .echo-fill-surface {
-    background: repeating-linear-gradient(155deg, transparent 0 18%, color-mix(in srgb, var(--item-rarity) 46%, white) 20% 25%, transparent 28% 44%);
+    background: repeating-linear-gradient(155deg, transparent 0 18%, color-mix(in srgb, var(--echo-essence-color) 46%, white) 20% 25%, transparent 28% 44%);
 }
 
 .echo-type-counter-tank .echo-fill-surface {
     background:
-        conic-gradient(from 25deg at center, transparent, color-mix(in srgb, var(--item-rarity) 36%, white), transparent 26%),
-        radial-gradient(circle, color-mix(in srgb, var(--item-rarity) 28%, white), transparent 52%);
+        conic-gradient(from 25deg at center, transparent, color-mix(in srgb, var(--echo-essence-color) 36%, white), transparent 26%),
+        radial-gradient(circle, color-mix(in srgb, var(--echo-essence-color) 28%, white), transparent 52%);
 }
 
 .echo-type-juggernaut .echo-fill-surface {
     background:
-        radial-gradient(circle at 50% 64%, color-mix(in srgb, var(--item-rarity) 58%, white) 0 7%, transparent 19%),
-        linear-gradient(0deg, color-mix(in srgb, var(--item-rarity) 32%, #020809), transparent 54%);
+        radial-gradient(circle at 50% 64%, color-mix(in srgb, var(--echo-essence-color) 58%, white) 0 7%, transparent 19%),
+        linear-gradient(0deg, color-mix(in srgb, var(--echo-essence-color) 32%, #020809), transparent 54%);
 }
 
 .echo-type-healer .echo-fill-surface {
     background:
-        radial-gradient(circle at 35% 72%, color-mix(in srgb, var(--item-rarity) 52%, white) 0 3%, transparent 5%),
-        radial-gradient(circle at 63% 54%, color-mix(in srgb, var(--item-rarity) 46%, white) 0 3%, transparent 5%),
-        linear-gradient(0deg, color-mix(in srgb, var(--item-rarity) 30%, white), transparent 62%);
+        radial-gradient(circle at 35% 72%, color-mix(in srgb, var(--echo-essence-color) 52%, white) 0 3%, transparent 5%),
+        radial-gradient(circle at 63% 54%, color-mix(in srgb, var(--echo-essence-color) 46%, white) 0 3%, transparent 5%),
+        linear-gradient(0deg, color-mix(in srgb, var(--echo-essence-color) 30%, white), transparent 62%);
 }
 
 .echo-type-chaotic .echo-fill-surface {
-    background: conic-gradient(from 40deg, color-mix(in srgb, var(--item-rarity) 38%, white), transparent 18%, color-mix(in srgb, var(--item-rarity) 62%, white) 34%, transparent 55%, var(--item-rarity));
+    background: conic-gradient(from 40deg, color-mix(in srgb, var(--echo-essence-color) 38%, white), transparent 18%, color-mix(in srgb, var(--echo-essence-color) 62%, white) 34%, transparent 55%, var(--echo-essence-color));
 }
 
 .echo-motion-strike .echo-fill-surface { animation: echo-raster-strike 3.2s ease-in-out infinite; }

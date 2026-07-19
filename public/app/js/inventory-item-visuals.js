@@ -6,17 +6,17 @@
   const RARITIES = new Set(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']);
   const ASSET_BASE = '/app/images/items/echo';
   const ECHO_TYPES = Object.freeze({
-    1: { key: 'melee', label: 'Melee', asset: '01-melee', motion: 'strike' },
-    2: { key: 'ranged', label: 'Ranged sniper', asset: '02-ranged', motion: 'focus' },
-    3: { key: 'poisoner', label: 'Poisoner', asset: '03-poisoner', motion: 'bubble' },
-    4: { key: 'aoe', label: 'AOE', asset: '04-aoe', motion: 'expand' },
-    5: { key: 'bruiser', label: 'Bruiser', asset: '05-bruiser', motion: 'heavy' },
-    6: { key: 'assassin', label: 'Assassin', asset: '06-assassin', motion: 'dart' },
-    7: { key: 'striker', label: 'Striker / cleave', asset: '07-striker', motion: 'cleave' },
-    8: { key: 'counter-tank', label: 'Counter tank', asset: '08-counter-tank', motion: 'roots' },
-    9: { key: 'juggernaut', label: 'Juggernaut', asset: '09-juggernaut', motion: 'core' },
-    10: { key: 'healer', label: 'Healer', asset: '10-healer', motion: 'rise' },
-    11: { key: 'chaotic', label: 'Chaotic', asset: '11-chaotic', motion: 'chaos' }
+    1: { key: 'melee', label: 'Melee', asset: '01-melee', motion: 'strike', essence: '#D1D5D8' },
+    2: { key: 'ranged', label: 'Ranged sniper', asset: '02-ranged', motion: 'focus', essence: '#171D24' },
+    3: { key: 'poisoner', label: 'Poisoner', asset: '03-poisoner', motion: 'bubble', essence: '#167246' },
+    4: { key: 'aoe', label: 'AOE', asset: '04-aoe', motion: 'expand', essence: '#E25041' },
+    5: { key: 'bruiser', label: 'Bruiser', asset: '05-bruiser', motion: 'heavy', essence: '#C8BDAA' },
+    6: { key: 'assassin', label: 'Assassin', asset: '06-assassin', motion: 'dart', essence: '#C084FC' },
+    7: { key: 'striker', label: 'Striker / cleave', asset: '07-striker', motion: 'cleave', essence: '#FFB23F' },
+    8: { key: 'counter-tank', label: 'Counter tank', asset: '08-counter-tank', motion: 'roots', essence: '#6E8F45' },
+    9: { key: 'juggernaut', label: 'Juggernaut', asset: '09-juggernaut', motion: 'core', essence: '#9BA8B8' },
+    10: { key: 'healer', label: 'Healer', asset: '10-healer', motion: 'rise', essence: '#8DE7FF' },
+    11: { key: 'chaotic', label: 'Chaotic', asset: '11-chaotic', motion: 'chaos', essence: '#52B7FF' }
   });
 
   function registerItemVisual(itemType, renderer) {
@@ -50,11 +50,10 @@
     const loading = context === 'detail' ? 'eager' : 'lazy';
 
     return `
-      <span class="inventory-item-renderer echo-item-visual echo-type-${type.key} echo-motion-${type.motion} echo-context-${context}" data-echo-type="${typeAttribute}" data-rarity="${rarity}" style="--echo-shell-mask: url('${shellUrl}'); --echo-fill-mask: url('${maskUrl}')" title="${escapeHtml(knownType ? type.label : 'Unknown')} Echo vessel" aria-hidden="true">
+      <span class="inventory-item-renderer echo-item-visual echo-type-${type.key} echo-motion-${type.motion} echo-context-${context}" data-echo-type="${typeAttribute}" data-rarity="${rarity}" style="--echo-shell-mask: url('${shellUrl}'); --echo-fill-mask: url('${maskUrl}'); --echo-essence-color: ${type.essence}" title="${escapeHtml(knownType ? type.label : 'Unknown')} Echo vessel" aria-hidden="true">
         <span class="echo-rarity-ornament" aria-hidden="true"></span>
         <span class="echo-rarity-aura" aria-hidden="true"></span>
-        <span class="echo-rarity-fill" aria-hidden="true"><span class="echo-fill-surface"></span></span>
-        <span class="echo-rarity-accent" aria-hidden="true"></span>
+        <span class="echo-essence-fill" aria-hidden="true"><span class="echo-fill-surface"></span></span>
         <img class="echo-item-shell" src="${shellUrl}" alt="" width="512" height="512" loading="${loading}" decoding="async" draggable="false">
         ${knownType ? '' : '<span class="echo-unknown-mark" aria-hidden="true">?</span>'}
       </span>`;
