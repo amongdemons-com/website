@@ -4,7 +4,16 @@
   const api = window.AmongDemons.api;
   const audio = window.AmongDemons.audio;
   const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
-  const getRarityColor = window.AmongDemons.ui.getRarityColor || (() => '#9ca3af');
+  const RARITY_COLORS = {
+    common: '#D1D5D8',
+    uncommon: '#41A85F',
+    rare: '#2C82C9',
+    epic: '#9365B8',
+    legendary: '#FAC51C',
+    mythic: '#E25041'
+  };
+  const getRarityColor = window.AmongDemons.ui.getRarityColor
+    || ((rarity) => RARITY_COLORS[String(rarity || '').toLowerCase()] || RARITY_COLORS.common);
   const RARITY_RANK = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5, mythic: 6 };
   const state = {
     items: [],
@@ -20,6 +29,7 @@
   };
   const elements = {};
   let resizeFrame = 0;
+  let tooltipHideTimer = 0;
 
   onReady(init);
 
@@ -64,8 +74,8 @@
     });
     elements.inventoryGrid.addEventListener('pointerout', (event) => {
       const item = event.target.closest('[data-inventory-key]');
-      if (!item || item.contains(event.relatedTarget) || state.inspectedKey === item.dataset.inventoryKey) return;
-      hideItemTooltip();
+      if (!item || item.contains(event.relatedTarget) || elements.inventoryItemTooltip.contains(event.relatedTarget) || state.inspectedKey === item.dataset.inventoryKey) return;
+      scheduleItemTooltipHide();
     });
     elements.inventoryGrid.addEventListener('focusin', (event) => {
       const item = event.target.closest('[data-inventory-key]');
@@ -73,8 +83,8 @@
     });
     elements.inventoryGrid.addEventListener('focusout', (event) => {
       const item = event.target.closest('[data-inventory-key]');
-      if (!item || item.contains(event.relatedTarget) || state.inspectedKey === item.dataset.inventoryKey) return;
-      hideItemTooltip();
+      if (!item || item.contains(event.relatedTarget) || elements.inventoryItemTooltip.contains(event.relatedTarget) || state.inspectedKey === item.dataset.inventoryKey) return;
+      scheduleItemTooltipHide();
     });
     elements.inventoryGrid.addEventListener('click', (event) => {
       const item = event.target.closest('[data-inventory-key]');
@@ -94,10 +104,26 @@
       openItem(itemKey);
     });
     document.addEventListener('pointerdown', (event) => {
-      if (event.target.closest('[data-inventory-key]')) return;
+      if (event.target.closest('[data-inventory-key], #inventoryItemTooltip')) return;
       state.inspectedKey = null;
       elements.inventoryGrid.querySelector('.is-inspecting')?.classList.remove('is-inspecting');
       hideItemTooltip();
+    });
+    elements.inventoryItemTooltip.addEventListener('pointerover', cancelItemTooltipHide);
+    elements.inventoryItemTooltip.addEventListener('pointerout', (event) => {
+      if (elements.inventoryItemTooltip.contains(event.relatedTarget)) return;
+      const relatedItem = event.relatedTarget?.closest?.('[data-inventory-key]');
+      if (relatedItem?.dataset.inventoryKey === elements.inventoryItemTooltip.dataset.inventoryKey) return;
+      if (!state.inspectedKey) scheduleItemTooltipHide();
+    });
+    elements.inventoryItemTooltip.addEventListener('focusin', cancelItemTooltipHide);
+    elements.inventoryItemTooltip.addEventListener('focusout', (event) => {
+      if (elements.inventoryItemTooltip.contains(event.relatedTarget) || state.inspectedKey) return;
+      scheduleItemTooltipHide();
+    });
+    elements.inventoryItemTooltip.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-inventory-tooltip-open]');
+      if (button) openItem(button.dataset.inventoryTooltipOpen);
     });
     elements.inventoryGridViewport.addEventListener('scroll', () => {
       if (!state.inspectedKey) {
@@ -274,12 +300,12 @@
       <section class="inventory-detail-panel">
         <h3>Refinement</h3>
         <div class="inventory-recipe" aria-label="${escapeHtml(`${item.refinementCost} ${sourceLabel} Echoes become 1 ${targetLabel} Echo`)}">
-          <div class="inventory-recipe-item"><strong>x${escapeHtml(item.refinementCost)}</strong><small class="d-block text-muted">${escapeHtml(capitalize(item.rarity))}</small></div>
+          <div class="inventory-recipe-item"><strong>x${escapeHtml(item.refinementCost)}</strong><small class="d-block inventory-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.rarity))}">${escapeHtml(capitalize(item.rarity))}</small></div>
           <span aria-hidden="true">${renderIcon('arrow-right')}</span>
-          <div class="inventory-recipe-item"><strong>x1</strong><small class="d-block" style="color:${escapeHtml(getRarityColor(item.nextRarity))}">${escapeHtml(capitalize(item.nextRarity))}</small></div>
+          <div class="inventory-recipe-item"><strong>x1</strong><small class="d-block inventory-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.nextRarity))}">${escapeHtml(capitalize(item.nextRarity))}</small></div>
         </div>
         <p class="small text-muted">${escapeHtml(lockedCopy)}</p>
-        <button class="btn btn-sm btn-primary w-100" type="button" data-inventory-action="refine" ${item.canRefine && !state.pending ? '' : 'disabled'}>
+        <button class="btn btn-sm btn-primary inventory-refine-action" type="button" data-inventory-action="refine" ${item.canRefine && !state.pending ? '' : 'disabled'}>
           ${state.pending ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
           <span>Refine Echo</span>
         </button>
@@ -402,11 +428,14 @@
 
     const rarity = normalizeRarity(item.rarity);
     const tooltip = elements.inventoryItemTooltip;
+    cancelItemTooltipHide();
+    tooltip.dataset.inventoryKey = itemKey;
     tooltip.style.setProperty('--item-rarity', getRarityColor(rarity));
     tooltip.innerHTML = `
       <span class="inventory-tooltip-rarity">${escapeHtml(capitalize(rarity))} Echo</span>
       <strong class="inventory-tooltip-title">${escapeHtml(item.species)}</strong>
       <span class="inventory-tooltip-meta">${escapeHtml(getItemStatus(item))}</span>
+      <button class="inventory-tooltip-action" type="button" data-inventory-tooltip-open="${escapeHtml(itemKey)}">View details</button>
     `;
     tooltip.hidden = false;
     tooltip.classList.remove('is-below');
@@ -420,19 +449,37 @@
       window.innerWidth - tooltipRect.width - margin,
       Math.max(margin, anchorRect.left + (anchorRect.width / 2) - (tooltipRect.width / 2))
     );
+    const anchorCenter = anchorRect.left + (anchorRect.width / 2);
+    const arrowOffset = Math.min(
+      tooltipRect.width - 12,
+      Math.max(12, anchorCenter - left)
+    );
     const top = isBelow
       ? anchorRect.bottom + gap
       : anchorRect.top - tooltipRect.height - gap;
 
     tooltip.classList.toggle('is-below', isBelow);
+    tooltip.style.setProperty('--tooltip-arrow-x', `${Math.round(arrowOffset)}px`);
     tooltip.style.left = `${Math.round(left)}px`;
     tooltip.style.top = `${Math.round(Math.max(margin, top))}px`;
   }
 
   function hideItemTooltip() {
     if (!elements.inventoryItemTooltip) return;
+    cancelItemTooltipHide();
     elements.inventoryItemTooltip.hidden = true;
+    delete elements.inventoryItemTooltip.dataset.inventoryKey;
     elements.inventoryItemTooltip.innerHTML = '';
+  }
+
+  function scheduleItemTooltipHide() {
+    window.clearTimeout(tooltipHideTimer);
+    tooltipHideTimer = window.setTimeout(() => hideItemTooltip(), 160);
+  }
+
+  function cancelItemTooltipHide() {
+    window.clearTimeout(tooltipHideTimer);
+    tooltipHideTimer = 0;
   }
 
   function scheduleSlotMeasurement() {

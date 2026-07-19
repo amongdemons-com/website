@@ -194,7 +194,9 @@ function renderDungeonEndScreen() {
       ${echo ? `
         <div class="dungeon-end-demon" aria-label="Extracted ${escapeHtml(`${capitalize(echo.rarity || 'common')} ${echo.species || 'Demon'} Echo`)}">
           <div class="dungeon-demon-card dungeon-end-demon-card" style="--rarity-color: ${escapeHtml(getRarityColor(echo.rarity || 'common'))}">
-            <img src="${escapeHtml(echo.imageUrl || '')}" alt="" width="1024" height="1024" loading="eager">
+            <div class="dungeon-demon-card-image">
+              <img src="${escapeHtml(echo.imageUrl || '')}" alt="" width="1024" height="1024" loading="eager" decoding="async">
+            </div>
             <span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>
           </div>
         </div>

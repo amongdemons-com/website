@@ -156,6 +156,9 @@ Conversion rates:
 - [x] Add `inventory.html` using the shared authenticated app shell.
 - [x] Add Inventory navigation near Collection on desktop and mobile without breaking
   existing navigation widths or active-route highlighting.
+- [x] Group World/Dungeon under Explore and Collection/Inventory under Hunter; order
+  the primary navigation as Camp, Explore, Hunter, Rankings, then Guides.
+- [x] Add global `I` and `B` shortcuts that open Inventory while ignoring editable fields.
 - [x] Add appropriate metadata and prevent an authenticated inventory surface from
   being treated as a public catalog page.
 - [x] Add a dedicated inventory UI module and page-specific CSS if appropriate.
@@ -172,6 +175,13 @@ Conversion rates:
 - [x] Make Inventory slots at least twice their original visual size on desktop and mobile.
 - [x] Hide item rarity, name, and status in a World-style tooltip until hover, keyboard
   focus, or touch inspection.
+- [x] Keep the item tooltip anchored to its actual slot, including when the vault card
+  creates a CSS containing block or the tooltip is clamped at a viewport edge.
+- [x] Add a clear `View details` tooltip action that opens the item modal while preserving
+  direct click and second-tap modal triggers.
+- [x] Use the canonical rarity palette for slot diamonds, tooltip and modal rarity labels,
+  and both sides of the refinement recipe; keep quantity at bottom-right.
+- [x] Keep the first-row slot border fully visible during hover and keyboard focus.
 - [x] Mark items that are ready to summon without relying on color alone.
 - [x] Support useful sorting: summon-ready, rarity, name, and quantity.
 - [x] Support an `All` and `Echoes` filter initially.
@@ -197,6 +207,10 @@ Conversion rates:
   `Inventory`.
 - [x] Make `Refine Echo` primary and keep Close/Summon as secondary actions using the
   shared game button styles.
+- [x] Center `Refine Echo` at a content-sized width instead of stretching it across the
+  refinement panel.
+- [x] Generate and apply an Inventory-specific Echo-vault background using the established
+  dark-fantasy environment style and page-overlay treatment.
 
 ### Collection integration
 
@@ -264,6 +278,8 @@ Conversion rates:
 - [x] Keep account XP, Souls, level changes, run ending, pending reward settlement, and
   defeat rules correct.
 - [x] Ensure collection achievements are not accidentally granted by unsummoned Echoes.
+- [x] Keep extracted Echo artwork constrained to its square card on the post-extraction
+  screen so the summary, rewards, and actions remain visible.
 - [x] Review other code paths that call `saveCollectionDemon` (including starter grants)
   and change only those intended by this feature.
 
