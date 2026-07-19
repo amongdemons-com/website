@@ -254,7 +254,7 @@
     }
 
     if (!demons.length) {
-      setText(elements.profileDemonPickerStatus, 'Extract a demon from the dungeon before choosing a camp portrait.');
+      setText(elements.profileDemonPickerStatus, 'Summon a demon into your Collection before choosing a camp portrait.');
       setHtml(elements.profileDemonGrid, `
         <div class="profile-demon-empty">
           <img src="/app/images/amongdemons_logo_250x250.png" alt="" width="88" height="88" loading="lazy">

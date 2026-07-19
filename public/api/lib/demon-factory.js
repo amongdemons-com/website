@@ -116,11 +116,19 @@ async function createDemon(rng, options = {}) {
       : baseWeight;
   }));
   const typeData = types[String(typeId)];
-  const rarity = options.rarity || pickRarity(rng, options.allowedRarities, (rarity, baseWeight) => (
-    typeof options.rarityWeightMultiplier === 'function'
-      ? baseWeight * options.rarityWeightMultiplier(rarity, baseWeight)
-      : baseWeight
-  ));
+  const rarity = options.rarity || (
+    options.rarityWeights && typeof options.rarityWeights === 'object'
+      ? pickWeighted(
+        rng,
+        Object.keys(options.rarityWeights).filter((candidate) => !options.allowedRarities || options.allowedRarities.includes(candidate)),
+        (candidate) => options.rarityWeights[candidate]
+      )
+      : pickRarity(rng, options.allowedRarities, (candidate, baseWeight) => (
+        typeof options.rarityWeightMultiplier === 'function'
+          ? baseWeight * options.rarityWeightMultiplier(candidate, baseWeight)
+          : baseWeight
+      ))
+  );
   const asset = assets.find((item) => item.type === typeId && item.rarity === rarity) ||
     assets.find((item) => item.type === typeId) ||
     assets[0];

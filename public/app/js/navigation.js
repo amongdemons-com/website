@@ -14,12 +14,27 @@
 
   function init() {
     initDefaultMusic();
+    ensureInventoryNavLinks();
     moveGuidesAfterRankings();
     markCurrentGameNav();
     bindDisabledLinks();
     bindGlobalPageShortcuts();
     bindPlayInstantly();
     initAccountNav();
+  }
+
+  function ensureInventoryNavLinks() {
+    document.querySelectorAll('.game-shell-tabs').forEach((nav) => {
+      if (nav.querySelector('[data-game-route="inventory"]')) return;
+      const collection = nav.querySelector('[data-game-route="collection"]')?.parentElement;
+      if (!collection) return;
+
+      const item = document.createElement('li');
+      item.className = 'nav-item';
+      const icon = window.AmongDemons?.ui?.renderIcon?.('amphora') || '';
+      item.innerHTML = `<a class="nav-link game-nav-link" href="/inventory" data-game-route="inventory">${icon}<span>Inventory</span></a>`;
+      collection.after(item);
+    });
   }
 
   function initDefaultMusic() {
@@ -116,7 +131,9 @@
             : pathname.startsWith('/bosses')
               ? 'bosses'
               : pathname.startsWith('/collection')
-                ? 'collection'
+              ? 'collection'
+              : pathname.startsWith('/inventory')
+                ? 'inventory'
                 : pathname.startsWith('/rank')
                   ? 'rankings'
                   : '';

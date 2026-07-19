@@ -51,7 +51,7 @@ function normalizeCollectionDemonStats(demon = {}) {
   return normalized;
 }
 
-async function saveCollectionDemon(playerId, demon) {
+async function saveCollectionDemon(playerId, demon, queryable = db) {
   const minimumDemon = await weakenDemonToMinimumStats(demon);
   const row = getCollectionDemonRow(minimumDemon);
 
@@ -61,7 +61,7 @@ async function saveCollectionDemon(playerId, demon) {
     throw error;
   }
 
-  const [result] = await db.query(
+  const [result] = await queryable.query(
     `INSERT INTO player_demons
        (player_id, source_demon_id, type_id, species, rarity, image_url, hp, atk, speed)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)

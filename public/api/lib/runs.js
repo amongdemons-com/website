@@ -17,9 +17,9 @@ function parseRun(row) {
   };
 }
 
-async function getRunForPlayer(runId, playerId) {
-  const [rows] = await db.query(
-    'SELECT * FROM runs WHERE id = ? AND player_id = ? LIMIT 1',
+async function getRunForPlayer(runId, playerId, queryable = db, options = {}) {
+  const [rows] = await queryable.query(
+    `SELECT * FROM runs WHERE id = ? AND player_id = ? LIMIT 1${options.forUpdate ? ' FOR UPDATE' : ''}`,
     [runId, playerId]
   );
 
@@ -66,8 +66,8 @@ async function closeOpenRunsForPlayer(playerId, exceptRunId = null) {
   );
 }
 
-async function saveRun(run) {
-  await db.query(
+async function saveRun(run, queryable = db) {
+  await queryable.query(
     `UPDATE runs
      SET status = ?, floor = ?, state = ?, rewards = ?, ended_at = ?
      WHERE id = ? AND player_id = ?`,

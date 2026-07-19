@@ -152,8 +152,8 @@ function getFullHpDemon(demon) {
 function applyRunBuffStatPreviewToDemon(demon = {}) {
   if (!demon || demon.runBuffStatsApplied || demon.runBuffStatsPreviewed) return { ...demon };
 
-  const maxHpMult = getRunBuffEffectMultiplier('max_hp_mult');
-  const speedMult = getRunBuffEffectMultiplier('speed_mult');
+  const maxHpMult = getRunBuffEffectMultiplier('max_hp_mult', demon);
+  const speedMult = getRunBuffEffectMultiplier('speed_mult', demon);
   const damagePreviewMult = getRunBuffAttackPreviewMultiplier(demon);
   const baseMaxHp = Math.max(1, Number(demon.runBaseMaxHp) || Number(demon.maxHp) || Number(demon.hp) || 1);
   const baseHp = Math.max(0, Number(demon.hp) || baseMaxHp);
@@ -238,8 +238,8 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
 
   if (hasAttackBonus || hasDamagePreviewBonus) {
     applyDamageOutputStatPreview(next, {
-      directDamageMult: getRunBuffEffectMultiplier('direct_damage_mult') * directDamageMult,
-      aoeDamageMult: getRunBuffEffectMultiplier('aoe_damage_mult') * aoeDamageMult,
+      directDamageMult: getRunBuffEffectMultiplier('direct_damage_mult', next) * directDamageMult,
+      aoeDamageMult: getRunBuffEffectMultiplier('aoe_damage_mult', next) * aoeDamageMult,
       aoeDamageFlat
     });
   }
@@ -313,8 +313,8 @@ function getCollectionStatPreviewDemon(demon = {}) {
   return next;
 }
 
-function getRunBuffEffectMultiplier(type) {
-  return getBuffEffectMultiplier(state.run?.buffs?.activeBuffs || [], type);
+function getRunBuffEffectMultiplier(type, demon = null) {
+  return getBuffEffectMultiplier(state.run?.buffs?.activeBuffs || [], type, demon);
 }
 
 function getPlayerWorldBuffEffectMultiplier(type) {
@@ -329,15 +329,22 @@ function getPlayerWorldBuffs() {
   return Array.isArray(state.run?.worldBuffs) ? state.run.worldBuffs : [];
 }
 
-function getBuffEffectMultiplier(buffs = [], type) {
+function getBuffEffectMultiplier(buffs = [], type, demon = null) {
   return (Array.isArray(buffs) ? buffs : []).reduce((multiplier, buff) => {
     const effects = Array.isArray(buff?.effects) ? buff.effects : [];
     return effects.reduce((nextMultiplier, effect) => {
-      if (effect?.type !== type) return nextMultiplier;
+      if (effect?.type !== type || !buffEffectAppliesToDemon(effect, demon)) return nextMultiplier;
       const value = Number(effect.value);
       return Number.isFinite(value) && value > 0 ? nextMultiplier * value : nextMultiplier;
     }, multiplier);
   }, 1);
+}
+
+function buffEffectAppliesToDemon(effect, demon = null) {
+  const targetRarities = Array.isArray(effect?.targetRarities) ? effect.targetRarities : [];
+  if (!targetRarities.length) return true;
+  if (!demon) return false;
+  return targetRarities.includes(String(demon.rarity || '').toLowerCase());
 }
 
 function getBuffEffectSum(buffs = [], type) {
@@ -352,9 +359,9 @@ function getBuffEffectSum(buffs = [], type) {
 }
 
 function getRunBuffAttackPreviewMultiplier(demon) {
-  let multiplier = getRunBuffEffectMultiplier('direct_damage_mult');
+  let multiplier = getRunBuffEffectMultiplier('direct_damage_mult', demon);
   if (isAoeDemon(demon)) {
-    multiplier *= getRunBuffEffectMultiplier('aoe_damage_mult');
+    multiplier *= getRunBuffEffectMultiplier('aoe_damage_mult', demon);
   }
   return multiplier;
 }

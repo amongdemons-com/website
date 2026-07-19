@@ -35,6 +35,7 @@ const noindexPaths = new Set([
   '/skill-tree',
   '/world',
   '/camp',
+  '/inventory',
   '/app/login.html',
   '/app/register.html',
   '/app/settings.html',
@@ -42,6 +43,7 @@ const noindexPaths = new Set([
   '/app/world.html',
   '/app/camp.html',
   '/app/collection.html',
+  '/app/inventory.html',
   '/app/privacy.html',
   '/app/terms.html'
 ]);
@@ -181,6 +183,10 @@ app.get(['/terms', '/terms/'], (req, res) => {
 
 app.get(['/collection', '/collection/'], (req, res) => {
   sendAppPage(res, 'collection.html');
+});
+
+app.get(['/inventory', '/inventory/'], (req, res) => {
+  sendAppPage(res, 'inventory.html');
 });
 
 app.get(['/hunter', '/hunter/'], (req, res) => {

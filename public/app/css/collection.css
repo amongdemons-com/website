@@ -24,6 +24,12 @@
     cursor: pointer;
 }
 
+.collection-missing-echo-label {
+    color: #8de7ff;
+    border-color: rgba(141, 231, 255, 0.26);
+    background: rgba(12, 54, 65, 0.7);
+}
+
 .collection-reinforcement-placeholder-icon {
     display: flex;
     align-items: center;

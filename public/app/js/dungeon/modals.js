@@ -16,6 +16,8 @@ const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreview
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
 const applyDungeonCombatStatPreviewToDemon = (...args) => dungeonActions.applyDungeonCombatStatPreviewToDemon(...args);
+const canExtractRun = (...args) => dungeonActions.canExtractRun(...args);
+const getRewardCandidates = (...args) => dungeonActions.getRewardCandidates(...args);
 const getSelectedCollectionReinforcements = (...args) => dungeonActions.getSelectedCollectionReinforcements(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
 const markCollectionReinforcementPlaceholderInteracted = (...args) => dungeonActions.markCollectionReinforcementPlaceholderInteracted(...args);
@@ -23,6 +25,7 @@ const markCollectionReinforcementStagedInteracted = (...args) => dungeonActions.
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const renderEmptyText = (...args) => dungeonActions.renderEmptyText(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
+const setRewardSelection = (...args) => dungeonActions.setRewardSelection(...args);
 let pendingCollectionReinforcementIds = new Set();
 
 async function openCollectionReinforcementModal() {
@@ -217,12 +220,13 @@ function bindDemonDetailCards() {
 
       const demon = getDemonForDetailCard(card);
       if (!demon) return;
+      const extractionCandidate = getExtractionCandidateForDetailCard(card);
       if (demon.recruitSource === 'collection') {
         markCollectionReinforcementStagedInteracted(demon.instanceId);
       }
 
       openDemonDetailsModal(demon, {
-        actions: getDungeonDetailActions()
+        actions: getDungeonDetailActions(extractionCandidate)
       });
     });
 
@@ -233,6 +237,18 @@ function bindDemonDetailCards() {
       card.click();
     });
   });
+}
+
+function getExtractionCandidateForDetailCard(card) {
+  if (!canExtractRun() || card?.closest('#enemyGrid')) return null;
+  const instanceId = card?.dataset.instanceId;
+  if (!instanceId) return null;
+
+  return getRewardCandidates().find((candidate) => (
+    candidate.instanceId === instanceId ||
+    candidate.demon?.instanceId === instanceId ||
+    candidate.demon?.originalInstanceId === instanceId
+  )) || null;
 }
 
 function getDemonForDetailCard(card) {
@@ -251,8 +267,22 @@ function getDemonForDetailCard(card) {
   ].filter(Boolean).find((demon) => demon.instanceId === instanceId) || null;
 }
 
-function getDungeonDetailActions() {
+function getDungeonDetailActions(extractionCandidate = null) {
   const actions = [];
+
+  if (extractionCandidate) {
+    actions.push({
+      label: 'Choose Echo',
+      helper: 'Place in extraction slot',
+      icon: 'flag',
+      variant: 'primary',
+      onClick: () => {
+        setRewardSelection(extractionCandidate);
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('demonDetailModal')).hide();
+        renderRun();
+      }
+    });
+  }
 
   // Potions hidden until the feature ships.
   // if (isStrategyPhase()) {

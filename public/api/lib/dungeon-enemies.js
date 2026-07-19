@@ -17,14 +17,23 @@ const ENEMY_PRESSURE_PACT_HP = 0.07;
 const ENEMY_PRESSURE_PACT_ATK = 0.055;
 const ENEMY_PRESSURE_PACT_SPEED = 0.02;
 const ENEMY_PRESSURE_MAX_SPEED_MULT = 1.85;
-const RARITY_RANK = {
-  common: 0,
-  uncommon: 1,
-  rare: 2,
-  epic: 3,
-  legendary: 4,
-  mythic: 5
-};
+const RARITY_CONVERGENCE_START_FLOOR = 10;
+const RARITY_CONVERGENCE_CHANCE = 0.25;
+const RARITY_CONVERGENCE_WEIGHTS = Object.freeze({
+  common: 26,
+  uncommon: 26,
+  rare: 28,
+  epic: 15,
+  legendary: 5
+});
+const RARITY_MULTIPLIER = Object.freeze({
+  common: 1,
+  uncommon: 1.1,
+  rare: 1.22,
+  epic: 1.36,
+  legendary: 1.52,
+  mythic: 1.7
+});
 
 function getAllowedDungeonTypeIds(floor) {
   if (floor <= 3) return STARTER_TYPE_IDS;
@@ -37,12 +46,18 @@ async function createDungeonEnemies(rng, floor, size, options = {}) {
   const teamSize = getDungeonEnemyTeamSize(floor, size);
   const positions = getEnemyPositions(teamSize);
   const eliteIndex = teamSize > 1 ? teamSize - 1 : 0;
-  const pressure = getEnemyPressureMultipliers(floor, options);
+  const encounterProfile = options.encounterProfile || getDungeonEncounterProfile(rng, floor);
+  const pressure = getEnemyPressureMultipliers(floor, {
+    ...options,
+    rarityRebalanced: true,
+    convergence: encounterProfile.convergence
+  });
   const enemies = [];
 
   for (let index = 0; index < teamSize; index += 1) {
     enemies.push(await createDemon(rng, {
       ...getEnemyGenerationOptions(floor, { elite: index === eliteIndex }),
+      ...(encounterProfile.convergence ? { rarity: encounterProfile.convergence.rarity } : {}),
       instanceId: `enemy-${floor}-${index + 1}`,
       position: positions[index],
       allowedTypeIds
@@ -54,38 +69,30 @@ async function createDungeonEnemies(rng, floor, size, options = {}) {
 
 function getEnemyGenerationOptions(floor, options = {}) {
   const floorNumber = Number(floor) || 1;
-  if (floorNumber === 1) {
-    return {
-      allowedRarities: ['common']
-    };
-  }
-
-  if (floorNumber <= 3) {
-    return {
-      allowedRarities: ['common', 'uncommon', 'rare']
-    };
-  }
-
   const pressure = getFloorSpawnPressure(floor);
   const elitePressure = options.elite ? Math.min(1, pressure + 0.32) : pressure;
+  const rarityWeights = getDungeonRarityWeights(floorNumber);
 
   return {
-    allowedRarities: getAllowedEnemyRarities(floor),
+    allowedRarities: Object.keys(rarityWeights),
+    rarityWeights,
     typeWeightMultiplier: (typeId, baseWeight) => getFloorTypeWeightMultiplier(typeId, baseWeight, elitePressure),
-    rarityWeightMultiplier: (rarity, baseWeight) => getFloorRarityWeightMultiplier(rarity, baseWeight, elitePressure)
   };
 }
 
 function getAllowedEnemyRarities(floor) {
-  const floorNumber = Number(floor) || 1;
-  if (floorNumber === 1) return ['common'];
-  if (floorNumber <= 3) return ['common', 'uncommon', 'rare'];
-  if (floorNumber < 7) return ['common', 'uncommon', 'rare', 'epic'];
-  if (floorNumber < 10) return ['uncommon', 'rare', 'epic'];
-  if (floorNumber < 15) return ['rare', 'epic', 'legendary'];
-  if (floorNumber < 20) return ['epic', 'legendary', 'mythic'];
-  if (floorNumber < 30) return ['legendary', 'mythic'];
-  return ['mythic'];
+  return Object.keys(getDungeonRarityWeights(floor));
+}
+
+function getDungeonRarityWeights(floor) {
+  const floorNumber = Math.max(1, Number(floor) || 1);
+  if (floorNumber === 1) return { common: 100 };
+  if (floorNumber <= 3) return { common: 70, uncommon: 25, rare: 5 };
+  if (floorNumber <= 6) return { common: 50, uncommon: 30, rare: 17, epic: 3 };
+  if (floorNumber <= 9) return { common: 30, uncommon: 30, rare: 28, epic: 11, legendary: 1 };
+  if (floorNumber <= 14) return { common: 20, uncommon: 25, rare: 30, epic: 20, legendary: 5 };
+  if (floorNumber <= 19) return { common: 15, uncommon: 20, rare: 30, epic: 25, legendary: 9.8, mythic: 0.2 };
+  return { common: 15, uncommon: 20, rare: 30, epic: 22, legendary: 12.5, mythic: 0.5 };
 }
 
 function getFloorSpawnPressure(floor) {
@@ -96,15 +103,6 @@ function getFloorTypeWeightMultiplier(typeId, baseWeight, pressure) {
   const rank = clamp((Number(typeId) - 1) / (MAX_DUNGEON_TYPE_ID - 1), 0, 1);
   const flattenBaseWeight = Math.pow(Math.max(1, Number(baseWeight) || 1), -pressure * 0.55);
   return flattenBaseWeight * (1 + pressure * rank * 3.2);
-}
-
-function getFloorRarityWeightMultiplier(rarity, baseWeight, pressure) {
-  const rank = RARITY_RANK[rarity] ?? 0;
-  const normalizedRank = rank / RARITY_RANK.mythic;
-  const highTierBoost = 1 + pressure * Math.pow(normalizedRank, 1.5) * 18;
-  const lowTierPenalty = Math.pow(Math.max(0.08, 1 - pressure * 0.72), RARITY_RANK.mythic - rank);
-
-  return Math.max(0.04, highTierBoost * lowTierPenalty);
 }
 
 function clamp(value, min, max) {
@@ -128,14 +126,113 @@ function getEnemyPressureMultipliers(floor, options = {}) {
   const activePactCount = normalizeRunBuffState(options.buffs || options.runBuffs || {}).active.length;
   const endlessFloors = Math.max(0, floorNumber - ENEMY_PRESSURE_START_FLOOR);
 
+  const rarityCompensation = options.rarityRebalanced ? getDungeonRarityCompensation(floorNumber) : 1;
+  const convergenceCompensation = Number(options.convergence?.powerMultiplier) || 1;
+
   return {
-    hp: 1 + endlessFloors * ENEMY_PRESSURE_FLOOR_HP + activePactCount * ENEMY_PRESSURE_PACT_HP,
-    atk: 1 + endlessFloors * ENEMY_PRESSURE_FLOOR_ATK + activePactCount * ENEMY_PRESSURE_PACT_ATK,
+    hp: (1 + endlessFloors * ENEMY_PRESSURE_FLOOR_HP + activePactCount * ENEMY_PRESSURE_PACT_HP) * rarityCompensation * convergenceCompensation,
+    atk: (1 + endlessFloors * ENEMY_PRESSURE_FLOOR_ATK + activePactCount * ENEMY_PRESSURE_PACT_ATK) * rarityCompensation * convergenceCompensation,
     speed: Math.min(
       ENEMY_PRESSURE_MAX_SPEED_MULT,
-      1 + endlessFloors * ENEMY_PRESSURE_FLOOR_SPEED + activePactCount * ENEMY_PRESSURE_PACT_SPEED
+      (1 + endlessFloors * ENEMY_PRESSURE_FLOOR_SPEED + activePactCount * ENEMY_PRESSURE_PACT_SPEED) * rarityCompensation * convergenceCompensation
     )
   };
+}
+
+function getDungeonEncounterProfile(rng, floor) {
+  const floorNumber = Math.max(1, Number(floor) || 1);
+  if (floorNumber < RARITY_CONVERGENCE_START_FLOOR || rng() >= RARITY_CONVERGENCE_CHANCE) {
+    return { convergence: null };
+  }
+
+  const rarity = pickWeightedRarity(rng, RARITY_CONVERGENCE_WEIGHTS);
+  return { convergence: getDungeonConvergence(floorNumber, rarity) };
+}
+
+function getDungeonConvergence(floor, rarity) {
+  const floorNumber = Math.max(1, Number(floor) || 1);
+  const normalizedRarity = String(rarity || '').toLowerCase();
+  if (floorNumber < RARITY_CONVERGENCE_START_FLOOR || !RARITY_CONVERGENCE_WEIGHTS[normalizedRarity]) {
+    return null;
+  }
+
+  const normalRarityPower = getExpectedRarityMultiplier(getDungeonRarityWeights(floorNumber));
+  const rarityPower = RARITY_MULTIPLIER[normalizedRarity] || 1;
+  const powerMultiplier = Math.max(1, Math.pow(normalRarityPower / rarityPower, 0.85));
+  const bonusTerror = Math.max(0, Math.round((powerMultiplier - 1) / ENEMY_PRESSURE_FLOOR_HP));
+
+  return {
+    id: 'rarity-convergence',
+    name: `${capitalize(normalizedRarity)} Host${bonusTerror ? ` +${bonusTerror}` : ''}`,
+    description: `Every enemy is ${capitalize(normalizedRarity)}. Hostile power is temporarily adjusted for this fight and disappears when recruited.`,
+    icon: 'sparkles',
+    rarity: normalizedRarity,
+    bonusTerror,
+    powerMultiplier: roundMultiplier(powerMultiplier),
+    hpBonusPct: getBonusPercent(powerMultiplier),
+    atkBonusPct: getBonusPercent(powerMultiplier),
+    speedBonusPct: getBonusPercent(powerMultiplier)
+  };
+}
+
+function getDungeonRarityCompensation(floor) {
+  const floorNumber = Math.max(1, Number(floor) || 1);
+  const current = getExpectedRarityMultiplier(getDungeonRarityWeights(floorNumber));
+  const legacyTarget = interpolateAnchors(floorNumber, [
+    [1, 1],
+    [3, 1.05],
+    [6, 1.12],
+    [9, 1.25],
+    [14, 1.4],
+    [19, 1.58],
+    [29, 1.68],
+    [30, 1.7]
+  ]);
+  return roundMultiplier(Math.max(1, legacyTarget / current));
+}
+
+function getExpectedRarityMultiplier(weights) {
+  const entries = Object.entries(weights || {}).filter(([, weight]) => Number(weight) > 0);
+  const total = entries.reduce((sum, [, weight]) => sum + Number(weight), 0);
+  if (!total) return 1;
+  return entries.reduce((sum, [rarity, weight]) => sum + Number(weight) * (RARITY_MULTIPLIER[rarity] || 1), 0) / total;
+}
+
+function interpolateAnchors(value, anchors) {
+  if (value <= anchors[0][0]) return anchors[0][1];
+  for (let index = 1; index < anchors.length; index += 1) {
+    const [floor, power] = anchors[index];
+    const [previousFloor, previousPower] = anchors[index - 1];
+    if (value <= floor) {
+      const progress = (value - previousFloor) / Math.max(1, floor - previousFloor);
+      return previousPower + (power - previousPower) * progress;
+    }
+  }
+  return anchors[anchors.length - 1][1];
+}
+
+function pickWeightedRarity(rng, weights) {
+  const entries = Object.entries(weights || {}).filter(([, weight]) => Number(weight) > 0);
+  const total = entries.reduce((sum, [, weight]) => sum + Number(weight), 0);
+  let roll = rng() * total;
+  for (const [rarity, weight] of entries) {
+    roll -= Number(weight);
+    if (roll <= 0) return rarity;
+  }
+  return entries[0]?.[0] || 'common';
+}
+
+function roundMultiplier(value) {
+  return Math.round((Number(value) || 1) * 1000) / 1000;
+}
+
+function getBonusPercent(value) {
+  return Math.max(0, Math.round(((Number(value) || 1) - 1) * 100));
+}
+
+function capitalize(value) {
+  const text = String(value || '');
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : '';
 }
 
 function applyEnemyPressure(enemies, pressure) {
@@ -186,7 +283,12 @@ module.exports = {
   createDungeonEnemies,
   getAllowedDungeonTypeIds,
   getAllowedEnemyRarities,
+  getDungeonConvergence,
+  getDungeonEncounterProfile,
+  getDungeonRarityCompensation,
+  getDungeonRarityWeights,
   getEnemyGenerationOptions,
+  getExpectedRarityMultiplier,
   getEnemyPressureMultipliers,
   getDungeonEnemyTeamSize,
   MAX_DUNGEON_ENEMY_TEAM_SIZE

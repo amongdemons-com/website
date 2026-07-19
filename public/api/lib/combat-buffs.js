@@ -10,6 +10,7 @@ const RARITY_WEIGHTS = {
   uncommon: 24,
   rare: 6
 };
+const DEMON_RARITIES = new Set(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']);
 
 let cachedBuffs = null;
 let cachedBuffsById = null;
@@ -105,6 +106,12 @@ function normalizeCombatBuffDefinition(buff) {
       if (Object.prototype.hasOwnProperty.call(effect, 'uses')) {
         normalized.uses = Math.max(1, Math.floor(Number(effect.uses) || 1));
       }
+      const targetRarities = (Array.isArray(effect?.targetRarities) ? effect.targetRarities : [])
+        .map((rarity) => String(rarity || '').trim().toLowerCase())
+        .filter((rarity, index, values) => DEMON_RARITIES.has(rarity) && values.indexOf(rarity) === index);
+      if (targetRarities.length) {
+        normalized.targetRarities = targetRarities;
+      }
       return normalized;
     })
     .filter(Boolean);
@@ -188,14 +195,6 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
   const persistedState = normalizeCombatBuffState({ active: state.active, temporary: state.temporary });
   const transientState = normalizeCombatBuffState({ activeBuffs: state.activeBuffs });
   const statsAlreadyApplied = (team || []).some((demon) => demon.runBuffStatsApplied);
-  const maxHpMult = (statsAlreadyApplied ? 1 : getEffectMultiplier(persistedState, 'max_hp_mult')) * getEffectMultiplier(transientState, 'max_hp_mult');
-  const speedMult = (statsAlreadyApplied ? 1 : getEffectMultiplier(persistedState, 'speed_mult')) * getEffectMultiplier(transientState, 'speed_mult');
-  const attackMult = getEffectMultiplier(state, 'attack_mult');
-  const directDamagePreviewMult = getEffectMultiplier(state, 'direct_damage_mult');
-  const aoeDamagePreviewMult = getEffectMultiplier(state, 'aoe_damage_mult');
-  const maxHpFlat = getEffectSum(state, 'max_hp_flat');
-  const attackFlat = getEffectSum(state, 'attack_flat');
-  const speedFlat = getEffectSum(state, 'speed_flat');
   const accountMaxHpMult = 1 + getBonusFraction(accountBonuses.maxHpPercent);
   const accountAttackMult = 1 + getBonusFraction(accountBonuses.attackPercent);
   const accountSpeedMult = 1 + getBonusFraction(accountBonuses.speedPercent);
@@ -212,6 +211,14 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
   const accountPoisonDamageFlat = Math.max(0, Number(accountBonuses.poisonDamageFlat) || 0);
 
   return (team || []).map((demon) => {
+    const maxHpMult = (statsAlreadyApplied ? 1 : getEffectMultiplier(persistedState, 'max_hp_mult', demon)) * getEffectMultiplier(transientState, 'max_hp_mult', demon);
+    const speedMult = (statsAlreadyApplied ? 1 : getEffectMultiplier(persistedState, 'speed_mult', demon)) * getEffectMultiplier(transientState, 'speed_mult', demon);
+    const attackMult = getEffectMultiplier(state, 'attack_mult', demon);
+    const directDamagePreviewMult = getEffectMultiplier(state, 'direct_damage_mult', demon);
+    const aoeDamagePreviewMult = getEffectMultiplier(state, 'aoe_damage_mult', demon);
+    const maxHpFlat = getEffectSum(state, 'max_hp_flat', demon);
+    const attackFlat = getEffectSum(state, 'attack_flat', demon);
+    const speedFlat = getEffectSum(state, 'speed_flat', demon);
     const next = {
       ...demon,
       accountStatsApplied: true,
@@ -219,13 +226,13 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
         ...(demon.battleBuffs || {}),
         directDamageMult: positiveNumber(demon.battleBuffs?.directDamageMult, 1),
         healingMult: accountHealingMult,
-        healingFlat: accountHealingFlat + getEffectSum(state, 'healing_flat'),
-        thornsPercent: accountThornsPercent + getEffectSum(state, 'thorns_percent'),
-        thornsFlat: accountThornsFlat + getEffectSum(state, 'thorns_flat'),
+        healingFlat: accountHealingFlat + getEffectSum(state, 'healing_flat', demon),
+        thornsPercent: accountThornsPercent + getEffectSum(state, 'thorns_percent', demon),
+        thornsFlat: accountThornsFlat + getEffectSum(state, 'thorns_flat', demon),
         aoeDamageMult: accountAoeDamageMult,
-        aoeDamageFlat: accountAoeDamageFlat + getEffectSum(state, 'aoe_damage_flat'),
+        aoeDamageFlat: accountAoeDamageFlat + getEffectSum(state, 'aoe_damage_flat', demon),
         poisonDamageMult: accountPoisonDamageMult,
-        poisonDamageFlat: accountPoisonDamageFlat + getEffectSum(state, 'poison_damage_flat')
+        poisonDamageFlat: accountPoisonDamageFlat + getEffectSum(state, 'poison_damage_flat', demon)
       }
     };
 
@@ -292,7 +299,7 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
     applyDamageOutputStatPreview(next, {
       directDamageMult: directDamagePreviewMult,
       aoeDamageMult: aoeDamagePreviewMult * accountAoeDamageMult,
-      aoeDamageFlat: accountAoeDamageFlat + getEffectSum(state, 'aoe_damage_flat')
+      aoeDamageFlat: accountAoeDamageFlat + getEffectSum(state, 'aoe_damage_flat', demon)
     });
 
     return next;
@@ -328,12 +335,11 @@ function applyRunBuffStatModifiers(run) {
   if (!run?.state) return [];
 
   const state = ensureCombatBuffState(run);
-  const maxHpMult = getEffectMultiplier(state, 'max_hp_mult');
-  const speedMult = getEffectMultiplier(state, 'speed_mult');
-  const directDamageMult = getEffectMultiplier(state, 'direct_damage_mult');
-  const aoeDamageMult = getEffectMultiplier(state, 'aoe_damage_mult');
-
   run.state.team = (run.state.team || []).map((demon) => {
+    const maxHpMult = getEffectMultiplier(state, 'max_hp_mult', demon);
+    const speedMult = getEffectMultiplier(state, 'speed_mult', demon);
+    const directDamageMult = getEffectMultiplier(state, 'direct_damage_mult', demon);
+    const aoeDamageMult = getEffectMultiplier(state, 'aoe_damage_mult', demon);
     const baseAtk = Math.max(0, Number(demon.runBaseAtk) || Number(demon.atk) || 0);
     const baseMaxHp = Math.max(1, Number(demon.runBaseMaxHp) || Number(demon.maxHp) || Number(demon.hp) || 1);
     const baseSpeed = Math.max(1, Number(demon.runBaseSpeed) || Number(demon.speed) || 1);
@@ -369,29 +375,29 @@ function applyDamageModifiers(context) {
   if (damage <= 0) return damage;
 
   if (context.damageKind === 'retaliation') {
-    return roundDamage(damage * getEffectMultiplier(state, 'retaliation_damage_mult'));
+    return roundDamage(damage * getEffectMultiplier(state, 'retaliation_damage_mult', context.attacker));
   }
 
   if (context.damageKind !== 'direct') return damage;
 
-  let multiplier = getEffectMultiplier(state, 'direct_damage_mult');
+  let multiplier = getEffectMultiplier(state, 'direct_damage_mult', context.attacker);
   multiplier *= positiveNumber(context.attacker?.battleBuffs?.directDamageMult, 1);
 
   if (isTargetBelowHalfHp(context.target)) {
-    multiplier *= getEffectMultiplier(state, 'damage_vs_low_hp_mult');
+    multiplier *= getEffectMultiplier(state, 'damage_vs_low_hp_mult', context.attacker);
   }
 
   if (hasHigherMaxHp(context.target, context.attacker)) {
-    multiplier *= getEffectMultiplier(state, 'damage_vs_higher_max_hp_mult');
+    multiplier *= getEffectMultiplier(state, 'damage_vs_higher_max_hp_mult', context.attacker);
   }
 
   if (hasPoison(context.target)) {
-    multiplier *= getEffectMultiplier(state, 'direct_damage_vs_poisoned_mult');
+    multiplier *= getEffectMultiplier(state, 'direct_damage_vs_poisoned_mult', context.attacker);
   }
 
   let flatDamage = 0;
   if (context.isAoe) {
-    multiplier *= getEffectMultiplier(state, 'aoe_damage_mult');
+    multiplier *= getEffectMultiplier(state, 'aoe_damage_mult', context.attacker);
     multiplier *= positiveNumber(context.attacker?.battleBuffs?.aoeDamageMult, 1);
     flatDamage = Math.max(0, Number(context.attacker?.battleBuffs?.aoeDamageFlat) || 0);
   }
@@ -412,11 +418,11 @@ function applyHealingModifiers(context) {
   return {
     healing: roundHealing(
       healing *
-      getEffectMultiplier(state, 'healing_mult') *
+      getEffectMultiplier(state, 'healing_mult', context.healer) *
       positiveNumber(context.healer?.battleBuffs?.healingMult, 1) +
       Math.max(0, Number(context.healer?.battleBuffs?.healingFlat) || 0)
     ),
-    overhealToShield: hasEffect(state, 'overheal_to_shield')
+    overhealToShield: hasEffect(state, 'overheal_to_shield', context.healer)
   };
 }
 
@@ -428,11 +434,11 @@ function applyPoisonModifiers(context) {
   return {
     damage: roundDamage(
       damage *
-      getEffectMultiplier(state, 'poison_tick_damage_mult') *
+      getEffectMultiplier(state, 'poison_tick_damage_mult', context.attacker) *
       positiveNumber(context.attacker?.battleBuffs?.poisonDamageMult, 1) +
       Math.max(0, Number(context.attacker?.battleBuffs?.poisonDamageFlat) || 0)
     ),
-    durationTicks: Math.max(1, Math.round(durationTicks * getEffectMultiplier(state, 'poison_duration_mult')))
+    durationTicks: Math.max(1, Math.round(durationTicks * getEffectMultiplier(state, 'poison_duration_mult', context.attacker)))
   };
 }
 
@@ -513,24 +519,31 @@ function isCurrentTemporaryTeamSizeEntry(entry) {
   return Boolean((buff?.effects || []).some((effect) => effect.type === TEMPORARY_TEAM_SIZE_EFFECT));
 }
 
-function getEffectMultiplier(state, type) {
-  return getActiveEffects(state, type)
+function getEffectMultiplier(state, type, demon = null) {
+  return getActiveEffects(state, type, demon)
     .reduce((product, effect) => product * positiveNumber(effect.value, 1), 1);
 }
 
-function getEffectSum(state, type) {
-  return getActiveEffects(state, type)
+function getEffectSum(state, type, demon = null) {
+  return getActiveEffects(state, type, demon)
     .reduce((sum, effect) => sum + (Number(effect.value) || 0), 0);
 }
 
-function hasEffect(state, type) {
-  return getActiveEffects(state, type).length > 0;
+function hasEffect(state, type, demon = null) {
+  return getActiveEffects(state, type, demon).length > 0;
 }
 
-function getActiveEffects(source, type) {
+function getActiveEffects(source, type, demon = null) {
   return getActiveCombatBuffs(source)
     .flatMap((buff) => buff.effects || [])
-    .filter((effect) => effect.type === type);
+    .filter((effect) => effect.type === type && effectAppliesToDemon(effect, demon));
+}
+
+function effectAppliesToDemon(effect, demon = null) {
+  const targets = Array.isArray(effect?.targetRarities) ? effect.targetRarities : [];
+  if (!targets.length) return true;
+  if (!demon) return false;
+  return targets.includes(String(demon.rarity || '').toLowerCase());
 }
 
 function getContextBuffState(context = {}, side = 'player') {

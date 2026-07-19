@@ -6,6 +6,7 @@ import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, 
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const audio = window.AmongDemons.audio;
+let lastConvergenceAnnouncementKey = null;
 
 const applyBattleSpeed = (...args) => dungeonActions.applyBattleSpeed(...args);
 const beginDeferredDemonicPactReveal = (...args) => dungeonActions.beginDeferredDemonicPactReveal(...args);
@@ -111,6 +112,7 @@ async function loadCurrentRun() {
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
     renderRun();
+    announceConvergence(state.run);
     return true;
   } catch (error) {
     if (error.status === 404) return false;
@@ -178,6 +180,7 @@ async function loadRun(runId) {
     syncRewardSelectionFromRun();
     storeCurrentRun(state.run.runId);
     renderRun();
+    announceConvergence(state.run);
   } catch (error) {
     clearCurrentRun();
     state.run = null;
@@ -185,6 +188,24 @@ async function loadRun(runId) {
     renderRun();
     throw error;
   }
+}
+
+function announceConvergence(run) {
+  if (!run) return;
+  const isPreview = Boolean(run.awaitingRecruit);
+  const floor = Math.max(1, Number(run.currentFloor) + (isPreview ? 1 : 0));
+  const buffs = isPreview ? run.nextEnemyBuffs : run.enemyBuffs;
+  const convergence = (Array.isArray(buffs) ? buffs : [])
+    .find((buff) => buff?.id === 'rarity-convergence');
+  if (!convergence) return;
+
+  const key = `${run.runId}:${floor}:${convergence.rarity || convergence.name}`;
+  if (lastConvergenceAnnouncementKey === key) return;
+  lastConvergenceAnnouncementKey = key;
+  setMessage(
+    `${convergence.name} on Floor ${floor}. Every enemy shares this rarity; its extra Terror lasts for this fight only.`,
+    'warning'
+  );
 }
 
 async function battle() {

@@ -6,9 +6,9 @@ Among Demons is a server-authoritative demon-collection game built with Node.js/
 
 The game has two connected play spaces plus permanent progression:
 
-- **Dungeon runs** (`/dungeon`) — roguelite runs through unlimited floors. Draft two starting demons, auto-battle server-simulated fights, recruit defeated enemies, seal run-long Demonic Pacts, and extract with XP/Souls and one saved demon — or lose everything on defeat.
+- **Dungeon runs** (`/dungeon`) — roguelite runs through unlimited floors. Draft two starting demons, auto-battle server-simulated fights, recruit defeated enemies, seal run-long Demonic Pacts, and extract with XP/Souls and one exact Demon Echo — or lose everything on defeat.
 - **World map** (`/world`) — a 101×101 tile overworld with roads, unpassable terrain, demon encounters, Forsaken Shrines, and Darkness Portals. Travel tile-by-tile (roads are far safer from ambushes), fight fixed encounter teams, leave a team passively hunting for Souls, and challenge other hunters standing on your tile to PvP.
-- **Permanent progression** — a demon collection with Soul-based training (`/collection`), an account skill tree fed by level-up stat points (`/skill-tree`), daily quests and a daily reward (`/camp`), public hunter profiles (`/hunter/:username`), and leaderboards (`/rankings`).
+- **Permanent progression** — an Echo inventory and summoning flow (`/inventory`), a permanent demon collection with Soul-based training (`/collection`), an account skill tree fed by level-up stat points (`/skill-tree`), daily quests and a daily reward (`/camp`), public hunter profiles (`/hunter/:username`), and leaderboards (`/rankings`).
 
 ## Tech Stack
 
@@ -112,6 +112,7 @@ amongdemons.com/
 | `/camp` | Authenticated hub: progression, current run briefing, daily quests, quick actions |
 | `/world` | World map exploration (Pixi.js) |
 | `/dungeon` | Dungeon run UI |
+| `/inventory` | Stackable item inventory with Echo refinement and summoning |
 | `/collection` | Collection browser with filters, sorting, missing slots, and Soul training |
 | `/skill-tree` | Account stat-point skill tree |
 | `/settings` | Account settings (username, profile demon) |
@@ -174,6 +175,14 @@ All routes are mounted under `/api`.
 | `GET` | `/demons/:id` | Return one owned permanent demon |
 | `POST` | `/demons/:id/train` | Spend Souls to train one demon server-side |
 
+### Inventory
+
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/inventory` | Read owned item stacks, Echo recipes, discovery state, and action availability |
+| `POST` | `/inventory/echoes/refine` | Convert same-species Echoes into one Echo of the adjacent rarity |
+| `POST` | `/inventory/echoes/summon` | Consume exact Echoes and summon the permanent minimum-stat demon |
+
 ### Dungeon Runs
 
 | Method | Route | Description |
@@ -188,7 +197,7 @@ All routes are mounted under `/api`.
 | `POST` | `/runs/:id/buff/reroll` | Recast the pact choices for 10 Souls |
 | `POST` | `/runs/:id/reward` | Mark a reward as claimed |
 | `POST` | `/runs/:id/recruit` | Stage or commit recruitment and advance to the next floor |
-| `POST` | `/runs/:id/cashout` | Extract: save one eligible demon and claim earned XP/Souls |
+| `POST` | `/runs/:id/cashout` | Extract one eligible demon as an exact Echo and claim earned XP/Souls |
 | `POST` | `/runs/:id/end` | Finalize a defeated run with zero payout |
 
 ### World
@@ -226,9 +235,11 @@ All routes are mounted under `/api`.
 - Runs start with exactly 2 demons chosen from six HMAC-signed draft starters (token expires after 15 minutes) and/or the permanent collection. Starting a new run closes any open run.
 - The team limit is `min(6, floor + 1)`: 2 demons on floor 1, capped at 6 from floor 5 onward. Enemy teams keep scaling deeper.
 - After clearing floor 10, the player may call in one collection demon as a one-time reinforcement.
-- After every win, defeated enemies become recruit options; between fights the player can recruit, swap, skip, or extract.
-- From floor 4 onward, enemy generation applies spawn pressure biasing deeper floors toward higher type IDs and rarities. A permanent enemy scaling layer ("Terror") ramps enemy stats starting at floor 18.
-- Extraction grants accumulated XP/Souls and saves one eligible demon. Losing grants 0 XP, 0 Souls, 0 demons — regardless of staged rewards.
+- After every win, defeated enemies become recruit options; between fights the player can recruit, swap, skip, or stage one eligible demon for Echo extraction.
+- Enemy rarity uses explicit floor-band distributions. Deep normal floors keep Common, Uncommon, and Rare at non-zero rates, while Mythic remains an exceptional `0.5%` roll rather than becoming the whole late-game roster.
+- From floor 10 onward, a seeded 25% roll may create a Rarity Convergence: every enemy is Common, Uncommon, Rare, Epic, or Legendary. Its temporary Host pressure is shown in a separate rarity-colored pill beside Terror and is removed from recruits.
+- Floor depth, enemy-team growth (up to nine), rarity compensation, and active Pact count drive hostile Terror. The redesigned floor-30 HP budget is calibrated to the former Mythic-heavy curve without requiring nine Mythics.
+- Extraction grants accumulated XP/Souls and exactly one Echo of the selected type and rarity. Carrying farther never increases that count; skipping the Echo remains valid. Losing grants 0 XP, 0 Souls, and no Echoes regardless of staged rewards.
 - Account levels use total-XP thresholds of `250 * (level - 1)^1.65`; payouts never reduce a stored level.
 
 ### Demonic Pacts
@@ -238,7 +249,8 @@ Run-long modifiers defined in `public/api/data/combat-buffs.json` and managed by
 - Every third cleared floor offers three rarity-weighted pact choices; a pending offer blocks battle, recruitment, and extraction until resolved.
 - Recasting an offer costs 10 Souls and excludes the current choices (`409` if no alternates exist).
 - The same pact can appear in later offers and duplicates stack through the same effect pipeline.
-- Effects cover run stats, direct/AOE damage, retaliation, poison, healing, shields, death triggers, and temporary team size. Original run base stats are preserved so recruited/saved demons never keep temporary scaling.
+- Effects cover run stats, direct/AOE damage, retaliation, poison, healing, shields, death triggers, and temporary team size. Three contained Pacts target demon rarities: Common/Uncommon, Rare, and Epic/Legendary. Target checks happen per player demon and do not buff enemies.
+- Original run base stats are preserved so recruits and extracted Echo identities never keep Pact, Terror, or Convergence scaling.
 
 ### World Exploration
 
@@ -263,13 +275,18 @@ Players earn one stat point per account level (level − 1 total). Nodes are def
 
 ### Daily Quests
 
-Defined in `public/api/lib/daily-quests.js` with a UTC daily reset: win 3 dungeon fights, extract a demon, complete "Trial of the Few" (win at floor 3+ with an open team slot), win a PvP challenge, and start a world hunt, plus a claimable daily Souls reward. Rewards scale with account level.
+Defined in `public/api/lib/daily-quests.js` with a UTC daily reset: win 3 dungeon fights, extract a Demon Echo, complete "Trial of the Few" (win at floor 3+ with an open team slot), win a PvP challenge, and start a world hunt, plus a claimable daily Souls reward. Rewards scale with account level.
 
-### Collection and Training
+### Echo Inventory, Summoning, and Collection
 
-- The permanent collection has one slot per demon type and rarity — 11 types × 6 rarities = 66 slots. Saving a duplicate type/rarity replaces that slot.
+- Dungeon extraction adds one exact `type + rarity` Echo stack to Inventory; it never directly creates or replaces a permanent demon. Echoes may continue accumulating after that slot is summoned.
+- Summoning requirements are Common `1`, Uncommon `2`, Rare `3`, Epic `5`, Legendary `8`, and Mythic `12`. Summoning atomically consumes only the requirement and creates the normal minimum-stat permanent demon; surplus remains banked.
+- Refinement stays within one species and advances one adjacent tier: Common→Uncommon costs `3`, Uncommon→Rare `3`, Rare→Epic `4`, Epic→Legendary `5`, and Legendary→Mythic `6`. The target must first have been naturally extracted (or already exist as a legacy owned slot), so refinement cannot replace discovery. Mythic surplus remains banked.
+- The permanent collection has one slot per demon type and rarity — 11 types × 6 rarities = 66 slots. Missing slots can show their exact Echo progress and link back to Inventory.
 - Training (`POST /api/demons/:id/train`) is transactional and server-authoritative: it locks the player and demon rows, checks cost, spends Souls, and raises one stat by +1, picked with weighted randomness from stats below their caps.
 - Stat caps come from the matching type's `baseStats` maxima in `demon-types.json`. Cost starts at 2 Souls and grows with overall progress toward the caps, multiplied by rarity.
+
+Existing permanent demons and their training remain untouched. The automatically granted onboarding starter is intentionally still a direct collection grant. Existing owned slots also count as legacy refinement discovery targets, while new natural discovery is stored separately and remains unlocked after an Echo stack is spent.
 
 ### Combat
 
@@ -289,7 +306,7 @@ Files in `public/api/data` are source game data — API code reads them at runti
 | `demon-types.json` | 11 demon types: roles, base stat ranges, targeting, abilities, spawn weights |
 | `demons.json` | 66 demon asset/species mappings |
 | `world-bosses.json` | World boss identities, teams, taunts, battle buffs, and rewards |
-| `combat-buffs.json` | 20 Demonic Pact definitions |
+| `combat-buffs.json` | 23 Demonic Pact definitions, including three rarity-targeted Pacts |
 | `map.json` | Generated world map: bounds, spawn, roads, blocks, encounters, events |
 
 Demon art lives in `public/app/images/demons` (full PNGs for battle cards, generated WebP variants for map tokens, thumbnails for lists). Rarity tiers are `common`, `uncommon`, `rare`, `epic`, `legendary`, `mythic`.
@@ -306,6 +323,8 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `oauth_states` | Short-lived OAuth CSRF state |
 | `player_stat_points` | Skill-tree allocations |
 | `player_demons` | Permanent owned demon collection |
+| `player_inventory` | Generic per-player item stacks, initially exact Demon Echoes |
+| `player_echo_discoveries` | Permanent natural type/rarity extraction history for refinement gates |
 | `player_world_positions` | Server-side world coordinates |
 | `player_bound_world_shrines` | Anchored Forsaken Shrine return points |
 | `player_hunt_unlocks` | Encounters defeated at least once (hunting eligibility) |
@@ -324,6 +343,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `public/app/js/camp-ui.js` | Camp hub: progression, run briefing, daily quests, quick actions |
 | `public/app/js/world-ui.js` | Pixi.js world map: movement, shrines, portals, hunting, PvP |
 | `public/app/js/dungeon.js` + `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, pacts, rewards |
+| `public/app/js/inventory-ui.js` | Inventory grid, sorting, Echo details, refinement, and summoning |
 | `public/app/js/collection-ui.js` | Collection filters, sorting, missing slots, training modal |
 | `public/app/js/skill-tree-ui.js` | Skill-tree allocation UI |
 | `public/app/js/settings-ui.js` | Username and profile demon settings |
@@ -333,7 +353,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `public/app/js/navigation.js` | Shared navigation |
 | `public/app/js/lucide-subset.js` | Generated icon subset (see scripts) |
 
-CSS is split per page — `base.css` loads everywhere; `battle.css`, `camp.css`, `collection.css`, `skill-tree.css`, and `world.css` load only where needed.
+CSS is split per page — `base.css` loads everywhere; `battle.css`, `camp.css`, `collection.css`, `inventory.css`, `skill-tree.css`, and `world.css` load only where needed.
 
 ## Backend Modules
 
@@ -349,6 +369,8 @@ CSS is split per page — `base.css` loads everywhere; `battle.css`, `camp.css`,
 | `public/api/lib/combat-buffs.js` | Demonic Pact loading, stacking, rerolls, effect pipeline |
 | `public/api/lib/player-combat-buffs.js` | Skill-tree allocations → pre-battle combat buffs |
 | `public/api/lib/demon-factory.js` | Demon generation, rarity selection, stat rolls |
+| `public/api/lib/echo-config.js` | Authoritative Echo keys, summoning thresholds, and refinement costs |
+| `public/api/lib/echo-inventory.js` | Echo catalog metadata, item serialization, discovery, and stack writes |
 | `public/api/lib/demon-training.js` | Training caps, costs, stat rolls |
 | `public/api/lib/dungeon-enemies.js` | Enemy pools, floor sizing, spawn pressure, scaling |
 | `public/api/lib/dungeon-rules.js` | Team-size and reinforcement constants |
@@ -371,6 +393,7 @@ CSS is split per page — `base.css` loads everywhere; `battle.css`, `camp.css`,
 | `scripts/generate-lucide-subset.js` | Rebuilds `lucide-subset.js` from icons actually referenced in HTML/JS |
 | `scripts/generate-demon-map-variants.js` | Generates small WebP demon variants for map tokens and avatars |
 | `scripts/split-main-css.js` | Re-runnable splitter that produced the per-page CSS files |
+| `scripts/simulate-dungeon-balance.js` | Checks milestone pressure, deep rarity availability, all Convergences, and the old floor-30 baseline |
 
 ## Caching
 
@@ -382,6 +405,12 @@ Run the unit tests (combat knockback, run rewards, stat points, username validat
 
 ```bash
 npm test
+```
+
+Run the deterministic dungeon balance report (optional argument: samples per milestone):
+
+```bash
+npm run simulate:dungeon -- 30
 ```
 
 Syntax-check the server and all backend/frontend scripts (PowerShell):

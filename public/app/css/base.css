@@ -2052,6 +2052,15 @@ body:has(#demonDetailModal.show) .modal-backdrop {
         0 0 16px rgba(242,195,94,0.16);
 }
 
+.enemy-buff-chip.is-rarity-convergence {
+    border-color: color-mix(in srgb, var(--enemy-buff-color, #f2c35e) 68%, transparent);
+    color: color-mix(in srgb, var(--enemy-buff-color, #f2c35e) 58%, white);
+    background: color-mix(in srgb, var(--enemy-buff-color, #f2c35e) 18%, rgba(8,13,16,0.82));
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.06),
+        0 0 17px color-mix(in srgb, var(--enemy-buff-color, #f2c35e) 25%, transparent);
+}
+
 .enemy-buff-chip .ad-icon {
     width: 0.72rem;
     height: 0.72rem;

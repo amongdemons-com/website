@@ -1,43 +1,27 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="index, follow">
-    <!--HUNTER_META_START-->
-    <title>Hunter Profile | Among Demons</title>
-    <meta name="description" content="View a public Among Demons hunter profile with level, PvP record, world team, coordinates, and active buffs.">
-    <link rel="canonical" href="https://amongdemons.com/hunter">
-    <meta property="og:site_name" content="Among Demons">
-    <meta property="og:type" content="profile">
-    <meta property="og:title" content="Hunter Profile | Among Demons">
-    <meta property="og:description" content="View a public Among Demons hunter profile with level, PvP record, world team, coordinates, and active buffs.">
-    <meta property="og:image" content="https://amongdemons.com/app/images/amongdemons_logo_white_text_bottom_1000x1000.png">
-    <meta property="og:image:width" content="1000">
-    <meta property="og:image:height" content="1000">
-    <meta property="og:image:alt" content="Among Demons logo">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Hunter Profile | Among Demons">
-    <meta name="twitter:description" content="View a public Among Demons hunter profile with level, PvP record, world team, coordinates, and active buffs.">
-    <meta name="twitter:image" content="https://amongdemons.com/app/images/amongdemons_logo_white_text_bottom_1000x1000.png">
-    <meta name="twitter:image:alt" content="Among Demons logo">
-    <!--HUNTER_META_END-->
+    <meta name="robots" content="noindex, nofollow">
+    <title>Inventory | Among Demons</title>
+    <meta name="description" content="Manage extracted Demon Echoes, refine rarities, and summon permanent demons.">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/base.css?v=20260716-secondary-normalized-v1" rel="stylesheet">
-    <link href="/app/css/battle.css?v=20260716-replay-skip-v2" rel="stylesheet">
+    <link href="/app/css/inventory.css?v=20260719-large-slot-tooltip-v1" rel="stylesheet">
   </head>
-  <body class="hunter-page">
+  <body class="inventory-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
       <div class="container-fluid">
         <a class="navbar-brand game-shell-brand" href="/" aria-label="Among Demons home">
           <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" class="logo-nav" width="40" height="40" loading="eager">
           <span class="game-shell-brand-copy"><span class="game-shell-brand-name">Among Demons</span></span>
         </a>
-        <button class="navbar-toggler game-shell-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#hunterGameNav" aria-controls="hunterGameNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler game-shell-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#inventoryGameNav" aria-controls="inventoryGameNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="hunterGameNav">
+        <div class="collapse navbar-collapse" id="inventoryGameNav">
           <ul class="navbar-nav game-shell-tabs me-auto">
             <li class="nav-item"><a class="nav-link game-nav-link" href="/world" data-game-route="world"><i data-lucide="map"></i><span>World</span></a></li>
             <li class="nav-item"><a class="nav-link game-nav-link" href="/camp" data-game-route="camp"><i data-lucide="tent"></i><span>Camp</span></a></li>
@@ -47,6 +31,7 @@
               <ul class="dropdown-menu game-nav-dropdown-menu"><li><a class="dropdown-item game-nav-dropdown-item" href="/demons" data-game-route="demons"><i data-lucide="skull"></i><span>Demons</span></a></li><li><a class="dropdown-item game-nav-dropdown-item" href="/bosses" data-game-route="bosses"><i data-lucide="shield-alert"></i><span>Bosses</span></a></li></ul>
             </li>
             <li class="nav-item"><a class="nav-link game-nav-link" href="/collection" data-game-route="collection"><i data-lucide="grid-3x3"></i><span>Collection</span></a></li>
+            <li class="nav-item"><a class="nav-link game-nav-link active" href="/inventory" data-game-route="inventory" aria-current="page"><i data-lucide="amphora"></i><span>Inventory</span></a></li>
             <li class="nav-item"><a class="nav-link game-nav-link" href="/rankings" data-game-route="rankings"><i data-lucide="trophy"></i><span>Rankings</span></a></li>
           </ul>
           <div class="nav-auth-actions game-shell-auth-actions" data-nav-auth-actions>
@@ -57,8 +42,7 @@
             <span class="nav-balance" data-nav-souls role="status" aria-live="polite" aria-atomic="true" title="Soul balance">
               <span class="soul-amount nav-soul-amount" aria-label="Souls loading">
                 <img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" width="16" height="16" loading="lazy" aria-hidden="true">
-                <span class="soul-amount-value">-</span>
-                <span class="soul-amount-label">Souls</span>
+                <span class="soul-amount-value">-</span><span class="soul-amount-label">Souls</span>
               </span>
             </span>
             <a class="nav-player" href="/camp" title="Go to camp">
@@ -72,63 +56,50 @@
       </div>
     </nav>
 
-    <main class="container hunter-shell my-4">
-      <div class="alert d-none" id="hunterMessage" role="alert"></div>
-
-      <section class="hunter-hero" aria-labelledby="hunterName">
-        <div class="hunter-identity">
-          <span class="hunter-avatar" aria-hidden="true">
-            <img id="hunterAvatar" src="/app/images/amongdemons_logo_250x250.png" alt="" width="96" height="96" loading="eager" decoding="async">
-          </span>
-          <div class="hunter-title-block">
-            <span class="hunter-kicker">Hunter Profile</span>
-            <h1 id="hunterName">Hunter</h1>
-            <p id="hunterSubline">Loading public record...</p>
-          </div>
-        </div>
-        <div class="hunter-hero-aside">
-          <div class="hunter-stat-grid" aria-label="Hunter location and progress">
-            <div class="hunter-stat">
-              <span class="hunter-stat-value" data-hunter-stat="floor">-</span>
-              <span class="hunter-stat-label">Top Floor</span>
-            </div>
-            <div class="hunter-stat">
-              <span class="hunter-stat-value" data-hunter-stat="coordinates">-</span>
-              <span class="hunter-stat-label">Coordinates</span>
-            </div>
-          </div>
-          <div class="hunter-share-bar" data-hunter-share aria-label="Share this hunter"></div>
-        </div>
-      </section>
-
-      <section class="hunter-content-grid">
-        <section class="hunter-panel hunter-team-panel" aria-labelledby="hunterTeamHeading">
-          <div class="hunter-panel-head">
+    <main class="container inventory-main">
+      <section class="card inventory-vault-card" aria-labelledby="inventoryVaultTitle">
+        <div class="card-header inventory-toolbar">
+          <div class="inventory-toolbar-title">
             <div>
-              <h2 id="hunterTeamHeading">World Team</h2>
-              <p id="hunterTeamSummary">Assigned demons appear here.</p>
+              <h1 class="h4 mb-0" id="inventoryVaultTitle">Inventory</h1>
+              <small id="inventoryCount">0 stacks</small>
             </div>
-            <span class="hunter-panel-icon" aria-hidden="true"><i data-lucide="shield"></i></span>
           </div>
-          <div class="hunter-team-board battle-side battle-side-player" id="hunterWorldTeam" aria-live="polite"></div>
-        </section>
-
-        <div class="hunter-sidebar">
-          <div class="hunter-cta" data-hunter-cta></div>
-
-          <section class="hunter-panel hunter-buffs-panel" aria-labelledby="hunterBuffsHeading">
-            <div class="hunter-panel-head">
-              <div>
-                <h2 id="hunterBuffsHeading">Buffs</h2>
-                <p>Level power currently comes from allocated skill points.</p>
-              </div>
-              <span class="hunter-panel-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
-            </div>
-            <div class="hunter-buff-list" id="hunterBuffs" aria-live="polite"></div>
-          </section>
+          <div class="inventory-controls">
+            <label class="visually-hidden" for="inventoryFilter">Item type</label>
+            <select class="form-select form-select-sm" id="inventoryFilter" aria-label="Item type">
+              <option value="all">All items</option>
+              <option value="echo">Echoes</option>
+            </select>
+            <label class="visually-hidden" for="inventorySort">Sort inventory</label>
+            <select class="form-select form-select-sm" id="inventorySort" aria-label="Sort inventory">
+              <option value="ready">Ready first</option>
+              <option value="rarity">Rarity</option>
+              <option value="name">Name</option>
+              <option value="quantity">Quantity</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="inventory-loading" id="inventoryLoading" role="status">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+            <span>Opening the vault...</span>
+          </div>
+          <div class="inventory-grid-viewport" id="inventoryGridViewport">
+            <div class="inventory-grid" id="inventoryGrid" aria-live="polite"></div>
+          </div>
+          <div class="inventory-item-tooltip" id="inventoryItemTooltip" role="tooltip" hidden></div>
         </div>
       </section>
     </main>
+
+    <div class="modal fade inventory-detail-modal" id="inventoryDetailModal" tabindex="-1" aria-labelledby="inventoryDetailTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" id="inventoryDetailContent"></div>
+      </div>
+    </div>
+
+    <div class="inventory-summon-celebration" id="inventorySummonCelebration" hidden aria-live="assertive"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/app/js/lucide-subset.js?v=20260713-boss-guides-v1"></script>
@@ -138,7 +109,6 @@
     <script src="/app/js/steam.js?v=20260716-steam-exit-v1"></script>
     <script src="/app/js/audio.js?v=20260717-audio-default-on-v1"></script>
     <script src="/app/js/navigation.js?v=20260719-echo-inventory-v1"></script>
-    <script src="/app/js/demon-cards.js?v=20260701-hunter-profile-v1"></script>
-    <script src="/app/js/hunter-ui.js?v=20260709-guest-mode-v2"></script>
+    <script src="/app/js/inventory-ui.js?v=20260719-large-slot-tooltip-v1"></script>
   </body>
 </html>

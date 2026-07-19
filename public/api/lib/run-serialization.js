@@ -1,4 +1,4 @@
-const { createDungeonEnemies, getEnemyPressureMultipliers } = require('./dungeon-enemies');
+const { createDungeonEnemies, getDungeonEncounterProfile, getEnemyPressureMultipliers } = require('./dungeon-enemies');
 const { createRng } = require('./rng');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('./dungeon-rules');
 const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, normalizeRunBuffState, serializeRunBuffState } = require('./run-buffs');
@@ -9,6 +9,8 @@ async function serializeRun(run, options = {}) {
   const collectionReinforcementLimit = getCollectionReinforcementLimit(run);
   const collectionReinforcementAvailable = collectionReinforcementLimit > 0;
   const worldBuffs = await getSerializedWorldBuffs(run, options);
+  const encounterProfile = getEncounterProfile(run, run.floor);
+  const nextEncounterProfile = getEncounterProfile(run, Number(run.floor) + 1);
 
   return {
     runId: run.id,
@@ -21,6 +23,8 @@ async function serializeRun(run, options = {}) {
     nextEnemies: await getNextEnemiesPreview(run),
     enemyPressure: getEnemyPressurePreview(run, run.floor),
     nextEnemyPressure: getEnemyPressurePreview(run, Number(run.floor) + 1),
+    enemyBuffs: serializeEncounterBuffs(encounterProfile),
+    nextEnemyBuffs: serializeEncounterBuffs(nextEncounterProfile),
     rewards: run.rewards,
     awaitingRecruit: Boolean(run.state.awaitingRecruit),
     collectionReinforcementAvailable,
@@ -44,21 +48,31 @@ async function getSerializedWorldBuffs(run, options = {}) {
 
 function getEnemyPressurePreview(run, floor) {
   const floorNumber = Math.max(1, Number(floor) || 1);
-  const pressure = getEnemyPressureMultipliers(floorNumber, { buffs: run.state.buffs });
+  const pressure = getEnemyPressureMultipliers(floorNumber, { buffs: run.state.buffs, rarityRebalanced: true });
   const activePactCount = normalizeRunBuffState(run.state.buffs || {}).active.length;
+  const level = getEnemyPressureLevel(pressure);
 
   return {
     floor: floorNumber,
     activePactCount,
-    level: getEnemyPressureLevel(floorNumber, activePactCount),
+    level,
     hpMult: roundMultiplier(pressure.hp),
     atkMult: roundMultiplier(pressure.atk),
     speedMult: roundMultiplier(pressure.speed),
     hpBonusPct: getBonusPercent(pressure.hp),
     atkBonusPct: getBonusPercent(pressure.atk),
     speedBonusPct: getBonusPercent(pressure.speed),
-    active: pressure.hp > 1 || pressure.atk > 1 || pressure.speed > 1
+    active: level > 0,
+    description: 'Floor depth, rarity balance, and sealed Pacts strengthen this formation.'
   };
+}
+
+function getEncounterProfile(run, floor) {
+  return getDungeonEncounterProfile(createRng(Number(run.seed) + Number(floor)), floor);
+}
+
+function serializeEncounterBuffs(profile) {
+  return profile?.convergence ? [{ ...profile.convergence }] : [];
 }
 
 function roundMultiplier(value) {
@@ -69,8 +83,8 @@ function getBonusPercent(value) {
   return Math.max(0, Math.round(((Number(value) || 1) - 1) * 100));
 }
 
-function getEnemyPressureLevel(floor, activePactCount) {
-  return Math.max(0, Number(floor) - 18) + Math.max(0, Number(activePactCount) || 0);
+function getEnemyPressureLevel(pressure = {}) {
+  return Math.max(0, Math.round(((Number(pressure.hp) || 1) - 1) / 0.045));
 }
 
 async function getNextEnemiesPreview(run) {

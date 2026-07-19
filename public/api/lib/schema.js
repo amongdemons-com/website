@@ -391,6 +391,36 @@ async function initializeSchema() {
   await runMigrationOnce(MINIMUM_PLAYER_DEMON_STATS_MIGRATION, normalizePlayerDemonMinimumStats);
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS player_inventory (
+      player_id VARCHAR(255) NOT NULL,
+      item_key VARCHAR(96) NOT NULL,
+      item_type VARCHAR(24) NOT NULL,
+      quantity INT UNSIGNED NOT NULL DEFAULT 0,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, item_key),
+      INDEX idx_player_inventory_type (player_id, item_type)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column('player_inventory', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_inventory', 'item_key', 'VARCHAR(96) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_inventory', 'item_type', 'VARCHAR(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addIndexIfMissing('player_inventory', 'idx_player_inventory_type', 'INDEX idx_player_inventory_type (player_id, item_type)');
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_echo_discoveries (
+      player_id VARCHAR(255) NOT NULL,
+      type_id INT UNSIGNED NOT NULL,
+      rarity VARCHAR(24) NOT NULL,
+      discovered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, type_id, rarity),
+      INDEX idx_player_echo_discoveries_player (player_id, discovered_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column('player_echo_discoveries', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_echo_discoveries', 'rarity', 'VARCHAR(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addIndexIfMissing('player_echo_discoveries', 'idx_player_echo_discoveries_player', 'INDEX idx_player_echo_discoveries_player (player_id, discovered_at)');
+  await db.query(`
     CREATE TABLE IF NOT EXISTS player_world_teams (
       player_id VARCHAR(255) NOT NULL,
       demon_id INT UNSIGNED NOT NULL,

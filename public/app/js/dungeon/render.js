@@ -2,7 +2,7 @@ import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
+import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount, getRarityColor } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, setElementHtml, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const audio = window.AmongDemons.audio;
@@ -171,6 +171,7 @@ function renderRun() {
 function renderDungeonEndScreen() {
   const summary = state.endSummary || {};
   const demon = summary.demon;
+  const echo = summary.echo;
   const isDefeat = summary.outcome === 'defeat';
   const eyebrow = isDefeat ? 'Defeat' : 'Extraction';
 
@@ -190,8 +191,17 @@ function renderDungeonEndScreen() {
           })}
         </div>
       ` : ''}
+      ${echo ? `
+        <div class="dungeon-end-demon" aria-label="Extracted ${escapeHtml(`${capitalize(echo.rarity || 'common')} ${echo.species || 'Demon'} Echo`)}">
+          <div class="dungeon-demon-card dungeon-end-demon-card" style="--rarity-color: ${escapeHtml(getRarityColor(echo.rarity || 'common'))}">
+            <img src="${escapeHtml(echo.imageUrl || '')}" alt="" width="1024" height="1024" loading="eager">
+            <span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>
+          </div>
+        </div>
+      ` : ''}
       <div class="dungeon-end-rewards" aria-label="Rewards obtained">
         ${demon ? `<span>${renderIcon('stars')}${escapeHtml(demon.species || 'Demon')}</span>` : ''}
+        ${echo ? `<span>${renderIcon('sparkles')}${escapeHtml(`${capitalize(echo.rarity || 'common')} ${echo.species || 'Demon'} Echo`)}</span>` : ''}
         <span>${Number(summary.xp) || 0} XP</span>
         ${renderSoulAmount(Number(summary.souls) || 0, { className: 'soul-chip dungeon-end-soul-amount' })}
       </div>
@@ -203,9 +213,9 @@ function renderDungeonEndScreen() {
           </button>
         ` : ''}
         ${!isDefeat ? `
-          <a class="btn btn-glass-muted" id="trainDemonsBtn" href="/collection">
-            ${renderIcon('collection')}
-            Train Demons
+          <a class="btn btn-glass-muted" id="trainDemonsBtn" href="/inventory">
+            ${renderIcon('amphora')}
+            View Inventory
           </a>
         ` : ''}
         <button class="btn btn-primary" id="startNewDungeonBtn" type="button">
@@ -351,12 +361,25 @@ function renderEnemyBuffChips(buffs = []) {
 function renderEnemyBuffChip(buff = {}) {
   const name = String(buff.name || buff.id || 'Boss Buff');
   const description = String(buff.description || '');
-  const tooltip = [name, description].filter(Boolean).join('\n');
+  const temporaryBonuses = buff.id === 'rarity-convergence'
+    ? [
+        `Temporary enemy HP ${formatBonusPercent(buff.hpBonusPct)}`,
+        `Temporary enemy Attack ${formatBonusPercent(buff.atkBonusPct)}`,
+        `Temporary enemy Speed ${formatBonusPercent(buff.speedBonusPct)}`,
+        'These bonuses disappear if a demon joins your team.'
+      ]
+    : [];
+  const tooltip = [name, description, ...temporaryBonuses].filter(Boolean).join('\n');
   const escapedTooltip = escapeTooltipAttribute(tooltip);
+  const convergence = buff.id === 'rarity-convergence';
+  const rarityStyle = convergence
+    ? ` style="--enemy-buff-color: ${escapeHtml(getRarityColor(buff.rarity || 'common'))}"`
+    : '';
 
   return `
     <span
-      class="enemy-pressure-chip enemy-buff-chip"
+      class="enemy-pressure-chip enemy-buff-chip${convergence ? ' is-rarity-convergence' : ''}"
+      ${rarityStyle}
       tabindex="0"
       data-tooltip="${escapedTooltip}"
       aria-label="${escapedTooltip}"

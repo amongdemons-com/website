@@ -29,6 +29,7 @@
   const state = {
     player: window.AmongDemons.getSession().player || null,
     collection: [],
+    echoItems: new Map(),
     catalog: [],
     visibleSlots: [],
     types: {},
@@ -169,15 +170,17 @@
 
     try {
       if (state.isAuthenticated) {
-        const [me, demons] = await Promise.all([
+        const [me, demons, inventory] = await Promise.all([
           api('/api/auth/me'),
           api('/api/demons'),
+          api('/api/inventory'),
           loadDemonTypes(),
           loadDemonCatalog()
         ]);
 
         state.player = me.player;
         state.collection = demons.demons || [];
+        state.echoItems = new Map((inventory.items || []).map((item) => [item.itemKey, item]));
       } else {
         state.player = null;
         state.collection = [];
@@ -248,13 +251,17 @@
   function renderMissingDemonCard(demon) {
     const typeName = getTypeName(demon.typeId);
     const rarity = capitalize(demon.rarity);
+    const echo = getEchoItemForDemon(demon);
+    const footer = echo
+      ? `<div class="collection-missing-label collection-missing-echo-label">${escapeHtml(`${echo.summonProgress}/${echo.summonRequirement} Echoes`)}</div>`
+      : '<div class="collection-missing-label">Missing</div>';
 
     return `
       <div class="collection-grid-item collection-grid-item-missing">
         ${renderSharedDemonCard(withTypeName(demon), {
           className: 'collection-demon-card collection-missing-card',
           showStats: false,
-          footerHtml: '<div class="collection-missing-label">Missing</div>',
+          footerHtml: footer,
           attributes: {
             'data-demon-id': demon.id,
             role: 'button',
@@ -386,17 +393,31 @@
 
   function getDemonDetailsActions(demon) {
     if (demon.isMissing) {
+      const echo = getEchoItemForDemon(demon);
       return [
+        ...(echo ? [{
+          label: echo.summonReady ? 'Summon in Inventory' : 'View Echoes',
+          icon: 'amphora',
+          variant: echo.summonReady ? 'primary' : 'outline-info',
+          href: '/inventory'
+        }] : []),
         {
           label: 'Enter Dungeon',
           icon: 'play',
-          variant: 'primary',
+          variant: echo ? 'outline-light' : 'primary',
           href: '/dungeon'
         }
       ];
     }
 
     return getTrainingActions(demon);
+  }
+
+  function getEchoItemForDemon(demon) {
+    const typeId = Number(demon?.typeId || demon?.type);
+    const rarity = String(demon?.rarity || '').toLowerCase();
+    if (!typeId || !rarity) return null;
+    return state.echoItems.get(`echo:${typeId}:${rarity}`) || null;
   }
 
   function getTrainingActions(demon) {

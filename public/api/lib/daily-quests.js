@@ -19,8 +19,8 @@ const QUEST_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: 'demon-extractions',
     icon: 'skull',
-    title: 'Extract a demon',
-    meta: 'Bring one defeated demon safely back to camp.',
+    title: 'Extract a Demon Echo',
+    meta: 'Preserve one defeated demon\'s Echo and bring it safely back to camp.',
     progressKey: 'demonsExtracted',
     target: 1,
     reward: Object.freeze({ type: 'xp', value: 20 }),

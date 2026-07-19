@@ -10,6 +10,7 @@ const { normalizeCombatBuffState, serializeCombatBuffState } = require('../lib/c
 const { resolvePlayerCombatBuffState } = require('../lib/player-combat-buffs');
 const { assignFormationSlots, mergeBattleTeamForRun, resetRunDemon } = require('../lib/run-demons');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
+const { getDungeonEncounterProfile } = require('../lib/dungeon-enemies');
 const { createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
 const achievements = require('../lib/achievements');
@@ -43,6 +44,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     teamLimit: teamLimitAtBattleStart
   });
   const rng = createRng(run.seed + run.floor);
+  const encounterProfile = getDungeonEncounterProfile(createRng(run.seed + run.floor), run.floor);
   const demonTypes = await getDemonTypes();
   const skillBuffs = await resolvePlayerCombatBuffState(req.player);
   const playerBuffs = getDungeonPlayerCombatBuffs(run.state.buffs, skillBuffs);
@@ -69,7 +71,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     playerTeamAfter: cloneForBattleReplay(result.playerTeam),
     enemyTeamAfter: cloneForBattleReplay(result.enemyTeam),
     playerBuffs: serializeCombatBuffState(playerBuffs).activeBuffs,
-    enemyBuffs: []
+    enemyBuffs: encounterProfile.convergence ? [{ ...encounterProfile.convergence }] : []
   };
 
   let rewards = {};

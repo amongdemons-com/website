@@ -9,7 +9,6 @@ const audio = window.AmongDemons.audio;
 
 const battle = (...args) => dungeonActions.battle(...args);
 const canAddDemonToFormationLane = (...args) => dungeonActions.canAddDemonToFormationLane(...args);
-const confirmCollectionReplacement = (...args) => dungeonActions.confirmCollectionReplacement(...args);
 const ensureRecruitDraft = (...args) => dungeonActions.ensureRecruitDraft(...args);
 const findDraftDemon = (...args) => dungeonActions.findDraftDemon(...args);
 const getDemonFormationRow = (...args) => dungeonActions.getDemonFormationRow(...args);
@@ -37,7 +36,7 @@ function openCashoutModal() {
   if (!canExtractRun()) return;
 
   const subtitle = document.getElementById('cashoutModalSubtitle');
-  if (subtitle) subtitle.textContent = 'Choose your reward';
+  if (subtitle) subtitle.textContent = 'Choose an Echo to preserve';
   renderCashoutModal();
   getModal(elements.cashoutModal).show();
 }
@@ -62,13 +61,13 @@ function renderCashoutModal() {
       </div>
       <div class="cashout-extract-copy">
         <div class="cashout-demon-summary">
-          <span class="cashout-demon-eyebrow">${demon ? 'Chosen demon' : 'No demon chosen'}</span>
+          <span class="cashout-demon-eyebrow">${demon ? 'Chosen Echo' : 'No Echo chosen'}</span>
           <h3 class="cashout-demon-name-line">${demon ? `
             <span class="cashout-rarity-label" style="--rarity-color: ${demonRarityColor}">${demonRarityLabel}</span>
             <span>${demonName}</span>
           ` : 'Run rewards only'}</h3>
           <p>${demon
-            ? 'Added to your collection after extraction.'
+            ? 'One exact Echo will be secured in your Inventory.'
             : 'You will leave with run rewards only.'}</p>
         </div>
         <div class="cashout-section-title">
@@ -583,11 +582,8 @@ async function cashOutDungeon() {
   if (!state.run || !canExtractRun()) return;
 
   const candidate = getSelectedRewardCandidate();
-  if (candidate && !(await confirmCollectionReplacement(candidate.demon))) return;
-
   await cashOut({
     button: elements.cashoutConfirmBtn,
-    clearCollection: Boolean(candidate),
     body: getCashoutBodyForCandidate(candidate)
   });
 }
@@ -604,11 +600,11 @@ function getCashoutBodyForCandidate(candidate) {
   };
 }
 
-async function cashOut({ button, body, clearCollection = false }) {
+async function cashOut({ button, body }) {
   await withBusy(button, async () => {
     try {
       const result = await api(activeRunPath('cashout'), { method: 'POST', body });
-      await finishCashout(result, { clearCollection, skippedDemon: Boolean(body.skipDemon) });
+      await finishCashout(result, { skippedEcho: Boolean(body.skipDemon) });
     } catch (error) {
       showError(error);
     }
@@ -616,12 +612,11 @@ async function cashOut({ button, body, clearCollection = false }) {
 }
 
 async function finishCashout(result, options = {}) {
-  const skippedDemon = Boolean(options.skippedDemon);
-  const demonMessage = skippedDemon ? '' : getCashoutDemonMessage(result);
+  const skippedEcho = Boolean(options.skippedEcho);
+  const echoMessage = skippedEcho ? '' : getCashoutEchoMessage(result);
   audio?.play('sfx.dungeon.extract', { volume: 0.94 });
 
   clearCurrentRun();
-  if (options.clearCollection) state.collectionDemons = null;
   state.run = null;
   clearRewardSelection();
   state.battleHandPreview = null;
@@ -630,16 +625,17 @@ async function finishCashout(result, options = {}) {
   state.endSummary = {
     title: 'Extraction complete',
     outcome: 'extraction',
-    message: skippedDemon ? 'You left with run rewards only.' : demonMessage,
-    demon: skippedDemon ? null : result.demon || null,
+    message: skippedEcho ? 'You left with run rewards only.' : echoMessage,
+    demon: null,
+    echo: skippedEcho ? null : result.echo || null,
     xp: result.xp,
     souls: result.souls
   };
   state.endedReplayRun = null;
   state.endNotice = {
-    html: skippedDemon
+    html: skippedEcho
       ? renderEarnedNoticeHtml('Extraction complete.', result)
-      : renderEarnedNoticeHtml(`Extraction complete. ${demonMessage}`, result),
+      : renderEarnedNoticeHtml(`Extraction complete. ${echoMessage}`, result),
     type: 'success'
   };
   getModal(elements.cashoutModal).hide();
@@ -659,11 +655,13 @@ function renderXpNoticeAmount(xp) {
   return `<span class="fight-log-reward-inline">${renderIcon('stars')}${escapeHtml(String(Number(xp) || 0))} XP</span>`;
 }
 
-function getCashoutDemonMessage(result) {
-  const species = result.demon?.species || 'Demon';
-  return result.replaced
-    ? `${species} replaced your previous collection demon.`
-    : `${species} joined your collection.`;
+function getCashoutEchoMessage(result) {
+  const echo = result.echo || {};
+  const species = echo.species || 'Demon';
+  const rarity = capitalize(echo.rarity || 'common');
+  const quantity = Math.max(1, Number(echo.quantity) || 1);
+  const requirement = Math.max(1, Number(echo.summonRequirement) || 1);
+  return `${rarity} ${species} Echo secured in Inventory (${Math.min(quantity, requirement)}/${requirement}).`;
 }
 
 export {
@@ -701,5 +699,5 @@ export {
   getCashoutBodyForCandidate,
   cashOut,
   finishCashout,
-  getCashoutDemonMessage
+  getCashoutEchoMessage
 };
