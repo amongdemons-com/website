@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { normalizeCollectionDemonStats } = require('../lib/collection-demons');
+const { isDungeonExtractionUnlocked } = require('../lib/dungeon-rules');
 const { addEcho } = require('../lib/echo-inventory');
 const { getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
@@ -23,6 +24,9 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
 
     const canCashOut = run.status === 'active' && run.state.awaitingRecruit;
     if (!canCashOut) throw createHttpError('Rewards can only be claimed between dungeon fights.', 409);
+    if (!isDungeonExtractionUnlocked(run.floor)) {
+      throw createHttpError('Extraction unlocks after winning your first fight.', 409);
+    }
     if (hasPendingBuffChoices(run)) throw createHttpError('Choose a Demonic Pact before extracting rewards.', 409);
 
     payout = req.body?.skipDemon

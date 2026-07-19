@@ -18,7 +18,6 @@
     10: { key: 'healer', label: 'Healer', asset: '10-healer', motion: 'rise', essence: '#8DE7FF' },
     11: { key: 'chaotic', label: 'Chaotic', asset: '11-chaotic', motion: 'chaos', essence: '#52B7FF' }
   });
-
   function registerItemVisual(itemType, renderer) {
     const key = String(itemType || '').trim().toLowerCase();
     if (!key || typeof renderer !== 'function') return false;

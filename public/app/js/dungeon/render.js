@@ -6,6 +6,8 @@ import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, 
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, setElementHtml, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const audio = window.AmongDemons.audio;
+const renderInventoryItemVisual = window.AmongDemons.inventoryVisuals?.renderItemVisual
+  || (() => '<span class="inventory-item-renderer inventory-unknown-visual" aria-hidden="true"></span>');
 
 const battle = (...args) => dungeonActions.battle(...args);
 const bindCollectionReinforcementPlaceholders = (...args) => dungeonActions.bindCollectionReinforcementPlaceholders(...args);
@@ -24,6 +26,7 @@ const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...a
 const groupCombatLog = (...args) => dungeonActions.groupCombatLog(...args);
 const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
 const init = (...args) => dungeonActions.init(...args);
+const isExtractionUnlocked = (...args) => dungeonActions.isExtractionUnlocked(...args);
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
 const pauseCombatPlayback = (...args) => dungeonActions.pauseCombatPlayback(...args);
 const playEnemyRevealEffect = (...args) => dungeonActions.playEnemyRevealEffect(...args);
@@ -192,13 +195,14 @@ function renderDungeonEndScreen() {
         </div>
       ` : ''}
       ${echo ? `
-        <div class="dungeon-end-demon" aria-label="Extracted ${escapeHtml(`${capitalize(echo.rarity || 'common')} ${echo.species || 'Demon'} Echo`)}">
-          <div class="dungeon-demon-card dungeon-end-demon-card" style="--rarity-color: ${escapeHtml(getRarityColor(echo.rarity || 'common'))}">
-            <div class="dungeon-demon-card-image">
-              <img src="${escapeHtml(echo.imageUrl || '')}" alt="" width="1024" height="1024" loading="eager" decoding="async">
-            </div>
-            <span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>
-          </div>
+        <div
+          class="dungeon-end-demon dungeon-end-echo"
+          style="--item-rarity: ${escapeHtml(getRarityColor(echo.rarity || 'common'))}"
+          aria-label="Extracted ${escapeHtml(`${capitalize(echo.rarity || 'common')} ${echo.species || 'Demon'} Echo`)}"
+        >
+          <span class="dungeon-end-echo-visual">
+            ${renderInventoryItemVisual(echo, { context: 'slot' })}
+          </span>
         </div>
       ` : ''}
       <div class="dungeon-end-rewards" aria-label="Rewards obtained">
@@ -712,6 +716,9 @@ function renderDungeonMobileFightBox(options = {}) {
   const activeTab = state.activeHandTab === 'pacts' ? 'pacts' : 'hand';
   const rewardOpen = Boolean(state.isMobileRewardBoxOpen && canExtract);
   const tabDisabled = !hasRun || isFighting;
+  const extractTitle = !isExtractionUnlocked(state.run)
+    ? 'Win your first fight to unlock extraction'
+    : 'Extract';
 
   const changed = setElementHtml(elements.dungeonMobileFightBox, `
     <button
@@ -764,8 +771,8 @@ function renderDungeonMobileFightBox(options = {}) {
       class="dungeon-mobile-nav-btn ${rewardOpen ? 'active' : ''}"
       id="dungeonMobileExtractBtn"
       type="button"
-      title="Extract"
-      aria-label="Extract"
+      title="${extractTitle}"
+      aria-label="${extractTitle}"
       aria-pressed="${rewardOpen ? 'true' : 'false'}"
       ${canExtract ? '' : 'disabled'}
     >

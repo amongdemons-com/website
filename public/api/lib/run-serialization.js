@@ -1,6 +1,10 @@
 const { createDungeonEnemies, getDungeonEncounterProfile, getEnemyPressureMultipliers } = require('./dungeon-enemies');
 const { createRng } = require('./rng');
-const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('./dungeon-rules');
+const {
+  COLLECTION_REINFORCEMENT_FLOOR,
+  getDungeonTeamLimit,
+  isDungeonExtractionUnlocked
+} = require('./dungeon-rules');
 const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, normalizeRunBuffState, serializeRunBuffState } = require('./run-buffs');
 const { getActiveWorldBossRewardBuffs } = require('./world-bosses');
 
@@ -27,6 +31,7 @@ async function serializeRun(run, options = {}) {
     nextEnemyBuffs: serializeEncounterBuffs(nextEncounterProfile),
     rewards: run.rewards,
     awaitingRecruit: Boolean(run.state.awaitingRecruit),
+    extractionUnlocked: isDungeonExtractionUnlocked(run.floor),
     collectionReinforcementAvailable,
     collectionReinforcementLimit,
     teamLimit: getSerializedTeamLimit(run),

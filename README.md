@@ -235,7 +235,7 @@ All routes are mounted under `/api`.
 - Runs start with exactly 2 demons chosen from six HMAC-signed draft starters (token expires after 15 minutes) and/or the permanent collection. Starting a new run closes any open run.
 - The team limit is `min(6, floor + 1)`: 2 demons on floor 1, capped at 6 from floor 5 onward. Enemy teams keep scaling deeper.
 - After clearing floor 10, the player may call in one collection demon as a one-time reinforcement.
-- After every win, defeated enemies become recruit options; between fights the player can recruit, swap, skip, or stage one eligible demon for Echo extraction.
+- After every win, defeated enemies become recruit options; between fights the player can recruit, swap, skip, or stage one eligible demon for Echo extraction. Extraction unlocks after the first win.
 - Enemy rarity uses explicit floor-band distributions. Deep normal floors keep Common, Uncommon, and Rare at non-zero rates, while Mythic remains an exceptional `0.5%` roll rather than becoming the whole late-game roster.
 - From floor 10 onward, a seeded 25% roll may create a Rarity Convergence: every enemy is Common, Uncommon, Rare, Epic, or Legendary. Its temporary Host pressure is shown in a separate rarity-colored pill beside Terror and is removed from recruits.
 - Floor depth, enemy-team growth (up to nine), rarity compensation, and active Pact count drive hostile Terror. The redesigned floor-30 HP budget is calibrated to the former Mythic-heavy curve without requiring nine Mythics.

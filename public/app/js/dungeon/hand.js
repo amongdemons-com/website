@@ -20,6 +20,7 @@ const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
 const renderActivePactIcon = (...args) => dungeonActions.renderActivePactIcon(...args);
 const shouldShowCollectionReinforcementHandPlaceholder = (...args) => dungeonActions.shouldShowCollectionReinforcementHandPlaceholder(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
+const isExtractionUnlocked = (...args) => dungeonActions.isExtractionUnlocked(...args);
 let handTabEventsBound = false;
 let handScrollEventsBound = false;
 let handScrollResizeEventsBound = false;
@@ -390,6 +391,9 @@ function renderRewardBox(isVisible, isInteractive = false, canExtract = false) {
 function renderRewardPayout(earned, canExtract = false) {
   const xp = Number(earned.xp) || 0;
   const souls = Number(earned.souls) || 0;
+  const extractTitle = !isExtractionUnlocked(state.run)
+    ? 'Win your first fight to unlock extraction'
+    : 'Extract';
   return `
     <div class="dungeon-reward-payout" aria-label="Dungeon rewards">
       <div class="dungeon-reward-payout-item">
@@ -400,7 +404,7 @@ function renderRewardPayout(earned, canExtract = false) {
         <strong>${escapeHtml(String(souls))}</strong>
         <span>Souls</span>
       </div>
-      <button class="btn btn-primary dungeon-reward-extract-btn" id="getRewardBtn" type="button" ${canExtract ? '' : 'disabled'}>
+      <button class="btn btn-primary dungeon-reward-extract-btn" id="getRewardBtn" type="button" title="${extractTitle}" ${canExtract ? '' : 'disabled'}>
         ${renderIcon('flag')}
         Extract
       </button>

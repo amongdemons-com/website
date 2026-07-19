@@ -541,8 +541,20 @@ function getRewardSoulValue(reward) {
   return Number.isFinite(souls) && souls > 0 ? souls : 1;
 }
 
+function isExtractionUnlocked(run = state.run) {
+  const currentFloor = Number(run?.currentFloor);
+  if (Number.isFinite(currentFloor)) return currentFloor >= 1;
+  return run?.extractionUnlocked === true;
+}
+
 function canExtractRun() {
-  return Boolean(state.run?.status === 'active' && state.run?.awaitingRecruit && state.isRecruiting && !hasPendingBuffChoices(state.run));
+  return Boolean(
+    state.run?.status === 'active' &&
+    state.run?.awaitingRecruit &&
+    isExtractionUnlocked(state.run) &&
+    state.isRecruiting &&
+    !hasPendingBuffChoices(state.run)
+  );
 }
 
 function syncRewardSelectionFromRun() {
@@ -692,6 +704,7 @@ export {
   moveRewardSelectionToPoolLane,
   swapRewardSelectionWithDraftTarget,
   getPayoutPreview,
+  isExtractionUnlocked,
   canExtractRun,
   syncRewardSelectionFromRun,
   getStoredExtractChoiceKey,
