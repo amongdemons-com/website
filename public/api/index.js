@@ -38,7 +38,7 @@ router.use(require('./account/achievements'));
 router.use(require('./demons/list'));
 router.use(require('./demons/show'));
 router.use(require('./demons/train'));
-router.use(require('./inventory'));
+router.use(require('./bag'));
 router.use(require('./runs/start'));
 router.use(require('./runs/show'));
 router.use(require('./runs/formation'));

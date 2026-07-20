@@ -170,17 +170,17 @@
 
     try {
       if (state.isAuthenticated) {
-        const [me, demons, inventory] = await Promise.all([
+        const [me, demons, bag] = await Promise.all([
           api('/api/auth/me'),
           api('/api/demons'),
-          api('/api/inventory'),
+          api('/api/bag'),
           loadDemonTypes(),
           loadDemonCatalog()
         ]);
 
         state.player = me.player;
         state.collection = demons.demons || [];
-        state.echoItems = new Map((inventory.items || []).map((item) => [item.itemKey, item]));
+        state.echoItems = new Map((bag.items || []).map((item) => [item.itemKey, item]));
       } else {
         state.player = null;
         state.collection = [];
@@ -396,10 +396,10 @@
       const echo = getEchoItemForDemon(demon);
       return [
         ...(echo ? [{
-          label: echo.summonReady ? 'Summon in Inventory' : 'View Echoes',
+          label: echo.summonReady ? 'Summon in Bag' : 'View Echoes',
           icon: 'amphora',
           variant: echo.summonReady ? 'primary' : 'outline-info',
-          href: '/inventory'
+          href: '/bag'
         }] : []),
         {
           label: 'Enter Dungeon',

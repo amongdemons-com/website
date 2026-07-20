@@ -11,17 +11,17 @@ const {
 const {
   createHttpError,
   getEchoDefinition,
-  getPlayerInventory
-} = require('./lib/echo-inventory');
+  getPlayerBag
+} = require('./lib/echo-bag');
 const achievements = require('./lib/achievements');
 
 const router = express.Router();
 
-router.get('/inventory', requireAuth, async (req, res) => {
-  res.json(await getPlayerInventory(req.player.id));
+router.get('/bag', requireAuth, async (req, res) => {
+  res.json(await getPlayerBag(req.player.id));
 });
 
-router.post('/inventory/echoes/refine', requireAuth, async (req, res) => {
+router.post('/bag/echoes/refine', requireAuth, async (req, res) => {
   const typeId = Math.max(0, Math.floor(Number(req.body?.typeId) || 0));
   const rarity = normalizeEchoRarity(req.body?.rarity);
   const targetRarity = getNextEchoRarity(rarity);
@@ -39,7 +39,7 @@ router.post('/inventory/echoes/refine', requireAuth, async (req, res) => {
   try {
     await connection.beginTransaction();
     const [result] = await connection.query(
-      `UPDATE player_inventory
+      `UPDATE player_bag
        SET quantity = quantity - ?, updated_at = CURRENT_TIMESTAMP
        WHERE player_id = ? AND item_key = ? AND quantity >= ?`,
       [cost, req.player.id, source.itemKey, cost]
@@ -47,7 +47,7 @@ router.post('/inventory/echoes/refine', requireAuth, async (req, res) => {
     if (!result.affectedRows) throw createHttpError(`You need ${cost} ${capitalize(rarity)} Echoes to refine.`, 409);
 
     await connection.query(
-      `INSERT INTO player_inventory (player_id, item_key, item_type, quantity)
+      `INSERT INTO player_bag (player_id, item_key, item_type, quantity)
        VALUES (?, ?, 'echo', 1)
        ON DUPLICATE KEY UPDATE
          quantity = quantity + 1,
@@ -64,11 +64,11 @@ router.post('/inventory/echoes/refine', requireAuth, async (req, res) => {
 
   res.json({
     refinement: { typeId, sourceRarity: rarity, targetRarity, cost, quantity: 1 },
-    ...(await getPlayerInventory(req.player.id))
+    ...(await getPlayerBag(req.player.id))
   });
 });
 
-router.post('/inventory/echoes/summon', requireAuth, async (req, res) => {
+router.post('/bag/echoes/summon', requireAuth, async (req, res) => {
   const typeId = Math.max(0, Math.floor(Number(req.body?.typeId) || 0));
   const rarity = normalizeEchoRarity(req.body?.rarity);
   if (!typeId || !rarity) throw createHttpError('Choose an Echo to summon.', 400);
@@ -91,7 +91,7 @@ router.post('/inventory/echoes/summon', requireAuth, async (req, res) => {
     if (ownedRows.length) throw createHttpError('This demon has already been summoned.', 409);
 
     const [result] = await connection.query(
-      `UPDATE player_inventory
+      `UPDATE player_bag
        SET quantity = quantity - ?, updated_at = CURRENT_TIMESTAMP
        WHERE player_id = ? AND item_key = ? AND quantity >= ?`,
       [requirement, req.player.id, definition.itemKey, requirement]
@@ -123,7 +123,7 @@ router.post('/inventory/echoes/summon', requireAuth, async (req, res) => {
   await achievements.checkCollection(req.player.id);
   res.status(201).json({
     demon: saved.demon,
-    ...(await getPlayerInventory(req.player.id))
+    ...(await getPlayerBag(req.player.id))
   });
 });
 

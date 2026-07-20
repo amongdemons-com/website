@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  const inventoryVisuals = window.AmongDemons.inventoryVisuals || {};
+  const bagVisuals = window.AmongDemons.bagVisuals || {};
   const renderers = new Map();
   const RARITIES = new Set(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']);
   const ASSET_BASE = '/app/images/items/echo';
@@ -32,7 +32,7 @@
     try {
       return renderer(item, options);
     } catch (error) {
-      console.error(`Unable to render ${itemType} inventory visual.`, error);
+      console.error(`Unable to render ${itemType} bag visual.`, error);
       return renderUnknownItemVisual(item, options);
     }
   }
@@ -49,7 +49,7 @@
     const loading = context === 'detail' ? 'eager' : 'lazy';
 
     return `
-      <span class="inventory-item-renderer echo-item-visual echo-type-${type.key} echo-motion-${type.motion} echo-context-${context}" data-echo-type="${typeAttribute}" data-rarity="${rarity}" style="--echo-shell-mask: url('${shellUrl}'); --echo-fill-mask: url('${maskUrl}'); --echo-essence-color: ${type.essence}" title="${escapeHtml(knownType ? type.label : 'Unknown')} Echo vessel" aria-hidden="true">
+      <span class="bag-item-renderer echo-item-visual echo-type-${type.key} echo-motion-${type.motion} echo-context-${context}" data-echo-type="${typeAttribute}" data-rarity="${rarity}" style="--echo-shell-mask: url('${shellUrl}'); --echo-fill-mask: url('${maskUrl}'); --echo-essence-color: ${type.essence}" title="${escapeHtml(knownType ? type.label : 'Unknown')} Echo vessel" aria-hidden="true">
         <span class="echo-rarity-ornament" aria-hidden="true"></span>
         <span class="echo-rarity-aura" aria-hidden="true"></span>
         <span class="echo-essence-fill" aria-hidden="true"><span class="echo-fill-surface"></span></span>
@@ -62,7 +62,7 @@
     const context = options.context === 'detail' ? 'detail' : 'slot';
     const itemType = escapeHtml(String(item?.itemType || 'other').toLowerCase());
     return `
-      <span class="inventory-item-renderer inventory-unknown-visual echo-context-${context}" data-item-type="${itemType}" aria-hidden="true">
+      <span class="bag-item-renderer bag-unknown-visual echo-context-${context}" data-item-type="${itemType}" aria-hidden="true">
         <span class="unknown-item-body"><span class="unknown-item-mark">?</span></span>
       </span>`;
   }
@@ -84,7 +84,7 @@
 
   registerItemVisual('echo', EchoItemVisual);
 
-  window.AmongDemons.inventoryVisuals = Object.assign(inventoryVisuals, {
+  window.AmongDemons.bagVisuals = Object.assign(bagVisuals, {
     ECHO_TYPES,
     EchoItemVisual,
     registerItemVisual,

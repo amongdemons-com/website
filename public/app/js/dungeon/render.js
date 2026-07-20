@@ -6,8 +6,8 @@ import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, 
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, setElementHtml, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const audio = window.AmongDemons.audio;
-const renderInventoryItemVisual = window.AmongDemons.inventoryVisuals?.renderItemVisual
-  || (() => '<span class="inventory-item-renderer inventory-unknown-visual" aria-hidden="true"></span>');
+const renderBagItemVisual = window.AmongDemons.bagVisuals?.renderItemVisual
+  || (() => '<span class="bag-item-renderer bag-unknown-visual" aria-hidden="true"></span>');
 
 const battle = (...args) => dungeonActions.battle(...args);
 const bindCollectionReinforcementPlaceholders = (...args) => dungeonActions.bindCollectionReinforcementPlaceholders(...args);
@@ -201,7 +201,7 @@ function renderDungeonEndScreen() {
           aria-label="Extracted ${escapeHtml(`${capitalize(echo.rarity || 'common')} ${echo.species || 'Demon'} Echo`)}"
         >
           <span class="dungeon-end-echo-visual">
-            ${renderInventoryItemVisual(echo, { context: 'slot' })}
+            ${renderBagItemVisual(echo, { context: 'slot' })}
           </span>
         </div>
       ` : ''}
@@ -219,9 +219,9 @@ function renderDungeonEndScreen() {
           </button>
         ` : ''}
         ${!isDefeat ? `
-          <a class="btn btn-glass-muted" id="trainDemonsBtn" href="/inventory">
+          <a class="btn btn-glass-muted" id="trainDemonsBtn" href="/bag">
             ${renderIcon('amphora')}
-            View Inventory
+            View Bag
           </a>
         ` : ''}
         <button class="btn btn-primary" id="startNewDungeonBtn" type="button">

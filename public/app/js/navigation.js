@@ -7,8 +7,8 @@
     ['m', '/world'],
     ['c', '/camp'],
     ['t', '/skill-tree'],
-    ['i', '/inventory'],
-    ['b', '/inventory']
+    ['i', '/bag'],
+    ['b', '/bag']
   ]);
   const DEFAULT_MUSIC_ROUTE = /^\/(?:demons|bosses|rankings|hunter)(?:\/|$)/;
 
@@ -26,7 +26,7 @@
 
   function organizeGameNavigation() {
     document.querySelectorAll('.game-shell-tabs').forEach((nav) => {
-      ensureInventoryNavLink(nav);
+      ensureBagNavLink(nav);
 
       const camp = getTopLevelRouteItem(nav, 'camp');
       const explore = createGameNavGroup(nav, {
@@ -39,7 +39,7 @@
         key: 'hunter',
         label: 'Hunter',
         icon: 'skull',
-        routes: ['collection', 'inventory']
+        routes: ['collection', 'bag']
       });
       const rankings = getTopLevelRouteItem(nav, 'rankings');
       const guides = Array.from(nav.children).find((item) => (
@@ -51,15 +51,15 @@
     });
   }
 
-  function ensureInventoryNavLink(nav) {
-    if (nav.querySelector('[data-game-route="inventory"]')) return;
+  function ensureBagNavLink(nav) {
+    if (nav.querySelector('[data-game-route="bag"]')) return;
     const collection = getTopLevelRouteItem(nav, 'collection');
     if (!collection) return;
 
     const item = document.createElement('li');
     item.className = 'nav-item';
     const icon = window.AmongDemons?.ui?.renderIcon?.('amphora') || '';
-    item.innerHTML = `<a class="nav-link game-nav-link" href="/inventory" data-game-route="inventory">${icon}<span>Inventory</span></a>`;
+    item.innerHTML = `<a class="nav-link game-nav-link" href="/bag" data-game-route="bag">${icon}<span>Bag</span></a>`;
     collection.after(item);
   }
 
@@ -200,8 +200,8 @@
               ? 'bosses'
               : pathname.startsWith('/collection')
               ? 'collection'
-              : pathname.startsWith('/inventory')
-                ? 'inventory'
+              : pathname.startsWith('/bag')
+                ? 'bag'
                 : pathname.startsWith('/rank')
                   ? 'rankings'
                   : '';

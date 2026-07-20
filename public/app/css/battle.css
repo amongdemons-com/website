@@ -788,7 +788,7 @@ body:not(.dungeon-page) {
     background: radial-gradient(circle, color-mix(in srgb, var(--item-rarity) 20%, transparent), transparent 66%);
 }
 
-.dungeon-end-echo-visual .inventory-item-renderer {
+.dungeon-end-echo-visual .bag-item-renderer {
     display: grid;
     width: 75%;
     height: 75%;

@@ -1,6 +1,6 @@
-﻿# Echo Inventory, Summoning, Rarity Pacts, and Encounter Scaling
+﻿# Echo Bag, Summoning, Rarity Pacts, and Encounter Scaling
 
-This file is the authoritative implementation checklist for the Echo inventory and
+This file is the authoritative implementation checklist for the Echo bag and
 related dungeon-progression redesign.
 
 ## File lifecycle
@@ -17,7 +17,7 @@ related dungeon-progression redesign.
 - Slow permanent collection completion without relying on extremely low drop rates.
 - Replace one-fight whole-demon extraction with visible, deterministic progress.
 - Make every extracted rarity useful, including duplicates of already-summoned demons.
-- Give Echo refinement and future item types a natural home in a reusable inventory.
+- Give Echo refinement and future item types a natural home in a reusable bag.
 - Keep Common, Uncommon, and Rare demons relevant on deep dungeon floors.
 - Allow simple rarity-targeted Demonic Pacts to remain useful throughout a run.
 - Make dungeon difficulty scale through enemy count and Terror rather than filling
@@ -31,7 +31,7 @@ related dungeon-progression redesign.
 - Do not add a Dominion/team-power budget.
 - Do not build a general enemy squad-archetype system.
 - Do not award bonus Echoes for carrying a demon deeper or using it in more fights.
-- Do not add bag capacity, paid inventory slots, item weight, or inventory pressure.
+- Do not add bag capacity, paid bag slots, item weight, or bag pressure.
   Empty grid cells are decorative layout slots, not a finite capacity system.
 - Do not invent placeholder consumables, keys, or materials merely to fill the page.
 - Do not make normal late-floor difficulty depend on all-Mythic enemy teams.
@@ -53,11 +53,11 @@ related dungeon-progression redesign.
 
 ## Recommended implementation order
 
-1. Add shared Echo/refinement configuration, generic inventory storage, natural
+1. Add shared Echo/refinement configuration, generic bag storage, natural
    discovery storage, and transactional server helpers.
-2. Add inventory read/refine/summon APIs with automated tests while leaving live
+2. Add bag read/refine/summon APIs with automated tests while leaving live
    cashout behavior unchanged.
-3. Build `/inventory`, the Echo grid/detail actions, summoning presentation, navigation,
+3. Build `/bag`, the Echo grid/detail actions, summoning presentation, navigation,
    and lightweight Collection integration.
 4. Switch dungeon cashout from whole-demon saving to Echo extraction and update quests,
    achievements, alerts, compatibility behavior, and tests in the same deployable unit.
@@ -69,14 +69,14 @@ related dungeon-progression redesign.
 
 ## Agreed product model
 
-### Collection versus Inventory
+### Collection versus Bag
 
 - `/collection` contains permanently summoned demons.
-- `/inventory` contains stackable items, beginning with Demon Echoes.
-- Dungeon extraction adds an item to Inventory; it does not immediately add that demon
+- `/bag` contains stackable items, beginning with Demon Echoes.
+- Dungeon extraction adds an item to Bag; it does not immediately add that demon
   to Collection.
-- Collection may show lightweight missing-slot Echo progress and a link to Inventory,
-  but refinement and summoning actions live in Inventory.
+- Collection may show lightweight missing-slot Echo progress and a link to Bag,
+  but refinement and summoning actions live in Bag.
 
 ### Echo identity and extraction
 
@@ -119,7 +119,7 @@ not hard-coded independently in routes and UI.
 - Natural discovery remains recorded after an Echo stack is spent or a demon is
   summoned.
 - Refined Echoes do not count as natural discovery.
-- Refinement is manually initiated in Inventory and never silently consumes items.
+- Refinement is manually initiated in Bag and never silently consumes items.
 - Directly extracting the desired rarity must remain much faster than refining upward.
 - Refinement is allowed even if the source or target demon has already been summoned;
   the result is simply added to the target surplus stack.
@@ -151,20 +151,20 @@ Conversion rates:
   action.
 - Collection achievements are checked after summoning, not after Echo extraction.
 
-## Inventory page
+## Bag page
 
 ### Route and navigation
 
-- [x] Add authenticated `/inventory` and `/inventory/` routes.
-- [x] Add `inventory.html` using the shared authenticated app shell.
-- [x] Add Inventory navigation near Collection on desktop and mobile without breaking
+- [x] Add authenticated `/bag` and `/bag/` routes.
+- [x] Add `bag.html` using the shared authenticated app shell.
+- [x] Add Bag navigation near Collection on desktop and mobile without breaking
   existing navigation widths or active-route highlighting.
-- [x] Group World/Dungeon under Explore and Collection/Inventory under Hunter; order
+- [x] Group World/Dungeon under Explore and Collection/Bag under Hunter; order
   the primary navigation as Camp, Explore, Hunter, Rankings, then Guides.
-- [x] Add global `I` and `B` shortcuts that open Inventory while ignoring editable fields.
-- [x] Add appropriate metadata and prevent an authenticated inventory surface from
+- [x] Add global `I` and `B` shortcuts that open Bag while ignoring editable fields.
+- [x] Add appropriate metadata and prevent an authenticated bag surface from
   being treated as a public catalog page.
-- [x] Add a dedicated inventory UI module and page-specific CSS if appropriate.
+- [x] Add a dedicated bag UI module and page-specific CSS if appropriate.
 - [x] Apply normal asset cache-version updates to changed HTML/script/style references.
 
 ### Grid behavior
@@ -175,7 +175,7 @@ Conversion rates:
 - [x] Reuse the demon thumbnail/art for Echo items with a clear spectral treatment.
 - [x] Show the rarity border/color, Echo identity, and stack count on every tile.
 - [x] Show a rarity diamond in the top-left corner of every owned Echo slot.
-- [x] Make Inventory slots at least twice their original visual size on desktop and mobile.
+- [x] Make Bag slots at least twice their original visual size on desktop and mobile.
 - [x] Hide item rarity, name, and status in a World-style tooltip until hover, keyboard
   focus, or touch inspection.
 - [x] Keep the item tooltip anchored to its actual slot, including when the vault card
@@ -206,13 +206,13 @@ Conversion rates:
   state immediately after a successful action.
 - [x] Prevent duplicate requests while an action is pending.
 - [x] Surface server errors through the existing game-alert system.
-- [x] Remove the Inventory hero section and `No slot limit` pill; label the card simply
-  `Inventory`.
+- [x] Remove the Bag hero section and `No slot limit` pill; label the card simply
+  `Bag`.
 - [x] Make `Refine Echo` primary and keep Close/Summon as secondary actions using the
   shared game button styles.
 - [x] Center `Refine Echo` at a content-sized width instead of stretching it across the
   refinement panel.
-- [x] Generate and apply an Inventory-specific Echo-vault background using the established
+- [x] Generate and apply an Bag-specific Echo-vault background using the established
   dark-fantasy environment style and page-overlay treatment.
 
 ### Collection integration
@@ -220,21 +220,21 @@ Conversion rates:
 - [x] Continue showing all owned permanent demons normally.
 - [x] For a missing collection slot, show lightweight exact Echo progress such as
   `2/3 Echoes` when progress exists.
-- [x] Add `View in Inventory` for a missing slot with Echo progress.
+- [x] Add `View in Bag` for a missing slot with Echo progress.
 - [x] Do not duplicate refinement controls on Collection.
 - [x] Refresh Collection correctly after a summon without requiring stale cache data.
 
 ## Data model and server APIs
 
-### Generic inventory storage
+### Generic bag storage
 
-- [x] Add a durable player inventory table with a unique player/item key and a
+- [x] Add a durable player bag table with a unique player/item key and a
   non-negative quantity.
 - [x] Use stable item keys such as `echo:<typeId>:<rarity>` or equivalently structured
   columns; do not use localized display names as identifiers.
 - [x] Derive Echo display metadata from authoritative demon types/assets rather than
   storing duplicate mutable names and image URLs in every player row.
-- [x] Add indexes needed for player inventory reads and transactional item updates.
+- [x] Add indexes needed for player bag reads and transactional item updates.
 - [x] Add schema initialization/migration support consistent with the existing project.
 - [x] Preserve all existing `player_demons` rows; current players keep their collection.
 - [x] Decide and document whether the automatically granted starter demon remains a
@@ -248,11 +248,11 @@ Conversion rates:
 - [x] Mark discovery only from a legitimate dungeon extraction of that exact Echo.
 - [x] Do not mark discovery when an Echo is created by refinement, administrative
   repair, or migration unless explicitly intended.
-- [x] Return discovery state through Inventory API responses where needed.
+- [x] Return discovery state through Bag API responses where needed.
 
-### Inventory API
+### Bag API
 
-- [x] Add an authenticated inventory read endpoint returning normalized item stacks,
+- [x] Add an authenticated bag read endpoint returning normalized item stacks,
   Echo metadata, requirements, available actions, and discovery state.
 - [x] Add a transactional refinement endpoint.
 - [x] Validate player ownership, source/target adjacency, same-species conversion,
@@ -271,12 +271,12 @@ Conversion rates:
 ### Dungeon cashout changes
 
 - [x] Replace whole-demon collection saving in normal dungeon cashout with one exact
-  Echo inventory increment.
+  Echo bag increment.
 - [x] Continue accepting the current valid team/reward/reserved extraction choices.
 - [x] Record natural discovery during successful extraction.
 - [x] Preserve skip-Echo cashout behavior.
 - [x] Update the response contract to describe the extracted Echo and resulting stack.
-- [x] Update cashout UI copy from permanent demon ownership to Inventory progress.
+- [x] Update cashout UI copy from permanent demon ownership to Bag progress.
 - [x] Decide how the existing daily `extract a demon` quest is worded and counted.
   Recommended: one successfully extracted Echo still completes extraction progress.
 - [x] Keep account XP, Souls, level changes, run ending, pending reward settlement, and
@@ -338,7 +338,7 @@ Locked deep normal distribution:
 - [x] Keep enough natural variation that higher-rarity encounters can still feel more
   threatening; do not normalize every encounter into perfect sameness without testing.
 - [x] Remove the temporary compensation when an enemy becomes a player recruit/reward.
-- [x] Show normal permanent/base stats in extraction and Inventory contexts.
+- [x] Show normal permanent/base stats in extraction and Bag contexts.
 - [x] If a Convergence is intentionally harder than the ordinary floor target, add an
   explicit reward bonus; do not silently increase risk without compensation.
 
@@ -423,9 +423,9 @@ Historical calibration notes from the brainstorm:
 
 ## Automated tests
 
-### Inventory and Echoes
+### Bag and Echoes
 
-- [ ] Inventory read returns only the authenticated player's item stacks.
+- [ ] Bag read returns only the authenticated player's item stacks.
 - [ ] Extraction increments exactly one correct type/rarity Echo.
 - [ ] Carry depth never changes the awarded Echo count.
 - [ ] Duplicate extraction remains allowed after summoning.
@@ -457,7 +457,7 @@ Historical calibration notes from the brainstorm:
 - [x] Targeted Pact stats apply only to eligible player demons.
 - [x] Untargeted Pact tests remain unchanged.
 - [x] Multiple targeted and untargeted Pacts stack according to existing rules.
-- [ ] Inventory sorting/filtering/action state has focused client tests where practical.
+- [ ] Bag sorting/filtering/action state has focused client tests where practical.
 - [ ] Cashout, collection, navigation, alerts, and responsive UI tests are updated.
 - [x] The complete existing test suite passes.
 
@@ -465,7 +465,7 @@ Historical calibration notes from the brainstorm:
 
 - [ ] Extract the first natural Echo of an unowned Rare and a higher rarity. Common was
   verified end to end on a disposable guest.
-- [x] Verify extraction copy clearly says Inventory progress, not permanent ownership.
+- [x] Verify extraction copy clearly says Bag progress, not permanent ownership.
 - [x] Refine an eligible Echo and verify both stacks update without reload.
 - [ ] Attempt every locked/invalid refinement state and confirm useful explanations.
   Insufficient quantity was verified. (2026-07-20: the undiscovered-target lock was
@@ -486,7 +486,7 @@ Historical calibration notes from the brainstorm:
 ## Documentation and final completion gate
 
 - [x] Update README routes, API endpoints, database tables, Dungeon Runs, Demonic Pacts,
-  Collection, and Inventory documentation.
+  Collection, and Bag documentation.
 - [x] Document the authoritative summoning/refinement configurations.
 - [x] Document migration/compatibility behavior for existing players and starter demons.
 - [x] Remove stale documentation saying extraction saves one permanent demon.
@@ -502,7 +502,7 @@ Historical calibration notes from the brainstorm:
 
 - 2026-07-19: Replace whole-demon dungeon extraction with exact type/rarity Echoes.
 - 2026-07-19: Award exactly one Echo per extraction; carrying deeper gives no bonus.
-- 2026-07-19: Create a dedicated `/inventory` item grid and keep `/collection` focused on
+- 2026-07-19: Create a dedicated `/bag` item grid and keep `/collection` focused on
   permanently summoned demons.
 - 2026-07-19: Never block extraction because a demon is already summoned; bank surplus.
 - 2026-07-19: Use same-species, one-tier refinement gated by first natural discovery.
@@ -518,7 +518,7 @@ Historical calibration notes from the brainstorm:
   25% floor-10+ Convergence rate, rare normal Mythic roll, and three rarity Pacts after
   deterministic milestone simulation.
 - 2026-07-19: Core desktop/mobile flow was verified on a disposable guest: extract a
-  Common Echo, inspect Inventory, summon it, see it in Collection, refine a seeded
+  Common Echo, inspect Bag, summon it, see it in Collection, refine a seeded
   3-to-1 stack, and inspect both quantity and natural-discovery lock states.
 - 2026-07-20: Remove the natural-discovery gate on refinement. Refining into the next
   rarity requires only enough source Echoes; the player chooses freely between banking
@@ -526,7 +526,7 @@ Historical calibration notes from the brainstorm:
   felt arbitrary in practice — notably for the free type 1 starter line, whose owner
   had never "naturally extracted" anything. Discovery history is still recorded for
   extraction provenance display.
-- 2026-07-19: Revise Inventory presentation to a viewport-filling decorative slot grid.
+- 2026-07-19: Revise Bag presentation to a viewport-filling decorative slot grid.
   Empty slots do not create capacity; scrolling begins only after the visible grid is
   full. Slots use a larger artwork-forward footprint, item copy appears in a World-style
   interaction tooltip, and rarity is represented by a top-left diamond.

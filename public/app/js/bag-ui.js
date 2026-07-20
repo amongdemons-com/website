@@ -14,8 +14,8 @@
   };
   const getRarityColor = window.AmongDemons.ui.getRarityColor
     || ((rarity) => RARITY_COLORS[String(rarity || '').toLowerCase()] || RARITY_COLORS.common);
-  const renderItemVisual = window.AmongDemons.inventoryVisuals?.renderItemVisual
-    || (() => '<span class="inventory-item-renderer inventory-unknown-visual" aria-hidden="true"></span>');
+  const renderItemVisual = window.AmongDemons.bagVisuals?.renderItemVisual
+    || (() => '<span class="bag-item-renderer bag-unknown-visual" aria-hidden="true"></span>');
   const RARITY_RANK = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5, mythic: 6 };
   const SUMMON_REVEAL_DELAY_MS = 3000;
   const state = {
@@ -52,55 +52,55 @@
       }
     }
 
-    await refreshInventory();
+    await refreshBag();
   }
 
   function cacheElements() {
-    ['inventoryCount', 'inventoryFilter', 'inventorySort', 'inventoryLoading', 'inventoryGridViewport', 'inventoryGrid', 'inventoryItemTooltip', 'inventoryDetailModal', 'inventoryDetailContent', 'inventorySummonModal', 'inventorySummonContent', 'inventoryRefineModal', 'inventoryRefineContent']
+    ['bagCount', 'bagFilter', 'bagSort', 'bagLoading', 'bagGridViewport', 'bagGrid', 'bagItemTooltip', 'bagDetailModal', 'bagDetailContent', 'bagSummonModal', 'bagSummonContent', 'bagRefineModal', 'bagRefineContent']
       .forEach((id) => { elements[id] = document.getElementById(id); });
   }
 
   function bindActions() {
-    elements.inventoryFilter.addEventListener('change', () => {
-      state.filter = elements.inventoryFilter.value;
-      renderInventory();
+    elements.bagFilter.addEventListener('change', () => {
+      state.filter = elements.bagFilter.value;
+      renderBag();
     });
-    elements.inventorySort.addEventListener('change', () => {
-      state.sort = elements.inventorySort.value;
-      renderInventory();
+    elements.bagSort.addEventListener('change', () => {
+      state.sort = elements.bagSort.value;
+      renderBag();
     });
-    elements.inventoryGrid.addEventListener('pointerdown', (event) => {
+    elements.bagGrid.addEventListener('pointerdown', (event) => {
       state.lastPointerType = event.pointerType || 'mouse';
     });
-    elements.inventoryGrid.addEventListener('pointerover', (event) => {
-      const item = event.target.closest('[data-inventory-key]');
+    elements.bagGrid.addEventListener('pointerover', (event) => {
+      const item = event.target.closest('[data-bag-key]');
       if (!item || item.contains(event.relatedTarget) || event.pointerType === 'touch') return;
-      showItemTooltip(item.dataset.inventoryKey, item);
+      showItemTooltip(item.dataset.bagKey, item);
     });
-    elements.inventoryGrid.addEventListener('pointerout', (event) => {
-      const item = event.target.closest('[data-inventory-key]');
-      if (!item || item.contains(event.relatedTarget) || elements.inventoryItemTooltip.contains(event.relatedTarget) || state.inspectedKey === item.dataset.inventoryKey) return;
+    elements.bagGrid.addEventListener('pointerout', (event) => {
+      const item = event.target.closest('[data-bag-key]');
+      if (!item || item.contains(event.relatedTarget) || elements.bagItemTooltip.contains(event.relatedTarget) || state.inspectedKey === item.dataset.bagKey) return;
       scheduleItemTooltipHide();
     });
-    elements.inventoryGrid.addEventListener('focusin', (event) => {
-      const item = event.target.closest('[data-inventory-key]');
-      if (item) showItemTooltip(item.dataset.inventoryKey, item);
+    elements.bagGrid.addEventListener('focusin', (event) => {
+      const item = event.target.closest('[data-bag-key]');
+      if (item) showItemTooltip(item.dataset.bagKey, item);
     });
-    elements.inventoryGrid.addEventListener('focusout', (event) => {
-      const item = event.target.closest('[data-inventory-key]');
-      if (!item || item.contains(event.relatedTarget) || elements.inventoryItemTooltip.contains(event.relatedTarget) || state.inspectedKey === item.dataset.inventoryKey) return;
+    elements.bagGrid.addEventListener('focusout', (event) => {
+      const item = event.target.closest('[data-bag-key]');
+      if (!item || item.contains(event.relatedTarget) || elements.bagItemTooltip.contains(event.relatedTarget) || state.inspectedKey === item.dataset.bagKey) return;
       scheduleItemTooltipHide();
     });
-    elements.inventoryGrid.addEventListener('click', (event) => {
-      const item = event.target.closest('[data-inventory-key]');
+    elements.bagGrid.addEventListener('click', (event) => {
+      const item = event.target.closest('[data-bag-key]');
       if (!item) return;
-      const itemKey = item.dataset.inventoryKey;
+      const itemKey = item.dataset.bagKey;
       const touchLike = state.lastPointerType === 'touch' || window.matchMedia('(hover: none), (pointer: coarse)').matches;
       if (touchLike && state.inspectedKey !== itemKey) {
         state.inspectedKey = itemKey;
-        renderInventory();
+        renderBag();
         window.requestAnimationFrame(() => {
-          const inspectedItem = elements.inventoryGrid.querySelector(`[data-inventory-key="${cssEscape(itemKey)}"]`);
+          const inspectedItem = elements.bagGrid.querySelector(`[data-bag-key="${cssEscape(itemKey)}"]`);
           inspectedItem?.focus({ preventScroll: true });
           showItemTooltip(itemKey, inspectedItem);
         });
@@ -109,55 +109,55 @@
       openItem(itemKey);
     });
     document.addEventListener('pointerdown', (event) => {
-      if (event.target.closest('[data-inventory-key], #inventoryItemTooltip')) return;
+      if (event.target.closest('[data-bag-key], #bagItemTooltip')) return;
       state.inspectedKey = null;
-      elements.inventoryGrid.querySelector('.is-inspecting')?.classList.remove('is-inspecting');
+      elements.bagGrid.querySelector('.is-inspecting')?.classList.remove('is-inspecting');
       hideItemTooltip();
     });
-    elements.inventoryItemTooltip.addEventListener('pointerover', cancelItemTooltipHide);
-    elements.inventoryItemTooltip.addEventListener('pointerout', (event) => {
-      if (elements.inventoryItemTooltip.contains(event.relatedTarget)) return;
-      const relatedItem = event.relatedTarget?.closest?.('[data-inventory-key]');
-      if (relatedItem?.dataset.inventoryKey === elements.inventoryItemTooltip.dataset.inventoryKey) return;
+    elements.bagItemTooltip.addEventListener('pointerover', cancelItemTooltipHide);
+    elements.bagItemTooltip.addEventListener('pointerout', (event) => {
+      if (elements.bagItemTooltip.contains(event.relatedTarget)) return;
+      const relatedItem = event.relatedTarget?.closest?.('[data-bag-key]');
+      if (relatedItem?.dataset.bagKey === elements.bagItemTooltip.dataset.bagKey) return;
       if (!state.inspectedKey) scheduleItemTooltipHide();
     });
-    elements.inventoryItemTooltip.addEventListener('focusin', cancelItemTooltipHide);
-    elements.inventoryItemTooltip.addEventListener('focusout', (event) => {
-      if (elements.inventoryItemTooltip.contains(event.relatedTarget) || state.inspectedKey) return;
+    elements.bagItemTooltip.addEventListener('focusin', cancelItemTooltipHide);
+    elements.bagItemTooltip.addEventListener('focusout', (event) => {
+      if (elements.bagItemTooltip.contains(event.relatedTarget) || state.inspectedKey) return;
       scheduleItemTooltipHide();
     });
-    elements.inventoryItemTooltip.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-inventory-tooltip-open]');
-      if (button) openItem(button.dataset.inventoryTooltipOpen);
+    elements.bagItemTooltip.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-bag-tooltip-open]');
+      if (button) openItem(button.dataset.bagTooltipOpen);
     });
-    elements.inventoryGridViewport.addEventListener('scroll', () => {
+    elements.bagGridViewport.addEventListener('scroll', () => {
       if (!state.inspectedKey) {
         hideItemTooltip();
         return;
       }
-      const item = elements.inventoryGrid.querySelector(`[data-inventory-key="${cssEscape(state.inspectedKey)}"]`);
+      const item = elements.bagGrid.querySelector(`[data-bag-key="${cssEscape(state.inspectedKey)}"]`);
       showItemTooltip(state.inspectedKey, item);
     }, { passive: true });
-    elements.inventoryDetailContent.addEventListener('click', handleDetailAction);
+    elements.bagDetailContent.addEventListener('click', handleDetailAction);
 
     const resizeObserver = new ResizeObserver(scheduleSlotMeasurement);
-    resizeObserver.observe(elements.inventoryGridViewport);
+    resizeObserver.observe(elements.bagGridViewport);
     window.addEventListener('resize', scheduleSlotMeasurement, { passive: true });
   }
 
-  async function refreshInventory() {
-    elements.inventoryLoading.hidden = false;
-    elements.inventoryGridViewport.hidden = true;
+  async function refreshBag() {
+    elements.bagLoading.hidden = false;
+    elements.bagGridViewport.hidden = true;
     try {
-      const payload = await api('/api/inventory');
+      const payload = await api('/api/bag');
       applyPayload(payload);
     } catch (error) {
       showError(error);
       state.items = [];
-      renderInventory();
+      renderBag();
     } finally {
-      elements.inventoryLoading.hidden = true;
-      elements.inventoryGridViewport.hidden = false;
+      elements.bagLoading.hidden = true;
+      elements.bagGridViewport.hidden = false;
       scheduleSlotMeasurement();
     }
   }
@@ -165,31 +165,31 @@
   function applyPayload(payload = {}) {
     state.items = Array.isArray(payload.items) ? payload.items : [];
     state.config = payload.config || state.config || {};
-    renderInventory();
+    renderBag();
     if (state.selectedKey) {
       const item = getSelectedItem();
       if (item) renderItemDetail(item);
     }
   }
 
-  function renderInventory() {
+  function renderBag() {
     const items = state.items
       .filter((item) => state.filter === 'all' || item.itemType === state.filter)
       .sort(compareItems);
-    elements.inventoryCount.textContent = `${state.items.length} ${state.items.length === 1 ? 'stack' : 'stacks'}`;
+    elements.bagCount.textContent = `${state.items.length} ${state.items.length === 1 ? 'stack' : 'stacks'}`;
     const emptySlotCount = Math.max(0, state.slotCapacity - items.length);
-    elements.inventoryGrid.style.setProperty('--inventory-columns', state.slotColumns);
-    elements.inventoryGrid.innerHTML = [
+    elements.bagGrid.style.setProperty('--bag-columns', state.slotColumns);
+    elements.bagGrid.innerHTML = [
       ...items.map(renderItem),
       ...Array.from({ length: emptySlotCount }, renderEmptySlot)
     ].join('');
-    elements.inventoryGridViewport.classList.toggle('is-scrollable', items.length > state.slotCapacity);
+    elements.bagGridViewport.classList.toggle('is-scrollable', items.length > state.slotCapacity);
     if (!state.inspectedKey) {
       hideItemTooltip();
       return;
     }
 
-    const inspectedItem = elements.inventoryGrid.querySelector(`[data-inventory-key="${cssEscape(state.inspectedKey)}"]`);
+    const inspectedItem = elements.bagGrid.querySelector(`[data-bag-key="${cssEscape(state.inspectedKey)}"]`);
     if (!inspectedItem) {
       state.inspectedKey = null;
       hideItemTooltip();
@@ -205,18 +205,18 @@
     const aria = `${capitalize(rarity)} ${item.species} Echo, quantity ${item.quantity}. ${status}.`;
 
     return `
-      <button class="inventory-slot inventory-item inventory-item-kind-${escapeHtml(normalizeItemType(item.itemType))} ${item.summonReady ? 'is-ready' : ''} ${state.inspectedKey === item.itemKey ? 'is-inspecting' : ''}" type="button" data-inventory-key="${escapeHtml(item.itemKey)}" style="--item-rarity: ${escapeHtml(color)}" aria-label="${escapeHtml(aria)}">
-        <span class="inventory-rarity-diamond" aria-hidden="true"></span>
-        <span class="inventory-item-visual">
+      <button class="bag-slot bag-item bag-item-kind-${escapeHtml(normalizeItemType(item.itemType))} ${item.summonReady ? 'is-ready' : ''} ${state.inspectedKey === item.itemKey ? 'is-inspecting' : ''}" type="button" data-bag-key="${escapeHtml(item.itemKey)}" style="--item-rarity: ${escapeHtml(color)}" aria-label="${escapeHtml(aria)}">
+        <span class="bag-rarity-diamond" aria-hidden="true"></span>
+        <span class="bag-item-visual">
           ${renderItemVisual(item, { context: 'slot' })}
-          <span class="inventory-item-count">x${escapeHtml(formatNumber(item.quantity))}</span>
+          <span class="bag-item-count">x${escapeHtml(formatNumber(item.quantity))}</span>
         </span>
       </button>
     `;
   }
 
   function renderEmptySlot() {
-    return '<span class="inventory-slot inventory-slot-empty" aria-hidden="true"></span>';
+    return '<span class="bag-slot bag-slot-empty" aria-hidden="true"></span>';
   }
 
   function openItem(itemKey) {
@@ -227,7 +227,7 @@
     hideItemTooltip();
     state.selectedKey = itemKey;
     renderItemDetail(item);
-    bootstrap.Modal.getOrCreateInstance(elements.inventoryDetailModal).show();
+    bootstrap.Modal.getOrCreateInstance(elements.bagDetailModal).show();
   }
 
   function renderItemDetail(item) {
@@ -244,20 +244,20 @@
         ? 'Known through Collection'
         : 'Refined Echo';
 
-    elements.inventoryDetailContent.style.setProperty('--item-rarity', color);
-    elements.inventoryDetailContent.innerHTML = `
-      <div class="inventory-detail-head">
-        <div class="inventory-detail-visual">${renderItemVisual(item, { context: 'detail' })}</div>
+    elements.bagDetailContent.style.setProperty('--item-rarity', color);
+    elements.bagDetailContent.innerHTML = `
+      <div class="bag-detail-head">
+        <div class="bag-detail-visual">${renderItemVisual(item, { context: 'detail' })}</div>
         <div>
-          <span class="inventory-detail-rarity">${escapeHtml(capitalize(rarity))} Demon Echo</span>
-          <h2 class="h4 mb-1" id="inventoryDetailTitle">${escapeHtml(item.species)}</h2>
+          <span class="bag-detail-rarity">${escapeHtml(capitalize(rarity))} Demon Echo</span>
+          <h2 class="h4 mb-1" id="bagDetailTitle">${escapeHtml(item.species)}</h2>
           <span class="text-muted">${escapeHtml(capitalize(item.role || 'Demon'))} - ${escapeHtml(item.preferredPosition || 'front')} line</span>
-          <span class="inventory-detail-discovery">${renderIcon(item.naturallyDiscovered ? 'check' : 'info')}<span>Source: ${escapeHtml(discoveryCopy)}</span></span>
+          <span class="bag-detail-discovery">${renderIcon(item.naturallyDiscovered ? 'check' : 'info')}<span>Source: ${escapeHtml(discoveryCopy)}</span></span>
         </div>
-        <button type="button" class="btn-close inventory-detail-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close bag-detail-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="inventory-detail-body">
-        <section class="inventory-detail-panel">
+      <div class="bag-detail-body">
+        <section class="bag-detail-panel">
           <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
             <h3 class="mb-0">${escapeHtml(summonTitle)}</h3>
             <strong>x${escapeHtml(formatNumber(item.quantity))}</strong>
@@ -265,9 +265,9 @@
           <p class="small text-muted">${escapeHtml(summonCopy)}</p>
           ${item.owned ? '' : `
             <div class="d-flex justify-content-between small mb-1"><span>Echo progress</span><strong>${escapeHtml(`${item.summonProgress}/${item.summonRequirement}`)}</strong></div>
-            <div class="inventory-progress-track" aria-label="${escapeHtml(`${progress}% of Echoes gathered`)}"><div class="inventory-progress-fill" style="width: ${progress}%"></div></div>
+            <div class="bag-progress-track" aria-label="${escapeHtml(`${progress}% of Echoes gathered`)}"><div class="bag-progress-fill" style="width: ${progress}%"></div></div>
             ${item.summonReady ? `
-              <button class="btn btn-sm btn-primary inventory-summon-action" type="button" data-inventory-action="summon" ${state.pending ? 'disabled' : ''}>
+              <button class="btn btn-sm btn-primary bag-summon-action" type="button" data-bag-action="summon" ${state.pending ? 'disabled' : ''}>
                 ${state.pendingAction === 'summon' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
                 <span>${state.pendingAction === 'summon' ? 'Summoning...' : 'Summon Demon'}</span>
               </button>
@@ -276,7 +276,7 @@
         </section>
         ${renderRefinementPanel(item)}
       </div>
-      <div class="inventory-detail-actions">
+      <div class="bag-detail-actions">
         <button class="btn btn-glass-muted" type="button" data-bs-dismiss="modal">Close</button>
         ${item.owned ? '<a class="btn btn-glass-muted" href="/collection">View Collection</a>' : ''}
       </div>
@@ -286,7 +286,7 @@
   function renderRefinementPanel(item) {
     if (!item.nextRarity) {
       return `
-        <section class="inventory-detail-panel">
+        <section class="bag-detail-panel">
           <h3>Refinement</h3>
           <p class="small text-muted mb-0">Mythic is the highest Echo rarity. Surplus Mythic Echoes remain safely stored.</p>
         </section>
@@ -301,16 +301,16 @@
       : `Consume ${item.refinementCost} ${sourceLabel} Echoes to create one ${targetLabel} Echo.`;
 
     return `
-      <section class="inventory-detail-panel">
+      <section class="bag-detail-panel">
         <h3>Refinement</h3>
-        <div class="inventory-recipe" aria-label="${escapeHtml(`${item.refinementCost} ${sourceLabel} Echoes become 1 ${targetLabel} Echo`)}">
-          <div class="inventory-recipe-item"><strong>x${escapeHtml(item.refinementCost)}</strong><small class="d-block inventory-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.rarity))}">${escapeHtml(capitalize(item.rarity))}</small></div>
+        <div class="bag-recipe" aria-label="${escapeHtml(`${item.refinementCost} ${sourceLabel} Echoes become 1 ${targetLabel} Echo`)}">
+          <div class="bag-recipe-item"><strong>x${escapeHtml(item.refinementCost)}</strong><small class="d-block bag-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.rarity))}">${escapeHtml(capitalize(item.rarity))}</small></div>
           <span aria-hidden="true">${renderIcon('arrow-right')}</span>
-          <div class="inventory-recipe-item"><strong>x1</strong><small class="d-block inventory-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.nextRarity))}">${escapeHtml(capitalize(item.nextRarity))}</small></div>
+          <div class="bag-recipe-item"><strong>x1</strong><small class="d-block bag-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.nextRarity))}">${escapeHtml(capitalize(item.nextRarity))}</small></div>
         </div>
         <p class="small text-muted">${escapeHtml(lockedCopy)}</p>
-        ${state.detailError ? `<div class="inventory-action-error mb-3" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
-        <button class="btn btn-sm btn-primary inventory-refine-action" type="button" data-inventory-action="refine" ${item.canRefine && !state.pending ? '' : 'disabled'}>
+        ${state.detailError ? `<div class="bag-action-error mb-3" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
+        <button class="btn btn-sm btn-primary bag-refine-action" type="button" data-bag-action="refine" ${item.canRefine && !state.pending ? '' : 'disabled'}>
           ${state.pendingAction === 'refine' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
           <span>${state.pendingAction === 'refine' ? 'Refining...' : 'Refine Echo'}</span>
         </button>
@@ -319,17 +319,17 @@
   }
 
   async function handleDetailAction(event) {
-    const button = event.target.closest('[data-inventory-action]');
+    const button = event.target.closest('[data-bag-action]');
     if (!button || state.pending) return;
     const item = getSelectedItem();
     if (!item) return;
-    const action = button.dataset.inventoryAction;
+    const action = button.dataset.bagAction;
 
     if (action === 'refine') {
-      await performAction('/api/inventory/echoes/refine', item, 'refine');
+      await performAction('/api/bag/echoes/refine', item, 'refine');
     }
     if (action === 'summon') {
-      await performAction('/api/inventory/echoes/summon', item, 'summon');
+      await performAction('/api/bag/echoes/summon', item, 'summon');
     }
   }
 
@@ -371,10 +371,10 @@
       state.pending = false;
       state.pendingAction = null;
       const selected = getSelectedItem();
-      if (selected && elements.inventoryDetailModal.classList.contains('show')) {
+      if (selected && elements.bagDetailModal.classList.contains('show')) {
         renderItemDetail(selected);
       } else if (!selected) {
-        bootstrap.Modal.getOrCreateInstance(elements.inventoryDetailModal).hide();
+        bootstrap.Modal.getOrCreateInstance(elements.bagDetailModal).hide();
       }
     }
   }
@@ -383,21 +383,21 @@
     const targetItem = getRefinementTargetItem(sourceItem, payload);
     const targetRarity = normalizeRarity(targetItem.rarity);
     const targetSpecies = targetItem.species || sourceItem.species;
-    elements.inventoryRefineContent.style.setProperty('--item-rarity', getRarityColor(targetRarity));
-    elements.inventoryRefineContent.innerHTML = `
+    elements.bagRefineContent.style.setProperty('--item-rarity', getRarityColor(targetRarity));
+    elements.bagRefineContent.innerHTML = `
       <div class="modal-header">
         <div>
-          <p class="inventory-action-kicker mb-1">Refinement complete</p>
-          <h2 class="modal-title h4" id="inventoryRefineTitle"><span class="inventory-action-title-rarity">${escapeHtml(capitalize(targetRarity))}</span> ${escapeHtml(targetSpecies)} Echo</h2>
+          <p class="bag-action-kicker mb-1">Refinement complete</p>
+          <h2 class="modal-title h4" id="bagRefineTitle"><span class="bag-action-title-rarity">${escapeHtml(capitalize(targetRarity))}</span> ${escapeHtml(targetSpecies)} Echo</h2>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body inventory-action-result-body">
-        <div class="inventory-action-echo-result">${renderItemVisual(targetItem, { context: 'detail' })}</div>
-        <p class="inventory-action-description" id="inventoryRefineDescription">Your refined Echo has been added to Inventory.</p>
+      <div class="modal-body bag-action-result-body">
+        <div class="bag-action-echo-result">${renderItemVisual(targetItem, { context: 'detail' })}</div>
+        <p class="bag-action-description" id="bagRefineDescription">Your refined Echo has been added to Bag.</p>
       </div>
     `;
-    transitionBetweenModals(elements.inventoryDetailModal, elements.inventoryRefineModal);
+    transitionBetweenModals(elements.bagDetailModal, elements.bagRefineModal);
   }
 
   function getRefinementTargetItem(sourceItem, payload = {}) {
@@ -433,8 +433,8 @@
     stopSummonRitual();
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return 0;
 
-    const target = elements.inventoryDetailContent;
-    const action = target?.querySelector('.inventory-summon-action');
+    const target = elements.bagDetailContent;
+    const action = target?.querySelector('.bag-summon-action');
     if (!target || !action) return 0;
 
     const actionRect = action.getBoundingClientRect();
@@ -442,14 +442,14 @@
     const coreX = actionRect.left + (actionRect.width / 2);
     const coreY = actionRect.top + (actionRect.height / 2);
     const ritual = document.createElement('div');
-    ritual.className = 'inventory-summon-ritual';
+    ritual.className = 'bag-summon-ritual';
     ritual.setAttribute('aria-hidden', 'true');
     ritual.style.setProperty('--item-rarity', target.style.getPropertyValue('--item-rarity'));
     ritual.style.setProperty('--summon-core-x', `${coreX.toFixed(1)}px`);
     ritual.style.setProperty('--summon-core-y', `${coreY.toFixed(1)}px`);
     ritual.innerHTML = `
-      <div class="inventory-summon-vortex">${renderSummonParticles(viewportRect)}</div>
-      <div class="inventory-summon-core"></div>
+      <div class="bag-summon-vortex">${renderSummonParticles(viewportRect)}</div>
+      <div class="bag-summon-core"></div>
     `;
 
     action.classList.add('is-summoning');
@@ -459,8 +459,8 @@
   }
 
   function stopSummonRitual() {
-    elements.inventoryDetailContent?.querySelector('.inventory-summon-action.is-summoning')?.classList.remove('is-summoning');
-    document.querySelectorAll('body > .inventory-summon-ritual').forEach((ritual) => ritual.remove());
+    elements.bagDetailContent?.querySelector('.bag-summon-action.is-summoning')?.classList.remove('is-summoning');
+    document.querySelectorAll('body > .bag-summon-ritual').forEach((ritual) => ritual.remove());
   }
 
   function renderSummonParticles(rect) {
@@ -477,7 +477,7 @@
       const duration = (SUMMON_REVEAL_DELAY_MS - delay) / 0.68;
       const size = randomBetween(0.55, 1.18);
       const spin = randomBetween(-260, 260);
-      return `<span class="inventory-summon-particle" style="--sx:${sx.toFixed(1)}px;--sy:${sy.toFixed(1)}px;--delay:${delay.toFixed(0)}ms;--duration:${duration.toFixed(0)}ms;--size:${size.toFixed(2)};--spin:${spin.toFixed(0)}deg"></span>`;
+      return `<span class="bag-summon-particle" style="--sx:${sx.toFixed(1)}px;--sy:${sy.toFixed(1)}px;--delay:${delay.toFixed(0)}ms;--duration:${duration.toFixed(0)}ms;--size:${size.toFixed(2)};--spin:${spin.toFixed(0)}deg"></span>`;
     }).join('');
   }
 
@@ -492,25 +492,25 @@
 
   function showSummonResult(demon) {
     const rarity = normalizeRarity(demon.rarity);
-    elements.inventorySummonContent.style.setProperty('--item-rarity', getRarityColor(rarity));
-    elements.inventorySummonContent.innerHTML = `
+    elements.bagSummonContent.style.setProperty('--item-rarity', getRarityColor(rarity));
+    elements.bagSummonContent.innerHTML = `
       <div class="modal-header">
         <div>
-          <p class="inventory-action-kicker mb-1">Summoning complete</p>
-          <h2 class="modal-title h4" id="inventorySummonTitle">${escapeHtml(`${capitalize(rarity)} ${demon.species || 'Demon'}`)}</h2>
+          <p class="bag-action-kicker mb-1">Summoning complete</p>
+          <h2 class="modal-title h4" id="bagSummonTitle">${escapeHtml(`${capitalize(rarity)} ${demon.species || 'Demon'}`)}</h2>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body inventory-action-result-body">
-        <img class="inventory-summon-portrait" src="${escapeHtml(demon.imageUrl || demon.image_url || '')}" alt="${escapeHtml(`${capitalize(rarity)} ${demon.species || 'demon'}`)}">
-        <p class="inventory-action-description" id="inventorySummonDescription">Your summon has joined your permanent Collection.</p>
+      <div class="modal-body bag-action-result-body">
+        <img class="bag-summon-portrait" src="${escapeHtml(demon.imageUrl || demon.image_url || '')}" alt="${escapeHtml(`${capitalize(rarity)} ${demon.species || 'demon'}`)}">
+        <p class="bag-action-description" id="bagSummonDescription">Your summon has joined your permanent Collection.</p>
       </div>
-      <div class="modal-footer inventory-action-footer-centered">
+      <div class="modal-footer bag-action-footer-centered">
         <a class="btn btn-primary" href="/collection">View Collection</a>
       </div>
     `;
 
-    transitionBetweenModals(elements.inventoryDetailModal, elements.inventorySummonModal);
+    transitionBetweenModals(elements.bagDetailModal, elements.bagSummonModal);
     audio?.play('sfx.progression.summonSuccess', { volume: 0.92 });
   }
 
@@ -543,22 +543,22 @@
 
   function showItemTooltip(itemKey, anchor) {
     const item = state.items.find((candidate) => candidate.itemKey === itemKey);
-    if (!item || !anchor || !elements.inventoryItemTooltip) {
+    if (!item || !anchor || !elements.bagItemTooltip) {
       hideItemTooltip();
       return;
     }
 
     const rarity = normalizeRarity(item.rarity);
-    const tooltip = elements.inventoryItemTooltip;
+    const tooltip = elements.bagItemTooltip;
     cancelItemTooltipHide();
-    tooltip.dataset.inventoryKey = itemKey;
+    tooltip.dataset.bagKey = itemKey;
     tooltip.style.setProperty('--item-rarity', getRarityColor(rarity));
     tooltip.innerHTML = `
-      <span class="inventory-tooltip-rarity">${escapeHtml(capitalize(rarity))} Echo</span>
-      <strong class="inventory-tooltip-title">${escapeHtml(item.species)}</strong>
-      <span class="inventory-tooltip-meta">${escapeHtml(capitalize(item.role || 'Demon'))} - x${escapeHtml(formatNumber(item.quantity))}</span>
-      <span class="inventory-tooltip-meta">${escapeHtml(getItemStatus(item))}</span>
-      <button class="inventory-tooltip-action" type="button" data-inventory-tooltip-open="${escapeHtml(itemKey)}">View details</button>
+      <span class="bag-tooltip-rarity">${escapeHtml(capitalize(rarity))} Echo</span>
+      <strong class="bag-tooltip-title">${escapeHtml(item.species)}</strong>
+      <span class="bag-tooltip-meta">${escapeHtml(capitalize(item.role || 'Demon'))} - x${escapeHtml(formatNumber(item.quantity))}</span>
+      <span class="bag-tooltip-meta">${escapeHtml(getItemStatus(item))}</span>
+      <button class="bag-tooltip-action" type="button" data-bag-tooltip-open="${escapeHtml(itemKey)}">View details</button>
     `;
     tooltip.hidden = false;
     tooltip.classList.remove('is-below');
@@ -588,11 +588,11 @@
   }
 
   function hideItemTooltip() {
-    if (!elements.inventoryItemTooltip) return;
+    if (!elements.bagItemTooltip) return;
     cancelItemTooltipHide();
-    elements.inventoryItemTooltip.hidden = true;
-    delete elements.inventoryItemTooltip.dataset.inventoryKey;
-    elements.inventoryItemTooltip.innerHTML = '';
+    elements.bagItemTooltip.hidden = true;
+    delete elements.bagItemTooltip.dataset.bagKey;
+    elements.bagItemTooltip.innerHTML = '';
   }
 
   function scheduleItemTooltipHide() {
@@ -611,7 +611,7 @@
   }
 
   function measureSlotCapacity() {
-    const viewport = elements.inventoryGridViewport;
+    const viewport = elements.bagGridViewport;
     if (!viewport) return;
     const width = viewport.clientWidth;
     const height = viewport.clientHeight;
@@ -628,12 +628,12 @@
 
     state.slotCapacity = capacity;
     state.slotColumns = columns;
-    renderInventory();
+    renderBag();
   }
 
   function showError(error) {
     if (typeof window.AmongDemons.showGameAlert === 'function') {
-      window.AmongDemons.showGameAlert(error, { context: 'inventory' });
+      window.AmongDemons.showGameAlert(error, { context: 'bag' });
     } else {
       console.error(error);
     }

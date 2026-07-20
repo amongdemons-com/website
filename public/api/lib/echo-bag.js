@@ -47,11 +47,11 @@ async function getEchoDefinition(typeId, rarity) {
   return definition;
 }
 
-async function getPlayerInventory(playerId, queryable = db) {
+async function getPlayerBag(playerId, queryable = db) {
   const catalogPromise = getEchoCatalog();
-  const [inventoryRows] = await queryable.query(
+  const [bagRows] = await queryable.query(
     `SELECT item_key AS itemKey, item_type AS itemType, quantity, updated_at AS updatedAt
-     FROM player_inventory
+     FROM player_bag
      WHERE player_id = ? AND quantity > 0
      ORDER BY updated_at DESC, item_key ASC`,
     [playerId]
@@ -71,9 +71,9 @@ async function getPlayerInventory(playerId, queryable = db) {
   const catalog = await catalogPromise;
   const discovered = new Map(discoveryRows.map((row) => [getEchoItemKey(row.typeId, row.rarity), row.discoveredAt]));
   const owned = new Map(demonRows.map((row) => [getEchoItemKey(row.typeId, row.rarity), Number(row.id)]));
-  const quantities = new Map(inventoryRows.map((row) => [row.itemKey, Math.max(0, Number(row.quantity) || 0)]));
+  const quantities = new Map(bagRows.map((row) => [row.itemKey, Math.max(0, Number(row.quantity) || 0)]));
 
-  const items = inventoryRows
+  const items = bagRows
     .map((row) => serializeEchoItem(catalog.get(row.itemKey), {
       quantity: row.quantity,
       discoveredAt: discovered.get(row.itemKey),
@@ -101,7 +101,7 @@ async function addEcho(playerId, demon, options = {}) {
   );
 
   await queryable.query(
-    `INSERT INTO player_inventory (player_id, item_key, item_type, quantity)
+    `INSERT INTO player_bag (player_id, item_key, item_type, quantity)
      VALUES (?, ?, 'echo', 1)
      ON DUPLICATE KEY UPDATE
        quantity = quantity + 1,
@@ -117,8 +117,8 @@ async function addEcho(playerId, demon, options = {}) {
     );
   }
 
-  const inventory = await getPlayerInventory(playerId, queryable);
-  return inventory.items.find((item) => item.itemKey === definition.itemKey) || null;
+  const bag = await getPlayerBag(playerId, queryable);
+  return bag.items.find((item) => item.itemKey === definition.itemKey) || null;
 }
 
 function serializeEchoItem(definition, state = {}) {
@@ -162,6 +162,6 @@ module.exports = {
   createHttpError,
   getEchoCatalog,
   getEchoDefinition,
-  getPlayerInventory,
+  getPlayerBag,
   serializeEchoItem
 };

@@ -4,25 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Inventory | Among Demons</title>
+    <title>Bag | Among Demons</title>
     <meta name="description" content="Manage extracted Demon Echoes, refine rarities, and summon permanent demons.">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/app/css/base.css?v=20260716-secondary-normalized-v1" rel="stylesheet">
-    <link href="/app/css/inventory.css?v=20260719-inventory-modals-v1" rel="stylesheet">
-    <link href="/app/css/inventory-item-visuals.css?v=20260719-echo-images-v6" rel="stylesheet">
+    <link href="/app/css/bag.css?v=20260719-bag-modals-v1" rel="stylesheet">
+    <link href="/app/css/bag-item-visuals.css?v=20260719-echo-images-v6" rel="stylesheet">
   </head>
-  <body class="inventory-page">
+  <body class="bag-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
       <div class="container-fluid">
         <a class="navbar-brand game-shell-brand" href="/" aria-label="Among Demons home">
           <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" class="logo-nav" width="40" height="40" loading="eager">
           <span class="game-shell-brand-copy"><span class="game-shell-brand-name">Among Demons</span></span>
         </a>
-        <button class="navbar-toggler game-shell-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#inventoryGameNav" aria-controls="inventoryGameNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler game-shell-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#bagGameNav" aria-controls="bagGameNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="inventoryGameNav">
+        <div class="collapse navbar-collapse" id="bagGameNav">
           <ul class="navbar-nav game-shell-tabs me-auto">
             <li class="nav-item"><a class="nav-link game-nav-link" href="/world" data-game-route="world"><i data-lucide="map"></i><span>World</span></a></li>
             <li class="nav-item"><a class="nav-link game-nav-link" href="/camp" data-game-route="camp"><i data-lucide="tent"></i><span>Camp</span></a></li>
@@ -32,7 +32,7 @@
               <ul class="dropdown-menu game-nav-dropdown-menu"><li><a class="dropdown-item game-nav-dropdown-item" href="/demons" data-game-route="demons"><i data-lucide="skull"></i><span>Demons</span></a></li><li><a class="dropdown-item game-nav-dropdown-item" href="/bosses" data-game-route="bosses"><i data-lucide="shield-alert"></i><span>Bosses</span></a></li></ul>
             </li>
             <li class="nav-item"><a class="nav-link game-nav-link" href="/collection" data-game-route="collection"><i data-lucide="grid-3x3"></i><span>Collection</span></a></li>
-            <li class="nav-item"><a class="nav-link game-nav-link active" href="/inventory" data-game-route="inventory" aria-current="page"><i data-lucide="amphora"></i><span>Inventory</span></a></li>
+            <li class="nav-item"><a class="nav-link game-nav-link active" href="/bag" data-game-route="bag" aria-current="page"><i data-lucide="amphora"></i><span>Bag</span></a></li>
             <li class="nav-item"><a class="nav-link game-nav-link" href="/rankings" data-game-route="rankings"><i data-lucide="trophy"></i><span>Rankings</span></a></li>
           </ul>
           <div class="nav-auth-actions game-shell-auth-actions" data-nav-auth-actions>
@@ -57,23 +57,23 @@
       </div>
     </nav>
 
-    <main class="container inventory-main">
-      <section class="card inventory-vault-card" aria-labelledby="inventoryVaultTitle">
-        <div class="card-header inventory-toolbar">
-          <div class="inventory-toolbar-title">
+    <main class="container bag-main">
+      <section class="card bag-vault-card" aria-labelledby="bagVaultTitle">
+        <div class="card-header bag-toolbar">
+          <div class="bag-toolbar-title">
             <div>
-              <h1 class="h4 mb-0" id="inventoryVaultTitle">Inventory</h1>
-              <small id="inventoryCount">0 stacks</small>
+              <h1 class="h4 mb-0" id="bagVaultTitle">Bag</h1>
+              <small id="bagCount">0 stacks</small>
             </div>
           </div>
-          <div class="inventory-controls">
-            <label class="visually-hidden" for="inventoryFilter">Item type</label>
-            <select class="form-select form-select-sm" id="inventoryFilter" aria-label="Item type">
+          <div class="bag-controls">
+            <label class="visually-hidden" for="bagFilter">Item type</label>
+            <select class="form-select form-select-sm" id="bagFilter" aria-label="Item type">
               <option value="all">All items</option>
               <option value="echo">Echoes</option>
             </select>
-            <label class="visually-hidden" for="inventorySort">Sort inventory</label>
-            <select class="form-select form-select-sm" id="inventorySort" aria-label="Sort inventory">
+            <label class="visually-hidden" for="bagSort">Sort bag</label>
+            <select class="form-select form-select-sm" id="bagSort" aria-label="Sort bag">
               <option value="ready">Ready first</option>
               <option value="rarity">Rarity</option>
               <option value="name">Name</option>
@@ -82,34 +82,34 @@
           </div>
         </div>
         <div class="card-body">
-          <div class="inventory-loading" id="inventoryLoading" role="status">
+          <div class="bag-loading" id="bagLoading" role="status">
             <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
             <span>Opening the vault...</span>
           </div>
-          <div class="inventory-grid-viewport" id="inventoryGridViewport">
-            <div class="inventory-grid" id="inventoryGrid" aria-live="polite"></div>
+          <div class="bag-grid-viewport" id="bagGridViewport">
+            <div class="bag-grid" id="bagGrid" aria-live="polite"></div>
           </div>
         </div>
       </section>
     </main>
 
-    <div class="inventory-item-tooltip" id="inventoryItemTooltip" role="tooltip" hidden></div>
+    <div class="bag-item-tooltip" id="bagItemTooltip" role="tooltip" hidden></div>
 
-    <div class="modal fade inventory-detail-modal" id="inventoryDetailModal" tabindex="-1" aria-labelledby="inventoryDetailTitle" aria-hidden="true">
+    <div class="modal fade bag-detail-modal" id="bagDetailModal" tabindex="-1" aria-labelledby="bagDetailTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content" id="inventoryDetailContent"></div>
+        <div class="modal-content" id="bagDetailContent"></div>
       </div>
     </div>
 
-    <div class="modal fade inventory-action-modal inventory-summon-modal" id="inventorySummonModal" tabindex="-1" aria-labelledby="inventorySummonTitle" aria-describedby="inventorySummonDescription" aria-hidden="true">
+    <div class="modal fade bag-action-modal bag-summon-modal" id="bagSummonModal" tabindex="-1" aria-labelledby="bagSummonTitle" aria-describedby="bagSummonDescription" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" id="inventorySummonContent"></div>
+        <div class="modal-content" id="bagSummonContent"></div>
       </div>
     </div>
 
-    <div class="modal fade inventory-action-modal inventory-refine-modal" id="inventoryRefineModal" tabindex="-1" aria-labelledby="inventoryRefineTitle" aria-describedby="inventoryRefineDescription" aria-hidden="true">
+    <div class="modal fade bag-action-modal bag-refine-modal" id="bagRefineModal" tabindex="-1" aria-labelledby="bagRefineTitle" aria-describedby="bagRefineDescription" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" id="inventoryRefineContent"></div>
+        <div class="modal-content" id="bagRefineContent"></div>
       </div>
     </div>
 
@@ -121,7 +121,7 @@
     <script src="/app/js/steam.js?v=20260716-steam-exit-v1"></script>
     <script src="/app/js/audio.js?v=20260717-audio-default-on-v1"></script>
     <script src="/app/js/navigation.js?v=20260719-nav-groups-v1"></script>
-    <script src="/app/js/inventory-item-visuals.js?v=20260719-echo-images-v3"></script>
-    <script src="/app/js/inventory-ui.js?v=20260720-refine-choice-v1"></script>
+    <script src="/app/js/bag-item-visuals.js?v=20260719-echo-images-v3"></script>
+    <script src="/app/js/bag-ui.js?v=20260720-refine-choice-v1"></script>
   </body>
 </html>

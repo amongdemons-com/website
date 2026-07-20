@@ -8,7 +8,7 @@ The game has two connected play spaces plus permanent progression:
 
 - **Dungeon runs** (`/dungeon`) — roguelite runs through unlimited floors. Draft two starting demons, auto-battle server-simulated fights, recruit defeated enemies, seal run-long Demonic Pacts, and extract with XP/Souls and one exact Demon Echo — or lose everything on defeat.
 - **World map** (`/world`) — a 101×101 tile overworld with roads, unpassable terrain, demon encounters, Forsaken Shrines, and Darkness Portals. Travel tile-by-tile (roads are far safer from ambushes), fight fixed encounter teams, leave a team passively hunting for Souls, and challenge other hunters standing on your tile to PvP.
-- **Permanent progression** — an Echo inventory and summoning flow (`/inventory`), a permanent demon collection with Soul-based training (`/collection`), an account skill tree fed by level-up stat points (`/skill-tree`), daily quests and a daily reward (`/camp`), public hunter profiles (`/hunter/:username`), and leaderboards (`/rankings`).
+- **Permanent progression** — an Echo bag and summoning flow (`/bag`), a permanent demon collection with Soul-based training (`/collection`), an account skill tree fed by level-up stat points (`/skill-tree`), daily quests and a daily reward (`/camp`), public hunter profiles (`/hunter/:username`), and leaderboards (`/rankings`).
 
 ## Tech Stack
 
@@ -112,7 +112,7 @@ amongdemons.com/
 | `/camp` | Authenticated hub: progression, current run briefing, daily quests, quick actions |
 | `/world` | World map exploration (Pixi.js) |
 | `/dungeon` | Dungeon run UI |
-| `/inventory` | Stackable item inventory with Echo refinement and summoning |
+| `/bag` | Stackable item bag with Echo refinement and summoning |
 | `/collection` | Collection browser with filters, sorting, missing slots, and Soul training |
 | `/skill-tree` | Account stat-point skill tree |
 | `/settings` | Account settings (username, profile demon) |
@@ -175,13 +175,13 @@ All routes are mounted under `/api`.
 | `GET` | `/demons/:id` | Return one owned permanent demon |
 | `POST` | `/demons/:id/train` | Spend Souls to train one demon server-side |
 
-### Inventory
+### Bag
 
 | Method | Route | Description |
 | --- | --- | --- |
-| `GET` | `/inventory` | Read owned item stacks, Echo recipes, discovery state, and action availability |
-| `POST` | `/inventory/echoes/refine` | Convert same-species Echoes into one Echo of the adjacent rarity |
-| `POST` | `/inventory/echoes/summon` | Consume exact Echoes and summon the permanent minimum-stat demon |
+| `GET` | `/bag` | Read owned item stacks, Echo recipes, discovery state, and action availability |
+| `POST` | `/bag/echoes/refine` | Convert same-species Echoes into one Echo of the adjacent rarity |
+| `POST` | `/bag/echoes/summon` | Consume exact Echoes and summon the permanent minimum-stat demon |
 
 ### Dungeon Runs
 
@@ -277,16 +277,16 @@ Players earn one stat point per account level (level − 1 total). Nodes are def
 
 Defined in `public/api/lib/daily-quests.js` with a UTC daily reset: win 3 dungeon fights, extract a Demon Echo, complete "Trial of the Few" (win at floor 3+ with an open team slot), win a PvP challenge, and start a world hunt, plus a claimable daily Souls reward. Rewards scale with account level.
 
-### Echo Inventory, Summoning, and Collection
+### Echo Bag, Summoning, and Collection
 
-- Dungeon extraction adds one exact `type + rarity` Echo stack to Inventory; it never directly creates or replaces a permanent demon. Echoes may continue accumulating after that slot is summoned.
+- Dungeon extraction adds one exact `type + rarity` Echo stack to Bag; it never directly creates or replaces a permanent demon. Echoes may continue accumulating after that slot is summoned.
 - Summoning requirements are Common `1`, Uncommon `2`, Rare `3`, Epic `5`, Legendary `8`, and Mythic `12`. Summoning atomically consumes only the requirement and creates the normal minimum-stat permanent demon; surplus remains banked.
 - Refinement stays within one species and advances one adjacent tier: Common→Uncommon costs `3`, Uncommon→Rare `3`, Rare→Epic `4`, Epic→Legendary `5`, and Legendary→Mythic `6`. Refining requires only enough source Echoes — the player freely chooses to refine or bank, regardless of whether the target rarity was previously extracted or summoned. Mythic surplus remains banked.
-- The permanent collection has one slot per demon type and rarity — 11 types × 6 rarities = 66 slots. Missing slots can show their exact Echo progress and link back to Inventory.
+- The permanent collection has one slot per demon type and rarity — 11 types × 6 rarities = 66 slots. Missing slots can show their exact Echo progress and link back to Bag.
 - Training (`POST /api/demons/:id/train`) is transactional and server-authoritative: it locks the player and demon rows, checks cost, spends Souls, and raises one stat by +1, picked with weighted randomness from stats below their caps.
 - Stat caps come from the matching type's `baseStats` maxima in `demon-types.json`. Cost starts at 2 Souls and grows with overall progress toward the caps, multiplied by rarity.
 
-Existing permanent demons and their training remain untouched. The automatically granted onboarding starter is intentionally still a direct collection grant. Natural discovery is stored separately from stack quantity as extraction history (shown as the Echo's source in Inventory) and remains recorded after a stack is spent.
+Existing permanent demons and their training remain untouched. The automatically granted onboarding starter is intentionally still a direct collection grant. Natural discovery is stored separately from stack quantity as extraction history (shown as the Echo's source in Bag) and remains recorded after a stack is spent.
 
 ### Combat
 
@@ -323,7 +323,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `oauth_states` | Short-lived OAuth CSRF state |
 | `player_stat_points` | Skill-tree allocations |
 | `player_demons` | Permanent owned demon collection |
-| `player_inventory` | Generic per-player item stacks, initially exact Demon Echoes |
+| `player_bag` | Generic per-player item stacks, initially exact Demon Echoes |
 | `player_echo_discoveries` | Permanent natural type/rarity extraction history |
 | `player_world_positions` | Server-side world coordinates |
 | `player_bound_world_shrines` | Anchored Forsaken Shrine return points |
@@ -343,7 +343,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `public/app/js/camp-ui.js` | Camp hub: progression, run briefing, daily quests, quick actions |
 | `public/app/js/world-ui.js` | Pixi.js world map: movement, shrines, portals, hunting, PvP |
 | `public/app/js/dungeon.js` + `public/app/js/dungeon/` | Dungeon UI modules: battle replay, drag/drop, recruitment, pacts, rewards |
-| `public/app/js/inventory-ui.js` | Inventory grid, sorting, Echo details, refinement, and summoning |
+| `public/app/js/bag-ui.js` | Bag grid, sorting, Echo details, refinement, and summoning |
 | `public/app/js/collection-ui.js` | Collection filters, sorting, missing slots, training modal |
 | `public/app/js/skill-tree-ui.js` | Skill-tree allocation UI |
 | `public/app/js/settings-ui.js` | Username and profile demon settings |
@@ -353,7 +353,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `public/app/js/navigation.js` | Shared navigation |
 | `public/app/js/lucide-subset.js` | Generated icon subset (see scripts) |
 
-CSS is split per page — `base.css` loads everywhere; `battle.css`, `camp.css`, `collection.css`, `inventory.css`, `skill-tree.css`, and `world.css` load only where needed.
+CSS is split per page — `base.css` loads everywhere; `battle.css`, `camp.css`, `collection.css`, `bag.css`, `skill-tree.css`, and `world.css` load only where needed.
 
 ## Backend Modules
 
@@ -370,7 +370,7 @@ CSS is split per page — `base.css` loads everywhere; `battle.css`, `camp.css`,
 | `public/api/lib/player-combat-buffs.js` | Skill-tree allocations → pre-battle combat buffs |
 | `public/api/lib/demon-factory.js` | Demon generation, rarity selection, stat rolls |
 | `public/api/lib/echo-config.js` | Authoritative Echo keys, summoning thresholds, and refinement costs |
-| `public/api/lib/echo-inventory.js` | Echo catalog metadata, item serialization, discovery, and stack writes |
+| `public/api/lib/echo-bag.js` | Echo catalog metadata, item serialization, discovery, and stack writes |
 | `public/api/lib/demon-training.js` | Training caps, costs, stat rolls |
 | `public/api/lib/dungeon-enemies.js` | Enemy pools, floor sizing, spawn pressure, scaling |
 | `public/api/lib/dungeon-rules.js` | Team-size and reinforcement constants |

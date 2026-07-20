@@ -67,7 +67,7 @@ function renderCashoutModal() {
             <span>${demonName}</span>
           ` : 'Run rewards only'}</h3>
           <p>${demon
-            ? 'One exact Echo will be secured in your Inventory.'
+            ? 'One exact Echo will be secured in your Bag.'
             : 'You will leave with run rewards only.'}</p>
         </div>
         <div class="cashout-section-title">
@@ -673,7 +673,7 @@ function getCashoutEchoMessage(result) {
   const rarity = capitalize(echo.rarity || 'common');
   const quantity = Math.max(1, Number(echo.quantity) || 1);
   const requirement = Math.max(1, Number(echo.summonRequirement) || 1);
-  return `${rarity} ${species} Echo secured in Inventory (${Math.min(quantity, requirement)}/${requirement}).`;
+  return `${rarity} ${species} Echo secured in Bag (${Math.min(quantity, requirement)}/${requirement}).`;
 }
 
 export {

@@ -30,6 +30,20 @@ async function normalizeUtf8Column(tableName, columnName, definition) {
   await db.query(`ALTER TABLE \`${tableName}\` MODIFY COLUMN \`${columnName}\` ${definition}`);
 }
 
+async function tableExists(tableName) {
+  const [rows] = await db.query(
+    'SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ? LIMIT 1',
+    [tableName]
+  );
+  return rows.length > 0;
+}
+
+async function renameTableIfPresent(fromTable, toTable) {
+  if (await tableExists(fromTable) && !(await tableExists(toTable))) {
+    await db.query(`RENAME TABLE \`${fromTable}\` TO \`${toTable}\``);
+  }
+}
+
 async function addIndexIfMissing(tableName, indexName, definition) {
   const [rows] = await db.query(`SHOW INDEX FROM \`${tableName}\` WHERE Key_name = ?`, [indexName]);
   if (!rows.length) {
@@ -397,8 +411,9 @@ async function initializeSchema() {
   );
   await runMigrationOnce(MINIMUM_PLAYER_DEMON_STATS_MIGRATION, normalizePlayerDemonMinimumStats);
 
+  await renameTableIfPresent('player_inventory', 'player_bag');
   await db.query(`
-    CREATE TABLE IF NOT EXISTS player_inventory (
+    CREATE TABLE IF NOT EXISTS player_bag (
       player_id VARCHAR(255) NOT NULL,
       item_key VARCHAR(96) NOT NULL,
       item_type VARCHAR(24) NOT NULL,
@@ -406,13 +421,14 @@ async function initializeSchema() {
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       PRIMARY KEY (player_id, item_key),
-      INDEX idx_player_inventory_type (player_id, item_type)
+      INDEX idx_player_bag_type (player_id, item_type)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
-  await normalizeUtf8Column('player_inventory', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
-  await normalizeUtf8Column('player_inventory', 'item_key', 'VARCHAR(96) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
-  await normalizeUtf8Column('player_inventory', 'item_type', 'VARCHAR(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
-  await addIndexIfMissing('player_inventory', 'idx_player_inventory_type', 'INDEX idx_player_inventory_type (player_id, item_type)');
+  await normalizeUtf8Column('player_bag', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_bag', 'item_key', 'VARCHAR(96) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_bag', 'item_type', 'VARCHAR(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await dropIndexIfPresent('player_bag', 'idx_player_inventory_type');
+  await addIndexIfMissing('player_bag', 'idx_player_bag_type', 'INDEX idx_player_bag_type (player_id, item_type)');
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_echo_discoveries (

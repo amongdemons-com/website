@@ -241,7 +241,7 @@
 .echo-motion-rise .echo-fill-surface { animation: echo-raster-rise 3.9s ease-in-out infinite; }
 .echo-motion-chaos .echo-fill-surface { animation: echo-raster-chaos 3.1s steps(4, end) infinite; }
 
-.inventory-unknown-visual {
+.bag-unknown-visual {
     position: relative;
     filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.52));
 }
