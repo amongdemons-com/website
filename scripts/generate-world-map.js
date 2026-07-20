@@ -28,7 +28,10 @@ const OUTPUT_PATH = path.join(DATA_DIR, 'map.json');
 const BOUNDS = { min: -50, max: 50 };
 const SPAWN = { x: 0, y: 0 };
 const SAFE_RADIUS = 3; // no blocks/encounters this close to spawn
-const MIN_ENCOUNTER_TEAM_SIZE = 3;
+// Every hunter can field a full 6-demon team (duplicates allowed), so demon
+// spots always field 6 as well; short legacy rolls are padded by
+// fillMinimumTeamSize without disturbing the shared map RNG.
+const MIN_ENCOUNTER_TEAM_SIZE = 6;
 const MAX_ENCOUNTER_TEAM_SIZE = 6;
 const MAX_DISTANCE = Math.hypot(50, 50); // farthest corner from center
 
