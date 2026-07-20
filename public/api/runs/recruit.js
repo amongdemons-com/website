@@ -324,6 +324,11 @@ function stageExtractChoice(run, choice) {
       error.status = 404;
       throw error;
     }
+    if (demon.collectionDemonId) {
+      const error = new Error('Demons recruited from your collection cannot be extracted.');
+      error.status = 409;
+      throw error;
+    }
 
     run.state.extractChoice = {
       key: choice.key || `team:${instanceId}`,

@@ -166,6 +166,7 @@ function cloneRewardCandidate(candidate) {
 }
 
 function canRewardCandidate(candidate) {
+  if (candidate.demon?.collectionDemonId) return false;
   return candidate.source === 'reward' || candidate.source === 'team' || candidate.source === 'reserved';
 }
 

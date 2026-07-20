@@ -8,6 +8,7 @@ const MAX_DUNGEON_TYPE_ID = 11;
 const MAX_DUNGEON_ENEMY_TEAM_SIZE = 9;
 const ENEMY_SIZE_INCREASE_START_FLOOR = 25;
 const ENEMY_SIZE_INCREASE_INTERVAL = 5;
+const EARLY_FLOOR_HANDICAP_END = 5;
 const DIFFICULTY_RAMP_FLOORS = 20;
 const ENEMY_PRESSURE_START_FLOOR = 18;
 const ENEMY_PRESSURE_FLOOR_HP = 0.045;
@@ -113,7 +114,10 @@ function getDungeonEnemyTeamSize(floor, fallbackSize) {
   const floorNumber = Number(floor) || 1;
   if (floorNumber === 1) return 1;
 
-  const baseSize = getDungeonTeamLimit(floor);
+  // Early floors field one fewer enemy than the player's team limit so new
+  // hunters aren't facing full-parity teams before they can build a roster.
+  const earlyHandicap = floorNumber <= EARLY_FLOOR_HANDICAP_END ? 1 : 0;
+  const baseSize = Math.max(2, getDungeonTeamLimit(floor) - earlyHandicap);
   const extraEnemies = floorNumber >= ENEMY_SIZE_INCREASE_START_FLOOR
     ? Math.floor((floorNumber - ENEMY_SIZE_INCREASE_START_FLOOR) / ENEMY_SIZE_INCREASE_INTERVAL) + 1
     : 0;

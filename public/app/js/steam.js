@@ -33,6 +33,10 @@
 
     const alreadySignedIn = AD.getToken() && sessionStorage.getItem(LOGIN_FLAG_KEY) === '1';
     if (!alreadySignedIn) {
+      // The ticket + Valve round-trip takes a few seconds; cover the sign-in
+      // form with a loading screen so the wrapper's first boot doesn't look
+      // like it wants a password. The form comes back if the handshake fails.
+      if (onAuthPage) showConnectOverlay();
       try {
         const ticket = await window.steamBridge.getAuthTicket();
         if (ticket) {
@@ -46,6 +50,7 @@
           sessionStorage.setItem(LOGIN_FLAG_KEY, '1');
 
           if (onAuthPage) {
+            // Keep the overlay up while the browser swaps to camp.
             window.location.replace(AD.appUrl('/camp'));
             return;
           }
@@ -56,16 +61,61 @@
             window.location.reload();
             return;
           }
+        } else {
+          removeConnectOverlay();
         }
       } catch (error) {
         console.warn('Steam sign-in unavailable:', error);
+        removeConnectOverlay();
       }
     } else if (onAuthPage) {
+      showConnectOverlay();
       window.location.replace(AD.appUrl('/camp'));
       return;
     }
 
     setTimeout(syncAchievementToasts, TOAST_SYNC_DELAY_MS);
+  }
+
+  // Full-page cover shown on auth pages while the Steam handshake runs, so
+  // the login form never greets a wrapper player who will be signed in
+  // automatically. Inline-styled on purpose: it must not depend on page CSS.
+  function showConnectOverlay() {
+    if (document.getElementById('steamConnectOverlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'steamConnectOverlay';
+    overlay.setAttribute('role', 'status');
+    overlay.style.cssText = [
+      'position:fixed',
+      'inset:0',
+      'z-index:9999',
+      // The auth pages hide <body> during wrapper boot; the overlay must
+      // stay visible inside it.
+      'visibility:visible',
+      'display:flex',
+      'flex-direction:column',
+      'align-items:center',
+      'justify-content:center',
+      'gap:1.1rem',
+      'background:var(--ad-bg, #071013)',
+      'color:var(--ad-muted, #9fb6b2)',
+      'font-size:0.95rem',
+      'letter-spacing:0.04em'
+    ].join(';');
+    overlay.innerHTML =
+      '<style>@keyframes steamConnectSpin{to{transform:rotate(360deg)}}</style>' +
+      '<div style="width:2.2rem;height:2.2rem;border-radius:50%;border:3px solid rgba(111,214,189,0.2);border-top-color:var(--ad-teal, #6fd6bd);animation:steamConnectSpin 0.9s linear infinite;" aria-hidden="true"></div>' +
+      '<div>Signing in through Steam&hellip;</div>';
+
+    document.body.appendChild(overlay);
+  }
+
+  function removeConnectOverlay() {
+    document.getElementById('steamConnectOverlay')?.remove();
+    // Un-hide the auth page hidden at first paint so the form works as the
+    // fallback when Steam sign-in fails.
+    delete document.documentElement.dataset.steamBoot;
   }
 
   // Wrapper-only exit affordance: takes the navbar spot of the logout button

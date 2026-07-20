@@ -111,6 +111,9 @@ function getCashoutDemon(run, body) {
       error.status = 404;
       throw error;
     }
+    if (demon.collectionDemonId) {
+      throw createHttpError('Demons recruited from your collection cannot be extracted.', 409);
+    }
     return normalizeCollectionDemonStats(demon);
   }
 

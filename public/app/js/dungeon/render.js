@@ -212,18 +212,23 @@ function renderDungeonEndScreen() {
         ${renderSoulAmount(Number(summary.souls) || 0, { className: 'soul-chip dungeon-end-soul-amount' })}
       </div>
       <div class="dungeon-end-actions">
-        <a class="btn btn-glass-muted" href="/camp">Leave</a>
+        ${isDefeat ? '' : '<a class="btn btn-glass-muted" href="/camp">Leave</a>'}
         ${state.endedReplayRun?.lastBattle?.combatLog?.length ? `
           <button class="btn btn-glass-muted btn-icon-only" id="replayEndedDungeonBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
             ${renderIcon('replay')}
           </button>
         ` : ''}
-        ${!isDefeat ? `
-          <a class="btn btn-glass-muted" id="trainDemonsBtn" href="/bag">
+        ${isDefeat ? `
+          <a class="btn btn-glass-muted" id="trainDemonsBtn" href="/collection">
+            ${renderIcon('swords')}
+            Train Demons
+          </a>
+        ` : `
+          <a class="btn btn-glass-muted" href="/bag">
             ${renderIcon('amphora')}
             View Bag
           </a>
-        ` : ''}
+        `}
         <button class="btn btn-primary" id="startNewDungeonBtn" type="button">
           ${renderIcon('play')}
           New Dungeon
