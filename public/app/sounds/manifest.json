@@ -4,10 +4,13 @@
   "music": {
     "default": [
       "music/default/1.ogg",
-      "music/default/2.ogg"
+      "music/default/2.ogg",
+      "music/default/3.ogg"
     ],
     "dungeon": [
-      "music/dungeon/1.ogg"
+      "music/dungeon/1.ogg",
+      "music/dungeon/2.ogg",
+      "music/dungeon/3.ogg"
     ],
     "worldBoss": "music/world_boss.ogg"
   },

@@ -25,6 +25,12 @@
 
     insertNavExitButton();
 
+    // Session-gated pages bounce to /login before this async handshake can
+    // finish, so the wrapper's first boot lands on the sign-in form. Once the
+    // handshake has produced a session, an auth page should go to camp instead
+    // of staying on (or reloading into) the login form.
+    const onAuthPage = Boolean(document.body.dataset.authMode);
+
     const alreadySignedIn = AD.getToken() && sessionStorage.getItem(LOGIN_FLAG_KEY) === '1';
     if (!alreadySignedIn) {
       try {
@@ -39,6 +45,11 @@
           AD.setSession({ token: payload.token, player: payload.player });
           sessionStorage.setItem(LOGIN_FLAG_KEY, '1');
 
+          if (onAuthPage) {
+            window.location.replace(AD.appUrl('/camp'));
+            return;
+          }
+
           // Reload only when the signed-in hunter actually changed, so the
           // page reflects the Steam account without looping on every boot.
           if (previousPlayerId !== payload.player.id) {
@@ -49,6 +60,9 @@
       } catch (error) {
         console.warn('Steam sign-in unavailable:', error);
       }
+    } else if (onAuthPage) {
+      window.location.replace(AD.appUrl('/camp'));
+      return;
     }
 
     setTimeout(syncAchievementToasts, TOAST_SYNC_DELAY_MS);

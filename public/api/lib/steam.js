@@ -51,6 +51,27 @@ async function authenticateUserTicket(ticketHex) {
   };
 }
 
+// Fetches the player's public profile so new accounts can be named after the
+// Steam persona instead of the generic fallback. Returns null when the profile
+// is missing rather than throwing; callers treat the name as best-effort.
+async function getPlayerSummary(steamId) {
+  requireSteamConfig();
+
+  const url = new URL(`${STEAM_API_BASE_URL}/ISteamUser/GetPlayerSummaries/v2/`);
+  url.searchParams.set('key', getSteamWebApiKey());
+  url.searchParams.set('steamids', String(steamId));
+
+  const payload = await requestSteamJson(url, { method: 'GET' });
+  const player = (payload?.response?.players || []).find(
+    (entry) => String(entry?.steamid) === String(steamId)
+  );
+  if (!player) return null;
+
+  return {
+    personaName: String(player.personaname || '').trim()
+  };
+}
+
 // Unlocks achievements for a player by Steamworks API name. Steam treats
 // re-setting an already unlocked achievement as a no-op, so retries are safe.
 async function setUserAchievements(steamId, steamNames) {
@@ -126,6 +147,7 @@ function createSteamError(message, status = 500, cause = undefined) {
 module.exports = {
   STEAM_TICKET_IDENTITY,
   authenticateUserTicket,
+  getPlayerSummary,
   isSteamConfigured,
   setUserAchievements
 };

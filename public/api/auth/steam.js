@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../lib/db');
 const { cleanPlayer, createSession } = require('../lib/auth');
 const { findOrCreateOAuthPlayer } = require('../lib/oauth');
-const { authenticateUserTicket, isSteamConfigured } = require('../lib/steam');
+const { authenticateUserTicket, getPlayerSummary, isSteamConfigured } = require('../lib/steam');
 const { checkRetroactive, pushUnsyncedToSteam } = require('../lib/achievements');
 
 const router = express.Router();
@@ -23,6 +23,15 @@ router.post('/auth/steam', async (req, res) => {
     return res.status(status).json({ error: error.message || 'Steam sign-in failed.' });
   }
 
+  // The ticket only proves the SteamID; the persona name needs a separate
+  // profile lookup. Best-effort: sign-in proceeds unnamed if the lookup fails.
+  let personaName = '';
+  try {
+    personaName = (await getPlayerSummary(verified.steamId))?.personaName || '';
+  } catch (error) {
+    personaName = '';
+  }
+
   const currentPlayer = await getBearerPlayer(req);
   let player = await getPlayerLinkedToSteam(verified.steamId);
 
@@ -31,8 +40,8 @@ router.post('/auth/steam', async (req, res) => {
     // so existing web players keep their progress inside the wrapper.
     await db.query(
       `INSERT INTO player_oauth_accounts (player_id, provider, provider_user_id, email, display_name)
-       VALUES (?, 'steam', ?, NULL, NULL)`,
-      [currentPlayer.id, verified.steamId]
+       VALUES (?, 'steam', ?, NULL, ?)`,
+      [currentPlayer.id, verified.steamId, personaName || null]
     );
     player = currentPlayer;
   }
@@ -40,7 +49,7 @@ router.post('/auth/steam', async (req, res) => {
   if (!player) {
     // New Steam identity: adopt the current guest hunter if there is one,
     // otherwise create a fresh account keyed to the SteamID.
-    player = await findOrCreateOAuthPlayer('steam', { id: verified.steamId }, {
+    player = await findOrCreateOAuthPlayer('steam', { id: verified.steamId, displayName: personaName }, {
       claimPlayerId: currentPlayer?.is_guest ? currentPlayer.id : null
     });
   }

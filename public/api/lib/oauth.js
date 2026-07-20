@@ -101,6 +101,7 @@ async function findOrCreateOAuthPlayer(provider, profile, options = {}) {
         email,
         displayName
       });
+      await upgradeFallbackUsername(connection, linkedRows[0], provider, displayName);
       await connection.commit();
       return linkedRows[0];
     }
@@ -291,6 +292,23 @@ async function adoptGuestForOAuth(connection, options) {
 
   const [rows] = await connection.query('SELECT * FROM players WHERE id = ? LIMIT 1', [guest.id]);
   return rows[0] || null;
+}
+
+// Accounts created while the provider had no usable display name (e.g. Steam
+// sign-ins from before the persona lookup existed) carry the generic
+// '<provider>-hunter' fallback; swap in a name derived from the real display
+// name once one shows up. Player-chosen usernames never match the fallback
+// pattern, so they are never touched.
+async function upgradeFallbackUsername(connection, player, provider, displayName) {
+  const fallback = `${provider}-hunter`;
+  const fallbackPattern = new RegExp(`^${fallback}(-[0-9a-f]{4})?$`);
+  if (!displayName || !fallbackPattern.test(player.username)) return;
+
+  const candidate = buildUsernameCandidate(displayName, provider);
+  if (candidate === fallback) return;
+
+  player.username = await buildUniqueUsername(connection, candidate, 0);
+  await connection.query('UPDATE players SET username = ? WHERE id = ?', [player.username, player.id]);
 }
 
 async function buildUniqueUsername(connection, baseUsername, attempt) {
