@@ -16,7 +16,6 @@
 
   function init() {
     initDefaultMusic();
-    organizeGameNavigation();
     markCurrentGameNav();
     bindDisabledLinks();
     bindGlobalPageShortcuts();
@@ -24,99 +23,9 @@
     initAccountNav();
   }
 
-  function organizeGameNavigation() {
-    document.querySelectorAll('.game-shell-tabs').forEach((nav) => {
-      ensureBagNavLink(nav);
-
-      const camp = getTopLevelRouteItem(nav, 'camp');
-      const explore = createGameNavGroup(nav, {
-        key: 'explore',
-        label: 'Explore',
-        icon: 'map',
-        routes: ['world', 'dungeon']
-      });
-      const hunter = createGameNavGroup(nav, {
-        key: 'hunter',
-        label: 'Hunter',
-        icon: 'skull',
-        routes: ['collection', 'bag']
-      });
-      const rankings = getTopLevelRouteItem(nav, 'rankings');
-      const guides = Array.from(nav.children).find((item) => (
-        item.querySelector(':scope > .game-nav-dropdown-toggle[data-game-sections~="demons"]')
-      ));
-
-      if (guides) guides.dataset.gameNavGroup = 'guides';
-      [camp, explore, hunter, rankings, guides].filter(Boolean).forEach((item) => nav.appendChild(item));
-    });
-  }
-
-  function ensureBagNavLink(nav) {
-    if (nav.querySelector('[data-game-route="bag"]')) return;
-    const collection = getTopLevelRouteItem(nav, 'collection');
-    if (!collection) return;
-
-    const item = document.createElement('li');
-    item.className = 'nav-item';
-    const icon = window.AmongDemons?.ui?.renderIcon?.('amphora') || '';
-    item.innerHTML = `<a class="nav-link game-nav-link" href="/bag" data-game-route="bag">${icon}<span>Bag</span></a>`;
-    collection.after(item);
-  }
-
   function initDefaultMusic() {
     if (!DEFAULT_MUSIC_ROUTE.test(window.location.pathname)) return;
     window.AmongDemons?.audio?.setScene({ music: 'music.default' });
-  }
-
-  function createGameNavGroup(nav, config) {
-    const existing = Array.from(nav.children).find((item) => item.dataset.gameNavGroup === config.key);
-    if (existing) return existing;
-
-    const routeItems = config.routes
-      .map((route) => getTopLevelRouteItem(nav, route))
-      .filter(Boolean);
-    if (!routeItems.length) return null;
-
-    const renderIcon = window.AmongDemons?.ui?.renderIcon;
-    const groupIcon = typeof renderIcon === 'function' ? renderIcon(config.icon) : '';
-    const caretIcon = typeof renderIcon === 'function'
-      ? renderIcon('chevron-down', { className: 'game-nav-caret' })
-      : '';
-    const group = document.createElement('li');
-    group.className = 'nav-item dropdown game-nav-dropdown';
-    group.dataset.gameNavGroup = config.key;
-    group.innerHTML = `
-      <button class="nav-link game-nav-link game-nav-dropdown-toggle" type="button"
-        data-bs-toggle="dropdown" data-bs-auto-close="true"
-        data-game-sections="${config.routes.join(' ')}" aria-expanded="false"
-        aria-label="Open ${config.label} navigation">
-        ${groupIcon}<span>${config.label}</span>${caretIcon}
-      </button>
-      <ul class="dropdown-menu game-nav-dropdown-menu"></ul>
-    `;
-
-    const menu = group.querySelector('.game-nav-dropdown-menu');
-    routeItems.forEach((item) => {
-      const link = item.firstElementChild;
-      if (!link) return;
-
-      link.classList.remove('nav-link', 'game-nav-link', 'active');
-      link.classList.add('dropdown-item', 'game-nav-dropdown-item');
-      link.removeAttribute('aria-current');
-
-      const menuItem = document.createElement('li');
-      menuItem.appendChild(link);
-      menu.appendChild(menuItem);
-      item.remove();
-    });
-
-    return group;
-  }
-
-  function getTopLevelRouteItem(nav, route) {
-    return Array.from(nav.children).find((item) => (
-      item.firstElementChild?.dataset.gameRoute === route
-    )) || null;
   }
 
   function bindGlobalPageShortcuts() {
