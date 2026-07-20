@@ -2,7 +2,7 @@ import { BATTLE_SPEED_KEY, BATTLE_SPEED_OPTIONS, COMBAT_THEMES, FORMATION_GRID_C
 import { registerDungeonActions } from './dungeon/registry.js';
 import { state as dungeonState, elements as dungeonElements } from './dungeon/state.js';
 import * as dungeonDom from './dungeon/dom.js';
-import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260716-replay-only-controls-v1';
+import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260720-music-unified-v1';
 import * as dungeonRender from './dungeon/render.js?v=20260720-dungeon-defeat-v1';
 import * as dungeonCombat from './dungeon/combat.js?v=20260716-replay-only-controls-v1';
 import * as dungeonRewards from './dungeon/rewards.js?v=20260720-dungeon-defeat-v1';

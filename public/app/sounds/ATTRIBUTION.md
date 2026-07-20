@@ -1,38 +1,38 @@
 # Audio sources
 
-All downloaded audio added during this sound pass is available under the [Creative Commons Zero 1.0](https://creativecommons.org/publicdomain/zero/1.0/) public-domain dedication. Attribution is not legally required, but the creators and source pages are recorded here for provenance. Six ability effects were instead derived from audio that already existed in this repository; their earlier provenance is noted separately below.
+Current state (2026-07-20): the sound effects in `sfx/` are custom derivatives — sampled from the source material listed below and reworked in Audacity, in most cases heavily. The music tracks are AI-generated with Suno and used close to their generated form. Earlier versions of this file described the downloaded assets as used directly; that stopped being accurate as sounds were progressively replaced.
 
-The downloaded source audio was renamed and converted to OGG Vorbis. All playable assets were normalized for consistent browser playback: files at least 400 ms long target -18 LUFS integrated loudness with mono compensation, while shorter transients target -2 dBTP because they are shorter than the EBU R128 measurement window. True peaks retain encoding headroom, and crest reduction is applied only where required to reach the loudness target without clipping.
+## Music (Suno)
 
-## Kenney
+`music/default/1.ogg`–`3.ogg` and `music/world_boss.ogg` were generated with [Suno](https://suno.com).
 
-- [RPG Audio](https://kenney.nl/assets/rpg-audio) — leather interaction sounds.
-- [Impact Sounds](https://kenney.nl/assets/impact-sounds) — ambush sounds.
-- [Music Jingles](https://kenney.nl/assets/music-jingles) — hunt, challenge, battle-start, and boss stingers.
+Ownership and commercial-use rights for Suno output depend on the subscription tier the tracks were generated under (free-tier output is owned by Suno and licensed for non-commercial use only; paid tiers grant ownership and commercial use). For any commercial release, confirm the generating account's tier and keep the generation records.
 
-## OpenGameArt
+`music/dungeon/1.ogg`–`3.ogg` are unused legacy tracks (the dungeon now plays the default playlist) and are kept only until deleted; `1.ogg` derives from [Whispers in the Fog](https://opengameart.org/content/whispers-in-the-fog) by Ruhinre.
 
-- [Dark Forest Theme](https://opengameart.org/content/dark-forest-theme) by cynicmusic — `music/default/1.ogg`.
-- [Whispers in the Fog](https://opengameart.org/content/whispers-in-the-fog) by Ruhinre — `music/dungeon/1.ogg`.
-- [Battle Theme A](https://opengameart.org/content/battle-theme-a) by cynicmusic — `music/world_boss.ogg`.
-- [7 Assorted Sound Effects](https://opengameart.org/content/7-assorted-sound-effects-menu-level-up) by Joth — movement, pickup, level-up, and skill effects.
-- [Magic Spell SFX](https://opengameart.org/content/magic-spell-sfx) by JaggedStone — shrine, portal, teleport, pact, poison, heal, chaos, and reset effects.
-- [Battle Sound Effects](https://opengameart.org/content/battle-sound-effects) by artisticdude/Ogrebane — ranged projectile effects.
-- [80 CC0 creature SFX](https://opengameart.org/content/80-cc0-creature-sfx) by rubberduck — demon, roar, scream, and boss creature effects.
-- [Game Over Theme](https://opengameart.org/content/game-over-theme) by Cleyton Kauffman — defeat and lost-run cues.
-- [Victory Fanfare](https://opengameart.org/content/victory-fanfare) by ARoachIFoundOnMyPillow — battle victory cue.
+## Sound effects — sampled source material
 
-## Pre-existing repository audio
+The samples behind the current SFX were drawn from the libraries below. All are available under the [Creative Commons Zero 1.0](https://creativecommons.org/publicdomain/zero/1.0/) public-domain dedication unless noted otherwise, so the derived sounds carry no attribution requirement; the sources are recorded here for provenance.
 
-These configured ability effects now use the six pre-existing `type_*` assets. The WAV sources were converted to OGG Vorbis; the existing OGG sources were renamed into the semantic catalog. Their license and original source predate this sound pass and are not established by the download links above.
+### Kenney
 
-- `type_1.wav` → `sfx/battle/abilities/type_1.ogg`
-- `type_4.ogg` → `sfx/battle/abilities/type_4.ogg`
-- `type_5.wav` → `sfx/battle/abilities/type_5.ogg`
-- `type_6.wav` → `sfx/battle/abilities/type_6.ogg`
-- `type_7.ogg` → `sfx/battle/abilities/type_7.ogg`
-- `type_9.ogg` → `sfx/battle/abilities/type_9.ogg`
+- [RPG Audio](https://kenney.nl/assets/rpg-audio)
+- [Impact Sounds](https://kenney.nl/assets/impact-sounds)
+- [Music Jingles](https://kenney.nl/assets/music-jingles)
 
-## User-provided audio
+### OpenGameArt
 
-The ten `sfx/world/footstep_dirt_*.ogg` movement variants were converted from the user-provided `Fantasy Sound Library/Mp3/Footsteps/Footstep_Dirt_00.mp3` through `Footstep_Dirt_09.mp3` files. Their source-library license is separate from the CC0 assets listed above.
+- [7 Assorted Sound Effects](https://opengameart.org/content/7-assorted-sound-effects-menu-level-up) by Joth
+- [Magic Spell SFX](https://opengameart.org/content/magic-spell-sfx) by JaggedStone
+- [Battle Sound Effects](https://opengameart.org/content/battle-sound-effects) by artisticdude/Ogrebane
+- [80 CC0 creature SFX](https://opengameart.org/content/80-cc0-creature-sfx) by rubberduck
+- [Game Over Theme](https://opengameart.org/content/game-over-theme) by Cleyton Kauffman
+- [Victory Fanfare](https://opengameart.org/content/victory-fanfare) by ARoachIFoundOnMyPillow
+
+### Pre-existing repository audio
+
+Some `sfx/battle/abilities/type_*.ogg` sounds started from `type_*` WAV/OGG assets that predate the 2026-07 sound pass; their original source is not established by the links above.
+
+### User-provided audio
+
+The ten `sfx/world/footstep_dirt_*.ogg` movement variants were converted from the user-provided `Fantasy Sound Library/Mp3/Footsteps/Footstep_Dirt_00.mp3`–`09.mp3` files. That library's license is separate from the CC0 sources above and applies to the derived footsteps as well.

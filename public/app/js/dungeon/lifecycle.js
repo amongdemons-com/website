@@ -43,7 +43,7 @@ const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelecti
       }
     }
 
-  audio?.setScene({ music: 'music.dungeon' });
+  audio?.setScene({ music: 'music.default' });
   cacheElements();
   bindActions();
   applyBattleSpeed();

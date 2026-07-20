@@ -167,7 +167,7 @@
 
     scenePendingKeys[channel] = key;
     // Consume this before loading the next file so entering a different scene
-    // (especially the dungeon) immediately breaks the previous-page handoff.
+    // (e.g. a world boss fight) immediately breaks the previous-page handoff.
     const handoff = channel === 'music' ? takeMusicHandoff(key) : null;
     const trackUrls = await resolveSoundUrls(key);
     if (!trackUrls.length || token !== sceneTokens[channel] || scene[channel] !== key) {
