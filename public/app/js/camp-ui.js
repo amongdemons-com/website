@@ -476,13 +476,21 @@
 
   function renderObjectives() {
     const objectives = state.questData?.quests || [];
-    const visibleObjectives = objectives.filter((objective) => !objective.claimed);
+    const visibleObjectives = objectives
+      .filter((objective) => !objective.claimed)
+      .sort((a, b) => questSortRank(a) - questSortRank(b));
     setHtml(
       elements.objectiveList,
       visibleObjectives.length
         ? visibleObjectives.map(renderObjective).join('')
         : renderCompletedQuestsMessage()
     );
+  }
+
+  function questSortRank(objective) {
+    if (objective.claimable) return 0;
+    if (objective.completed) return 1;
+    return 2;
   }
 
   function renderCompletedQuestsMessage() {
