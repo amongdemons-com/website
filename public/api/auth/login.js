@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const db = require('../lib/db');
 const { cleanPlayer, createSession, hashPassword, verifyPassword } = require('../lib/auth');
 const { saveDefaultBoundShrine } = require('../lib/world-shrines');
+const { grantStarterDemons } = require('../lib/starter-demon');
 
 const router = express.Router();
 
@@ -26,6 +27,11 @@ router.post('/auth/login', async (req, res) => {
       [playerId, username, email, hash, salt, JSON.stringify([])]
     );
     await saveDefaultBoundShrine(playerId);
+    try {
+      await grantStarterDemons(playerId);
+    } catch (starterError) {
+      console.error('Failed to grant starter demons on login signup', playerId, starterError);
+    }
     const [createdRows] = await db.query('SELECT * FROM players WHERE id = ? LIMIT 1', [playerId]);
     player = createdRows[0];
   } else if (!player.password_salt) {

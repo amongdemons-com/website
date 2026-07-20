@@ -2,7 +2,7 @@ const db = require('../public/api/lib/db');
 const { saveCollectionDemon } = require('../public/api/lib/collection-demons');
 const { createDemon } = require('../public/api/lib/demon-factory');
 const { createRng } = require('../public/api/lib/rng');
-const { STARTER_RARITY, STARTER_TYPE_ID } = require('../public/api/lib/starter-demon');
+const { STARTER_RARITY, STARTER_TYPE_IDS } = require('../public/api/lib/starter-demon');
 
 const FLOOR_DELETE_THRESHOLD = 2;
 const APPLY_FLAG = '--apply';
@@ -111,10 +111,13 @@ async function getResetSummary(connection) {
     authRowsRetained[tableName] = Number(row.retainedRows) || 0;
   }
 
-  const starter = await createDemon(createRng(0x51a7e2), {
-    typeId: STARTER_TYPE_ID,
-    rarity: STARTER_RARITY
-  });
+  const starters = [];
+  for (const typeId of STARTER_TYPE_IDS) {
+    starters.push(await createDemon(createRng(0x51a7e2 ^ typeId), {
+      typeId,
+      rarity: STARTER_RARITY
+    }));
+  }
 
   return {
     databaseName: target.databaseName,
@@ -125,7 +128,7 @@ async function getResetSummary(connection) {
     tableRows,
     authRowsDeleted,
     authRowsRetained,
-    starter
+    starters
   };
 }
 
@@ -136,10 +139,12 @@ function printSummary(summary, apply) {
     `Players: delete ${summary.deletedPlayers} at floor <= ${FLOOR_DELETE_THRESHOLD}; ` +
     `reset and retain ${summary.retainedPlayers}; total ${summary.totalPlayers}.`
   );
-  console.log(
-    `Starter: one ${summary.starter.rarity} ${summary.starter.species} ` +
-    `(type ${summary.starter.typeId}) per retained player.`
-  );
+  for (const starter of summary.starters) {
+    console.log(
+      `Starter: one ${starter.rarity} ${starter.species} ` +
+      `(type ${starter.typeId}) per retained player.`
+    );
+  }
   console.log('Gameplay/global rows cleared:');
   for (const [tableName, rowCount] of Object.entries(summary.tableRows)) {
     console.log(`  ${tableName}: ${rowCount}`);
@@ -201,7 +206,9 @@ async function applyReset(connection, summary) {
     );
 
     for (const playerId of survivorIds) {
-      await saveCollectionDemon(playerId, summary.starter, connection);
+      for (const starter of summary.starters) {
+        await saveCollectionDemon(playerId, starter, connection);
+      }
       await connection.query(
         'INSERT INTO player_world_positions (player_id, x, y) VALUES (?, 0, 0)',
         [playerId]
@@ -248,12 +255,16 @@ async function verifyReset(connection, expectedPlayers) {
        LEFT JOIN (
          SELECT player_id,
                 COUNT(*) AS demonCount,
-                SUM(type_id = ? AND rarity = ? AND times_trained = 0) AS starterCount
+                SUM(rarity = ? AND times_trained = 0
+                    AND type_id IN (${STARTER_TYPE_IDS.map(() => '?').join(', ')})) AS starterCount,
+                COUNT(DISTINCT type_id) AS starterTypeCount
          FROM player_demons
          GROUP BY player_id
        ) roster ON roster.player_id = p.id
-       WHERE COALESCE(roster.demonCount, 0) <> 1 OR COALESCE(roster.starterCount, 0) <> 1`,
-      [STARTER_TYPE_ID, STARTER_RARITY]
+       WHERE COALESCE(roster.demonCount, 0) <> ${STARTER_TYPE_IDS.length}
+          OR COALESCE(roster.starterCount, 0) <> ${STARTER_TYPE_IDS.length}
+          OR COALESCE(roster.starterTypeCount, 0) <> ${STARTER_TYPE_IDS.length}`,
+      [STARTER_RARITY, ...STARTER_TYPE_IDS]
     ],
     wrongWorldPosition: [
       `SELECT COUNT(*) AS failures

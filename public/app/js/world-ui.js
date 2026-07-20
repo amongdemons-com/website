@@ -3616,7 +3616,8 @@ import * as dungeonUtils from './dungeon/utils.js';
     const demonId = getWorldTeamEditorDemonId(demon);
     const teamEntry = getWorldTeamEditorTeamEntry(demonId);
     const isCollection = zone === 'collection';
-    const isInTeam = Boolean(teamEntry);
+    const teamCopies = isCollection ? countWorldTeamEditorTeamCopies(demonId) : 0;
+    const isInTeam = teamCopies > 0;
     const displayDemon = normalizeWorldTeamEditorCardDemon(
       isCollection ? { ...demon, ...(teamEntry ? { formationSlot: teamEntry.formationSlot } : {}) } : demon,
       zone,
@@ -3628,8 +3629,9 @@ import * as dungeonUtils from './dungeon/utils.js';
       isCollection ? 'world-team-editor-collection-card' : 'world-team-editor-team-card',
       isCollection && isInTeam ? 'is-in-team' : ''
     ].filter(Boolean).join(' ');
+    const inTeamLabel = teamCopies > 1 ? `In team ×${teamCopies}` : 'In team';
     const overlayHtml = isCollection && isInTeam
-      ? `<span class="world-team-editor-in-team-mark" title="In team" aria-label="In team">${renderIcon('check')}</span>`
+      ? `<span class="world-team-editor-in-team-mark${teamCopies > 1 ? ' has-count' : ''}" title="${inTeamLabel}" aria-label="${inTeamLabel}">${teamCopies > 1 ? `×${teamCopies}` : renderIcon('check')}</span>`
       : '';
 
     return renderDemonCard(displayDemon, {
@@ -3639,7 +3641,8 @@ import * as dungeonUtils from './dungeon/utils.js';
         'data-world-team-demon-id': demonId,
         'data-world-team-drop-zone': zone,
         'data-world-team-source-zone': zone,
-        'data-world-team-slot': Number.isInteger(slot) ? slot : null,
+        // String, because escapeHtml drops the number 0 (`String(value || '')`).
+        'data-world-team-slot': Number.isInteger(slot) ? String(slot) : null,
         'data-world-team-in-team': isInTeam ? 'true' : null,
         role: 'button',
         tabindex: '0'
@@ -3680,20 +3683,19 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function normalizeWorldTeamEditorTeam(team = [], collection = []) {
     const collectionById = new Map(collection.map((demon) => [getWorldTeamEditorDemonId(demon), demon]));
-    const usedDemons = new Set();
     const usedSlots = new Set();
 
+    // The same collection demon may fill several slots; only slots are unique.
     return (Array.isArray(team) ? team : [])
       .map((demon, index) => {
         const demonId = Number(demon?.collectionDemonId ?? demon?.id);
-        if (!Number.isInteger(demonId) || demonId <= 0 || usedDemons.has(demonId)) return null;
+        if (!Number.isInteger(demonId) || demonId <= 0) return null;
         const requestedSlot = normalizeWorldTeamEditorSlot(demon.formationSlot ?? demon.formationRow);
         const slot = requestedSlot !== null && !usedSlots.has(requestedSlot)
           ? requestedSlot
           : getNextWorldTeamEditorOpenSlot(usedSlots, index);
         if (slot === null) return null;
 
-        usedDemons.add(demonId);
         usedSlots.add(slot);
 
         return createWorldTeamEditorTeamEntry(collectionById.get(demonId) || demon, slot);
@@ -3712,7 +3714,8 @@ import * as dungeonUtils from './dungeon/utils.js';
       ...demon,
       id: demonId,
       collectionDemonId: demonId,
-      instanceId: `world-team-editor-${zone}-${demonId}`,
+      // Slot suffix keeps ids unique when the same demon fills several slots.
+      instanceId: `world-team-editor-${zone}-${demonId}${formationSlot === null ? '' : `-s${formationSlot}`}`,
       maxHp,
       hp: currentHp,
       formationSlot,
@@ -3853,7 +3856,7 @@ import * as dungeonUtils from './dungeon/utils.js';
       return slot !== null;
     }
     if (zone === 'collection') {
-      return Boolean(getWorldTeamEditorTeamEntry(drag.demonId));
+      return drag.sourceZone === 'team';
     }
     return false;
   }
@@ -3862,43 +3865,75 @@ import * as dungeonUtils from './dungeon/utils.js';
     const zone = target.dataset.worldTeamDropZone;
     if (zone === 'team') {
       const slot = normalizeWorldTeamEditorSlot(target.dataset.worldTeamSlot);
-      if (slot !== null) moveWorldTeamEditorDemonToSlot(drag.demonId, slot);
-    } else if (zone === 'collection') {
-      removeWorldTeamEditorDemonFromTeam(drag.demonId);
+      if (slot !== null) {
+        if (drag.sourceZone === 'team') {
+          moveWorldTeamEditorSlotEntry(drag.sourceSlot, slot);
+        } else {
+          placeWorldTeamEditorCollectionDemon(drag.demonId, slot);
+        }
+      }
+    } else if (zone === 'collection' && drag.sourceZone === 'team') {
+      removeWorldTeamEditorSlot(drag.sourceSlot);
     }
 
     renderWorldTeamEditor();
   }
 
-  function moveWorldTeamEditorDemonToSlot(demonId, targetSlot) {
+  // Dropping a collection card copies it into the slot — the same demon may
+  // fill any number of slots — so the card stays available for more copies.
+  function placeWorldTeamEditorCollectionDemon(demonId, targetSlot) {
     const editor = state.worldTeamEditor;
-    const sourceEntry = getWorldTeamEditorTeamEntry(demonId);
-    const targetEntry = editor.team.find((demon) => normalizeWorldTeamEditorSlot(demon.formationSlot) === targetSlot) || null;
-    const sourceDemon = sourceEntry || getWorldTeamEditorCollectionDemon(demonId);
-    if (!sourceDemon) return;
-    if (!sourceEntry && !targetEntry && editor.team.length >= WORLD_TEAM_LIMIT) {
-      return;
-    }
+    const demon = getWorldTeamEditorCollectionDemon(demonId);
+    const slot = normalizeWorldTeamEditorSlot(targetSlot);
+    if (!demon || slot === null) return;
 
-    const sourceSlot = normalizeWorldTeamEditorSlot(sourceEntry?.formationSlot);
-    const nextTeam = editor.team.filter((demon) => {
-      const id = getWorldTeamEditorDemonId(demon);
-      const slot = normalizeWorldTeamEditorSlot(demon.formationSlot);
-      return id !== demonId && slot !== targetSlot;
+    const targetEntry = getWorldTeamEditorSlotEntry(slot);
+    if (!targetEntry && editor.team.length >= WORLD_TEAM_LIMIT) return;
+
+    editor.team = editor.team
+      .filter((entry) => normalizeWorldTeamEditorSlot(entry.formationSlot) !== slot)
+      .concat(createWorldTeamEditorTeamEntry(demon, slot))
+      .sort(compareWorldTeamEditorSlots);
+  }
+
+  function moveWorldTeamEditorSlotEntry(sourceSlot, targetSlot) {
+    const editor = state.worldTeamEditor;
+    const source = normalizeWorldTeamEditorSlot(sourceSlot);
+    const target = normalizeWorldTeamEditorSlot(targetSlot);
+    if (source === null || target === null || source === target) return;
+
+    const sourceEntry = getWorldTeamEditorSlotEntry(source);
+    if (!sourceEntry) return;
+    const targetEntry = getWorldTeamEditorSlotEntry(target);
+
+    const nextTeam = editor.team.filter((entry) => {
+      const slot = normalizeWorldTeamEditorSlot(entry.formationSlot);
+      return slot !== source && slot !== target;
     });
-
-    if (sourceEntry && targetEntry && getWorldTeamEditorDemonId(targetEntry) !== demonId && sourceSlot !== null) {
-      nextTeam.push(createWorldTeamEditorTeamEntry(targetEntry, sourceSlot));
-    }
-
-    nextTeam.push(createWorldTeamEditorTeamEntry(sourceDemon, targetSlot));
+    if (targetEntry) nextTeam.push(createWorldTeamEditorTeamEntry(targetEntry, source));
+    nextTeam.push(createWorldTeamEditorTeamEntry(sourceEntry, target));
     editor.team = nextTeam.sort(compareWorldTeamEditorSlots);
   }
 
-  function removeWorldTeamEditorDemonFromTeam(demonId) {
+  function removeWorldTeamEditorSlot(slot) {
+    const normalized = normalizeWorldTeamEditorSlot(slot);
+    if (normalized === null) return;
     state.worldTeamEditor.team = state.worldTeamEditor.team
-      .filter((demon) => getWorldTeamEditorDemonId(demon) !== Number(demonId))
+      .filter((entry) => normalizeWorldTeamEditorSlot(entry.formationSlot) !== normalized)
       .sort(compareWorldTeamEditorSlots);
+  }
+
+  function getWorldTeamEditorSlotEntry(slot) {
+    const normalized = normalizeWorldTeamEditorSlot(slot);
+    if (normalized === null) return null;
+    return state.worldTeamEditor.team
+      .find((entry) => normalizeWorldTeamEditorSlot(entry.formationSlot) === normalized) || null;
+  }
+
+  function countWorldTeamEditorTeamCopies(demonId) {
+    const id = Number(demonId);
+    return state.worldTeamEditor.team
+      .filter((entry) => getWorldTeamEditorDemonId(entry) === id).length;
   }
 
   function onWorldTeamEditorCardClick(event) {

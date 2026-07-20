@@ -38,26 +38,6 @@ router.post('/inventory/echoes/refine', requireAuth, async (req, res) => {
 
   try {
     await connection.beginTransaction();
-    const [discoveryRows] = await connection.query(
-      `SELECT discovered_at
-       FROM player_echo_discoveries
-       WHERE player_id = ? AND type_id = ? AND rarity = ?
-       LIMIT 1
-       FOR UPDATE`,
-      [req.player.id, typeId, targetRarity]
-    );
-    const [ownedRows] = await connection.query(
-      `SELECT id
-       FROM player_demons
-       WHERE player_id = ? AND type_id = ? AND rarity = ?
-       LIMIT 1
-       FOR UPDATE`,
-      [req.player.id, typeId, targetRarity]
-    );
-    if (!discoveryRows.length && !ownedRows.length) {
-      throw createHttpError(`Extract a ${capitalize(targetRarity)} ${target.species} Echo before refining this rarity.`, 409);
-    }
-
     const [result] = await connection.query(
       `UPDATE player_inventory
        SET quantity = quantity - ?, updated_at = CURRENT_TIMESTAMP

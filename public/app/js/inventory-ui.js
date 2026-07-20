@@ -296,11 +296,9 @@
     const sourceLabel = `${capitalize(item.rarity)} ${item.species}`;
     const targetLabel = `${capitalize(item.nextRarity)} ${item.species}`;
     const lacking = Math.max(0, Number(item.refinementCost) - Number(item.quantity));
-    const lockedCopy = !item.targetDiscovered
-      ? `Extract ${getIndefiniteArticle(item.nextRarity)} ${targetLabel} Echo naturally before refining into this rarity.`
-      : lacking > 0
-        ? `Gather ${lacking} more ${sourceLabel} ${lacking === 1 ? 'Echo' : 'Echoes'} to refine.`
-        : `Consume ${item.refinementCost} ${sourceLabel} Echoes to create one ${targetLabel} Echo.`;
+    const lockedCopy = lacking > 0
+      ? `Gather ${lacking} more ${sourceLabel} ${lacking === 1 ? 'Echo' : 'Echoes'} to refine.`
+      : `Consume ${item.refinementCost} ${sourceLabel} Echoes to create one ${targetLabel} Echo.`;
 
     return `
       <section class="inventory-detail-panel">
@@ -657,10 +655,6 @@
 
   function formatNumber(value) {
     return Math.max(0, Number(value) || 0).toLocaleString();
-  }
-
-  function getIndefiniteArticle(value) {
-    return /^[aeiou]/i.test(String(value || '')) ? 'an' : 'a';
   }
 
   function escapeHtml(value) {

@@ -281,12 +281,12 @@ Defined in `public/api/lib/daily-quests.js` with a UTC daily reset: win 3 dungeo
 
 - Dungeon extraction adds one exact `type + rarity` Echo stack to Inventory; it never directly creates or replaces a permanent demon. Echoes may continue accumulating after that slot is summoned.
 - Summoning requirements are Common `1`, Uncommon `2`, Rare `3`, Epic `5`, Legendary `8`, and Mythic `12`. Summoning atomically consumes only the requirement and creates the normal minimum-stat permanent demon; surplus remains banked.
-- Refinement stays within one species and advances one adjacent tier: Common→Uncommon costs `3`, Uncommon→Rare `3`, Rare→Epic `4`, Epic→Legendary `5`, and Legendary→Mythic `6`. The target must first have been naturally extracted (or already exist as a legacy owned slot), so refinement cannot replace discovery. Mythic surplus remains banked.
+- Refinement stays within one species and advances one adjacent tier: Common→Uncommon costs `3`, Uncommon→Rare `3`, Rare→Epic `4`, Epic→Legendary `5`, and Legendary→Mythic `6`. Refining requires only enough source Echoes — the player freely chooses to refine or bank, regardless of whether the target rarity was previously extracted or summoned. Mythic surplus remains banked.
 - The permanent collection has one slot per demon type and rarity — 11 types × 6 rarities = 66 slots. Missing slots can show their exact Echo progress and link back to Inventory.
 - Training (`POST /api/demons/:id/train`) is transactional and server-authoritative: it locks the player and demon rows, checks cost, spends Souls, and raises one stat by +1, picked with weighted randomness from stats below their caps.
 - Stat caps come from the matching type's `baseStats` maxima in `demon-types.json`. Cost starts at 2 Souls and grows with overall progress toward the caps, multiplied by rarity.
 
-Existing permanent demons and their training remain untouched. The automatically granted onboarding starter is intentionally still a direct collection grant. Existing owned slots also count as legacy refinement discovery targets, while new natural discovery is stored separately and remains unlocked after an Echo stack is spent.
+Existing permanent demons and their training remain untouched. The automatically granted onboarding starter is intentionally still a direct collection grant. Natural discovery is stored separately from stack quantity as extraction history (shown as the Echo's source in Inventory) and remains recorded after a stack is spent.
 
 ### Combat
 
@@ -324,7 +324,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `player_stat_points` | Skill-tree allocations |
 | `player_demons` | Permanent owned demon collection |
 | `player_inventory` | Generic per-player item stacks, initially exact Demon Echoes |
-| `player_echo_discoveries` | Permanent natural type/rarity extraction history for refinement gates |
+| `player_echo_discoveries` | Permanent natural type/rarity extraction history |
 | `player_world_positions` | Server-side world coordinates |
 | `player_bound_world_shrines` | Anchored Forsaken Shrine return points |
 | `player_hunt_unlocks` | Encounters defeated at least once (hunting eligibility) |

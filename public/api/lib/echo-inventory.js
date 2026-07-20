@@ -78,7 +78,6 @@ async function getPlayerInventory(playerId, queryable = db) {
       quantity: row.quantity,
       discoveredAt: discovered.get(row.itemKey),
       ownedDemonId: owned.get(row.itemKey),
-      targetDiscovered: isTargetDiscovered(catalog.get(row.itemKey), discovered, owned),
       targetQuantity: getTargetQuantity(catalog.get(row.itemKey), quantities)
     }))
     .filter(Boolean);
@@ -138,21 +137,13 @@ function serializeEchoItem(definition, state = {}) {
     ownedDemonId,
     summonReady: !ownedDemonId && quantity >= summonRequirement,
     summonProgress: Math.min(quantity, summonRequirement),
-    targetDiscovered: Boolean(state.targetDiscovered),
     targetQuantity: Math.max(0, Number(state.targetQuantity) || 0),
     canRefine: Boolean(
       definition.nextRarity &&
       definition.refinementCost &&
-      quantity >= definition.refinementCost &&
-      state.targetDiscovered
+      quantity >= definition.refinementCost
     )
   };
-}
-
-function isTargetDiscovered(definition, discovered, owned) {
-  if (!definition?.nextRarity) return false;
-  const targetKey = getEchoItemKey(definition.typeId, definition.nextRarity);
-  return discovered.has(targetKey) || owned.has(targetKey);
 }
 
 function getTargetQuantity(definition, quantities) {

@@ -111,8 +111,11 @@ not hard-coded independently in routes and UI.
 
 - Refinement converts Echoes only within the same demon species.
 - Refinement advances exactly one rarity tier at a time.
-- The target rarity must have been naturally extracted at least once before the player
-  can refine into it. Refinement must never replace first discovery.
+- 2026-07-20 revision: refinement is not gated on prior discovery or summoning of the
+  target rarity. Having enough source Echoes is the only requirement; the player freely
+  chooses between banking toward a summon and refining upward. (The original
+  discovery-gate design blocked refinement for players who had not summoned or
+  extracted the target — including the free type 1 starter line — and was removed.)
 - Natural discovery remains recorded after an Echo stack is spent or a demon is
   summoned.
 - Refined Echoes do not count as natural discovery.
@@ -195,8 +198,8 @@ Conversion rates:
 - [x] Selecting an Echo opens a detail panel or modal with exact type, rarity, owned
   quantity, summon requirement, summon state, and natural-discovery state.
 - [x] Show a clear refinement recipe preview: source count, arrow, and target Echo.
-- [x] Explain why refinement is locked when the target rarity has not been naturally
-  discovered.
+- [x] 2026-07-20 revision: the natural-discovery refinement lock and its explanation
+  were removed; insufficient quantity is the only locked refinement state.
 - [x] Disable actions with an explicit reason when quantity is insufficient.
 - [x] Confirm destructive item consumption before refinement or summoning.
 - [x] Update the tile, detail view, navigation progression, and relevant collection
@@ -253,7 +256,8 @@ Conversion rates:
   Echo metadata, requirements, available actions, and discovery state.
 - [x] Add a transactional refinement endpoint.
 - [x] Validate player ownership, source/target adjacency, same-species conversion,
-  natural target discovery, recipe cost, and available quantity server-side.
+  recipe cost, and available quantity server-side. (2026-07-20: the natural target
+  discovery requirement was removed.)
 - [x] Atomically decrement the source stack and increment the target stack.
 - [x] Add a transactional summoning endpoint.
 - [x] Validate the exact slot, summon requirement, available quantity, authoritative
@@ -427,8 +431,9 @@ Historical calibration notes from the brainstorm:
 - [ ] Duplicate extraction remains allowed after summoning.
 - [ ] Skip-Echo cashout grants no Echo and still settles allowed run rewards.
 - [ ] Natural extraction records discovery; refinement does not.
-- [ ] Refinement rejects insufficient quantity, wrong species, skipped tiers, undiscovered
-  target rarity, invalid rarity, and Mythic-as-source upgrades.
+- [ ] Refinement rejects insufficient quantity, wrong species, skipped tiers, invalid
+  rarity, and Mythic-as-source upgrades. (2026-07-20: an undiscovered target rarity is
+  no longer rejected.)
 - [ ] Successful refinement consumes and creates exact configured quantities atomically.
 - [ ] Summoning rejects insufficient Echoes and an already-owned slot.
 - [ ] Successful summoning consumes only the requirement, preserves surplus, creates
@@ -463,7 +468,8 @@ Historical calibration notes from the brainstorm:
 - [x] Verify extraction copy clearly says Inventory progress, not permanent ownership.
 - [x] Refine an eligible Echo and verify both stacks update without reload.
 - [ ] Attempt every locked/invalid refinement state and confirm useful explanations.
-  Insufficient quantity and undiscovered-target states were verified.
+  Insufficient quantity was verified. (2026-07-20: the undiscovered-target lock was
+  removed by design revision.)
 - [ ] Summon with surplus quantity. Exact-quantity summoning was verified end to end.
 - [x] Verify the summoning celebration and `View in Collection` action.
 - [ ] Extract another Echo after summoning and confirm it is banked, not blocked.
@@ -514,6 +520,12 @@ Historical calibration notes from the brainstorm:
 - 2026-07-19: Core desktop/mobile flow was verified on a disposable guest: extract a
   Common Echo, inspect Inventory, summon it, see it in Collection, refine a seeded
   3-to-1 stack, and inspect both quantity and natural-discovery lock states.
+- 2026-07-20: Remove the natural-discovery gate on refinement. Refining into the next
+  rarity requires only enough source Echoes; the player chooses freely between banking
+  for a summon and refining, and never has to summon or re-extract first. The gate
+  felt arbitrary in practice — notably for the free type 1 starter line, whose owner
+  had never "naturally extracted" anything. Discovery history is still recorded for
+  extraction provenance display.
 - 2026-07-19: Revise Inventory presentation to a viewport-filling decorative slot grid.
   Empty slots do not create capacity; scrolling begins only after the visible grid is
   full. Slots use a larger artwork-forward footprint, item copy appears in a World-style

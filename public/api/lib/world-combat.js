@@ -71,8 +71,11 @@ async function getSavedWorldTeamRows(playerId) {
 
 async function materializeWorldTeamRows(rows = []) {
   const team = [];
-  for (const row of rows) {
-    const demon = await createRunDemonFromCollection(row, `world-collection-${row.id}`);
+  for (const [index, row] of rows.entries()) {
+    // The same collection demon may fill several slots, so the instance id has
+    // to be unique per slot for battle results to map back correctly.
+    const slotKey = normalizeWorldTeamSlot(row.formationSlot) ?? `i${index}`;
+    const demon = await createRunDemonFromCollection(row, `world-collection-${row.id}-s${slotKey}`);
     const formationSlot = normalizeWorldTeamSlot(row.formationSlot);
     if (formationSlot !== null) {
       demon.formationSlot = formationSlot;
@@ -180,7 +183,6 @@ function normalizeWorldTeamRequest(requestedTeam = []) {
     throw error;
   }
 
-  const seenDemons = new Set();
   const seenSlots = new Set();
 
   return requestedTeam.map((entry) => {
@@ -199,19 +201,12 @@ function normalizeWorldTeamRequest(requestedTeam = []) {
       throw error;
     }
 
-    if (seenDemons.has(demonId)) {
-      const error = new Error('Each demon can only appear once in your world team.');
-      error.status = 400;
-      throw error;
-    }
-
     if (seenSlots.has(formationSlot)) {
       const error = new Error('Each world team slot can only hold one demon.');
       error.status = 400;
       throw error;
     }
 
-    seenDemons.add(demonId);
     seenSlots.add(formationSlot);
 
     return { demonId, formationSlot };

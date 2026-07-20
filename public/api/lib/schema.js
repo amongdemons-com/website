@@ -37,6 +37,13 @@ async function addIndexIfMissing(tableName, indexName, definition) {
   }
 }
 
+async function dropIndexIfPresent(tableName, indexName) {
+  const [rows] = await db.query(`SHOW INDEX FROM \`${tableName}\` WHERE Key_name = ?`, [indexName]);
+  if (rows.length) {
+    await db.query(`ALTER TABLE \`${tableName}\` DROP INDEX \`${indexName}\``);
+  }
+}
+
 function getConqueredFloorFromRun(row) {
   const floor = Math.max(0, Number(row.floor) || 0);
   let state = {};
@@ -427,21 +434,28 @@ async function initializeSchema() {
       formation_slot TINYINT UNSIGNED NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (player_id, demon_id),
-      UNIQUE INDEX uniq_player_world_teams_slot (player_id, formation_slot),
+      PRIMARY KEY (player_id, formation_slot),
       INDEX idx_player_world_teams_demon_id (demon_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+  // The world team allows the same collection demon in multiple slots, so the
+  // primary key is per-slot rather than per-demon. Migrate tables created with
+  // the old (player_id, demon_id) key; the legacy unique slot index becomes
+  // redundant once the slot is the primary key.
+  const [worldTeamDemonPkRows] = await db.query(
+    "SHOW INDEX FROM player_world_teams WHERE Key_name = 'PRIMARY' AND Column_name = 'demon_id'"
+  );
+  if (worldTeamDemonPkRows.length) {
+    await db.query(
+      'ALTER TABLE player_world_teams DROP PRIMARY KEY, ADD PRIMARY KEY (player_id, formation_slot)'
+    );
+  }
+  await dropIndexIfPresent('player_world_teams', 'uniq_player_world_teams_slot');
   await addColumnIfMissing('player_world_teams', 'demon_id', '`demon_id` INT UNSIGNED NOT NULL');
   await addColumnIfMissing('player_world_teams', 'formation_slot', '`formation_slot` TINYINT UNSIGNED NOT NULL DEFAULT 0');
   await addColumnIfMissing('player_world_teams', 'created_at', '`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
   await addColumnIfMissing('player_world_teams', 'updated_at', '`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
   await normalizeUtf8Column('player_world_teams', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
-  await addIndexIfMissing(
-    'player_world_teams',
-    'uniq_player_world_teams_slot',
-    'UNIQUE INDEX uniq_player_world_teams_slot (player_id, formation_slot)'
-  );
   await addIndexIfMissing('player_world_teams', 'idx_player_world_teams_demon_id', 'INDEX idx_player_world_teams_demon_id (demon_id)');
 
   await db.query(`
