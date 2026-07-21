@@ -153,6 +153,28 @@
     } catch (error) {
       throw createNetworkError(error, path);
     }
+
+    // The hosting CDN rate-limits request bursts (fast page navigation) with
+    // 429s; one delayed retry absorbs the blip for idempotent reads instead
+    // of surfacing a generic error.
+    const method = (options.method || 'GET').toUpperCase();
+    if (response.status === 429 && (method === 'GET' || method === 'HEAD')) {
+      const retryAfter = Number(response.headers.get('Retry-After'));
+      const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
+        ? Math.min(retryAfter * 1000, 5000)
+        : 1500;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      try {
+        response = await fetch(url, {
+          ...options,
+          headers,
+          body
+        });
+      } catch (error) {
+        throw createNetworkError(error, path);
+      }
+    }
+
     const text = await response.text();
 
     return handleApiResponse(response.ok, response.status, text ? parsePayload(text) : null, path);
