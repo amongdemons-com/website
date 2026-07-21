@@ -3629,9 +3629,9 @@ import * as dungeonUtils from './dungeon/utils.js';
       isCollection ? 'world-team-editor-collection-card' : 'world-team-editor-team-card',
       isCollection && isInTeam ? 'is-in-team' : ''
     ].filter(Boolean).join(' ');
-    const inTeamLabel = teamCopies > 1 ? `In team ×${teamCopies}` : 'In team';
+    const inTeamLabel = `In team ×${teamCopies}`;
     const overlayHtml = isCollection && isInTeam
-      ? `<span class="world-team-editor-in-team-mark${teamCopies > 1 ? ' has-count' : ''}" title="${inTeamLabel}" aria-label="${inTeamLabel}">${teamCopies > 1 ? `×${teamCopies}` : renderIcon('check')}</span>`
+      ? `<span class="world-team-editor-in-team-mark has-count" title="${inTeamLabel}" aria-label="${inTeamLabel}">×${teamCopies}</span>`
       : '';
 
     return renderDemonCard(displayDemon, {
