@@ -22,6 +22,30 @@ function getXpForAccountLevel(level) {
   return Math.ceil(ACCOUNT_LEVEL_BASE_XP * Math.pow(targetLevel - 1, ACCOUNT_LEVEL_EXPONENT));
 }
 
+// Response shape consumed by the client's nav XP progress bar; XP-granting
+// endpoints include this as `progression` so the level-up animation can fire.
+function getAccountProgressionSummary(level, xp) {
+  const resolvedLevel = getNextAccountLevel(level, xp);
+  const totalXp = Math.max(0, Math.floor(Number(xp) || 0));
+  const currentLevelXp = getXpForAccountLevel(resolvedLevel);
+  const nextLevelXp = getXpForAccountLevel(resolvedLevel + 1);
+  const xpForNextLevel = Math.max(1, nextLevelXp - currentLevelXp);
+  const xpIntoLevel = Math.min(xpForNextLevel, Math.max(0, totalXp - currentLevelXp));
+
+  return {
+    level: resolvedLevel,
+    xp: totalXp,
+    levelProgress: {
+      currentLevelXp,
+      nextLevelXp,
+      xpIntoLevel,
+      xpForNextLevel,
+      xpToNextLevel: Math.max(0, nextLevelXp - totalXp),
+      percent: xpIntoLevel / xpForNextLevel
+    }
+  };
+}
+
 // Collapses XP down to the floor of the level it already reached: the level
 // derived from the result always equals the level derived from the input, so
 // normalizing can trim progress toward the next level but never demote.
@@ -33,6 +57,7 @@ module.exports = {
   ACCOUNT_LEVEL_BASE_XP,
   ACCOUNT_LEVEL_EXPONENT,
   getAccountLevelForXp,
+  getAccountProgressionSummary,
   getNextAccountLevel,
   getNormalizedAccountXp,
   getXpForAccountLevel

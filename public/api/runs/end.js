@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
-const { getNextAccountLevel } = require('../lib/progression');
+const { getAccountProgressionSummary, getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { getDefeatPayout } = require('../lib/run-rewards');
 const achievements = require('../lib/achievements');
@@ -25,7 +25,7 @@ router.post('/runs/:id/end', requireAuth, async (req, res) => {
 
   const earned = getDefeatPayout(run);
 
-  const [playerRows] = await db.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1', [req.player.id]);
+  const [playerRows] = await db.query('SELECT xp, level, souls FROM players WHERE id = ? LIMIT 1', [req.player.id]);
   const nextXp = playerRows[0].xp + earned.xp;
   const nextLevel = getNextAccountLevel(playerRows[0].level, nextXp);
 
@@ -43,7 +43,11 @@ router.post('/runs/:id/end', requireAuth, async (req, res) => {
     xp: earned.xp,
     souls: earned.souls,
     level: nextLevel,
-    runId: run.id
+    runId: run.id,
+    progression: {
+      ...getAccountProgressionSummary(nextLevel, nextXp),
+      souls: playerRows[0].souls + earned.souls
+    }
   });
 });
 

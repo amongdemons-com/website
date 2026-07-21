@@ -4,7 +4,7 @@ const { requireAuth } = require('../lib/auth');
 const { normalizeCollectionDemonStats } = require('../lib/collection-demons');
 const { isDungeonExtractionUnlocked } = require('../lib/dungeon-rules');
 const { addEcho } = require('../lib/echo-bag');
-const { getNextAccountLevel } = require('../lib/progression');
+const { getAccountProgressionSummary, getNextAccountLevel } = require('../lib/progression');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { hasPendingBuffChoices } = require('../lib/run-buffs');
 const { clearPendingRewardSoul, getEarnedWithPendingDiscardedSouls, settleDiscardedSoulRewards } = require('../lib/run-rewards');
@@ -79,7 +79,7 @@ async function endRunWithoutEcho(run, playerId, connection) {
 async function settleRunPayout(run, playerId, connection) {
   settleDiscardedSoulRewards(run);
   const earned = getEarnedForPayout(run);
-  const [playerRows] = await connection.query('SELECT xp, level FROM players WHERE id = ? LIMIT 1 FOR UPDATE', [playerId]);
+  const [playerRows] = await connection.query('SELECT xp, level, souls FROM players WHERE id = ? LIMIT 1 FOR UPDATE', [playerId]);
   if (!playerRows.length) throw createHttpError('Player not found.', 404);
   const nextXp = playerRows[0].xp + (earned.xp || 0);
   const nextLevel = getNextAccountLevel(playerRows[0].level, nextXp);
@@ -95,7 +95,11 @@ async function settleRunPayout(run, playerId, connection) {
   return {
     xp: earned.xp || 0,
     souls: earned.souls || 0,
-    level: nextLevel
+    level: nextLevel,
+    progression: {
+      ...getAccountProgressionSummary(nextLevel, nextXp),
+      souls: playerRows[0].souls + (earned.souls || 0)
+    }
   };
 }
 
