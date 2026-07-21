@@ -298,7 +298,7 @@ function showBattleResultOverlay(type) {
     <div class="battle-result-burst-text">${type === 'victory' ? 'Victory' : 'Defeat'}</div>
     ${isDefeat ? '<div class="battle-result-burst-subtitle">Your demons have fallen</div>' : ''}
     <div class="battle-result-burst-sparks" aria-hidden="true">
-      ${Array.from({ length: isDefeat ? 16 : 10 }, () => '<span></span>').join('')}
+      ${Array.from({ length: isDefeat ? 16 : 14 }, () => '<span></span>').join('')}
     </div>
   `;
   document.body.appendChild(overlay);

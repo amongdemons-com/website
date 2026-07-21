@@ -24,6 +24,10 @@ const SCAN_DIRS = [
 const SCAN_EXTENSIONS = new Set(['.html', '.js', '.json']);
 const SKIP_DIRS = new Set(['node_modules', 'steam', 'android', 'map']);
 
+// Icons referenced dynamically (e.g. rankings-ui.js topRankIcons array) that
+// the literal-pattern scan below cannot discover.
+const EXTRA_ICONS = ['crown', 'trophy', 'medal'];
+
 function collectFiles(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {
@@ -52,6 +56,8 @@ function collectRequestedNames() {
       for (const match of content.matchAll(pattern)) kebabNames.add(match[1]);
     }
   }
+
+  for (const name of EXTRA_ICONS) kebabNames.add(name);
 
   // Every alias target in icons.js is reachable via renderIcon(aliasName).
   const iconsJs = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'icons.js'), 'utf8');

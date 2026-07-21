@@ -840,86 +840,154 @@ body:not(.dungeon-page) {
     animation: battle-result-fade var(--battle-result-duration, 2200ms) ease-out forwards;
 }
 
+/* Victory reads as molten gold in a firelit forest: warm wash, halo flare, rising embers. */
+.battle-result-burst.is-victory {
+    background:
+        radial-gradient(ellipse at 50% 40%, rgba(255,158,54,0.22), transparent 54%),
+        radial-gradient(ellipse at 50% 118%, rgba(150,62,14,0.28), transparent 62%),
+        radial-gradient(ellipse at 50% 44%, transparent 30%, rgba(20,8,2,0.5) 74%, rgba(10,4,1,0.78));
+}
+
 .battle-result-burst::before {
     content: "";
     position: absolute;
-    width: min(34rem, 86vw);
+    width: min(38rem, 92vw);
     aspect-ratio: 1;
     border-radius: 50%;
     background:
-        radial-gradient(circle, rgba(255,255,255,0.22), transparent 18%),
-        radial-gradient(circle, rgba(128,214,151,0.18), transparent 62%);
-    filter: blur(1px);
+        radial-gradient(circle, rgba(255,248,222,0.5), transparent 20%),
+        radial-gradient(circle, rgba(255,178,64,0.38), transparent 46%),
+        radial-gradient(circle, rgba(224,110,24,0.24), transparent 70%);
+    filter: blur(2px);
     transform: scale(0.2);
-    animation: battle-result-shockwave var(--battle-result-duration, 2200ms) ease-out forwards;
+    animation: battle-victory-bloom var(--battle-result-duration, 2200ms) ease-out forwards;
 }
 
 .battle-result-burst-ring {
     position: absolute;
-    width: min(18rem, 68vw);
+    width: min(19rem, 70vw);
     aspect-ratio: 1;
-    border: 2px solid rgba(250,197,28,0.72);
+    border: 2px solid rgba(255,208,110,0.78);
     border-radius: 50%;
     box-shadow:
-        0 0 34px rgba(250,197,28,0.38),
-        inset 0 0 34px rgba(128,214,151,0.2);
-    animation: battle-result-ring var(--battle-result-duration, 2200ms) cubic-bezier(0.18, 0.84, 0.18, 1) forwards;
+        0 0 34px rgba(255,178,64,0.5),
+        0 0 90px rgba(224,110,24,0.35),
+        inset 0 0 40px rgba(255,196,86,0.26);
+    animation: battle-victory-halo var(--battle-result-duration, 2200ms) cubic-bezier(0.18, 0.84, 0.18, 1) forwards;
+}
+
+/* Lens-flare beams through the halo, vertical dominant like a rising light. */
+.battle-result-burst.is-victory .battle-result-burst-ring::before,
+.battle-result-burst.is-victory .battle-result-burst-ring::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    background: linear-gradient(180deg, transparent, rgba(255,232,168,0.9) 42%, #fffbe9 50%, rgba(255,232,168,0.9) 58%, transparent);
+    filter: blur(1px);
+}
+
+.battle-result-burst.is-victory .battle-result-burst-ring::before {
+    height: 174%;
+    transform: translate(-50%, -50%);
+}
+
+.battle-result-burst.is-victory .battle-result-burst-ring::after {
+    height: 118%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    opacity: 0.65;
 }
 
 .battle-result-burst-text {
     position: relative;
     z-index: 2;
-    color: #fff7cf;
     font-size: clamp(3.4rem, 12vw, 8.5rem);
     font-weight: 950;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     line-height: 1;
     text-transform: uppercase;
-    text-shadow:
-        0 0 10px rgba(255,255,255,0.86),
-        0 0 34px rgba(250,197,28,0.72),
-        0 8px 24px rgba(0,0,0,0.62);
-    transform: scale(0.74) rotate(-2deg);
-    animation: battle-result-text-pop var(--battle-result-duration, 2200ms) cubic-bezier(0.16, 0.88, 0.2, 1) forwards;
+}
+
+.battle-result-burst.is-victory .battle-result-burst-text {
+    background: linear-gradient(180deg, #fffdf2 6%, #ffefb2 34%, #ffc44d 62%, #ee8d16 92%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #ffd76a;
+    filter:
+        drop-shadow(0 0 12px rgba(255,214,110,0.85))
+        drop-shadow(0 0 38px rgba(255,150,36,0.6))
+        drop-shadow(0 8px 26px rgba(0,0,0,0.6));
+    transform: scale(0.74);
+    animation: battle-victory-title var(--battle-result-duration, 2200ms) cubic-bezier(0.16, 0.88, 0.2, 1) forwards;
 }
 
 .battle-result-burst-sparks {
     position: absolute;
-    width: min(22rem, 74vw);
-    aspect-ratio: 1;
+    inset: 0;
+    overflow: hidden;
 }
 
 .battle-result-burst-sparks span {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 0.42rem;
-    height: 2.4rem;
-    border-radius: 999px;
-    background: linear-gradient(#fff9d4, rgba(250,197,28,0));
-    transform-origin: center min(11rem, 37vw);
-    animation: battle-result-spark var(--battle-result-duration, 2200ms) ease-out forwards;
 }
 
-.battle-result-burst-sparks span:nth-child(1) { --spark-angle: 0deg; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span {
+    left: var(--ember-left, 50%);
+    top: var(--ember-top, 78%);
+    width: var(--ember-size, 0.3rem);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff3c9 18%, rgba(255,168,54,0.9) 52%, rgba(224,110,24,0) 78%);
+    box-shadow: 0 0 10px rgba(255,168,54,0.7);
+    opacity: 0;
+    animation: battle-victory-ember var(--battle-result-duration, 2200ms) ease-out var(--ember-delay, 0ms) forwards;
+}
 
-.battle-result-burst-sparks span:nth-child(2) { --spark-angle: 36deg; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(1) { --ember-left: 7%; --ember-top: 84%; --ember-delay: 80ms; --ember-drift: 1.6rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(2) { --ember-left: 15%; --ember-top: 70%; --ember-delay: 420ms; --ember-size: 0.22rem; --ember-drift: -1.1rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(3) { --ember-left: 24%; --ember-top: 88%; --ember-delay: 190ms; --ember-size: 0.36rem; --ember-drift: 0.7rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(4) { --ember-left: 33%; --ember-top: 76%; --ember-delay: 640ms; --ember-drift: -1.8rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(5) { --ember-left: 41%; --ember-top: 90%; --ember-delay: 40ms; --ember-size: 0.26rem; --ember-drift: 1.2rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(6) { --ember-left: 50%; --ember-top: 82%; --ember-delay: 520ms; --ember-size: 0.38rem; --ember-drift: -0.6rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(7) { --ember-left: 58%; --ember-top: 72%; --ember-delay: 300ms; --ember-drift: 1.9rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(8) { --ember-left: 66%; --ember-top: 86%; --ember-delay: 720ms; --ember-size: 0.24rem; --ember-drift: -1.4rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(9) { --ember-left: 75%; --ember-top: 78%; --ember-delay: 140ms; --ember-size: 0.34rem; --ember-drift: 0.9rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(10) { --ember-left: 84%; --ember-top: 88%; --ember-delay: 480ms; --ember-drift: -0.8rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(11) { --ember-left: 92%; --ember-top: 74%; --ember-delay: 260ms; --ember-size: 0.26rem; --ember-drift: 1.3rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(12) { --ember-left: 12%; --ember-top: 92%; --ember-delay: 860ms; --ember-size: 0.3rem; --ember-drift: 0.5rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(13) { --ember-left: 46%; --ember-top: 68%; --ember-delay: 940ms; --ember-size: 0.22rem; --ember-drift: -1.2rem; }
+.battle-result-burst.is-victory .battle-result-burst-sparks span:nth-child(14) { --ember-left: 88%; --ember-top: 92%; --ember-delay: 600ms; --ember-size: 0.32rem; --ember-drift: 1rem; }
 
-.battle-result-burst-sparks span:nth-child(3) { --spark-angle: 72deg; }
+@keyframes battle-victory-bloom {
+    0% { opacity: 0; transform: scale(0.2); }
+    18% { opacity: 1; }
+    62% { opacity: 0.92; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.12); }
+}
 
-.battle-result-burst-sparks span:nth-child(4) { --spark-angle: 108deg; }
+@keyframes battle-victory-halo {
+    0% { opacity: 0; transform: scale(0.42); }
+    20% { opacity: 1; }
+    58% { opacity: 0.95; transform: scale(1.04); }
+    100% { opacity: 0; transform: scale(1.16); }
+}
 
-.battle-result-burst-sparks span:nth-child(5) { --spark-angle: 144deg; }
+@keyframes battle-victory-title {
+    0% { opacity: 0; transform: scale(0.6); }
+    16% { opacity: 1; transform: scale(1.07); }
+    32% { transform: scale(0.99); }
+    84% { opacity: 1; transform: scale(1.03); }
+    100% { opacity: 0; transform: scale(1.08); }
+}
 
-.battle-result-burst-sparks span:nth-child(6) { --spark-angle: 180deg; }
-
-.battle-result-burst-sparks span:nth-child(7) { --spark-angle: 216deg; }
-
-.battle-result-burst-sparks span:nth-child(8) { --spark-angle: 252deg; }
-
-.battle-result-burst-sparks span:nth-child(9) { --spark-angle: 288deg; }
-
-.battle-result-burst-sparks span:nth-child(10) { --spark-angle: 324deg; }
+@keyframes battle-victory-ember {
+    0% { opacity: 0; transform: translate3d(0, 0.6rem, 0) scale(0.6); }
+    16% { opacity: 1; }
+    70% { opacity: 0.85; }
+    100% { opacity: 0; transform: translate3d(var(--ember-drift, 0rem), -38vh, 0) scale(1.1); }
+}
 
 /* Defeat closes in and falls away; it should never read like recolored victory. */
 .battle-result-burst.is-defeat {
