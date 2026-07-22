@@ -31,12 +31,7 @@ async function getCurrentRunForPlayer(playerId) {
     `SELECT * FROM runs
      WHERE player_id = ?
        AND status IN ('active', 'defeated')
-     ORDER BY
-       CASE status
-         WHEN 'active' THEN 1
-         WHEN 'defeated' THEN 2
-         ELSE 4
-       END,
+     ORDER BY status ASC,
        updated_at DESC,
        created_at DESC
      LIMIT 1`,

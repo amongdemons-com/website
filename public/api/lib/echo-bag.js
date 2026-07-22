@@ -49,28 +49,47 @@ async function getEchoDefinition(typeId, rarity) {
 
 async function getPlayerBag(playerId, queryable = db) {
   const catalogPromise = getEchoCatalog();
-  const [bagRows] = await queryable.query(
-    `SELECT item_key AS itemKey, item_type AS itemType, quantity, updated_at AS updatedAt
+  const [rows] = await queryable.query(
+    `SELECT 'bag' AS rowType,
+            item_key AS itemKey,
+            item_type AS itemType,
+            quantity,
+            updated_at AS updatedAt,
+            NULL AS typeId,
+            NULL AS rarity,
+            NULL AS discoveredAt,
+            NULL AS demonId
      FROM player_bag
      WHERE player_id = ? AND quantity > 0
-     ORDER BY updated_at DESC, item_key ASC`,
-    [playerId]
-  );
-  const [discoveryRows] = await queryable.query(
-    `SELECT type_id AS typeId, rarity, discovered_at AS discoveredAt
+     UNION ALL
+     SELECT 'discovery', NULL, NULL, NULL, NULL,
+            type_id,
+            CONVERT(rarity USING utf8mb4) COLLATE utf8mb4_unicode_ci,
+            discovered_at,
+            NULL
      FROM player_echo_discoveries
-     WHERE player_id = ?`,
-    [playerId]
-  );
-  const [demonRows] = await queryable.query(
-    `SELECT id, type_id AS typeId, rarity
+     WHERE player_id = ?
+     UNION ALL
+     SELECT 'demon', NULL, NULL, NULL, NULL,
+            type_id,
+            CONVERT(rarity USING utf8mb4) COLLATE utf8mb4_unicode_ci,
+            NULL,
+            id
      FROM player_demons
      WHERE player_id = ?`,
-    [playerId]
+    [playerId, playerId, playerId]
   );
+  const bagRows = rows
+    .filter((row) => row.rowType === 'bag')
+    .sort((left, right) => (
+      new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+      || String(left.itemKey).localeCompare(String(right.itemKey))
+    ));
+  const discoveryRows = rows.filter((row) => row.rowType === 'discovery');
+  const demonRows = rows.filter((row) => row.rowType === 'demon');
   const catalog = await catalogPromise;
   const discovered = new Map(discoveryRows.map((row) => [getEchoItemKey(row.typeId, row.rarity), row.discoveredAt]));
-  const owned = new Map(demonRows.map((row) => [getEchoItemKey(row.typeId, row.rarity), Number(row.id)]));
+  const owned = new Map(demonRows.map((row) => [getEchoItemKey(row.typeId, row.rarity), Number(row.demonId)]));
   const quantities = new Map(bagRows.map((row) => [row.itemKey, Math.max(0, Number(row.quantity) || 0)]));
 
   const items = bagRows

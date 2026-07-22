@@ -1,0 +1,9 @@
+import './bootstrap-global.js';
+import '../public/app/js/lucide-subset.js';
+import '../public/app/js/icons.js';
+import '../public/app/js/api-config.js';
+import '../public/app/js/session.js';
+import '../public/app/js/steam.js';
+import '../public/app/js/audio.js';
+import '../public/app/js/navigation.js';
+import '../public/app/js/demon-cards.js';

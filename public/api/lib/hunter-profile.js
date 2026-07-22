@@ -4,6 +4,7 @@ const { resolveActivePlayerCombatBuffs } = require('./player-combat-buffs');
 const { isValidUsername, normalizeUsername } = require('./usernames');
 const { getActiveWorldTeam } = require('./world-combat');
 const worldMap = require('../data/map.json');
+const { getDemonImageUrl } = require('./demon-images');
 
 const WORLD_SPAWN = worldMap.spawn || { x: 0, y: 0 };
 
@@ -63,7 +64,9 @@ async function getPublicHunterProfile(rawUsername) {
       pvpLosses: Math.max(0, Number(row.pvpLosses) || 0),
       profileDemonSpecies: row.profileDemonSpecies || null,
       profileDemonRarity: row.profileDemonRarity || null,
-      profileDemonImageUrl: row.profileDemonImageUrl || null
+      profileDemonImageUrl: row.profileDemonImageUrl
+        ? getDemonImageUrl(row.profileDemonImageUrl, 'portrait')
+        : null
     },
     coordinates: serializeCoordinates(row),
     worldTeam: visualWorldTeam.map(serializeTeamMember),
@@ -90,7 +93,7 @@ function serializeTeamMember(demon = {}) {
     typeId: Number(demon.typeId) || null,
     species: demon.species || 'Demon',
     rarity: demon.rarity || 'common',
-    imageUrl: demon.imageUrl || '',
+    imageUrl: getDemonImageUrl(demon, 'portrait'),
     hp: Math.max(0, Number(demon.hp) || 0),
     maxHp: Math.max(0, Number(demon.maxHp) || Number(demon.hp) || 0),
     atk: Math.max(0, Number(demon.atk) || 0),

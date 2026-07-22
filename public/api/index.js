@@ -1,19 +1,13 @@
 const express = require('express');
-const { initializeSchema } = require('./lib/schema');
+const { ensureSchemaReady } = require('./lib/schema');
 
 const router = express.Router();
-let schemaReady;
-
 function ensureSchema(req, res, next) {
   if (req.method === 'GET' && req.path === '/world/map') {
     return next();
   }
 
-  if (!schemaReady) {
-    schemaReady = initializeSchema();
-  }
-
-  schemaReady
+  ensureSchemaReady()
     .then(() => next())
     .catch((error) => {
       console.error('Database initialization failed:', error);

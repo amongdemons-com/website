@@ -704,7 +704,11 @@
   }
 
   function getDemonImageUrl(demon) {
-    return demon?.imageUrl || demon?.image_url || DEFAULT_PROFILE_IMAGE_URL;
+    return window.AmongDemons.ui?.toDemonImageUrl?.(demon, 'portrait')
+      || demon?.portraitImageUrl
+      || demon?.imageUrl
+      || demon?.image_url
+      || DEFAULT_PROFILE_IMAGE_URL;
   }
 
   function syncSessionPlayer(player) {

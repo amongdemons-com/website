@@ -1,4 +1,5 @@
 const { getDemonTypes } = require('./game-data');
+const { withDemonImageVariants } = require('./demon-images');
 
 const FORMATION_GRID_COLUMNS = 3;
 const FORMATION_GRID_SIZE = 9;
@@ -74,7 +75,7 @@ function assignFormationSlots(team, side = 'player') {
 async function createRunDemonFromCollection(row, instanceId) {
   const preferredPosition = await getPreferredPosition(row.type_id || row.typeId);
 
-  return {
+  return withDemonImageVariants({
     instanceId,
     collectionDemonId: row.id,
     sourceDemonId: row.source_demon_id || row.sourceDemonId,
@@ -89,7 +90,7 @@ async function createRunDemonFromCollection(row, instanceId) {
     preferredPosition,
     position: 'front',
     attackMeter: 0
-  };
+  });
 }
 
 function resetRunDemon(demon, instanceId) {

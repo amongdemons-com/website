@@ -91,12 +91,11 @@ router.get('/world/map', (req, res) => {
 });
 
 router.get('/world/state', requireAuth, async (req, res) => {
-  const position = await getOrCreatePosition(req.player.id);
+  const { position, boundShrine } = await getWorldStateLocation(req.player.id);
   const activeBosses = getActiveWorldBosses();
-  const [playersAt, activeWorldTeam, boundShrine, hunt] = await Promise.all([
+  const [playersAt, activeWorldTeam, hunt] = await Promise.all([
     getPlayersAt(position.x, position.y, req.player.id),
     getActiveWorldTeam(req.player.id),
-    getBoundShrine(req.player.id),
     getHuntState(req.player.id)
   ]);
 
@@ -105,7 +104,6 @@ router.get('/world/state', requireAuth, async (req, res) => {
       player: req.player,
       progression: getAccountProgressionPayload(req.player)
     },
-    progression: getAccountProgressionPayload(req.player),
     player: getWorldPlayer(req.player),
     position,
     mapVersion: WORLD_MAP_VERSION,
@@ -120,6 +118,37 @@ router.get('/world/state', requireAuth, async (req, res) => {
     hunt
   });
 });
+
+async function getWorldStateLocation(playerId) {
+  const [rows] = await db.query(
+    `SELECT wp.x,
+            wp.y,
+            shrine.x AS shrineX,
+            shrine.y AS shrineY
+     FROM (SELECT ? AS player_id) requested
+     LEFT JOIN player_world_positions wp ON wp.player_id = requested.player_id
+     LEFT JOIN player_bound_world_shrines shrine ON shrine.player_id = requested.player_id`,
+    [playerId]
+  );
+  const row = rows[0] || {};
+  const hasPosition = row.x !== null && row.x !== undefined && row.y !== null && row.y !== undefined;
+  let position = hasPosition
+    ? normalizePosition(row, { allowBlocked: true })
+    : { ...WORLD_SPAWN };
+
+  if (!hasPosition || isBlocked(position.x, position.y)) {
+    position = { ...WORLD_SPAWN };
+    await savePosition(playerId, position);
+  }
+
+  const hasShrine = row.shrineX !== null && row.shrineX !== undefined
+    && row.shrineY !== null && row.shrineY !== undefined;
+  const boundShrine = hasShrine
+    ? getShrineAt(row.shrineX, row.shrineY)
+    : getShrineAt(WORLD_SPAWN.x, WORLD_SPAWN.y);
+
+  return { position, boundShrine };
+}
 
 router.get('/world/team', requireAuth, async (req, res) => {
   const [team, collection] = await Promise.all([
@@ -835,17 +864,29 @@ async function settleActiveHunt(player, options = {}) {
 }
 
 async function getHuntState(playerId) {
-  const [unlockRows, activeRows] = await Promise.all([
-    db.query('SELECT encounter_id AS encounterId, unlocked_at AS unlockedAt FROM player_hunt_unlocks WHERE player_id = ?', [playerId]),
-    db.query('SELECT encounter_id AS encounterId, snapshot, started_at AS startedAt, enemy_respawn_seconds AS enemyRespawnSeconds FROM player_active_hunts WHERE player_id = ? LIMIT 1', [playerId])
-  ]);
-  const active = activeRows[0][0] || null;
+  const [rows] = await db.query(
+    `SELECT 'unlock' AS rowType,
+            encounter_id AS encounterId,
+            unlocked_at AS unlockedAt,
+            NULL AS snapshot,
+            NULL AS startedAt,
+            NULL AS enemyRespawnSeconds
+     FROM player_hunt_unlocks
+     WHERE player_id = ?
+     UNION ALL
+     SELECT 'active', encounter_id, NULL, snapshot, started_at, enemy_respawn_seconds
+     FROM player_active_hunts
+     WHERE player_id = ?`,
+    [playerId, playerId]
+  );
+  const unlockRows = rows.filter((row) => row.rowType === 'unlock');
+  const active = rows.find((row) => row.rowType === 'active') || null;
   const liveCapacityState = active
     ? await getLiveHuntCapacityState({ id: playerId })
     : null;
 
   return {
-    unlockedEncounterIds: unlockRows[0].map((row) => row.encounterId),
+    unlockedEncounterIds: unlockRows.map((row) => row.encounterId),
     active: active ? serializeActiveHunt(
       active,
       liveCapacityState.soulCapacity,

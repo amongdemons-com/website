@@ -1,4 +1,5 @@
 const { getDemonAssets, getDemonTypes } = require('./game-data');
+const { withDemonImageVariants } = require('./demon-images');
 const { randomInt } = require('./rng');
 
 const rarityWeights = [
@@ -135,7 +136,7 @@ async function createDemon(rng, options = {}) {
   const stats = rollStats(rng, typeData, asset.rarity);
   const preferredPosition = typeData.preferredPosition === 'back' ? 'back' : 'front';
 
-  return {
+  return withDemonImageVariants({
     instanceId: options.instanceId || `${typeId}-${asset.rarity}-${Math.floor(rng() * 1000000)}`,
     sourceDemonId: asset.id,
     typeId,
@@ -151,7 +152,7 @@ async function createDemon(rng, options = {}) {
     speed: stats.speed,
     position: options.position ? (options.position === 'back' ? 'back' : 'front') : preferredPosition,
     attackMeter: 0
-  };
+  });
 }
 
 async function createTeam(rng, size, options = {}) {

@@ -2,7 +2,7 @@
   'use strict';
 
   const root = window.AmongDemons = window.AmongDemons || {};
-  const MANIFEST_URL = '/app/sounds/manifest.json';
+  const MANIFEST_URL = '/app/sounds/manifest.json?v=20260722-lazy-audio-v1';
   const STORAGE_KEYS = Object.freeze({
     master: 'amongdemons-audio-master-volume',
     music: 'amongdemons-audio-music-volume',
@@ -18,15 +18,7 @@
     'sfx.battle.victory': Object.freeze({ gain: 1.35, musicDuck: 0.2, musicDuckMs: 2500 })
   });
 
-  const manifestPromise = fetch(MANIFEST_URL, { cache: 'no-cache' })
-    .then((response) => {
-      if (!response.ok) throw new Error(`Audio manifest request failed (${response.status})`);
-      return response.json();
-    })
-    .catch((error) => {
-      console.warn('Among Demons audio is unavailable.', error);
-      return null;
-    });
+  let manifestPromise = null;
 
   const scene = { music: null };
   const scenePlayers = { music: null };
@@ -157,6 +149,10 @@
       stopSceneChannel(channel);
       return;
     }
+
+    // A scene can be selected during page initialization, but no audio bytes
+    // should be requested before the browser has granted user activation.
+    if (muted || !audioUnlocked || document.hidden) return;
 
     const current = scenePlayers[channel];
     if (current?.dataset.soundKey === key) {
@@ -328,8 +324,10 @@
   }
 
   async function play(key, options = {}) {
-    if (!audioUnlocked && options.queueUntilUnlock) {
-      pendingUnlockSounds.set(key, { ...options, queueUntilUnlock: false });
+    if (!audioUnlocked) {
+      if (options.queueUntilUnlock) {
+        pendingUnlockSounds.set(key, { ...options, queueUntilUnlock: false });
+      }
       return null;
     }
     const mix = SFX_MIXES[key] || {};
@@ -400,7 +398,7 @@
   }
 
   async function resolveSoundUrls(key) {
-    const manifest = await manifestPromise;
+    const manifest = await getManifest();
     if (!manifest) return [];
     const entry = String(key).split('.').reduce((value, part) => value?.[part], manifest);
     const paths = (Array.isArray(entry) ? entry : [entry]).filter((path) => typeof path === 'string');
@@ -409,6 +407,21 @@
       return [];
     }
     return paths.map((path) => `${manifest.basePath || '/app/sounds/'}${path}`);
+  }
+
+  function getManifest() {
+    if (!manifestPromise) {
+      manifestPromise = fetch(MANIFEST_URL)
+        .then((response) => {
+          if (!response.ok) throw new Error(`Audio manifest request failed (${response.status})`);
+          return response.json();
+        })
+        .catch((error) => {
+          console.warn('Among Demons audio is unavailable.', error);
+          return null;
+        });
+    }
+    return manifestPromise;
   }
 
   async function resolveSoundUrl(key) {

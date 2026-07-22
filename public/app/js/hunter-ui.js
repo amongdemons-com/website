@@ -32,6 +32,16 @@
       return;
     }
 
+    const initialData = readInitialHunterData();
+    if (initialData) {
+      if (initialData.profile) {
+        renderHunter(initialData.profile);
+      } else if (initialData.notFound) {
+        showNotFound(username);
+      }
+      return;
+    }
+
     setLoading(username);
 
     try {
@@ -41,6 +51,19 @@
       console.error(error);
       showMessage(error.status === 404 ? 'Hunter not found.' : error, error.status === 404 ? 'warning' : 'danger');
       showNotFound(username);
+    }
+  }
+
+  function readInitialHunterData() {
+    const element = document.getElementById('hunterInitialData');
+    if (!element) return null;
+    try {
+      return JSON.parse(element.textContent || 'null');
+    } catch (error) {
+      console.warn('Unable to read the server-rendered hunter profile.', error);
+      return null;
+    } finally {
+      element.remove();
     }
   }
 

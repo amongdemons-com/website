@@ -29,7 +29,7 @@ router.get('/runs/bootstrap', requireAuth, async (req, res) => {
     statPoints,
     collection,
     run: run ? await serializeRun(run) : null,
-    startOptions: run ? null : await createStartOptions(req.player.id, collection)
+    startOptions: run ? null : await createStartOptions(req.player.id, collection, { includeCollection: false })
   });
 });
 
@@ -37,7 +37,7 @@ router.get('/runs/start-options', requireAuth, async (req, res) => {
   res.json(await createStartOptions(req.player.id));
 });
 
-async function createStartOptions(playerId, existingCollection = null) {
+async function createStartOptions(playerId, existingCollection = null, options = {}) {
   const draftSeed = crypto.randomInt(1, 4294967295);
   const draft = await createTeam(createRng(draftSeed), DRAFT_STARTER_COUNT, {
     prefix: 'draft',
@@ -53,7 +53,7 @@ async function createStartOptions(playerId, existingCollection = null) {
       draftSeed,
       expiresAt: Date.now() + 15 * 60 * 1000
     }),
-    collection
+    ...(options.includeCollection === false ? {} : { collection })
   };
 }
 

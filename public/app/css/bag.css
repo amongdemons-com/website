@@ -5,7 +5,7 @@
     background:
         linear-gradient(180deg, rgba(3, 10, 13, 0.52), rgba(3, 8, 10, 0.84)),
         radial-gradient(circle at 50% 15%, rgba(85, 255, 255, 0.07), transparent 42%),
-        url("/app/images/assets/background/amongdemons_bag.png") center / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_bag.avif") type("image/avif"), url("/app/images/assets/background/amongdemons_bag.webp") type("image/webp"), url("/app/images/assets/background/amongdemons_bag.png") type("image/png")) center / cover fixed no-repeat,
         #050b0e;
 }
 

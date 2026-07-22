@@ -13,6 +13,12 @@ import * as dungeonModals from './dungeon/modals.js?v=20260706-stat-preview-v4';
 import * as dungeonDragDrop from './dungeon/drag-drop.js?v=20260714-audio-v2';
 import * as dungeonCards from './dungeon/cards.js';
 import * as dungeonUtils from './dungeon/utils.js';
+import {
+  DEMON_MAP_ATLAS_COLUMNS,
+  DEMON_MAP_ATLAS_FRAME_SIZE,
+  DEMON_MAP_ATLAS_IDS,
+  DEMON_MAP_ATLAS_URL
+} from './generated/demon-map-atlas.js';
 
 (function() {
   'use strict';
@@ -24,6 +30,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   const renderDemonCard = window.AmongDemons?.ui?.renderDemonCard || (() => '');
   const openDemonDetailsModal = window.AmongDemons?.ui?.openDemonDetailsModal || (() => {});
   const replaceStaticIcons = window.AmongDemons?.ui?.replaceStaticIcons || (() => {});
+  const toDemonImageUrl = window.AmongDemons?.ui?.toDemonImageUrl || ((value) => value?.imageUrl || value || '');
   const TILE_SIZE = 64;
   const WORLD_RADIUS = 50;
   const ZONE_START_RADIUS = 24;
@@ -56,6 +63,8 @@ import * as dungeonUtils from './dungeon/utils.js';
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
+  let demonMapAtlasPromise = null;
+  let pixiCullerRegistered = false;
   // World boss intro dialog: a random boss taunts the hunter after their first
   // click in the world, allowing that click's original action to continue.
   // Gate it behind sessionStorage once the novelty should wear off.
@@ -469,6 +478,11 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     if (!host || !Pixi?.Application) {
       throw new Error('PixiJS failed to load.');
+    }
+
+    if (!pixiCullerRegistered && Pixi.CullerPlugin && Pixi.extensions?.add) {
+      Pixi.extensions.add(Pixi.CullerPlugin);
+      pixiCullerRegistered = true;
     }
 
     const app = new Pixi.Application();
@@ -1586,6 +1600,34 @@ import * as dungeonUtils from './dungeon/utils.js';
     return sprite;
   }
 
+  function createChunkAppender(layer, min, chunkSize = 16) {
+    const Pixi = window.PIXI;
+    const chunks = new Map();
+
+    return (displayObject, x, y) => {
+      const chunkX = Math.floor((x - min) / chunkSize);
+      const chunkY = Math.floor((y - min) / chunkSize);
+      const key = `${chunkX},${chunkY}`;
+      let chunk = chunks.get(key);
+      if (!chunk) {
+        const startX = min + chunkX * chunkSize;
+        const startY = min + chunkY * chunkSize;
+        chunk = new Pixi.Container({ label: `terrain-chunk-${key}` });
+        chunk.cullable = true;
+        chunk.cullableChildren = false;
+        chunk.cullArea = new Pixi.Rectangle(
+          startX * TILE_SIZE,
+          startY * TILE_SIZE,
+          chunkSize * TILE_SIZE,
+          chunkSize * TILE_SIZE
+        );
+        chunks.set(key, chunk);
+        layer.addChild(chunk);
+      }
+      chunk.addChild(displayObject);
+    };
+  }
+
   // --- texture detail helpers -------------------------------------------------
 
   // --- texture builders -------------------------------------------------------
@@ -2432,6 +2474,8 @@ import * as dungeonUtils from './dungeon/utils.js';
 
     const min = state.bounds.min ?? -WORLD_RADIUS;
     const max = state.bounds.max ?? WORLD_RADIUS;
+    const addGroundObject = createChunkAppender(state.groundLayer, min);
+    const addRoadObject = createChunkAppender(state.roadLayer, min);
 
     // Tiles in a connected cluster of 2+ blocked tiles get drawn together as one
     // merged shape below (poison puddle, lava pool, or rock formation), so skip
@@ -2470,7 +2514,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         const ground = makeTileSprite(groundTexture(zone, Math.floor(hashTile(x, y, 0) * GROUND_VARIANTS)), x, y);
         ground.rotation = Math.floor(hashTile(x, y, 3) * 4) * (Math.PI / 2);
         if (hashTile(x, y, 4) < 0.5) ground.scale.x = -1;
-        state.groundLayer.addChild(ground);
+        addGroundObject(ground, x, y);
 
         const blocked = getBlockedTile({ x, y });
         if (blocked) {
@@ -2494,13 +2538,13 @@ import * as dungeonUtils from './dungeon/utils.js';
             const kind = OBSTACLE_KINDS[Math.floor(hashTile(x, y, 1) * OBSTACLE_KINDS.length)];
             const obstacle = makeTileSprite(obstacleTexture(kind, Math.floor(hashTile(x, y, 2) * OBSTACLE_VARIANTS), zone, blockType), x, y);
             if (hashTile(x, y, 5) < 0.5) obstacle.scale.x = -1;
-            state.groundLayer.addChild(obstacle);
+            addGroundObject(obstacle, x, y);
           }
         } else if (!isRoadTile({ x, y }) && hashTile(x, y, 7) < PROP_CHANCE) {
           // Rare, subtle stone decal on open ground.
           const prop = makeTileSprite(propTexture(zone, Math.floor(hashTile(x, y, 8) * 3)), x, y);
           if (hashTile(x, y, 9) < 0.5) prop.scale.x = -1;
-          state.groundLayer.addChild(prop);
+          addGroundObject(prop, x, y);
         }
       }
     }
@@ -2543,7 +2587,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         (isRoadTile({ x: tile.x - 1, y: tile.y }) ? 8 : 0);
       const variant = Math.floor(hashTile(tile.x, tile.y, 6) * ROAD_VARIANTS);
       const zone = zoneTypeIdForTile(tile.x, tile.y);
-      state.roadLayer.addChild(makeTileSprite(roadTexture(mask, variant, zone), tile.x, tile.y));
+      addRoadObject(makeTileSprite(roadTexture(mask, variant, zone), tile.x, tile.y), tile.x, tile.y);
     });
 
     state.terrainBuilt = true;
@@ -7039,12 +7083,13 @@ import * as dungeonUtils from './dungeon/utils.js';
     const Pixi = window.PIXI;
     if (!Pixi) return;
 
-    const imageUrl = state.player?.profileDemonImageUrl || DEFAULT_PROFILE_IMAGE_URL;
+    const imageUrl = toDemonImageUrl(state.player?.profileDemonImageUrl || DEFAULT_PROFILE_IMAGE_URL, 'map');
 
     try {
-      state.hunterAvatarTexture = Pixi.Assets
+      const atlasTextures = await getDemonMapAtlasTextures();
+      state.hunterAvatarTexture = atlasTextures.get(imageUrl) || (Pixi.Assets
         ? await Pixi.Assets.load(imageUrl)
-        : Pixi.Texture.from(imageUrl);
+        : Pixi.Texture.from(imageUrl));
     } catch (error) {
       state.hunterAvatarTexture = null;
     }
@@ -7060,15 +7105,7 @@ import * as dungeonUtils from './dungeon/utils.js';
         .filter(Boolean)
     ));
 
-    await Promise.all(urls.map(async (url) => {
-      if (state.encounterTextures.has(url)) return;
-      try {
-        const texture = Pixi.Assets ? await Pixi.Assets.load(url) : Pixi.Texture.from(url);
-        state.encounterTextures.set(url, texture);
-      } catch (error) {
-        state.encounterTextures.set(url, null);
-      }
-    }));
+    await loadDemonTextures(urls, state.encounterTextures);
   }
 
   async function loadBossTextures() {
@@ -7081,15 +7118,54 @@ import * as dungeonUtils from './dungeon/utils.js';
         .filter(Boolean)
     ));
 
+    await loadDemonTextures(urls, state.bossTextures);
+  }
+
+  async function loadDemonTextures(urls, target) {
+    const Pixi = window.PIXI;
+    const atlasTextures = await getDemonMapAtlasTextures();
     await Promise.all(urls.map(async (url) => {
-      if (state.bossTextures.has(url)) return;
+      if (target.has(url)) return;
+      const atlasTexture = atlasTextures.get(url);
+      if (atlasTexture) {
+        target.set(url, atlasTexture);
+        return;
+      }
       try {
-        const texture = Pixi.Assets ? await Pixi.Assets.load(url) : Pixi.Texture.from(url);
-        state.bossTextures.set(url, texture);
+        target.set(url, Pixi.Assets ? await Pixi.Assets.load(url) : Pixi.Texture.from(url));
       } catch (error) {
-        state.bossTextures.set(url, null);
+        target.set(url, null);
       }
     }));
+  }
+
+  function getDemonMapAtlasTextures() {
+    if (demonMapAtlasPromise) return demonMapAtlasPromise;
+    demonMapAtlasPromise = (async () => {
+      const Pixi = window.PIXI;
+      const textures = new Map();
+      if (!Pixi?.Assets || !Pixi?.Texture || !Pixi?.Rectangle) return textures;
+
+      try {
+        const atlas = await Pixi.Assets.load(DEMON_MAP_ATLAS_URL);
+        DEMON_MAP_ATLAS_IDS.forEach((id, index) => {
+          const frame = new Pixi.Rectangle(
+            (index % DEMON_MAP_ATLAS_COLUMNS) * DEMON_MAP_ATLAS_FRAME_SIZE,
+            Math.floor(index / DEMON_MAP_ATLAS_COLUMNS) * DEMON_MAP_ATLAS_FRAME_SIZE,
+            DEMON_MAP_ATLAS_FRAME_SIZE,
+            DEMON_MAP_ATLAS_FRAME_SIZE
+          );
+          textures.set(
+            `/app/images/demons/map/${id}.webp`,
+            new Pixi.Texture({ source: atlas.source, frame })
+          );
+        });
+      } catch (error) {
+        console.warn('Unable to load the demon map atlas; falling back to individual textures.', error);
+      }
+      return textures;
+    })();
+    return demonMapAtlasPromise;
   }
 
   function updateTargetTooltip() {

@@ -15,6 +15,7 @@ const BOSS_ACHIEVEMENT_BY_BOSS_ID = new Map(
 const DEMON_RARITY_COUNT = 6;
 const DEMON_TYPE_COUNT = 11;
 const COLLECTION_SLOT_COUNT = DEMON_RARITY_COUNT * DEMON_TYPE_COUNT;
+const queuedSteamSyncs = new Set();
 
 // Unlocks achievements for a player. Idempotent (already unlocked ids are
 // skipped) and intentionally swallow-all: achievement bookkeeping must never
@@ -25,19 +26,24 @@ async function grantAchievements(playerId, achievementIds) {
     const ids = [...new Set((achievementIds || []).filter((id) => ACHIEVEMENTS_BY_ID.has(id)))];
     if (!playerId || !ids.length) return [];
 
-    const newlyUnlocked = [];
-    for (const id of ids) {
-      const [result] = await db.query(
-        'INSERT IGNORE INTO player_achievements (player_id, achievement_id) VALUES (?, ?)',
-        [playerId, id]
-      );
-      if (result.affectedRows) {
-        newlyUnlocked.push(ACHIEVEMENTS_BY_ID.get(id));
-      }
-    }
+    const [existingRows] = await db.query(
+      'SELECT achievement_id AS achievementId FROM player_achievements WHERE player_id = ? AND achievement_id IN (?)',
+      [playerId, ids]
+    );
+    const existingIds = new Set(existingRows.map((row) => row.achievementId));
+    const newIds = ids.filter((id) => !existingIds.has(id));
+    if (!newIds.length) return [];
+
+    const placeholders = newIds.map(() => '(?, ?)').join(', ');
+    const values = newIds.flatMap((id) => [playerId, id]);
+    await db.query(
+      `INSERT IGNORE INTO player_achievements (player_id, achievement_id) VALUES ${placeholders}`,
+      values
+    );
+    const newlyUnlocked = newIds.map((id) => ACHIEVEMENTS_BY_ID.get(id));
 
     if (newlyUnlocked.length) {
-      await pushUnsyncedToSteam(playerId);
+      queueSteamSync(playerId);
     }
 
     return newlyUnlocked;
@@ -45,6 +51,34 @@ async function grantAchievements(playerId, achievementIds) {
     console.error('Failed to grant achievements:', error);
     return [];
   }
+}
+
+function grantDungeonBattleAchievements(playerId, battle = {}) {
+  const ids = [];
+  if (Math.max(0, Number(battle.teamSize) || 0) >= 6) ids.push('six-deep');
+  if (battle.winner === 'player') {
+    ids.push('first-blood');
+    if (battle.undermanned) ids.push('trial-of-the-few');
+    const cleared = Math.max(0, Number(battle.floor) || 0);
+    ids.push(...FLOOR_ACHIEVEMENTS
+      .filter((achievement) => cleared >= achievement.threshold)
+      .map((achievement) => achievement.id));
+  }
+  return grantAchievements(playerId, ids);
+}
+
+function queueSteamSync(playerId) {
+  // Unsynced database rows are the durable outbox. Steam is an external
+  // cosmetic mirror, so never hold a gameplay response open for that call.
+  if (queuedSteamSyncs.has(playerId)) return;
+  queuedSteamSyncs.add(playerId);
+  setImmediate(async () => {
+    try {
+      await pushUnsyncedToSteam(playerId);
+    } finally {
+      queuedSteamSyncs.delete(playerId);
+    }
+  });
 }
 
 async function checkAccountLevel(playerId, level) {
@@ -196,8 +230,10 @@ async function pushUnsyncedToSteam(playerId) {
     await db.query(
       `UPDATE player_achievements
        SET steam_synced_at = CURRENT_TIMESTAMP
-       WHERE player_id = ? AND steam_synced_at IS NULL`,
-      [playerId]
+       WHERE player_id = ?
+         AND achievement_id IN (?)
+         AND steam_synced_at IS NULL`,
+      [playerId, rows.map((row) => row.achievementId)]
     );
   } catch (error) {
     console.error('Failed to sync achievements to Steam:', error);
@@ -225,5 +261,6 @@ module.exports = {
   getPlayerAchievements,
   grantAchievements,
   grantBossDefeat,
+  grantDungeonBattleAchievements,
   pushUnsyncedToSteam
 };

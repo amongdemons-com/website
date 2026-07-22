@@ -219,19 +219,22 @@ async function battle() {
   await withBusy(null, async () => {
     try {
       const result = await api(activeRunPath('battle'), { method: 'POST' });
-      state.combatLog = result.combatLog || [];
-      if (result.lastBattle) {
-        state.run.lastBattle = result.lastBattle;
-        state.run.team = cloneDemons(result.lastBattle.playerTeamBefore || state.run.team || []);
-        state.run.enemies = cloneDemons(result.lastBattle.enemyTeamBefore || state.run.enemies || []);
+      const lastBattle = result.run?.lastBattle || result.lastBattle || null;
+      const combatLog = lastBattle?.combatLog || result.combatLog || [];
+      const playbackResult = { ...result, lastBattle, combatLog };
+      state.combatLog = combatLog;
+      if (lastBattle) {
+        state.run.lastBattle = lastBattle;
+        state.run.team = cloneDemons(lastBattle.playerTeamBefore || state.run.team || []);
+        state.run.enemies = cloneDemons(lastBattle.enemyTeamBefore || state.run.enemies || []);
       }
       state.combatDemons = createCombatDemonMap();
       elements.fightLog.innerHTML = '';
       elements.fightLog.classList.remove('text-muted');
-      await playCombatLog(result);
+      await playCombatLog(playbackResult);
       if (result.winner === 'enemy') {
         state.run.status = 'defeated';
-        state.run.lastBattle = result.lastBattle || state.run.lastBattle;
+        state.run.lastBattle = lastBattle || state.run.lastBattle;
         state.battleHandPreview = null;
         const resultOverlay = showBattleResultOverlay('defeat');
         window.setTimeout(() => audio?.play('sfx.dungeon.runLost', { volume: 0.88 }), 1050);

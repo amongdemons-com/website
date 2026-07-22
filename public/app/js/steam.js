@@ -7,9 +7,11 @@
   'use strict';
 
   const TOAST_SYNC_DELAY_MS = 4000;
+  const TOAST_SYNC_INTERVAL_MS = 5 * 60 * 1000;
   // The ticket handshake only needs to run once per app run, not on every
   // page navigation; sessionStorage survives navigations within the wrapper.
   const LOGIN_FLAG_KEY = 'amongdemons-steam-login-v1';
+  const ACHIEVEMENT_SYNC_KEY = 'amongdemons-steam-achievement-sync-v1';
 
   if (!window.steamBridge || typeof window.steamBridge.getAuthTicket !== 'function') return;
 
@@ -74,7 +76,9 @@
       return;
     }
 
-    setTimeout(syncAchievementToasts, TOAST_SYNC_DELAY_MS);
+    if (shouldSyncAchievementToasts()) {
+      setTimeout(syncAchievementToasts, TOAST_SYNC_DELAY_MS);
+    }
   }
 
   // Full-page cover shown on auth pages while the Steam handshake runs, so
@@ -154,8 +158,16 @@
           void window.steamBridge.unlockAchievement(achievement.steamName);
         }
       }
+      sessionStorage.setItem(ACHIEVEMENT_SYNC_KEY, String(Date.now()));
     } catch (error) {
       // Toast mirroring is cosmetic; never surface errors for it.
     }
+  }
+
+  function shouldSyncAchievementToasts() {
+    const lastSyncedAt = Number(sessionStorage.getItem(ACHIEVEMENT_SYNC_KEY));
+    return !Number.isFinite(lastSyncedAt)
+      || lastSyncedAt <= 0
+      || Date.now() - lastSyncedAt >= TOAST_SYNC_INTERVAL_MS;
   }
 })();

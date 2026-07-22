@@ -3,6 +3,9 @@ const { getMinimumStats } = require('./demon-factory');
 const { getDemonTypes } = require('./game-data');
 
 const MINIMUM_PLAYER_DEMON_STATS_MIGRATION = '20260711_minimum_player_demon_stats_v1';
+const BASELINE_SCHEMA_MIGRATION = '20260722_baseline_schema_v1';
+const PERFORMANCE_INDEXES_MIGRATION = '20260722_performance_indexes_v3';
+let schemaReadyPromise;
 
 async function getColumns(tableName) {
   const [rows] = await db.query(`SHOW COLUMNS FROM \`${tableName}\``);
@@ -142,7 +145,7 @@ async function normalizePlayerDemonMinimumStats() {
   }
 }
 
-async function initializeSchema() {
+async function applyBaselineSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       id VARCHAR(128) NOT NULL PRIMARY KEY,
@@ -545,4 +548,60 @@ async function initializeSchema() {
   await backfillHighestFloors();
 }
 
-module.exports = { initializeSchema };
+async function addPerformanceIndexes() {
+  // The composite index covers every player_id-only lookup too, so the old
+  // single-column index only duplicates writes and can mislead the optimizer.
+  await dropIndexIfPresent('runs', 'idx_runs_player_id');
+  await addIndexIfMissing(
+    'runs',
+    'idx_runs_player_status_updated',
+    'INDEX idx_runs_player_status_updated (player_id, status, updated_at DESC, created_at DESC)'
+  );
+  await dropIndexIfPresent('players', 'idx_players_rank_level');
+  await addIndexIfMissing(
+    'players',
+    'idx_players_rank_level',
+    'INDEX idx_players_rank_level (level, xp, highest_floor, souls)'
+  );
+  await dropIndexIfPresent('players', 'idx_players_rank_pvp');
+  await addIndexIfMissing(
+    'players',
+    'idx_players_rank_pvp',
+    'INDEX idx_players_rank_pvp (pvp_wins DESC, pvp_losses ASC, level DESC, xp DESC, highest_floor DESC, souls DESC)'
+  );
+  await addIndexIfMissing(
+    'players',
+    'idx_players_rank_xp',
+    'INDEX idx_players_rank_xp (xp, level, highest_floor, souls)'
+  );
+  await addIndexIfMissing(
+    'players',
+    'idx_players_rank_souls',
+    'INDEX idx_players_rank_souls (souls, highest_floor, level, xp)'
+  );
+}
+
+async function initializeSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      id VARCHAR(128) NOT NULL PRIMARY KEY,
+      applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await runMigrationOnce(BASELINE_SCHEMA_MIGRATION, applyBaselineSchema);
+  await runMigrationOnce(PERFORMANCE_INDEXES_MIGRATION, addPerformanceIndexes);
+}
+
+function ensureSchemaReady() {
+  if (!schemaReadyPromise) {
+    schemaReadyPromise = initializeSchema().catch((error) => {
+      schemaReadyPromise = null;
+      throw error;
+    });
+  }
+
+  return schemaReadyPromise;
+}
+
+module.exports = { ensureSchemaReady, initializeSchema };

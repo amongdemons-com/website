@@ -3,6 +3,8 @@
 
   const ME_API = '/api/auth/me';
   const PROGRESSION_API = '/api/account/progression';
+  const AUTH_VALIDATION_KEY = 'amongdemons-nav-auth-validation-v1';
+  const AUTH_VALIDATION_TTL_MS = 30000;
   const PAGE_ACCOUNT_APIS = [
     ['/camp', '/api/camp/bootstrap'],
     ['/collection', '/api/collection/bootstrap'],
@@ -190,12 +192,17 @@
   }
 
   async function refreshAccount(auth, session) {
+    const endpoint = getPageAccountApi();
+    const token = typeof auth.getToken === 'function' ? auth.getToken() : session.token;
+    if (endpoint === ME_API && hasFreshAuthValidation(token)) return;
+
     try {
-      const payload = await auth.api(getPageAccountApi());
+      const payload = await auth.api(endpoint);
       const account = payload?.account || payload || {};
       const player = account.player || payload?.player || null;
       const progression = account.progression || payload?.progression || null;
       if (!player) return;
+      if (endpoint === ME_API) rememberAuthValidation(token);
 
       if (typeof auth.setSession === 'function') {
         auth.setSession({
@@ -214,6 +221,29 @@
         if (typeof auth.clearSession === 'function') auth.clearSession();
         clearAccountNav();
       }
+    }
+  }
+
+  function hasFreshAuthValidation(token) {
+    if (!token) return false;
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(AUTH_VALIDATION_KEY) || 'null');
+      return stored?.token === token
+        && Date.now() - Number(stored.validatedAt) < AUTH_VALIDATION_TTL_MS;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function rememberAuthValidation(token) {
+    if (!token) return;
+    try {
+      sessionStorage.setItem(AUTH_VALIDATION_KEY, JSON.stringify({
+        token,
+        validatedAt: Date.now()
+      }));
+    } catch (error) {
+      /* Navigation still works when session storage is unavailable. */
     }
   }
 

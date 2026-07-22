@@ -21,7 +21,7 @@ body.world-page {
         radial-gradient(circle at 18% 8%, rgba(111,214,189,0.12), transparent 24rem),
         radial-gradient(circle at 86% 12%, rgba(156,122,200,0.1), transparent 22rem),
         linear-gradient(rgba(4,9,12,0.68), rgba(4,9,12,0.86)),
-        url("/app/images/assets/background/amongdemons_dungeon.png") center / cover no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png") type("image/png")) center / cover no-repeat,
         var(--ad-bg, #071013);
     color: var(--ad-text, #eef8f5);
     overscroll-behavior: none;

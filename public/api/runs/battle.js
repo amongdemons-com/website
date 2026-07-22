@@ -104,30 +104,31 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   }
 
   await saveRun(run);
-  if (teamSizeAtBattleStart >= 6) {
-    await achievements.grantAchievements(req.player.id, ['six-deep']);
-  }
   if (result.winner === 'player') {
     await recordDailyQuestProgress(req.player.id, {
       dungeonWins: 1,
       undermannedWins: isUndermannedAttempt ? 1 : 0
     });
-    await achievements.grantAchievements(req.player.id, [
-      'first-blood',
-      ...(isUndermannedAttempt ? ['trial-of-the-few'] : [])
-    ]);
-    await achievements.checkDungeonFloor(req.player.id, run.floor);
   }
+
+  await achievements.grantDungeonBattleAchievements(req.player.id, {
+    floor: run.floor,
+    winner: result.winner,
+    teamSize: teamSizeAtBattleStart,
+    undermanned: isUndermannedAttempt
+  });
+
+  const worldBuffs = (skillBuffs.activeBuffs || [])
+    .filter((buff) => buff?.source === 'world_boss_reward');
+  const serializedRun = await serializeRun(run, { worldBuffs });
 
   res.json({
     winner: result.winner,
     endReason: result.endReason,
     ticks: result.ticks,
-    combatLog: result.combatLog,
-    lastBattle: run.state.lastBattle,
     buffs: serializeRunBuffState(run.state.buffs),
     rewards,
-    run: await serializeRun(run)
+    run: serializedRun
   });
 });
 

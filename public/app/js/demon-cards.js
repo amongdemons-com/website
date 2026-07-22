@@ -24,7 +24,10 @@
 
   function renderDemonCard(demon = {}, options = {}) {
     const tag = options.tag || 'div';
-    const imageUrl = options.imageUrl || demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
+    const sourceImageUrl = options.imageUrl || demon.portraitImageUrl || demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
+    const imageUrl = options.imageUrl
+      ? sourceImageUrl
+      : ui.toDemonImageUrl?.(demon, 'portrait') || sourceImageUrl;
     const imagePriorityAttribute = options.imageFetchPriority
       ? ` fetchpriority="${escapeHtml(options.imageFetchPriority)}"`
       : '';

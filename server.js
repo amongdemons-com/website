@@ -22,6 +22,7 @@ const {
   renderSitemap
 } = require('./lib/seo-pages');
 const { renderHunterPage } = require('./lib/hunter-page');
+const { ensureSchemaReady } = require('./public/api/lib/schema');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -100,9 +101,12 @@ app.get('/app/images/demons/:imageName', async (req, res, next) => {
   res.sendFile(getDemonImageFilePath(demon));
 });
 
-app.use(express.static(path.join(__dirname, 'public'), staticOptions));
+// Serve only deployable browser assets. Wrapper build directories and API
+// source files live under public for historical reasons but are not web roots.
+app.use('/app', express.static(appDir, staticOptions));
 app.use('/vendor/lucide', express.static(path.join(__dirname, 'node_modules', 'lucide', 'dist', 'umd'), staticOptions));
 app.use('/vendor/pixi', express.static(path.join(__dirname, 'node_modules', 'pixi.js', 'dist'), staticOptions));
+app.use('/vendor/bootstrap/css', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 'dist', 'css'), staticOptions));
 
 app.get(['/demons/type', '/demons/type/', '/demons/type/:page'], (req, res) => {
   return res.redirect(301, '/demons');
@@ -223,7 +227,15 @@ app.get(['/rankings/:sort', '/rankings/:sort/'], (req, res) => {
 // ============================================================================
 
 if (require.main === module) {
-  app.listen(PORT, () => {
+  startServer().catch((error) => {
+    console.error('Unable to start server:', error);
+    process.exitCode = 1;
+  });
+}
+
+async function startServer() {
+  await ensureSchemaReady();
+  return app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
 }
