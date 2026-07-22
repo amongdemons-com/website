@@ -53,16 +53,19 @@ const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelecti
 async function refreshAll() {
   setDungeonLoading(true);
   try {
-    const [me] = await Promise.all([
-      api('/api/auth/me'),
-      loadAccountStatPoints()
-    ]);
-    state.player = me.player;
+    const bootstrap = await api('/api/runs/bootstrap');
+    state.player = bootstrap.player;
+    state.statPoints = bootstrap.statPoints;
+    state.collectionDemons = bootstrap.collection || [];
+    state.startOptions = bootstrap.startOptions || null;
     renderPlayer();
 
-    if (state.run && state.run.runId) {
-      await loadRun(state.run.runId);
-    } else if (!(await loadCurrentRun()) && !(await loadSavedRun())) {
+    if (bootstrap.run) {
+      await applyRunPayload(bootstrap.run);
+    } else {
+      clearCurrentRun();
+      state.run = null;
+      state.combatLog = [];
       await startRun();
     }
     setDungeonLoading(false);
@@ -104,15 +107,7 @@ async function loadSavedRun() {
 
 async function loadCurrentRun() {
   try {
-    state.run = await api('/api/runs/current');
-    await ensureCollectionLoaded();
-    state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
-    state.isRecruiting = Boolean(state.run.awaitingRecruit);
-    if (state.isRecruiting) prepareRecruitStrategyState();
-    syncRewardSelectionFromRun();
-    storeCurrentRun(state.run.runId);
-    renderRun();
-    announceConvergence(state.run);
+    await applyRunPayload(await api('/api/runs/current'));
     return true;
   } catch (error) {
     if (error.status === 404) return false;
@@ -137,7 +132,11 @@ async function startRun() {
     clearRewardSelection();
     state.startOptions = null;
     storeCurrentRun(payload.runId);
-    await loadRun(payload.runId);
+    if (payload.run) {
+      await applyRunPayload(payload.run);
+    } else {
+      await loadRun(payload.runId);
+    }
   } catch (error) {
     showError(error);
   }
@@ -169,18 +168,7 @@ async function createRunFromStartOptions() {
 
 async function loadRun(runId) {
   try {
-    state.run = await api(runPath(runId));
-    await ensureCollectionLoaded();
-    state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
-    state.isRecruiting = Boolean(state.run.awaitingRecruit);
-    if (state.isRecruiting) prepareRecruitStrategyState();
-    if (!state.isRecruiting) {
-      clearRecruitDrafts();
-    }
-    syncRewardSelectionFromRun();
-    storeCurrentRun(state.run.runId);
-    renderRun();
-    announceConvergence(state.run);
+    await applyRunPayload(await api(runPath(runId)));
   } catch (error) {
     clearCurrentRun();
     state.run = null;
@@ -188,6 +176,22 @@ async function loadRun(runId) {
     renderRun();
     throw error;
   }
+}
+
+async function applyRunPayload(run) {
+  state.run = run;
+  await ensureCollectionLoaded();
+  state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
+  state.isRecruiting = Boolean(state.run.awaitingRecruit);
+  if (state.isRecruiting) {
+    prepareRecruitStrategyState();
+  } else {
+    clearRecruitDrafts();
+  }
+  syncRewardSelectionFromRun();
+  storeCurrentRun(state.run.runId);
+  renderRun();
+  announceConvergence(state.run);
 }
 
 function announceConvergence(run) {
@@ -240,7 +244,11 @@ async function battle() {
         state.pendingHandFlowSources = handFlowSources;
         state.isEnemyPreviewDeferred = true;
         await resultOverlay;
-        await loadRun(state.run.runId);
+        if (result.run) {
+          await applyRunPayload(result.run);
+        } else {
+          await loadRun(state.run.runId);
+        }
         state.battleHandPreview = null;
         setMessage(getWinMessage(), 'success');
       }
@@ -364,7 +372,7 @@ async function confirmRecruitReward() {
   body.extractChoice = extractChoice;
 
   try {
-    await api(activeRunPath('recruit'), {
+    const result = await api(activeRunPath('recruit'), {
       method: 'POST',
       body
     });
@@ -376,7 +384,11 @@ async function confirmRecruitReward() {
     resetCombatState();
     resetEndState();
     getModal(elements.teamChoiceModal).hide();
-    await loadRun(runId);
+    if (result.run) {
+      await applyRunPayload(result.run);
+    } else {
+      await loadRun(runId);
+    }
     if (canStartCurrentBattle()) {
       await battle();
       return;
@@ -425,8 +437,7 @@ async function finishRun(message, summary = {}) {
     getModal(elements.teamChoiceModal).hide();
     await Promise.all([
       loadStartOptions(),
-      loadAccountStatPoints(),
-      window.AmongDemons.ui?.refreshNavXpProgress?.()
+      loadAccountStatPoints()
     ]);
     renderRun();
   } catch (error) {

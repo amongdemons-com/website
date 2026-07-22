@@ -6,11 +6,16 @@ const {
   savePlayerStatAllocations
 } = require('../lib/account-stat-points');
 const achievements = require('../lib/achievements');
+const { getAccountProgressionPayload } = require('../lib/progression');
 
 const router = express.Router();
 
 router.get('/account/stat-points', requireAuth, async (req, res) => {
-  res.json(await getPlayerStatPointSummary(req.player));
+  res.json({
+    ...(await getPlayerStatPointSummary(req.player)),
+    player: req.player,
+    progression: getAccountProgressionPayload(req.player)
+  });
 });
 
 router.post('/account/stat-points', requireAuth, async (req, res) => {

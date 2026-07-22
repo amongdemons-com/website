@@ -14,11 +14,16 @@ const {
   getPlayerBag
 } = require('./lib/echo-bag');
 const achievements = require('./lib/achievements');
+const { getAccountProgressionPayload } = require('./lib/progression');
 
 const router = express.Router();
 
 router.get('/bag', requireAuth, async (req, res) => {
-  res.json(await getPlayerBag(req.player.id));
+  res.json({
+    ...(await getPlayerBag(req.player.id)),
+    player: req.player,
+    progression: getAccountProgressionPayload(req.player)
+  });
 });
 
 router.post('/bag/echoes/refine', requireAuth, async (req, res) => {

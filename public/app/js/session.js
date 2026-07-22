@@ -2,6 +2,7 @@
   'use strict';
 
   const KEY = 'amongdemons-session';
+  const inFlightReads = new Map();
   const GAME_ALERT_HOST_ID = 'gameAlertToastHost';
   const ALERT_TYPE_MAP = {
     danger: 'error',
@@ -120,7 +121,7 @@
     return session;
   }
 
-  async function api(path, options = {}) {
+  function api(path, options = {}) {
     const toApiUrl = window.AmongDemons?.apiUrl || ((value) => value);
     const url = toApiUrl(path);
     const headers = {
@@ -140,16 +141,38 @@
     const body = options.body && typeof options.body !== 'string'
       ? JSON.stringify(options.body)
       : options.body;
+    const method = (options.method || 'GET').toUpperCase();
+    const canShareRead = (method === 'GET' || method === 'HEAD')
+      && !body
+      && !options.signal
+      && options.dedupe !== false;
 
-    if (shouldUseNativeHttp()) return nativeApi(url, options, headers, body);
+    if (!canShareRead) {
+      return executeApiRequest(path, url, options, headers, body, method);
+    }
+
+    const key = createReadRequestKey(method, url, headers);
+    const pending = inFlightReads.get(key);
+    if (pending) return pending;
+
+    let sharedRequest;
+    sharedRequest = executeApiRequest(path, url, options, headers, body, method)
+      .finally(() => {
+        if (inFlightReads.get(key) === sharedRequest) inFlightReads.delete(key);
+      });
+    inFlightReads.set(key, sharedRequest);
+    return sharedRequest;
+  }
+
+  async function executeApiRequest(path, url, options, headers, body, method) {
+    const fetchOptions = { ...options, headers, body };
+    delete fetchOptions.dedupe;
+
+    if (shouldUseNativeHttp()) return nativeApi(url, fetchOptions, headers, body);
 
     let response;
     try {
-      response = await fetch(url, {
-        ...options,
-        headers,
-        body
-      });
+      response = await fetch(url, fetchOptions);
     } catch (error) {
       throw createNetworkError(error, path);
     }
@@ -157,7 +180,6 @@
     // The hosting CDN rate-limits request bursts (fast page navigation) with
     // 429s; one delayed retry absorbs the blip for idempotent reads instead
     // of surfacing a generic error.
-    const method = (options.method || 'GET').toUpperCase();
     if (response.status === 429 && (method === 'GET' || method === 'HEAD')) {
       const retryAfter = Number(response.headers.get('Retry-After'));
       const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
@@ -165,11 +187,7 @@
         : 1500;
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       try {
-        response = await fetch(url, {
-          ...options,
-          headers,
-          body
-        });
+        response = await fetch(url, fetchOptions);
       } catch (error) {
         throw createNetworkError(error, path);
       }
@@ -178,6 +196,14 @@
     const text = await response.text();
 
     return handleApiResponse(response.ok, response.status, text ? parsePayload(text) : null, path);
+  }
+
+  function createReadRequestKey(method, url, headers) {
+    const normalizedHeaders = Object.keys(headers)
+      .sort()
+      .map((name) => `${name.toLowerCase()}:${headers[name]}`)
+      .join('|');
+    return `${method}:${url}:${normalizedHeaders}`;
   }
 
   async function nativeApi(url, options, headers, body) {

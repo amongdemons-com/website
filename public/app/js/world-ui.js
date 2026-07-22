@@ -40,7 +40,7 @@ import * as dungeonUtils from './dungeon/utils.js';
   const TRAVEL_ZOOM = 1;
   // Kept in sync with world-combat.js so the live hunt readout matches the server payout.
   const HUNT_DEFAULT_KILL_SECONDS = 300;
-  const HUNT_STATUS_REFRESH_MS = 15000;
+  const HUNT_RECONCILE_MIN_INTERVAL_MS = 5000;
   // Keep this in sync with WORLD_BATTLE_REPLAY_STEP_MS in public/api/lib/world-combat.js.
   const WORLD_BATTLE_REPLAY_STEP_MS = 520;
   const WORLD_BATTLE_REPLAY_REDUCED_STEP_MS = 160;
@@ -180,6 +180,7 @@ import * as dungeonUtils from './dungeon/utils.js';
     huntBusyAction: null,
     bossBusy: false,
     huntTicker: null,
+    huntReconcileTimer: null,
     huntStatusRefreshAt: 0,
     bossRefreshTimer: null,
     boundShrine: null,
@@ -300,6 +301,10 @@ import * as dungeonUtils from './dungeon/utils.js';
   }
 
   function bindDomControls() {
+    addListener(window, 'focus', reconcileHuntStatus);
+    addListener(document, 'visibilitychange', () => {
+      if (!document.hidden) reconcileHuntStatus();
+    });
     elements.worldPositionButton?.addEventListener('click', () => resetCameraOnHunter());
     elements.worldTargetTooltip?.addEventListener('click', (event) => {
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
@@ -1144,6 +1149,9 @@ import * as dungeonUtils from './dungeon/utils.js';
         await showWorldBattleReplay(battle, battleMeta);
       }
       const won = battle?.winner === 'player';
+      if (won && rewardBuff && isHuntActive()) {
+        await refreshHuntStatus({ force: true }).catch(() => {});
+      }
       if (won) audio?.play('sfx.bosses.defeated', { volume: 0.96 });
       setMessage(
         payload.message || getWorldBattleFallbackMessage(battle, battleMeta),
@@ -6647,14 +6655,31 @@ import * as dungeonUtils from './dungeon/utils.js';
   function setHuntState(hunt) {
     state.hunt = normalizeHunt(hunt);
     state.huntStatusRefreshAt = Date.now();
+    scheduleHuntCapacityReconcile();
     syncWorldSidePanel();
     return state.hunt;
+  }
+
+  function scheduleHuntCapacityReconcile() {
+    if (state.huntReconcileTimer) {
+      window.clearTimeout(state.huntReconcileTimer);
+      state.huntReconcileTimer = null;
+    }
+
+    const recheckAt = Date.parse(state.hunt?.active?.capacityRecheckAt || '');
+    if (!Number.isFinite(recheckAt)) return;
+
+    const delayMs = clamp(recheckAt - Date.now() + 1000, 1000, 2147483647);
+    state.huntReconcileTimer = window.setTimeout(() => {
+      state.huntReconcileTimer = null;
+      void refreshHuntStatus({ force: true }).catch(() => {});
+    }, delayMs);
   }
 
   async function refreshHuntStatus(options = {}) {
     const force = Boolean(options.force);
     const now = Date.now();
-    if (!force && state.huntStatusRefreshAt && now - state.huntStatusRefreshAt < HUNT_STATUS_REFRESH_MS) {
+    if (!force && state.huntStatusRefreshAt && now - state.huntStatusRefreshAt < HUNT_RECONCILE_MIN_INTERVAL_MS) {
       return state.hunt;
     }
 
@@ -6673,6 +6698,10 @@ import * as dungeonUtils from './dungeon/utils.js';
     }
 
     return state.hunt;
+  }
+
+  function reconcileHuntStatus() {
+    void refreshHuntStatus().catch(() => {});
   }
 
   function isEncounterUnlocked(encounterId) {
@@ -7315,7 +7344,6 @@ import * as dungeonUtils from './dungeon/utils.js';
 
   function syncHuntTicker() {
     if (isHuntActive()) {
-      void refreshHuntStatus().catch(() => {});
       updateHuntTooltip();
       if (!state.huntTicker) {
         state.huntTicker = window.setInterval(onHuntTick, 1000);
@@ -7345,16 +7373,6 @@ import * as dungeonUtils from './dungeon/utils.js';
     // which could swallow clicks that straddled a refresh.
     updateActiveHuntReadout();
     updateHuntTooltip();
-    void refreshHuntStatus({ render: false })
-      .then(() => {
-        if (!isHuntActive()) {
-          renderEncounterPanel();
-          syncHuntTicker();
-          return;
-        }
-        updateActiveHuntReadout();
-      })
-      .catch(() => {});
   }
 
   function updateActiveHuntReadout() {
@@ -7673,6 +7691,10 @@ import * as dungeonUtils from './dungeon/utils.js';
     if (state.bossRefreshTimer) {
       window.clearTimeout(state.bossRefreshTimer);
       state.bossRefreshTimer = null;
+    }
+    if (state.huntReconcileTimer) {
+      window.clearTimeout(state.huntReconcileTimer);
+      state.huntReconcileTimer = null;
     }
     state.resizeObserver?.disconnect();
     state.resizeObserver = null;

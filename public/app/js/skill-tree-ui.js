@@ -56,11 +56,8 @@
     bindControls();
 
     try {
-      const [me, summary] = await Promise.all([
-        api('/api/auth/me'),
-        api('/api/account/stat-points')
-      ]);
-      applyPlayer(me.player);
+      const summary = await api('/api/account/stat-points');
+      applyPlayer(summary.player);
       applySummary(summary);
       render();
     } catch (error) {

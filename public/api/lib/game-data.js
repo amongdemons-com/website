@@ -1,11 +1,23 @@
 const fs = require('fs/promises');
 const path = require('path');
+const crypto = require('crypto');
 
 const dataDir = path.join(__dirname, '..', 'data');
+const jsonCache = new Map();
+let gameCatalogPromise = null;
 
 async function readJson(fileName) {
-  const raw = await fs.readFile(path.join(dataDir, fileName), 'utf8');
-  return JSON.parse(raw);
+  if (!jsonCache.has(fileName)) {
+    const pending = fs.readFile(path.join(dataDir, fileName), 'utf8')
+      .then((raw) => JSON.parse(raw))
+      .catch((error) => {
+        jsonCache.delete(fileName);
+        throw error;
+      });
+    jsonCache.set(fileName, pending);
+  }
+
+  return jsonCache.get(fileName);
 }
 
 async function getDemonTypes() {
@@ -18,6 +30,27 @@ async function getDemonAssets() {
 
 async function getWorldBossConfig() {
   return readJson('world-bosses.json');
+}
+
+async function getGameCatalog() {
+  if (!gameCatalogPromise) {
+    gameCatalogPromise = Promise.all([getDemonAssets(), getDemonTypes()])
+      .then(([demons, types]) => ({
+        demons,
+        types,
+        version: crypto
+          .createHash('sha256')
+          .update(JSON.stringify({ demons, types }))
+          .digest('hex')
+          .slice(0, 12)
+      }))
+      .catch((error) => {
+        gameCatalogPromise = null;
+        throw error;
+      });
+  }
+
+  return gameCatalogPromise;
 }
 
 async function getFullDemonCatalog() {
@@ -78,6 +111,7 @@ function enrichBossMember(member, assets, types) {
 module.exports = {
   getDemonAssets,
   getDemonTypes,
+  getGameCatalog,
   getFullBossCatalog,
   getFullDemonCatalog,
   getWorldBossConfig

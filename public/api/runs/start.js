@@ -2,42 +2,60 @@ const crypto = require('crypto');
 const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
+const { getPlayerStatPointSummary } = require('../lib/account-stat-points');
+const { getPlayerCollection } = require('../lib/collection-demons');
 const { createRng } = require('../lib/rng');
 const { createTeam } = require('../lib/demon-factory');
 const { STARTER_TYPE_IDS } = require('../lib/dungeon-enemies');
-const { closeOpenRunsForPlayer } = require('../lib/runs');
-const { enrichDemonPreferredPositions, resetRunDemon } = require('../lib/run-demons');
+const { getAccountProgressionPayload } = require('../lib/progression');
+const { closeOpenRunsForPlayer, getCurrentRunForPlayer } = require('../lib/runs');
+const { resetRunDemon } = require('../lib/run-demons');
+const { serializeRun } = require('../lib/run-serialization');
 
 const router = express.Router();
 const draftTokenSecret = crypto.randomBytes(32);
 const DRAFT_STARTER_COUNT = 2;
 
+router.get('/runs/bootstrap', requireAuth, async (req, res) => {
+  const [run, statPoints, collection] = await Promise.all([
+    getCurrentRunForPlayer(req.player.id),
+    getPlayerStatPointSummary(req.player),
+    getPlayerCollection(req.player.id)
+  ]);
+
+  res.json({
+    player: req.player,
+    progression: getAccountProgressionPayload(req.player),
+    statPoints,
+    collection,
+    run: run ? await serializeRun(run) : null,
+    startOptions: run ? null : await createStartOptions(req.player.id, collection)
+  });
+});
+
 router.get('/runs/start-options', requireAuth, async (req, res) => {
+  res.json(await createStartOptions(req.player.id));
+});
+
+async function createStartOptions(playerId, existingCollection = null) {
   const draftSeed = crypto.randomInt(1, 4294967295);
   const draft = await createTeam(createRng(draftSeed), DRAFT_STARTER_COUNT, {
     prefix: 'draft',
     allowedTypeIds: STARTER_TYPE_IDS,
     allowedRarities: ['common', 'uncommon', 'rare']
   });
-  const [collection] = await db.query(
-    `SELECT id, source_demon_id AS sourceDemonId, type_id AS typeId, species, rarity,
-            image_url AS imageUrl, hp, atk, speed, created_at AS createdAt
-     FROM player_demons
-     WHERE player_id = ?
-     ORDER BY created_at DESC, id DESC`,
-    [req.player.id]
-  );
+  const collection = existingCollection || await getPlayerCollection(playerId);
 
-  res.json({
+  return {
     draft,
     draftToken: signDraftToken({
-      playerId: req.player.id,
+      playerId,
       draftSeed,
       expiresAt: Date.now() + 15 * 60 * 1000
     }),
-    collection: await enrichDemonPreferredPositions(collection)
-  });
-});
+    collection
+  };
+}
 
 router.post('/runs/start', requireAuth, async (req, res) => {
   const runId = crypto.randomUUID();
@@ -75,10 +93,21 @@ router.post('/runs/start', requireAuth, async (req, res) => {
     [runId, req.player.id, seed, 'active', 0, JSON.stringify(state), JSON.stringify(rewards)]
   );
 
+  const run = {
+    id: runId,
+    playerId: req.player.id,
+    seed,
+    status: 'active',
+    floor: 0,
+    state,
+    rewards
+  };
+
   res.status(201).json({
     runId,
     seed,
-    startingHand
+    startingHand,
+    run: await serializeRun(run)
   });
 });
 

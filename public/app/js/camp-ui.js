@@ -336,19 +336,13 @@
 
   async function loadCamp() {
     try {
-      const [me, progression, collection, questData, statPoints] = await Promise.all([
-        api('/api/auth/me'),
-        api('/api/account/progression'),
-        loadCollection(),
-        api('/api/account/quests'),
-        api('/api/account/stat-points')
-      ]);
+      const payload = await api('/api/camp/bootstrap');
 
-      state.player = me.player;
-      state.progression = progression;
-      state.questData = questData;
-      state.statPoints = statPoints;
-      state.collection = collection.demons || [];
+      state.player = payload.player;
+      state.progression = payload.progression;
+      state.questData = payload.questData;
+      state.statPoints = payload.statPoints;
+      state.collection = payload.demons || [];
       state.collectionLoaded = true;
 
       renderPlayer();
@@ -359,10 +353,6 @@
     } catch (error) {
       handleAuthError(error);
     }
-  }
-
-  async function loadCollection() {
-    return api('/api/demons');
   }
 
   function renderPlayer() {

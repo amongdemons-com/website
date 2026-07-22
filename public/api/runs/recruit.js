@@ -5,6 +5,7 @@ const { normalizeCollectionDemonStats } = require('../lib/collection-demons');
 const { createRng } = require('../lib/rng');
 const { createDungeonEnemies } = require('../lib/dungeon-enemies');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
+const { serializeRun } = require('../lib/run-serialization');
 const {
   assignFormationSlots,
   createRunDemonFromCollection,
@@ -53,7 +54,11 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     settleDiscardedSoulRewards(run);
     await advanceFloor(run);
     await saveRun(run);
-    return res.json({ team: run.state.team, skipped: true });
+    return res.json({
+      team: run.state.team,
+      skipped: true,
+      run: await serializeRun(run)
+    });
   }
 
   if (stagedTeam) {
@@ -93,7 +98,10 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
       ...(recruitedDefeatedEnemy ? ['fresh-blood'] : []),
       ...(usedCollectionReinforcement ? ['call-from-camp'] : [])
     ]);
-    return res.json({ team: run.state.team });
+    return res.json({
+      team: run.state.team,
+      run: await serializeRun(run)
+    });
   }
 
   const reward = rewardId
@@ -141,7 +149,11 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
 
   await saveRun(run);
   await achievements.grantAchievements(req.player.id, ['fresh-blood']);
-  res.json({ team: run.state.team, reward });
+  res.json({
+    team: run.state.team,
+    reward,
+    run: await serializeRun(run)
+  });
 });
 
 async function advanceFloor(run) {

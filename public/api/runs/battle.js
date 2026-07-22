@@ -5,6 +5,7 @@ const { simulateFight } = require('../lib/combat');
 const { getDemonTypes } = require('../lib/game-data');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
+const { serializeRun } = require('../lib/run-serialization');
 const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, getTemporaryTeamSizeBonus, hasPendingBuffChoices, serializeRunBuffState, shouldOfferRunBuffChoices } = require('../lib/run-buffs');
 const { normalizeCombatBuffState, serializeCombatBuffState } = require('../lib/combat-buffs');
 const { resolvePlayerCombatBuffState } = require('../lib/player-combat-buffs');
@@ -125,7 +126,8 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     combatLog: result.combatLog,
     lastBattle: run.state.lastBattle,
     buffs: serializeRunBuffState(run.state.buffs),
-    rewards
+    rewards,
+    run: await serializeRun(run)
   });
 });
 

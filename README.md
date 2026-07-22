@@ -152,7 +152,7 @@ All routes are mounted under `/api`.
 | `GET` | `/auth/oauth/providers` | OAuth provider availability for the login/register UI |
 | `GET` | `/auth/oauth/:provider` | Start Google or Discord OAuth sign-in |
 | `GET/POST` | `/auth/oauth/:provider/callback` | Complete OAuth sign-in and create a session |
-| `GET` | `/auth/me` | Return the authenticated player |
+| `GET` | `/auth/me` | Return the authenticated player and authoritative progression summary |
 
 ### Account
 
@@ -166,6 +166,7 @@ All routes are mounted under `/api`.
 | `GET` | `/account/quests` | Daily quest and daily reward state |
 | `POST` | `/account/quests/:questId/claim` | Claim a completed daily quest |
 | `POST` | `/account/daily-reward/claim` | Claim the daily Souls reward |
+| `GET` | `/camp/bootstrap` | Consolidated camp player, progression, quests, skill points, and collection state |
 
 ### Collection
 
@@ -174,6 +175,7 @@ All routes are mounted under `/api`.
 | `GET` | `/demons` | List owned permanent demons |
 | `GET` | `/demons/:id` | Return one owned permanent demon |
 | `POST` | `/demons/:id/train` | Spend Souls to train one demon server-side |
+| `GET` | `/collection/bootstrap` | Consolidated player, collection, and Echo bag state |
 
 ### Bag
 
@@ -187,16 +189,17 @@ All routes are mounted under `/api`.
 
 | Method | Route | Description |
 | --- | --- | --- |
+| `GET` | `/runs/bootstrap` | Consolidated player, skill points, collection, current run, and start options |
 | `GET` | `/runs/start-options` | Six draft starters, a signed short-lived draft token, and the collection |
 | `POST` | `/runs/start` | Start a run from two draft or collection demons |
 | `GET` | `/runs/current` | The player's active or defeated-pending run |
 | `GET` | `/runs/:id` | One run owned by the player |
 | `POST` | `/runs/:id/formation` | Update front/back positions before battle |
-| `POST` | `/runs/:id/battle` | Simulate the next battle server-side |
+| `POST` | `/runs/:id/battle` | Simulate the next battle server-side and return the canonical updated run |
 | `POST` | `/runs/:id/buff` | Choose one pending Demonic Pact |
 | `POST` | `/runs/:id/buff/reroll` | Recast the pact choices for 10 Souls |
 | `POST` | `/runs/:id/reward` | Mark a reward as claimed |
-| `POST` | `/runs/:id/recruit` | Stage or commit recruitment and advance to the next floor |
+| `POST` | `/runs/:id/recruit` | Stage or commit recruitment, advance, and return the canonical updated run |
 | `POST` | `/runs/:id/cashout` | Extract one eligible demon as an exact Echo and claim earned XP/Souls |
 | `POST` | `/runs/:id/end` | Finalize a defeated run with zero payout |
 
@@ -225,6 +228,7 @@ All routes are mounted under `/api`.
 | --- | --- | --- |
 | `GET` | `/game/demon-types` | Demon type, role, stat, targeting, and ability data |
 | `GET` | `/game/demons` | Demon asset mappings |
+| `GET` | `/game/catalog` | Combined, versioned, immutable-cacheable demon types and asset mappings |
 | `GET` | `/hunters/:username` | Public hunter profile (level, floor, PvP record, position) |
 | `GET` | `/leaderboard?sort=floor\|level\|xp\|souls\|pvp` | Up to 100 ranked players |
 

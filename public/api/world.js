@@ -1,7 +1,11 @@
 const express = require('express');
 const db = require('./lib/db');
 const { blockGuests, cleanPlayer, requireAuth } = require('./lib/auth');
-const { getAccountProgressionSummary, getNextAccountLevel } = require('./lib/progression');
+const {
+  getAccountProgressionPayload,
+  getAccountProgressionSummary,
+  getNextAccountLevel
+} = require('./lib/progression');
 const { recordDailyQuestProgress } = require('./lib/daily-quests');
 const {
   ANCHOR_SUCCESS_MESSAGE,
@@ -81,8 +85,8 @@ const WORLD_MAP_VERSION = require('crypto')
   .digest('hex')
   .slice(0, 12);
 
-router.get('/world/map', requireAuth, (req, res) => {
-  res.set('Cache-Control', 'private, max-age=31536000, immutable');
+router.get('/world/map', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=31536000, immutable');
   res.json({ ...WORLD_MAP_PAYLOAD, mapVersion: WORLD_MAP_VERSION });
 });
 
@@ -97,6 +101,11 @@ router.get('/world/state', requireAuth, async (req, res) => {
   ]);
 
   res.json({
+    account: {
+      player: req.player,
+      progression: getAccountProgressionPayload(req.player)
+    },
+    progression: getAccountProgressionPayload(req.player),
     player: getWorldPlayer(req.player),
     position,
     mapVersion: WORLD_MAP_VERSION,
@@ -831,22 +840,41 @@ async function getHuntState(playerId) {
     db.query('SELECT encounter_id AS encounterId, snapshot, started_at AS startedAt, enemy_respawn_seconds AS enemyRespawnSeconds FROM player_active_hunts WHERE player_id = ? LIMIT 1', [playerId])
   ]);
   const active = activeRows[0][0] || null;
-  const liveSoulCapacity = active
-    ? await getLiveHuntSoulCapacity({ id: playerId })
+  const liveCapacityState = active
+    ? await getLiveHuntCapacityState({ id: playerId })
     : null;
 
   return {
     unlockedEncounterIds: unlockRows[0].map((row) => row.encounterId),
-    active: active ? serializeActiveHunt(active, liveSoulCapacity) : null
+    active: active ? serializeActiveHunt(
+      active,
+      liveCapacityState.soulCapacity,
+      liveCapacityState.recheckAt
+    ) : null
   };
 }
 
 async function getLiveHuntSoulCapacity(player) {
+  return (await getLiveHuntCapacityState(player)).soulCapacity;
+}
+
+async function getLiveHuntCapacityState(player) {
   const [statSummary, activeBossBuffs] = await Promise.all([
     getPlayerStatPointSummary(player),
     getActiveWorldBossRewardBuffs(player)
   ]);
-  return getBuffedHuntSoulCapacity(statSummary, activeBossBuffs);
+  const capacityBuffExpirations = activeBossBuffs
+    .filter((buff) => (buff.effects || []).some((effect) => effect.type === 'soul_capacity_mult'))
+    .map((buff) => Date.parse(buff.expiresAt || ''))
+    .filter(Number.isFinite)
+    .sort((left, right) => left - right);
+
+  return {
+    soulCapacity: getBuffedHuntSoulCapacity(statSummary, activeBossBuffs),
+    recheckAt: capacityBuffExpirations.length
+      ? new Date(capacityBuffExpirations[0]).toISOString()
+      : null
+  };
 }
 
 async function isHuntUnlocked(playerId, encounterId) {
@@ -874,7 +902,7 @@ async function getActiveHunt(playerId) {
   return rows[0] || null;
 }
 
-function serializeActiveHunt(row, liveSoulCapacity = null) {
+function serializeActiveHunt(row, liveSoulCapacity = null, capacityRecheckAt = null) {
   const snapshot = parseHuntSnapshot(row.snapshot);
   const killSeconds = getSnapshotKillSeconds(snapshot, row.enemyRespawnSeconds);
   const difficulty = Math.max(1, Number(snapshot.encounter?.difficulty) || 1);
@@ -911,6 +939,7 @@ function serializeActiveHunt(row, liveSoulCapacity = null) {
     soulsPerCycle,
     defeatedDemonsPerCycle,
     soulCapacity: Number.isFinite(soulCapacity) && soulCapacity > 0 ? Math.floor(soulCapacity) : null,
+    capacityRecheckAt,
     xpReward,
     soulReward: snapshot.soulReward || null,
     terror: snapshot.terror || null,

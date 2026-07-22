@@ -51,6 +51,19 @@ function normalizeCollectionDemonStats(demon = {}) {
   return normalized;
 }
 
+async function getPlayerCollection(playerId, queryable = db) {
+  const [rows] = await queryable.query(
+    `SELECT id, source_demon_id AS sourceDemonId, type_id AS typeId, species, rarity,
+            image_url AS imageUrl, hp, atk, speed, created_at AS createdAt
+     FROM player_demons
+     WHERE player_id = ?
+     ORDER BY created_at DESC, id DESC`,
+    [playerId]
+  );
+
+  return enrichCollectionDemonsWithTraining(rows);
+}
+
 async function saveCollectionDemon(playerId, demon, queryable = db) {
   const minimumDemon = await weakenDemonToMinimumStats(demon);
   const row = getCollectionDemonRow(minimumDemon);
@@ -107,6 +120,7 @@ async function saveCollectionDemon(playerId, demon, queryable = db) {
 
 module.exports = {
   getCollectionDemonRow,
+  getPlayerCollection,
   normalizeCollectionDemonStats,
   saveCollectionDemon
 };

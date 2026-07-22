@@ -55,6 +55,15 @@ function getAccountProgressionSummary(level, xp, options = {}) {
   };
 }
 
+function getAccountProgressionPayload(player = {}, options = {}) {
+  return {
+    ...getAccountProgressionSummary(player.level, player.xp, options),
+    souls: Math.max(0, Number(player.souls) || 0),
+    highestFloor: Math.max(0, Number(player.highestFloor ?? player.highest_floor) || 0),
+    unlocks: Array.isArray(player.unlocks) ? player.unlocks : []
+  };
+}
+
 // Collapses XP down to the floor of the level it already reached: the level
 // derived from the result always equals the level derived from the input, so
 // normalizing can trim progress toward the next level but never demote.
@@ -66,6 +75,7 @@ module.exports = {
   ACCOUNT_LEVEL_BASE_XP,
   ACCOUNT_LEVEL_EXPONENT,
   getAccountLevelForXp,
+  getAccountProgressionPayload,
   getAccountProgressionSummary,
   getNextAccountLevel,
   getNormalizedAccountXp,

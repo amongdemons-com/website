@@ -272,8 +272,7 @@ function getDungeonDetailActions(extractionCandidate = null) {
 
   if (extractionCandidate) {
     actions.push({
-      label: 'Choose Echo',
-      helper: 'Place in extraction slot',
+      label: 'Extract',
       icon: 'flag',
       variant: 'primary',
       onClick: () => {

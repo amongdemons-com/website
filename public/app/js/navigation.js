@@ -3,6 +3,14 @@
 
   const ME_API = '/api/auth/me';
   const PROGRESSION_API = '/api/account/progression';
+  const PAGE_ACCOUNT_APIS = [
+    ['/camp', '/api/camp/bootstrap'],
+    ['/collection', '/api/collection/bootstrap'],
+    ['/world', '/api/world/state'],
+    ['/dungeon', '/api/runs/bootstrap'],
+    ['/bag', '/api/bag'],
+    ['/skill-tree', '/api/account/stat-points']
+  ];
   const GLOBAL_PAGE_SHORTCUTS = new Map([
     ['m', '/world'],
     ['c', '/camp'],
@@ -183,8 +191,10 @@
 
   async function refreshAccount(auth, session) {
     try {
-      const payload = await auth.api(ME_API);
-      const player = payload && payload.player ? payload.player : null;
+      const payload = await auth.api(getPageAccountApi());
+      const account = payload?.account || payload || {};
+      const player = account.player || payload?.player || null;
+      const progression = account.progression || payload?.progression || null;
       if (!player) return;
 
       if (typeof auth.setSession === 'function') {
@@ -195,14 +205,22 @@
         });
       }
 
-      updateAccountNav(player, { animate: false });
-      refreshProgress(auth);
+      updateAccountNav({ ...player, ...(progression || {}) }, { animate: false });
+      if (progression) {
+        window.AmongDemons?.ui?.updateNavXpProgress?.(progression, { animate: false });
+      }
     } catch (error) {
       if (error.status === 401) {
         if (typeof auth.clearSession === 'function') auth.clearSession();
         clearAccountNav();
       }
     }
+  }
+
+  function getPageAccountApi() {
+    const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
+    const match = PAGE_ACCOUNT_APIS.find(([route]) => pathname === route || pathname.startsWith(`${route}/`));
+    return match?.[1] || ME_API;
   }
 
   function registerXpProgressRefresh(auth) {

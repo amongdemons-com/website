@@ -654,8 +654,7 @@ async function finishCashout(result, options = {}) {
   getModal(elements.cashoutModal).hide();
   await Promise.all([
     loadStartOptions(),
-    loadAccountStatPoints(),
-    window.AmongDemons.ui?.refreshNavXpProgress?.()
+    loadAccountStatPoints()
   ]);
   renderRun();
 }

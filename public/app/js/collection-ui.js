@@ -47,6 +47,7 @@
     autoTrainRunning: false
   };
   const elements = {};
+  let gameCatalogPromise = null;
 
   onReady(init);
 
@@ -170,17 +171,15 @@
 
     try {
       if (state.isAuthenticated) {
-        const [me, demons, bag] = await Promise.all([
-          api('/api/auth/me'),
-          api('/api/demons'),
-          api('/api/bag'),
+        const [bootstrap] = await Promise.all([
+          api('/api/collection/bootstrap'),
           loadDemonTypes(),
           loadDemonCatalog()
         ]);
 
-        state.player = me.player;
-        state.collection = demons.demons || [];
-        state.echoItems = new Map((bag.items || []).map((item) => [item.itemKey, item]));
+        state.player = bootstrap.player;
+        state.collection = bootstrap.demons || [];
+        state.echoItems = new Map((bootstrap.bag?.items || []).map((item) => [item.itemKey, item]));
       } else {
         state.player = null;
         state.collection = [];
@@ -326,14 +325,30 @@
 
   async function loadDemonTypes() {
     if (Object.keys(state.types).length) return state.types;
-    state.types = await api('/api/game/demon-types');
+    await loadGameCatalog();
     return state.types;
   }
 
   async function loadDemonCatalog() {
     if (state.catalog.length) return state.catalog;
-    state.catalog = await api('/api/game/demons');
+    await loadGameCatalog();
     return state.catalog;
+  }
+
+  async function loadGameCatalog() {
+    if (Object.keys(state.types).length && state.catalog.length) return;
+    if (!gameCatalogPromise) {
+      gameCatalogPromise = api('/api/game/catalog?v=20260722-request-optimization-v1')
+        .then((payload) => {
+          state.types = payload?.types || {};
+          state.catalog = Array.isArray(payload?.demons) ? payload.demons : [];
+        })
+        .catch((error) => {
+          gameCatalogPromise = null;
+          throw error;
+        });
+    }
+    await gameCatalogPromise;
   }
 
   function populateFilters() {

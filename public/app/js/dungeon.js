@@ -1,7 +1,7 @@
 import { registerDungeonActions } from './dungeon/registry.js';
 import { onReady } from './dungeon/utils.js';
 import * as dom from './dungeon/dom.js';
-import * as lifecycle from './dungeon/lifecycle.js?v=20260720-music-unified-v1';
+import * as lifecycle from './dungeon/lifecycle.js?v=20260722-request-optimization-v1';
 import * as render from './dungeon/render.js?v=20260721-victory-gold-v1';
 import * as combat from './dungeon/combat.js?v=20260717-paused-skip-result-v1';
 import * as rewards from './dungeon/rewards.js?v=20260720-dungeon-defeat-v1';

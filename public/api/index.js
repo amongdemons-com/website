@@ -5,6 +5,10 @@ const router = express.Router();
 let schemaReady;
 
 function ensureSchema(req, res, next) {
+  if (req.method === 'GET' && req.path === '/world/map') {
+    return next();
+  }
+
   if (!schemaReady) {
     schemaReady = initializeSchema();
   }
@@ -19,6 +23,7 @@ function ensureSchema(req, res, next) {
 
 router.use(require('./game/demon-types'));
 router.use(require('./game/demons'));
+router.use(require('./game/catalog'));
 router.use(require('./og'));
 
 router.use(ensureSchema);
@@ -35,6 +40,7 @@ router.use(require('./account/progression'));
 router.use(require('./account/stat-points'));
 router.use(require('./account/quests'));
 router.use(require('./account/achievements'));
+router.use(require('./bootstrap'));
 router.use(require('./demons/list'));
 router.use(require('./demons/show'));
 router.use(require('./demons/train'));
