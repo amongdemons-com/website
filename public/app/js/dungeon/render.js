@@ -372,17 +372,16 @@ function renderEnemyBuffChips(buffs = []) {
 function renderEnemyBuffChip(buff = {}) {
   const name = String(buff.name || buff.id || 'Boss Buff');
   const description = String(buff.description || '');
-  const temporaryBonuses = buff.id === 'rarity-convergence'
-    ? [
-        `Temporary enemy HP ${formatBonusPercent(buff.hpBonusPct)}`,
-        `Temporary enemy Attack ${formatBonusPercent(buff.atkBonusPct)}`,
-        `Temporary enemy Speed ${formatBonusPercent(buff.speedBonusPct)}`,
-        'These bonuses disappear if a demon joins your team.'
-      ]
-    : [];
-  const tooltip = [name, description, ...temporaryBonuses].filter(Boolean).join('\n');
-  const escapedTooltip = escapeTooltipAttribute(tooltip);
   const convergence = buff.id === 'rarity-convergence';
+  const tooltip = convergence
+    ? [
+        `${capitalize(buff.rarity || 'common')} enemy encounter`,
+        `HP ${formatBonusPercent(buff.hpBonusPct)}`,
+        `Attack ${formatBonusPercent(buff.atkBonusPct)}`,
+        `Speed ${formatBonusPercent(buff.speedBonusPct)}`
+      ].join('\n')
+    : [name, description].filter(Boolean).join('\n');
+  const escapedTooltip = escapeTooltipAttribute(tooltip);
   const rarityStyle = convergence
     ? ` style="--enemy-buff-color: ${escapeHtml(getRarityColor(buff.rarity || 'common'))}"`
     : '';

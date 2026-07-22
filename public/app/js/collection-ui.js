@@ -17,6 +17,8 @@
   ];
   const TRAINING_REVEAL_DELAY_MS = 2850;
   const TRAINING_BURST_CLEANUP_MS = 5200;
+  const EAGER_CARD_IMAGE_COUNT = 24;
+  const HIGH_PRIORITY_CARD_IMAGE_COUNT = 6;
   const RARITY_ORDER = {
     common: 1,
     uncommon: 2,
@@ -222,17 +224,18 @@
   }
 
   function renderDemonCards(demons) {
-    return demons.map((demon) => demon.isMissing
-      ? renderMissingDemonCard(demon)
-      : renderOwnedDemonCard(demon)
+    return demons.map((demon, index) => demon.isMissing
+      ? renderMissingDemonCard(demon, index)
+      : renderOwnedDemonCard(demon, index)
     ).join('');
   }
 
-  function renderOwnedDemonCard(demon) {
+  function renderOwnedDemonCard(demon, index) {
     return `
       <div class="collection-grid-item">
         ${renderSharedDemonCard(withTypeName(demon), {
           className: 'collection-demon-card',
+          ...getCollectionCardImageOptions(demon, index),
           overlayHtml: renderTrainingCardBadge(demon),
           statsOptions: {
             hideHpBar: true
@@ -247,7 +250,7 @@
     `;
   }
 
-  function renderMissingDemonCard(demon) {
+  function renderMissingDemonCard(demon, index) {
     const typeName = getTypeName(demon.typeId);
     const rarity = capitalize(demon.rarity);
     const echo = getEchoItemForDemon(demon);
@@ -259,6 +262,7 @@
       <div class="collection-grid-item collection-grid-item-missing">
         ${renderSharedDemonCard(withTypeName(demon), {
           className: 'collection-demon-card collection-missing-card',
+          ...getCollectionCardImageOptions(demon, index),
           showStats: false,
           footerHtml: footer,
           attributes: {
@@ -271,6 +275,27 @@
         })}
       </div>
     `;
+  }
+
+  function getCollectionCardImageOptions(demon, index) {
+    return {
+      imageUrl: getCollectionCardImageUrl(demon),
+      imageLoading: index < EAGER_CARD_IMAGE_COUNT ? 'eager' : 'lazy',
+      imageFetchPriority: index < HIGH_PRIORITY_CARD_IMAGE_COUNT ? 'high' : 'auto'
+    };
+  }
+
+  function getCollectionCardImageUrl(demon) {
+    const sourceDemonId = Number(demon?.sourceDemonId || demon?.source_demon_id);
+    if (Number.isInteger(sourceDemonId) && sourceDemonId > 0) {
+      return `/app/images/demons/portrait/${sourceDemonId}.webp`;
+    }
+
+    const imageUrl = String(demon?.imageUrl || demon?.image_url || '');
+    const sourceMatch = /^\/app\/images\/demons\/(\d+)\.png$/.exec(imageUrl);
+    return sourceMatch
+      ? `/app/images/demons/portrait/${sourceMatch[1]}.webp`
+      : imageUrl;
   }
 
   function getVisibleCollectionSlots(ownedDemons = getOwnedDemons()) {

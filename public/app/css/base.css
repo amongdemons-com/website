@@ -8061,6 +8061,21 @@ body.settings-page .game-shell-nav .nav-settings-link {
     padding: 0.7rem 0.9rem;
 }
 
+.settings-profile-field {
+    max-width: 40rem;
+}
+
+.settings-username-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 0.65rem;
+}
+
+.settings-username-row .settings-submit {
+    min-height: 2.55rem;
+}
+
 .settings-field .form-label {
     margin: 0;
     color: rgba(232,244,241,0.9);
@@ -8120,29 +8135,19 @@ body.settings-page .game-shell-nav .nav-settings-link {
     cursor: pointer;
 }
 
-.settings-battle-form {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.settings-battle-form .settings-field {
-    max-width: none;
-}
-
-.settings-battle-form .settings-field + .settings-field {
-    border-left: 1px solid rgba(161,212,201,0.1);
-}
-
+.settings-battle-form,
 .settings-audio-form {
-    grid-template-columns: minmax(8rem, 0.72fr) repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
 }
 
-.settings-audio-form .settings-field + .settings-field {
-    border-left: 1px solid rgba(161,212,201,0.1);
-}
-
-.settings-audio-mute-field {
-    align-content: center;
+.settings-battle-form .settings-field,
+.settings-audio-form .settings-field {
     max-width: none;
+}
+
+.settings-audio-mute {
+    flex: 0 0 auto;
+    margin-left: auto;
 }
 
 .settings-volume-field {
@@ -8218,17 +8223,6 @@ body.settings-page .game-shell-nav .nav-settings-link {
     box-shadow: 0 0 0 0.22rem rgba(111,214,189,0.2), 0 0 12px rgba(111,214,189,0.32);
 }
 
-.settings-form-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    min-height: 3.4rem;
-    border-top: 1px solid rgba(161,212,201,0.11);
-    background: rgba(3,9,11,0.24);
-    padding: 0.5rem 0.9rem;
-}
-
 .settings-message {
     position: relative;
     flex: 1 1 auto;
@@ -8290,20 +8284,6 @@ body.settings-page .game-shell-nav .nav-settings-link {
         max-width: none;
     }
 
-.settings-battle-form,
-.settings-audio-form {
-        grid-template-columns: 1fr;
-    }
-
-.settings-battle-form .settings-field + .settings-field,
-.settings-audio-form .settings-field + .settings-field {
-        border-top: 1px solid rgba(161,212,201,0.1);
-        border-left: 0;
-    }
-
-.settings-form-footer {
-        width: 100%;
-    }
 }
 
 .level-points-header {

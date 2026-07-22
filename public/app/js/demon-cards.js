@@ -24,7 +24,10 @@
 
   function renderDemonCard(demon = {}, options = {}) {
     const tag = options.tag || 'div';
-    const imageUrl = demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
+    const imageUrl = options.imageUrl || demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
+    const imagePriorityAttribute = options.imageFetchPriority
+      ? ` fetchpriority="${escapeHtml(options.imageFetchPriority)}"`
+      : '';
     const title = options.title || demon.species || demon.name || capitalize(demon.rarity) || 'Demon';
     const rarity = capitalize(demon.rarity || 'common');
     const imageAlt = options.imageAlt || getDemonImageAlt(demon, title, rarity);
@@ -46,7 +49,7 @@
     return `
       <${tag} class="${escapeHtml(classes)}" style="${escapeHtml(style)}" ${renderAttributes(attributes)}>
         <div class="dungeon-demon-card-image" aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity">
-          <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(imageAlt)}" width="${DEMON_IMAGE_WIDTH}" height="${DEMON_IMAGE_HEIGHT}" loading="${escapeHtml(options.imageLoading || 'lazy')}" decoding="async" draggable="false" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE_URL}';">
+          <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(imageAlt)}" width="${DEMON_IMAGE_WIDTH}" height="${DEMON_IMAGE_HEIGHT}" loading="${escapeHtml(options.imageLoading || 'lazy')}" decoding="async"${imagePriorityAttribute} draggable="false" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE_URL}';">
           <span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>
         </div>
         ${options.overlayHtml || ''}

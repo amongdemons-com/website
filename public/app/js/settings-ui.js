@@ -23,6 +23,7 @@
     audio?.setScene({ music: 'music.default' });
     cacheElements();
     elements.form.addEventListener('submit', saveUsername);
+    elements.username.addEventListener('input', handleUsernameInput);
     initBattleToggles();
     initAudioControls();
 
@@ -58,6 +59,12 @@
     elements.musicVolumeValue = document.getElementById('settingsMusicVolumeValue');
     elements.sfxVolume = document.getElementById('settingsSfxVolume');
     elements.sfxVolumeValue = document.getElementById('settingsSfxVolumeValue');
+  }
+
+  function handleUsernameInput() {
+    elements.username.setCustomValidity('');
+    elements.message.classList.add('d-none');
+    updateUsernameSaveState();
   }
 
   function initBattleToggles() {
@@ -124,6 +131,7 @@
       ? usernames.normalize(elements.username.value)
       : elements.username.value.trim();
     elements.username.value = username;
+    updateUsernameSaveState();
 
     const usernameError = usernames?.getValidationMessage?.(username) || '';
     if (usernameError) {
@@ -168,6 +176,7 @@
 
     currentUsername = player.username || '';
     elements.username.value = currentUsername;
+    updateUsernameSaveState();
 
     const session = window.AmongDemons.getSession();
     window.AmongDemons.setSession({ ...session, player });
@@ -176,14 +185,20 @@
 
   function setFormEnabled(enabled) {
     elements.username.disabled = !enabled;
-    elements.submit.disabled = !enabled;
+    updateUsernameSaveState();
   }
 
   function setBusy(busy) {
     elements.username.disabled = busy;
-    elements.submit.disabled = busy;
     elements.form.setAttribute('aria-busy', String(busy));
     elements.submitLabel.textContent = busy ? 'Saving...' : 'Save';
+    updateUsernameSaveState();
+  }
+
+  function updateUsernameSaveState() {
+    const usernameChanged = elements.username.value !== currentUsername;
+    elements.submit.classList.toggle('d-none', !usernameChanged);
+    elements.submit.disabled = elements.username.disabled || !usernameChanged;
   }
 
   function showMessage(message, type) {
