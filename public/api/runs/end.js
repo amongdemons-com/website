@@ -45,7 +45,9 @@ router.post('/runs/:id/end', requireAuth, async (req, res) => {
     level: nextLevel,
     runId: run.id,
     progression: {
-      ...getAccountProgressionSummary(nextLevel, nextXp),
+      ...getAccountProgressionSummary(nextLevel, nextXp, {
+        previousLevel: playerRows[0].level
+      }),
       souls: playerRows[0].souls + earned.souls
     }
   });

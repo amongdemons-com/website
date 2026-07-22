@@ -1,5 +1,9 @@
 const db = require('./db');
-const { getNextAccountLevel, getXpForAccountLevel } = require('./progression');
+const {
+  getAccountProgressionSummary,
+  getNextAccountLevel,
+  getXpForAccountLevel
+} = require('./progression');
 
 const XP_REWARD_LEVEL_FRACTION = 0.1;
 const SOUL_REWARD_LEVEL_GROWTH = 0.12;
@@ -250,8 +254,9 @@ async function grantReward(connection, player, reward) {
   );
 
   return {
-    level: nextLevel,
-    xp: nextXp,
+    ...getAccountProgressionSummary(nextLevel, nextXp, {
+      previousLevel: player.level
+    }),
     souls: nextSouls,
     highestFloor: toPositiveInteger(player.highestFloor)
   };

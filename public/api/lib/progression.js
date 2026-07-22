@@ -22,19 +22,28 @@ function getXpForAccountLevel(level) {
   return Math.ceil(ACCOUNT_LEVEL_BASE_XP * Math.pow(targetLevel - 1, ACCOUNT_LEVEL_EXPONENT));
 }
 
-// Response shape consumed by the client's nav XP progress bar; XP-granting
-// endpoints include this as `progression` so the level-up animation can fire.
-function getAccountProgressionSummary(level, xp) {
+// Response shape consumed by the client's nav XP progress bar. XP-granting
+// endpoints pass `previousLevel` so the client gets an authoritative, one-shot
+// level-up event instead of inferring one from potentially stale nav state.
+function getAccountProgressionSummary(level, xp, options = {}) {
   const resolvedLevel = getNextAccountLevel(level, xp);
   const totalXp = Math.max(0, Math.floor(Number(xp) || 0));
   const currentLevelXp = getXpForAccountLevel(resolvedLevel);
   const nextLevelXp = getXpForAccountLevel(resolvedLevel + 1);
   const xpForNextLevel = Math.max(1, nextLevelXp - currentLevelXp);
   const xpIntoLevel = Math.min(xpForNextLevel, Math.max(0, totalXp - currentLevelXp));
+  const hasPreviousLevel = Object.prototype.hasOwnProperty.call(options, 'previousLevel');
+  const previousLevel = hasPreviousLevel
+    ? Math.max(1, Math.floor(Number(options.previousLevel) || 1))
+    : null;
 
   return {
     level: resolvedLevel,
     xp: totalXp,
+    ...(hasPreviousLevel ? {
+      previousLevel,
+      leveledUp: resolvedLevel > previousLevel
+    } : {}),
     levelProgress: {
       currentLevelXp,
       nextLevelXp,

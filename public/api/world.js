@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('./lib/db');
 const { blockGuests, cleanPlayer, requireAuth } = require('./lib/auth');
-const { getNextAccountLevel } = require('./lib/progression');
+const { getAccountProgressionSummary, getNextAccountLevel } = require('./lib/progression');
 const { recordDailyQuestProgress } = require('./lib/daily-quests');
 const {
   ANCHOR_SUCCESS_MESSAGE,
@@ -140,6 +140,7 @@ router.post('/world/team', requireAuth, async (req, res) => {
     activeTeam: serializeTeamSummaryForClient(getActiveWorldTeamSummary(saveResult.team)),
     ...(reset ? {
       player: reset.player,
+      progression: reset.progression,
       rewards: reset.rewards,
       huntingReset: {
         stoppedHunt: reset.stoppedHunt,
@@ -732,6 +733,7 @@ async function settleActiveHunt(player, options = {}) {
   let stoppedHunt = false;
   let clearedUnlocks = 0;
   let settledLevel = null;
+  let settledPreviousLevel = null;
   // `player` is req.player, which requireAuth already passed through cleanPlayer.
   // The DB row fetched below is the raw shape that still needs cleaning.
   let playerPayload = player;
@@ -770,6 +772,7 @@ async function settleActiveHunt(player, options = {}) {
 
       stoppedHunt = true;
       settledLevel = nextLevel;
+      settledPreviousLevel = currentLevel;
     }
 
     if (clearUnlocks) {
@@ -811,6 +814,12 @@ async function settleActiveHunt(player, options = {}) {
     stoppedHunt,
     rewards,
     player: playerPayload,
+    progression: stoppedHunt ? {
+      ...getAccountProgressionSummary(settledLevel, playerPayload.xp, {
+        previousLevel: settledPreviousLevel
+      }),
+      souls: playerPayload.souls
+    } : undefined,
     clearedUnlocks,
     hunt: await getHuntState(player.id)
   };

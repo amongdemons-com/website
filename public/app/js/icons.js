@@ -299,7 +299,6 @@
 
     const nextState = normalizeXpProgress(data);
     if (!nextState) return null;
-    const previousState = navXpState ? { ...navXpState } : null;
     navXpState = nextState;
 
     const percentValue = Math.round(nextState.percent * 1000) / 10;
@@ -329,9 +328,17 @@
     const tooltip = progress.querySelector('[data-nav-xp-tooltip]');
     if (tooltip) tooltip.innerHTML = tooltipHtml;
 
+    const authoritativePreviousLevel = Math.max(
+      1,
+      Math.floor(toFiniteNumber(data.previousLevel, nextState.level))
+    );
+    // Only a payout response that carries the server-calculated transition may
+    // celebrate. Comparing nav snapshots is racy and can also turn a later,
+    // unrelated account refresh into a false level-up.
+    const confirmedLevelUp = data.leveledUp === true &&
+      nextState.level > authoritativePreviousLevel;
     const shouldAnimateLevelUp = options.animate !== false &&
-      previousState &&
-      nextState.level > previousState.level &&
+      confirmedLevelUp &&
       nextState.level > getSeenLevelUpLevel(data);
 
     if (shouldAnimateLevelUp) {
@@ -341,8 +348,8 @@
         triggerLevelUpAnimation({
           root,
           level: nextState.level,
-          previousLevel: previousState.level,
-          detail: getLevelUpDetail(previousState, nextState),
+          previousLevel: authoritativePreviousLevel,
+          detail: getLevelUpDetail({ level: authoritativePreviousLevel }, nextState),
           progress: nextState
         });
       });
