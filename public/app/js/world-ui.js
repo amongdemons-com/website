@@ -68,6 +68,11 @@ import './bag-item-visuals.js';
   const MERCHANT_FALLBACK_BRIBE_COST = 50;
   const MERCHANT_ARROW_EDGE_INSET = 30;
   const MERCHANT_ARROW_FLOAT_DISTANCE = 4;
+  // Marker-local offsets shared by drawWorldMerchantMarker and its animated
+  // glow (updateMerchantGlow): where the soul lantern hangs inside the wagon
+  // and the center of the curtained opening its light spills out of.
+  const MERCHANT_LANTERN_OFFSET = { x: -9, y: -4.3 };
+  const MERCHANT_INTERIOR_GLOW = { x: 0, y: 1 };
   let demonMapAtlasPromise = null;
   let pixiCullerRegistered = false;
   // World boss intro dialog: a random boss taunts the hunter after their first
@@ -577,6 +582,7 @@ import './bag-item-visuals.js';
     state.pathPulse = new Pixi.Graphics();     // animated destination ring
     state.shrineGlow = new Pixi.Graphics();    // animated soul smoke around forsaken shrines
     state.portalGlow = new Pixi.Graphics();    // animated breathing aura around darkness portals
+    state.merchantGlow = new Pixi.Graphics();  // animated lantern flicker on the traveling merchant
     state.bossAura = new Pixi.Graphics();      // animated pulsating aura beneath boss markers
     state.puddleFx = new Pixi.Graphics();      // animated bubbles / embers over puddles
     state.markerLayer = new Pixi.Container();
@@ -609,6 +615,8 @@ import './bag-item-visuals.js';
     state.viewport.addChild(state.shrineGlow);
     state.viewport.addChild(state.portalGlow);
     state.viewport.addChild(state.markerLayer);
+    // Above the markers so the lantern light spills over the wagon curtains.
+    state.viewport.addChild(state.merchantGlow);
     state.viewport.addChild(state.encounterLayer);
     state.viewport.addChild(state.bossAura);
     state.viewport.addChild(state.bossLayer);
@@ -620,6 +628,7 @@ import './bag-item-visuals.js';
     app.ticker.add(updatePathPulse);
     app.ticker.add(updateShrineGlow);
     app.ticker.add(updatePortalGlow);
+    app.ticker.add(updateMerchantGlow);
     app.ticker.add(updateBossAura);
     app.ticker.add(updatePuddleFx);
     app.ticker.add(updateMerchantDirectionArrow);
@@ -3209,6 +3218,51 @@ import './bag-item-visuals.js';
     });
   }
 
+  // Animated warm flicker for the traveling merchant's soul lantern — an
+  // uneven candle-like halo with tiny embers drifting up off the flame, plus a
+  // faint glow breathing out of the curtained opening (runs on the ticker,
+  // drawn above the marker so the light spills over the wagon curtains).
+  function updateMerchantGlow() {
+    const layer = state.merchantGlow;
+    if (!layer) return;
+    layer.clear();
+
+    const merchant = state.merchant;
+    if (!merchant) return;
+
+    const c = tileCenter(merchant);
+    const now = performance.now();
+    const gold = 0xe8b04a;
+    const phase = merchant.x * 23 + merchant.y * 41;
+
+    // Two layered sine frequencies give the lantern an uneven candle flicker.
+    const flicker = 0.5
+      + Math.sin(now / 480 + phase) * 0.28
+      + Math.sin(now / 130 + phase * 1.7) * 0.14;
+    const lanternX = c.x + MERCHANT_LANTERN_OFFSET.x;
+    const lanternY = c.y + MERCHANT_LANTERN_OFFSET.y;
+    layer.circle(lanternX, lanternY, 8 + flicker * 3)
+      .fill({ color: gold, alpha: 0.06 + flicker * 0.06 });
+    layer.circle(lanternX, lanternY, 4 + flicker * 1.6)
+      .fill({ color: 0xffd27a, alpha: 0.09 + flicker * 0.08 });
+
+    // A few embers rising off the flame: born at the lantern, drift up, fade.
+    for (let i = 0; i < 3; i += 1) {
+      const life = ((now / 2600) + i / 3 + phase * 0.011) % 1;
+      const rise = life * 11;
+      const drift = Math.sin(life * Math.PI * 2 + phase + i * 29) * 2.5;
+      const alpha = Math.sin(life * Math.PI) * 0.45;
+      if (alpha <= 0) continue;
+      layer.circle(lanternX + drift, lanternY - 3 - rise, 0.8 + life * 0.7)
+        .fill({ color: 0xffd98a, alpha });
+    }
+
+    // Warm light breathing out of the curtained opening.
+    const breath = (Math.sin(now / 1100 + phase) + 1) / 2;
+    layer.ellipse(c.x + MERCHANT_INTERIOR_GLOW.x, c.y + MERCHANT_INTERIOR_GLOW.y, 9 + breath * 2.5, 8 + breath * 2.5)
+      .fill({ color: gold, alpha: 0.04 + breath * 0.05 });
+  }
+
   // Animated pulsating aura beneath boss markers — a gold halo that swells and
   // fades in a loop, with a second slower ring so the threat reads at a glance
   // (runs on the ticker, drawn under the boss node in drawBossMarkers).
@@ -3304,6 +3358,10 @@ import './bag-item-visuals.js';
     drawWorldMerchantMarker(layer);
   }
 
+  // A traveling vardo seen from the front: big side wheels, a dark timber
+  // body, an arched crimson roof with a scalloped valance, and curtains drawn
+  // back to spill warm lantern light over shelves of wares. The lantern's
+  // living flicker comes from updateMerchantGlow on the ticker.
   function drawWorldMerchantMarker(layer) {
     const merchant = state.merchant;
     const Pixi = window.PIXI;
@@ -3311,33 +3369,149 @@ import './bag-item-visuals.js';
 
     const marker = new Pixi.Graphics();
     const position = tileCenter(merchant);
+    const rng = seededRng((Math.imul(merchant.x | 0, 60493) ^ Math.imul(merchant.y | 0, 19349)) >>> 0);
     const gold = 0xe8b04a;
-    const canvas = 0x6d2635;
-    const wood = 0x70411f;
+    const goldTrim = 0xc9973f;
+    const roof = 0x4f1d26;
+    const roofDark = 0x1f0a10;
+    const roofLit = 0x7a3040;
+    const curtain = 0x6d2635;
+    const curtainDark = 0x38121c;
+    const frameWood = 0x2a1a14;
+    const woodDark = 0x140a07;
+    const woodLight = 0x8a6236;
+    const iron = 0x171716;
 
-    // A compact roadside cart: wheels and timber base, a striped awning, then
-    // a warm soul lantern so the merchant remains recognizable when zoomed out.
-    marker.ellipse(0, 22, 26, 7).fill({ color: 0x000000, alpha: 0.42 });
-    marker.circle(-17, 18, 6).fill({ color: 0x17110c, alpha: 0.98 })
-      .stroke({ color: 0xa47740, width: 1.5, alpha: 0.8 });
-    marker.circle(17, 18, 6).fill({ color: 0x17110c, alpha: 0.98 })
-      .stroke({ color: 0xa47740, width: 1.5, alpha: 0.8 });
-    marker.roundRect(-23, 6, 46, 14, 3).fill({ color: wood, alpha: 0.98 })
-      .stroke({ color: 0x28140a, width: 2, alpha: 0.95 });
-    marker.rect(-20, -11, 40, 18).fill({ color: 0x251619, alpha: 0.98 });
-    marker.poly([-25, -11, 25, -11, 20, -24, -20, -24])
-      .fill({ color: canvas, alpha: 0.99 })
-      .stroke({ color: 0x2b1017, width: 1.7, alpha: 0.96 });
-    for (let x = -14; x <= 14; x += 14) {
-      marker.poly([x - 6, -23, x + 1, -23, x + 5, -11, x - 9, -11])
-        .fill({ color: 0xd4b56f, alpha: 0.82 });
+    // Ground shadow.
+    marker.ellipse(0, 20, 26, 6.5).fill({ color: 0x000000, alpha: 0.42 });
+
+    // Wheels seen edge-on — the caravan faces us, so each one is a slim
+    // iron-shod rim peeking out beside the body, with a worn tread highlight
+    // and the axle hub band across the middle.
+    [-19.8, 19.8].forEach((wx) => {
+      const wobble = (rng() - 0.5) * 1.2;
+      marker.ellipse(wx + wobble, 12, 2.9, 7.9)
+        .fill({ color: 0x1c110a, alpha: 0.98 })
+        .stroke({ color: iron, width: 2, alpha: 0.95 });
+      const side = wx < 0 ? -1 : 1;
+      marker.moveTo(wx + wobble - side * 0.9, 5.8)
+        .bezierCurveTo(
+          wx + wobble - side * 1.7, 9,
+          wx + wobble - side * 1.7, 15,
+          wx + wobble - side * 0.9, 18.2
+        )
+        .stroke({ color: woodLight, width: 1, alpha: 0.4 });
+      marker.moveTo(wx + wobble - 2.6, 12).lineTo(wx + wobble + 2.6, 12)
+        .stroke({ color: iron, width: 1.4, alpha: 0.85 });
+    });
+
+    // Dark timber body, slightly crooked, with a few grain scuffs.
+    marker.poly([-17.5, -13, 17, -14, 18.5, 13, -18, 14])
+      .fill({ color: frameWood, alpha: 0.99 })
+      .stroke({ color: 0x0d0605, width: 2, alpha: 0.96 });
+    for (let i = 0; i < 3; i += 1) {
+      const side = i % 2 === 0 ? -1 : 1;
+      const px = side * (14.8 + rng() * 2);
+      const py = -6 + rng() * 14;
+      marker.moveTo(px, py).lineTo(px + (rng() - 0.5), py + 2 + rng() * 2)
+        .stroke({ color: woodDark, width: 0.8, alpha: 0.6 });
     }
-    marker.moveTo(-20, -11).lineTo(-20, 8).stroke({ color: 0x9e7340, width: 2.2, alpha: 0.9 });
-    marker.moveTo(20, -11).lineTo(20, 8).stroke({ color: 0x9e7340, width: 2.2, alpha: 0.9 });
-    marker.circle(0, -3, 7).fill({ color: gold, alpha: 0.18 });
-    marker.roundRect(-4, -8, 8, 11, 2).fill({ color: 0x1a1110, alpha: 0.96 })
-      .stroke({ color: gold, width: 1.4, alpha: 0.95 });
-    marker.circle(0, -3, 2.5).fill({ color: 0xffe8a0, alpha: 0.98 });
+
+    // The open front: near-black interior with warm light pooling inside.
+    marker.poly([-13.5, -9.5, 13.5, -10, 14.5, 11, -14.5, 11.5])
+      .fill({ color: 0x120809, alpha: 0.98 });
+    marker.ellipse(0, 1, 10, 9).fill({ color: gold, alpha: 0.1 });
+    marker.ellipse(-4, -2, 6, 6).fill({ color: gold, alpha: 0.08 });
+
+    // Shelves of wares: two boards with bottle and trinket glints.
+    marker.moveTo(-12, -1).lineTo(12, -1.4).stroke({ color: woodLight, width: 1.1, alpha: 0.6 });
+    marker.moveTo(-12.5, 5.4).lineTo(13, 5).stroke({ color: woodLight, width: 1.1, alpha: 0.6 });
+    marker.roundRect(-9, 1.6, 2, 3.4, 0.6).fill({ color: BOARD_COLORS.shrineSoul, alpha: 0.5 });
+    marker.roundRect(-4.4, 1.2, 2.4, 3.8, 0.6).fill({ color: gold, alpha: 0.6 });
+    marker.circle(1.6, 3.4, 1.6).fill({ color: 0xc9803a, alpha: 0.75 });
+    marker.roundRect(5.6, 1.8, 2, 3.2, 0.6).fill({ color: BOARD_COLORS.portalGlow, alpha: 0.6 });
+    marker.circle(-6.8, -3.6, 1.2).fill({ color: gold, alpha: 0.7 });
+    marker.roundRect(-1.6, -4.8, 1.8, 3.2, 0.5).fill({ color: BOARD_COLORS.shrineSoul, alpha: 0.5 });
+    marker.circle(4.6, -3.8, 1.3).fill({ color: 0xd9c8ea, alpha: 0.6 });
+
+    // Curtains drawn back to the sides, each tied with a gold sash.
+    marker.moveTo(-14, -10).lineTo(-7.5, -10)
+      .bezierCurveTo(-9, -5, -10, -1, -11, 3)
+      .bezierCurveTo(-12, 7, -13, 9.5, -13.5, 11.5)
+      .lineTo(-14, 11.5).closePath()
+      .fill({ color: curtain, alpha: 0.98 })
+      .stroke({ color: curtainDark, width: 1.3, alpha: 0.9 });
+    marker.moveTo(-10.5, -9).bezierCurveTo(-11.5, -4, -12, 2, -12.6, 9)
+      .stroke({ color: curtainDark, width: 1, alpha: 0.5 });
+    marker.poly([-12.6, 2.4, -10.2, 3.2, -10.5, 4.8, -12.9, 3.9])
+      .fill({ color: goldTrim, alpha: 0.85 });
+    marker.moveTo(14, -10.5).lineTo(7.5, -10.5)
+      .bezierCurveTo(9, -5, 10, -1, 11, 3)
+      .bezierCurveTo(12, 7, 13, 9.5, 13.5, 11)
+      .lineTo(14, 11).closePath()
+      .fill({ color: curtain, alpha: 0.98 })
+      .stroke({ color: curtainDark, width: 1.3, alpha: 0.9 });
+    marker.moveTo(10.5, -9.5).bezierCurveTo(11.5, -4, 12, 2, 12.6, 8.5)
+      .stroke({ color: curtainDark, width: 1, alpha: 0.5 });
+    marker.poly([12.6, 2.4, 10.2, 3.2, 10.5, 4.8, 12.9, 3.9])
+      .fill({ color: goldTrim, alpha: 0.85 });
+
+    // A swag of curtain draping across the top of the opening.
+    marker.moveTo(-14, -10).bezierCurveTo(-5, -4.5, 5, -4.5, 14, -10.5)
+      .lineTo(14, -13).lineTo(-14, -12.5).closePath()
+      .fill({ color: curtain, alpha: 0.98 })
+      .stroke({ color: curtainDark, width: 1.2, alpha: 0.9 });
+    marker.moveTo(-11, -9.4).bezierCurveTo(-4, -5.9, 4, -5.9, 11, -9.8)
+      .stroke({ color: curtainDark, width: 0.9, alpha: 0.5 });
+
+    // The soul lantern hanging just inside (its halo breathes on the ticker).
+    marker.moveTo(-9, -8.4).lineTo(-9, -7)
+      .stroke({ color: 0x55524c, width: 1, alpha: 0.9 });
+    marker.circle(MERCHANT_LANTERN_OFFSET.x, MERCHANT_LANTERN_OFFSET.y, 5)
+      .fill({ color: gold, alpha: 0.18 });
+    marker.roundRect(-11, -7.2, 4, 5.8, 1.1).fill({ color: 0x1a1110, alpha: 0.97 })
+      .stroke({ color: gold, width: 1.1, alpha: 0.95 });
+    marker.circle(MERCHANT_LANTERN_OFFSET.x, MERCHANT_LANTERN_OFFSET.y, 1.6)
+      .fill({ color: 0xffe8a0, alpha: 0.98 });
+
+    // Arched barrel roof with overhanging eaves and a lit crest.
+    marker.moveTo(-21.5, -11)
+      .bezierCurveTo(-19.5, -22, -9, -26.5, 0, -26.5)
+      .bezierCurveTo(9, -26.5, 19.5, -22, 21.5, -11.5)
+      .quadraticCurveTo(0, -15.5, -21.5, -11)
+      .closePath()
+      .fill({ color: roof, alpha: 0.99 })
+      .stroke({ color: roofDark, width: 2, alpha: 0.96 });
+    marker.moveTo(-18, -13.5).bezierCurveTo(-16, -21, -8, -24.8, 0, -25)
+      .stroke({ color: roofLit, width: 1.8, alpha: 0.5 });
+
+    // Scalloped valance hanging from the eave, tipped with gold beads.
+    [[-16, -12.1], [-8, -13.1], [0, -13.4], [8, -13.1], [16, -12.1]].forEach(([sx, sy]) => {
+      marker.moveTo(sx + 4, sy).arc(sx, sy, 4, 0, Math.PI).closePath()
+        .fill({ color: curtainDark, alpha: 0.96 });
+      marker.circle(sx, sy + 4.4, 0.8).fill({ color: goldTrim, alpha: 0.85 });
+    });
+
+    // A small gold curl crowning the roof.
+    marker.moveTo(-3, -25.8).quadraticCurveTo(0, -30, 3, -25.8)
+      .stroke({ color: goldTrim, width: 1.2, alpha: 0.7 });
+    marker.circle(0, -28.6, 1.3).fill({ color: goldTrim, alpha: 0.9 });
+
+    // Charms dangling from the eave corners.
+    marker.moveTo(-21, -11.5).lineTo(-21.6, -7.6).stroke({ color: 0x3a2413, width: 1, alpha: 0.85 });
+    marker.circle(-21.6, -6.4, 1.4).fill({ color: gold, alpha: 0.9 });
+    marker.moveTo(21, -12).lineTo(21.7, -8.4).stroke({ color: 0x3a2413, width: 1, alpha: 0.85 });
+    marker.poly([21.7, -8.2, 23, -6.7, 21.7, -5.2, 20.4, -6.7])
+      .fill({ color: BOARD_COLORS.shrineSoul, alpha: 0.85 });
+
+    // Iron rivets on the timber posts and worn boarding steps below.
+    [[-15.8, -11.6], [15.5, -12.2], [-16.2, 12.2], [16.6, 11.6]].forEach(([px, py]) => {
+      marker.circle(px, py, 0.8).fill({ color: goldTrim, alpha: 0.55 });
+    });
+    marker.roundRect(-7.5, 13.6, 15, 3, 1).fill({ color: 0x3a2413, alpha: 0.98 })
+      .stroke({ color: woodDark, width: 1.3, alpha: 0.9 });
+    marker.roundRect(-5, 16.6, 10, 2.6, 1).fill({ color: frameWood, alpha: 0.98 })
+      .stroke({ color: woodDark, width: 1.2, alpha: 0.9 });
 
     marker.position.set(position.x, position.y);
     layer.addChild(marker);
