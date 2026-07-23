@@ -188,6 +188,7 @@ function blockTypeForTile(x, y) {
   const zoneType = zoneTypeId(x, y);
   if (zoneType === 3) return 'poison';
   if (zoneType === 4) return 'lava';
+  if (zoneType === 8) return 'leaves';
   return 'rocks';
 }
 

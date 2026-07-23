@@ -1823,6 +1823,10 @@ import {
         drawLavaPuddle(g, rng, palette);
         return;
       }
+      if (blockType === 'leaves') {
+        drawTreeObstacle(g, rng, palette);
+        return;
+      }
       drawObstacle(g, kind, rng, palette);
     });
   }
@@ -2478,11 +2482,12 @@ import {
     const addRoadObject = createChunkAppender(state.roadLayer, min);
 
     // Tiles in a connected cluster of 2+ blocked tiles get drawn together as one
-    // merged shape below (poison puddle, lava pool, or rock formation), so skip
-    // their per-tile obstacle art here. The block's type, not its zone, selects
-    // the obstacle style.
+    // merged shape below (poison puddle, lava pool, leaf mass, or rock
+    // formation), so skip their per-tile obstacle art here. The block's type,
+    // not its zone, selects the obstacle style.
     const poisonComponents = computeBlockedComponents('poison');
     const lavaComponents = computeBlockedComponents('lava');
+    const leafComponents = computeBlockedComponents('leaves');
     const rockZones = new Set();
     for (const t of state.blockedTiles) {
       if (getBlockedTileType(t) !== 'rocks') continue;
@@ -2496,7 +2501,7 @@ import {
       }
     }
     const mergedKeys = new Set();
-    for (const comps of [poisonComponents, lavaComponents, rockComponents.map((c) => c.tiles)]) {
+    for (const comps of [poisonComponents, lavaComponents, leafComponents, rockComponents.map((c) => c.tiles)]) {
       for (const comp of comps) {
         if (comp.length >= 2) for (const t of comp) mergedKeys.add(getTileKey(t));
       }
@@ -2561,6 +2566,14 @@ import {
       const lava = new Pixi.Graphics();
       drawGiantLavaPuddle(lava, comp, ZONE_PALETTES[4] || DEFAULT_ZONE_PALETTE);
       state.groundLayer.addChild(lava);
+    }
+    for (const comp of leafComponents) {
+      if (comp.length < 2) continue;
+      const leaves = new Pixi.Graphics();
+      const first = comp[0];
+      const zone = zoneTypeIdForTile(first.x, first.y);
+      drawGiantLeafCluster(leaves, comp, ZONE_PALETTES[zone] || DEFAULT_ZONE_PALETTE);
+      state.groundLayer.addChild(leaves);
     }
     for (const { zone, tiles } of rockComponents) {
       if (tiles.length < 2) continue;
@@ -6634,7 +6647,7 @@ import {
 
   function getBlockedTileType(tile) {
     const type = String(tile?.type || '').trim().toLowerCase();
-    return type === 'poison' || type === 'lava' || type === 'sign' ? type : 'rocks';
+    return type === 'poison' || type === 'lava' || type === 'leaves' || type === 'sign' ? type : 'rocks';
   }
 
   function isRoadTile(position) {

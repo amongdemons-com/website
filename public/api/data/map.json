@@ -269,10 +269,6 @@
       "y": -31
     },
     {
-      "x": -2,
-      "y": -1
-    },
-    {
       "x": -4,
       "y": -1
     },
@@ -4103,6 +4099,446 @@
     {
       "x": 40,
       "y": 2
+    },
+    {
+      "x": -49,
+      "y": -49
+    },
+    {
+      "x": -48,
+      "y": -49
+    },
+    {
+      "x": -48,
+      "y": -48
+    },
+    {
+      "x": -47,
+      "y": -48
+    },
+    {
+      "x": -47,
+      "y": -47
+    },
+    {
+      "x": -46,
+      "y": -47
+    },
+    {
+      "x": -46,
+      "y": -46
+    },
+    {
+      "x": -46,
+      "y": -45
+    },
+    {
+      "x": -45,
+      "y": -47
+    },
+    {
+      "x": -49,
+      "y": -47
+    },
+    {
+      "x": -49,
+      "y": -46
+    },
+    {
+      "x": -48,
+      "y": -50
+    },
+    {
+      "x": -49,
+      "y": -45
+    },
+    {
+      "x": -48,
+      "y": -45
+    },
+    {
+      "x": -47,
+      "y": -45
+    },
+    {
+      "x": -46,
+      "y": -44
+    },
+    {
+      "x": -46,
+      "y": -43
+    },
+    {
+      "x": -1,
+      "y": -3
+    },
+    {
+      "x": 0,
+      "y": 1
+    },
+    {
+      "x": 48,
+      "y": -48
+    },
+    {
+      "x": 47,
+      "y": -47
+    },
+    {
+      "x": 46,
+      "y": -46
+    },
+    {
+      "x": 45,
+      "y": -45
+    },
+    {
+      "x": 45,
+      "y": -46
+    },
+    {
+      "x": 47,
+      "y": -46
+    },
+    {
+      "x": 47,
+      "y": -48
+    },
+    {
+      "x": 49,
+      "y": -48
+    },
+    {
+      "x": 49,
+      "y": -49
+    },
+    {
+      "x": 50,
+      "y": -49
+    },
+    {
+      "x": 50,
+      "y": -50
+    },
+    {
+      "x": 45,
+      "y": -44
+    },
+    {
+      "x": 45,
+      "y": -43
+    },
+    {
+      "x": 45,
+      "y": -42
+    },
+    {
+      "x": 44,
+      "y": -44
+    },
+    {
+      "x": 43,
+      "y": -44
+    },
+    {
+      "x": 42,
+      "y": -44
+    },
+    {
+      "x": 41,
+      "y": -44
+    },
+    {
+      "x": 42,
+      "y": -43
+    },
+    {
+      "x": 40,
+      "y": -44
+    },
+    {
+      "x": 39,
+      "y": -44
+    },
+    {
+      "x": 38,
+      "y": -44
+    },
+    {
+      "x": 45,
+      "y": -40
+    },
+    {
+      "x": 45,
+      "y": -39
+    },
+    {
+      "x": 35,
+      "y": -45
+    },
+    {
+      "x": 35,
+      "y": -44
+    },
+    {
+      "x": 36,
+      "y": -44
+    },
+    {
+      "x": 34,
+      "y": -45
+    },
+    {
+      "x": 32,
+      "y": 35
+    },
+    {
+      "x": 32,
+      "y": 36
+    },
+    {
+      "x": 33,
+      "y": 36
+    },
+    {
+      "x": 33,
+      "y": 37
+    },
+    {
+      "x": 34,
+      "y": 37
+    },
+    {
+      "x": 34,
+      "y": 38
+    },
+    {
+      "x": 35,
+      "y": 38
+    },
+    {
+      "x": 36,
+      "y": 38
+    },
+    {
+      "x": 36,
+      "y": 37
+    },
+    {
+      "x": 37,
+      "y": 37
+    },
+    {
+      "x": 36,
+      "y": 39
+    },
+    {
+      "x": -50,
+      "y": 48
+    },
+    {
+      "x": -50,
+      "y": 49
+    },
+    {
+      "x": -50,
+      "y": 50
+    },
+    {
+      "x": -49,
+      "y": 48
+    },
+    {
+      "x": -49,
+      "y": 45
+    },
+    {
+      "x": -49,
+      "y": 46
+    },
+    {
+      "x": -49,
+      "y": 47
+    },
+    {
+      "x": -49,
+      "y": 50
+    },
+    {
+      "x": -48,
+      "y": 50
+    },
+    {
+      "x": -48,
+      "y": 49
+    },
+    {
+      "x": -47,
+      "y": 49
+    },
+    {
+      "x": -46,
+      "y": 49
+    },
+    {
+      "x": -45,
+      "y": 49
+    },
+    {
+      "x": -44,
+      "y": 49
+    },
+    {
+      "x": -49,
+      "y": 44
+    },
+    {
+      "x": -42,
+      "y": 49
+    },
+    {
+      "x": -41,
+      "y": 49
+    },
+    {
+      "x": -40,
+      "y": 49
+    },
+    {
+      "x": -40,
+      "y": 48
+    },
+    {
+      "x": -39,
+      "y": 48
+    },
+    {
+      "x": -49,
+      "y": 42
+    },
+    {
+      "x": -49,
+      "y": 41
+    },
+    {
+      "x": -49,
+      "y": 40
+    },
+    {
+      "x": -48,
+      "y": 40
+    },
+    {
+      "x": -48,
+      "y": 39
+    },
+    {
+      "x": -48,
+      "y": 43
+    },
+    {
+      "x": -47,
+      "y": 43
+    },
+    {
+      "x": -46,
+      "y": 43
+    },
+    {
+      "x": -46,
+      "y": 42
+    },
+    {
+      "x": -45,
+      "y": 42
+    },
+    {
+      "x": -43,
+      "y": 48
+    },
+    {
+      "x": -43,
+      "y": 47
+    },
+    {
+      "x": -43,
+      "y": 46
+    },
+    {
+      "x": -42,
+      "y": 46
+    },
+    {
+      "x": -42,
+      "y": 45
+    },
+    {
+      "x": -20,
+      "y": 40
+    },
+    {
+      "x": -21,
+      "y": 42
+    },
+    {
+      "x": -22,
+      "y": 42
+    },
+    {
+      "x": -18,
+      "y": 42
+    },
+    {
+      "x": -19,
+      "y": 42
+    },
+    {
+      "x": -20,
+      "y": 42
+    },
+    {
+      "x": -20,
+      "y": 41
+    },
+    {
+      "x": -20,
+      "y": 43
+    },
+    {
+      "x": -20,
+      "y": 44
+    },
+    {
+      "x": -19,
+      "y": 41
+    },
+    {
+      "x": -21,
+      "y": 41
+    },
+    {
+      "x": -21,
+      "y": 43
+    },
+    {
+      "x": -19,
+      "y": 43
+    },
+    {
+      "x": -20,
+      "y": 39
+    },
+    {
+      "x": -23,
+      "y": 42
+    },
+    {
+      "x": -17,
+      "y": 42
+    },
+    {
+      "x": -20,
+      "y": 45
     }
   ],
   "events": [
@@ -4184,8 +4620,8 @@
       "description": "A weathered altar where hunters can anchor their souls."
     },
     {
-      "x": -14,
-      "y": 31,
+      "x": -20,
+      "y": 42,
       "type": "forsaken_shrine",
       "title": "Forsaken Shrine",
       "description": "A weathered altar where hunters can anchor their souls."
@@ -4206,8 +4642,8 @@
       "summonCostPerDistance": 2
     },
     {
-      "x": -40,
-      "y": -29,
+      "x": -49,
+      "y": -49,
       "type": "darkness-portal",
       "title": "Darkness Portal",
       "description": "Spend 2 Souls per map step to teleport here instantly.",
@@ -4220,6 +4656,14 @@
       "title": "Darkness Portal",
       "description": "Spend 2 Souls per map step to teleport here instantly.",
       "summonCostPerDistance": 2
+    },
+    {
+      "type": "darkness-portal",
+      "title": "Darkness Portal",
+      "summonCostPerDistance": 2,
+      "description": "Spend 2 Souls per map step to teleport here instantly.",
+      "x": 36,
+      "y": 38
     }
   ],
   "blocks": [
@@ -4251,37 +4695,37 @@
     {
       "x": 12,
       "y": 16,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 11,
       "y": 17,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 12,
       "y": 17,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 11,
       "y": 18,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 12,
       "y": 18,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 11,
       "y": 19,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 12,
       "y": 19,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 6,
@@ -4506,37 +4950,37 @@
     {
       "x": 31,
       "y": 26,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 32,
       "y": 26,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 31,
       "y": 27,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 32,
       "y": 27,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 31,
       "y": 28,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 32,
       "y": 28,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 32,
       "y": 29,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -37,
@@ -4601,7 +5045,7 @@
     {
       "x": 19,
       "y": -50,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 20,
@@ -4620,11 +5064,6 @@
     },
     {
       "x": 18,
-      "y": -48,
-      "type": "lava"
-    },
-    {
-      "x": 20,
       "y": -48,
       "type": "lava"
     },
@@ -4709,11 +5148,6 @@
       "type": "lava"
     },
     {
-      "x": 35,
-      "y": -43,
-      "type": "lava"
-    },
-    {
       "x": 36,
       "y": -43,
       "type": "lava"
@@ -4721,31 +5155,16 @@
     {
       "x": 37,
       "y": -43,
-      "type": "lava"
-    },
-    {
-      "x": 35,
-      "y": -42,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 37,
       "y": -42,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 37,
       "y": -41,
-      "type": "lava"
-    },
-    {
-      "x": 35,
-      "y": -40,
-      "type": "lava"
-    },
-    {
-      "x": 36,
-      "y": -40,
       "type": "lava"
     },
     {
@@ -4781,11 +5200,6 @@
     {
       "x": 3,
       "y": -7,
-      "type": "rocks"
-    },
-    {
-      "x": -8,
-      "y": 0,
       "type": "rocks"
     },
     {
@@ -4854,62 +5268,12 @@
       "type": "rocks"
     },
     {
-      "x": 35,
-      "y": -38,
-      "type": "lava"
-    },
-    {
-      "x": 36,
-      "y": -38,
-      "type": "lava"
-    },
-    {
       "x": 37,
       "y": -38,
       "type": "lava"
     },
     {
-      "x": 38,
-      "y": -38,
-      "type": "lava"
-    },
-    {
-      "x": 39,
-      "y": -38,
-      "type": "lava"
-    },
-    {
       "x": 35,
-      "y": -37,
-      "type": "lava"
-    },
-    {
-      "x": 39,
-      "y": -37,
-      "type": "lava"
-    },
-    {
-      "x": 39,
-      "y": -36,
-      "type": "lava"
-    },
-    {
-      "x": 35,
-      "y": -35,
-      "type": "lava"
-    },
-    {
-      "x": 37,
-      "y": -35,
-      "type": "lava"
-    },
-    {
-      "x": 38,
-      "y": -35,
-      "type": "lava"
-    },
-    {
-      "x": 39,
       "y": -35,
       "type": "lava"
     },
@@ -4926,32 +5290,32 @@
     {
       "x": 32,
       "y": 20,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 34,
       "y": 20,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 34,
       "y": 22,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 32,
       "y": 23,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 33,
       "y": 23,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 34,
       "y": 23,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 2,
@@ -5126,27 +5490,27 @@
     {
       "x": 18,
       "y": 41,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 19,
       "y": 41,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 20,
       "y": 41,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 18,
       "y": 42,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 20,
       "y": 42,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 43,
@@ -5196,17 +5560,17 @@
     {
       "x": 30,
       "y": -41,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 31,
       "y": -41,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 28,
       "y": -40,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 29,
@@ -5291,12 +5655,7 @@
     {
       "x": 37,
       "y": -45,
-      "type": "lava"
-    },
-    {
-      "x": 38,
-      "y": -45,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 39,
@@ -5309,29 +5668,14 @@
       "type": "lava"
     },
     {
-      "x": 37,
-      "y": -44,
-      "type": "lava"
-    },
-    {
-      "x": 40,
-      "y": -44,
-      "type": "lava"
-    },
-    {
-      "x": 40,
-      "y": -43,
-      "type": "lava"
-    },
-    {
       "x": 38,
       "y": -42,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 39,
       "y": -42,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 40,
@@ -5426,22 +5770,22 @@
     {
       "x": 26,
       "y": 48,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 27,
       "y": 48,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 28,
       "y": 48,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 29,
       "y": 48,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 25,
@@ -5461,22 +5805,22 @@
     {
       "x": 28,
       "y": 49,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 29,
       "y": 49,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 42,
       "y": 37,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 43,
       "y": 38,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 39,
@@ -5979,16 +6323,6 @@
       "type": "lava"
     },
     {
-      "x": 14,
-      "y": -28,
-      "type": "lava"
-    },
-    {
-      "x": 15,
-      "y": -28,
-      "type": "lava"
-    },
-    {
       "x": 16,
       "y": -28,
       "type": "lava"
@@ -6011,12 +6345,12 @@
     {
       "x": 14,
       "y": -26,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 15,
       "y": -26,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": -36,
@@ -6391,7 +6725,7 @@
     {
       "x": 34,
       "y": 19,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -19,
@@ -6621,32 +6955,32 @@
     {
       "x": 28,
       "y": 38,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 28,
       "y": 37,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 29,
       "y": 37,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 29,
       "y": 36,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 30,
       "y": 36,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 30,
       "y": 37,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -49,
@@ -6806,16 +7140,11 @@
     {
       "x": 16,
       "y": -24,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 17,
       "y": -24,
-      "type": "lava"
-    },
-    {
-      "x": 16,
-      "y": -25,
       "type": "lava"
     },
     {
@@ -7226,22 +7555,22 @@
     {
       "x": 27,
       "y": 30,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 27,
       "y": 29,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 26,
       "y": 29,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 27,
       "y": 28,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 39,
@@ -7386,17 +7715,7 @@
     {
       "x": 46,
       "y": -40,
-      "type": "lava"
-    },
-    {
-      "x": 45,
-      "y": -40,
-      "type": "lava"
-    },
-    {
-      "x": 45,
-      "y": -39,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 46,
@@ -7411,7 +7730,7 @@
     {
       "x": 15,
       "y": -27,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": -4,
@@ -7571,7 +7890,7 @@
     {
       "x": 11,
       "y": 16,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 10,
@@ -7701,27 +8020,27 @@
     {
       "x": 38,
       "y": 29,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 39,
       "y": 29,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 39,
       "y": 30,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 40,
       "y": 30,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 40,
       "y": 31,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 4,
@@ -7791,22 +8110,22 @@
     {
       "x": 25,
       "y": 34,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 25,
       "y": 33,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 25,
       "y": 32,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 24,
       "y": 32,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 14,
@@ -7861,12 +8180,12 @@
     {
       "x": 23,
       "y": 25,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 22,
       "y": 25,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 10,
@@ -8031,27 +8350,27 @@
     {
       "x": 47,
       "y": 45,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 47,
       "y": 44,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 46,
       "y": 44,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 46,
       "y": 43,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 45,
       "y": 43,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -15,
@@ -8221,17 +8540,17 @@
     {
       "x": 19,
       "y": 38,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 19,
       "y": 39,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 19,
       "y": 40,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 18,
@@ -8361,22 +8680,22 @@
     {
       "x": 21,
       "y": 22,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 20,
       "y": 22,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 20,
       "y": 23,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 20,
       "y": 24,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 37,
@@ -8416,7 +8735,7 @@
     {
       "x": 42,
       "y": -49,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 7,
@@ -8491,62 +8810,62 @@
     {
       "x": 29,
       "y": 39,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 29,
       "y": 40,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 28,
       "y": 40,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 28,
       "y": 41,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 28,
       "y": 42,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 28,
       "y": 43,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 28,
       "y": 44,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 25,
       "y": 45,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 25,
       "y": 44,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 26,
       "y": 45,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 26,
       "y": 46,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 25,
       "y": 46,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -45,
@@ -8701,22 +9020,22 @@
     {
       "x": 39,
       "y": 28,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 38,
       "y": 28,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 38,
       "y": 27,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 38,
       "y": 26,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -43,
@@ -8856,37 +9175,37 @@
     {
       "x": 39,
       "y": 44,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 38,
       "y": 44,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 38,
       "y": 45,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 38,
       "y": 46,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 39,
       "y": 46,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 39,
       "y": 45,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 40,
       "y": 45,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 7,
@@ -8921,17 +9240,17 @@
     {
       "x": 27,
       "y": 24,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 26,
       "y": 24,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 25,
       "y": 24,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -25,
@@ -8991,11 +9310,6 @@
     {
       "x": -42,
       "y": 47,
-      "type": "rocks"
-    },
-    {
-      "x": -42,
-      "y": 46,
       "type": "rocks"
     },
     {
@@ -9266,12 +9580,12 @@
     {
       "x": 45,
       "y": 33,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 45,
       "y": 34,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 45,
@@ -9416,12 +9730,12 @@
     {
       "x": 24,
       "y": 25,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 24,
       "y": 24,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -32,
@@ -9531,22 +9845,22 @@
     {
       "x": 18,
       "y": 33,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 18,
       "y": 32,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 18,
       "y": 31,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 19,
       "y": 31,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 2,
@@ -9566,17 +9880,17 @@
     {
       "x": 31,
       "y": 49,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 30,
       "y": 49,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 29,
       "y": 50,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 28,
@@ -9601,7 +9915,7 @@
     {
       "x": 15,
       "y": -25,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": 15,
@@ -9615,18 +9929,13 @@
     },
     {
       "x": 21,
-      "y": -48,
-      "type": "lava"
-    },
-    {
-      "x": 21,
       "y": -49,
       "type": "lava"
     },
     {
       "x": 19,
       "y": -49,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": -17,
@@ -9676,12 +9985,12 @@
     {
       "x": 31,
       "y": 21,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 29,
       "y": 20,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 29,
@@ -9721,17 +10030,17 @@
     {
       "x": 39,
       "y": 38,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 39,
       "y": 39,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 39,
       "y": 40,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -48,
@@ -9891,17 +10200,17 @@
     {
       "x": 24,
       "y": 41,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 24,
       "y": 40,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 23,
       "y": 40,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -29,
@@ -10235,16 +10544,6 @@
     },
     {
       "x": 23,
-      "y": -49,
-      "type": "lava"
-    },
-    {
-      "x": 23,
-      "y": -48,
-      "type": "lava"
-    },
-    {
-      "x": 23,
       "y": -47,
       "type": "lava"
     },
@@ -10396,7 +10695,7 @@
     {
       "x": 19,
       "y": -48,
-      "type": "lava"
+      "type": "rocks"
     },
     {
       "x": -25,
@@ -10506,22 +10805,22 @@
     {
       "x": 21,
       "y": 46,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 22,
       "y": 46,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 22,
       "y": 45,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 21,
       "y": 45,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": -22,
@@ -10606,32 +10905,32 @@
     {
       "x": 35,
       "y": 41,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 34,
       "y": 41,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 35,
       "y": 42,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 35,
       "y": 43,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 34,
       "y": 43,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 34,
       "y": 42,
-      "type": "rocks"
+      "type": "leaves"
     },
     {
       "x": 41,
@@ -10686,6 +10985,976 @@
       "y": 18,
       "type": "sign",
       "message": "Darkness Portals cross the world in an instant, but every step they swallow must be paid for in Souls."
+    },
+    {
+      "x": -47,
+      "y": -50,
+      "type": "rocks"
+    },
+    {
+      "x": -46,
+      "y": -50,
+      "type": "rocks"
+    },
+    {
+      "x": -50,
+      "y": -45,
+      "type": "rocks"
+    },
+    {
+      "x": -50,
+      "y": -46,
+      "type": "rocks"
+    },
+    {
+      "x": 1,
+      "y": -1,
+      "type": "rocks"
+    },
+    {
+      "x": 1,
+      "y": -2,
+      "type": "rocks"
+    },
+    {
+      "x": 2,
+      "y": -1,
+      "type": "rocks"
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "type": "rocks"
+    },
+    {
+      "x": -1,
+      "y": -1,
+      "type": "rocks"
+    },
+    {
+      "x": -2,
+      "y": -1,
+      "type": "rocks"
+    },
+    {
+      "x": -2,
+      "y": 0,
+      "type": "rocks"
+    },
+    {
+      "x": -1,
+      "y": 0,
+      "type": "rocks"
+    },
+    {
+      "x": -3,
+      "y": 0,
+      "type": "rocks"
+    },
+    {
+      "x": 48,
+      "y": -50,
+      "type": "lava"
+    },
+    {
+      "x": 49,
+      "y": -50,
+      "type": "lava"
+    },
+    {
+      "x": 50,
+      "y": -48,
+      "type": "lava"
+    },
+    {
+      "x": 50,
+      "y": -47,
+      "type": "lava"
+    },
+    {
+      "x": 47,
+      "y": -49,
+      "type": "lava"
+    },
+    {
+      "x": 49,
+      "y": -47,
+      "type": "lava"
+    },
+    {
+      "x": 46,
+      "y": -50,
+      "type": "rocks"
+    },
+    {
+      "x": 46,
+      "y": -49,
+      "type": "lava"
+    },
+    {
+      "x": 49,
+      "y": -46,
+      "type": "rocks"
+    },
+    {
+      "x": 50,
+      "y": -46,
+      "type": "rocks"
+    },
+    {
+      "x": 50,
+      "y": -45,
+      "type": "rocks"
+    },
+    {
+      "x": 45,
+      "y": -50,
+      "type": "rocks"
+    },
+    {
+      "x": 44,
+      "y": -50,
+      "type": "rocks"
+    },
+    {
+      "x": 47,
+      "y": -45,
+      "type": "rocks"
+    },
+    {
+      "x": 47,
+      "y": -44,
+      "type": "rocks"
+    },
+    {
+      "x": 48,
+      "y": -44,
+      "type": "rocks"
+    },
+    {
+      "x": 48,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 49,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 50,
+      "y": -44,
+      "type": "rocks"
+    },
+    {
+      "x": 50,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 43,
+      "y": -50,
+      "type": "lava"
+    },
+    {
+      "x": 46,
+      "y": -47,
+      "type": "lava"
+    },
+    {
+      "x": 45,
+      "y": -47,
+      "type": "lava"
+    },
+    {
+      "x": 44,
+      "y": -47,
+      "type": "lava"
+    },
+    {
+      "x": 44,
+      "y": -48,
+      "type": "lava"
+    },
+    {
+      "x": 43,
+      "y": -48,
+      "type": "rocks"
+    },
+    {
+      "x": 43,
+      "y": -49,
+      "type": "lava"
+    },
+    {
+      "x": 41,
+      "y": -49,
+      "type": "rocks"
+    },
+    {
+      "x": 41,
+      "y": -48,
+      "type": "rocks"
+    },
+    {
+      "x": 40,
+      "y": -49,
+      "type": "rocks"
+    },
+    {
+      "x": 43,
+      "y": -47,
+      "type": "rocks"
+    },
+    {
+      "x": 43,
+      "y": -46,
+      "type": "rocks"
+    },
+    {
+      "x": 42,
+      "y": -46,
+      "type": "rocks"
+    },
+    {
+      "x": 48,
+      "y": -49,
+      "type": "lava"
+    },
+    {
+      "x": 48,
+      "y": -47,
+      "type": "lava"
+    },
+    {
+      "x": 49,
+      "y": -31,
+      "type": "rocks"
+    },
+    {
+      "x": 49,
+      "y": -30,
+      "type": "rocks"
+    },
+    {
+      "x": 46,
+      "y": -37,
+      "type": "rocks"
+    },
+    {
+      "x": 46,
+      "y": -36,
+      "type": "rocks"
+    },
+    {
+      "x": 46,
+      "y": -35,
+      "type": "rocks"
+    },
+    {
+      "x": 46,
+      "y": -34,
+      "type": "rocks"
+    },
+    {
+      "x": 45,
+      "y": -36,
+      "type": "rocks"
+    },
+    {
+      "x": 45,
+      "y": -35,
+      "type": "rocks"
+    },
+    {
+      "x": 44,
+      "y": -35,
+      "type": "rocks"
+    },
+    {
+      "x": 44,
+      "y": -34,
+      "type": "rocks"
+    },
+    {
+      "x": 44,
+      "y": -33,
+      "type": "rocks"
+    },
+    {
+      "x": 43,
+      "y": -34,
+      "type": "rocks"
+    },
+    {
+      "x": 32,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 31,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 30,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 29,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 28,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 30,
+      "y": -44,
+      "type": "rocks"
+    },
+    {
+      "x": 25,
+      "y": -49,
+      "type": "rocks"
+    },
+    {
+      "x": 25,
+      "y": -48,
+      "type": "rocks"
+    },
+    {
+      "x": 25,
+      "y": -35,
+      "type": "rocks"
+    },
+    {
+      "x": 25,
+      "y": -34,
+      "type": "rocks"
+    },
+    {
+      "x": 26,
+      "y": -34,
+      "type": "rocks"
+    },
+    {
+      "x": 26,
+      "y": -35,
+      "type": "rocks"
+    },
+    {
+      "x": 29,
+      "y": -34,
+      "type": "rocks"
+    },
+    {
+      "x": 21,
+      "y": -31,
+      "type": "rocks"
+    },
+    {
+      "x": 21,
+      "y": -32,
+      "type": "rocks"
+    },
+    {
+      "x": 20,
+      "y": -32,
+      "type": "rocks"
+    },
+    {
+      "x": 19,
+      "y": -32,
+      "type": "rocks"
+    },
+    {
+      "x": 18,
+      "y": -32,
+      "type": "rocks"
+    },
+    {
+      "x": 23,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 23,
+      "y": -39,
+      "type": "rocks"
+    },
+    {
+      "x": 23,
+      "y": -38,
+      "type": "rocks"
+    },
+    {
+      "x": 21,
+      "y": -45,
+      "type": "rocks"
+    },
+    {
+      "x": 21,
+      "y": -44,
+      "type": "rocks"
+    },
+    {
+      "x": 21,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 21,
+      "y": -42,
+      "type": "rocks"
+    },
+    {
+      "x": 20,
+      "y": -42,
+      "type": "rocks"
+    },
+    {
+      "x": 37,
+      "y": -37,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -37,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -36,
+      "type": "rocks"
+    },
+    {
+      "x": 39,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -40,
+      "type": "lava"
+    },
+    {
+      "x": 39,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 40,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 28,
+      "y": -31,
+      "type": "rocks"
+    },
+    {
+      "x": 28,
+      "y": -30,
+      "type": "rocks"
+    },
+    {
+      "x": 28,
+      "y": -29,
+      "type": "rocks"
+    },
+    {
+      "x": 28,
+      "y": -28,
+      "type": "rocks"
+    },
+    {
+      "x": 27,
+      "y": -30,
+      "type": "rocks"
+    },
+    {
+      "x": 27,
+      "y": -29,
+      "type": "rocks"
+    },
+    {
+      "x": 27,
+      "y": -28,
+      "type": "rocks"
+    },
+    {
+      "x": 27,
+      "y": -27,
+      "type": "rocks"
+    },
+    {
+      "x": 50,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 49,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 48,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 47,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 46,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 50,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 49,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 48,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 47,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 44,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 43,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 44,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 43,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 37,
+      "y": -50,
+      "type": "rocks"
+    },
+    {
+      "x": 37,
+      "y": -49,
+      "type": "rocks"
+    },
+    {
+      "x": 37,
+      "y": -48,
+      "type": "rocks"
+    },
+    {
+      "x": 37,
+      "y": -47,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -50,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -49,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -48,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -47,
+      "type": "rocks"
+    },
+    {
+      "x": 37,
+      "y": -46,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 40,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 41,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 41,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 42,
+      "y": -41,
+      "type": "rocks"
+    },
+    {
+      "x": 42,
+      "y": -40,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -46,
+      "type": "rocks"
+    },
+    {
+      "x": 38,
+      "y": -45,
+      "type": "rocks"
+    },
+    {
+      "x": 36,
+      "y": -50,
+      "type": "lava"
+    },
+    {
+      "x": 36,
+      "y": -49,
+      "type": "lava"
+    },
+    {
+      "x": 36,
+      "y": -48,
+      "type": "lava"
+    },
+    {
+      "x": 36,
+      "y": -47,
+      "type": "lava"
+    },
+    {
+      "x": 36,
+      "y": -46,
+      "type": "lava"
+    },
+    {
+      "x": 36,
+      "y": -45,
+      "type": "lava"
+    },
+    {
+      "x": 50,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 49,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 48,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 47,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 44,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 43,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 42,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 41,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 40,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 39,
+      "y": -39,
+      "type": "lava"
+    },
+    {
+      "x": 36,
+      "y": -41,
+      "type": "lava"
+    },
+    {
+      "x": 37,
+      "y": 36,
+      "type": "leaves"
+    },
+    {
+      "x": 38,
+      "y": 36,
+      "type": "leaves"
+    },
+    {
+      "x": 36,
+      "y": 50,
+      "type": "leaves"
+    },
+    {
+      "x": 39,
+      "y": 48,
+      "type": "leaves"
+    },
+    {
+      "x": 39,
+      "y": 49,
+      "type": "leaves"
+    },
+    {
+      "x": 39,
+      "y": 50,
+      "type": "leaves"
+    },
+    {
+      "x": 35,
+      "y": 49,
+      "type": "leaves"
+    },
+    {
+      "x": 35,
+      "y": 50,
+      "type": "leaves"
+    },
+    {
+      "x": 40,
+      "y": 50,
+      "type": "leaves"
+    },
+    {
+      "x": 43,
+      "y": 49,
+      "type": "leaves"
+    },
+    {
+      "x": 44,
+      "y": 49,
+      "type": "leaves"
+    },
+    {
+      "x": 45,
+      "y": 47,
+      "type": "leaves"
+    },
+    {
+      "x": 45,
+      "y": 48,
+      "type": "leaves"
+    },
+    {
+      "x": 45,
+      "y": 49,
+      "type": "leaves"
+    },
+    {
+      "x": 46,
+      "y": 48,
+      "type": "leaves"
+    },
+    {
+      "x": 47,
+      "y": 48,
+      "type": "leaves"
+    },
+    {
+      "x": 47,
+      "y": 50,
+      "type": "leaves"
+    },
+    {
+      "x": 48,
+      "y": 50,
+      "type": "leaves"
+    },
+    {
+      "x": 50,
+      "y": 49,
+      "type": "leaves"
+    },
+    {
+      "x": 50,
+      "y": 48,
+      "type": "leaves"
+    },
+    {
+      "x": 50,
+      "y": 47,
+      "type": "leaves"
+    },
+    {
+      "x": 43,
+      "y": 50,
+      "type": "leaves"
+    },
+    {
+      "x": 38,
+      "y": -38,
+      "type": "lava"
+    },
+    {
+      "x": 36,
+      "y": -42,
+      "type": "lava"
+    },
+    {
+      "x": 35,
+      "y": -43,
+      "type": "rocks"
+    },
+    {
+      "x": 44,
+      "y": -38,
+      "type": "rocks"
+    },
+    {
+      "x": 43,
+      "y": -38,
+      "type": "rocks"
+    },
+    {
+      "x": 14,
+      "y": -25,
+      "type": "rocks"
+    },
+    {
+      "x": 13,
+      "y": -23,
+      "type": "lava"
+    },
+    {
+      "x": 13,
+      "y": -24,
+      "type": "lava"
+    },
+    {
+      "x": 16,
+      "y": -26,
+      "type": "lava"
+    },
+    {
+      "x": 17,
+      "y": -26,
+      "type": "lava"
+    },
+    {
+      "x": 12,
+      "y": -27,
+      "type": "rocks"
+    },
+    {
+      "x": 15,
+      "y": -23,
+      "type": "rocks"
+    },
+    {
+      "x": -48,
+      "y": 46,
+      "type": "rocks"
+    },
+    {
+      "x": -48,
+      "y": 47,
+      "type": "rocks"
+    },
+    {
+      "x": -47,
+      "y": 48,
+      "type": "rocks"
+    },
+    {
+      "x": -46,
+      "y": 48,
+      "type": "rocks"
+    },
+    {
+      "x": -47,
+      "y": 45,
+      "type": "rocks"
+    },
+    {
+      "x": -47,
+      "y": 46,
+      "type": "rocks"
+    },
+    {
+      "x": -46,
+      "y": 47,
+      "type": "rocks"
+    },
+    {
+      "x": -45,
+      "y": 47,
+      "type": "rocks"
+    },
+    {
+      "x": -44,
+      "y": 47,
+      "type": "rocks"
+    },
+    {
+      "x": -47,
+      "y": 44,
+      "type": "rocks"
+    },
+    {
+      "x": -49,
+      "y": 49,
+      "type": "rocks"
     }
   ],
   "encounters": [
@@ -10953,8 +12222,8 @@
     },
     {
       "id": "enc-5",
-      "x": 44,
-      "y": -50,
+      "x": 49,
+      "y": -44,
       "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
@@ -11024,7 +12293,7 @@
     {
       "id": "enc-6",
       "x": -50,
-      "y": -49,
+      "y": -50,
       "difficulty": 6,
       "zoneType": 2,
       "keyDemon": {
@@ -11093,7 +12362,7 @@
     },
     {
       "id": "enc-7",
-      "x": -48,
+      "x": -45,
       "y": -49,
       "difficulty": 7,
       "zoneType": 2,
@@ -11609,7 +12878,7 @@
     {
       "id": "enc-15",
       "x": 44,
-      "y": -48,
+      "y": -49,
       "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
@@ -12035,8 +13304,8 @@
     },
     {
       "id": "enc-22",
-      "x": 21,
-      "y": -46,
+      "x": 20,
+      "y": -48,
       "difficulty": 5,
       "zoneType": 4,
       "keyDemon": {
@@ -12157,8 +13426,8 @@
     },
     {
       "id": "enc-24",
-      "x": 33,
-      "y": -46,
+      "x": 35,
+      "y": -42,
       "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
@@ -12227,8 +13496,8 @@
     },
     {
       "id": "enc-25",
-      "x": 36,
-      "y": -46,
+      "x": 40,
+      "y": -48,
       "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
@@ -12611,8 +13880,8 @@
     },
     {
       "id": "enc-31",
-      "x": 49,
-      "y": -45,
+      "x": 50,
+      "y": -50,
       "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
@@ -12804,7 +14073,7 @@
     {
       "id": "enc-34",
       "x": 35,
-      "y": -44,
+      "y": -46,
       "difficulty": 7,
       "zoneType": 4,
       "keyDemon": {
@@ -14482,8 +15751,8 @@
     },
     {
       "id": "enc-63",
-      "x": 32,
-      "y": -36,
+      "x": 31,
+      "y": -38,
       "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
@@ -14543,8 +15812,8 @@
     },
     {
       "id": "enc-64",
-      "x": 34,
-      "y": -36,
+      "x": 37,
+      "y": -39,
       "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
@@ -17793,8 +19062,8 @@
     },
     {
       "id": "enc-122",
-      "x": 34,
-      "y": -20,
+      "x": 32,
+      "y": -24,
       "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
@@ -21439,8 +22708,8 @@
     },
     {
       "id": "enc-189",
-      "x": -9,
-      "y": 2,
+      "x": -7,
+      "y": -4,
       "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
@@ -28492,7 +29761,7 @@
     {
       "id": "enc-317",
       "x": -20,
-      "y": 39,
+      "y": 37,
       "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
@@ -29230,8 +30499,8 @@
     },
     {
       "id": "enc-330",
-      "x": 42,
-      "y": 42,
+      "x": 44,
+      "y": 50,
       "difficulty": 8,
       "zoneType": 8,
       "keyDemon": {
@@ -29371,7 +30640,7 @@
     {
       "id": "enc-332",
       "x": -50,
-      "y": 43,
+      "y": 41,
       "difficulty": 10,
       "zoneType": 11,
       "keyDemon": {
@@ -30093,8 +31362,8 @@
     },
     {
       "id": "enc-344",
-      "x": -20,
-      "y": 45,
+      "x": -17,
+      "y": 44,
       "difficulty": 7,
       "zoneType": 10,
       "keyDemon": {
@@ -31035,8 +32304,8 @@
     },
     {
       "id": "enc-359",
-      "x": -49,
-      "y": 49,
+      "x": -50,
+      "y": 50,
       "difficulty": 8,
       "zoneType": 11,
       "keyDemon": {
@@ -31812,7 +33081,7 @@
     },
     {
       "id": "enc-371",
-      "x": 44,
+      "x": 50,
       "y": 50,
       "difficulty": 9,
       "zoneType": 8,

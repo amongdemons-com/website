@@ -258,7 +258,7 @@ Run-long modifiers defined in `public/api/data/combat-buffs.json` and managed by
 
 ### World Exploration
 
-The world is a generated 101×101 grid (coordinates −50..50) defined in `public/api/data/map.json`: roads, typed unpassable blocks (`rocks`, `poison`, or `lava`), fixed demon-team encounters, and event objects (shrines, portals). The layout is identical for every player, so `/world/map` is served immutable-cached and keyed by a content hash; `/world/state` carries only per-player data.
+The world is a generated 101×101 grid (coordinates −50..50) defined in `public/api/data/map.json`: roads, typed unpassable blocks (`rocks`, `poison`, `lava`, or `leaves`), fixed demon-team encounters, and event objects (shrines, portals). The layout is identical for every player, so `/world/map` is served immutable-cached and keyed by a content hash; `/world/state` carries only per-player data.
 
 Each fixed monster spot has a unique 3–6 demon composition. Its displayed difficulty is calculated from the final team size, demon rarities, and type weights.
 
