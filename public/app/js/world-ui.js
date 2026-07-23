@@ -830,7 +830,6 @@ import './bag-item-visuals.js';
       if (moved) {
         hideWorldMerchantModal();
       }
-      maybeOpenWorldMerchantShop();
     } catch (error) {
       handleAuthError(error);
     }
@@ -5288,7 +5287,6 @@ import './bag-item-visuals.js';
       setWorldMerchantState(payload, { deferRender: true });
       if (!getMerchantAt(state.position) || !state.merchant?.canShop) {
         hideWorldMerchantModal();
-        setMessage('The traveling merchant has refreshed his stock.', 'warning');
         return;
       }
     } catch (error) {
