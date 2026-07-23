@@ -22,7 +22,7 @@
     <link href="/app/css/base.css?v=8823e40a4b6b" rel="stylesheet">
     <link href="/app/css/battle.css?v=2a833b90a1a6" rel="stylesheet">
     <link href="/app/css/bag-item-visuals.css?v=eb4584c38950" rel="stylesheet">
-    <link href="/app/css/world.css?v=1527644d44f2" rel="stylesheet">
+    <link href="/app/css/world.css?v=cdac956d9d84" rel="stylesheet">
   </head>
   <body class="world-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -206,23 +206,51 @@
             </div>
             <div class="world-merchant-head-meta">
               <span class="world-merchant-balance" id="worldMerchantBalance" aria-label="Soul balance"></span>
-              <span class="world-merchant-countdown" id="worldMerchantCountdown">New stock in 30:00</span>
+              <span class="world-merchant-countdown" id="worldMerchantCountdown">Leaves in 30:00</span>
             </div>
           </header>
           <div class="modal-body world-merchant-body">
-            <div class="world-merchant-status d-none" id="worldMerchantStatus" role="status" aria-live="polite"></div>
-            <div class="world-merchant-stock" id="worldMerchantStock" aria-label="Merchant stock"></div>
+            <div class="world-merchant-layout">
+              <figure class="world-merchant-portrait">
+                <img
+                  src="/app/images/merchant/crowley.webp"
+                  alt="Crowley, the horned traveling merchant, offering a spectral Soul at a forest crossroads"
+                  width="512"
+                  height="512"
+                >
+                <figcaption>
+                  <span>At the crossroads</span>
+                  <p>&ldquo;Choose carefully. Regret is the only refund I offer.&rdquo;</p>
+                </figcaption>
+              </figure>
+              <section class="world-merchant-shop" aria-labelledby="worldMerchantStockTitle">
+                <div class="world-merchant-shop-head">
+                  <div>
+                    <span class="world-merchant-shop-kicker">Fresh off the road</span>
+                    <h3 id="worldMerchantStockTitle">Four rare items</h3>
+                  </div>
+                  <div class="world-merchant-reroll">
+                    <span class="world-merchant-reroll-copy">
+                      <strong>Tempt fate</strong>
+                      <small>Pay Crowley to reveal four different items.</small>
+                    </span>
+                    <button type="button" class="btn btn-glass-muted btn-sm world-merchant-bribe" id="worldMerchantBribeButton" data-bribe-merchant aria-label="Bribe Crowley for 50 Souls">
+                      <span>Bribe</span>
+                      <span class="world-merchant-bribe-cost" id="worldMerchantBribeCost">
+                        <img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" width="16" height="16" aria-hidden="true">
+                        <span>50</span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+                <div class="world-merchant-status d-none" id="worldMerchantStatus" role="status" aria-live="polite"></div>
+                <div class="world-merchant-stock" id="worldMerchantStock" aria-label="Merchant stock"></div>
+              </section>
+            </div>
           </div>
           <footer class="world-merchant-foot">
-            <span><i data-lucide="amphora"></i> Bought items go directly to your bag.</span>
+            <span class="world-merchant-foot-note"><i data-lucide="amphora"></i> Bought items go directly to your bag.</span>
             <span class="world-merchant-foot-actions">
-              <button type="button" class="btn btn-glass-muted btn-sm world-merchant-bribe" id="worldMerchantBribeButton" data-bribe-merchant aria-label="Bribe Crowley for 50 Souls">
-                <span>Bribe</span>
-                <span class="world-merchant-bribe-cost" id="worldMerchantBribeCost">
-                  <img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" width="16" height="16" aria-hidden="true">
-                  <span>50</span>
-                </span>
-              </button>
               <button type="button" class="btn btn-glass-muted btn-sm" data-bs-dismiss="modal">Leave</button>
             </span>
           </footer>
@@ -330,8 +358,8 @@
         </div>
       </div>
     </section>
-    <script src="/app/dist/runtime.bundle.js?v=42adadc9bd12"></script>
+    <script src="/app/dist/runtime.bundle.js?v=35f3a858fdf9"></script>
     <script src="/vendor/pixi/pixi.min.js"></script>
-    <script src="/app/dist/world.bundle.js?v=9654509e07f4"></script>
+    <script src="/app/dist/world.bundle.js?v=7c8b51a46548"></script>
   </body>
 </html>

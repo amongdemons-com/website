@@ -47,9 +47,12 @@
     const maskUrl = `${ASSET_BASE}/${type.asset}-mask.png`;
     const typeAttribute = knownType ? String(typeId) : 'unknown';
     const loading = context === 'detail' ? 'eager' : 'lazy';
+    const title = typeof options.title === 'string'
+      ? options.title
+      : `${knownType ? type.label : 'Unknown'} Echo vessel`;
 
     return `
-      <span class="bag-item-renderer echo-item-visual echo-type-${type.key} echo-motion-${type.motion} echo-context-${context}" data-echo-type="${typeAttribute}" data-rarity="${rarity}" style="--echo-shell-mask: url('${shellUrl}'); --echo-fill-mask: url('${maskUrl}'); --echo-essence-color: ${type.essence}" title="${escapeHtml(knownType ? type.label : 'Unknown')} Echo vessel" aria-hidden="true">
+      <span class="bag-item-renderer echo-item-visual echo-type-${type.key} echo-motion-${type.motion} echo-context-${context}" data-echo-type="${typeAttribute}" data-rarity="${rarity}" style="--echo-shell-mask: url('${shellUrl}'); --echo-fill-mask: url('${maskUrl}'); --echo-essence-color: ${type.essence}" title="${escapeHtml(title)}" aria-hidden="true">
         <span class="echo-rarity-ornament" aria-hidden="true"></span>
         <span class="echo-rarity-aura" aria-hidden="true"></span>
         <span class="echo-essence-fill" aria-hidden="true"><span class="echo-fill-surface"></span></span>

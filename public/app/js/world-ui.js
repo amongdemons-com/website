@@ -66,6 +66,7 @@ import './bag-item-visuals.js';
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
   const MERCHANT_FALLBACK_MOVE_SECONDS = 30 * 60;
   const MERCHANT_FALLBACK_BRIBE_COST = 50;
+  const MERCHANT_OFFER_LIMIT = 4;
   const MERCHANT_ARROW_EDGE_INSET = 30;
   const MERCHANT_ARROW_FLOAT_DISTANCE = 4;
   // Marker-local offsets shared by drawWorldMerchantMarker and its animated
@@ -4739,18 +4740,15 @@ import './bag-item-visuals.js';
   }
 
   function renderCurrentWorldMerchant(merchant) {
-    const available = (merchant.itemSlots || []).filter((item) => !item.purchased).length;
-    const stockMeta = available
-      ? `${formatNumber(available)} of ${formatNumber((merchant.itemSlots || []).length)} offers remain`
-      : 'All offers purchased';
-
     return `
       <article class="world-sidebar-card world-merchant-card">
+        <span class="world-merchant-card-portrait" aria-hidden="true">
+          <img src="/app/images/merchant/crowley.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
+        </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Traveling Merchant</span>
           <strong class="world-card-title">${escapeHtml(merchant.name)}</strong>
           <span class="world-card-meta world-merchant-description">${escapeHtml(merchant.description)}</span>
-          <small class="world-card-meta">${escapeHtml(stockMeta)}</small>
           <small class="world-card-meta world-merchant-move-meta">${escapeHtml(formatMerchantMoveMeta(merchant))}</small>
         </span>
         <button class="btn btn-primary btn-sm world-card-action" type="button" data-open-merchant>
@@ -5251,7 +5249,7 @@ import './bag-item-visuals.js';
           price: Math.max(0, Number(item.price) || 0),
           purchased: Boolean(item.purchased)
         }))
-        .slice(0, 5)
+        .slice(0, MERCHANT_OFFER_LIMIT)
     };
   }
 
@@ -5284,6 +5282,7 @@ import './bag-item-visuals.js';
     state.merchantStatus = '';
     renderWorldMerchantModal();
     modalApi.getOrCreateInstance(modalElement).show();
+    audio?.play('sfx.world.merchantWelcome', { volume: 0.86, minInterval: 800 });
 
     try {
       const payload = await api('/api/world/merchant', { dedupe: false });
@@ -5432,7 +5431,7 @@ import './bag-item-visuals.js';
       elements.worldMerchantBalance.innerHTML = renderSoulAmount(getPlayerSoulBalance() || 0);
     }
     if (elements.worldMerchantCountdown) {
-      elements.worldMerchantCountdown.textContent = formatMerchantMoveMeta(merchant, { shop: true });
+      elements.worldMerchantCountdown.textContent = formatMerchantMoveMeta(merchant);
     }
     renderWorldMerchantBribeButton(merchant);
     renderWorldMerchantStatus();
@@ -5476,7 +5475,7 @@ import './bag-item-visuals.js';
         : `You need ${formatSoulCount(cost)} to bribe Crowley`
     );
     button.title = canAfford
-      ? `Reroll all five offers for ${formatSoulCount(cost)}.`
+      ? `Reroll all ${MERCHANT_OFFER_LIMIT} offers for ${formatSoulCount(cost)}.`
       : `You need ${formatSoulCount(cost)}.`;
     button.querySelector(':scope > span')?.replaceChildren(state.merchantBribing ? 'Bribing...' : 'Bribe');
     costElement.innerHTML = renderSoulAmount(cost);
@@ -5495,7 +5494,10 @@ import './bag-item-visuals.js';
     const canAfford = souls === null || souls >= item.price;
     const busy = state.merchantBusySlot === item.slot;
     const disabled = item.purchased || busy || !canAfford || state.merchantBusySlot !== null || state.merchantBribing;
-    const visual = window.AmongDemons.bagVisuals?.renderItemVisual?.(item, { context: 'slot' })
+    const visual = window.AmongDemons.bagVisuals?.renderItemVisual?.(item, {
+      context: 'slot',
+      title: `${capitalize(rarity)} item`
+    })
       || `<img class="world-merchant-fallback-item" src="${escapeAttribute(item.imageUrl || DEFAULT_PROFILE_IMAGE_URL)}" alt="">`;
     const buyLabel = item.purchased
       ? 'Purchased'
@@ -5512,7 +5514,7 @@ import './bag-item-visuals.js';
           ${item.purchased ? `<span class="world-merchant-sold-mark">${renderIcon('check')}<span>Bought</span></span>` : ''}
         </div>
         <div class="world-merchant-item-copy">
-          <span class="world-merchant-item-rarity">${escapeHtml(capitalize(rarity))} Demon Echo</span>
+          <span class="world-merchant-item-rarity">${escapeHtml(capitalize(rarity))} Item</span>
           <strong>${escapeHtml(item.species || 'Unknown Demon')}</strong>
           <small>${escapeHtml(formatMerchantRole(item.role))}</small>
         </div>
@@ -5542,14 +5544,12 @@ import './bag-item-visuals.js';
     return role.toLowerCase() === 'aoe' ? 'AOE' : role;
   }
 
-  function formatMerchantMoveMeta(merchant = state.merchant, options = {}) {
+  function formatMerchantMoveMeta(merchant = state.merchant) {
     const movesAt = Date.parse(merchant?.movesAt || '');
-    if (!Number.isFinite(movesAt)) return options.shop ? 'New stock in 30:00' : 'Respawns every 30 minutes';
+    if (!Number.isFinite(movesAt)) return 'Leaves in 30:00';
     const remainingSeconds = Math.max(0, Math.ceil((movesAt - Date.now()) / 1000));
-    if (remainingSeconds <= 0) return options.shop ? 'Refreshing now...' : 'Respawning now...';
-    return options.shop
-      ? `New stock in ${formatDuration(remainingSeconds)}`
-      : `Respawns in ${formatDuration(remainingSeconds)}`;
+    if (remainingSeconds <= 0) return 'Leaving now...';
+    return `Leaves in ${formatDuration(remainingSeconds)}`;
   }
 
   function syncWorldMerchantTicker() {
@@ -5571,7 +5571,7 @@ import './bag-item-visuals.js';
 
   function updateWorldMerchantCountdowns() {
     if (elements.worldMerchantCountdown) {
-      elements.worldMerchantCountdown.textContent = formatMerchantMoveMeta(state.merchant, { shop: true });
+      elements.worldMerchantCountdown.textContent = formatMerchantMoveMeta(state.merchant);
     }
     elements.worldEncounterList?.querySelectorAll('.world-merchant-move-meta').forEach((element) => {
       element.textContent = formatMerchantMoveMeta(state.merchant);
