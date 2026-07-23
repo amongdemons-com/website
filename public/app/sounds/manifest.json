@@ -32,7 +32,8 @@
       "teleport": "sfx/world/teleport.ogg",
       "huntStart": "sfx/world/hunt_start.ogg",
       "huntStop": "sfx/world/hunt_stop.ogg",
-      "merchantPurchase": "sfx/progression/daily_reward.ogg"
+      "merchantPurchase": "sfx/merchant/purchase.ogg",
+      "merchantBribe": "sfx/merchant/bribe.ogg"
     },
     "battle": {
       "battleStart": "sfx/battle/battle_start.ogg",

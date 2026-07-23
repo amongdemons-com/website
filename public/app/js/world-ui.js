@@ -66,6 +66,8 @@ import './bag-item-visuals.js';
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
   const MERCHANT_FALLBACK_MOVE_SECONDS = 30 * 60;
   const MERCHANT_FALLBACK_BRIBE_COST = 50;
+  const MERCHANT_ARROW_EDGE_INSET = 30;
+  const MERCHANT_ARROW_FLOAT_DISTANCE = 4;
   let demonMapAtlasPromise = null;
   let pixiCullerRegistered = false;
   // World boss intro dialog: a random boss taunts the hunter after their first
@@ -161,6 +163,9 @@ import './bag-item-visuals.js';
     hunterMask: null,
     hunterAvatarTexture: null,
     effectLayer: null,
+    merchantArrowLayer: null,
+    merchantArrowOcclusionRect: null,
+    merchantArrowViewportBounds: null,
     resizeObserver: null,
     sidePanelResizeObserver: null,
     cleanup: [],
@@ -483,12 +488,48 @@ import './bag-item-visuals.js';
 
   function syncWorldSidePanelMetrics() {
     const panel = elements.worldSidePanel;
-    if (!panel) return;
+    const host = elements.worldCanvasHost;
+    if (!host) {
+      state.merchantArrowOcclusionRect = null;
+      state.merchantArrowViewportBounds = null;
+      return;
+    }
 
-    const height = Math.ceil(panel.getBoundingClientRect().height);
+    const hostRect = host.getBoundingClientRect();
+    const navRect = document.querySelector('.game-shell-nav')?.getBoundingClientRect();
+    const visibleTop = navRect
+      ? clamp(navRect.bottom - hostRect.top, 0, hostRect.height)
+      : 0;
+    state.merchantArrowViewportBounds = {
+      left: 0,
+      top: visibleTop,
+      right: hostRect.width,
+      bottom: hostRect.height
+    };
+
+    if (!panel) {
+      state.merchantArrowOcclusionRect = null;
+      return;
+    }
+
+    const panelRect = panel.getBoundingClientRect();
+    const height = Math.ceil(panelRect.height);
     if (height > 0) {
       document.body?.style.setProperty('--world-side-panel-height', `${height}px`);
     }
+
+    if (!state.sidePanelExpanded || panel.classList.contains('is-collapsed')) {
+      state.merchantArrowOcclusionRect = null;
+      return;
+    }
+
+    const left = clamp(panelRect.left - hostRect.left, 0, hostRect.width);
+    const top = clamp(panelRect.top - hostRect.top, 0, hostRect.height);
+    const right = clamp(panelRect.right - hostRect.left, 0, hostRect.width);
+    const bottom = clamp(panelRect.bottom - hostRect.top, 0, hostRect.height);
+    state.merchantArrowOcclusionRect = right > left && bottom > top
+      ? { left, top, right, bottom }
+      : null;
   }
 
   function getWorldSidePanelStatus() {
@@ -545,6 +586,9 @@ import './bag-item-visuals.js';
     state.hunterFrame = new Pixi.Graphics();
     state.hunterAvatar = new Pixi.Sprite(Pixi.Texture.EMPTY);
     state.effectLayer = new Pixi.Graphics();
+    state.merchantArrowLayer = new Pixi.Graphics();
+    state.merchantArrowLayer.eventMode = 'none';
+    state.merchantArrowLayer.label = 'merchant-direction-arrow';
 
     state.hunterAvatar.anchor.set(0.5);
     state.hunterLayer.addChild(state.hunterFrame);
@@ -571,12 +615,14 @@ import './bag-item-visuals.js';
     state.viewport.addChild(state.hunterLayer);
     state.viewport.addChild(state.effectLayer);
     app.stage.addChild(state.viewport);
+    app.stage.addChild(state.merchantArrowLayer);
 
     app.ticker.add(updatePathPulse);
     app.ticker.add(updateShrineGlow);
     app.ticker.add(updatePortalGlow);
     app.ticker.add(updateBossAura);
     app.ticker.add(updatePuddleFx);
+    app.ticker.add(updateMerchantDirectionArrow);
 
     bindCanvasInput(canvas);
     bindResize();
@@ -609,6 +655,8 @@ import './bag-item-visuals.js';
 
     state.resizeObserver = new ResizeObserver(() => resizeCanvas());
     state.resizeObserver.observe(host);
+    const navigation = document.querySelector('.game-shell-nav');
+    if (navigation) state.resizeObserver.observe(navigation);
   }
 
   async function loadWorld(initialPayload = null) {
@@ -3295,6 +3343,192 @@ import './bag-item-visuals.js';
     layer.addChild(marker);
   }
 
+  function updateMerchantDirectionArrow() {
+    const layer = state.merchantArrowLayer;
+    const app = state.app;
+    const viewport = state.viewport;
+    const merchant = state.merchant;
+    if (!layer) return;
+
+    layer.clear();
+    if (!app || !viewport || !merchant) return;
+
+    const width = app.screen?.width || app.renderer?.width || 0;
+    const height = app.screen?.height || app.renderer?.height || 0;
+    if (width <= 0 || height <= 0) return;
+
+    const scale = viewport.scale.x || 1;
+    const merchantWorld = tileCenter(merchant);
+    const targetX = viewport.x + merchantWorld.x * scale;
+    const targetY = viewport.y + merchantWorld.y * scale;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const deltaX = targetX - centerX;
+    const deltaY = targetY - centerY;
+    const distance = Math.hypot(deltaX, deltaY);
+    const directionX = distance > 0 ? deltaX / distance : 0;
+    const directionY = distance > 0 ? deltaY / distance : -1;
+    const tileHalfSize = TILE_SIZE * scale / 2;
+    const viewportBounds = state.merchantArrowViewportBounds || {
+      left: 0,
+      top: 0,
+      right: width,
+      bottom: height
+    };
+    const tileBounds = {
+      left: targetX - tileHalfSize,
+      top: targetY - tileHalfSize,
+      right: targetX + tileHalfSize,
+      bottom: targetY + tileHalfSize
+    };
+    const occlusionRect = state.merchantArrowOcclusionRect;
+    const merchantTileOccluded = Boolean(
+      occlusionRect
+      && tileBounds.left >= occlusionRect.left
+      && tileBounds.top >= occlusionRect.top
+      && tileBounds.right <= occlusionRect.right
+      && tileBounds.bottom <= occlusionRect.bottom
+    );
+    const merchantTileVisible = !merchantTileOccluded && (
+      targetX + tileHalfSize >= viewportBounds.left
+      && targetX - tileHalfSize <= viewportBounds.right
+      && targetY + tileHalfSize >= viewportBounds.top
+      && targetY - tileHalfSize <= viewportBounds.bottom
+    );
+
+    let arrowX;
+    let arrowY;
+    let arrowDirectionX = directionX;
+    let arrowDirectionY = directionY;
+    if (merchantTileVisible) {
+      // Once the cart is visible, use one stable north-facing pointer beneath it.
+      const markerOffset = clamp(26 * scale + 12, 30, 66);
+      arrowDirectionX = 0;
+      arrowDirectionY = -1;
+      arrowX = clamp(
+        targetX,
+        viewportBounds.left + MERCHANT_ARROW_EDGE_INSET,
+        viewportBounds.right - MERCHANT_ARROW_EDGE_INSET
+      );
+      arrowY = clamp(
+        targetY + markerOffset,
+        viewportBounds.top + MERCHANT_ARROW_EDGE_INSET,
+        viewportBounds.bottom - MERCHANT_ARROW_EDGE_INSET
+      );
+    } else {
+      // Intersect the center-to-merchant ray with an inset screen rectangle.
+      let edgeDistance = Number.POSITIVE_INFINITY;
+      if (directionX > 0) {
+        edgeDistance = Math.min(
+          edgeDistance,
+          (viewportBounds.right - MERCHANT_ARROW_EDGE_INSET - centerX) / directionX
+        );
+      } else if (directionX < 0) {
+        edgeDistance = Math.min(
+          edgeDistance,
+          (viewportBounds.left + MERCHANT_ARROW_EDGE_INSET - centerX) / directionX
+        );
+      }
+      if (directionY > 0) {
+        edgeDistance = Math.min(
+          edgeDistance,
+          (viewportBounds.bottom - MERCHANT_ARROW_EDGE_INSET - centerY) / directionY
+        );
+      } else if (directionY < 0) {
+        edgeDistance = Math.min(
+          edgeDistance,
+          (viewportBounds.top + MERCHANT_ARROW_EDGE_INSET - centerY) / directionY
+        );
+      }
+      if (occlusionRect) {
+        const occlusionDistance = getRayRectangleEntryDistance(
+          centerX,
+          centerY,
+          directionX,
+          directionY,
+          occlusionRect
+        );
+        if (Number.isFinite(occlusionDistance) && occlusionDistance > MERCHANT_ARROW_EDGE_INSET) {
+          edgeDistance = Math.min(edgeDistance, occlusionDistance - MERCHANT_ARROW_EDGE_INSET);
+        }
+      }
+
+      if (!Number.isFinite(edgeDistance) || edgeDistance < 0) return;
+      arrowX = centerX + directionX * edgeDistance;
+      arrowY = centerY + directionY * edgeDistance;
+    }
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const floatOffset = reducedMotion
+      ? 0
+      : Math.sin(performance.now() / 360) * MERCHANT_ARROW_FLOAT_DISTANCE;
+    arrowX += arrowDirectionX * floatOffset;
+    arrowY += arrowDirectionY * floatOffset;
+
+    drawMerchantDirectionArrow(
+      layer,
+      arrowX,
+      arrowY,
+      Math.atan2(arrowDirectionY, arrowDirectionX),
+      merchantTileVisible
+    );
+  }
+
+  function drawMerchantDirectionArrow(layer, x, y, angle, merchantTileVisible) {
+    const size = merchantTileVisible ? 0.92 : 1;
+    const points = [
+      [16, 0],
+      [1, -12],
+      [1, -5.5],
+      [-13, -5.5],
+      [-13, 5.5],
+      [1, 5.5],
+      [1, 12]
+    ];
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const transformPoints = (offsetY = 0) => points.flatMap(([pointX, pointY]) => {
+      const scaledX = pointX * size;
+      const scaledY = pointY * size;
+      return [
+        x + scaledX * cos - scaledY * sin,
+        y + offsetY + scaledX * sin + scaledY * cos
+      ];
+    });
+
+    layer.poly(transformPoints(2))
+      .fill({ color: 0x000000, alpha: 0.48 });
+    layer.poly(transformPoints())
+      .fill({ color: 0xff6e2f, alpha: 0.99 })
+      .stroke({ color: 0x2a1008, width: 2.5, alpha: 0.98, join: 'round' });
+  }
+
+  function getRayRectangleEntryDistance(originX, originY, directionX, directionY, rectangle) {
+    let nearDistance = Number.NEGATIVE_INFINITY;
+    let farDistance = Number.POSITIVE_INFINITY;
+    const axes = [
+      [originX, directionX, rectangle.left, rectangle.right],
+      [originY, directionY, rectangle.top, rectangle.bottom]
+    ];
+
+    for (const [origin, direction, minimum, maximum] of axes) {
+      if (Math.abs(direction) < 0.0001) {
+        if (origin < minimum || origin > maximum) return null;
+        continue;
+      }
+
+      let near = (minimum - origin) / direction;
+      let far = (maximum - origin) / direction;
+      if (near > far) [near, far] = [far, near];
+      nearDistance = Math.max(nearDistance, near);
+      farDistance = Math.min(farDistance, far);
+      if (farDistance < nearDistance) return null;
+    }
+
+    if (farDistance < 0) return null;
+    return Math.max(0, nearDistance);
+  }
+
   // A hand-built wooden trail sign. Uneven planks, iron nails and wood grain
   // keep it readable as a sign even when the map is zoomed out.
   function drawSignMarker(g, rng) {
@@ -4994,7 +5228,7 @@ import './bag-item-visuals.js';
         window.AmongDemons.ui?.updateNavAccount?.(payload.player);
       }
       setWorldMerchantState(payload, { deferRender: true });
-      audio?.play('sfx.world.merchantPurchase', { volume: 0.76, playbackRate: 0.92 });
+      audio?.play('sfx.world.merchantBribe', { volume: 0.78 });
     } catch (error) {
       if (error.status === 401) {
         handleAuthError(error);
@@ -6978,6 +7212,7 @@ import './bag-item-visuals.js';
 
     const size = getHostSize();
     app.renderer.resize(size.width, size.height);
+    queueWorldSidePanelMeasure();
     if (!state.initialCameraCentered) {
       centerOnHunter();
     }
@@ -8335,6 +8570,7 @@ import './bag-item-visuals.js';
     state.app?.ticker?.remove(updatePortalGlow);
     state.app?.ticker?.remove(updateBossAura);
     state.app?.ticker?.remove(updatePuddleFx);
+    state.app?.ticker?.remove(updateMerchantDirectionArrow);
     state.tileTextures.forEach((texture) => texture?.destroy?.(true));
     state.tileTextures.clear();
     state.bossTextures.forEach((texture) => texture?.destroy?.(true));
