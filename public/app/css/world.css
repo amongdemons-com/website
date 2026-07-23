@@ -273,6 +273,11 @@ body.is-world-side-collapsed .world-map-controls {
     pointer-events: auto;
 }
 
+.world-target-tooltip.is-below-target,
+.world-encounter-tooltip.is-below-target {
+    transform: translate(-50%, 0) translateY(0.55rem);
+}
+
 .world-encounter-tooltip {
     position: absolute;
     z-index: 5;
@@ -309,6 +314,16 @@ body.is-world-side-collapsed .world-map-controls {
     background: rgba(4,8,8,0.95);
     transform: translateX(-50%) rotate(45deg);
     pointer-events: none;
+}
+
+.world-target-tooltip.is-below-target::after,
+.world-encounter-tooltip.is-below-target::after {
+    top: -5px;
+    bottom: auto;
+    border: 0;
+    border-top: 1px solid rgba(177,132,63,0.56);
+    border-left: 1px solid rgba(177,132,63,0.56);
+    background: rgba(20,21,14,0.97);
 }
 
 .world-hunt-tooltip {
@@ -420,6 +435,13 @@ body.is-world-side-collapsed .world-map-controls {
     max-width: 100%;
 }
 
+.world-tooltip-title.world-sign-travel-title {
+    width: 100%;
+    margin-top: 0.22rem;
+    padding-top: 0.38rem;
+    border-top: 1px solid rgba(177,132,63,0.22);
+}
+
 .world-tooltip-meta {
     color: rgba(226,207,164,0.74);
     font-size: 0.7rem;
@@ -460,6 +482,12 @@ body.is-world-side-collapsed .world-map-controls {
     text-transform: uppercase;
 }
 
+.world-target-event-type.is-leading {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
 .world-target-event-title {
     color: #f5e7c5;
     font-size: 0.82rem;
@@ -473,6 +501,10 @@ body.is-world-side-collapsed .world-map-controls {
     font-size: 0.7rem;
     font-weight: 700;
     line-height: 1.35;
+}
+
+.world-target-event-copy.world-sign-message-copy {
+    font-size: 0.82rem;
 }
 
 .world-target-summon-cost {

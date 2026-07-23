@@ -10903,11 +10903,6 @@
     },
     {
       "x": 35,
-      "y": 42,
-      "type": "leaves"
-    },
-    {
-      "x": 35,
       "y": 43,
       "type": "leaves"
     },
@@ -13082,11 +13077,6 @@
       "type": "poison"
     },
     {
-      "x": 33,
-      "y": 44,
-      "type": "poison"
-    },
-    {
       "x": 34,
       "y": 44,
       "type": "poison"
@@ -13490,6 +13480,21 @@
       "x": -5,
       "y": -14,
       "type": "rocks"
+    },
+    {
+      "x": 33,
+      "y": 42,
+      "type": "leaves"
+    },
+    {
+      "x": 32,
+      "y": 42,
+      "type": "leaves"
+    },
+    {
+      "x": 35,
+      "y": 44,
+      "type": "leaves"
     }
   ],
   "encounters": [
@@ -31973,8 +31978,8 @@
     },
     {
       "id": "enc-329",
-      "x": 8,
-      "y": 42,
+      "x": 4,
+      "y": 44,
       "difficulty": 5,
       "zoneType": 9,
       "keyDemon": {
@@ -32348,8 +32353,8 @@
     },
     {
       "id": "enc-335",
-      "x": 38,
-      "y": 43,
+      "x": 35,
+      "y": 42,
       "difficulty": 7,
       "zoneType": 8,
       "keyDemon": {
@@ -32958,8 +32963,8 @@
     },
     {
       "id": "enc-345",
-      "x": -7,
-      "y": 45,
+      "x": -1,
+      "y": 48,
       "difficulty": 7,
       "zoneType": 9,
       "keyDemon": {

@@ -7197,15 +7197,9 @@ import {
       return;
     }
 
-    const center = tileCenter(target);
-    const scale = state.viewport.scale.x || 1;
-    const x = state.viewport.x + center.x * scale;
-    const y = state.viewport.y + center.y * scale;
-
     tooltip.innerHTML = renderTargetTooltipContent(target, path);
     tooltip.classList.toggle('has-actions', isPortalTarget);
-    tooltip.style.left = `${Math.round(x)}px`;
-    tooltip.style.top = `${Math.round(y)}px`;
+    positionMapTargetTooltip(tooltip, target);
     tooltip.classList.remove('d-none');
   }
 
@@ -7218,22 +7212,30 @@ import {
       ? getTileDistance(state.position, target)
       : getPathStepCount(path);
     const meta = escapeHtml(formatTravelMeta(target, stepCount));
-    const header = `
-      <strong class="world-tooltip-title">${isCurrentSign ? 'Trail Sign' : (isPortalTarget ? 'Teleport to' : 'Travel to')}</strong>
+    const travelTitleClass = sign && !isCurrentSign ? ' world-sign-travel-title' : '';
+    const travelSection = `
+      <strong class="world-tooltip-title${travelTitleClass}">${isCurrentSign ? 'Trail Sign' : (isPortalTarget ? 'Teleport to' : 'Travel to')}</strong>
       <span class="world-tooltip-meta">${meta}</span>
     `;
     const travelHint = isPortalTarget || isCurrentSign ? '' : '<span class="world-tooltip-hint">(Click again to travel)</span>';
 
     if (sign) {
+      if (isCurrentSign) {
+        return `
+          ${travelSection}
+          <span class="world-target-event-copy world-sign-message-copy">${escapeHtml(getSignMessage(sign))}</span>
+        `;
+      }
+
       return `
-        ${header}
-        ${isCurrentSign ? '' : '<span class="world-target-event-type">Trail Sign</span>'}
-        <span class="world-target-event-copy">${escapeHtml(getSignMessage(sign))}</span>
+        <span class="world-target-event-type is-leading">Trail Sign</span>
+        <span class="world-target-event-copy world-sign-message-copy">${escapeHtml(getSignMessage(sign))}</span>
+        ${travelSection}
         ${travelHint}
       `;
     }
 
-    if (!event) return `${header}${travelHint}`;
+    if (!event) return `${travelSection}${travelHint}`;
     const eventLabel = getEventLabel(event.type);
     const eventTitle = String(event.title || '').trim();
     const eventTitleMarkup = eventTitle && eventTitle !== eventLabel
@@ -7241,7 +7243,7 @@ import {
       : '';
 
     return `
-      ${header}
+      ${travelSection}
       <span class="world-target-event-type">${escapeHtml(eventLabel)}</span>
       ${eventTitleMarkup}
       ${event.description ? `<span class="world-target-event-copy">${escapeHtml(event.description)}</span>` : ''}
@@ -7396,13 +7398,7 @@ import {
       return;
     }
 
-    const center = tileCenter(encounter);
-    const scale = state.viewport.scale.x || 1;
-    const x = state.viewport.x + center.x * scale;
-    const y = state.viewport.y + (center.y - TILE_SIZE / 2) * scale;
-
-    tooltip.style.left = `${Math.round(x)}px`;
-    tooltip.style.top = `${Math.round(y)}px`;
+    positionMapTargetTooltip(tooltip, encounter, { anchorAtTileEdge: true });
     tooltip.classList.remove('d-none');
   }
 
@@ -7416,14 +7412,23 @@ import {
       return;
     }
 
-    const center = tileCenter(boss);
-    const scale = state.viewport.scale.x || 1;
-    const x = state.viewport.x + center.x * scale;
-    const y = state.viewport.y + (center.y - TILE_SIZE / 2) * scale;
+    positionMapTargetTooltip(tooltip, boss, { anchorAtTileEdge: true });
+    tooltip.classList.remove('d-none');
+  }
 
+  function positionMapTargetTooltip(tooltip, target, options = {}) {
+    const center = tileCenter(target);
+    const scale = state.viewport.scale.x || 1;
+    const showAbove = Number(target.y) < Number(state.position.y);
+    const tileEdgeOffset = options.anchorAtTileEdge
+      ? (showAbove ? -TILE_SIZE / 2 : TILE_SIZE / 2)
+      : 0;
+    const x = state.viewport.x + center.x * scale;
+    const y = state.viewport.y + (center.y + tileEdgeOffset) * scale;
+
+    tooltip.classList.toggle('is-below-target', !showAbove);
     tooltip.style.left = `${Math.round(x)}px`;
     tooltip.style.top = `${Math.round(y)}px`;
-    tooltip.classList.remove('d-none');
   }
 
   // ===========================================================================
