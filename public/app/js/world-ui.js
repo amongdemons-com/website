@@ -829,7 +829,6 @@ import './bag-item-visuals.js';
       const moved = previousSpawnId && previousSpawnId !== state.merchant?.spawnId;
       if (moved) {
         hideWorldMerchantModal();
-        setMessage('The traveling merchant has refreshed his stock.', 'info');
       }
       maybeOpenWorldMerchantShop();
     } catch (error) {
@@ -8137,45 +8136,47 @@ import './bag-item-visuals.js';
     const sign = getSignAt(target);
     const merchant = getMerchantAt(target);
     const isPortalTarget = isDarknessPortalEvent(event);
-    const isCurrentSign = Boolean(sign && positionsEqual(target, state.position));
+    const isCurrent = positionsEqual(target, state.position);
     const stepCount = isPortalTarget
       ? getTileDistance(state.position, target)
       : getPathStepCount(path);
     const meta = escapeHtml(formatTravelMeta(target, stepCount));
-    const travelTitleClass = sign && !isCurrentSign ? ' world-sign-travel-title' : '';
-    const travelSection = `
-      <strong class="world-tooltip-title${travelTitleClass}">${isCurrentSign ? 'Trail Sign' : (isPortalTarget ? 'Teleport to' : 'Travel to')}</strong>
-      <span class="world-tooltip-meta">${meta}</span>
-    `;
-    const travelHint = isPortalTarget || isCurrentSign ? '' : '<span class="world-tooltip-hint">(Click again to travel)</span>';
+    // Shared trailer: area + step count, then a "(Click again to travel)" hint.
+    // Delimiter lines above the meta and the hint keep every activity tooltip
+    // (shrine, portal, sign, merchant) reading the same way.
+    const metaSection = `<span class="world-tooltip-meta world-tooltip-travel-meta">${meta}</span>`;
+    const travelHint = isPortalTarget || isCurrent
+      ? ''
+      : '<span class="world-tooltip-hint">(Click again to travel)</span>';
 
     if (merchant) {
       return `
         <span class="world-target-event-type is-leading">Traveling Merchant</span>
         <span class="world-target-event-title">${escapeHtml(merchant.name)}</span>
-        <span class="world-target-event-copy">${escapeHtml(merchant.description)}</span>
-        ${travelSection}
+        ${merchant.description ? `<span class="world-target-event-copy">${escapeHtml(merchant.description)}</span>` : ''}
+        ${metaSection}
         ${travelHint}
       `;
     }
 
     if (sign) {
-      if (isCurrentSign) {
-        return `
-          ${travelSection}
-          <span class="world-target-event-copy world-sign-message-copy">${escapeHtml(getSignMessage(sign))}</span>
-        `;
-      }
-
       return `
         <span class="world-target-event-type is-leading">Trail Sign</span>
         <span class="world-target-event-copy world-sign-message-copy">${escapeHtml(getSignMessage(sign))}</span>
-        ${travelSection}
+        ${metaSection}
         ${travelHint}
       `;
     }
 
-    if (!event) return `${travelSection}${travelHint}`;
+    if (!event) {
+      // Plain tile: no info block to sit above, so keep the classic
+      // "Travel to" heading + coords as two rows with no divider between them.
+      return `
+        <strong class="world-tooltip-title">Travel to</strong>
+        <span class="world-tooltip-meta">${meta}</span>
+        ${travelHint}
+      `;
+    }
     const eventLabel = getEventLabel(event.type);
     const eventTitle = String(event.title || '').trim();
     const eventTitleMarkup = eventTitle && eventTitle !== eventLabel
@@ -8183,12 +8184,11 @@ import './bag-item-visuals.js';
       : '';
 
     return `
-      ${travelSection}
-      <span class="world-target-event-type">${escapeHtml(eventLabel)}</span>
+      <span class="world-target-event-type is-leading">${escapeHtml(eventLabel)}</span>
       ${eventTitleMarkup}
       ${event.description ? `<span class="world-target-event-copy">${escapeHtml(event.description)}</span>` : ''}
-      ${isDarknessPortalEvent(event) ? renderDarknessPortalSummonAction(event) : ''}
-      ${travelHint}
+      ${metaSection}
+      ${isDarknessPortalEvent(event) ? renderDarknessPortalSummonAction(event) : travelHint}
     `;
   }
 
@@ -8270,12 +8270,12 @@ import './bag-item-visuals.js';
 
     tooltip.innerHTML = `
       ${renderEncounterTitle(encounter, 'world-tooltip-title')}
-      <span class="world-tooltip-meta">${escapeHtml(formatTravelMeta(encounter, stepCount))}</span>
       ${demons ? `<div class="world-enc-demons">${demons}</div>` : ''}
       <div class="world-enc-difficulty is-${meterTone}">
         <span class="world-enc-difficulty-label">Threat</span>
         <span class="world-enc-meter" aria-label="Threat ${difficulty} of 10">${meter}</span>
       </div>
+      <span class="world-tooltip-meta world-tooltip-travel-meta">${escapeHtml(formatTravelMeta(encounter, stepCount))}</span>
       <span class="world-tooltip-hint">(Click again to travel)</span>
     `;
   }
@@ -8297,9 +8297,9 @@ import './bag-item-visuals.js';
 
     tooltip.innerHTML = `
       ${renderBossTitle(boss, 'world-tooltip-title')}
-      <span class="world-tooltip-meta">${escapeHtml(formatTravelMeta(boss, stepCount))}</span>
       ${formation}
       ${reward}
+      <span class="world-tooltip-meta world-tooltip-travel-meta">${escapeHtml(formatTravelMeta(boss, stepCount))}</span>
       ${travelHint}
     `;
   }
