@@ -2,7 +2,7 @@
   'use strict';
 
   const root = window.AmongDemons = window.AmongDemons || {};
-  const MANIFEST_URL = '/app/sounds/manifest.json?v=20260722-lazy-audio-v1';
+  const MANIFEST_URL = '/app/sounds/manifest.json?v=20260723-merchant-purchase-v1';
   const STORAGE_KEYS = Object.freeze({
     master: 'amongdemons-audio-master-volume',
     music: 'amongdemons-audio-music-volume',

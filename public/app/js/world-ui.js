@@ -19,6 +19,7 @@ import {
   DEMON_MAP_ATLAS_IDS,
   DEMON_MAP_ATLAS_URL
 } from './generated/demon-map-atlas.js';
+import './bag-item-visuals.js';
 
 (function() {
   'use strict';
@@ -63,6 +64,8 @@ import {
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
+  const MERCHANT_FALLBACK_MOVE_SECONDS = 30 * 60;
+  const MERCHANT_FALLBACK_BRIBE_COST = 50;
   let demonMapAtlasPromise = null;
   let pixiCullerRegistered = false;
   // World boss intro dialog: a random boss taunts the hunter after their first
@@ -168,6 +171,7 @@ import {
     roadKeys: new Set(),
     encounters: [],
     bosses: [],
+    merchant: null,
     encounterTextures: new Map(),
     bossTextures: new Map(),
     tileTextures: new Map(),
@@ -192,6 +196,14 @@ import {
     huntReconcileTimer: null,
     huntStatusRefreshAt: 0,
     bossRefreshTimer: null,
+    merchantRefreshTimer: null,
+    merchantTicker: null,
+    merchantLoading: false,
+    merchantBusySlot: null,
+    merchantBribing: false,
+    merchantStatus: '',
+    merchantStatusType: 'info',
+    merchantAutoOpenedSpawnId: null,
     boundShrine: null,
     bindingShrine: false,
     summoningPortal: false,
@@ -281,6 +293,13 @@ import {
       'worldTeamModal',
       'worldTravelTeamRequiredModal',
       'worldTravelTeamConfirmButton',
+      'worldMerchantModal',
+      'worldMerchantBalance',
+      'worldMerchantCountdown',
+      'worldMerchantBribeButton',
+      'worldMerchantBribeCost',
+      'worldMerchantStatus',
+      'worldMerchantStock',
       'worldTeamEditorStatus',
       'worldTeamEditorCount',
       'worldTeamEditorGrid',
@@ -326,6 +345,7 @@ import {
     });
     elements.worldEditTeamButton?.addEventListener('click', openWorldTeamEditor);
     elements.worldTravelTeamConfirmButton?.addEventListener('click', openWorldTeamEditorFromTravelWarning);
+    elements.worldMerchantModal?.addEventListener('click', onWorldMerchantModalClick);
     elements.worldTeamSaveButton?.addEventListener('click', saveWorldTeamEditor);
     elements.worldTeamModal?.addEventListener('pointerdown', onWorldTeamEditorPointerDown);
     elements.worldTeamModal?.addEventListener('click', onWorldTeamEditorCardClick);
@@ -367,6 +387,11 @@ import {
       const challengeBossButton = target?.closest('[data-challenge-boss]');
       if (challengeBossButton) {
         challengeBoss(challengeBossButton.dataset.challengeBoss, challengeBossButton);
+        return;
+      }
+      const merchantButton = target?.closest('[data-open-merchant]');
+      if (merchantButton) {
+        openWorldMerchantShop();
         return;
       }
       const replayButton = target?.closest('[data-view-world-battle]');
@@ -601,6 +626,7 @@ import {
     state.roadKeys = new Set(state.roads.map((tile) => getTileKey(tile)));
     state.encounters = Array.isArray(map.encounters) ? map.encounters : [];
     setWorldBossState(payload, { deferArt: true });
+    setWorldMerchantState(payload, { deferRender: true });
     state.player = payload.player || state.player;
     const blockedTiles = Array.isArray(map.blockedTiles) ? map.blockedTiles : FALLBACK_BLOCKED_TILES;
     state.blockedTiles = blockedTiles.map((tile) => ({ ...tile, type: getBlockedTileType(tile) }));
@@ -625,6 +651,7 @@ import {
     // Portrait art is not worth blocking the map for: markers render with
     // rarity-tinted fallbacks and get their portraits swapped in on arrival.
     void loadWorldArt();
+    window.setTimeout(() => maybeOpenWorldMerchantShop(), 0);
   }
 
   async function loadWorldMapData(version) {
@@ -692,6 +719,66 @@ import {
     }, delayMs);
   }
 
+  function setWorldMerchantState(payload = {}, options = {}) {
+    if (!Object.prototype.hasOwnProperty.call(payload, 'merchant')) return;
+
+    const previousSpawnId = state.merchant?.spawnId || null;
+    state.merchant = normalizeWorldMerchant(payload.merchant);
+    const nextSpawnId = state.merchant?.spawnId || null;
+
+    if (previousSpawnId && previousSpawnId !== nextSpawnId) {
+      state.merchantBusySlot = null;
+      state.merchantBribing = false;
+      state.merchantAutoOpenedSpawnId = null;
+    }
+
+    scheduleWorldMerchantRefresh();
+    syncWorldMerchantTicker();
+    if (!options.deferRender) {
+      drawMarkers();
+      renderEncounterPanel();
+      updateTargetTooltip();
+      renderWorldMerchantModal();
+    }
+  }
+
+  function scheduleWorldMerchantRefresh() {
+    if (state.merchantRefreshTimer) {
+      window.clearTimeout(state.merchantRefreshTimer);
+      state.merchantRefreshTimer = null;
+    }
+
+    const movesAt = Date.parse(state.merchant?.movesAt || '');
+    if (!Number.isFinite(movesAt)) return;
+
+    const delayMs = clamp(movesAt - Date.now() + 1200, 1000, MERCHANT_FALLBACK_MOVE_SECONDS * 1000);
+    state.merchantRefreshTimer = window.setTimeout(() => {
+      state.merchantRefreshTimer = null;
+      void refreshWorldMerchantState();
+    }, delayMs);
+  }
+
+  async function refreshWorldMerchantState() {
+    if (state.moving) {
+      scheduleWorldMerchantRefresh();
+      return;
+    }
+
+    const previousSpawnId = state.merchant?.spawnId || null;
+    try {
+      const payload = await api('/api/world/merchant', { dedupe: false });
+      setWorldMerchantState(payload);
+      const moved = previousSpawnId && previousSpawnId !== state.merchant?.spawnId;
+      if (moved) {
+        hideWorldMerchantModal();
+        setMessage('The traveling merchant has refreshed his stock.', 'info');
+      }
+      maybeOpenWorldMerchantShop();
+    } catch (error) {
+      handleAuthError(error);
+    }
+  }
+
   async function refreshWorldBossState() {
     if (state.moving) {
       scheduleWorldBossRefresh();
@@ -701,6 +788,7 @@ import {
     try {
       const payload = await api('/api/world/state');
       setWorldBossState(payload);
+      setWorldMerchantState(payload);
       state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
       state.currentEvent = payload.currentEvent || getEventAt(state.position);
       state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
@@ -721,6 +809,19 @@ import {
     if (!isInBounds(target)) return;
 
     const sign = getSignAt(target);
+    const merchant = getMerchantAt(target);
+
+    if (merchant && positionsEqual(target, state.position)) {
+      state.selectedTarget = null;
+      state.selectedPath = [];
+      state.travelStatus = 'idle';
+      state.recentStepEvent = null;
+      hideWorldActivityTooltip();
+      renderWorld();
+      renderTravelPanel();
+      openWorldMerchantShop();
+      return;
+    }
 
     const boss = getBossAt(target);
     if (boss && positionsEqual(target, state.position)) {
@@ -824,6 +925,7 @@ import {
     try {
       const payload = await commitTravelPath(path);
       setWorldBossState(payload);
+      setWorldMerchantState(payload, { deferRender: true });
       const stepEvents = getTravelStepEvents(payload, path);
 
       let lostAmbush = false;
@@ -905,6 +1007,9 @@ import {
       renderPanels();
       if (shouldFadeOutAmbushDefeat) {
         await fadeWorldAmbushDefeatFromBlack();
+      }
+      if (completedTravel) {
+        maybeOpenWorldMerchantShop();
       }
     }
   }
@@ -3147,6 +3252,47 @@ import {
         marker.position.set(position.x, position.y);
         layer.addChild(marker);
       });
+
+    drawWorldMerchantMarker(layer);
+  }
+
+  function drawWorldMerchantMarker(layer) {
+    const merchant = state.merchant;
+    const Pixi = window.PIXI;
+    if (!merchant || !layer || !Pixi?.Graphics) return;
+
+    const marker = new Pixi.Graphics();
+    const position = tileCenter(merchant);
+    const gold = 0xe8b04a;
+    const canvas = 0x6d2635;
+    const wood = 0x70411f;
+
+    // A compact roadside cart: wheels and timber base, a striped awning, then
+    // a warm soul lantern so the merchant remains recognizable when zoomed out.
+    marker.ellipse(0, 22, 26, 7).fill({ color: 0x000000, alpha: 0.42 });
+    marker.circle(-17, 18, 6).fill({ color: 0x17110c, alpha: 0.98 })
+      .stroke({ color: 0xa47740, width: 1.5, alpha: 0.8 });
+    marker.circle(17, 18, 6).fill({ color: 0x17110c, alpha: 0.98 })
+      .stroke({ color: 0xa47740, width: 1.5, alpha: 0.8 });
+    marker.roundRect(-23, 6, 46, 14, 3).fill({ color: wood, alpha: 0.98 })
+      .stroke({ color: 0x28140a, width: 2, alpha: 0.95 });
+    marker.rect(-20, -11, 40, 18).fill({ color: 0x251619, alpha: 0.98 });
+    marker.poly([-25, -11, 25, -11, 20, -24, -20, -24])
+      .fill({ color: canvas, alpha: 0.99 })
+      .stroke({ color: 0x2b1017, width: 1.7, alpha: 0.96 });
+    for (let x = -14; x <= 14; x += 14) {
+      marker.poly([x - 6, -23, x + 1, -23, x + 5, -11, x - 9, -11])
+        .fill({ color: 0xd4b56f, alpha: 0.82 });
+    }
+    marker.moveTo(-20, -11).lineTo(-20, 8).stroke({ color: 0x9e7340, width: 2.2, alpha: 0.9 });
+    marker.moveTo(20, -11).lineTo(20, 8).stroke({ color: 0x9e7340, width: 2.2, alpha: 0.9 });
+    marker.circle(0, -3, 7).fill({ color: gold, alpha: 0.18 });
+    marker.roundRect(-4, -8, 8, 11, 2).fill({ color: 0x1a1110, alpha: 0.96 })
+      .stroke({ color: gold, width: 1.4, alpha: 0.95 });
+    marker.circle(0, -3, 2.5).fill({ color: 0xffe8a0, alpha: 0.98 });
+
+    marker.position.set(position.x, position.y);
+    layer.addChild(marker);
   }
 
   // A hand-built wooden trail sign. Uneven planks, iron nails and wood grain
@@ -4145,7 +4291,8 @@ import {
     const boss = state.moving ? null : state.currentBoss;
     const currentShrine = state.moving ? null : getShrineAt(state.position);
     const currentSign = state.moving ? null : getSignAt(state.position);
-    const pveParts = renderPveSidebarParts({ encounter, boss, currentShrine, currentSign });
+    const merchant = state.moving ? null : getMerchantAt(state.position);
+    const pveParts = renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant });
     const pvpParts = players.map(renderPvpPlayerCard);
 
     const activeTab = state.worldEncounterTab === 'pvp' ? 'pvp' : 'pve';
@@ -4165,7 +4312,7 @@ import {
     queueWorldSidePanelMeasure();
   }
 
-  function renderPveSidebarParts({ encounter, boss, currentShrine, currentSign }) {
+  function renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant }) {
     if (state.moving || state.travelStatus === 'moving') {
       return [renderTravelStatusCard()];
     }
@@ -4177,9 +4324,33 @@ import {
     return [
       currentSign ? renderCurrentSign(currentSign) : '',
       currentShrine ? renderShrineAnchorAction(currentShrine) : '',
+      merchant ? renderCurrentWorldMerchant(merchant) : '',
       boss ? renderCurrentBoss(boss) : '',
       encounter ? renderCurrentEncounter(encounter) : ''
     ].filter(Boolean);
+  }
+
+  function renderCurrentWorldMerchant(merchant) {
+    const available = (merchant.itemSlots || []).filter((item) => !item.purchased).length;
+    const stockMeta = available
+      ? `${formatNumber(available)} of ${formatNumber((merchant.itemSlots || []).length)} offers remain`
+      : 'All offers purchased';
+
+    return `
+      <article class="world-sidebar-card world-merchant-card">
+        <span class="world-card-copy">
+          <span class="world-card-kicker">Traveling Merchant</span>
+          <strong class="world-card-title">${escapeHtml(merchant.name)}</strong>
+          <span class="world-card-meta world-merchant-description">${escapeHtml(merchant.description)}</span>
+          <small class="world-card-meta">${escapeHtml(stockMeta)}</small>
+          <small class="world-card-meta world-merchant-move-meta">${escapeHtml(formatMerchantMoveMeta(merchant))}</small>
+        </span>
+        <button class="btn btn-primary btn-sm world-card-action" type="button" data-open-merchant>
+          ${renderIcon('amphora')}
+          <span>Shop</span>
+        </button>
+      </article>
+    `;
   }
 
   function renderEncounterTabs({ activeTab, pveCount, pvpCount }) {
@@ -4649,6 +4820,354 @@ import {
   function isTravelTeamRequiredError(error) {
     return Number(error?.status) === 409 &&
       String(error?.message || '').toLowerCase().includes('dangerous to travel alone');
+  }
+
+  function normalizeWorldMerchant(merchant) {
+    if (!merchant || typeof merchant !== 'object') return null;
+    return {
+      ...merchant,
+      ...normalizePosition(merchant),
+      id: String(merchant.id || 'wandering-echo-merchant'),
+      name: String(merchant.name || 'Crowley'),
+      description: String(merchant.description || 'Offers rare wares in exchange for Souls'),
+      spawnId: String(merchant.spawnId || ''),
+      stockId: String(merchant.stockId || ''),
+      rerollCount: Math.max(0, Math.floor(Number(merchant.rerollCount) || 0)),
+      bribeCost: Math.max(0, Math.floor(Number(merchant.bribeCost) || MERCHANT_FALLBACK_BRIBE_COST)),
+      canShop: Boolean(merchant.canShop),
+      itemSlots: (Array.isArray(merchant.itemSlots) ? merchant.itemSlots : [])
+        .map((item, index) => ({
+          ...item,
+          slot: Number.isInteger(Number(item.slot)) ? Number(item.slot) : index,
+          typeId: Math.max(1, Number(item.typeId) || 1),
+          price: Math.max(0, Number(item.price) || 0),
+          purchased: Boolean(item.purchased)
+        }))
+        .slice(0, 5)
+    };
+  }
+
+  function getMerchantAt(position) {
+    return state.merchant && positionsEqual(state.merchant, position) ? state.merchant : null;
+  }
+
+  function maybeOpenWorldMerchantShop() {
+    const merchant = getMerchantAt(state.position);
+    if (!merchant || state.moving || state.merchantAutoOpenedSpawnId === merchant.spawnId) return;
+    state.merchantAutoOpenedSpawnId = merchant.spawnId;
+    openWorldMerchantShop({ automatic: true });
+  }
+
+  async function openWorldMerchantShop(options = {}) {
+    const modalElement = elements.worldMerchantModal;
+    const modalApi = window.bootstrap?.Modal;
+    const merchant = getMerchantAt(state.position);
+
+    if (!merchant || state.moving) {
+      if (!options.automatic) setMessage('Find the traveling merchant on the road before opening his shop.', 'warning');
+      return;
+    }
+    if (!modalElement || !modalApi) {
+      setMessage('The merchant shop is unavailable.', 'danger');
+      return;
+    }
+
+    state.merchantLoading = true;
+    state.merchantStatus = '';
+    renderWorldMerchantModal();
+    modalApi.getOrCreateInstance(modalElement).show();
+
+    try {
+      const payload = await api('/api/world/merchant', { dedupe: false });
+      setWorldMerchantState(payload, { deferRender: true });
+      if (!getMerchantAt(state.position) || !state.merchant?.canShop) {
+        hideWorldMerchantModal();
+        setMessage('The traveling merchant has refreshed his stock.', 'warning');
+        return;
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setWorldMerchantStatus(error.message || 'The merchant refuses to open his wares.', 'danger');
+    } finally {
+      state.merchantLoading = false;
+      renderWorld();
+      renderPanels();
+      renderWorldMerchantModal();
+    }
+  }
+
+  function hideWorldMerchantModal() {
+    const modalElement = elements.worldMerchantModal;
+    const modalApi = window.bootstrap?.Modal;
+    if (modalElement && modalApi) modalApi.getOrCreateInstance(modalElement).hide();
+  }
+
+  function onWorldMerchantModalClick(event) {
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const bribeButton = target?.closest('[data-bribe-merchant]');
+    if (bribeButton) {
+      bribeWorldMerchant();
+      return;
+    }
+    const buyButton = target?.closest('[data-buy-merchant-slot]');
+    if (!buyButton) return;
+    purchaseWorldMerchantItem(Number(buyButton.dataset.buyMerchantSlot));
+  }
+
+  async function purchaseWorldMerchantItem(slot) {
+    const merchant = state.merchant;
+    const item = (merchant?.itemSlots || []).find((candidate) => candidate.slot === slot);
+    if (!merchant || !item || item.purchased || state.merchantBusySlot !== null || state.merchantBribing) return;
+
+    state.merchantBusySlot = slot;
+    setWorldMerchantStatus('');
+    renderWorldMerchantModal();
+
+    try {
+      const payload = await api('/api/world/merchant/purchase', {
+        method: 'POST',
+        body: {
+          spawnId: merchant.spawnId,
+          stockId: merchant.stockId,
+          slot
+        }
+      });
+      if (payload.player) {
+        state.player = {
+          ...(state.player || {}),
+          ...payload.player
+        };
+        window.AmongDemons.ui?.updateNavAccount?.(payload.player);
+      }
+      setWorldMerchantState(payload, { deferRender: true });
+      audio?.play('sfx.world.merchantPurchase', { volume: 0.82 });
+      if (!state.merchant?.canShop) {
+        hideWorldMerchantModal();
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setWorldMerchantStatus(error.message || 'The purchase failed.', 'danger');
+      if (String(error.message || '').toLowerCase().includes('moved')) {
+        await refreshWorldMerchantState();
+      }
+    } finally {
+      state.merchantBusySlot = null;
+      renderWorld();
+      renderPanels();
+      renderWorldMerchantModal();
+    }
+  }
+
+  async function bribeWorldMerchant() {
+    const merchant = state.merchant;
+    const bribeCost = Math.max(0, Number(merchant?.bribeCost) || MERCHANT_FALLBACK_BRIBE_COST);
+    if (
+      !merchant?.canShop
+      || state.merchantBribing
+      || state.merchantBusySlot !== null
+      || getPlayerSoulBalance() < bribeCost
+    ) return;
+
+    state.merchantBribing = true;
+    setWorldMerchantStatus('');
+    renderWorldMerchantModal();
+
+    try {
+      const payload = await api('/api/world/merchant/bribe', {
+        method: 'POST',
+        body: {
+          spawnId: merchant.spawnId,
+          stockId: merchant.stockId
+        }
+      });
+      if (payload.player) {
+        state.player = {
+          ...(state.player || {}),
+          ...payload.player
+        };
+        window.AmongDemons.ui?.updateNavAccount?.(payload.player);
+      }
+      setWorldMerchantState(payload, { deferRender: true });
+      audio?.play('sfx.world.merchantPurchase', { volume: 0.76, playbackRate: 0.92 });
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setWorldMerchantStatus(error.message || 'Crowley refuses the bribe.', 'danger');
+      if (Number(error.status) === 409) {
+        await refreshWorldMerchantState();
+      }
+    } finally {
+      state.merchantBribing = false;
+      renderWorld();
+      renderPanels();
+      renderWorldMerchantModal();
+    }
+  }
+
+  function setWorldMerchantStatus(value, type = 'info') {
+    state.merchantStatus = value instanceof Error ? value.message : String(value || '');
+    state.merchantStatusType = type;
+    renderWorldMerchantStatus();
+  }
+
+  function renderWorldMerchantModal() {
+    const merchant = state.merchant;
+    if (elements.worldMerchantBalance) {
+      elements.worldMerchantBalance.innerHTML = renderSoulAmount(getPlayerSoulBalance() || 0);
+    }
+    if (elements.worldMerchantCountdown) {
+      elements.worldMerchantCountdown.textContent = formatMerchantMoveMeta(merchant, { shop: true });
+    }
+    renderWorldMerchantBribeButton(merchant);
+    renderWorldMerchantStatus();
+    if (!elements.worldMerchantStock) return;
+
+    if (state.merchantLoading) {
+      elements.worldMerchantStock.innerHTML = `
+        <div class="world-merchant-loading" role="status">
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span>The traveling merchant is unpacking his wares...</span>
+        </div>
+      `;
+      return;
+    }
+
+    const stock = merchant?.itemSlots || [];
+    elements.worldMerchantStock.innerHTML = stock.length
+      ? stock.map(renderWorldMerchantItem).join('')
+      : '<p class="world-empty-text">No wares survived this road.</p>';
+    replaceStaticIcons(elements.worldMerchantModal);
+  }
+
+  function renderWorldMerchantBribeButton(merchant = state.merchant) {
+    const button = elements.worldMerchantBribeButton;
+    const costElement = elements.worldMerchantBribeCost;
+    if (!button || !costElement) return;
+    const cost = Math.max(0, Number(merchant?.bribeCost) || MERCHANT_FALLBACK_BRIBE_COST);
+    const canAfford = getPlayerSoulBalance() >= cost;
+    const disabled = (
+      !merchant?.canShop
+      || state.merchantLoading
+      || state.merchantBribing
+      || state.merchantBusySlot !== null
+      || !canAfford
+    );
+    button.disabled = disabled;
+    button.setAttribute(
+      'aria-label',
+      canAfford
+        ? `Bribe Crowley for ${formatSoulCount(cost)} to reroll his items`
+        : `You need ${formatSoulCount(cost)} to bribe Crowley`
+    );
+    button.title = canAfford
+      ? `Reroll all five offers for ${formatSoulCount(cost)}.`
+      : `You need ${formatSoulCount(cost)}.`;
+    button.querySelector(':scope > span')?.replaceChildren(state.merchantBribing ? 'Bribing...' : 'Bribe');
+    costElement.innerHTML = renderSoulAmount(cost);
+  }
+
+  function renderWorldMerchantStatus() {
+    if (!elements.worldMerchantStatus) return;
+    elements.worldMerchantStatus.className = `world-merchant-status${state.merchantStatus ? ` is-${state.merchantStatusType}` : ' d-none'}`;
+    elements.worldMerchantStatus.textContent = state.merchantStatus;
+  }
+
+  function renderWorldMerchantItem(item) {
+    const rarity = String(item.rarity || 'common').toLowerCase();
+    const rarityColor = rarityCss(rarity);
+    const souls = getPlayerSoulBalance();
+    const canAfford = souls === null || souls >= item.price;
+    const busy = state.merchantBusySlot === item.slot;
+    const disabled = item.purchased || busy || !canAfford || state.merchantBusySlot !== null || state.merchantBribing;
+    const visual = window.AmongDemons.bagVisuals?.renderItemVisual?.(item, { context: 'slot' })
+      || `<img class="world-merchant-fallback-item" src="${escapeAttribute(item.imageUrl || DEFAULT_PROFILE_IMAGE_URL)}" alt="">`;
+    const buyLabel = item.purchased
+      ? 'Purchased'
+      : busy
+        ? 'Buying...'
+        : canAfford
+          ? 'Buy'
+          : 'Not enough Souls';
+
+    return `
+      <article class="world-merchant-item ${item.purchased ? 'is-purchased' : ''}" style="--item-rarity:${escapeAttribute(rarityColor)}">
+        <div class="world-merchant-item-visual">
+          ${visual}
+          ${item.purchased ? `<span class="world-merchant-sold-mark">${renderIcon('check')}<span>Bought</span></span>` : ''}
+        </div>
+        <div class="world-merchant-item-copy">
+          <span class="world-merchant-item-rarity">${escapeHtml(capitalize(rarity))} Demon Echo</span>
+          <strong>${escapeHtml(item.species || 'Unknown Demon')}</strong>
+          <small>${escapeHtml(formatMerchantRole(item.role))}</small>
+        </div>
+        <div class="world-merchant-item-buy">
+          <span class="world-merchant-price">${renderSoulAmount(item.price)}</span>
+          <button class="btn btn-primary btn-sm" type="button" data-buy-merchant-slot="${escapeAttribute(item.slot)}" ${disabled ? 'disabled' : ''}>
+            ${busy ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : ''}
+            <span>${escapeHtml(buyLabel)}</span>
+          </button>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderSoulAmount(value) {
+    return `
+      <span class="soul-amount">
+        <img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" width="16" height="16" aria-hidden="true">
+        <span class="soul-amount-value">${escapeHtml(formatNumber(Math.max(0, Number(value) || 0)))}</span>
+        <span class="soul-amount-label">Souls</span>
+      </span>
+    `;
+  }
+
+  function formatMerchantRole(value) {
+    const role = formatWorldBattleLabel(value || 'Demon');
+    return role.toLowerCase() === 'aoe' ? 'AOE' : role;
+  }
+
+  function formatMerchantMoveMeta(merchant = state.merchant, options = {}) {
+    const movesAt = Date.parse(merchant?.movesAt || '');
+    if (!Number.isFinite(movesAt)) return options.shop ? 'New stock in 30:00' : 'Respawns every 30 minutes';
+    const remainingSeconds = Math.max(0, Math.ceil((movesAt - Date.now()) / 1000));
+    if (remainingSeconds <= 0) return options.shop ? 'Refreshing now...' : 'Respawning now...';
+    return options.shop
+      ? `New stock in ${formatDuration(remainingSeconds)}`
+      : `Respawns in ${formatDuration(remainingSeconds)}`;
+  }
+
+  function syncWorldMerchantTicker() {
+    if (!state.merchant) {
+      stopWorldMerchantTicker();
+      return;
+    }
+    updateWorldMerchantCountdowns();
+    if (state.merchantTicker) return;
+    state.merchantTicker = window.setInterval(updateWorldMerchantCountdowns, 1000);
+    state.cleanup.push(stopWorldMerchantTicker);
+  }
+
+  function stopWorldMerchantTicker() {
+    if (!state.merchantTicker) return;
+    window.clearInterval(state.merchantTicker);
+    state.merchantTicker = null;
+  }
+
+  function updateWorldMerchantCountdowns() {
+    if (elements.worldMerchantCountdown) {
+      elements.worldMerchantCountdown.textContent = formatMerchantMoveMeta(state.merchant, { shop: true });
+    }
+    elements.worldEncounterList?.querySelectorAll('.world-merchant-move-meta').forEach((element) => {
+      element.textContent = formatMerchantMoveMeta(state.merchant);
+    });
   }
 
   function formatSoulCount(value) {
@@ -7189,10 +7708,11 @@ import {
     const path = state.selectedPath || [];
     const event = target ? getEventAt(target) : null;
     const sign = target ? getSignAt(target) : null;
+    const merchant = target ? getMerchantAt(target) : null;
     const isPortalTarget = isDarknessPortalEvent(event);
     if (!tooltip) return;
 
-    if (!target || (!isPortalTarget && !sign && path.length < 2) || state.moving || !state.viewport || state.selectedEncounter || state.selectedBoss) {
+    if (!target || (!isPortalTarget && !sign && !merchant && path.length < 2) || state.moving || !state.viewport || state.selectedEncounter || state.selectedBoss) {
       tooltip.classList.add('d-none');
       return;
     }
@@ -7206,6 +7726,7 @@ import {
   function renderTargetTooltipContent(target, path) {
     const event = getEventAt(target);
     const sign = getSignAt(target);
+    const merchant = getMerchantAt(target);
     const isPortalTarget = isDarknessPortalEvent(event);
     const isCurrentSign = Boolean(sign && positionsEqual(target, state.position));
     const stepCount = isPortalTarget
@@ -7218,6 +7739,16 @@ import {
       <span class="world-tooltip-meta">${meta}</span>
     `;
     const travelHint = isPortalTarget || isCurrentSign ? '' : '<span class="world-tooltip-hint">(Click again to travel)</span>';
+
+    if (merchant) {
+      return `
+        <span class="world-target-event-type is-leading">Traveling Merchant</span>
+        <span class="world-target-event-title">${escapeHtml(merchant.name)}</span>
+        <span class="world-target-event-copy">${escapeHtml(merchant.description)}</span>
+        ${travelSection}
+        ${travelHint}
+      `;
+    }
 
     if (sign) {
       if (isCurrentSign) {
@@ -7785,6 +8316,10 @@ import {
     if (state.bossRefreshTimer) {
       window.clearTimeout(state.bossRefreshTimer);
       state.bossRefreshTimer = null;
+    }
+    if (state.merchantRefreshTimer) {
+      window.clearTimeout(state.merchantRefreshTimer);
+      state.merchantRefreshTimer = null;
     }
     if (state.huntReconcileTimer) {
       window.clearTimeout(state.huntReconcileTimer);

@@ -5,6 +5,8 @@ const { getDemonTypes } = require('./game-data');
 const MINIMUM_PLAYER_DEMON_STATS_MIGRATION = '20260711_minimum_player_demon_stats_v1';
 const BASELINE_SCHEMA_MIGRATION = '20260722_baseline_schema_v1';
 const PERFORMANCE_INDEXES_MIGRATION = '20260722_performance_indexes_v3';
+const WORLD_MERCHANT_SCHEMA_MIGRATION = '20260723_world_merchant_schema_v1';
+const WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION = '20260723_world_merchant_bribe_schema_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -581,6 +583,59 @@ async function addPerformanceIndexes() {
   );
 }
 
+async function addWorldMerchantSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_world_merchant_purchases (
+      player_id VARCHAR(255) NOT NULL,
+      spawn_id BIGINT UNSIGNED NOT NULL,
+      slot TINYINT UNSIGNED NOT NULL,
+      item_key VARCHAR(96) NOT NULL,
+      price INT UNSIGNED NOT NULL,
+      purchased_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, spawn_id, slot),
+      INDEX idx_world_merchant_purchases_spawn (spawn_id, purchased_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column(
+    'player_world_merchant_purchases',
+    'player_id',
+    'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+  );
+  await normalizeUtf8Column(
+    'player_world_merchant_purchases',
+    'item_key',
+    'VARCHAR(96) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+  );
+  await addIndexIfMissing(
+    'player_world_merchant_purchases',
+    'idx_world_merchant_purchases_spawn',
+    'INDEX idx_world_merchant_purchases_spawn (spawn_id, purchased_at)'
+  );
+}
+
+async function addWorldMerchantBribeSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_world_merchant_stock (
+      player_id VARCHAR(255) NOT NULL,
+      spawn_id BIGINT UNSIGNED NOT NULL,
+      reroll_count INT UNSIGNED NOT NULL DEFAULT 0,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id),
+      INDEX idx_world_merchant_stock_spawn (spawn_id, updated_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column(
+    'player_world_merchant_stock',
+    'player_id',
+    'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+  );
+  await addIndexIfMissing(
+    'player_world_merchant_stock',
+    'idx_world_merchant_stock_spawn',
+    'INDEX idx_world_merchant_stock_spawn (spawn_id, updated_at)'
+  );
+}
+
 async function initializeSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -591,6 +646,8 @@ async function initializeSchema() {
 
   await runMigrationOnce(BASELINE_SCHEMA_MIGRATION, applyBaselineSchema);
   await runMigrationOnce(PERFORMANCE_INDEXES_MIGRATION, addPerformanceIndexes);
+  await runMigrationOnce(WORLD_MERCHANT_SCHEMA_MIGRATION, addWorldMerchantSchema);
+  await runMigrationOnce(WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION, addWorldMerchantBribeSchema);
 }
 
 function ensureSchemaReady() {

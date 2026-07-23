@@ -38,6 +38,12 @@ const {
   grantWorldBossRewardBuff,
   serializeWorldBossForClient
 } = require('./lib/world-bosses');
+const {
+  bribeWorldMerchant,
+  getActiveWorldMerchant,
+  getWorldMerchantForPlayer,
+  purchaseWorldMerchantItem
+} = require('./lib/world-merchant');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const { getPlayerStatPointSummary } = require('./lib/account-stat-points');
 const achievements = require('./lib/achievements');
@@ -93,10 +99,11 @@ router.get('/world/map', (req, res) => {
 router.get('/world/state', requireAuth, async (req, res) => {
   const { position, boundShrine } = await getWorldStateLocation(req.player.id);
   const activeBosses = getActiveWorldBosses();
-  const [playersAt, activeWorldTeam, hunt] = await Promise.all([
+  const [playersAt, activeWorldTeam, hunt, merchant] = await Promise.all([
     getPlayersAt(position.x, position.y, req.player.id),
     getActiveWorldTeam(req.player.id),
-    getHuntState(req.player.id)
+    getHuntState(req.player.id),
+    getWorldMerchantForPlayer(req.player.id)
   ]);
 
   res.json({
@@ -113,6 +120,7 @@ router.get('/world/state', requireAuth, async (req, res) => {
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
     currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
     bosses: activeBosses.map(serializeWorldBossForClient),
+    merchant: serializeWorldMerchantForClient(merchant, position),
     playersAt,
     activeTeam: serializeTeamSummaryForClient(getActiveWorldTeamSummary(activeWorldTeam)),
     hunt
@@ -149,6 +157,56 @@ async function getWorldStateLocation(playerId) {
 
   return { position, boundShrine };
 }
+
+router.get('/world/merchant', requireAuth, async (req, res) => {
+  const [position, merchant] = await Promise.all([
+    getOrCreatePosition(req.player.id),
+    getWorldMerchantForPlayer(req.player.id)
+  ]);
+
+  res.json({
+    merchant: serializeWorldMerchantForClient(merchant, position)
+  });
+});
+
+router.post('/world/merchant/purchase', requireAuth, async (req, res) => {
+  const purchase = await purchaseWorldMerchantItem(
+    req.player.id,
+    req.body?.spawnId,
+    req.body?.stockId,
+    req.body?.slot
+  );
+  const [merchant, position] = await Promise.all([
+    getWorldMerchantForPlayer(req.player.id),
+    getOrCreatePosition(req.player.id)
+  ]);
+
+  res.json({
+    ok: true,
+    purchasedItem: purchase.item,
+    player: getWorldPlayer(purchase.player),
+    merchant: serializeWorldMerchantForClient(merchant, position),
+    message: `${capitalize(purchase.item.rarity)} ${purchase.item.species} Echo added to your bag.`
+  });
+});
+
+router.post('/world/merchant/bribe', requireAuth, async (req, res) => {
+  const bribe = await bribeWorldMerchant(
+    req.player.id,
+    req.body?.spawnId,
+    req.body?.stockId
+  );
+  const [merchant, position] = await Promise.all([
+    getWorldMerchantForPlayer(req.player.id),
+    getOrCreatePosition(req.player.id)
+  ]);
+
+  res.json({
+    ok: true,
+    player: getWorldPlayer(bribe.player),
+    merchant: serializeWorldMerchantForClient(merchant, position)
+  });
+});
 
 router.get('/world/team', requireAuth, async (req, res) => {
   const [team, collection] = await Promise.all([
@@ -268,15 +326,20 @@ router.post('/world/move', requireAuth, async (req, res) => {
     await achievements.grantAchievements(req.player.id, ['edgewalker']);
   }
 
-  const playersAt = await getPlayersAt(position.x, position.y, req.player.id);
+  const [playersAt, merchant, resolvedTravelEvents] = await Promise.all([
+    getPlayersAt(position.x, position.y, req.player.id),
+    getWorldMerchantForPlayer(req.player.id),
+    resolveTravelEvents(req.player, travelEvents)
+  ]);
   res.json({
     position,
     currentEvent: getEventAt(position.x, position.y),
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
     currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
     bosses: activeBosses.map(serializeWorldBossForClient),
+    merchant: serializeWorldMerchantForClient(merchant, position),
     playersAt,
-    travelEvents: await resolveTravelEvents(req.player, travelEvents)
+    travelEvents: resolvedTravelEvents
   });
 });
 
@@ -1011,6 +1074,37 @@ function serializeWorldEncounterForClient(encounter) {
   };
 }
 
+function serializeWorldMerchantForClient(merchant, playerPosition) {
+  if (!merchant) return null;
+  return {
+    id: merchant.id,
+    name: merchant.name,
+    description: merchant.description,
+    spawnId: String(merchant.spawnId || ''),
+    stockId: String(merchant.stockId || ''),
+    rerollCount: Math.max(0, Number(merchant.rerollCount) || 0),
+    bribeCost: Math.max(0, Number(merchant.bribeCost) || 0),
+    x: Number(merchant.x) || 0,
+    y: Number(merchant.y) || 0,
+    spawnedAt: merchant.spawnedAt || null,
+    movesAt: merchant.movesAt || null,
+    canShop: positionsEqual(merchant, playerPosition),
+    itemSlots: (Array.isArray(merchant.itemSlots) ? merchant.itemSlots : []).map((item) => ({
+      slot: Math.max(0, Number(item.slot) || 0),
+      itemKey: item.itemKey,
+      itemType: item.itemType,
+      typeId: Math.max(1, Number(item.typeId) || 1),
+      rarity: item.rarity,
+      species: item.species,
+      role: item.role,
+      preferredPosition: item.preferredPosition,
+      imageUrl: item.imageUrl,
+      price: Math.max(0, Number(item.price) || 0),
+      purchased: Boolean(item.purchased)
+    }))
+  };
+}
+
 // The world map and side panels render demon art as small tokens/avatars, so
 // they get lightweight WebP variants (scripts/generate-demon-map-variants.js)
 // instead of the multi-megabyte battle-card PNGs. Unknown URLs pass through.
@@ -1129,6 +1223,11 @@ function formatSoulCount(value) {
   return `${count} Soul${count === 1 ? '' : 's'}`;
 }
 
+function capitalize(value) {
+  const text = String(value || '');
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : '';
+}
+
 function formatDurationHours(value) {
   const hours = Math.max(0, Number(value) || 0);
   if (!hours) return '24h';
@@ -1204,9 +1303,11 @@ function getAmbushChanceForTile(x, y) {
 }
 
 function isAmbushEligibleTile(x, y, activeBosses = []) {
+  const merchant = getActiveWorldMerchant();
   return !getEventAt(x, y) &&
     !getSignAt(x, y) &&
     !getEncounterAt(x, y) &&
+    !positionsEqual(merchant, { x, y }) &&
     !getWorldBossAtFromList(activeBosses, x, y);
 }
 

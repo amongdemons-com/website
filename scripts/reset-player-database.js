@@ -23,6 +23,8 @@ const PROGRESS_TABLES = [
   'player_bag',
   'player_stat_points',
   'player_world_boss_buffs',
+  'player_world_merchant_purchases',
+  'player_world_merchant_stock',
   'player_world_positions',
   'player_world_teams'
 ];
