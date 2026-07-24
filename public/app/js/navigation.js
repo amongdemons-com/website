@@ -20,7 +20,7 @@
     ['i', '/bag'],
     ['b', '/bag']
   ]);
-  const DEFAULT_MUSIC_ROUTE = /^\/(?:demons|bosses|rankings|hunter)(?:\/|$)/;
+  const DEFAULT_MUSIC_ROUTE = /^\/(?:demons|bosses|events|rankings|hunter)(?:\/|$)/;
 
   onReady(init);
 
@@ -117,6 +117,8 @@
             ? 'demons'
             : pathname.startsWith('/bosses')
               ? 'bosses'
+              : pathname.startsWith('/events')
+              ? 'events'
               : pathname.startsWith('/collection')
               ? 'collection'
               : pathname.startsWith('/bag')

@@ -3996,6 +3996,47 @@ body.seo-page {
     font-size: 1.05rem;
 }
 
+.seo-event-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.seo-event-category .ad-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.seo-event-card .seo-event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    grid-template-columns: none;
+}
+
+.seo-event-card .seo-event-meta span {
+    flex: 0 0 auto;
+    padding: 0.28rem 0.55rem;
+}
+
+.seo-event-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.75rem;
+    color: var(--rarity-color, var(--ad-teal, #6fd6bd));
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.seo-event-link .ad-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.seo-events-page .seo-action-row {
+    margin-top: 1.75rem;
+}
+
 .seo-demon-grid {
     grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
 }
@@ -4003,7 +4044,8 @@ body.seo-page {
 .seo-demons-page .seo-demon-grid,
 .seo-demon-page .seo-demon-grid,
 .seo-bosses-page .seo-boss-grid,
-.seo-boss-page .seo-boss-grid {
+.seo-boss-page .seo-boss-grid,
+.seo-events-page .seo-demon-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -4476,7 +4518,8 @@ body.seo-page {
     }
 
 .seo-demons-page .seo-demon-grid,
-    .seo-bosses-page .seo-boss-grid {
+    .seo-bosses-page .seo-boss-grid,
+    .seo-events-page .seo-demon-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -4488,7 +4531,8 @@ body.seo-page {
 
 @media (max-width: 390px) {
 .seo-demons-page .seo-demon-grid,
-    .seo-bosses-page .seo-boss-grid {
+    .seo-bosses-page .seo-boss-grid,
+    .seo-events-page .seo-demon-grid {
         grid-template-columns: 1fr;
     }
 }

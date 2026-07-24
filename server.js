@@ -17,6 +17,7 @@ const {
   renderBossesPage,
   renderDemonPage,
   renderDemonsPage,
+  renderEventsPage,
   renderHomePage,
   renderRobotsTxt,
   renderSitemap
@@ -133,6 +134,10 @@ app.get(['/demons/:slug', '/demons/:slug/'], async (req, res, next) => {
 app.get(['/bosses', '/bosses/'], async (req, res) => {
   const bosses = await loadBossCatalog();
   res.send(renderBossesPage(bosses));
+});
+
+app.get(['/events', '/events/'], (req, res) => {
+  res.send(renderEventsPage());
 });
 
 app.get(['/bosses/:slug', '/bosses/:slug/'], async (req, res, next) => {
