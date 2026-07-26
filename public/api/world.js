@@ -24,6 +24,7 @@ const {
   getWorldSoulReward,
   getWorldTerrorPreview,
   getWorldXpReward,
+  resolveWorldCombatContext,
   saveActiveWorldTeam,
   simulateTryHunt,
   simulateWorldAmbush,
@@ -99,11 +100,11 @@ router.get('/world/map', (req, res) => {
 router.get('/world/state', requireAuth, async (req, res) => {
   const { position, boundShrine } = await getWorldStateLocation(req.player.id);
   const activeBosses = getActiveWorldBosses();
-  const [playersAt, activeWorldTeam, hunt, merchant] = await Promise.all([
+  const merchant = getActiveWorldMerchant();
+  const [playersAt, activeWorldTeam, hunt] = await Promise.all([
     getPlayersAt(position.x, position.y, req.player.id),
     getActiveWorldTeam(req.player.id),
-    getHuntState(req.player.id),
-    getWorldMerchantForPlayer(req.player.id)
+    getHuntState(req.player.id)
   ]);
 
   res.json({
@@ -120,7 +121,7 @@ router.get('/world/state', requireAuth, async (req, res) => {
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
     currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
     bosses: activeBosses.map(serializeWorldBossForClient),
-    merchant: serializeWorldMerchantForClient(merchant, position),
+    merchant: serializeWorldMerchantForClient(merchant, position, { includeStock: false }),
     playersAt,
     activeTeam: serializeTeamSummaryForClient(getActiveWorldTeamSummary(activeWorldTeam)),
     hunt
@@ -320,18 +321,19 @@ router.post('/world/move', requireAuth, async (req, res) => {
       error: "It's dangerous to travel alone. Assign a team before traveling."
     });
   }
+  const travelCombatContext = travelEvents.some((event) => event.type === 'ambush')
+    ? await resolveWorldCombatContext(req.player, { playerTeam: activeWorldTeam })
+    : null;
 
   await savePosition(req.player.id, position);
   if ([WORLD_MIN, WORLD_MAX].includes(position.x) || [WORLD_MIN, WORLD_MAX].includes(position.y)) {
     await achievements.grantAchievements(req.player.id, ['edgewalker']);
   }
 
-  const resolvedTravel = await resolveTravelEvents(req.player, travelEvents);
+  const resolvedTravel = await resolveTravelEvents(req.player, travelEvents, { combatContext: travelCombatContext });
   const travelSettlement = await settleTravelAmbushRewards(req.player, resolvedTravel.rewards);
-  const [playersAt, merchant] = await Promise.all([
-    getPlayersAt(position.x, position.y, req.player.id),
-    getWorldMerchantForPlayer(req.player.id)
-  ]);
+  const playersAt = await getPlayersAt(position.x, position.y, req.player.id);
+  const merchant = getActiveWorldMerchant();
   res.json({
     position,
     player: getWorldPlayer(travelSettlement.player),
@@ -340,7 +342,7 @@ router.post('/world/move', requireAuth, async (req, res) => {
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
     currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
     bosses: activeBosses.map(serializeWorldBossForClient),
-    merchant: serializeWorldMerchantForClient(merchant, position),
+    merchant: serializeWorldMerchantForClient(merchant, position, { includeStock: false }),
     playersAt,
     travelEvents: resolvedTravel.events,
     travelSummary: resolvedTravel.rewards
@@ -815,8 +817,10 @@ async function getWorldTeamCollection(playerId) {
   return enrichCollectionDemonsWithTraining(rows);
 }
 
-async function resolveTravelEvents(player, travelEvents = []) {
+async function resolveTravelEvents(player, travelEvents = [], options = {}) {
   const resolved = [];
+  const combatContext = options.combatContext || null;
+  let grantedRoadLessTravelled = false;
   const rewards = {
     ambushesWon: 0,
     xp: 0,
@@ -832,14 +836,24 @@ async function resolveTravelEvents(player, travelEvents = []) {
 
     let battle = null;
     try {
-      battle = await simulateWorldAmbush(player, event.position, WORLD_ENCOUNTERS);
+      battle = await simulateWorldAmbush(
+        player,
+        event.position,
+        WORLD_ENCOUNTERS,
+        { context: combatContext }
+      );
     } catch (error) {
       if (!error.status || error.status >= 500) throw error;
       battle = {
         error: error.message
       };
     }
-    if (battle?.winner === 'player' && !isRoad(event.position.x, event.position.y)) {
+    if (
+      battle?.winner === 'player'
+      && !isRoad(event.position.x, event.position.y)
+      && !grantedRoadLessTravelled
+    ) {
+      grantedRoadLessTravelled = true;
       await achievements.grantAchievements(player.id, ['road-less-travelled']);
     }
     if (battle?.winner === 'player') {
@@ -943,6 +957,7 @@ async function settleActiveHunt(player, options = {}) {
   let clearedUnlocks = 0;
   let settledLevel = null;
   let settledPreviousLevel = null;
+  let liveHuntCapacityState = null;
   // `player` is req.player, which requireAuth already passed through cleanPlayer.
   // The DB row fetched below is the raw shape that still needs cleaning.
   let playerPayload = player;
@@ -971,11 +986,15 @@ async function settleActiveHunt(player, options = {}) {
         throw error;
       }
       // Live capacity so vessel points spent mid-hunt apply to the payout.
-      const soulCapacity = await getLiveHuntSoulCapacity(player);
+      liveHuntCapacityState = await getLiveHuntCapacityState(player);
+      const soulCapacity = liveHuntCapacityState.soulCapacity;
       const settledAt = new Date();
       rewards = await calculateHuntRewards(snapshot, settledAt, { soulCapacity });
       const restartedSnapshot = restartHunt
-        ? await createHuntSnapshot(player, encounter)
+        ? await createHuntSnapshot(player, encounter, {
+          statSummary: liveHuntCapacityState.statSummary,
+          activeBossBuffs: liveHuntCapacityState.activeBossBuffs
+        })
         : null;
 
       const [lockedRows] = await connection.query(
@@ -1067,11 +1086,13 @@ async function settleActiveHunt(player, options = {}) {
       souls: playerPayload.souls
     } : undefined,
     clearedUnlocks,
-    hunt: await getHuntState(player.id)
+    hunt: await getHuntState(player.id, {
+      liveCapacityState: restartedHunt ? liveHuntCapacityState : null
+    })
   };
 }
 
-async function getHuntState(playerId) {
+async function getHuntState(playerId, options = {}) {
   const [rows] = await db.query(
     `SELECT 'unlock' AS rowType,
             encounter_id AS encounterId,
@@ -1090,7 +1111,7 @@ async function getHuntState(playerId) {
   const unlockRows = rows.filter((row) => row.rowType === 'unlock');
   const active = rows.find((row) => row.rowType === 'active') || null;
   const liveCapacityState = active
-    ? await getLiveHuntCapacityState({ id: playerId })
+    ? options.liveCapacityState || await getLiveHuntCapacityState({ id: playerId })
     : null;
 
   return {
@@ -1101,10 +1122,6 @@ async function getHuntState(playerId) {
       liveCapacityState.recheckAt
     ) : null
   };
-}
-
-async function getLiveHuntSoulCapacity(player) {
-  return (await getLiveHuntCapacityState(player)).soulCapacity;
 }
 
 async function getLiveHuntCapacityState(player) {
@@ -1122,7 +1139,9 @@ async function getLiveHuntCapacityState(player) {
     soulCapacity: getBuffedHuntSoulCapacity(statSummary, activeBossBuffs),
     recheckAt: capacityBuffExpirations.length
       ? new Date(capacityBuffExpirations[0]).toISOString()
-      : null
+      : null,
+    statSummary,
+    activeBossBuffs
   };
 }
 
@@ -1218,21 +1237,26 @@ function serializeWorldEncounterForClient(encounter) {
   };
 }
 
-function serializeWorldMerchantForClient(merchant, playerPosition) {
+function serializeWorldMerchantForClient(merchant, playerPosition, options = {}) {
   if (!merchant) return null;
-  return {
+  const payload = {
     id: merchant.id,
     name: merchant.name,
     description: merchant.description,
     spawnId: String(merchant.spawnId || ''),
-    stockId: String(merchant.stockId || ''),
-    rerollCount: Math.max(0, Number(merchant.rerollCount) || 0),
-    bribeCost: Math.max(0, Number(merchant.bribeCost) || 0),
     x: Number(merchant.x) || 0,
     y: Number(merchant.y) || 0,
     spawnedAt: merchant.spawnedAt || null,
     movesAt: merchant.movesAt || null,
-    canShop: positionsEqual(merchant, playerPosition),
+    canShop: positionsEqual(merchant, playerPosition)
+  };
+  if (options.includeStock === false) return payload;
+
+  return {
+    ...payload,
+    stockId: String(merchant.stockId || ''),
+    rerollCount: Math.max(0, Number(merchant.rerollCount) || 0),
+    bribeCost: Math.max(0, Number(merchant.bribeCost) || 0),
     itemSlots: (Array.isArray(merchant.itemSlots) ? merchant.itemSlots : []).map((item) => ({
       slot: Math.max(0, Number(item.slot) || 0),
       itemKey: item.itemKey,

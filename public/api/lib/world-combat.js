@@ -255,7 +255,7 @@ function getActiveWorldTeamSummary(team = []) {
   };
 }
 
-async function simulateWorldAmbush(player, position, encounters = []) {
+async function simulateWorldAmbush(player, position, encounters = [], options = {}) {
   const targetEncounter = pickAmbushEncounter(position, encounters);
   if (!targetEncounter) return null;
   const ambushEncounter = createAmbushEncounter(targetEncounter, position);
@@ -264,7 +264,8 @@ async function simulateWorldAmbush(player, position, encounters = []) {
     player,
     encounter: ambushEncounter,
     combatType: 'ambush',
-    seed: hashSeed(`ambush:${player.id}:${position.x}:${position.y}:${targetEncounter.id}`)
+    seed: hashSeed(`ambush:${player.id}:${position.x}:${position.y}:${targetEncounter.id}`),
+    context: options.context
   });
 }
 
@@ -357,12 +358,14 @@ async function simulateWorldBossChallenge(player, boss, options = {}) {
   };
 }
 
-async function createHuntSnapshot(player, encounter) {
+async function createHuntSnapshot(player, encounter, options = {}) {
   const [playerTeam, statSummary, demonTypes, activeBossBuffs] = await Promise.all([
-    getActiveWorldTeam(player.id),
-    getPlayerStatPointSummary(player),
-    getDemonTypes(),
-    getActiveWorldBossRewardBuffs(player)
+    Array.isArray(options.playerTeam) ? options.playerTeam : getActiveWorldTeam(player.id),
+    options.statSummary || getPlayerStatPointSummary(player),
+    options.demonTypes || getDemonTypes(),
+    Array.isArray(options.activeBossBuffs)
+      ? options.activeBossBuffs
+      : getActiveWorldBossRewardBuffs(player)
   ]);
   const playerBuffs = createPlayerCombatBuffState(statSummary, { activeBuffs: activeBossBuffs });
   const soulCapacity = getBuffedHuntSoulCapacity(statSummary, activeBossBuffs);
@@ -513,12 +516,18 @@ async function calculateHuntRewards(snapshot, stoppedAt = new Date(), options = 
   };
 }
 
-async function simulateWorldCombat({ player, encounter, combatType, seed }) {
+async function resolveWorldCombatContext(player, options = {}) {
   const [playerTeam, playerBuffs, demonTypes] = await Promise.all([
-    getActiveWorldTeam(player.id),
-    resolvePlayerCombatBuffState(player),
-    getDemonTypes()
+    Array.isArray(options.playerTeam) ? options.playerTeam : getActiveWorldTeam(player.id),
+    options.playerBuffs || resolvePlayerCombatBuffState(player),
+    options.demonTypes || getDemonTypes()
   ]);
+
+  return { playerTeam, playerBuffs, demonTypes };
+}
+
+async function simulateWorldCombat({ player, encounter, combatType, seed, context = null }) {
+  const { playerTeam, playerBuffs, demonTypes } = context || await resolveWorldCombatContext(player);
 
   if (!playerTeam.length) {
     const error = new Error('Choose a hunting team before entering combat.');
@@ -873,6 +882,7 @@ module.exports = {
   getWorldTerrorPreview,
   getWorldXpReward,
   materializeEncounterTeam,
+  resolveWorldCombatContext,
   saveActiveWorldTeam,
   simulateTryHunt,
   simulateWorldAmbush,

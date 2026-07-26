@@ -182,6 +182,7 @@ import './bag-item-visuals.js';
     bosses: [],
     merchant: null,
     encounterTextures: new Map(),
+    encounterMarkerNodes: new Map(),
     bossTextures: new Map(),
     tileTextures: new Map(),
     terrainBuilt: false,
@@ -702,6 +703,9 @@ import './bag-item-visuals.js';
     state.currentBoss = payload.currentBoss || getBossAt(state.position);
 
     buildBoard();
+    drawMarkers();
+    drawEncounterMarkers();
+    drawBossMarkers();
     renderWorld();
     renderPanels();
 
@@ -784,8 +788,28 @@ import './bag-item-visuals.js';
   function setWorldMerchantState(payload = {}, options = {}) {
     if (!Object.prototype.hasOwnProperty.call(payload, 'merchant')) return;
 
+    const incomingMerchant = payload.merchant;
+    const includesPrivateStock = Boolean(
+      incomingMerchant
+      && Object.prototype.hasOwnProperty.call(incomingMerchant, 'itemSlots')
+    );
     const previousSpawnId = state.merchant?.spawnId || null;
-    state.merchant = normalizeWorldMerchant(payload.merchant);
+    const previousMerchant = state.merchant;
+    state.merchant = normalizeWorldMerchant(incomingMerchant);
+    if (
+      !includesPrivateStock
+      && previousMerchant
+      && previousSpawnId
+      && previousSpawnId === state.merchant?.spawnId
+    ) {
+      state.merchant = {
+        ...state.merchant,
+        stockId: previousMerchant.stockId,
+        rerollCount: previousMerchant.rerollCount,
+        bribeCost: previousMerchant.bribeCost,
+        itemSlots: previousMerchant.itemSlots
+      };
+    }
     const nextSpawnId = state.merchant?.spawnId || null;
 
     if (previousSpawnId && previousSpawnId !== nextSpawnId) {
@@ -989,6 +1013,7 @@ import './bag-item-visuals.js';
       applyWorldPlayerUpdate(payload.player);
       setWorldBossState(payload);
       setWorldMerchantState(payload, { deferRender: true });
+      drawMarkers();
       const stepEvents = getTravelStepEvents(payload, path);
 
       let lostAmbush = false;
@@ -1531,6 +1556,7 @@ import './bag-item-visuals.js';
 
       state.boundShrine = normalizeShrine(payload.boundShrine);
       state.currentEvent = payload.currentShrine || getEventAt(state.position);
+      drawMarkers();
       audio?.play('sfx.world.shrineBind', { volume: 0.92 });
       setMessage(
         payload.message || 'Soul anchored. You will return to this Forsaken Shrine if defeated.',
@@ -1610,9 +1636,7 @@ import './bag-item-visuals.js';
     drawFog();
     drawHover();
     drawPath();
-    drawMarkers();
-    drawEncounterMarkers();
-    drawBossMarkers();
+    drawHunter();
     drawStepEffect();
     updateCameraStatus();
   }
@@ -3346,7 +3370,6 @@ import './bag-item-visuals.js';
 
   function drawMarkers() {
     drawEventMarkers();
-    drawHunter();
   }
 
   function drawEventMarkers() {
@@ -3829,76 +3852,112 @@ import './bag-item-visuals.js';
     if (!layer || !Pixi?.Graphics) return;
 
     layer.removeChildren().forEach((child) => child.destroy({ children: true }));
+    state.encounterMarkerNodes.clear();
 
     state.encounters.forEach((encounter) => {
-      const center = tileCenter(encounter);
-      const ringColor = rarityHex(encounter.keyDemon?.rarity);
-      const selected = state.selectedEncounter?.id === encounter.id;
-      const defeated = isEncounterUnlocked(encounter.id);
-      const radius = 22;
-      const rng = seededRng((Math.imul(encounter.x | 0, 92821) ^ Math.imul(encounter.y | 0, 68917)) >>> 0);
-
-      const node = new Pixi.Container();
-      node.position.set(center.x, center.y);
-
-      // A grounded world node: trampled dark earth where the demon prowls, a
-      // soft ground shadow, a faint rarity glow, and a single thin ring around
-      // the portrait - no UI-sticker rings or runes.
-      const base = new Pixi.Graphics();
-      // Trampled ground: overlapping dark scuffs with a few prowl marks.
-      for (let i = 0; i < 3; i += 1) {
-        base.ellipse((rng() - 0.5) * 14, radius - 4 + (rng() - 0.5) * 8, radius * (0.6 + rng() * 0.3), 6 + rng() * 4)
-          .fill({ color: 0x000000, alpha: 0.1 });
-      }
-      for (let i = 0; i < 4; i += 1) {
-        const a = rng() * Math.PI;
-        const dist = radius * (0.7 + rng() * 0.4);
-        base.ellipse(Math.cos(a) * dist, radius - 2 + Math.sin(a) * 6, 1.6 + rng(), 1 + rng() * 0.8)
-          .fill({ color: 0x000000, alpha: 0.22 });
-      }
-      base.ellipse(0, radius + 3, radius - 2, 5).fill({ color: 0x000000, alpha: 0.35 }); // shadow
-      base.circle(0, 0, radius + 4).fill({ color: ringColor, alpha: selected ? 0.2 : 0.09 }); // glow
-      if (selected) base.circle(0, 0, radius + 8).fill({ color: ringColor, alpha: 0.08 });
-      base.circle(0, 0, radius + 1).fill({ color: 0x080c0e, alpha: 0.92 });
-      base.circle(0, 0, radius + 2.5).stroke({ color: 0x0a0705, width: 2, alpha: 0.7 }); // dark rim seats the ring
-      base.circle(0, 0, radius + 1).stroke({ color: ringColor, width: selected ? 2.5 : 1.5, alpha: selected ? 0.95 : 0.6 });
-      node.addChild(base);
-
-      const texture = state.encounterTextures.get(encounter.keyDemon?.imageUrl);
-      if (texture) {
-        const portrait = new Pixi.Sprite(texture);
-        portrait.anchor.set(0.5);
-        portrait.width = radius * 2;
-        portrait.height = radius * 2;
-
-        const mask = new Pixi.Graphics();
-        mask.circle(0, 0, radius).fill({ color: 0xffffff });
-        node.addChild(mask);
-        portrait.mask = mask;
-        node.addChild(portrait);
-      } else {
-        base.circle(0, 0, radius).fill({ color: ringColor, alpha: 0.25 });
-      }
-
-      if (defeated) {
-        const badgeX = radius * 0.7;
-        const badgeY = radius * 0.7;
-        const badge = new Pixi.Graphics();
-        badge.circle(badgeX, badgeY, 9.5)
-          .fill({ color: 0x07110f, alpha: 0.98 })
-          .stroke({ color: 0x050807, width: 2.5, alpha: 0.92 });
-        badge.circle(badgeX, badgeY, 7.5)
-          .fill({ color: 0x49c59d, alpha: 0.98 })
-          .stroke({ color: 0xb8ffe8, width: 1, alpha: 0.8 });
-        badge.moveTo(badgeX - 3.7, badgeY)
-          .lineTo(badgeX - 0.8, badgeY + 3)
-          .lineTo(badgeX + 4.7, badgeY - 3.3)
-          .stroke({ color: 0x07110f, width: 2.2, alpha: 1 });
-        node.addChild(badge);
-      }
-
+      const node = createEncounterMarkerNode(encounter);
+      if (!node) return;
+      state.encounterMarkerNodes.set(String(encounter.id), node);
       layer.addChild(node);
     });
+  }
+
+  function refreshEncounterMarker(encounterId) {
+    const layer = state.encounterLayer;
+    const id = String(encounterId || '');
+    const encounter = getEncounterById(id);
+    if (!layer || !id || !encounter) return;
+
+    const previous = state.encounterMarkerNodes.get(id);
+    if (previous) {
+      layer.removeChild(previous);
+      previous.destroy({ children: true });
+    }
+
+    const node = createEncounterMarkerNode(encounter);
+    if (!node) {
+      state.encounterMarkerNodes.delete(id);
+      return;
+    }
+    state.encounterMarkerNodes.set(id, node);
+    layer.addChild(node);
+  }
+
+  function createEncounterMarkerNode(encounter) {
+    const Pixi = window.PIXI;
+    if (!Pixi?.Graphics || !encounter) return null;
+
+    const center = tileCenter(encounter);
+    const ringColor = rarityHex(encounter.keyDemon?.rarity);
+    const selected = state.selectedEncounter?.id === encounter.id;
+    const defeated = isEncounterUnlocked(encounter.id);
+    const radius = 22;
+    const rng = seededRng((Math.imul(encounter.x | 0, 92821) ^ Math.imul(encounter.y | 0, 68917)) >>> 0);
+    const node = new Pixi.Container();
+    node.position.set(center.x, center.y);
+    node.cullable = true;
+    node.cullableChildren = false;
+    if (Pixi.Rectangle) {
+      node.cullArea = new Pixi.Rectangle(-radius - 12, -radius - 12, radius * 2 + 24, radius * 2 + 48);
+    }
+
+    // A grounded world node: trampled dark earth where the demon prowls, a
+    // soft ground shadow, a faint rarity glow, and a single thin ring around
+    // the portrait - no UI-sticker rings or runes.
+    const base = new Pixi.Graphics();
+    // Trampled ground: overlapping dark scuffs with a few prowl marks.
+    for (let i = 0; i < 3; i += 1) {
+      base.ellipse((rng() - 0.5) * 14, radius - 4 + (rng() - 0.5) * 8, radius * (0.6 + rng() * 0.3), 6 + rng() * 4)
+        .fill({ color: 0x000000, alpha: 0.1 });
+    }
+    for (let i = 0; i < 4; i += 1) {
+      const a = rng() * Math.PI;
+      const dist = radius * (0.7 + rng() * 0.4);
+      base.ellipse(Math.cos(a) * dist, radius - 2 + Math.sin(a) * 6, 1.6 + rng(), 1 + rng() * 0.8)
+        .fill({ color: 0x000000, alpha: 0.22 });
+    }
+    base.ellipse(0, radius + 3, radius - 2, 5).fill({ color: 0x000000, alpha: 0.35 }); // shadow
+    base.circle(0, 0, radius + 4).fill({ color: ringColor, alpha: selected ? 0.2 : 0.09 }); // glow
+    if (selected) base.circle(0, 0, radius + 8).fill({ color: ringColor, alpha: 0.08 });
+    base.circle(0, 0, radius + 1).fill({ color: 0x080c0e, alpha: 0.92 });
+    base.circle(0, 0, radius + 2.5).stroke({ color: 0x0a0705, width: 2, alpha: 0.7 }); // dark rim seats the ring
+    base.circle(0, 0, radius + 1).stroke({ color: ringColor, width: selected ? 2.5 : 1.5, alpha: selected ? 0.95 : 0.6 });
+    node.addChild(base);
+
+    const texture = state.encounterTextures.get(encounter.keyDemon?.imageUrl);
+    if (texture) {
+      const portrait = new Pixi.Sprite(texture);
+      portrait.anchor.set(0.5);
+      portrait.width = radius * 2;
+      portrait.height = radius * 2;
+
+      const mask = new Pixi.Graphics();
+      mask.circle(0, 0, radius).fill({ color: 0xffffff });
+      node.addChild(mask);
+      portrait.mask = mask;
+      node.addChild(portrait);
+    } else {
+      base.circle(0, 0, radius).fill({ color: ringColor, alpha: 0.25 });
+    }
+
+    if (defeated) {
+      const badgeX = radius * 0.7;
+      const badgeY = radius * 0.7;
+      const badge = new Pixi.Graphics();
+      badge.circle(badgeX, badgeY, 9.5)
+        .fill({ color: 0x07110f, alpha: 0.98 })
+        .stroke({ color: 0x050807, width: 2.5, alpha: 0.92 });
+      badge.circle(badgeX, badgeY, 7.5)
+        .fill({ color: 0x49c59d, alpha: 0.98 })
+        .stroke({ color: 0xb8ffe8, width: 1, alpha: 0.8 });
+      badge.moveTo(badgeX - 3.7, badgeY)
+        .lineTo(badgeX - 0.8, badgeY + 3)
+        .lineTo(badgeX + 4.7, badgeY - 3.3)
+        .stroke({ color: 0x07110f, width: 2.2, alpha: 1 });
+      node.addChild(badge);
+    }
+
+    return node;
   }
 
   function drawBossMarkers() {
@@ -7754,16 +7813,18 @@ import './bag-item-visuals.js';
   function setHuntState(hunt) {
     const normalizedHunt = normalizeHunt(hunt);
     const unlockedEncounterIds = new Set(normalizedHunt.unlockedEncounterIds);
-    const unlocksChanged = unlockedEncounterIds.size !== state.unlockedEncounterIds.size
-      || Array.from(unlockedEncounterIds).some((encounterId) => !state.unlockedEncounterIds.has(encounterId));
+    const changedEncounterIds = new Set([
+      ...Array.from(state.unlockedEncounterIds).filter((encounterId) => !unlockedEncounterIds.has(encounterId)),
+      ...Array.from(unlockedEncounterIds).filter((encounterId) => !state.unlockedEncounterIds.has(encounterId))
+    ]);
 
     state.hunt = normalizedHunt;
     state.unlockedEncounterIds = unlockedEncounterIds;
     state.huntStatusRefreshAt = Date.now();
     scheduleHuntCapacityReconcile();
     syncWorldSidePanel();
-    if (unlocksChanged) {
-      drawEncounterMarkers();
+    if (changedEncounterIds.size && state.encounterMarkerNodes.size) {
+      changedEncounterIds.forEach(refreshEncounterMarker);
       if (state.selectedEncounter) renderEncounterTooltip();
     }
     return state.hunt;
@@ -8328,21 +8389,33 @@ import './bag-item-visuals.js';
   }
 
   function showEncounterTooltip(encounter) {
+    const previousEncounterId = state.selectedEncounter?.id || null;
+    const hadSelectedBoss = Boolean(state.selectedBoss);
     state.selectedEncounter = encounter;
     state.selectedBoss = null;
+    if (previousEncounterId && previousEncounterId !== encounter?.id) {
+      refreshEncounterMarker(previousEncounterId);
+    }
+    refreshEncounterMarker(encounter?.id);
+    if (hadSelectedBoss) drawBossMarkers();
     renderEncounterTooltip();
     updateEncounterTooltip();
   }
 
   function hideEncounterTooltip() {
     if (!state.selectedEncounter) return;
+    const previousEncounterId = state.selectedEncounter.id;
     state.selectedEncounter = null;
+    refreshEncounterMarker(previousEncounterId);
     if (!state.selectedBoss) elements.worldEncounterTooltip?.classList.add('d-none');
   }
 
   function showBossTooltip(boss) {
+    const previousEncounterId = state.selectedEncounter?.id || null;
     state.selectedBoss = boss;
     state.selectedEncounter = null;
+    if (previousEncounterId) refreshEncounterMarker(previousEncounterId);
+    drawBossMarkers();
     renderBossTooltip();
     updateBossTooltip();
   }
@@ -8350,12 +8423,17 @@ import './bag-item-visuals.js';
   function hideBossTooltip() {
     if (!state.selectedBoss) return;
     state.selectedBoss = null;
+    drawBossMarkers();
     if (!state.selectedEncounter) elements.worldEncounterTooltip?.classList.add('d-none');
   }
 
   function hideWorldActivityTooltip() {
+    const previousEncounterId = state.selectedEncounter?.id || null;
+    const hadSelectedBoss = Boolean(state.selectedBoss);
     state.selectedEncounter = null;
     state.selectedBoss = null;
+    if (previousEncounterId) refreshEncounterMarker(previousEncounterId);
+    if (hadSelectedBoss) drawBossMarkers();
     elements.worldEncounterTooltip?.classList.add('d-none');
   }
 
@@ -8854,6 +8932,7 @@ import './bag-item-visuals.js';
     state.app?.ticker?.remove(updateMerchantDirectionArrow);
     state.tileTextures.forEach((texture) => texture?.destroy?.(true));
     state.tileTextures.clear();
+    state.encounterMarkerNodes.clear();
     state.bossTextures.forEach((texture) => texture?.destroy?.(true));
     state.bossTextures.clear();
     state.puddleFxTiles = [];
