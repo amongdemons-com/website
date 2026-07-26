@@ -214,12 +214,12 @@ All routes are mounted under `/api`.
 | `GET` | `/world/shrine` | Current bound Forsaken Shrine and whether standing on one |
 | `POST` | `/world/shrine/bind` | Bind to the Forsaken Shrine at the current position |
 | `POST` | `/world/portal/summon` | Spend Souls to teleport to a Darkness Portal (cost scales with distance) |
-| `POST` | `/world/hunt/try` | Fight the encounter on the current tile |
+| `POST` | `/world/hunt/try` | Fight the encounter on the current tile; a loss respawns at the bound shrine |
 | `POST` | `/world/hunting/start` | Start passive hunting on a defeated encounter |
 | `POST` | `/world/hunting/claim` | Bank hunt rewards and atomically restart the same hunt |
 | `POST` | `/world/hunting/stop` | Stop hunting and bank the accumulated Souls |
 | `GET` | `/world/hunting/status` | Current passive hunt progress |
-| `POST` | `/world/ambush-defeat` | Return to the Anchored Shrine (or spawn) after an ambush loss |
+| `POST` | `/world/ambush-defeat` | Return to the Anchored Shrine (or spawn) after a separately resolved defeat |
 | `GET` | `/world/players-at` | Other hunters standing on a tile |
 | `POST` | `/world/challenge` | Challenge another hunter on your tile to PvP (30 s cooldown) |
 
@@ -263,9 +263,11 @@ The world is a generated 101×101 grid (coordinates −50..50) defined in `publi
 
 Each fixed monster spot has a unique demon composition. Demon rarity and type retain their inherent stats, while World Terror is the single explicit distance-based encounter multiplier.
 
+Crowley, the traveling merchant, moves to a deterministic open road tile every 30 minutes and refreshes his stock when he moves.
+
 - Movement is validated server-side step by step (up to 256 steps per request). Off-road steps on empty tiles risk ambushes (~1 in 7); roads are much safer (~1 in 34). Each ambush victory grants the encounter's XP and Soul payout, summarized when travel ends.
 - World Terror rises one level per map ring beyond the safe center (starting ~10 tiles out, capped at level 40), scaling encounter stats and XP with distance.
-- **Forsaken Shrines** — bind your soul at a shrine to respawn there after ambush defeats instead of at world spawn.
+- **Forsaken Shrines** — bind your soul at a shrine to respawn there after combat defeats instead of at world spawn.
 - **Darkness Portals** — paid teleports; the Soul cost scales with distance.
 - **Passive hunting** — after defeating a tile's encounter you may leave your world team hunting there. Souls accumulate while away but are capped by your Soul Vessel (base 50, expanded through skill-tree nodes), so AFK income is bounded by investment, not time.
 - **PvP** — hunters on the same tile can challenge each other (server-simulated battle, 30-second cooldown); wins and losses feed the `pvp` leaderboard and hunter profiles.

@@ -364,10 +364,13 @@ router.post('/world/hunt/try', requireAuth, async (req, res) => {
     ]);
   }
 
+  const respawn = unlocked ? null : await respawnPlayerAfterDefeat(req.player.id);
+
   res.json({
     unlocked,
     battle,
-    hunt: await getHuntState(req.player.id)
+    hunt: await getHuntState(req.player.id),
+    respawn
   });
 });
 
@@ -421,21 +424,25 @@ router.get('/world/hunting/status', requireAuth, async (req, res) => {
 });
 
 router.post('/world/ambush-defeat', requireAuth, async (req, res) => {
-  const result = getAmbushDefeatReturn(await getBoundShrine(req.player.id));
+  res.json(await respawnPlayerAfterDefeat(req.player.id));
+});
+
+async function respawnPlayerAfterDefeat(playerId) {
+  const result = getAmbushDefeatReturn(await getBoundShrine(playerId));
   const activeBosses = getActiveWorldBosses();
 
-  await savePosition(req.player.id, result.position);
-  await achievements.grantAchievements(req.player.id, ['death-has-an-address']);
+  await savePosition(playerId, result.position);
+  await achievements.grantAchievements(playerId, ['death-has-an-address']);
 
-  res.json({
+  return {
     ...result,
     currentEvent: getEventAt(result.position.x, result.position.y),
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(result.position.x, result.position.y)),
     currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, result.position.x, result.position.y)),
     bosses: activeBosses.map(serializeWorldBossForClient),
-    playersAt: await getPlayersAt(result.position.x, result.position.y, req.player.id)
-  });
-});
+    playersAt: await getPlayersAt(result.position.x, result.position.y, playerId)
+  };
+}
 
 router.get('/world/players-at', requireAuth, async (req, res) => {
   const position = normalizePosition(req.query);

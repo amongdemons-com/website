@@ -10,7 +10,6 @@ const MERCHANT_MOVE_INTERVAL_SECONDS = 30 * 60;
 const MERCHANT_STOCK_SIZE = 4;
 const MERCHANT_STOCK_VERSION = 1;
 const MERCHANT_BRIBE_COST = 50;
-const MERCHANT_TEST_POSITION = Object.freeze({ x: 3, y: -1 });
 
 // A shop contains mostly attainable Echoes. The final two bands are
 // intentionally tiny: a Mythic averages one appearance per 20,000 slots.
@@ -69,9 +68,20 @@ function getMerchantSpawnId(now = new Date()) {
   return String(Math.floor(time / (MERCHANT_MOVE_INTERVAL_SECONDS * 1000)));
 }
 
-function resolveMerchantPosition() {
-  // TODO: Remove this fixed test position and restore the road itinerary.
-  return { ...MERCHANT_TEST_POSITION };
+function resolveMerchantPosition(spawnId) {
+  if (!MERCHANT_ROAD_ITINERARY.length) {
+    return {
+      x: Number(worldMap.spawn?.x) || 0,
+      y: Number(worldMap.spawn?.y) || 0
+    };
+  }
+
+  const numericSpawnId = Number(spawnId);
+  const waypoint = Number.isSafeInteger(numericSpawnId)
+    ? ((numericSpawnId % MERCHANT_ROAD_ITINERARY.length) + MERCHANT_ROAD_ITINERARY.length)
+      % MERCHANT_ROAD_ITINERARY.length
+    : 0;
+  return { ...MERCHANT_ROAD_ITINERARY[waypoint] };
 }
 
 async function getWorldMerchantForPlayer(playerId, options = {}) {

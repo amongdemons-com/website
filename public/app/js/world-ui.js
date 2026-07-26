@@ -1099,7 +1099,8 @@ import './bag-item-visuals.js';
   }
 
   async function resolveAmbushDefeat(options = {}) {
-    const recovery = await api('/api/world/ambush-defeat', { method: 'POST' });
+    const recovery = options.recovery
+      || await api('/api/world/ambush-defeat', { method: 'POST' });
     const returnPosition = normalizePosition(recovery.position || state.position);
     setWorldBossState(recovery);
 
@@ -1367,7 +1368,14 @@ import './bag-item-visuals.js';
       if (shouldShowWorldBattleReplay(payload.battle)) {
         await showWorldBattleReplay(payload.battle, getWorldBattleMeta('try_hunt', payload.battle));
       }
-      setMessage(won ? 'You are strong enough to hunt in this area.' : 'Fight failed. Hunting remains locked.', won ? 'success' : 'warning');
+      if (!won && payload.respawn) {
+        await resolveAmbushDefeat({ recovery: payload.respawn });
+      } else {
+        setMessage(
+          won ? 'You are strong enough to hunt in this area.' : 'Fight failed. Hunting remains locked.',
+          won ? 'success' : 'warning'
+        );
+      }
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -1375,6 +1383,9 @@ import './bag-item-visuals.js';
       state.huntBusyAction = null;
       setButtonBusy(button, false);
       renderEncounterPanel();
+      if (state.ambushDefeatBlackoutActive) {
+        await fadeWorldAmbushDefeatFromBlack();
+      }
     }
   }
 
@@ -1418,7 +1429,7 @@ import './bag-item-visuals.js';
       setHuntState(payload.hunt);
       applyWorldPlayerUpdate(payload.player);
       const rewards = payload.rewards || {};
-      audio?.play('sfx.world.huntStart', { volume: 0.78 });
+      playQuestCompleteSound();
       setMessage(`Rewards claimed. ${formatHuntRewardSummary(rewards)} Hunt restarted.`, 'success');
       return true;
     } catch (error) {
@@ -5240,16 +5251,18 @@ import './bag-item-visuals.js';
     const ambushesWon = Math.max(0, Number(summary?.ambushesWon) || 0);
     const xp = Math.max(0, Number(summary?.xp) || 0);
     const souls = Math.max(0, Number(summary?.souls) || 0);
+    const defeated = Boolean(summary?.defeated);
 
-    if (!modalElement || !modalApi) {
+    if (ambushesWon === 0 || !modalElement || !modalApi) {
       options.onHidden?.();
       return;
     }
 
-    setText(elements.worldTravelSummaryTitle, summary?.defeated ? 'Driven back' : 'Safe arrival');
+    modalElement.classList.toggle('is-defeated', defeated);
+    setText(elements.worldTravelSummaryTitle, defeated ? 'Driven back' : 'Safe Arrival');
     setText(
       elements.worldTravelSummaryAmbushes,
-      `${formatNumber(ambushesWon)} ${ambushesWon === 1 ? 'ambush' : 'ambushes'} won`
+      `${formatNumber(ambushesWon)} ${ambushesWon === 1 ? 'ambush' : 'ambushes'} defeated`
     );
     setText(elements.worldTravelSummaryXp, `${formatNumber(xp)} XP`);
     setText(elements.worldTravelSummarySouls, formatSoulCount(souls));
@@ -5258,6 +5271,11 @@ import './bag-item-visuals.js';
       modalElement.addEventListener('hidden.bs.modal', options.onHidden, { once: true });
     }
     modalApi.getOrCreateInstance(modalElement).show();
+    playQuestCompleteSound();
+  }
+
+  function playQuestCompleteSound() {
+    audio?.play('sfx.progression.questComplete', { volume: 0.82 });
   }
 
   function openWorldTeamEditorFromTravelWarning() {
@@ -7104,7 +7122,9 @@ import './bag-item-visuals.js';
   }
 
   function shouldReturnToShrineAfterWorldBattle(battle = {}, meta = {}) {
-    return isLostAmbushBattle(battle, meta) || isLostPvpChallenge(battle, meta);
+    return isLostAmbushBattle(battle, meta)
+      || isLostPvpChallenge(battle, meta)
+      || isLostHuntFight(battle, meta);
   }
 
   function isLostAmbushBattle(battle = {}, meta = {}) {
@@ -7117,6 +7137,10 @@ import './bag-item-visuals.js';
 
   function isLostPvpChallenge(battle = {}, meta = {}) {
     return meta?.type === 'pvp_challenge' && battle?.winner === 'enemy';
+  }
+
+  function isLostHuntFight(battle = {}, meta = {}) {
+    return meta?.type === 'try_hunt' && battle?.winner === 'enemy';
   }
 
   function areWinningAmbushesHidden() {
