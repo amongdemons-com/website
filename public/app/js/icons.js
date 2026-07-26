@@ -785,11 +785,6 @@
     alert.classList.add('d-none');
   }
 
-  function initializeUi() {
-    replaceStaticIcons();
-    initializeGameAlerts();
-  }
-
   function isPoisonIcon(name) {
     return String(name || '').toLowerCase() === 'poison';
   }
@@ -849,9 +844,14 @@
   ui.dismissGameAlert = dismissGameAlert;
   ui.toDemonImageUrl = toDemonImageUrl;
 
+  // The shared runtime is loaded at the end of <body>, so the static icon
+  // placeholders already exist when this module executes. Replace them now
+  // instead of waiting behind heavier page scripts for DOMContentLoaded.
+  replaceStaticIcons();
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeUi);
+    document.addEventListener('DOMContentLoaded', initializeGameAlerts, { once: true });
   } else {
-    initializeUi();
+    initializeGameAlerts();
   }
 })();

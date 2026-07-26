@@ -6051,7 +6051,7 @@ body.rankings-page {
     scrollbar-color: rgba(111,214,189,0.42) rgba(255,255,255,0.05);
     scrollbar-gutter: stable;
     scrollbar-width: thin;
-    padding-right: 0.35rem;
+    padding: 2px 0.35rem 2px 2px;
 }
 
 .profile-demon-option {

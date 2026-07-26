@@ -874,7 +874,7 @@ body.camp-page > .camp-lobby {
     gap: 0.64rem;
     min-height: 0;
     overflow: auto;
-    padding-right: 0.12rem;
+    padding: 2px 0.12rem 2px 2px;
 }
 
 .camp-page .play-objective {
