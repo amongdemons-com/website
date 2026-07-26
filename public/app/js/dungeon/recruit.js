@@ -179,8 +179,9 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
 
   const maxHpFlat = Math.max(0, Number(bonuses.maxHpFlat) || 0) + getPlayerWorldBuffEffectSum('max_hp_flat');
   const maxHpMult = (1 + getAccountBonusFraction(bonuses.maxHpPercent)) * getPlayerWorldBuffEffectMultiplier('max_hp_mult');
-  const attackFlat = Math.max(0, Number(bonuses.attackFlat) || 0) + getPlayerWorldBuffEffectSum('attack_flat');
-  const attackMult = (1 + getAccountBonusFraction(bonuses.attackPercent)) * getPlayerWorldBuffEffectMultiplier('attack_mult');
+  const receivesSkillTreeAttack = isSingleTargetAttackDemon(demon);
+  const attackFlat = (receivesSkillTreeAttack ? Math.max(0, Number(bonuses.attackFlat) || 0) : 0) + getPlayerWorldBuffEffectSum('attack_flat');
+  const attackMult = (receivesSkillTreeAttack ? 1 + getAccountBonusFraction(bonuses.attackPercent) : 1) * getPlayerWorldBuffEffectMultiplier('attack_mult');
   const speedFlat = Math.max(0, Number(bonuses.speedFlat) || 0) + getPlayerWorldBuffEffectSum('speed_flat');
   const speedMult = (1 + getAccountBonusFraction(bonuses.speedPercent)) * getPlayerWorldBuffEffectMultiplier('speed_mult');
   const directDamageMult = getPlayerWorldBuffEffectMultiplier('direct_damage_mult');
@@ -267,7 +268,8 @@ function applyDamageOutputStatPreview(demon, options = {}) {
   const aoeDamageMult = Math.max(0, Number(options.aoeDamageMult) || 1);
   const aoeDamageFlat = Math.max(0, Number(options.aoeDamageFlat) || 0);
   const isAoe = isAoeDemon(demon);
-  const damageMult = directDamageMult * (isAoe ? aoeDamageMult : 1);
+  const isSingleTarget = isSingleTargetAttackDemon(demon);
+  const damageMult = (isSingleTarget ? directDamageMult : 1) * (isAoe ? aoeDamageMult : 1);
   const damageFlat = isAoe ? aoeDamageFlat : 0;
   if (damageMult === 1 && damageFlat <= 0) return;
 
@@ -359,7 +361,9 @@ function getBuffEffectSum(buffs = [], type) {
 }
 
 function getRunBuffAttackPreviewMultiplier(demon) {
-  let multiplier = getRunBuffEffectMultiplier('direct_damage_mult', demon);
+  let multiplier = isSingleTargetAttackDemon(demon)
+    ? getRunBuffEffectMultiplier('direct_damage_mult', demon)
+    : 1;
   if (isAoeDemon(demon)) {
     multiplier *= getRunBuffEffectMultiplier('aoe_damage_mult', demon);
   }
@@ -370,7 +374,22 @@ function isAoeDemon(demon) {
   const typeId = Number(demon?.typeId || demon?.type_id || demon?.type);
   const role = String(demon?.role || '').toLowerCase();
   const targeting = String(demon?.targeting || '').toLowerCase();
-  return typeId === 4 || role === 'aoe' || targeting === 'all';
+  const abilityKind = String(demon?.abilityKind || demon?.ability?.kind || '').toLowerCase();
+  return typeId === 4 ||
+    typeId === 7 ||
+    role === 'aoe' ||
+    targeting === 'all' ||
+    targeting === 'cleave' ||
+    abilityKind === 'aoe_attack' ||
+    abilityKind === 'cleave_attack';
+}
+
+function isSingleTargetAttackDemon(demon) {
+  if (!demon || isAoeDemon(demon)) return false;
+
+  const typeId = Number(demon.typeId || demon.type_id || demon.type);
+  const abilityKind = String(demon.abilityKind || demon.ability?.kind || '').toLowerCase();
+  return ![3, 8, 10].includes(typeId) && !['heal', 'poison', 'retaliate'].includes(abilityKind);
 }
 
 function getRecruitTeamLimit() {

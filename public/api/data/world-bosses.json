@@ -75,12 +75,12 @@
         {
           "id": "boss_bulwark_hp",
           "name": "Overwhelming Discipline",
-          "description": "+150% Attack Damage",
+          "description": "+150% Single-target Damage",
           "rarity": "rare",
           "icon": "heart",
           "effects": [
             {
-              "type": "attack_mult",
+              "type": "direct_damage_mult",
               "value": 2.5
             }
           ]
@@ -89,7 +89,7 @@
       "rewardBuff": {
         "id": "boss_reward_warbinder_force",
         "name": "Discipline",
-        "description": "+10% Damage · All demons",
+        "description": "+10% Single-target Damage · All demons",
         "rarity": "rare",
         "icon": "swords",
         "effects": [
@@ -136,12 +136,12 @@
         {
           "id": "boss_shadow_focus",
           "name": "Singularity Aim",
-          "description": "+350% Attack Damage · +200% Attack Speed · -40% Health",
+          "description": "+350% Single-target Damage · +200% Attack Speed · -40% Health",
           "rarity": "rare",
           "icon": "crosshair",
           "effects": [
             {
-              "type": "attack_mult",
+              "type": "direct_damage_mult",
               "value": 4.5
             },
             {
@@ -158,12 +158,12 @@
       "rewardBuff": {
         "id": "boss_reward_shadow_focus",
         "name": "Void Sight",
-        "description": "+25% Attack Damage · All demons",
+        "description": "+25% Single-target Damage · All demons",
         "rarity": "rare",
         "icon": "crosshair",
         "effects": [
           {
-            "type": "attack_mult",
+            "type": "direct_damage_mult",
             "value": 1.25
           }
         ]
@@ -349,7 +349,7 @@
         {
           "id": "boss_iron_hide",
           "name": "Unbroken Hide",
-          "description": "+500% Health · +150% Attack Damage",
+          "description": "+500% Health · +150% Single-target Damage",
           "rarity": "rare",
           "icon": "shield",
           "effects": [
@@ -358,7 +358,7 @@
               "value": 6
             },
             {
-              "type": "attack_mult",
+              "type": "direct_damage_mult",
               "value": 2.5
             }
           ]
@@ -367,7 +367,7 @@
       "rewardBuff": {
         "id": "boss_reward_iron_hide",
         "name": "Warhide",
-        "description": "+30% Health · +10% Damage · All demons",
+        "description": "+30% Health · +10% Single-target Damage · All demons",
         "rarity": "rare",
         "icon": "shield",
         "effects": [
@@ -418,7 +418,7 @@
         {
           "id": "boss_night_knife",
           "name": "Silent Execution",
-          "description": "+300% Attack Speed · +250% Attack Damage",
+          "description": "+300% Attack Speed · +250% Single-target Damage",
           "rarity": "rare",
           "icon": "zap",
           "effects": [
@@ -427,7 +427,7 @@
               "value": 4
             },
             {
-              "type": "attack_mult",
+              "type": "direct_damage_mult",
               "value": 3.5
             }
           ]
@@ -498,12 +498,12 @@
         {
           "id": "boss_breaker_surge",
           "name": "Shattering Charge",
-          "description": "+400% Attack Damage · +300% Health",
+          "description": "+400% AOE Damage · +300% Health",
           "rarity": "rare",
           "icon": "swords",
           "effects": [
             {
-              "type": "attack_mult",
+              "type": "aoe_damage_mult",
               "value": 5
             },
             {
@@ -516,12 +516,12 @@
       "rewardBuff": {
         "id": "boss_reward_breaker_surge",
         "name": "Siegeborn",
-        "description": "+30% Attack Damage · All demons",
+        "description": "+30% Single-target Damage · All demons",
         "rarity": "rare",
         "icon": "swords",
         "effects": [
           {
-            "type": "attack_mult",
+            "type": "direct_damage_mult",
             "value": 1.3
           }
         ]
@@ -643,7 +643,7 @@
         {
           "id": "boss_ruin_maul",
           "name": "Titan Might",
-          "description": "+250% Attack Damage · +1000% Health",
+          "description": "+250% Single-target Damage · +1000% Health",
           "rarity": "rare",
           "icon": "hammer",
           "effects": [
@@ -652,7 +652,7 @@
               "value": 11
             },
             {
-              "type": "attack_mult",
+              "type": "direct_damage_mult",
               "value": 3.5
             }
           ]

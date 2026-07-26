@@ -2,7 +2,7 @@
   {
     "id": "blood_pact",
     "name": "Blood Pact",
-    "description": "All direct damage is increased by 12%.",
+    "description": "All single-target attack damage is increased by 12%.",
     "rarity": "common",
     "icon": "swords",
     "tags": ["damage"],
@@ -44,7 +44,7 @@
   {
     "id": "first_strike",
     "name": "Razor Omen",
-    "description": "Speed is increased by 8%, and direct damage is increased by 8%.",
+    "description": "Speed is increased by 8%, and single-target attack damage is increased by 8%.",
     "rarity": "uncommon",
     "icon": "zap",
     "tags": ["speed", "damage"],
@@ -62,7 +62,7 @@
   {
     "id": "execution_mark",
     "name": "Execution Mark",
-    "description": "Deal 35% more direct damage to enemies below 50% HP.",
+    "description": "Deal 35% more single-target attack damage to enemies below 50% HP.",
     "rarity": "uncommon",
     "icon": "crosshair",
     "tags": ["damage", "execute"],
@@ -76,7 +76,7 @@
   {
     "id": "giant_slayer",
     "name": "Giant Slayer",
-    "description": "Deal 30% more direct damage to enemies with higher max HP.",
+    "description": "Deal 30% more single-target attack damage to enemies with higher max HP.",
     "rarity": "uncommon",
     "icon": "mountain",
     "tags": ["damage", "tank-breaker"],
@@ -118,7 +118,7 @@
   {
     "id": "corrosion",
     "name": "Corrosion",
-    "description": "Poisoned enemies take 15% more direct damage.",
+    "description": "Poisoned enemies take 15% more single-target attack damage.",
     "rarity": "uncommon",
     "icon": "biohazard",
     "tags": ["poison", "damage"],
@@ -146,7 +146,7 @@
   {
     "id": "dire_focus",
     "name": "Dire Focus",
-    "description": "Direct damage is increased by 18%, and speed is increased by 8%.",
+    "description": "Single-target attack damage is increased by 18%, and speed is increased by 8%.",
     "rarity": "rare",
     "icon": "eye",
     "tags": ["damage", "speed"],
@@ -224,7 +224,7 @@
   {
     "id": "glass_cannons",
     "name": "Glass Cannons",
-    "description": "Direct damage is increased by 40%, but max HP is reduced by 25%.",
+    "description": "Single-target attack damage is increased by 40%, but max HP is reduced by 25%.",
     "rarity": "rare",
     "icon": "skull",
     "tags": ["damage", "tradeoff"],
@@ -242,7 +242,7 @@
   {
     "id": "cursed_momentum",
     "name": "Cursed Momentum",
-    "description": "Speed is increased by 20%, but direct damage is reduced by 10%.",
+    "description": "Speed is increased by 20%, but single-target attack damage is reduced by 10%.",
     "rarity": "uncommon",
     "icon": "wind",
     "tags": ["speed", "tradeoff"],
@@ -260,7 +260,7 @@
   {
     "id": "shared_pain",
     "name": "Shared Pain",
-    "description": "When an ally dies, surviving allies gain 25% direct damage for the battle.",
+    "description": "When an ally dies, surviving allies gain 25% single-target attack damage for the battle.",
     "rarity": "rare",
     "icon": "users",
     "tags": ["death", "damage"],
@@ -288,7 +288,7 @@
   {
     "id": "blackened_ritual",
     "name": "Blackened Ritual",
-    "description": "Direct damage is increased by 15%, but healing is reduced by 10%.",
+    "description": "Single-target attack damage is increased by 15%, but healing is reduced by 10%.",
     "rarity": "rare",
     "icon": "flame",
     "tags": ["damage", "tradeoff"],
@@ -306,7 +306,7 @@
   {
     "id": "many_below",
     "name": "The Many Below",
-    "description": "[Common] and [Uncommon] demons gain 30% direct damage and 25% max HP.",
+    "description": "[Common] and [Uncommon] demons gain 30% single-target attack damage and 25% max HP.",
     "rarity": "uncommon",
     "icon": "users",
     "tags": ["rarity", "damage", "health"],
@@ -326,7 +326,7 @@
   {
     "id": "crimson_standard",
     "name": "Crimson Standard",
-    "description": "[Rare] demons gain 35% direct damage and 20% speed.",
+    "description": "[Rare] demons gain 35% single-target attack damage and 20% speed.",
     "rarity": "rare",
     "icon": "flag",
     "tags": ["rarity", "damage", "speed"],
@@ -346,7 +346,7 @@
   {
     "id": "fallen_nobility",
     "name": "Fallen Nobility",
-    "description": "[Epic] and [Legendary] demons gain 20% direct damage and 15% max HP.",
+    "description": "[Epic] and [Legendary] demons gain 20% single-target attack damage and 15% max HP.",
     "rarity": "rare",
     "icon": "stars",
     "tags": ["rarity", "damage", "health"],

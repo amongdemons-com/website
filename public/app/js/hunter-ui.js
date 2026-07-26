@@ -8,6 +8,7 @@
     aoe_damage_mult: 'AOE Damage',
     attack_flat: 'Attack',
     attack_mult: 'Attack',
+    direct_damage_mult: 'Single-target Damage',
     healing_flat: 'Healing',
     healing_mult: 'Healing',
     max_hp_flat: 'Max HP',

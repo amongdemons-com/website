@@ -78,12 +78,12 @@ function createPlayerCombatBuffs(summary = {}) {
   addBuff(buffs, {
     id: 'skill_force',
     name: 'Soulbound Force',
-    description: 'Skill-tree attack bonuses.',
+    description: 'Skill-tree single-target attack bonuses.',
     icon: 'swords',
     tags: ['skill', 'damage'],
     effects: [
-      flatEffect('attack_flat', bonuses.attackFlat),
-      percentEffect('attack_mult', bonuses.attackPercent)
+      flatEffect('attack_flat', bonuses.attackFlat, { singleTargetOnly: true }),
+      percentEffect('attack_mult', bonuses.attackPercent, { singleTargetOnly: true })
     ]
   });
 
@@ -126,21 +126,23 @@ function addBuff(buffs, buff) {
   });
 }
 
-function flatEffect(type, value) {
+function flatEffect(type, value, options = {}) {
   const number = Number(value);
   if (!Number.isFinite(number) || number <= 0) return null;
   return {
     type,
-    value: Math.round(number * 10) / 10
+    value: Math.round(number * 10) / 10,
+    ...options
   };
 }
 
-function percentEffect(type, percent) {
+function percentEffect(type, percent, options = {}) {
   const number = Number(percent);
   if (!Number.isFinite(number) || number <= 0) return null;
   return {
     type,
-    value: Math.round((1 + number / 100) * 1000) / 1000
+    value: Math.round((1 + number / 100) * 1000) / 1000,
+    ...options
   };
 }
 

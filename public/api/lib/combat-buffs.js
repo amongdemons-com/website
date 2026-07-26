@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const DEFAULT_DEMON_TYPES = require('../data/demon-types.json');
 
 const BUFF_DATA_PATH = path.join(__dirname, '..', 'data', 'combat-buffs.json');
 const TEMPORARY_TEAM_SIZE_EFFECT = 'next_battle_team_size_add';
@@ -118,6 +119,9 @@ function normalizeCombatBuffDefinition(buff) {
       if (Object.prototype.hasOwnProperty.call(effect, 'uses')) {
         normalized.uses = Math.max(1, Math.floor(Number(effect.uses) || 1));
       }
+      if (effect?.singleTargetOnly === true) {
+        normalized.singleTargetOnly = true;
+      }
       const targetRarities = (Array.isArray(effect?.targetRarities) ? effect.targetRarities : [])
         .map((rarity) => String(rarity || '').trim().toLowerCase())
         .filter((rarity, index, values) => DEMON_RARITIES.has(rarity) && values.indexOf(rarity) === index);
@@ -223,6 +227,7 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
   const accountPoisonDamageFlat = Math.max(0, Number(accountBonuses.poisonDamageFlat) || 0);
 
   return (team || []).map((demon) => {
+    const receivesSkillTreeAttack = isSingleTargetAttackDemon(demon);
     const maxHpMult = (statsAlreadyApplied ? 1 : getEffectMultiplier(persistedState, 'max_hp_mult', demon)) * getEffectMultiplier(transientState, 'max_hp_mult', demon);
     const speedMult = (statsAlreadyApplied ? 1 : getEffectMultiplier(persistedState, 'speed_mult', demon)) * getEffectMultiplier(transientState, 'speed_mult', demon);
     const attackMult = getEffectMultiplier(state, 'attack_mult', demon);
@@ -285,7 +290,7 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
       next.hp = Math.max(next.hp > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
     }
 
-    if (accountAttackFlat > 0) {
+    if (receivesSkillTreeAttack && accountAttackFlat > 0) {
       applyAttackStatPreviewChange(next, (atk) => Math.max(1, Math.round(atk + accountAttackFlat)));
     }
 
@@ -300,7 +305,7 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
       next.hp = Math.max(next.hp > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
     }
 
-    if (accountAttackMult !== 1) {
+    if (receivesSkillTreeAttack && accountAttackMult !== 1) {
       applyAttackStatPreviewChange(next, (atk) => Math.max(1, Math.round(atk * accountAttackMult)));
     }
 
@@ -334,7 +339,8 @@ function applyDamageOutputStatPreview(demon, options = {}) {
   const aoeDamageMult = positiveNumber(options.aoeDamageMult, 1);
   const aoeDamageFlat = Math.max(0, Number(options.aoeDamageFlat) || 0);
   const isAoe = isAoeDemon(demon);
-  const damageMult = directDamageMult * (isAoe ? aoeDamageMult : 1);
+  const isSingleTarget = isSingleTargetAttackDemon(demon);
+  const damageMult = (isSingleTarget ? directDamageMult : 1) * (isAoe ? aoeDamageMult : 1);
   const damageFlat = isAoe ? aoeDamageFlat : 0;
 
   if (damageMult === 1 && damageFlat <= 0) return;
@@ -359,7 +365,8 @@ function applyRunBuffStatModifiers(run) {
     const hpRatio = currentMaxHp > 0
       ? clamp((Number(demon.hp) || currentMaxHp) / currentMaxHp, 0, 1)
       : 1;
-    const damagePreviewMult = directDamageMult * (isAoeDemon(demon) ? aoeDamageMult : 1);
+    const damagePreviewMult = (isSingleTargetAttackDemon(demon) ? directDamageMult : 1) *
+      (isAoeDemon(demon) ? aoeDamageMult : 1);
     const nextEffectiveAtk = baseAtk > 0 ? Math.max(1, Math.round(baseAtk * damagePreviewMult)) : baseAtk;
     const nextMaxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
     const nextSpeed = Math.max(1, Math.round(baseSpeed * speedMult));
@@ -392,26 +399,27 @@ function applyDamageModifiers(context) {
 
   if (context.damageKind !== 'direct') return damage;
 
-  let multiplier = getEffectMultiplier(state, 'direct_damage_mult', context.attacker);
-  multiplier *= positiveNumber(context.attacker?.battleBuffs?.directDamageMult, 1);
-
-  if (isTargetBelowHalfHp(context.target)) {
-    multiplier *= getEffectMultiplier(state, 'damage_vs_low_hp_mult', context.attacker);
-  }
-
-  if (hasHigherMaxHp(context.target, context.attacker)) {
-    multiplier *= getEffectMultiplier(state, 'damage_vs_higher_max_hp_mult', context.attacker);
-  }
-
-  if (hasPoison(context.target)) {
-    multiplier *= getEffectMultiplier(state, 'direct_damage_vs_poisoned_mult', context.attacker);
-  }
-
+  let multiplier = 1;
   let flatDamage = 0;
   if (context.isAoe) {
     multiplier *= getEffectMultiplier(state, 'aoe_damage_mult', context.attacker);
     multiplier *= positiveNumber(context.attacker?.battleBuffs?.aoeDamageMult, 1);
     flatDamage = Math.max(0, Number(context.attacker?.battleBuffs?.aoeDamageFlat) || 0);
+  } else if (isSingleTargetAttackDemon(context.attacker)) {
+    multiplier *= getEffectMultiplier(state, 'direct_damage_mult', context.attacker);
+    multiplier *= positiveNumber(context.attacker?.battleBuffs?.directDamageMult, 1);
+
+    if (isTargetBelowHalfHp(context.target)) {
+      multiplier *= getEffectMultiplier(state, 'damage_vs_low_hp_mult', context.attacker);
+    }
+
+    if (hasHigherMaxHp(context.target, context.attacker)) {
+      multiplier *= getEffectMultiplier(state, 'damage_vs_higher_max_hp_mult', context.attacker);
+    }
+
+    if (hasPoison(context.target)) {
+      multiplier *= getEffectMultiplier(state, 'direct_damage_vs_poisoned_mult', context.attacker);
+    }
   }
 
   return roundDamage((damage + flatDamage) * multiplier);
@@ -551,9 +559,13 @@ function getActiveEffects(source, type, demon = null) {
 
 function effectAppliesToDemon(effect, demon = null) {
   const targets = Array.isArray(effect?.targetRarities) ? effect.targetRarities : [];
-  if (!targets.length) return true;
-  if (!demon) return false;
-  return targets.includes(String(demon.rarity || '').toLowerCase());
+  if (targets.length && (!demon || !targets.includes(String(demon.rarity || '').toLowerCase()))) {
+    return false;
+  }
+  if (effect?.singleTargetOnly && !isSingleTargetAttackDemon(demon)) {
+    return false;
+  }
+  return true;
 }
 
 function getContextBuffState(context = {}, side = 'player') {
@@ -742,9 +754,26 @@ function hasPoison(target) {
 
 function isAoeDemon(demon) {
   const typeId = Number(demon?.typeId || demon?.type_id || demon?.type);
-  const role = String(demon?.role || '').toLowerCase();
-  const targeting = String(demon?.targeting || '').toLowerCase();
-  return typeId === 4 || role === 'aoe' || targeting === 'all';
+  const type = DEFAULT_DEMON_TYPES[String(typeId)] || {};
+  const role = String(demon?.role || type.role || '').toLowerCase();
+  const targeting = String(demon?.targeting || type.targeting || '').toLowerCase();
+  const abilityKind = String(demon?.abilityKind || demon?.ability?.kind || type.ability?.kind || '').toLowerCase();
+  return typeId === 4 ||
+    typeId === 7 ||
+    role === 'aoe' ||
+    targeting === 'all' ||
+    targeting === 'cleave' ||
+    abilityKind === 'aoe_attack' ||
+    abilityKind === 'cleave_attack';
+}
+
+function isSingleTargetAttackDemon(demon) {
+  if (!demon || isAoeDemon(demon)) return false;
+
+  const typeId = Number(demon.typeId || demon.type_id || demon.type);
+  const type = DEFAULT_DEMON_TYPES[String(typeId)] || {};
+  const abilityKind = String(demon.abilityKind || demon.ability?.kind || type.ability?.kind || '').toLowerCase();
+  return !['heal', 'poison', 'retaliate'].includes(abilityKind);
 }
 
 function normalizePosition(position) {
