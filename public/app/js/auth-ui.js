@@ -10,7 +10,7 @@
   const message = document.getElementById('authMessage');
   const oauthButtons = Array.from(document.querySelectorAll('[data-oauth-provider]'));
   // A guest arriving at the register page is here to SAVE their existing hunter,
-  // not to open a second account — so we claim in place instead of registering.
+  // not to open a second account - so we claim in place instead of registering.
   const claimMode = mode === 'register' && Boolean(window.AmongDemons.isGuest?.());
 
   if (!form) return;

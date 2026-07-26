@@ -763,14 +763,24 @@
       };
     }
 
+    const huntRewards = text.match(/^earned ([\d,]+) xp and ([\d,]+) souls?\.\s*lost ([\d,]+) souls?\.?$/i);
+    if (huntRewards) {
+      return {
+        type: 'success',
+        title: `Earned ${huntRewards[1]} XP and ${huntRewards[2]} Souls.`,
+        message: `Lost ${huntRewards[3]} Souls.`,
+        action: 'Return later for more rewards.'
+      };
+    }
+
     const huntEnded = text.match(/hunting (?:ended|stopped).*earned ([\d,]+) xp and ([\d,]+) souls/i);
     if (huntEnded) {
-      const vesselOverflow = text.match(/vessel overflowed — ([\d,]+) souls? slipped/i);
+      const soulsLost = text.match(/lost ([\d,]+) souls?/i);
       return {
         type: 'success',
         title: 'Hunt ended.',
-        message: `You earned ${huntEnded[1]} XP and ${huntEnded[2]} Souls.${vesselOverflow ? ` ${vesselOverflow[1]} Souls slipped into the dark.` : ''}`,
-        action: vesselOverflow
+        message: `You earned ${huntEnded[1]} XP and ${huntEnded[2]} Souls.${soulsLost ? ` Lost ${soulsLost[1]} Souls.` : ''}`,
+        action: soulsLost
           ? 'Expand your Soul Vessel in the skill tree to bank more.'
           : 'Choose another hunt or return to camp.'
       };
@@ -791,6 +801,24 @@
         title: 'Soul anchored.',
         message: 'This Forsaken Shrine is now your return point.',
         action: 'Continue exploring.'
+      };
+    }
+
+    const receivedReward = text.match(/^(quest reward|daily cache)\.\s*earned ([\d,]+) (xp|souls?)\.?$/i);
+    if (receivedReward) {
+      const source = receivedReward[1].toLowerCase() === 'daily cache'
+        ? 'Daily cache.'
+        : 'Quest reward.';
+      const unit = receivedReward[3].toLowerCase() === 'xp'
+        ? 'XP'
+        : (receivedReward[3].toLowerCase() === 'soul' ? 'Soul' : 'Souls');
+      return {
+        type: 'success',
+        title: source,
+        message: `Earned ${receivedReward[2]} ${unit}.`,
+        action: receivedReward[1].toLowerCase() === 'daily cache'
+          ? 'Return after the daily reset for more.'
+          : 'Keep pushing for the next mark.'
       };
     }
 
@@ -1052,8 +1080,8 @@
       ${icon ? `<span class="game-alert-icon" aria-hidden="true">${icon}</span>` : ''}
       <span class="game-alert-copy">
         <strong class="game-alert-title">${renderGameAlertText(alert.title)}</strong>
-        <span class="game-alert-message">${renderGameAlertText(alert.message)}</span>
-        <span class="game-alert-action">${renderGameAlertText(alert.action)}</span>
+        ${alert.message ? `<span class="game-alert-message">${renderGameAlertText(alert.message)}</span>` : ''}
+        ${alert.action ? `<span class="game-alert-action">${renderGameAlertText(alert.action)}</span>` : ''}
       </span>
     `;
   }

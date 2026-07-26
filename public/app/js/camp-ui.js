@@ -610,6 +610,7 @@
     state.questClaimPending = true;
     button.disabled = true;
     button.classList.add('is-busy');
+    const claimedReward = state.questData?.quests?.find((quest) => quest.id === questId)?.reward;
 
     try {
       const payload = await api(`/api/account/quests/${encodeURIComponent(questId)}/claim`, {
@@ -617,7 +618,7 @@
       });
       applyQuestPayload(payload);
       audio?.play('sfx.progression.questComplete', { volume: 0.9 });
-      setMessage('Quest reward claimed.', 'success');
+      setMessage(formatRewardAlert('Quest reward', claimedReward), 'success');
     } catch (error) {
       showError(error);
     } finally {
@@ -632,12 +633,13 @@
     state.dailyRewardPending = true;
     renderDailyReward();
     button?.classList.add('is-busy');
+    const claimedReward = state.questData?.dailyReward?.reward;
 
     try {
       const payload = await api('/api/account/daily-reward/claim', { method: 'POST' });
       applyQuestPayload(payload);
       audio?.play('sfx.progression.dailyReward', { volume: 0.92 });
-      setMessage('Lost Souls claimed.', 'success');
+      setMessage(formatRewardAlert('Daily cache', claimedReward), 'success');
     } catch (error) {
       showError(error);
     } finally {
@@ -769,6 +771,14 @@
 
     const number = Number(value);
     return Number.isFinite(number) ? number.toLocaleString() : String(value);
+  }
+
+  function formatRewardAlert(source, reward = {}) {
+    const amount = Math.max(0, Number(reward.value) || 0);
+    const unit = reward.type === 'xp'
+      ? 'XP'
+      : (amount === 1 ? 'Soul' : 'Souls');
+    return `${source}. Earned ${formatNumber(amount)} ${unit}.`;
   }
 
   function escapeHtml(value) {

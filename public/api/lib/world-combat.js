@@ -28,7 +28,7 @@ const WORLD_TERROR_XP_MULTIPLIER_BONUS = 2;
 const WORLD_TERROR_START_DISTANCE = 10;
 // Passive (AFK) hunting pays a fraction of the per-kill XP that an active
 // fight is worth. xpPerCycle keeps its Terror scaling, so
-// far encounters stay strictly better — they just accrue at a reduced rate.
+// far encounters stay strictly better - they just accrue at a reduced rate.
 // Keep this in sync with PASSIVE_HUNT_XP_MULTIPLIER in public/app/js/world-ui.js.
 const PASSIVE_HUNT_XP_MULTIPLIER = 0.20;
 const WORLD_TERROR_MAX_LEVEL = 40;

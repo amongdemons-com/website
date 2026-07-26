@@ -48,7 +48,7 @@ router.post('/auth/guest', async (req, res) => {
   return res.status(503).json({ error: 'Could not open a guest hunter. Try again in a moment.' });
 });
 
-// Missing starter demons must never fail account creation — the player can
+// Missing starter demons must never fail account creation - the player can
 // still recruit demons in the dungeon.
 async function grantStarterDemonsSafely(playerId) {
   try {

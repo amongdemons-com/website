@@ -1,4 +1,4 @@
-/* base.css — split from main.css by scripts/split-main-css.js.
+/* base.css - split from main.css by scripts/split-main-css.js.
    Shared shell: variables, nav, buttons, landing, auth, settings, rankings, notifications. Loaded by every page, first.
    Edit these files directly; main.css no longer exists. */
 
@@ -4011,11 +4011,28 @@ body.seo-page {
     display: flex;
     flex-wrap: wrap;
     grid-template-columns: none;
+    margin-top: auto;
+    padding-top: 0.9rem;
 }
 
 .seo-event-card .seo-event-meta span {
     flex: 0 0 auto;
     padding: 0.28rem 0.55rem;
+}
+
+.seo-event-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.seo-event-card .seo-demon-card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.seo-event-card .seo-demon-card-body > p {
+    margin-bottom: 0;
 }
 
 .seo-event-link {
@@ -4518,9 +4535,13 @@ body.seo-page {
     }
 
 .seo-demons-page .seo-demon-grid,
-    .seo-bosses-page .seo-boss-grid,
-    .seo-events-page .seo-demon-grid {
+    .seo-bosses-page .seo-boss-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .seo-events-page .seo-demon-grid {
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
     }
 
 .seo-demon-page .seo-demon-grid,

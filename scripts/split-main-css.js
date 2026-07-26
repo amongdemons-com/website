@@ -76,7 +76,7 @@ function splitRules(css) {
     const braceIndex = css.indexOf('{', index);
     const semiIndex = css.indexOf(';', index);
     if (braceIndex === -1 || (semiIndex !== -1 && semiIndex < braceIndex)) {
-      // Blockless at-rule (@import/@charset) — keep at the top of base.
+      // Blockless at-rule (@import/@charset) - keep at the top of base.
       const end = semiIndex === -1 ? css.length : semiIndex + 1;
       chunks.push({ bucket: 'base', text: pendingComment + css.slice(index, end) });
       pendingComment = '';
@@ -136,7 +136,7 @@ function main() {
   let total = 0;
   for (const bucket of BUCKET_ORDER) {
     const file = path.join(CSS_DIR, `${bucket}.css`);
-    const banner = `/* ${bucket}.css — split from main.css by scripts/split-main-css.js.\n   ${HEADERS[bucket]}\n   Edit these files directly; main.css no longer exists. */\n\n`;
+    const banner = `/* ${bucket}.css - split from main.css by scripts/split-main-css.js.\n   ${HEADERS[bucket]}\n   Edit these files directly; main.css no longer exists. */\n\n`;
     const body = outputs.get(bucket).join('\n\n');
     fs.writeFileSync(file, banner + body + '\n');
     total += body.length;

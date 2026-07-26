@@ -563,7 +563,7 @@ function renderEndNotice() {
 }
 
 // The battle playback + speed controls render into #dungeonBottomControls, which
-// overlays the (empty during battle) hand grid — replacing the old "Fighting"
+// overlays the (empty during battle) hand grid - replacing the old "Fighting"
 // placeholder. The dedicated control bar has been removed.
 function renderBattleControlsOverlay(html) {
   if (!elements.dungeonBottomControls) return false;

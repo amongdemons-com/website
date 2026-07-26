@@ -121,7 +121,7 @@ async function consumeOAuthState(state, provider) {
 }
 
 // Resolve a guest's session token to their player id, but only if the row is
-// still an unclaimed guest — so the state never carries a claim for a
+// still an unclaimed guest - so the state never carries a claim for a
 // real account or an expired session.
 async function resolveGuestClaimPlayerId(claimToken) {
   const token = String(claimToken || '').trim();

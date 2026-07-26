@@ -66,7 +66,7 @@
   }
 
   // "Play Instantly" opens a guest hunter (or reuses an existing session) and
-  // sends the visitor straight into the game — no email, username, or password.
+  // sends the visitor straight into the game - no email, username, or password.
   // Capture phase prevents the anchor from navigating before the guest exists.
   function bindPlayInstantly() {
     document.addEventListener('click', async (event) => {

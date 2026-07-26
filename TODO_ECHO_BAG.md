@@ -1,4 +1,4 @@
-﻿# Echo Bag, Summoning, Rarity Pacts, and Encounter Scaling
+# Echo Bag, Summoning, Rarity Pacts, and Encounter Scaling
 
 This file is the authoritative implementation checklist for the Echo bag and
 related dungeon-progression redesign.
@@ -115,7 +115,7 @@ not hard-coded independently in routes and UI.
   target rarity. Having enough source Echoes is the only requirement; the player freely
   chooses between banking toward a summon and refining upward. (The original
   discovery-gate design blocked refinement for players who had not summoned or
-  extracted the target — including the free type 1 starter line — and was removed.)
+  extracted the target - including the free type 1 starter line - and was removed.)
 - Natural discovery remains recorded after an Echo stack is spent or a demon is
   summoned.
 - Refined Echoes do not count as natural discovery.
@@ -523,7 +523,7 @@ Historical calibration notes from the brainstorm:
 - 2026-07-20: Remove the natural-discovery gate on refinement. Refining into the next
   rarity requires only enough source Echoes; the player chooses freely between banking
   for a summon and refining, and never has to summon or re-extract first. The gate
-  felt arbitrary in practice — notably for the free type 1 starter line, whose owner
+  felt arbitrary in practice - notably for the free type 1 starter line, whose owner
   had never "naturally extracted" anything. Discovery history is still recorded for
   extraction provenance display.
 - 2026-07-19: Revise Bag presentation to a viewport-filling decorative slot grid.

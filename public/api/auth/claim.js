@@ -5,8 +5,8 @@ const { assertValidUsername } = require('../lib/usernames');
 
 const router = express.Router();
 
-// Save (claim) a guest hunter: keep the same player row — and therefore every
-// demon, stat, quest, world position, soul, and XP — while swapping the
+// Save (claim) a guest hunter: keep the same player row - and therefore every
+// demon, stat, quest, world position, soul, and XP - while swapping the
 // temporary name for a chosen one and attaching real credentials. The session
 // token is unchanged, so the player stays logged in. Existing register/login
 // are untouched; this only ever upgrades an is_guest = 1 row in place.

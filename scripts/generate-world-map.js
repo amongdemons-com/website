@@ -8,7 +8,7 @@
  * Layout rules:
  *  - Distance from the center (0, 0) controls team size and rarity bands.
  *    Terror is the single explicit distance-based combat scaling system.
- *  - Demon TYPE is zone-based — the map is split into angular wedges and each
+ *  - Demon TYPE is zone-based - the map is split into angular wedges and each
  *    of the 11 types predominates in its own wedge, so areas feel themed.
  *  - Roads connect camps, lairs, shrines, and portals through meandering
  *    orthogonal trails. Travel along a road is much less likely to be ambushed

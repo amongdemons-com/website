@@ -1,4 +1,4 @@
-/* battle.css — split from main.css by scripts/split-main-css.js.
+/* battle.css - split from main.css by scripts/split-main-css.js.
    Battle surfaces: dungeon arena, demon cards, combat FX, fight log. Loaded by dungeon, world, collection, hunter and settings pages.
    Edit these files directly; main.css no longer exists. */
 
@@ -1203,7 +1203,7 @@ body:not(.dungeon-page) {
     z-index: 2;
 }
 
-/* Soft, periodic toxic pulse — deliberately gentler than a normal hit. */
+/* Soft, periodic toxic pulse - deliberately gentler than a normal hit. */
 .dungeon-demon-card.is-poison-tick {
     animation: demon-poison-tick var(--battle-duration-520, 520ms) ease-in-out;
 }

@@ -1430,7 +1430,7 @@ import './bag-item-visuals.js';
       applyWorldPlayerUpdate(payload.player);
       const rewards = payload.rewards || {};
       playQuestCompleteSound();
-      setMessage(`Rewards claimed. ${formatHuntRewardSummary(rewards)} Hunt restarted.`, 'success');
+      setMessage(formatHuntRewardSummary(rewards), 'success');
       return true;
     } catch (error) {
       handleAuthError(error);
@@ -1455,10 +1455,7 @@ import './bag-item-visuals.js';
 
   function formatHuntRewardSummary(rewards = {}) {
     const soulsLost = Math.max(0, Number(rewards.soulsLost) || 0);
-    const overflowNote = soulsLost > 0
-      ? ` Your Soul Vessel overflowed — ${formatSoulCount(soulsLost)} slipped into the dark.`
-      : '';
-    return `Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls.${overflowNote}`;
+    return `Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls. Lost ${formatSoulCount(soulsLost)}.`;
   }
 
   async function finishActiveHunt(options = {}) {
@@ -1717,7 +1714,7 @@ import './bag-item-visuals.js';
     return ((rgb[0] & 255) << 16) | ((rgb[1] & 255) << 8) | (rgb[2] & 255);
   }
 
-  // Deterministic 0..1 hash per (x, y, salt) — drives stable per-tile variation.
+  // Deterministic 0..1 hash per (x, y, salt) - drives stable per-tile variation.
   function hashTile(x, y, salt) {
     let h = Math.imul((x | 0) + 0x9e37, 374761393) ^
       Math.imul((y | 0) + 0x85eb, 668265263) ^
@@ -1832,7 +1829,7 @@ import './bag-item-visuals.js';
 
   // --- texture builders -------------------------------------------------------
 
-  // Mossy broken-flagstone ground. Values stay near-identical across variants —
+  // Mossy broken-flagstone ground. Values stay near-identical across variants -
   // large-scale tonal drift comes from the macro shading overlay, not the tile
   // grid, so the ground reads as one continuous surface instead of a checker.
   function groundTexture(zone, variant) {
@@ -1887,7 +1884,7 @@ import './bag-item-visuals.js';
 
   // World-space macro shading: broad, soft light/dark pools laid over the whole
   // board so tonal drift crosses tile boundaries. This is what makes the ground
-  // read as terrain instead of a grid of squares. Static — drawn once.
+  // read as terrain instead of a grid of squares. Static - drawn once.
   function drawMacroShading(g) {
     const min = state.bounds.min ?? -WORLD_RADIUS;
     const max = state.bounds.max ?? WORLD_RADIUS;
@@ -2034,7 +2031,7 @@ import './bag-item-visuals.js';
   // Top-down cluster of dark leaves used to mask blocked tiles in the demon
   // type 8 zone. The tile stays blocked in pathing logic; this only changes how
   // it's drawn.
-  // Deep, desaturated leaf greens tinted by the zone accent — dark and brooding.
+  // Deep, desaturated leaf greens tinted by the zone accent - dark and brooding.
   function leafClusterColors(palette) {
     const accentRgb = colorNumberToRgb(palette.accent);
     return {
@@ -2045,7 +2042,7 @@ import './bag-item-visuals.js';
     };
   }
 
-  // Paint one pile of overlapping leaves centred at (cx,cy). No shadow — the
+  // Paint one pile of overlapping leaves centred at (cx,cy). No shadow - the
   // caller lays shadows down first so a merged mass shares one continuous pool.
   function drawLeafCluster(g, cx, cy, radius, rng, colors) {
     const { leafDeep, leafDark, leafMid, leafEdge } = colors;
@@ -2109,7 +2106,7 @@ import './bag-item-visuals.js';
 
   // A single merged leaf mass spanning a connected cluster of blocked zone-8
   // tiles. Drawn in world coordinates so the foliage flows across tile
-  // boundaries. Blocking/pathing logic is unchanged — every tile stays blocked.
+  // boundaries. Blocking/pathing logic is unchanged - every tile stays blocked.
   function drawGiantLeafCluster(g, tiles, palette) {
     const colors = leafClusterColors(palette);
     const keySet = new Set(tiles.map(getTileKey));
@@ -2149,7 +2146,7 @@ import './bag-item-visuals.js';
 
   // --- puddle-style obstacles (poison ooze in zone 3, lava in zone 4) --------
   // A blocked tile is drawn as an irregular puddle; connected clusters merge
-  // into one giant puddle. The tile stays blocked in pathing logic — this only
+  // into one giant puddle. The tile stays blocked in pathing logic - this only
   // changes how it's drawn. Poison and lava share the same shape/merge code and
   // differ only in their colour set and the details painted on the surface.
 
@@ -2171,7 +2168,7 @@ import './bag-item-visuals.js';
       const a = (i / lobes) * Math.PI * 2;
       let raw = 0;
       for (const { freq, amp, phase } of h) raw += amp * Math.sin(a * freq + phase);
-      // Asymmetric: shallow outward bulges but deeper inward bays — the lobed,
+      // Asymmetric: shallow outward bulges but deeper inward bays - the lobed,
       // irregular look of a real puddle edge.
       const factor = 1 + (raw > 0 ? raw * 0.5 : raw * 0.95);
       const r = radius * factor;
@@ -2205,7 +2202,7 @@ import './bag-item-visuals.js';
 
   // Generic merged puddle spanning a connected cluster of blocked tiles. Drawn
   // in world coordinates (not a per-tile texture) so the shape flows across tile
-  // boundaries. Blocking/pathing logic is unchanged — every tile in `tiles` is
+  // boundaries. Blocking/pathing logic is unchanged - every tile in `tiles` is
   // still individually blocked.
   function drawGiantPuddle(g, tiles, palette, colorsFn, drawDetails) {
     const colors = colorsFn(palette);
@@ -2223,8 +2220,8 @@ import './bag-item-visuals.js';
       }
       // Bridge each tile to its right/down neighbour (each edge once) with a
       // couple of overlapping rounded blobs along the corridor. Blobs (not a
-      // straight rectangle) keep the join organic — no straight edges or hard
-      // corners — while still overlapping enough that it can never pinch apart.
+      // straight rectangle) keep the join organic - no straight edges or hard
+      // corners - while still overlapping enough that it can never pinch apart.
       for (const t of tiles) {
         for (const d of [{ x: 1, y: 0 }, { x: 0, y: 1 }]) {
           const n = { x: t.x + d.x, y: t.y + d.y };
@@ -2322,7 +2319,7 @@ import './bag-item-visuals.js';
     };
   }
 
-  // Cooled crust plates and the occasional white-hot well — the non-fissure
+  // Cooled crust plates and the occasional white-hot well - the non-fissure
   // surface of a lava pool. The rising embers are animated separately
   // (see drawLavaFxParticle).
   function drawLavaCrust(g, cx, cy, radius, rng, colors) {
@@ -2350,7 +2347,7 @@ import './bag-item-visuals.js';
   }
 
   // Solo tiles and merged pools both keep just the crust plates and hot
-  // wells — no glowing crack lines.
+  // wells - no glowing crack lines.
   function drawLavaPuddle(g, rng, palette) {
     drawPuddle(g, rng, palette, lavaPuddleColors, drawLavaCrust);
   }
@@ -2432,7 +2429,7 @@ import './bag-item-visuals.js';
     if (!tiles || !tiles.length) return;
 
     const now = performance.now();
-    // Embers drift slowly — ~30fps is plenty and halves the redraw cost.
+    // Embers drift slowly - ~30fps is plenty and halves the redraw cost.
     if (now - (state.puddleFxLast || 0) < 33) return;
     state.puddleFxLast = now;
 
@@ -2524,7 +2521,7 @@ import './bag-item-visuals.js';
       .stroke({ color: palette.stoneDark, width: 1.1, alpha: 0.6 });
   }
 
-  // Blocked tile: a cluster of ruined rock outcrops — dark angular boulders
+  // Blocked tile: a cluster of ruined rock outcrops - dark angular boulders
   // with a moonlit top edge, rubble at the base and moss in the cracks.
   function drawObstacle(g, kind, rng, palette) {
     void kind;
@@ -2568,14 +2565,14 @@ import './bag-item-visuals.js';
   // A single merged rock formation spanning a connected cluster of blocked
   // tiles (every zone without a bespoke obstacle style). Drawn in world
   // coordinates so boulders straddle tile boundaries and the cluster reads as
-  // one outcrop. Blocking/pathing logic is unchanged — every tile stays blocked.
+  // one outcrop. Blocking/pathing logic is unchanged - every tile stays blocked.
   function drawGiantRockCluster(g, tiles, palette) {
     const keySet = new Set(tiles.map(getTileKey));
     const seedFor = (a, b, c) => (Math.imul(a | 0, 73856093) ^ Math.imul(b | 0, 19349663) ^ (c >>> 0)) >>> 0;
 
     // Boulder nodes in three size bands, biggest placed first. Anything that
-    // would sit inside a bigger rock's footprint is dropped — a large rock
-    // replaces the small clutter instead of being surrounded by it — and the
+    // would sit inside a bigger rock's footprint is dropped - a large rock
+    // replaces the small clutter instead of being surrounded by it - and the
     // bands overlap in size so the mix reads small → medium → large.
     const bigs = [];
     for (const t of tiles) {
@@ -2808,7 +2805,7 @@ import './bag-item-visuals.js';
 
   // --- border ridge -----------------------------------------------------------
   // An impassable rocky ridge hems in the playable map and sinks into the
-  // darkness beyond. Purely cosmetic — pathing already clamps to the bounds —
+  // darkness beyond. Purely cosmetic - pathing already clamps to the bounds -
   // and derived from state.bounds, so it moves outward if the map ever grows.
   const BORDER_RIDGE_DEPTH = 3;
 
@@ -2845,7 +2842,7 @@ import './bag-item-visuals.js';
     };
 
     // Ground first for every ring so no boulder overhang gets painted over,
-    // continuing each zone's terrain out under the rocks, at full brightness —
+    // continuing each zone's terrain out under the rocks, at full brightness -
     // the darkening comes from the smooth veil below, not per-tile tints.
     for (let depth = 1; depth <= BORDER_RIDGE_DEPTH; depth += 1) {
       eachRingTile(depth, (x, y) => {
@@ -2917,7 +2914,7 @@ import './bag-item-visuals.js';
     state.groundLayer.addChild(ridge);
   }
 
-  // Faint static grid — barely visible by default; emphasis for the active /
+  // Faint static grid - barely visible by default; emphasis for the active /
   // hovered / path tiles is layered on top by the dynamic passes below.
   function drawGrid() {
     const layer = state.gridLayer;
@@ -3179,7 +3176,7 @@ import './bag-item-visuals.js';
     layer.stroke({ ...style, cap: 'round', join: 'round' });
   }
 
-  // Animated destination marker — stays visible throughout preview and travel.
+  // Animated destination marker - stays visible throughout preview and travel.
   function updatePathPulse() {
     const layer = state.pathPulse;
     if (!layer) return;
@@ -3195,7 +3192,7 @@ import './bag-item-visuals.js';
     layer.circle(c.x, c.y, 2.6).fill({ color: PATH_CORE, alpha: 0.9 });
   }
 
-  // Animated soul glow for forsaken shrines — a gently breathing blue halo with a
+  // Animated soul glow for forsaken shrines - a gently breathing blue halo with a
   // few drifting "smoke" wisps that rise and fade in a loop (runs on the ticker).
   function updateShrineGlow() {
     const layer = state.shrineGlow;
@@ -3232,7 +3229,7 @@ import './bag-item-visuals.js';
     });
   }
 
-  // Animated aura for darkness portals — a soft violet glow that slowly swells
+  // Animated aura for darkness portals - a soft violet glow that slowly swells
   // and shrinks in a loop (runs on the ticker).
   function updatePortalGlow() {
     const layer = state.portalGlow;
@@ -3256,7 +3253,7 @@ import './bag-item-visuals.js';
     });
   }
 
-  // Animated warm flicker for the traveling merchant's soul lantern — an
+  // Animated warm flicker for the traveling merchant's soul lantern - an
   // uneven candle-like halo with tiny embers drifting up off the flame, plus a
   // faint glow breathing out of the curtained opening (runs on the ticker,
   // drawn above the marker so the light spills over the wagon curtains).
@@ -3301,7 +3298,7 @@ import './bag-item-visuals.js';
       .fill({ color: gold, alpha: 0.04 + breath * 0.05 });
   }
 
-  // Animated pulsating aura beneath boss markers — a gold halo that swells and
+  // Animated pulsating aura beneath boss markers - a gold halo that swells and
   // fades in a loop, with a second slower ring so the threat reads at a glance
   // (runs on the ticker, drawn under the boss node in drawBossMarkers).
   function updateBossAura() {
@@ -3423,7 +3420,7 @@ import './bag-item-visuals.js';
     // Ground shadow.
     marker.ellipse(0, 20, 26, 6.5).fill({ color: 0x000000, alpha: 0.42 });
 
-    // Wheels seen edge-on — the caravan faces us, so each one is a slim
+    // Wheels seen edge-on - the caravan faces us, so each one is a slim
     // iron-shod rim peeking out beside the body, with a worn tread highlight
     // and the axle hub band across the middle.
     [-19.8, 19.8].forEach((wx) => {
@@ -3834,7 +3831,7 @@ import './bag-item-visuals.js';
 
       // A grounded world node: trampled dark earth where the demon prowls, a
       // soft ground shadow, a faint rarity glow, and a single thin ring around
-      // the portrait — no UI-sticker rings or runes.
+      // the portrait - no UI-sticker rings or runes.
       const base = new Pixi.Graphics();
       // Trampled ground: overlapping dark scuffs with a few prowl marks.
       for (let i = 0; i < 3; i += 1) {
@@ -4536,8 +4533,8 @@ import './bag-item-visuals.js';
     renderWorldTeamEditor();
   }
 
-  // Dropping a collection card copies it into the slot — the same demon may
-  // fill any number of slots — so the card stays available for more copies.
+  // Dropping a collection card copies it into the slot - the same demon may
+  // fill any number of slots - so the card stays available for more copies.
   function placeWorldTeamEditorCollectionDemon(demonId, targetSlot) {
     const editor = state.worldTeamEditor;
     const demon = getWorldTeamEditorCollectionDemon(demonId);
@@ -4672,7 +4669,7 @@ import './bag-item-visuals.js';
   }
 
   // Static SVG twin of drawShrineMarker (the Pixi board marker): the same
-  // cracked standing stone, slab, soul rune and crown flame — minus the smoke.
+  // cracked standing stone, slab, soul rune and crown flame - minus the smoke.
   function renderShrineMarkSvg(bound) {
     const soul = '#8de7ff';
     const glowAlpha = bound ? 0.9 : 0.66;
@@ -8435,7 +8432,7 @@ import './bag-item-visuals.js';
   }
 
   // ===========================================================================
-  // Passive hunt readout — a ticking timer pinned to the hunter tile plus the
+  // Passive hunt readout - a ticking timer pinned to the hunter tile plus the
   // accumulated/expected rewards mirrored into the sidebar encounter panel.
   // ===========================================================================
 

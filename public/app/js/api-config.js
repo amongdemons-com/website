@@ -28,7 +28,7 @@
   }
 
   function isPackagedRuntime() {
-    // TEMP capture workaround — REVERT: force local API on localhost so the
+    // TEMP capture workaround - REVERT: force local API on localhost so the
     // Electron-UA preview browser hits the dev server instead of production.
     if (/^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) return false;
     return isCapacitorRuntime() || isElectronRuntime();

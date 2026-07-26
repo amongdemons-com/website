@@ -5,7 +5,7 @@ const { saveCollectionDemon } = require('./collection-demons');
 const STARTER_TYPE_IDS = [1, 2];
 const STARTER_RARITY = 'common';
 
-// Every new hunter — guest or registered — starts with one common demon of each
+// Every new hunter - guest or registered - starts with one common demon of each
 // starter type so the collection, world team, and dungeon are immediately
 // playable instead of opening on an empty roster. Best-effort: a starter
 // failure must never block account creation, so callers wrap this and swallow

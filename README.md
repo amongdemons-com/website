@@ -1,14 +1,14 @@
 # Among Demons
 
-Among Demons is a server-authoritative demon-collection game built with Node.js/Express and MySQL. The frontend is static HTML/CSS/vanilla JavaScript served from `public/app` (the world map renders with Pixi.js); public marketing/catalog pages are server-rendered for SEO. All gameplay outcomes — combat, RNG, rewards, XP, Souls, movement, and collection writes — are calculated on the server. The browser only displays state and stages player choices.
+Among Demons is a server-authoritative demon-collection game built with Node.js/Express and MySQL. The frontend is static HTML/CSS/vanilla JavaScript served from `public/app` (the world map renders with Pixi.js); public marketing/catalog pages are server-rendered for SEO. All gameplay outcomes - combat, RNG, rewards, XP, Souls, movement, and collection writes - are calculated on the server. The browser only displays state and stages player choices.
 
 ## Game Overview
 
 The game has two connected play spaces plus permanent progression:
 
-- **Dungeon runs** (`/dungeon`) — roguelite runs through unlimited floors. Draft two starting demons, auto-battle server-simulated fights, recruit defeated enemies, seal run-long Demonic Pacts, and extract with XP/Souls and one exact Demon Echo — or lose everything on defeat.
-- **World map** (`/world`) — a 101×101 tile overworld with roads, unpassable terrain, demon encounters, Forsaken Shrines, and Darkness Portals. Travel tile-by-tile (roads are far safer from ambushes), fight fixed encounter teams, leave a team passively hunting for Souls, and challenge other hunters standing on your tile to PvP.
-- **Permanent progression** — an Echo bag and summoning flow (`/bag`), a permanent demon collection with Soul-based training (`/collection`), an account skill tree fed by level-up stat points (`/skill-tree`), daily quests and a daily reward (`/camp`), public hunter profiles (`/hunter/:username`), and leaderboards (`/rankings`).
+- **Dungeon runs** (`/dungeon`) - roguelite runs through unlimited floors. Draft two starting demons, auto-battle server-simulated fights, recruit defeated enemies, seal run-long Demonic Pacts, and extract with XP/Souls and one exact Demon Echo - or lose everything on defeat.
+- **World map** (`/world`) - a 101×101 tile overworld with roads, unpassable terrain, demon encounters, Forsaken Shrines, and Darkness Portals. Travel tile-by-tile (roads are far safer from ambushes), fight fixed encounter teams, leave a team passively hunting for Souls, and challenge other hunters standing on your tile to PvP.
+- **Permanent progression** - an Echo bag and summoning flow (`/bag`), a permanent demon collection with Soul-based training (`/collection`), an account skill tree fed by level-up stat points (`/skill-tree`), daily quests and a daily reward (`/camp`), public hunter profiles (`/hunter/:username`), and leaderboards (`/rankings`).
 
 ## Tech Stack
 
@@ -64,7 +64,7 @@ npm run dev   # with nodemon restarts
 npm start     # plain node
 ```
 
-The database schema is created automatically on first API use — `public/api/lib/schema.js` creates missing tables and performs additive schema checks against older local databases.
+The database schema is created automatically on first API use - `public/api/lib/schema.js` creates missing tables and performs additive schema checks against older local databases.
 
 ## NPM Scripts
 
@@ -267,10 +267,10 @@ Crowley, the traveling merchant, moves to a deterministic open road tile every 3
 
 - Movement is validated server-side step by step (up to 256 steps per request). Off-road steps on empty tiles risk ambushes (~1 in 7); roads are much safer (~1 in 34). Each ambush victory grants the encounter's XP and Soul payout, summarized when travel ends.
 - World Terror rises one level per map ring beyond the safe center (starting ~10 tiles out, capped at level 40), scaling encounter stats and XP with distance.
-- **Forsaken Shrines** — bind your soul at a shrine to respawn there after combat defeats instead of at world spawn.
-- **Darkness Portals** — paid teleports; the Soul cost scales with distance.
-- **Passive hunting** — after defeating a tile's encounter you may leave your world team hunting there. Souls accumulate while away but are capped by your Soul Vessel (base 50, expanded through skill-tree nodes), so AFK income is bounded by investment, not time.
-- **PvP** — hunters on the same tile can challenge each other (server-simulated battle, 30-second cooldown); wins and losses feed the `pvp` leaderboard and hunter profiles.
+- **Forsaken Shrines** - bind your soul at a shrine to respawn there after combat defeats instead of at world spawn.
+- **Darkness Portals** - paid teleports; the Soul cost scales with distance.
+- **Passive hunting** - after defeating a tile's encounter you may leave your world team hunting there. Souls accumulate while away but are capped by your Soul Vessel (base 50, expanded through skill-tree nodes), so AFK income is bounded by investment, not time.
+- **PvP** - hunters on the same tile can challenge each other (server-simulated battle, 30-second cooldown); wins and losses feed the `pvp` leaderboard and hunter profiles.
 
 ### Skill Tree
 
@@ -288,8 +288,8 @@ Defined in `public/api/lib/daily-quests.js` with a UTC daily reset: win 3 dungeo
 
 - Dungeon extraction adds one exact `type + rarity` Echo stack to Bag; it never directly creates or replaces a permanent demon. Echoes may continue accumulating after that slot is summoned.
 - Summoning requirements are Common `1`, Uncommon `2`, Rare `3`, Epic `5`, Legendary `8`, and Mythic `12`. Summoning atomically consumes only the requirement and creates the normal minimum-stat permanent demon; surplus remains banked.
-- Refinement stays within one species and advances one adjacent tier: Common→Uncommon costs `3`, Uncommon→Rare `3`, Rare→Epic `4`, Epic→Legendary `5`, and Legendary→Mythic `6`. Refining requires only enough source Echoes — the player freely chooses to refine or bank, regardless of whether the target rarity was previously extracted or summoned. Mythic surplus remains banked.
-- The permanent collection has one slot per demon type and rarity — 11 types × 6 rarities = 66 slots. Missing slots can show their exact Echo progress and link back to Bag.
+- Refinement stays within one species and advances one adjacent tier: Common→Uncommon costs `3`, Uncommon→Rare `3`, Rare→Epic `4`, Epic→Legendary `5`, and Legendary→Mythic `6`. Refining requires only enough source Echoes - the player freely chooses to refine or bank, regardless of whether the target rarity was previously extracted or summoned. Mythic surplus remains banked.
+- The permanent collection has one slot per demon type and rarity - 11 types × 6 rarities = 66 slots. Missing slots can show their exact Echo progress and link back to Bag.
 - Training (`POST /api/demons/:id/train`) is transactional and server-authoritative: it locks the player and demon rows, checks cost, spends Souls, and raises one stat by +1, picked with weighted randomness from stats below their caps.
 - Stat caps come from the matching type's `baseStats` maxima in `demon-types.json`. Cost starts at 2 Souls and grows with overall progress toward the caps, multiplied by rarity.
 
@@ -297,7 +297,7 @@ Existing permanent demons and their training remain untouched. The automatically
 
 ### Combat
 
-Combat is automatic and simulated in `public/api/lib/combat.js` (all battle types — dungeon, world encounter, ambush, PvP — share the same simulator):
+Combat is automatic and simulated in `public/api/lib/combat.js` (all battle types - dungeon, world encounter, ambush, PvP - share the same simulator):
 
 - Living demons gain `attackMeter += speed` per tick and act when the meter reaches 100; battles end when one side is wiped or after a 1000-tick safety limit.
 - Front-row targeting prefers living front-row enemies, falling back to any living enemy.
@@ -306,7 +306,7 @@ Combat is automatic and simulated in `public/api/lib/combat.js` (all battle type
 
 ## Static Data and Assets
 
-Files in `public/api/data` are source game data — API code reads them at runtime and must not mutate them.
+Files in `public/api/data` are source game data - API code reads them at runtime and must not mutate them.
 
 | File | Contents |
 | --- | --- |
@@ -360,7 +360,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `public/app/js/navigation.js` | Shared navigation |
 | `public/app/js/lucide-subset.js` | Generated icon subset (see scripts) |
 
-CSS is split per page — `base.css` loads everywhere; `battle.css`, `camp.css`, `collection.css`, `bag.css`, `skill-tree.css`, and `world.css` load only where needed.
+CSS is split per page - `base.css` loads everywhere; `battle.css`, `camp.css`, `collection.css`, `bag.css`, `skill-tree.css`, and `world.css` load only where needed.
 
 ## Backend Modules
 

@@ -1,4 +1,4 @@
-/* world.css — split from main.css by scripts/split-main-css.js.
+/* world.css - split from main.css by scripts/split-main-css.js.
    Hunter world map, side panel, world team editor and world battle modal. Loaded by world.html only.
    Edit these files directly; main.css no longer exists. */
 
@@ -3771,7 +3771,7 @@ body.is-world-side-collapsed .world-map-controls {
     }
 }
 
-/* World boss intro dialog — visual-novel style overlay shown on entering the
+/* World boss intro dialog - visual-novel style overlay shown on entering the
    world. Framed demon portrait on the left (the art has its own painted
    background, so it gets a gold-rimmed card instead of a cutout), teal glass
    panel and gold trim matching the site palette. */

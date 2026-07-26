@@ -1,6 +1,6 @@
 # Audio sources
 
-Current state (2026-07-20): the sound effects in `sfx/` are custom derivatives — sampled from the source material listed below and reworked in Audacity, in most cases heavily. The music tracks are AI-generated with Suno and used close to their generated form. Earlier versions of this file described the downloaded assets as used directly; that stopped being accurate as sounds were progressively replaced.
+Current state (2026-07-20): the sound effects in `sfx/` are custom derivatives - sampled from the source material listed below and reworked in Audacity, in most cases heavily. The music tracks are AI-generated with Suno and used close to their generated form. Earlier versions of this file described the downloaded assets as used directly; that stopped being accurate as sounds were progressively replaced.
 
 ## Music (Suno)
 
@@ -10,7 +10,7 @@ Ownership and commercial-use rights for Suno output depend on the subscription t
 
 `music/dungeon/1.ogg`–`3.ogg` are unused legacy tracks (the dungeon now plays the default playlist) and are kept only until deleted; `1.ogg` derives from [Whispers in the Fog](https://opengameart.org/content/whispers-in-the-fog) by Ruhinre.
 
-## Sound effects — sampled source material
+## Sound effects - sampled source material
 
 The samples behind the current SFX were drawn from the libraries below. All are available under the [Creative Commons Zero 1.0](https://creativecommons.org/publicdomain/zero/1.0/) public-domain dedication unless noted otherwise, so the derived sounds carry no attribution requirement; the sources are recorded here for provenance.
 
