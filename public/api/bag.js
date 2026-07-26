@@ -35,6 +35,19 @@ router.post('/bag/echoes/refine', requireAuth, async (req, res) => {
     throw createHttpError('Choose an Echo that can be refined.', 400);
   }
 
+  if (
+    Object.hasOwn(req.body || {}, 'targetTypeId') &&
+    Number(req.body.targetTypeId) !== typeId
+  ) {
+    throw createHttpError('Echoes can only be refined within the same demon species.', 400);
+  }
+  if (
+    Object.hasOwn(req.body || {}, 'targetRarity') &&
+    normalizeEchoRarity(req.body.targetRarity) !== targetRarity
+  ) {
+    throw createHttpError('Echoes can only be refined by one adjacent rarity tier.', 400);
+  }
+
   const [source, target] = await Promise.all([
     getEchoDefinition(typeId, rarity),
     getEchoDefinition(typeId, targetRarity)
