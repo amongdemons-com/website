@@ -197,6 +197,7 @@ function renderDungeonDemonCard(demon, options = {}) {
 
 function renderDemonCard(demon, options) {
   const isPlayer = options.side === 'player';
+  const isHandTeamUpgrade = options.side === 'hand' && Boolean(options.isTeamUpgrade);
   const isRecruitPoolDemon = Boolean(options.allowRecruitDrag && demon.recruitSource);
   const isRewardDraggable = Boolean(options.allowRewardDrag && demon.rewardCandidateKey);
   const canDropRecruit = Boolean(state.isRecruiting && isPlayer);
@@ -206,7 +207,7 @@ function renderDemonCard(demon, options) {
     'dungeon-demon-card',
     isRecruitPoolDemon ? 'is-recruit-draggable' : '',
     isRewardDraggable ? 'is-reward-draggable' : '',
-    options.isTeamUpgrade ? 'is-team-upgrade' : '',
+    isHandTeamUpgrade ? 'is-team-upgrade' : '',
     demon.recruitSource === 'collection' && !state.collectionReinforcementStagedInteracted ? 'is-collection-reinforcement-attention' : '',
     canDropRecruit ? 'is-recruit-drop-target' : '',
     hasPoisonStatus(demon) ? 'is-poisoned' : '',
@@ -218,7 +219,7 @@ function renderDemonCard(demon, options) {
     active: state.selectedSwapInstanceId === demon.instanceId ||
       state.selectedRecruitRewardId === demon.rewardId ||
       state.selectedRewardDemonKey === demon.rewardCandidateKey,
-    overlayHtml: renderDemonStatus(demon),
+    overlayHtml: `${isHandTeamUpgrade ? renderTeamUpgradeIndicator() : ''}${renderDemonStatus(demon)}`,
     attributes: {
       'data-instance-id': demon.instanceId,
       'data-reward-id': demon.rewardId || null,
@@ -229,6 +230,20 @@ function renderDemonCard(demon, options) {
       draggable
     }
   });
+}
+
+function renderTeamUpgradeIndicator() {
+  const arrow = renderIcon('arrow-up', {
+    className: 'dungeon-team-upgrade-arrow',
+    size: 14,
+    strokeWidth: 3.25
+  });
+
+  return `
+    <span class="dungeon-team-upgrade-indicator" role="img" aria-label="Upgrade available" title="Upgrade available">
+      ${arrow}${arrow}
+    </span>
+  `;
 }
 
 function renderDemonStatus(demon) {
@@ -310,6 +325,7 @@ export {
   renderCollectionReinforcementPlaceholder,
   renderDungeonDemonCard,
   renderDemonCard,
+  renderTeamUpgradeIndicator,
   renderDemonStatus,
   renderNewEncounterBadge,
   hasPoisonStatus,

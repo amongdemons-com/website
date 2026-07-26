@@ -1214,6 +1214,38 @@ body:not(.dungeon-page) {
     animation: team-upgrade-gold-pulse 1.4s ease-in-out infinite;
 }
 
+.dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator {
+    position: absolute;
+    top: 0.18rem;
+    left: 50%;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.04rem;
+    color: #fff1a8;
+    pointer-events: none;
+    filter:
+        drop-shadow(0 1px 1px rgba(0,0,0,0.96))
+        drop-shadow(0 0 4px rgba(255,184,28,0.88));
+    animation: team-upgrade-arrows-float 900ms ease-in-out infinite;
+}
+
+.dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator .dungeon-team-upgrade-arrow {
+    width: clamp(0.68rem, 13%, 0.88rem);
+    height: clamp(0.68rem, 13%, 0.88rem);
+    flex: none;
+}
+
+@keyframes team-upgrade-arrows-float {
+    0%, 100% {
+        transform: translate(-50%, 1px);
+    }
+    50% {
+        transform: translate(-50%, -3px);
+    }
+}
+
 @keyframes team-upgrade-gold-pulse {
     0%, 100% {
         border-color: rgba(255,213,79,0.48);
@@ -1236,6 +1268,11 @@ body:not(.dungeon-page) {
         box-shadow:
             0 0 0 1px rgba(255,213,79,0.12),
             0 0 18px rgba(255,184,28,0.32);
+    }
+
+    .dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator {
+        animation: none;
+        transform: translateX(-50%);
     }
 }
 

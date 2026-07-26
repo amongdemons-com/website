@@ -7092,6 +7092,17 @@ body .game-shell-nav .game-nav-link {
     transition: background 150ms ease, color 150ms ease;
 }
 
+/* Reserve icon space before the local Lucide runtime replaces placeholders.
+   This keeps nav labels stationary during page initialization. */
+body .game-shell-nav [data-lucide] {
+    display: inline-block;
+    width: 0.92rem;
+    height: 0.92rem;
+    flex: 0 0 0.92rem;
+    margin: 0;
+    vertical-align: -0.125em;
+}
+
 body .game-shell-nav .game-nav-link .ad-icon {
     width: 0.92rem;
     height: 0.92rem;
@@ -7148,6 +7159,7 @@ body .game-shell-nav .game-nav-dropdown-toggle {
 body .game-shell-nav .game-nav-caret {
     width: 0.72rem;
     height: 0.72rem;
+    flex: 0 0 0.72rem;
     margin: 0 0 0 0.08rem;
     color: rgba(220,232,229,0.52);
     transition: transform 150ms ease;
@@ -7301,6 +7313,14 @@ body .game-shell-nav .nav-logout-btn .ad-icon {
     width: 0.96rem;
     height: 0.96rem;
     margin: 0;
+}
+
+body .game-shell-nav .nav-settings-link [data-lucide],
+body .game-shell-nav .nav-logout-btn [data-lucide],
+body .game-shell-nav .nav-account .nav-guest-save-btn [data-lucide] {
+    width: 0.96rem;
+    height: 0.96rem;
+    flex-basis: 0.96rem;
 }
 
 body .game-shell-nav .game-shell-auth-actions .btn {

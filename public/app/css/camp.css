@@ -2556,11 +2556,11 @@ body.camp-page {
         padding: 0.72rem;
     }
 
-.camp-lobby-grid {
+    .camp-lobby-grid {
         grid-template-columns: minmax(0, 1fr);
         grid-template-areas:
-            "player"
             "stage"
+            "player"
             "quests";
         gap: 0.7rem;
     }

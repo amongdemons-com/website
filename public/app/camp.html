@@ -23,8 +23,8 @@
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_campfire.png">
     <meta name="twitter:image:alt" content="Among Demons campfire artwork">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=27ff51d484ea" rel="stylesheet">
-    <link href="/app/css/camp.css?v=f8138bd6e1cb" rel="stylesheet">
+    <link href="/app/css/base.css?v=ac68cde96e2e" rel="stylesheet">
+    <link href="/app/css/camp.css?v=4eb4c0ad3f30" rel="stylesheet">
   </head>
   <body class="camp-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -152,6 +152,9 @@
           </dl>
 
           <div class="camp-profile-shortcuts">
+            <div class="camp-skill-tree-stats" id="campSkillTreeStats" aria-label="Active skill tree bonuses">
+              <span class="camp-skill-tree-empty">Loading bonuses...</span>
+            </div>
             <a class="camp-skill-tree-link" id="campSkillTreeLink" href="/skill-tree">
               <span class="camp-skill-tree-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
               <strong class="camp-profile-shortcut-label">Skill Tree</strong>
@@ -160,9 +163,6 @@
               <span class="camp-skill-tree-icon camp-bag-icon" aria-hidden="true"><i data-lucide="amphora"></i></span>
               <strong class="camp-profile-shortcut-label">Bag</strong>
             </a>
-            <div class="camp-skill-tree-stats" id="campSkillTreeStats" aria-label="Active skill tree bonuses">
-              <span class="camp-skill-tree-empty">Loading bonuses...</span>
-            </div>
           </div>
         </aside>
 
@@ -235,7 +235,7 @@
         <div class="profile-demon-grid" id="profileDemonGrid"></div>
       </section>
     </div>
-    <script src="/app/dist/runtime.bundle.js?v=ea5de9c00c0c"></script>
+    <script src="/app/dist/runtime.bundle.js?v=2fac2f515e68"></script>
     <script src="/app/js/camp-ui.js?v=b8148f6dc30b"></script>
   </body>
 </html>
