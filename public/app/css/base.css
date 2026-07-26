@@ -1882,7 +1882,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
 
 .demon-detail-meta {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
     gap: 0.65rem;
     align-content: start;
     padding-bottom: 1rem;
@@ -1989,8 +1989,8 @@ body:has(#demonDetailModal.show) .modal-backdrop {
         display: block;
     }
 
-.demon-detail-meta {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .demon-detail-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.4rem;
         padding-right: 0.75rem;
         padding-left: 0.75rem;

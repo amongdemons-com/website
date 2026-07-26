@@ -1455,7 +1455,7 @@ import './bag-item-visuals.js';
   }
 
   async function claimHuntRewards(button) {
-    if (state.huntBusy) return false;
+    if (state.huntBusy || !hasClaimableHuntRewards()) return false;
     state.huntBusy = true;
     state.huntBusyAction = 'claim';
     setButtonBusy(button, true, 'Claiming…');
@@ -5055,6 +5055,7 @@ import './bag-item-visuals.js';
     const encounter = getActiveHuntEncounter();
     const progress = computeHuntProgress();
     const rate = computeHuntRate(encounter);
+    const canClaimRewards = hasClaimableHuntRewards(progress);
     const terror = rate.terror || getEncounterTerror(encounter);
     const huntingDemons = renderDemonPortraitGroup(encounter?.team, {
       max: 5,
@@ -5073,7 +5074,14 @@ import './bag-item-visuals.js';
         ${huntingDemons || '<p class="world-empty-text">No hunted demons visible.</p>'}
         ${renderHuntProgress(progress, rate)}
         ${renderHuntRewardLines(rate, progress)}
-        <button class="btn btn-primary btn-sm world-card-action world-end-hunt-action ${state.huntBusyAction === 'claim' ? 'is-busy' : ''}" type="button" data-claim-hunt-rewards ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'claim' ? 'Claiming…' : 'Claim Rewards'}</button>
+        <button
+          class="btn btn-primary btn-sm world-card-action world-end-hunt-action ${state.huntBusyAction === 'claim' ? 'is-busy' : ''}"
+          type="button"
+          data-claim-hunt-rewards
+          ${state.huntBusy || !canClaimRewards ? 'disabled' : ''}
+          ${state.huntBusy ? 'aria-busy="true"' : ''}
+          ${!canClaimRewards ? 'title="Rewards become claimable after the first hunt victory." aria-label="Claim rewards after the first hunt victory"' : 'aria-label="Claim hunt rewards"'}
+        >${state.huntBusyAction === 'claim' ? 'Claiming…' : 'Claim Rewards'}</button>
       </article>
     `;
   }
@@ -8035,6 +8043,13 @@ import './bag-item-visuals.js';
     };
   }
 
+  function hasClaimableHuntRewards(progress = computeHuntProgress()) {
+    return Boolean(progress) && (
+      Math.max(0, Number(progress.accruedXp) || 0) > 0
+      || Math.max(0, Number(progress.accruedSouls) || 0) > 0
+    );
+  }
+
   function renderWorldCardMeta(parts = []) {
     const visibleParts = parts.filter(Boolean);
     if (!visibleParts.length) return '';
@@ -8619,6 +8634,24 @@ import './bag-item-visuals.js';
     setText(perKillRow?.querySelector('.world-hunt-souls-value'), formatSoulCount(rate.soulsPerCycle));
     setText(earnedRow?.querySelector('.world-hunt-xp-value'), `${formatNumber(progress.accruedXp)} XP`);
     updateHuntEarnedSouls(earnedRow?.querySelector('.world-hunt-souls-value'), progress);
+    updateHuntClaimButton(card.querySelector('[data-claim-hunt-rewards]'), progress);
+  }
+
+  function updateHuntClaimButton(button, progress) {
+    if (!button) return;
+
+    const canClaimRewards = hasClaimableHuntRewards(progress);
+    button.disabled = state.huntBusy || !canClaimRewards;
+    if (state.huntBusyAction === 'claim') return;
+
+    if (canClaimRewards) {
+      button.removeAttribute('title');
+      button.setAttribute('aria-label', 'Claim hunt rewards');
+      return;
+    }
+
+    button.title = 'Rewards become claimable after the first hunt victory.';
+    button.setAttribute('aria-label', 'Claim rewards after the first hunt victory');
   }
 
   function updateHuntEarnedSouls(element, progress) {

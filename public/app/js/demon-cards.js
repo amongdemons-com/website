@@ -21,6 +21,19 @@
     10: 'Healer',
     11: 'Chaotic'
   };
+  const DAMAGE_TYPE_LABELS_BY_TYPE = {
+    1: 'Single-target',
+    2: 'Single-target',
+    3: 'Poison',
+    4: 'AOE',
+    5: 'Single-target',
+    6: 'Single-target',
+    7: 'AOE',
+    8: 'Thorns',
+    9: 'Single-target',
+    10: 'Healing',
+    11: 'Single-target'
+  };
 
   function renderDemonCard(demon = {}, options = {}) {
     const tag = options.tag || 'div';
@@ -195,7 +208,8 @@
     const rows = [
       ['Type', getTypeLabel(demon)],
       ['Position', getPositionLabel(demon)],
-      ['Trait', getTraitLabel(demon)]
+      ['Trait', getTraitLabel(demon)],
+      ['Damage type', getDamageTypeLabel(demon)]
     ].filter(([, value]) => value !== null && value !== undefined && value !== '');
 
     if (!rows.length) return '';
@@ -352,6 +366,43 @@
     return formatTraitLabel(demon.role);
   }
 
+  function getDamageTypeLabel(demon = {}) {
+    const explicitDamageType = demon.damageType || demon.damage_type;
+    if (explicitDamageType) return formatDamageTypeLabel(explicitDamageType);
+
+    const typeId = Number(demon.typeId || demon.type);
+    if (DAMAGE_TYPE_LABELS_BY_TYPE[typeId]) return DAMAGE_TYPE_LABELS_BY_TYPE[typeId];
+
+    const abilityKind = String(demon.abilityKind || demon.ability_kind || demon.ability?.kind || '').toLowerCase();
+    if (abilityKind === 'heal') return 'Healing';
+    if (abilityKind === 'poison') return 'Poison';
+    if (abilityKind === 'retaliate') return 'Thorns';
+    if (abilityKind === 'aoe_attack' || abilityKind === 'cleave_attack') return 'AOE';
+
+    const role = String(demon.role || '').toLowerCase();
+    if (role === 'healer') return 'Healing';
+    if (role === 'poisoner') return 'Poison';
+    if (role === 'counter_tank') return 'Thorns';
+    if (role === 'aoe' || role === 'striker') return 'AOE';
+
+    const targeting = String(demon.targeting || '').toLowerCase();
+    if (targeting === 'all' || targeting === 'cleave') return 'AOE';
+    return abilityKind || role || targeting ? 'Single-target' : '';
+  }
+
+  function formatDamageTypeLabel(damageType) {
+    const normalized = String(damageType || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[\s-]+/g, '_');
+    if (['direct', 'direct_damage', 'single', 'single_target', 'basic_attack'].includes(normalized)) return 'Single-target';
+    if (['aoe', 'aoe_damage', 'multi_target'].includes(normalized)) return 'AOE';
+    if (['poison', 'poison_tick'].includes(normalized)) return 'Poison';
+    if (['retaliate', 'retaliation', 'thorns'].includes(normalized)) return 'Thorns';
+    if (['heal', 'healing'].includes(normalized)) return 'Healing';
+    return formatLabel(damageType);
+  }
+
   function getDemonImageAlt(demon = {}, title = 'Demon', rarity = '') {
     const trait = getTraitLabel(demon);
     const position = getPositionLabel(demon);
@@ -390,6 +441,7 @@
   ui.getDemonRoleLabel = getTraitLabel;
   ui.getDemonTraitLabel = getTraitLabel;
   ui.getDemonPositionLabel = getPositionLabel;
+  ui.getDemonDamageTypeLabel = getDamageTypeLabel;
   ui.getRarityColor = getRarityColor;
   ui.escapeHtml = escapeHtml;
   ui.capitalize = capitalize;

@@ -1,5 +1,6 @@
 const { createDemon } = require('./demon-factory');
 const { getDungeonTeamLimit } = require('./dungeon-rules');
+const { getAllowedEnemyTypeIds } = require('./enemy-team-rules');
 const { assignFormationSlots } = require('./run-demons');
 const { normalizeRunBuffState } = require('./run-buffs');
 
@@ -56,12 +57,13 @@ async function createDungeonEnemies(rng, floor, size, options = {}) {
   const enemies = [];
 
   for (let index = 0; index < teamSize; index += 1) {
+    const availableTypeIds = getAllowedEnemyTypeIds(allowedTypeIds, enemies);
     enemies.push(await createDemon(rng, {
       ...getEnemyGenerationOptions(floor, { elite: index === eliteIndex }),
       ...(encounterProfile.convergence ? { rarity: encounterProfile.convergence.rarity } : {}),
       instanceId: `enemy-${floor}-${index + 1}`,
       position: positions[index],
-      allowedTypeIds
+      allowedTypeIds: availableTypeIds
     }));
   }
 

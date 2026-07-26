@@ -79,8 +79,16 @@ const SUPPORT_ONLY_ROLES = new Set(['healer', 'counter_tank']);
 
 const demonTypes = require(path.join(DATA_DIR, 'demon-types.json'));
 const demonAssets = require(path.join(DATA_DIR, 'demons.json'));
+const {
+  MAX_ENEMY_MELEE_DEMONS,
+  countEnemyMeleeDemons,
+  isMeleeEnemyDemon
+} = require('../public/api/lib/enemy-team-rules');
 const TYPE_WEIGHTS = demonAssets.map((asset) => Number(asset.typeWeight)).filter(Number.isFinite);
 const MAX_TYPE_WEIGHT = Math.max(...TYPE_WEIGHTS);
+const NON_MELEE_TYPE_IDS = Object.keys(demonTypes)
+  .map(Number)
+  .filter((typeId) => !isMeleeEnemyDemon({ typeId }, demonTypes));
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -411,6 +419,93 @@ function buildEncounter(id, x, y, legacyTeamKeys, finalTeamKeys) {
     },
     team: members
   };
+}
+
+// Apply encounter-only composition rules after every map tile has already been
+// generated. This keeps the shared RNG sequence - and therefore every demon
+// spot coordinate - exactly unchanged.
+function enforceEncounterMeleeLimits(encounters) {
+  const usedTeamKeys = new Set(
+    encounters
+      .filter((encounter) => countEnemyMeleeDemons(encounter.team, demonTypes) <= MAX_ENEMY_MELEE_DEMONS)
+      .map((encounter) => teamKey(encounter.team))
+  );
+
+  return encounters.map((encounter) => {
+    if (countEnemyMeleeDemons(encounter.team, demonTypes) <= MAX_ENEMY_MELEE_DEMONS) {
+      return encounter;
+    }
+
+    for (let salt = 0; salt < 700; salt += 1) {
+      const constrained = constrainEncounterMeleeTeam(encounter, salt);
+      const key = teamKey(constrained.team);
+      if (usedTeamKeys.has(key)) continue;
+
+      usedTeamKeys.add(key);
+      return constrained;
+    }
+
+    throw new Error(`Could not enforce the melee limit for ${encounter.id}.`);
+  });
+}
+
+function constrainEncounterMeleeTeam(encounter, salt) {
+  let meleeCount = 0;
+  let replacementIndex = 0;
+  const team = encounter.team.map((member, index) => {
+    if (!isMeleeEnemyDemon(member, demonTypes)) return { ...member };
+
+    meleeCount += 1;
+    if (meleeCount <= MAX_ENEMY_MELEE_DEMONS) return { ...member };
+
+    const typeIndex = hashText(`${encounter.id}:${index}:${replacementIndex}:${salt}`) % NON_MELEE_TYPE_IDS.length;
+    const typeId = NON_MELEE_TYPE_IDS[typeIndex];
+    replacementIndex += 1;
+    return buildMember(
+      typeId,
+      member.rarity,
+      member.instanceId || `${encounter.id}-m${index + 1}`,
+      preferredPosition(typeId)
+    );
+  });
+
+  return refreshEncounterKeyDemon({ ...encounter, team });
+}
+
+function refreshEncounterKeyDemon(encounter) {
+  const primaryType = encounter.zoneType || mixedTypeId(encounter.x, encounter.y);
+  const team = encounter.team.map((member) => {
+    const { elite, ...rest } = member;
+    return rest;
+  });
+  const keyDemon = team
+    .slice()
+    .sort((a, b) =>
+      rarityRank(b.rarity) - rarityRank(a.rarity) ||
+      Number(b.typeId === primaryType) - Number(a.typeId === primaryType) ||
+      b.typeId - a.typeId
+    )[0];
+  keyDemon.elite = true;
+
+  return {
+    ...encounter,
+    keyDemon: {
+      typeId: keyDemon.typeId,
+      species: keyDemon.species,
+      rarity: keyDemon.rarity,
+      imageUrl: keyDemon.imageUrl
+    },
+    team
+  };
+}
+
+function hashText(value) {
+  let hash = 2166136261;
+  for (const character of String(value || '')) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }
 
 // Named landmarks give the road network and travel view anchors. Forsaken
@@ -843,8 +938,9 @@ function generateEncounters(occupied, roadSet) {
     }
   }
 
-  validateEncounterTeams(encounters);
-  return encounters;
+  const constrainedEncounters = enforceEncounterMeleeLimits(encounters);
+  validateEncounterTeams(constrainedEncounters);
+  return constrainedEncounters;
 }
 
 function validateEncounterTeams(encounters) {
@@ -865,6 +961,10 @@ function validateEncounterTeams(encounters) {
       throw new Error(`Support-only enemy team generated: ${encounter.id}`);
     }
 
+    const meleeCount = countEnemyMeleeDemons(encounter.team, demonTypes);
+    if (meleeCount > MAX_ENEMY_MELEE_DEMONS) {
+      throw new Error(`Too many melee demons for ${encounter.id}: ${meleeCount}`);
+    }
   });
 }
 
@@ -1015,4 +1115,11 @@ function main() {
   console.log('  encounters per zone type:', zoneCounts);
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  enforceEncounterMeleeLimits,
+  validateEncounterTeams
+};

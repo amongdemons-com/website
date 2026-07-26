@@ -418,7 +418,10 @@ router.post('/world/hunting/stop', requireAuth, async (req, res) => {
 });
 
 router.post('/world/hunting/claim', requireAuth, async (req, res) => {
-  res.json(await settleActiveHunt(req.player, { restartHunt: true }));
+  res.json(await settleActiveHunt(req.player, {
+    restartHunt: true,
+    requireClaimableRewards: true
+  }));
 });
 
 router.get('/world/hunting/status', requireAuth, async (req, res) => {
@@ -949,6 +952,7 @@ async function settleTravelAmbushRewards(player, rewards = {}) {
 async function settleActiveHunt(player, options = {}) {
   const clearUnlocks = Boolean(options.clearUnlocks);
   const restartHunt = Boolean(options.restartHunt);
+  const requireClaimableRewards = Boolean(options.requireClaimableRewards);
   const connection = await db.getConnection();
   let committed = false;
   let rewards = createEmptyHuntRewards();
@@ -990,6 +994,11 @@ async function settleActiveHunt(player, options = {}) {
       const soulCapacity = liveHuntCapacityState.soulCapacity;
       const settledAt = new Date();
       rewards = await calculateHuntRewards(snapshot, settledAt, { soulCapacity });
+      if (requireClaimableRewards && !hasClaimableHuntRewards(rewards)) {
+        const error = new Error('Hunt rewards are not ready yet.');
+        error.status = 409;
+        throw error;
+      }
       const restartedSnapshot = restartHunt
         ? await createHuntSnapshot(player, encounter, {
           statSummary: liveHuntCapacityState.statSummary,
@@ -1321,6 +1330,11 @@ function createEmptyHuntRewards() {
   };
 }
 
+function hasClaimableHuntRewards(rewards = {}) {
+  return Math.max(0, Number(rewards.xp) || 0) > 0
+    || Math.max(0, Number(rewards.souls) || 0) > 0;
+}
+
 function getWorldPlayer(player) {
   return {
     id: player.id,
@@ -1535,6 +1549,7 @@ router._test = {
   getDarknessPortalSummonCost,
   getSignAt,
   getAmbushChanceForTile,
+  hasClaimableHuntRewards,
   isBlocked,
   isAmbushEligibleTile,
   resolveTravelStepEvent

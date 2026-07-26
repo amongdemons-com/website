@@ -10,6 +10,10 @@ const MERCHANT_MOVE_INTERVAL_SECONDS = 30 * 60;
 const MERCHANT_STOCK_SIZE = 4;
 const MERCHANT_STOCK_VERSION = 1;
 const MERCHANT_BRIBE_COST = 50;
+// At the outer edge, every slot gets a second baseline rarity roll. Keeping the
+// better result makes distant shops meaningfully stronger while the Echo count,
+// exact demon type, and Soul price still gate completed high-rarity summons.
+const MERCHANT_MAX_DISTANCE_LUCK_REROLL_CHANCE = 1;
 
 // A shop contains mostly attainable Echoes. The final two bands are
 // intentionally tiny: a Mythic averages one appearance per 20,000 slots.
@@ -136,14 +140,17 @@ function buildMerchantStock(playerId, spawnId, catalog, purchasedSlots = new Set
 
   const normalizedRerollCount = Math.max(0, Math.floor(Number(rerollCount) || 0));
   const rerollSeed = normalizedRerollCount > 0 ? `:reroll:${normalizedRerollCount}` : '';
-  const rng = seededRng(hashSeed(
-    `merchant-stock:v${MERCHANT_STOCK_VERSION}:${spawnId}:${String(playerId || '')}${rerollSeed}`
-  ));
+  const stockSeed = `merchant-stock:v${MERCHANT_STOCK_VERSION}:${spawnId}:${String(playerId || '')}${rerollSeed}`;
+  const rng = seededRng(hashSeed(stockSeed));
+  // A separate stream keeps the original stock roll sequence stable unless a
+  // slot actually benefits from distance luck.
+  const luckRng = seededRng(hashSeed(`${stockSeed}:distance-luck:v1`));
+  const luckRerollChance = getMerchantLuckRerollChance(resolveMerchantPosition(spawnId));
   const usedKeys = new Set();
   const usedTypeIds = new Set();
 
   return Array.from({ length: MERCHANT_STOCK_SIZE }, (unused, slot) => {
-    const rarity = rollMerchantRarity(rng);
+    const rarity = rollMerchantRarity(rng, luckRerollChance, luckRng);
     const rarityPool = byRarity.get(rarity) || definitions;
     let candidates = rarityPool.filter((definition) => (
       !usedKeys.has(definition.itemKey) && !usedTypeIds.has(Number(definition.typeId))
@@ -175,7 +182,22 @@ function buildMerchantStock(playerId, spawnId, catalog, purchasedSlots = new Set
   });
 }
 
-function rollMerchantRarity(rng = Math.random) {
+function rollMerchantRarity(rng = Math.random, luckRerollChance = 0, luckRng = rng) {
+  const firstRarity = rollBaseMerchantRarity(rng);
+  const normalizedLuck = Math.min(
+    MERCHANT_MAX_DISTANCE_LUCK_REROLL_CHANCE,
+    Math.max(0, Number(luckRerollChance) || 0)
+  );
+  if (normalizedLuck <= 0 || luckRng() >= normalizedLuck) return firstRarity;
+
+  const secondRarity = rollBaseMerchantRarity(luckRng);
+  const rarityOrder = Object.keys(MERCHANT_RARITY_WEIGHTS);
+  return rarityOrder.indexOf(secondRarity) > rarityOrder.indexOf(firstRarity)
+    ? secondRarity
+    : firstRarity;
+}
+
+function rollBaseMerchantRarity(rng = Math.random) {
   const entries = Object.entries(MERCHANT_RARITY_WEIGHTS);
   const totalWeight = entries.reduce((total, entry) => total + entry[1], 0);
   let roll = rng() * totalWeight;
@@ -186,6 +208,28 @@ function rollMerchantRarity(rng = Math.random) {
   }
 
   return 'common';
+}
+
+function getMerchantLuckRerollChance(position = {}) {
+  const centerX = Number(worldMap.spawn?.x) || 0;
+  const centerY = Number(worldMap.spawn?.y) || 0;
+  const boundsMin = Number(worldMap.bounds?.min);
+  const boundsMax = Number(worldMap.bounds?.max);
+  const edgeDistance = Math.max(
+    1,
+    Number.isFinite(boundsMin) ? Math.abs(boundsMin - centerX) : 0,
+    Number.isFinite(boundsMax) ? Math.abs(boundsMax - centerX) : 0,
+    Number.isFinite(boundsMin) ? Math.abs(boundsMin - centerY) : 0,
+    Number.isFinite(boundsMax) ? Math.abs(boundsMax - centerY) : 0
+  );
+  // Match the square distance rings used by World Terror.
+  const distance = Math.max(
+    Math.abs((Number(position.x) || 0) - centerX),
+    Math.abs((Number(position.y) || 0) - centerY)
+  );
+  const distanceProgress = Math.min(1, distance / edgeDistance);
+
+  return distanceProgress * MERCHANT_MAX_DISTANCE_LUCK_REROLL_CHANCE;
 }
 
 async function purchaseWorldMerchantItem(
@@ -461,12 +505,14 @@ module.exports = {
   MERCHANT_BRIBE_COST,
   MERCHANT_ID,
   MERCHANT_MOVE_INTERVAL_SECONDS,
+  MERCHANT_MAX_DISTANCE_LUCK_REROLL_CHANCE,
   MERCHANT_RARITY_PRICES,
   MERCHANT_RARITY_WEIGHTS,
   MERCHANT_STOCK_SIZE,
   bribeWorldMerchant,
   buildMerchantStock,
   getActiveWorldMerchant,
+  getMerchantLuckRerollChance,
   getMerchantSpawnId,
   getMerchantStockId,
   getWorldMerchantForPlayer,

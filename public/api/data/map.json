@@ -13738,21 +13738,21 @@
         },
         {
           "instanceId": "enc-4-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/30.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/18.png"
         },
         {
           "instanceId": "enc-4-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 8,
+          "species": "Ko Pak",
+          "role": "counter_tank",
           "rarity": "legendary",
           "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "imageUrl": "/app/images/demons/47.png"
         }
       ]
     },
@@ -14683,12 +14683,12 @@
         },
         {
           "instanceId": "enc-19-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/16.png"
         }
       ]
     },
@@ -15310,21 +15310,21 @@
         },
         {
           "instanceId": "enc-29-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         },
         {
           "instanceId": "enc-29-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/59.png"
         }
       ]
     },
@@ -15508,12 +15508,12 @@
         },
         {
           "instanceId": "enc-32-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         }
       ]
     },
@@ -16141,21 +16141,21 @@
         },
         {
           "instanceId": "enc-43-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/58.png"
         },
         {
           "instanceId": "enc-43-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/58.png"
         }
       ]
     },
@@ -16210,12 +16210,12 @@
         },
         {
           "instanceId": "enc-44-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/64.png"
         }
       ]
     },
@@ -16312,12 +16312,12 @@
         },
         {
           "instanceId": "enc-46-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 6,
+          "species": "Goh Loomb",
+          "role": "assassin",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/35.png"
         }
       ]
     },
@@ -16492,12 +16492,12 @@
         },
         {
           "instanceId": "enc-49-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 2,
+          "species": "Gon G'ah",
+          "role": "ranged",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/28.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/10.png"
         }
       ]
     },
@@ -16543,12 +16543,12 @@
         },
         {
           "instanceId": "enc-50-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/65.png"
         }
       ]
     },
@@ -16594,12 +16594,12 @@
         },
         {
           "instanceId": "enc-51-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 6,
+          "species": "Goh Loomb",
+          "role": "assassin",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/35.png"
         },
         {
           "instanceId": "enc-51-m5",
@@ -16816,21 +16816,21 @@
         },
         {
           "instanceId": "enc-55-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 2,
+          "species": "Gon G'ah",
+          "role": "ranged",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/11.png"
         },
         {
           "instanceId": "enc-55-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/3.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/57.png"
         }
       ]
     },
@@ -17578,12 +17578,12 @@
         },
         {
           "instanceId": "enc-68-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/15.png"
         }
       ]
     },
@@ -18244,12 +18244,12 @@
         },
         {
           "instanceId": "enc-80-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png"
         }
       ]
     },
@@ -20086,12 +20086,12 @@
         },
         {
           "instanceId": "enc-114-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 6,
+          "species": "Goh Loomb",
+          "role": "assassin",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/33.png"
         }
       ]
     },
@@ -20470,12 +20470,12 @@
         },
         {
           "instanceId": "enc-121-m4",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/51.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/57.png"
         }
       ]
     },
@@ -22114,21 +22114,21 @@
         },
         {
           "instanceId": "enc-152-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/17.png"
         },
         {
           "instanceId": "enc-152-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 2,
+          "species": "Gon G'ah",
+          "role": "ranged",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/11.png"
         }
       ]
     },
@@ -22225,12 +22225,12 @@
         },
         {
           "instanceId": "enc-154-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/58.png"
         },
         {
           "instanceId": "enc-154-m5",
@@ -22438,21 +22438,21 @@
         },
         {
           "instanceId": "enc-158-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/6.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/18.png"
         },
         {
           "instanceId": "enc-158-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/6.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/66.png"
         }
       ]
     },
@@ -22498,12 +22498,12 @@
         },
         {
           "instanceId": "enc-159-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/16.png"
         }
       ]
     },
@@ -22975,12 +22975,12 @@
         },
         {
           "instanceId": "enc-168-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/58.png"
         }
       ]
     },
@@ -23026,21 +23026,21 @@
         },
         {
           "instanceId": "enc-169-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/16.png"
         },
         {
           "instanceId": "enc-169-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/65.png"
         }
       ]
     },
@@ -23350,12 +23350,12 @@
         },
         {
           "instanceId": "enc-175-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 8,
+          "species": "Ko Pak",
+          "role": "counter_tank",
           "rarity": "rare",
           "position": "front",
-          "imageUrl": "/app/images/demons/3.png"
+          "imageUrl": "/app/images/demons/45.png"
         }
       ]
     },
@@ -23401,21 +23401,21 @@
         },
         {
           "instanceId": "enc-176-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 8,
+          "species": "Ko Pak",
+          "role": "counter_tank",
           "rarity": "rare",
           "position": "front",
-          "imageUrl": "/app/images/demons/3.png"
+          "imageUrl": "/app/images/demons/45.png"
         },
         {
           "instanceId": "enc-176-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 8,
+          "species": "Ko Pak",
+          "role": "counter_tank",
           "rarity": "rare",
           "position": "front",
-          "imageUrl": "/app/images/demons/3.png"
+          "imageUrl": "/app/images/demons/45.png"
         }
       ]
     },
@@ -23470,12 +23470,12 @@
         },
         {
           "instanceId": "enc-177-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 6,
+          "species": "Goh Loomb",
+          "role": "assassin",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/34.png"
         }
       ]
     },
@@ -23683,12 +23683,12 @@
         },
         {
           "instanceId": "enc-181-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 8,
+          "species": "Ko Pak",
+          "role": "counter_tank",
           "rarity": "epic",
           "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "imageUrl": "/app/images/demons/46.png"
         }
       ]
     },
@@ -24049,12 +24049,12 @@
         },
         {
           "instanceId": "enc-188-m4",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/27.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/15.png"
         }
       ]
     },
@@ -24151,12 +24151,12 @@
         },
         {
           "instanceId": "enc-190-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/64.png"
         }
       ]
     },
@@ -24253,12 +24253,12 @@
         },
         {
           "instanceId": "enc-192-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/39.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/15.png"
         }
       ]
     },
@@ -24304,21 +24304,21 @@
         },
         {
           "instanceId": "enc-193-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 6,
+          "species": "Goh Loomb",
+          "role": "assassin",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/40.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/34.png"
         },
         {
           "instanceId": "enc-193-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/6.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/60.png"
         }
       ]
     },
@@ -24568,12 +24568,12 @@
         },
         {
           "instanceId": "enc-198-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 2,
+          "species": "Gon G'ah",
+          "role": "ranged",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/41.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/11.png"
         }
       ]
     },
@@ -24670,12 +24670,12 @@
         },
         {
           "instanceId": "enc-200-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/17.png"
         }
       ]
     },
@@ -24721,12 +24721,12 @@
         },
         {
           "instanceId": "enc-201-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/17.png"
         }
       ]
     },
@@ -24976,12 +24976,12 @@
         },
         {
           "instanceId": "enc-206-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "uncommon",
-          "position": "front",
-          "imageUrl": "/app/images/demons/2.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/62.png"
         }
       ]
     },
@@ -25027,12 +25027,12 @@
         },
         {
           "instanceId": "enc-207-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 8,
+          "species": "Ko Pak",
+          "role": "counter_tank",
           "rarity": "rare",
           "position": "front",
-          "imageUrl": "/app/images/demons/3.png"
+          "imageUrl": "/app/images/demons/45.png"
         }
       ]
     },
@@ -25129,12 +25129,12 @@
         },
         {
           "instanceId": "enc-209-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/39.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png"
         }
       ]
     },
@@ -25231,12 +25231,12 @@
         },
         {
           "instanceId": "enc-211-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/40.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/58.png"
         }
       ]
     },
@@ -25843,12 +25843,12 @@
         },
         {
           "instanceId": "enc-223-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/40.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-223-m5",
@@ -25912,12 +25912,12 @@
         },
         {
           "instanceId": "enc-224-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         }
       ]
     },
@@ -25963,21 +25963,21 @@
         },
         {
           "instanceId": "enc-225-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 2,
+          "species": "Gon G'ah",
+          "role": "ranged",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/10.png"
         },
         {
           "instanceId": "enc-225-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/6.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/66.png"
         }
       ]
     },
@@ -26032,12 +26032,12 @@
         },
         {
           "instanceId": "enc-226-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 8,
+          "species": "Ko Pak",
+          "role": "counter_tank",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/6.png"
+          "imageUrl": "/app/images/demons/48.png"
         }
       ]
     },
@@ -26083,12 +26083,12 @@
         },
         {
           "instanceId": "enc-227-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/65.png"
         },
         {
           "instanceId": "enc-227-m5",
@@ -26347,12 +26347,12 @@
         },
         {
           "instanceId": "enc-232-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/40.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/58.png"
         }
       ]
     },
@@ -26407,12 +26407,12 @@
         },
         {
           "instanceId": "enc-233-m5",
-          "typeId": 5,
-          "species": "Vi'Zel",
-          "role": "bruiser",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/29.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/59.png"
         }
       ]
     },
@@ -26458,12 +26458,12 @@
         },
         {
           "instanceId": "enc-234-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/6.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/18.png"
         }
       ]
     },
@@ -26833,12 +26833,12 @@
         },
         {
           "instanceId": "enc-241-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 6,
+          "species": "Goh Loomb",
+          "role": "assassin",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/35.png"
         }
       ]
     },
@@ -27481,12 +27481,12 @@
         },
         {
           "instanceId": "enc-253-m5",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/40.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         }
       ]
     },
@@ -27643,12 +27643,12 @@
         },
         {
           "instanceId": "enc-256-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/3.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/15.png"
         }
       ]
     },
@@ -27745,21 +27745,21 @@
         },
         {
           "instanceId": "enc-258-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 8,
+          "species": "Ko Pak",
+          "role": "counter_tank",
           "rarity": "mythic",
           "position": "front",
-          "imageUrl": "/app/images/demons/42.png"
+          "imageUrl": "/app/images/demons/48.png"
         },
         {
           "instanceId": "enc-258-m5",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/52.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         }
       ]
     },
@@ -28273,21 +28273,21 @@
         },
         {
           "instanceId": "enc-268-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/41.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/17.png"
         },
         {
           "instanceId": "enc-268-m5",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 2,
+          "species": "Gon G'ah",
+          "role": "ranged",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/4.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/10.png"
         }
       ]
     },
@@ -28657,12 +28657,12 @@
         },
         {
           "instanceId": "enc-275-m4",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/51.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/21.png"
         }
       ]
     },
@@ -28768,12 +28768,12 @@
         },
         {
           "instanceId": "enc-277-m5",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/41.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/65.png"
         }
       ]
     },
@@ -29356,30 +29356,30 @@
         },
         {
           "instanceId": "enc-288-m4",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/42.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-288-m5",
-          "typeId": 7,
-          "species": "Baobaw",
-          "role": "striker",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/42.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/24.png"
         },
         {
           "instanceId": "enc-288-m6",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 10,
+          "species": "Ba Be'aga",
+          "role": "healer",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/5.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/59.png"
         }
       ]
     },
@@ -29809,12 +29809,12 @@
         },
         {
           "instanceId": "enc-296-m4",
-          "typeId": 1,
-          "species": "Boof Nitza",
-          "role": "melee",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "rare",
-          "position": "front",
-          "imageUrl": "/app/images/demons/3.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/15.png"
         }
       ]
     },
@@ -30091,12 +30091,12 @@
         },
         {
           "instanceId": "enc-301-m4",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/52.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/16.png"
         }
       ]
     },
@@ -30655,12 +30655,12 @@
         },
         {
           "instanceId": "enc-311-m4",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/52.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/64.png"
         }
       ]
     },
@@ -31957,12 +31957,12 @@
         },
         {
           "instanceId": "enc-333-m4",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/53.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/23.png"
         }
       ]
     },
@@ -32308,12 +32308,12 @@
         },
         {
           "instanceId": "enc-339-m4",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 2,
+          "species": "Gon G'ah",
+          "role": "ranged",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/52.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/10.png"
         }
       ]
     },
@@ -32659,12 +32659,12 @@
         },
         {
           "instanceId": "enc-345-m4",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/54.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/66.png"
         }
       ]
     },
@@ -33070,21 +33070,21 @@
         },
         {
           "instanceId": "enc-352-m4",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 11,
+          "species": "Vee Scol",
+          "role": "chaotic",
           "rarity": "mythic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/54.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/66.png"
         },
         {
           "instanceId": "enc-352-m5",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 3,
+          "species": "Ma'Zga",
+          "role": "poisoner",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/52.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/16.png"
         }
       ]
     },
@@ -33595,12 +33595,12 @@
         },
         {
           "instanceId": "enc-360-m4",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 4,
+          "species": "Tor Tza",
+          "role": "aoe",
           "rarity": "epic",
-          "position": "front",
-          "imageUrl": "/app/images/demons/52.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/22.png"
         },
         {
           "instanceId": "enc-360-m5",
@@ -33664,12 +33664,12 @@
         },
         {
           "instanceId": "enc-361-m5",
-          "typeId": 9,
-          "species": "Chu Perk",
-          "role": "juggernaut",
+          "typeId": 2,
+          "species": "Gon G'ah",
+          "role": "ranged",
           "rarity": "legendary",
-          "position": "front",
-          "imageUrl": "/app/images/demons/53.png"
+          "position": "back",
+          "imageUrl": "/app/images/demons/11.png"
         }
       ]
     },

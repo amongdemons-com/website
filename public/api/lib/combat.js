@@ -14,9 +14,86 @@ const FORMATION_GRID_COLUMNS = 3;
 const FORMATION_GRID_SIZE = 9;
 const CHU_PERK_TYPE_ID = 9;
 const CHU_KNOCKBACK_CHANCE = 0.01;
+const RARITY_TIEBREAK_POINTS = Object.freeze({
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  epic: 4,
+  legendary: 5,
+  mythic: 6
+});
 
 function alive(team) {
   return team.filter((demon) => demon.hp > 0);
+}
+
+function getStalemateTeamScore(team = []) {
+  const survivors = alive(team);
+  const rarityRanks = survivors
+    .map((demon) => RARITY_TIEBREAK_POINTS[String(demon.rarity || '').toLowerCase()] || 0)
+    .sort((a, b) => b - a);
+  const remainingHp = sumTeamStat(survivors, 'hp');
+  const attack = sumTeamStat(survivors, 'atk');
+  const speed = sumTeamStat(survivors, 'speed');
+
+  return {
+    aliveCount: survivors.length,
+    rarityPoints: rarityRanks.reduce((sum, rank) => sum + rank, 0),
+    rarityRanks,
+    statPoints: remainingHp + attack + speed,
+    remainingHp,
+    attack,
+    speed,
+    maxHp: sumTeamStat(survivors, 'maxHp')
+  };
+}
+
+function resolveStalemateWinner(playerTeam = [], enemyTeam = []) {
+  const playerScore = getStalemateTeamScore(playerTeam);
+  const enemyScore = getStalemateTeamScore(enemyTeam);
+  const comparison = compareStalemateTeamScores(playerScore, enemyScore);
+
+  // Preserve the existing defender-win behavior only for an exact mirror tie.
+  return comparison > 0 ? 'player' : 'enemy';
+}
+
+function compareStalemateTeamScores(playerScore, enemyScore) {
+  const scalarFields = [
+    'aliveCount',
+    'rarityPoints'
+  ];
+
+  for (const field of scalarFields) {
+    const comparison = compareNumbers(playerScore[field], enemyScore[field]);
+    if (comparison) return comparison;
+  }
+
+  const rarityComparison = compareNumberLists(playerScore.rarityRanks, enemyScore.rarityRanks);
+  if (rarityComparison) return rarityComparison;
+
+  for (const field of ['statPoints', 'remainingHp', 'attack', 'speed', 'maxHp']) {
+    const comparison = compareNumbers(playerScore[field], enemyScore[field]);
+    if (comparison) return comparison;
+  }
+
+  return 0;
+}
+
+function compareNumberLists(left = [], right = []) {
+  const length = Math.max(left.length, right.length);
+  for (let index = 0; index < length; index += 1) {
+    const comparison = compareNumbers(left[index], right[index]);
+    if (comparison) return comparison;
+  }
+  return 0;
+}
+
+function compareNumbers(left, right) {
+  return (Number(left) || 0) - (Number(right) || 0);
+}
+
+function sumTeamStat(team, field) {
+  return team.reduce((sum, demon) => sum + Math.max(0, Number(demon[field]) || 0), 0);
 }
 
 function normalizePosition(position) {
@@ -693,7 +770,6 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
 
   const playerAlive = alive(players).length > 0;
   const enemyAlive = alive(enemies).length > 0;
-  const winner = playerAlive && !enemyAlive ? 'player' : 'enemy';
   if (!endReason) {
     endReason = !playerAlive
       ? 'defeat'
@@ -701,6 +777,13 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
         ? 'victory'
         : 'timeout';
   }
+  const winner = playerAlive && !enemyAlive
+    ? 'player'
+    : enemyAlive && !playerAlive
+      ? 'enemy'
+      : playerAlive && enemyAlive && (endReason === 'stalemate' || endReason === 'timeout')
+        ? resolveStalemateWinner(players, enemies)
+        : 'enemy';
 
   return {
     winner,
@@ -783,5 +866,7 @@ function cloneBattleTeamForReplay(team) {
 }
 
 module.exports = {
+  getStalemateTeamScore,
+  resolveStalemateWinner,
   simulateFight
 };
