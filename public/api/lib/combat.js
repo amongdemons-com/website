@@ -461,7 +461,11 @@ function applyThornsDamage({
 
   const thornsPercent = Math.max(0, Number(defender.battleBuffs?.thornsPercent) || 0);
   const thornsFlat = Math.max(0, Number(defender.battleBuffs?.thornsFlat) || 0);
-  const thornsDamage = Math.max(0, Math.round(receivedDamage * (thornsPercent / 100)) + thornsFlat);
+  const thornsMultiplier = 1 + (thornsPercent / 100);
+  const thornsDamage = Math.max(0, Math.round(
+    (receivedDamage * (thornsPercent / 100)) +
+    (thornsFlat * thornsMultiplier)
+  ));
   if (thornsDamage <= 0) return;
 
   const damageResult = dealDamage(attacker, thornsDamage);

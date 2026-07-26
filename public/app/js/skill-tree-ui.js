@@ -6,25 +6,25 @@
   const renderSoulAmount = window.AmongDemons.ui?.renderSoulAmount || ((value) => String(value ?? '-'));
   const NODE_DEFINITIONS = {
     health_flat: { label: 'Max Health', help: 'Adds 5 maximum Health to every demon on your team per point.', cap: 5, requires: [] },
-    health_percent: { label: 'Greater Health', help: 'Increases every demon\'s maximum Health by 3% per point.', cap: 5, requires: [['health_flat', 5]] },
-    health_mastery: { label: 'Endless Health', help: 'Adds 5 maximum Health per point with no rank limit.', cap: Infinity, requires: [['health_percent', 5]] },
-    healing_percent: { label: 'Healing', help: 'Increases all healing performed by your demons by 3% per point.', cap: 5, requires: [['health_flat', 5]] },
-    healing_mastery: { label: 'Endless Healing', help: 'Adds 1 Health to every heal per point, after percentage bonuses, with no rank limit.', cap: Infinity, requires: [['healing_percent', 5]] },
-    thorns_percent: { label: 'Thorns', help: 'Reflects an extra 5% of received damage back at attackers per point.', cap: 5, requires: [['health_flat', 5]] },
-    thorns_mastery: { label: 'Endless Thorns', help: 'Adds 1 damage to every Thorns retaliation per point, with no rank limit.', cap: Infinity, requires: [['thorns_percent', 5]] },
+    health_percent: { label: 'Greater Health', help: 'Increases total maximum Health, including fixed Health bonuses, by 3% per point.', cap: 5, requires: [['health_flat', 5]] },
+    health_mastery: { label: 'Endless Health', help: 'Adds 5 maximum Health per point with no rank limit. This fixed bonus is scaled by Greater Health.', cap: Infinity, requires: [['health_percent', 5]] },
+    healing_percent: { label: 'Healing', help: 'Increases all healing, including fixed Healing bonuses, by 3% per point.', cap: 5, requires: [['health_flat', 5]] },
+    healing_mastery: { label: 'Endless Healing', help: 'Adds 1 Health to every heal per point with no rank limit. This fixed bonus is scaled by Healing.', cap: Infinity, requires: [['healing_percent', 5]] },
+    thorns_percent: { label: 'Thorns', help: 'Reflects an extra 5% of received damage and increases fixed Thorns bonuses by 5% per point.', cap: 5, requires: [['health_flat', 5]] },
+    thorns_mastery: { label: 'Endless Thorns', help: 'Adds 1 damage to every Thorns retaliation per point with no rank limit. This fixed bonus is scaled by Thorns.', cap: Infinity, requires: [['thorns_percent', 5]] },
     speed_flat: { label: 'Speed', help: 'Adds 1 Speed to every demon on your team per point.', cap: 5, requires: [] },
-    speed_percent: { label: 'Momentum', help: 'Increases every demon\'s Speed by 2% per point.', cap: 5, requires: [['speed_flat', 5]] },
-    speed_mastery: { label: 'Endless Speed', help: 'Adds 1 Speed per point with no rank limit.', cap: Infinity, requires: [['speed_percent', 5]] },
-    attack_percent: { label: 'Brutal Force', help: 'Increases every demon\'s Attack by 3% per point.', cap: 5, requires: [['speed_flat', 5]] },
-    attack_mastery: { label: 'Endless Force', help: 'Adds 1 Attack per point with no rank limit.', cap: Infinity, requires: [['attack_percent', 5]] },
-    aoe_percent: { label: 'Wide Ruin', help: 'Increases damage from attacks that hit multiple targets by 2% per point.', cap: 5, requires: [['speed_flat', 5]] },
-    aoe_mastery: { label: 'Endless Ruin', help: 'Adds 1 damage to attacks that hit multiple targets per point, with no rank limit.', cap: Infinity, requires: [['aoe_percent', 5]] },
+    speed_percent: { label: 'Momentum', help: 'Increases every demon\'s total Speed, including fixed Speed bonuses, by 2% per point.', cap: 5, requires: [['speed_flat', 5]] },
+    speed_mastery: { label: 'Endless Speed', help: 'Adds 1 Speed per point with no rank limit. This fixed bonus is scaled by Momentum.', cap: Infinity, requires: [['speed_percent', 5]] },
+    attack_percent: { label: 'Brutal Force', help: 'Increases every demon\'s total Attack, including fixed Attack bonuses, by 3% per point.', cap: 5, requires: [['speed_flat', 5]] },
+    attack_mastery: { label: 'Endless Force', help: 'Adds 1 Attack per point with no rank limit. This fixed bonus is scaled by Brutal Force.', cap: Infinity, requires: [['attack_percent', 5]] },
+    aoe_percent: { label: 'Wide Ruin', help: 'Increases all multi-target attack damage, including fixed AoE bonuses, by 2% per point.', cap: 5, requires: [['speed_flat', 5]] },
+    aoe_mastery: { label: 'Endless Ruin', help: 'Adds 1 damage to multi-target attacks per point with no rank limit. This fixed bonus is scaled by Wide Ruin.', cap: Infinity, requires: [['aoe_percent', 5]] },
     poison_flat: { label: 'Poison Damage', help: 'Adds 1 damage to every poison tick per point.', cap: 5, requires: [] },
-    poison_percent: { label: 'Virulent Poison', help: 'Increases the damage of every poison tick by 3% per point.', cap: 5, requires: [['poison_flat', 5]] },
-    poison_mastery: { label: 'Endless Poison', help: 'Adds 1 damage to every poison tick per point, with no rank limit.', cap: Infinity, requires: [['poison_percent', 5]] },
+    poison_percent: { label: 'Virulent Poison', help: 'Increases every poison tick, including fixed Poison bonuses, by 3% per point.', cap: 5, requires: [['poison_flat', 5]] },
+    poison_mastery: { label: 'Endless Poison', help: 'Adds 1 damage to every poison tick per point with no rank limit. This fixed bonus is scaled by Virulent Poison.', cap: Infinity, requires: [['poison_percent', 5]] },
     soul_capacity: { label: 'Soul Vessel', help: 'Increases passive-hunt Soul capacity by 20 per point from a base of 50. Soul gain pauses when full; XP continues.', cap: 5, requires: [] },
     soul_capacity_percent: { label: 'Greater Vessel', help: 'Increases total Soul Vessel capacity by 10% per point. Soul gain pauses when full; XP continues.', cap: 5, requires: [['soul_capacity', 5]] },
-    soul_capacity_mastery: { label: 'Endless Vessel', help: 'Adds 10 Soul Vessel capacity per point with no rank limit. Soul gain pauses when full; XP continues.', cap: Infinity, requires: [['soul_capacity_percent', 5]] }
+    soul_capacity_mastery: { label: 'Endless Vessel', help: 'Adds 10 Soul Vessel capacity per point with no rank limit. This fixed bonus is scaled by Greater Vessel. Soul gain pauses when full; XP continues.', cap: Infinity, requires: [['soul_capacity_percent', 5]] }
   };
   const STAT_KEYS = Object.keys(NODE_DEFINITIONS);
   const RESET_SOULS_PER_POINT = 10;

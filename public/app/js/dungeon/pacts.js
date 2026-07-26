@@ -9,6 +9,7 @@ const audio = window.AmongDemons.audio;
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
 const prepareRecruitStrategyState = (...args) => dungeonActions.prepareRecruitStrategyState(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
+const DEMON_RARITY_TOKEN_PATTERN = /(\[(?:common|uncommon|rare|epic|legendary|mythic)\])/gi;
 let activePactTooltipEventsBound = false;
 
 function hasPendingBuffChoices(run = state.run) {
@@ -51,12 +52,25 @@ function renderDemonicPactCard(buff) {
       <span class="demonic-pact-icon" aria-hidden="true">${renderIcon(icon, { size: 42, strokeWidth: 1.85 })}</span>
       <span class="demonic-pact-rarity ad-${escapeHtml(rarity)}">${escapeHtml(capitalize(rarity))}</span>
       <strong>${escapeHtml(buff.name || buff.id)}</strong>
-      <span class="demonic-pact-description">${escapeHtml(buff.description || '')}</span>
+      <span class="demonic-pact-description">${renderDemonicPactDescription(buff.description)}</span>
       <span class="demonic-pact-tags">
         ${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}
       </span>
     </button>
   `;
+}
+
+function renderDemonicPactDescription(description = '') {
+  return String(description)
+    .split(DEMON_RARITY_TOKEN_PATTERN)
+    .map((part) => {
+      const match = part.match(/^\[([a-z]+)\]$/i);
+      if (!match) return escapeHtml(part);
+
+      const rarity = match[1].toLowerCase();
+      return `<span class="demonic-pact-rarity-token ad-${escapeHtml(rarity)}">${escapeHtml(part)}</span>`;
+    })
+    .join('');
 }
 
 function renderActivePactIcon(buff) {

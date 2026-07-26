@@ -163,19 +163,21 @@ function getDungeonConvergence(floor, rarity) {
   const normalRarityPower = getExpectedRarityMultiplier(getDungeonRarityWeights(floorNumber));
   const rarityPower = RARITY_MULTIPLIER[normalizedRarity] || 1;
   const powerMultiplier = Math.max(1, Math.pow(normalRarityPower / rarityPower, 0.85));
+  const hostPowerMultiplier = roundMultiplier(rarityPower * powerMultiplier);
   const bonusTerror = Math.max(0, Math.round((powerMultiplier - 1) / ENEMY_PRESSURE_FLOOR_HP));
 
   return {
     id: 'rarity-convergence',
     name: `${capitalize(normalizedRarity)} Host${bonusTerror ? ` +${bonusTerror}` : ''}`,
-    description: `Every enemy is ${capitalize(normalizedRarity)}. Hostile power is temporarily adjusted for this fight and disappears when recruited.`,
+    description: `Every enemy is ${capitalize(normalizedRarity)}. Host power combines their shared rarity with temporary encounter pressure; only the temporary pressure disappears when recruited.`,
     icon: 'sparkles',
     rarity: normalizedRarity,
     bonusTerror,
     powerMultiplier: roundMultiplier(powerMultiplier),
-    hpBonusPct: getBonusPercent(powerMultiplier),
-    atkBonusPct: getBonusPercent(powerMultiplier),
-    speedBonusPct: getBonusPercent(powerMultiplier)
+    hostPowerMultiplier,
+    hpBonusPct: getBonusPercent(hostPowerMultiplier),
+    atkBonusPct: getBonusPercent(hostPowerMultiplier),
+    speedBonusPct: getBonusPercent(hostPowerMultiplier)
   };
 }
 

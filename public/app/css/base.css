@@ -6439,6 +6439,11 @@ body.rankings-page {
     line-height: 1.38;
 }
 
+.demonic-pact-rarity-token {
+    font-weight: 900;
+    white-space: nowrap;
+}
+
 .demonic-pact-tags {
     display: flex;
     flex-wrap: wrap;

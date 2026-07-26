@@ -306,7 +306,7 @@
   {
     "id": "many_below",
     "name": "The Many Below",
-    "description": "Common and Uncommon demons gain 30% direct damage and 25% max HP.",
+    "description": "[Common] and [Uncommon] demons gain 30% direct damage and 25% max HP.",
     "rarity": "uncommon",
     "icon": "users",
     "tags": ["rarity", "damage", "health"],
@@ -326,7 +326,7 @@
   {
     "id": "crimson_standard",
     "name": "Crimson Standard",
-    "description": "Rare demons gain 35% direct damage and 20% speed.",
+    "description": "[Rare] demons gain 35% direct damage and 20% speed.",
     "rarity": "rare",
     "icon": "flag",
     "tags": ["rarity", "damage", "speed"],
@@ -346,7 +346,7 @@
   {
     "id": "fallen_nobility",
     "name": "Fallen Nobility",
-    "description": "Epic and Legendary demons gain 20% direct damage and 15% max HP.",
+    "description": "[Epic] and [Legendary] demons gain 20% direct damage and 15% max HP.",
     "rarity": "rare",
     "icon": "stars",
     "tags": ["rarity", "damage", "health"],

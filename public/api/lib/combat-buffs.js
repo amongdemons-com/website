@@ -76,19 +76,31 @@ function serializeCombatBuffState(source = {}) {
 
 function getActiveCombatBuffs(source = {}) {
   const state = normalizeCombatBuffState(source);
-  const activeBuffs = [];
-  const seen = new Set();
-  const addBuff = (buff) => {
+  const activeBuffs = state.active
+    .map(getCombatBuffById)
+    .map(normalizeCombatBuffDefinition)
+    .filter(Boolean);
+  const mirroredActiveCounts = state.active.reduce((counts, id) => {
+    counts.set(id, (counts.get(id) || 0) + 1);
+    return counts;
+  }, new Map());
+
+  state.activeBuffs.forEach((buff) => {
     const normalized = normalizeCombatBuffDefinition(buff);
     if (!normalized) return;
-    const key = normalized.id || JSON.stringify(normalized.effects);
-    if (seen.has(key)) return;
-    seen.add(key);
-    activeBuffs.push(normalized);
-  };
 
-  state.active.map(getCombatBuffById).forEach(addBuff);
-  state.activeBuffs.forEach(addBuff);
+    // Serialized states contain both the canonical active Pact IDs and expanded
+    // definitions for display. Ignore only those mirrored definitions; repeated
+    // IDs in the canonical list are separate selections and must all apply.
+    const mirroredCount = mirroredActiveCounts.get(normalized.id) || 0;
+    if (mirroredCount > 0) {
+      mirroredActiveCounts.set(normalized.id, mirroredCount - 1);
+      return;
+    }
+
+    activeBuffs.push(normalized);
+  });
+
   return activeBuffs;
 }
 
@@ -236,21 +248,17 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
       }
     };
 
-    if (maxHpMult !== 1) {
-      const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
-      const hpRatio = clamp((Number(next.hp) || baseMaxHp) / baseMaxHp, 0, 1);
-      next.maxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
-      next.hp = Math.max(next.hp > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
-    }
-
-    if (speedMult !== 1) {
-      next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * speedMult));
-    }
-
     if (maxHpFlat > 0) {
       const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
       const hpRatio = clamp((Number(next.hp) || baseMaxHp) / baseMaxHp, 0, 1);
       next.maxHp = Math.max(1, Math.round(baseMaxHp + maxHpFlat));
+      next.hp = Math.max(next.hp > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
+    }
+
+    if (maxHpMult !== 1) {
+      const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
+      const hpRatio = clamp((Number(next.hp) || baseMaxHp) / baseMaxHp, 0, 1);
+      next.maxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
       next.hp = Math.max(next.hp > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
     }
 
@@ -260,6 +268,10 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
 
     if (speedFlat > 0) {
       next.speed = Math.max(1, Math.round((Number(next.speed) || 1) + speedFlat));
+    }
+
+    if (speedMult !== 1) {
+      next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * speedMult));
     }
 
     if (attackMult !== 1) {
@@ -328,7 +340,7 @@ function applyDamageOutputStatPreview(demon, options = {}) {
   if (damageMult === 1 && damageFlat <= 0) return;
 
   const baseAtk = Math.max(1, Number(demon.atk) || 1);
-  demon.effectiveAtk = Math.max(1, Math.round((baseAtk * damageMult) + damageFlat));
+  demon.effectiveAtk = Math.max(1, Math.round((baseAtk + damageFlat) * damageMult));
 }
 
 function applyRunBuffStatModifiers(run) {
@@ -402,7 +414,7 @@ function applyDamageModifiers(context) {
     flatDamage = Math.max(0, Number(context.attacker?.battleBuffs?.aoeDamageFlat) || 0);
   }
 
-  return roundDamage((damage * multiplier) + flatDamage);
+  return roundDamage((damage + flatDamage) * multiplier);
 }
 
 function applyHealingModifiers(context) {
@@ -417,10 +429,9 @@ function applyHealingModifiers(context) {
 
   return {
     healing: roundHealing(
-      healing *
+      (healing + Math.max(0, Number(context.healer?.battleBuffs?.healingFlat) || 0)) *
       getEffectMultiplier(state, 'healing_mult', context.healer) *
-      positiveNumber(context.healer?.battleBuffs?.healingMult, 1) +
-      Math.max(0, Number(context.healer?.battleBuffs?.healingFlat) || 0)
+      positiveNumber(context.healer?.battleBuffs?.healingMult, 1)
     ),
     overhealToShield: hasEffect(state, 'overheal_to_shield', context.healer)
   };
@@ -433,10 +444,9 @@ function applyPoisonModifiers(context) {
 
   return {
     damage: roundDamage(
-      damage *
+      (damage + Math.max(0, Number(context.attacker?.battleBuffs?.poisonDamageFlat) || 0)) *
       getEffectMultiplier(state, 'poison_tick_damage_mult', context.attacker) *
-      positiveNumber(context.attacker?.battleBuffs?.poisonDamageMult, 1) +
-      Math.max(0, Number(context.attacker?.battleBuffs?.poisonDamageFlat) || 0)
+      positiveNumber(context.attacker?.battleBuffs?.poisonDamageMult, 1)
     ),
     durationTicks: Math.max(1, Math.round(durationTicks * getEffectMultiplier(state, 'poison_duration_mult', context.attacker)))
   };

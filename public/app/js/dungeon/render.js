@@ -229,10 +229,10 @@ function renderDungeonEndScreen() {
             View Bag
           </a>
         `}
-        <button class="btn btn-primary" id="startNewDungeonBtn" type="button">
+        <a class="btn btn-primary" href="/dungeon">
           ${renderIcon('play')}
           New Dungeon
-        </button>
+        </a>
       </div>
     </div>
   `;
@@ -375,10 +375,11 @@ function renderEnemyBuffChip(buff = {}) {
   const convergence = buff.id === 'rarity-convergence';
   const tooltip = convergence
     ? [
-        `${capitalize(buff.rarity || 'common')} enemy encounter`,
-        `HP ${formatBonusPercent(buff.hpBonusPct)}`,
-        `Attack ${formatBonusPercent(buff.atkBonusPct)}`,
-        `Speed ${formatBonusPercent(buff.speedBonusPct)}`
+        name,
+        description,
+        `Host HP ${formatBonusPercent(buff.hpBonusPct)}`,
+        `Host Attack ${formatBonusPercent(buff.atkBonusPct)}`,
+        `Host Speed ${formatBonusPercent(buff.speedBonusPct)}`
       ].join('\n')
     : [name, description].filter(Boolean).join('\n');
   const escapedTooltip = escapeTooltipAttribute(tooltip);

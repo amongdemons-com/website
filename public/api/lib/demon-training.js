@@ -22,28 +22,33 @@ const RARITY_COST_MULTIPLIER = {
 function getDemonTrainingInfo(demon = {}, types = {}) {
   const typeData = types[String(demon.type_id || demon.typeId || demon.type)] || {};
   const statBounds = getStatBounds(typeData, String(demon.rarity || '').toLowerCase());
+  const trainableStatKeys = getTrainableStatKeys(typeData);
   const stats = {};
   let totalRange = 0;
   let totalProgress = 0;
   let totalRemaining = 0;
 
   STAT_KEYS.forEach((key) => {
+    const trainable = trainableStatKeys.includes(key);
     const min = positiveInteger(statBounds[key]?.min, 1);
     const max = Math.max(min, positiveInteger(statBounds[key]?.max, min));
     const current = Math.max(0, Math.floor(Number(demon[key]) || 0));
     const range = Math.max(1, max - min);
     const progress = Math.max(0, Math.min(range, current - min));
-    const remaining = Math.max(0, max - current);
+    const remaining = trainable ? Math.max(0, max - current) : 0;
 
-    totalRange += range;
-    totalProgress += progress;
-    totalRemaining += remaining;
+    if (trainable) {
+      totalRange += range;
+      totalProgress += progress;
+      totalRemaining += remaining;
+    }
     stats[key] = {
       current,
       min,
       max,
       remaining,
-      maxed: remaining <= 0
+      maxed: remaining <= 0,
+      trainable
     };
   });
 
@@ -56,8 +61,14 @@ function getDemonTrainingInfo(demon = {}, types = {}) {
     progress: Math.round(progress * 100),
     successChance: maxed ? null : TRAINING_SUCCESS_CHANCE,
     stats,
-    trainableStats: STAT_KEYS.filter((key) => stats[key].remaining > 0)
+    trainableStats: trainableStatKeys.filter((key) => stats[key].remaining > 0)
   };
+}
+
+function getTrainableStatKeys(typeData = {}) {
+  return typeData?.ability?.kind === 'retaliate'
+    ? STAT_KEYS.filter((key) => key !== 'speed')
+    : [...STAT_KEYS];
 }
 
 async function enrichCollectionDemonsWithTraining(demons = []) {
@@ -142,6 +153,7 @@ module.exports = {
   applyTrainingIncreases,
   enrichCollectionDemonsWithTraining,
   getDemonTrainingInfo,
+  getTrainableStatKeys,
   rollTrainingAttempt,
   rollTrainingIncreases
 };
