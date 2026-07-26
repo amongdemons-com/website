@@ -676,6 +676,11 @@ import './bag-item-visuals.js';
 
   async function loadWorld(initialPayload = null) {
     const payload = initialPayload || await api('/api/world/state');
+    state.player = payload.player || state.player;
+    // Start the hunter portrait alongside the cached map request, then wait for
+    // it before the first visible render. The texture comes from the shared
+    // demon atlas, so this does not require another player/profile request.
+    const hunterAvatarPromise = loadHunterAvatar();
     // Static map layout comes from a separate immutable-cached endpoint keyed
     // by mapVersion, so repeat visits skip re-downloading the whole map.
     const map = await loadWorldMapData(payload.mapVersion);
@@ -690,7 +695,6 @@ import './bag-item-visuals.js';
     state.encounters = Array.isArray(map.encounters) ? map.encounters : [];
     setWorldBossState(payload, { deferArt: true });
     setWorldMerchantState(payload, { deferRender: true });
-    state.player = payload.player || state.player;
     const blockedTiles = Array.isArray(map.blockedTiles) ? map.blockedTiles : FALLBACK_BLOCKED_TILES;
     state.blockedTiles = blockedTiles.map((tile) => ({ ...tile, type: getBlockedTileType(tile) }));
     state.blockedMap = new Map(state.blockedTiles.map((tile) => [getTileKey(tile), tile]));
@@ -702,6 +706,7 @@ import './bag-item-visuals.js';
     state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
     state.currentBoss = payload.currentBoss || getBossAt(state.position);
 
+    await hunterAvatarPromise;
     buildBoard();
     drawMarkers();
     drawEncounterMarkers();
@@ -716,7 +721,7 @@ import './bag-item-visuals.js';
 
     // Portrait art is not worth blocking the map for: markers render with
     // rarity-tinted fallbacks and get their portraits swapped in on arrival.
-    void loadWorldArt();
+    void loadWorldArt({ hunterAvatarLoaded: true });
     window.setTimeout(() => maybeOpenWorldMerchantShop(), 0);
   }
 
@@ -732,9 +737,11 @@ import './bag-item-visuals.js';
     return map;
   }
 
-  async function loadWorldArt() {
+  async function loadWorldArt(options = {}) {
     try {
-      await Promise.all([loadHunterAvatar(), loadEncounterTextures(), loadBossTextures()]);
+      const textureLoads = [loadEncounterTextures(), loadBossTextures()];
+      if (!options.hunterAvatarLoaded) textureLoads.push(loadHunterAvatar());
+      await Promise.all(textureLoads);
     } finally {
       drawMarkers();
       drawEncounterMarkers();
