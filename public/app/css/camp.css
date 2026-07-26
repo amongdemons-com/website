@@ -2405,25 +2405,41 @@ body.camp-page {
     grid-template-rows: minmax(0, 1fr);
 }
 
-.camp-skill-tree-link {
+.camp-profile-shortcuts {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
     gap: 0.52rem;
     margin-top: 0.72rem;
+}
+
+.camp-skill-tree-link,
+.camp-bag-link {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.38rem;
     border: 1px solid rgba(161,212,201,0.18);
     border-radius: 4px;
     background:
         linear-gradient(90deg, rgba(111,214,189,0.06), rgba(232,199,106,0.035)),
         rgba(4,10,13,0.5);
     color: rgba(220,232,229,0.78);
-    padding: 0.52rem;
+    padding: 0.42rem;
     text-decoration: none;
     transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
+.camp-bag-link {
+    background:
+        linear-gradient(90deg, rgba(143,167,255,0.08), rgba(232,199,106,0.035)),
+        rgba(4,10,13,0.5);
+}
+
 .camp-skill-tree-link:hover,
-.camp-skill-tree-link:focus-visible {
+.camp-skill-tree-link:focus-visible,
+.camp-bag-link:hover,
+.camp-bag-link:focus-visible {
     border-color: rgba(232,199,106,0.56);
     color: #fff3bd;
     box-shadow: 0 0 20px rgba(232,199,106,0.1);
@@ -2442,7 +2458,7 @@ body.camp-page {
 .camp-skill-tree-icon {
     display: grid;
     place-items: center;
-    width: 2rem;
+    width: 1.8rem;
     aspect-ratio: 1;
     border: 1px solid rgba(111,214,189,0.24);
     border-radius: 50%;
@@ -2450,40 +2466,81 @@ body.camp-page {
     color: var(--ad-teal, #6fd6bd);
 }
 
-.camp-skill-tree-icon .ad-icon,
-.camp-skill-tree-link > .ad-icon {
+.camp-skill-tree-icon .ad-icon {
     width: 1rem;
     height: 1rem;
     margin: 0;
 }
 
-.camp-skill-tree-copy {
-    display: grid;
-    gap: 0.12rem;
-    min-width: 0;
+.camp-bag-icon {
+    border-color: rgba(143,167,255,0.28);
+    background: rgba(143,167,255,0.1);
+    color: #8fa7ff;
 }
 
-.camp-skill-tree-copy strong {
+.camp-profile-shortcut-label {
+    min-width: 0;
+    overflow: hidden;
     color: #f8fbf9;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 0.84rem;
-}
-
-.camp-skill-tree-copy small {
-    overflow: hidden;
-    color: rgba(220,232,229,0.56);
-    font-size: 0.62rem;
-    font-weight: 800;
+    font-size: 0.7rem;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.camp-skill-tree-link.has-unspent-points .camp-skill-tree-copy small {
-    color: #8de7ff;
+.camp-skill-tree-stats {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.3rem;
+    border-top: 1px solid rgba(161,212,201,0.12);
+    padding-top: 0.44rem;
+}
+
+.camp-skill-tree-stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    min-width: 0;
+    gap: 0.28rem;
+    border: 1px solid rgba(161,212,201,0.1);
+    border-radius: 3px;
+    background: rgba(0,0,0,0.18);
+    padding: 0.28rem 0.34rem;
+}
+
+.camp-skill-tree-stats strong {
+    overflow: hidden;
+    color: #f8fbf9;
+    font-size: 0.66rem;
+    font-weight: 900;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.camp-skill-tree-stats small {
+    overflow: hidden;
+    color: rgba(220,232,229,0.48);
+    font-size: 0.5rem;
+    font-weight: 900;
+    line-height: 1;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.camp-skill-tree-empty {
+    grid-column: 1 / -1;
+    color: rgba(220,232,229,0.5);
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {
-.camp-skill-tree-link {
+.camp-skill-tree-link,
+    .camp-bag-link {
         transition: none;
     }
 

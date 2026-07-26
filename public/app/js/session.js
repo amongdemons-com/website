@@ -165,10 +165,14 @@
   }
 
   async function executeApiRequest(path, url, options, headers, body, method) {
+    const progressionAnimation = options.progressionAnimation;
     const fetchOptions = { ...options, headers, body };
     delete fetchOptions.dedupe;
+    delete fetchOptions.progressionAnimation;
 
-    if (shouldUseNativeHttp()) return nativeApi(url, fetchOptions, headers, body);
+    if (shouldUseNativeHttp()) {
+      return nativeApi(url, fetchOptions, headers, body, path, { progressionAnimation });
+    }
 
     let response;
     try {
@@ -195,7 +199,13 @@
 
     const text = await response.text();
 
-    return handleApiResponse(response.ok, response.status, text ? parsePayload(text) : null, path);
+    return handleApiResponse(
+      response.ok,
+      response.status,
+      text ? parsePayload(text) : null,
+      path,
+      { progressionAnimation }
+    );
   }
 
   function createReadRequestKey(method, url, headers) {
@@ -206,7 +216,7 @@
     return `${method}:${url}:${normalizedHeaders}`;
   }
 
-  async function nativeApi(url, options, headers, body) {
+  async function nativeApi(url, options, headers, body, path = url, responseOptions = {}) {
     let response;
     try {
       response = await window.Capacitor.Plugins.CapacitorHttp.request({
@@ -221,7 +231,13 @@
     }
 
     const status = Number(response.status || 0);
-    return handleApiResponse(status >= 200 && status < 300, status, normalizePayload(response.data), url);
+    return handleApiResponse(
+      status >= 200 && status < 300,
+      status,
+      normalizePayload(response.data),
+      path,
+      responseOptions
+    );
   }
 
   function shouldUseNativeHttp() {
@@ -232,7 +248,7 @@
     );
   }
 
-  function handleApiResponse(ok, status, payload, path = '') {
+  function handleApiResponse(ok, status, payload, path = '', options = {}) {
     if (!ok) {
       const message = payload && payload.error ? payload.error : 'Something went wrong.';
       const error = new Error(message);
@@ -242,11 +258,11 @@
       throw error;
     }
 
-    notifyProgressionPayload(payload, path);
+    notifyProgressionPayload(payload, path, options);
     return payload;
   }
 
-  function notifyProgressionPayload(payload, path = '') {
+  function notifyProgressionPayload(payload, path = '', requestOptions = {}) {
     if (!payload || typeof payload !== 'object') return;
 
     const ui = window.AmongDemons?.ui;
@@ -255,7 +271,12 @@
     const candidate = getProgressionCandidate(payload, path);
     if (!candidate) return;
 
-    const options = { animate: shouldAnimateProgressionPayload(path) };
+    const animationOverride = requestOptions.progressionAnimation;
+    const options = {
+      animate: animationOverride === undefined
+        ? shouldAnimateProgressionPayload(path)
+        : animationOverride !== false
+    };
 
     if (candidate.kind === 'player' && typeof ui.updateNavAccount === 'function') {
       ui.updateNavAccount(candidate.data, options);

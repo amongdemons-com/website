@@ -76,7 +76,7 @@
       'profileDemonPickerStatus',
       'profileDemonGrid',
       'campSkillTreeLink',
-      'campSkillTreeMeta'
+      'campSkillTreeStats'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -424,11 +424,59 @@
     const unspent = Math.max(0, Number(summary?.unspentPoints) || 0);
 
     elements.campSkillTreeLink?.classList.toggle('has-unspent-points', unspent > 0);
-    setText(elements.campSkillTreeMeta, !summary
-      ? 'Loading level points...'
-      : unspent > 0
-        ? `${formatNumber(unspent)} unspent point${unspent === 1 ? '' : 's'}`
-        : 'Review your upgrades');
+    setHtml(elements.campSkillTreeStats, renderSkillTreeBonuses(summary));
+  }
+
+  function renderSkillTreeBonuses(summary) {
+    if (!summary) {
+      return '<span class="camp-skill-tree-empty">Loading bonuses...</span>';
+    }
+
+    const bonuses = summary.bonuses || {};
+    const stats = [
+      createSkillTreeBonus('Health', bonuses.maxHpFlat, bonuses.maxHpPercent),
+      createSkillTreeBonus('Attack', bonuses.attackFlat, bonuses.attackPercent),
+      createSkillTreeBonus('Speed', bonuses.speedFlat, bonuses.speedPercent),
+      createSkillTreeBonus('Healing', bonuses.healingFlat, bonuses.healingPercent),
+      createSkillTreeBonus('Thorns', bonuses.thornsFlat, bonuses.thornsPercent),
+      createSkillTreeBonus('AOE', bonuses.aoeDamageFlat, bonuses.aoeDamagePercent),
+      createSkillTreeBonus('Poison', bonuses.poisonDamageFlat, bonuses.poisonDamagePercent)
+    ].filter(Boolean);
+    const allocations = summary.allocations || {};
+    const hasSoulVesselBonus = [
+      'soul_capacity',
+      'soul_capacity_percent',
+      'soul_capacity_mastery'
+    ].some((key) => Number(allocations[key]) > 0);
+
+    if (hasSoulVesselBonus) {
+      stats.push({
+        label: 'Soul Vessel',
+        value: formatNumber(Math.max(0, Number(bonuses.huntSoulCapacity) || 0))
+      });
+    }
+
+    if (!stats.length) {
+      return '<span class="camp-skill-tree-empty">No active bonuses yet.</span>';
+    }
+
+    return stats.map((stat) => `
+      <span class="camp-skill-tree-stat">
+        <small>${escapeHtml(stat.label)}</small>
+        <strong>${escapeHtml(stat.value)}</strong>
+      </span>
+    `).join('');
+  }
+
+  function createSkillTreeBonus(label, flatValue, percentValue) {
+    const flat = Math.max(0, Number(flatValue) || 0);
+    const percent = Math.max(0, Number(percentValue) || 0);
+    const values = [
+      ...(flat > 0 ? [`+${formatNumber(flat)}`] : []),
+      ...(percent > 0 ? [`+${formatNumber(percent)}%`] : [])
+    ];
+
+    return values.length ? { label, value: values.join(' / ') } : null;
   }
 
   function getLevelProgress(progression, level, xp) {

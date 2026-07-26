@@ -24,7 +24,7 @@
     <meta name="twitter:image:alt" content="Among Demons campfire artwork">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
     <link href="/app/css/base.css?v=27ff51d484ea" rel="stylesheet">
-    <link href="/app/css/camp.css?v=6041e9d4f9be" rel="stylesheet">
+    <link href="/app/css/camp.css?v=f8138bd6e1cb" rel="stylesheet">
   </head>
   <body class="camp-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -151,14 +151,19 @@
             </div>
           </dl>
 
-          <a class="camp-skill-tree-link" id="campSkillTreeLink" href="/skill-tree">
-            <span class="camp-skill-tree-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
-            <span class="camp-skill-tree-copy">
-              <strong>Skill Tree</strong>
-              <small id="campSkillTreeMeta">Loading level points...</small>
-            </span>
-            <i data-lucide="arrow-right"></i>
-          </a>
+          <div class="camp-profile-shortcuts">
+            <a class="camp-skill-tree-link" id="campSkillTreeLink" href="/skill-tree">
+              <span class="camp-skill-tree-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
+              <strong class="camp-profile-shortcut-label">Skill Tree</strong>
+            </a>
+            <a class="camp-bag-link" href="/bag">
+              <span class="camp-skill-tree-icon camp-bag-icon" aria-hidden="true"><i data-lucide="amphora"></i></span>
+              <strong class="camp-profile-shortcut-label">Bag</strong>
+            </a>
+            <div class="camp-skill-tree-stats" id="campSkillTreeStats" aria-label="Active skill tree bonuses">
+              <span class="camp-skill-tree-empty">Loading bonuses...</span>
+            </div>
+          </div>
         </aside>
 
         <section class="camp-center-stage" aria-labelledby="campPlayerName">
@@ -230,7 +235,7 @@
         <div class="profile-demon-grid" id="profileDemonGrid"></div>
       </section>
     </div>
-    <script src="/app/dist/runtime.bundle.js?v=eda09b76ecf7"></script>
-    <script src="/app/js/camp-ui.js?v=d4e7e79ca649"></script>
+    <script src="/app/dist/runtime.bundle.js?v=ea5de9c00c0c"></script>
+    <script src="/app/js/camp-ui.js?v=b8148f6dc30b"></script>
   </body>
 </html>

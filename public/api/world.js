@@ -485,6 +485,9 @@ router.post('/world/boss/challenge', requireAuth, async (req, res) => {
   if (battle.winner === 'player') {
     await achievements.grantBossDefeat(req.player.id, boss.id);
   }
+  const respawn = battle.winner === 'enemy'
+    ? await respawnPlayerAfterDefeat(req.player.id)
+    : null;
 
   const activeBosses = getActiveWorldBosses();
   const serializedBoss = serializeWorldBossForClient(boss);
@@ -497,9 +500,10 @@ router.post('/world/boss/challenge', requireAuth, async (req, res) => {
     bosses: activeBosses.map(serializeWorldBossForClient),
     rewardBuff,
     battle,
+    respawn,
     message: battle.winner === 'player'
       ? `You defeated ${boss.title}. ${rewardBuff ? `${rewardBuff.name} is active for ${formatDurationHours(rewardBuff.durationHours)}.` : ''}`.trim()
-      : `${boss.title} endured the challenge.`
+      : `${boss.title} defeated you. You returned to your Anchored Shrine.`
   });
 });
 

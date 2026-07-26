@@ -198,6 +198,7 @@ import './bag-item-visuals.js';
     currentEncounter: null,
     currentBoss: null,
     hunt: null,
+    unlockedEncounterIds: new Set(),
     huntBusy: false,
     huntBusyAction: null,
     bossBusy: false,
@@ -1337,10 +1338,17 @@ import './bag-item-visuals.js';
         await refreshHuntStatus({ force: true }).catch(() => {});
       }
       if (won) audio?.play('sfx.bosses.defeated', { volume: 0.96 });
-      setMessage(
-        payload.message || getWorldBattleFallbackMessage(battle, battleMeta),
-        won ? 'success' : 'warning'
-      );
+      if (!won && payload.respawn) {
+        await resolveAmbushDefeat({
+          recovery: payload.respawn,
+          message: payload.message
+        });
+      } else {
+        setMessage(
+          payload.message || getWorldBattleFallbackMessage(battle, battleMeta),
+          won ? 'success' : 'warning'
+        );
+      }
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -1349,6 +1357,9 @@ import './bag-item-visuals.js';
       state.bossBusy = false;
       setButtonBusy(button, false);
       renderEncounterPanel();
+      if (state.ambushDefeatBlackoutActive) {
+        await fadeWorldAmbushDefeatFromBlack();
+      }
     }
   }
 
@@ -3823,6 +3834,7 @@ import './bag-item-visuals.js';
       const center = tileCenter(encounter);
       const ringColor = rarityHex(encounter.keyDemon?.rarity);
       const selected = state.selectedEncounter?.id === encounter.id;
+      const defeated = isEncounterUnlocked(encounter.id);
       const radius = 22;
       const rng = seededRng((Math.imul(encounter.x | 0, 92821) ^ Math.imul(encounter.y | 0, 68917)) >>> 0);
 
@@ -3866,6 +3878,23 @@ import './bag-item-visuals.js';
         node.addChild(portrait);
       } else {
         base.circle(0, 0, radius).fill({ color: ringColor, alpha: 0.25 });
+      }
+
+      if (defeated) {
+        const badgeX = radius * 0.7;
+        const badgeY = radius * 0.7;
+        const badge = new Pixi.Graphics();
+        badge.circle(badgeX, badgeY, 9.5)
+          .fill({ color: 0x07110f, alpha: 0.98 })
+          .stroke({ color: 0x050807, width: 2.5, alpha: 0.92 });
+        badge.circle(badgeX, badgeY, 7.5)
+          .fill({ color: 0x49c59d, alpha: 0.98 })
+          .stroke({ color: 0xb8ffe8, width: 1, alpha: 0.8 });
+        badge.moveTo(badgeX - 3.7, badgeY)
+          .lineTo(badgeX - 0.8, badgeY + 3)
+          .lineTo(badgeX + 4.7, badgeY - 3.3)
+          .stroke({ color: 0x07110f, width: 2.2, alpha: 1 });
+        node.addChild(badge);
       }
 
       layer.addChild(node);
@@ -4864,6 +4893,7 @@ import './bag-item-visuals.js';
         <span class="world-card-copy">
           ${renderEncounterTitle(encounter)}
           ${renderWorldCardMeta([
+            unlocked ? '<span aria-label="Defeated demon spot">✓ Defeated</span>' : '',
             renderWorldTerrorChip(terror, { inline: true })
           ])}
           ${enemyDemons}
@@ -7121,7 +7151,8 @@ import './bag-item-visuals.js';
   function shouldReturnToShrineAfterWorldBattle(battle = {}, meta = {}) {
     return isLostAmbushBattle(battle, meta)
       || isLostPvpChallenge(battle, meta)
-      || isLostHuntFight(battle, meta);
+      || isLostHuntFight(battle, meta)
+      || isLostWorldBossBattle(battle, meta);
   }
 
   function isLostAmbushBattle(battle = {}, meta = {}) {
@@ -7138,6 +7169,10 @@ import './bag-item-visuals.js';
 
   function isLostHuntFight(battle = {}, meta = {}) {
     return meta?.type === 'try_hunt' && battle?.winner === 'enemy';
+  }
+
+  function isLostWorldBossBattle(battle = {}, meta = {}) {
+    return meta?.type === 'world_boss' && battle?.winner === 'enemy';
   }
 
   function areWinningAmbushesHidden() {
@@ -7717,10 +7752,20 @@ import './bag-item-visuals.js';
   }
 
   function setHuntState(hunt) {
-    state.hunt = normalizeHunt(hunt);
+    const normalizedHunt = normalizeHunt(hunt);
+    const unlockedEncounterIds = new Set(normalizedHunt.unlockedEncounterIds);
+    const unlocksChanged = unlockedEncounterIds.size !== state.unlockedEncounterIds.size
+      || Array.from(unlockedEncounterIds).some((encounterId) => !state.unlockedEncounterIds.has(encounterId));
+
+    state.hunt = normalizedHunt;
+    state.unlockedEncounterIds = unlockedEncounterIds;
     state.huntStatusRefreshAt = Date.now();
     scheduleHuntCapacityReconcile();
     syncWorldSidePanel();
+    if (unlocksChanged) {
+      drawEncounterMarkers();
+      if (state.selectedEncounter) renderEncounterTooltip();
+    }
     return state.hunt;
   }
 
@@ -7769,7 +7814,7 @@ import './bag-item-visuals.js';
   }
 
   function isEncounterUnlocked(encounterId) {
-    return (state.hunt?.unlockedEncounterIds || []).includes(String(encounterId));
+    return state.unlockedEncounterIds.has(String(encounterId));
   }
 
   function isActiveHuntFor(encounterId) {
@@ -8331,10 +8376,12 @@ import './bag-item-visuals.js';
     const stepCount = getPathStepCount(state.selectedPath || []);
 
     const demons = team.map(renderDemonPortrait).join('');
+    const defeated = isEncounterUnlocked(encounter.id);
 
     tooltip.innerHTML = `
       ${renderEncounterTitle(encounter, 'world-tooltip-title')}
       ${demons ? `<div class="world-enc-demons">${demons}</div>` : ''}
+      ${defeated ? '<span class="world-tooltip-meta" aria-label="Defeated demon spot">✓ Defeated</span>' : ''}
       <span class="world-tooltip-meta world-tooltip-travel-meta">${escapeHtml(formatTravelMeta(encounter, stepCount))}</span>
       <span class="world-tooltip-hint">(Click again to travel)</span>
     `;

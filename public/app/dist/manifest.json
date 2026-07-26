@@ -1,5 +1,5 @@
 {
-  "runtime": "/app/dist/runtime.bundle.js?v=eda09b76ecf7",
-  "dungeon": "/app/dist/dungeon.bundle.js?v=af2566e31d58",
-  "world": "/app/dist/world.bundle.js?v=4aecb4288359"
+  "runtime": "/app/dist/runtime.bundle.js?v=ea5de9c00c0c",
+  "dungeon": "/app/dist/dungeon.bundle.js?v=3c6cba4e4401",
+  "world": "/app/dist/world.bundle.js?v=b94a48d00587"
 }

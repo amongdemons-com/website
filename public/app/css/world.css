@@ -1954,7 +1954,20 @@ body.is-world-side-collapsed .world-map-controls {
 }
 
 .world-team-editor-board .battle-side-heading {
-    min-height: 1.42rem;
+    flex-direction: column;
+    gap: 0.16rem;
+    min-height: 2.45rem;
+    text-align: center;
+}
+
+.world-team-editor-hint {
+    color: rgba(220,232,229,0.58);
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: 0;
+    text-shadow: none;
+    text-transform: none;
 }
 
 .world-team-editor-grid-host {

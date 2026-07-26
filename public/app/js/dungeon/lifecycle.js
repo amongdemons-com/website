@@ -415,7 +415,10 @@ async function finishRun(message, summary = {}) {
 
   try {
     const replayRun = summary.defeated ? createReplayRunSnapshot(state.run) : null;
-    const result = await api(activeRunPath('end'), { method: 'POST' });
+    const result = await api(activeRunPath('end'), {
+      method: 'POST',
+      progressionAnimation: false
+    });
     clearCurrentRun();
     state.run = null;
     clearRecruitSelection();
@@ -443,9 +446,15 @@ async function finishRun(message, summary = {}) {
       loadAccountStatPoints()
     ]);
     renderRun();
+    animateSettledProgression(result.progression);
   } catch (error) {
     showError(error);
   }
+}
+
+function animateSettledProgression(progression) {
+  if (!progression?.leveledUp) return;
+  window.AmongDemons.ui?.updateNavProgression?.(progression, { animate: true });
 }
 
 function renderEarnedNoticeHtml(message, result) {
