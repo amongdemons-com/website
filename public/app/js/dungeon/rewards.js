@@ -3,7 +3,7 @@ import { state, elements, laneResizeObserver, setLaneResizeObserver } from './st
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount, getRarityColor } from './shared-ui.js';
-import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
+import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, showDungeonResultProgression, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const audio = window.AmongDemons.audio;
 
@@ -616,7 +616,11 @@ function getCashoutBodyForCandidate(candidate) {
 async function cashOut({ button, body }) {
   await withBusy(button, async () => {
     try {
-      const result = await api(activeRunPath('cashout'), { method: 'POST', body });
+      const result = await api(activeRunPath('cashout'), {
+        method: 'POST',
+        body,
+        progressionAnimation: false
+      });
       await finishCashout(result, { skippedEcho: Boolean(body.skipDemon) });
     } catch (error) {
       showError(error);
@@ -657,6 +661,7 @@ async function finishCashout(result, options = {}) {
     loadAccountStatPoints()
   ]);
   renderRun();
+  showDungeonResultProgression(result.progression);
 }
 
 function renderEarnedNoticeHtml(message, result) {

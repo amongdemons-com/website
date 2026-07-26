@@ -317,6 +317,11 @@ function syncActionButtons(fallbackButton) {
   }
 }
 
+function showDungeonResultProgression(progression) {
+  if (!progression?.leveledUp) return;
+  window.AmongDemons.ui?.updateNavProgression?.(progression, { animate: true });
+}
+
 function capitalize(value) {
   if (!value) return '';
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -369,6 +374,7 @@ export {
   getModal,
   setTeamChoiceModalFullscreen,
   syncActionButtons,
+  showDungeonResultProgression,
   capitalize,
   escapeHtml,
   onReady,
