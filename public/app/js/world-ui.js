@@ -52,9 +52,7 @@ import './bag-item-visuals.js';
   // Keep this in sync with WORLD_BATTLE_REPLAY_STEP_MS in public/api/lib/world-combat.js.
   const WORLD_BATTLE_REPLAY_STEP_MS = 520;
   const WORLD_BATTLE_REPLAY_REDUCED_STEP_MS = 160;
-  const WORLD_DISTANCE_REWARD_START = 8;
-  const WORLD_DISTANCE_REWARD_CAP = 70;
-  const WORLD_DISTANCE_XP_MULTIPLIER_BONUS = 2;
+  const WORLD_TERROR_XP_MULTIPLIER_BONUS = 2;
   // Keep this in sync with PASSIVE_HUNT_XP_MULTIPLIER in public/api/lib/world-combat.js.
   const PASSIVE_HUNT_XP_MULTIPLIER = 0.20;
   const WORLD_TERROR_START_DISTANCE = 10;
@@ -304,6 +302,11 @@ import './bag-item-visuals.js';
       'worldTeamModal',
       'worldTravelTeamRequiredModal',
       'worldTravelTeamConfirmButton',
+      'worldTravelSummaryModal',
+      'worldTravelSummaryTitle',
+      'worldTravelSummaryAmbushes',
+      'worldTravelSummaryXp',
+      'worldTravelSummarySouls',
       'worldMerchantModal',
       'worldMerchantBalance',
       'worldMerchantCountdown',
@@ -423,9 +426,9 @@ import './bag-item-visuals.js';
         startHunting(startHuntingButton.dataset.startHunting, startHuntingButton);
         return;
       }
-      const stopHuntingButton = target?.closest('[data-stop-hunting]');
-      if (stopHuntingButton) {
-        stopHunting(stopHuntingButton);
+      const claimHuntRewardsButton = target?.closest('[data-claim-hunt-rewards]');
+      if (claimHuntRewardsButton) {
+        claimHuntRewards(claimHuntRewardsButton);
       }
     });
 
@@ -978,8 +981,11 @@ import './bag-item-visuals.js';
     renderWorld();
 
     let completedTravel = false;
+    let travelSummary = null;
     try {
       const payload = await commitTravelPath(path);
+      travelSummary = payload.travelSummary || null;
+      applyWorldPlayerUpdate(payload.player);
       setWorldBossState(payload);
       setWorldMerchantState(payload, { deferRender: true });
       const stepEvents = getTravelStepEvents(payload, path);
@@ -1065,7 +1071,9 @@ import './bag-item-visuals.js';
         await fadeWorldAmbushDefeatFromBlack();
       }
       if (completedTravel) {
-        maybeOpenWorldMerchantShop();
+        showTravelSummaryModal(travelSummary, {
+          onHidden: maybeOpenWorldMerchantShop
+        });
       }
     }
   }
@@ -1399,6 +1407,32 @@ import './bag-item-visuals.js';
     await finishActiveHunt({ button });
   }
 
+  async function claimHuntRewards(button) {
+    if (state.huntBusy) return false;
+    state.huntBusy = true;
+    state.huntBusyAction = 'claim';
+    setButtonBusy(button, true, 'Claiming…');
+
+    try {
+      const payload = await api('/api/world/hunting/claim', { method: 'POST' });
+      setHuntState(payload.hunt);
+      applyWorldPlayerUpdate(payload.player);
+      const rewards = payload.rewards || {};
+      audio?.play('sfx.world.huntStart', { volume: 0.78 });
+      setMessage(`Rewards claimed. ${formatHuntRewardSummary(rewards)} Hunt restarted.`, 'success');
+      return true;
+    } catch (error) {
+      handleAuthError(error);
+      return false;
+    } finally {
+      state.huntBusy = false;
+      state.huntBusyAction = null;
+      setButtonBusy(button, false);
+      renderEncounterPanel();
+      syncHuntTicker();
+    }
+  }
+
   async function stopHuntingForTravel() {
     if (!isHuntActive()) return true;
     return finishActiveHunt({
@@ -1425,13 +1459,7 @@ import './bag-item-visuals.js';
     try {
       const payload = await api('/api/world/hunting/stop', { method: 'POST' });
       setHuntState(payload.hunt);
-      if (payload.player) {
-        state.player = {
-          ...(state.player || {}),
-          ...payload.player
-        };
-        window.AmongDemons.ui?.updateNavAccount?.(payload.player);
-      }
+      applyWorldPlayerUpdate(payload.player);
       const rewards = payload.rewards || {};
       if (!payload.alreadyStopped) audio?.play('sfx.world.huntStop', { volume: 0.78 });
       setMessage(
@@ -4828,8 +4856,7 @@ import './bag-item-visuals.js';
         <span class="world-card-copy">
           ${renderEncounterTitle(encounter)}
           ${renderWorldCardMeta([
-            renderWorldTerrorChip(terror, { inline: true }),
-            `Threat ${formatNumber(encounter.difficulty || 1)}`
+            renderWorldTerrorChip(terror, { inline: true })
           ])}
           ${enemyDemons}
         </span>
@@ -4943,14 +4970,13 @@ import './bag-item-visuals.js';
         <span class="world-card-copy">
           ${renderEncounterTitleLink(encounter, 'world-card-title')}
           ${renderWorldCardMeta([
-            renderWorldTerrorChip(terror, { inline: true }),
-            `Threat ${formatNumber(rate.difficulty)}`
+            renderWorldTerrorChip(terror, { inline: true })
           ])}
         </span>
         ${huntingDemons || '<p class="world-empty-text">No hunted demons visible.</p>'}
         ${renderHuntProgress(progress, rate)}
         ${renderHuntRewardLines(rate, progress)}
-        <button class="btn btn-outline-light btn-sm world-card-action world-end-hunt-action ${state.huntBusyAction === 'end' ? 'is-busy' : ''}" type="button" data-stop-hunting ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'end' ? 'Ending…' : 'End Hunt'}</button>
+        <button class="btn btn-primary btn-sm world-card-action world-end-hunt-action ${state.huntBusyAction === 'claim' ? 'is-busy' : ''}" type="button" data-claim-hunt-rewards ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'claim' ? 'Claiming…' : 'Claim Rewards'}</button>
       </article>
     `;
   }
@@ -4991,6 +5017,15 @@ import './bag-item-visuals.js';
   function getHunterProfileHref(player = {}) {
     const username = String(player.username || '').trim();
     return username ? appUrl(`/hunter/${encodeURIComponent(username)}`) : '';
+  }
+
+  function applyWorldPlayerUpdate(player) {
+    if (!player) return;
+    state.player = {
+      ...(state.player || {}),
+      ...player
+    };
+    window.AmongDemons.ui?.updateNavAccount?.(player);
   }
 
   function applyPvpChallengeRecords(payload = {}) {
@@ -5196,6 +5231,32 @@ import './bag-item-visuals.js';
       return;
     }
 
+    modalApi.getOrCreateInstance(modalElement).show();
+  }
+
+  function showTravelSummaryModal(summary = {}, options = {}) {
+    const modalElement = elements.worldTravelSummaryModal;
+    const modalApi = window.bootstrap?.Modal;
+    const ambushesWon = Math.max(0, Number(summary?.ambushesWon) || 0);
+    const xp = Math.max(0, Number(summary?.xp) || 0);
+    const souls = Math.max(0, Number(summary?.souls) || 0);
+
+    if (!modalElement || !modalApi) {
+      options.onHidden?.();
+      return;
+    }
+
+    setText(elements.worldTravelSummaryTitle, summary?.defeated ? 'Driven back' : 'Safe arrival');
+    setText(
+      elements.worldTravelSummaryAmbushes,
+      `${formatNumber(ambushesWon)} ${ambushesWon === 1 ? 'ambush' : 'ambushes'} won`
+    );
+    setText(elements.worldTravelSummaryXp, `${formatNumber(xp)} XP`);
+    setText(elements.worldTravelSummarySouls, formatSoulCount(souls));
+
+    if (typeof options.onHidden === 'function') {
+      modalElement.addEventListener('hidden.bs.modal', options.onHidden, { once: true });
+    }
     modalApi.getOrCreateInstance(modalElement).show();
   }
 
@@ -7772,13 +7833,12 @@ import './bag-item-visuals.js';
   // Expected payout per kill. Active hunts receive server-snapshotted values
   // based on the 1x unlock-fight playback time and defeated demon count.
   function computeHuntRate(encounter) {
-    const difficulty = Math.max(1, Number(encounter?.difficulty) || 1);
     const active = state.hunt?.active;
     const activeKillSeconds = Number(active?.killSeconds ?? active?.enemyRespawnSeconds);
     const explicit = Number(encounter?.enemyRespawnSeconds || encounter?.respawnSeconds);
     const fallbackKillSeconds = Number.isFinite(explicit) && explicit > 0
       ? Math.floor(explicit)
-      : HUNT_DEFAULT_KILL_SECONDS + Math.max(0, difficulty - 1) * 60;
+      : HUNT_DEFAULT_KILL_SECONDS;
     const killSeconds = Number.isFinite(activeKillSeconds) && activeKillSeconds > 0
       ? Math.floor(activeKillSeconds)
       : fallbackKillSeconds;
@@ -7788,12 +7848,11 @@ import './bag-item-visuals.js';
       ? Math.floor(Number(soulReward.soulsPerCycle))
       : Array.isArray(encounter?.team)
         ? encounter.team.length
-        : Math.max(1, Math.ceil(difficulty / 2));
+        : 1;
     const xpPerCycle = Number(active?.xpPerCycle ?? active?.xpPerKill);
     const soulsPerCycle = Number(active?.soulsPerCycle ?? active?.soulsPerKill ?? active?.defeatedDemonsPerCycle);
 
     return {
-      difficulty,
       killSeconds,
       respawnSeconds: killSeconds,
       xpReward,
@@ -7801,7 +7860,7 @@ import './bag-item-visuals.js';
       terror: active?.terror || getEncounterTerror(encounter),
       xpPerCycle: Number.isFinite(xpPerCycle) && xpPerCycle >= 0
         ? Math.round(xpPerCycle)
-        : Math.max(0, Math.round(Number(xpReward?.xpPerCycle) || (5 + difficulty * 2))),
+        : Math.max(0, Math.round(Number(xpReward?.xpPerCycle) || 7)),
       soulsPerCycle: Number.isFinite(soulsPerCycle) && soulsPerCycle >= 0
         ? Math.floor(soulsPerCycle)
         : fallbackSoulCount
@@ -7837,7 +7896,6 @@ import './bag-item-visuals.js';
       elapsedSeconds,
       killSeconds,
       respawnSeconds: killSeconds,
-      difficulty: rate.difficulty,
       cycles,
       xpPerCycle: rate.xpPerCycle,
       soulsPerCycle: rate.soulsPerCycle,
@@ -7944,27 +8002,20 @@ import './bag-item-visuals.js';
   }
 
   function computeWorldXpReward(encounter = {}) {
-    const difficulty = Math.max(1, Number(encounter?.difficulty) || 1);
-    const baseXp = 5 + difficulty * 2;
-    const distance = getWorldDistance(encounter);
-    const distanceFactor = getDistanceProgress(encounter, WORLD_DISTANCE_REWARD_START, WORLD_DISTANCE_REWARD_CAP);
-    const distanceMultiplier = 1 + Math.pow(distanceFactor, 1.4) * WORLD_DISTANCE_XP_MULTIPLIER_BONUS;
+    const teamSize = Array.isArray(encounter?.team) ? encounter.team.length : 1;
+    const baseXp = 5 + teamSize * 2;
+    const terrorLevel = getWorldTerrorLevel(encounter);
+    const terrorFactor = clamp(terrorLevel / WORLD_TERROR_MAX_LEVEL, 0, 1);
+    const terrorMultiplier = 1 + Math.pow(terrorFactor, 1.4) * WORLD_TERROR_XP_MULTIPLIER_BONUS;
 
     return {
       baseXp,
-      xpPerCycle: Math.ceil(baseXp * distanceMultiplier),
-      distance: roundNumber(distance, 1),
-      distanceFactor: roundNumber(distanceFactor, 3),
-      distanceMultiplier: roundMultiplier(distanceMultiplier)
+      teamSize,
+      xpPerCycle: Math.ceil(baseXp * terrorMultiplier),
+      terrorLevel,
+      terrorFactor: roundNumber(terrorFactor, 3),
+      terrorMultiplier: roundMultiplier(terrorMultiplier)
     };
-  }
-
-  function getDistanceProgress(encounter = {}, start, cap) {
-    return clamp((getWorldDistance(encounter) - start) / Math.max(1, cap - start), 0, 1);
-  }
-
-  function getWorldDistance(encounter = {}) {
-    return Math.hypot(Number(encounter?.x) || 0, Number(encounter?.y) || 0);
   }
 
   function getWorldTerrorDistance(encounter = {}) {
@@ -8256,23 +8307,13 @@ import './bag-item-visuals.js';
     if (!tooltip || !encounter) return;
 
     const team = Array.isArray(encounter.team) ? encounter.team : [];
-    const difficulty = Math.max(1, Math.min(10, Number(encounter.difficulty) || 1));
     const stepCount = getPathStepCount(state.selectedPath || []);
 
     const demons = team.map(renderDemonPortrait).join('');
 
-    const meterTone = difficulty <= 3 ? 'easy' : (difficulty >= 8 ? 'hard' : 'medium');
-    const meter = Array.from({ length: 10 }, (item, index) => (
-      `<span class="world-enc-pip${index < difficulty ? ' is-on' : ''}"></span>`
-    )).join('');
-
     tooltip.innerHTML = `
       ${renderEncounterTitle(encounter, 'world-tooltip-title')}
       ${demons ? `<div class="world-enc-demons">${demons}</div>` : ''}
-      <div class="world-enc-difficulty is-${meterTone}">
-        <span class="world-enc-difficulty-label">Threat</span>
-        <span class="world-enc-meter" aria-label="Threat ${difficulty} of 10">${meter}</span>
-      </div>
       <span class="world-tooltip-meta world-tooltip-travel-meta">${escapeHtml(formatTravelMeta(encounter, stepCount))}</span>
       <span class="world-tooltip-hint">(Click again to travel)</span>
     `;

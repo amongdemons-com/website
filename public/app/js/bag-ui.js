@@ -16,6 +16,8 @@
     || ((rarity) => RARITY_COLORS[String(rarity || '').toLowerCase()] || RARITY_COLORS.common);
   const renderItemVisual = window.AmongDemons.bagVisuals?.renderItemVisual
     || (() => '<span class="bag-item-renderer bag-unknown-visual" aria-hidden="true"></span>');
+  const getDemonRoleLabel = window.AmongDemons.ui.getDemonRoleLabel
+    || ((demon) => capitalize(demon?.role || 'Demon'));
   const RARITY_RANK = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5, mythic: 6 };
   const SUMMON_REVEAL_DELAY_MS = 3000;
   const state = {
@@ -251,7 +253,7 @@
         <div>
           <span class="bag-detail-rarity">${escapeHtml(capitalize(rarity))} Demon Echo</span>
           <h2 class="h4 mb-1" id="bagDetailTitle">${escapeHtml(item.species)}</h2>
-          <span class="text-muted">${escapeHtml(capitalize(item.role || 'Demon'))} - ${escapeHtml(item.preferredPosition || 'front')} line</span>
+          <span class="text-muted">${escapeHtml(getDemonRoleLabel(item) || 'Demon')} - ${escapeHtml(item.preferredPosition || 'front')} line</span>
           <span class="bag-detail-discovery">${renderIcon(item.naturallyDiscovered ? 'check' : 'info')}<span>Source: ${escapeHtml(discoveryCopy)}</span></span>
         </div>
         <button type="button" class="btn-close bag-detail-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -556,7 +558,7 @@
     tooltip.innerHTML = `
       <span class="bag-tooltip-rarity">${escapeHtml(capitalize(rarity))} Echo</span>
       <strong class="bag-tooltip-title">${escapeHtml(item.species)}</strong>
-      <span class="bag-tooltip-meta">${escapeHtml(capitalize(item.role || 'Demon'))} - x${escapeHtml(formatNumber(item.quantity))}</span>
+      <span class="bag-tooltip-meta">${escapeHtml(getDemonRoleLabel(item) || 'Demon')} - x${escapeHtml(formatNumber(item.quantity))}</span>
       <span class="bag-tooltip-meta">${escapeHtml(getItemStatus(item))}</span>
       <button class="bag-tooltip-action" type="button" data-bag-tooltip-open="${escapeHtml(itemKey)}">View details</button>
     `;

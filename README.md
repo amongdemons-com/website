@@ -209,13 +209,14 @@ All routes are mounted under `/api`.
 | --- | --- | --- |
 | `GET` | `/world/map` | Static map layout (immutable-cached, keyed by content hash) |
 | `GET` | `/world/state` | Per-player world state: position, team, shrine, hunt, players nearby |
-| `POST` | `/world/move` | Move along a validated path; returns travel events and ambushes |
+| `POST` | `/world/move` | Move along a validated path; resolves ambushes and banks victory XP/Souls |
 | `GET/POST` | `/world/team` | Read or save the active world team |
 | `GET` | `/world/shrine` | Current bound Forsaken Shrine and whether standing on one |
 | `POST` | `/world/shrine/bind` | Bind to the Forsaken Shrine at the current position |
 | `POST` | `/world/portal/summon` | Spend Souls to teleport to a Darkness Portal (cost scales with distance) |
 | `POST` | `/world/hunt/try` | Fight the encounter on the current tile |
 | `POST` | `/world/hunting/start` | Start passive hunting on a defeated encounter |
+| `POST` | `/world/hunting/claim` | Bank hunt rewards and atomically restart the same hunt |
 | `POST` | `/world/hunting/stop` | Stop hunting and bank the accumulated Souls |
 | `GET` | `/world/hunting/status` | Current passive hunt progress |
 | `POST` | `/world/ambush-defeat` | Return to the Anchored Shrine (or spawn) after an ambush loss |
@@ -260,10 +261,10 @@ Run-long modifiers defined in `public/api/data/combat-buffs.json` and managed by
 
 The world is a generated 101×101 grid (coordinates −50..50) defined in `public/api/data/map.json`: roads, typed unpassable blocks (`rocks`, `poison`, `lava`, or `leaves`), fixed demon-team encounters, and event objects (shrines, portals). The layout is identical for every player, so `/world/map` is served immutable-cached and keyed by a content hash; `/world/state` carries only per-player data.
 
-Each fixed monster spot has a unique 3–6 demon composition. Its displayed difficulty is calculated from the final team size, demon rarities, and type weights.
+Each fixed monster spot has a unique demon composition. Demon rarity and type retain their inherent stats, while World Terror is the single explicit distance-based encounter multiplier.
 
-- Movement is validated server-side step by step (up to 256 steps per request). Off-road steps on empty tiles risk ambushes (~1 in 7); roads are much safer (~1 in 34).
-- World Terror rises one level per map ring beyond the safe center (starting ~10 tiles out, capped at level 40), scaling encounter difficulty with distance.
+- Movement is validated server-side step by step (up to 256 steps per request). Off-road steps on empty tiles risk ambushes (~1 in 7); roads are much safer (~1 in 34). Each ambush victory grants the encounter's XP and Soul payout, summarized when travel ends.
+- World Terror rises one level per map ring beyond the safe center (starting ~10 tiles out, capped at level 40), scaling encounter stats and XP with distance.
 - **Forsaken Shrines** — bind your soul at a shrine to respawn there after ambush defeats instead of at world spawn.
 - **Darkness Portals** — paid teleports; the Soul cost scales with distance.
 - **Passive hunting** — after defeating a tile's encounter you may leave your world team hunting there. Souls accumulate while away but are capped by your Soul Vessel (base 50, expanded through skill-tree nodes), so AFK income is bounded by investment, not time.

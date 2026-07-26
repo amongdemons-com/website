@@ -326,20 +326,24 @@ router.post('/world/move', requireAuth, async (req, res) => {
     await achievements.grantAchievements(req.player.id, ['edgewalker']);
   }
 
-  const [playersAt, merchant, resolvedTravelEvents] = await Promise.all([
+  const resolvedTravel = await resolveTravelEvents(req.player, travelEvents);
+  const travelSettlement = await settleTravelAmbushRewards(req.player, resolvedTravel.rewards);
+  const [playersAt, merchant] = await Promise.all([
     getPlayersAt(position.x, position.y, req.player.id),
-    getWorldMerchantForPlayer(req.player.id),
-    resolveTravelEvents(req.player, travelEvents)
+    getWorldMerchantForPlayer(req.player.id)
   ]);
   res.json({
     position,
+    player: getWorldPlayer(travelSettlement.player),
+    progression: travelSettlement.progression,
     currentEvent: getEventAt(position.x, position.y),
     currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
     currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
     bosses: activeBosses.map(serializeWorldBossForClient),
     merchant: serializeWorldMerchantForClient(merchant, position),
     playersAt,
-    travelEvents: resolvedTravelEvents
+    travelEvents: resolvedTravel.events,
+    travelSummary: resolvedTravel.rewards
   });
 });
 
@@ -406,6 +410,10 @@ router.post('/world/hunting/start', requireAuth, async (req, res) => {
 
 router.post('/world/hunting/stop', requireAuth, async (req, res) => {
   res.json(await settleActiveHunt(req.player));
+});
+
+router.post('/world/hunting/claim', requireAuth, async (req, res) => {
+  res.json(await settleActiveHunt(req.player, { restartHunt: true }));
 });
 
 router.get('/world/hunting/status', requireAuth, async (req, res) => {
@@ -798,6 +806,12 @@ async function getWorldTeamCollection(playerId) {
 
 async function resolveTravelEvents(player, travelEvents = []) {
   const resolved = [];
+  const rewards = {
+    ambushesWon: 0,
+    xp: 0,
+    souls: 0,
+    defeated: false
+  };
 
   for (const event of travelEvents) {
     if (event.type !== 'ambush') {
@@ -817,21 +831,104 @@ async function resolveTravelEvents(player, travelEvents = []) {
     if (battle?.winner === 'player' && !isRoad(event.position.x, event.position.y)) {
       await achievements.grantAchievements(player.id, ['road-less-travelled']);
     }
+    if (battle?.winner === 'player') {
+      const victoryRewards = getAmbushVictoryRewards(battle);
+      battle.rewards = victoryRewards;
+      rewards.ambushesWon += 1;
+      rewards.xp += victoryRewards.xp;
+      rewards.souls += victoryRewards.souls;
+    }
     resolved.push({
       ...event,
       battle
     });
+    if (battle?.winner === 'enemy') {
+      rewards.defeated = true;
+      break;
+    }
   }
 
-  return resolved;
+  return { events: resolved, rewards };
+}
+
+function getAmbushVictoryRewards(battle = {}) {
+  return {
+    xp: Math.max(0, Math.round(Number(battle.encounter?.xpReward?.xpPerCycle) || 0)),
+    souls: Math.max(0, Math.floor(Number(battle.encounter?.soulReward?.soulsPerCycle) || 0))
+  };
+}
+
+async function settleTravelAmbushRewards(player, rewards = {}) {
+  const xp = Math.max(0, Math.round(Number(rewards.xp) || 0));
+  const souls = Math.max(0, Math.floor(Number(rewards.souls) || 0));
+  if (!xp && !souls) {
+    return {
+      player,
+      progression: getAccountProgressionSummary(player.level, player.xp, {
+        previousLevel: player.level
+      })
+    };
+  }
+
+  const connection = await db.getConnection();
+  let committed = false;
+  let playerPayload = player;
+  let previousLevel = Math.max(1, Number(player.level) || 1);
+
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.query(
+      'SELECT * FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
+      [player.id]
+    );
+    const lockedPlayer = rows[0];
+    if (!lockedPlayer) {
+      const error = new Error('Player not found.');
+      error.status = 404;
+      throw error;
+    }
+
+    previousLevel = Math.max(1, Number(lockedPlayer.level) || 1);
+    const nextXp = Math.max(0, Number(lockedPlayer.xp) || 0) + xp;
+    const nextLevel = getNextAccountLevel(previousLevel, nextXp);
+    await connection.query(
+      'UPDATE players SET xp = ?, souls = souls + ?, level = ? WHERE id = ?',
+      [nextXp, souls, nextLevel, player.id]
+    );
+    const [updatedRows] = await connection.query(
+      'SELECT * FROM players WHERE id = ? LIMIT 1',
+      [player.id]
+    );
+    playerPayload = cleanPlayer(updatedRows[0]);
+
+    await connection.commit();
+    committed = true;
+  } catch (error) {
+    if (!committed) await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  await achievements.checkAccountLevel(player.id, playerPayload.level);
+
+  return {
+    player: playerPayload,
+    progression: {
+      ...getAccountProgressionSummary(playerPayload.level, playerPayload.xp, { previousLevel }),
+      souls: playerPayload.souls
+    }
+  };
 }
 
 async function settleActiveHunt(player, options = {}) {
   const clearUnlocks = Boolean(options.clearUnlocks);
+  const restartHunt = Boolean(options.restartHunt);
   const connection = await db.getConnection();
   let committed = false;
   let rewards = createEmptyHuntRewards();
   let stoppedHunt = false;
+  let restartedHunt = false;
   let clearedUnlocks = 0;
   let settledLevel = null;
   let settledPreviousLevel = null;
@@ -847,11 +944,28 @@ async function settleActiveHunt(player, options = {}) {
       [player.id]
     );
 
+    if (restartHunt && !huntRows.length) {
+      const error = new Error('Hunting already stopped.');
+      error.status = 409;
+      throw error;
+    }
+
     if (huntRows.length) {
       const snapshot = parseHuntSnapshot(huntRows[0].snapshot);
+      const encounterId = huntRows[0].encounter_id || huntRows[0].encounterId;
+      const encounter = restartHunt ? getEncounterById(encounterId) : null;
+      if (restartHunt && !encounter) {
+        const error = new Error('The hunted demon spot no longer exists.');
+        error.status = 409;
+        throw error;
+      }
       // Live capacity so vessel points spent mid-hunt apply to the payout.
       const soulCapacity = await getLiveHuntSoulCapacity(player);
-      rewards = await calculateHuntRewards(snapshot, new Date(), { soulCapacity });
+      const settledAt = new Date();
+      rewards = await calculateHuntRewards(snapshot, settledAt, { soulCapacity });
+      const restartedSnapshot = restartHunt
+        ? await createHuntSnapshot(player, encounter)
+        : null;
 
       const [lockedRows] = await connection.query(
         'SELECT level, xp FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
@@ -866,10 +980,29 @@ async function settleActiveHunt(player, options = {}) {
         'UPDATE players SET xp = ?, souls = souls + ?, level = ? WHERE id = ?',
         [nextXp, rewards.souls, nextLevel, player.id]
       );
-      await connection.query(
-        'DELETE FROM player_active_hunts WHERE player_id = ?',
-        [player.id]
-      );
+      if (restartedSnapshot) {
+        await connection.query(
+          `UPDATE player_active_hunts
+           SET encounter_id = ?,
+               snapshot = ?,
+               started_at = FROM_UNIXTIME(?),
+               enemy_respawn_seconds = ?
+           WHERE player_id = ?`,
+          [
+            encounter.id,
+            JSON.stringify(restartedSnapshot),
+            Math.floor(Date.parse(restartedSnapshot.startedAt) / 1000),
+            restartedSnapshot.killSeconds ?? restartedSnapshot.enemyRespawnSeconds,
+            player.id
+          ]
+        );
+        restartedHunt = true;
+      } else {
+        await connection.query(
+          'DELETE FROM player_active_hunts WHERE player_id = ?',
+          [player.id]
+        );
+      }
 
       stoppedHunt = true;
       settledLevel = nextLevel;
@@ -913,6 +1046,7 @@ async function settleActiveHunt(player, options = {}) {
     ok: true,
     alreadyStopped: !stoppedHunt,
     stoppedHunt,
+    restartedHunt,
     rewards,
     player: playerPayload,
     progression: stoppedHunt ? {
@@ -1009,17 +1143,16 @@ async function getActiveHunt(playerId) {
 function serializeActiveHunt(row, liveSoulCapacity = null, capacityRecheckAt = null) {
   const snapshot = parseHuntSnapshot(row.snapshot);
   const killSeconds = getSnapshotKillSeconds(snapshot, row.enemyRespawnSeconds);
-  const difficulty = Math.max(1, Number(snapshot.encounter?.difficulty) || 1);
   const xpReward = snapshot.encounter
-    ? getWorldXpReward(snapshot.encounter, difficulty, snapshot.xpReward)
+    ? getWorldXpReward(snapshot.encounter, snapshot.xpReward)
     : snapshot.xpReward || null;
   const xpPerCycle = getSnapshotNonNegativeInteger(
     xpReward?.xpPerCycle,
-    snapshot.xpPerCycle ?? snapshot.xpPerKill ?? 5 + difficulty * 2
+    snapshot.xpPerCycle ?? snapshot.xpPerKill ?? 7
   );
   const fallbackSoulCount = Array.isArray(snapshot.targetEnemyTeam)
     ? snapshot.targetEnemyTeam.length
-    : Math.max(1, Math.ceil(difficulty / 2));
+    : 1;
   const defeatedDemonsPerCycle = getSnapshotNonNegativeInteger(
     snapshot.defeatedDemonsPerCycle ?? snapshot.soulReward?.baseSouls,
     fallbackSoulCount
@@ -1069,7 +1202,7 @@ function serializeWorldEncounterForClient(encounter) {
       ? encounter.team.map((member) => ({ ...member, imageUrl: toWorldMapImageUrl(member.imageUrl) }))
       : encounter.team,
     terror: getWorldTerrorPreview(encounter),
-    xpReward: getWorldXpReward(encounter, Math.max(1, Number(encounter.difficulty) || 1)),
+    xpReward: getWorldXpReward(encounter),
     soulReward: getWorldSoulReward(encounter, defeatedDemons)
   };
 }
@@ -1362,6 +1495,7 @@ function throwWorldError(message, status = 400) {
 }
 
 router._test = {
+  getAmbushVictoryRewards,
   getDarknessPortalAt,
   getDarknessPortalSummonCost,
   getSignAt,

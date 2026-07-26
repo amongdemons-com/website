@@ -13502,7 +13502,6 @@
       "id": "enc-1",
       "x": -42,
       "y": -50,
-      "difficulty": 7,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -13572,7 +13571,6 @@
       "id": "enc-2",
       "x": -40,
       "y": -50,
-      "difficulty": 8,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -13642,7 +13640,6 @@
       "id": "enc-3",
       "x": -17,
       "y": -50,
-      "difficulty": 6,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -13703,7 +13700,6 @@
       "id": "enc-4",
       "x": -2,
       "y": -50,
-      "difficulty": 6,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -13764,7 +13760,6 @@
       "id": "enc-5",
       "x": 49,
       "y": -44,
-      "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -13834,7 +13829,6 @@
       "id": "enc-6",
       "x": -50,
       "y": -50,
-      "difficulty": 6,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -13904,7 +13898,6 @@
       "id": "enc-7",
       "x": -45,
       "y": -49,
-      "difficulty": 7,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -13974,7 +13967,6 @@
       "id": "enc-8",
       "x": -11,
       "y": -49,
-      "difficulty": 5,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -14035,7 +14027,6 @@
       "id": "enc-9",
       "x": -5,
       "y": -49,
-      "difficulty": 5,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -14096,7 +14087,6 @@
       "id": "enc-10",
       "x": 10,
       "y": -49,
-      "difficulty": 5,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -14157,7 +14147,6 @@
       "id": "enc-11",
       "x": 28,
       "y": -49,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -14218,7 +14207,6 @@
       "id": "enc-12",
       "x": -35,
       "y": -48,
-      "difficulty": 7,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -14288,7 +14276,6 @@
       "id": "enc-13",
       "x": -31,
       "y": -48,
-      "difficulty": 7,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -14358,7 +14345,6 @@
       "id": "enc-14",
       "x": 32,
       "y": -48,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -14419,7 +14405,6 @@
       "id": "enc-15",
       "x": 44,
       "y": -49,
-      "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -14489,7 +14474,6 @@
       "id": "enc-16",
       "x": -18,
       "y": -47,
-      "difficulty": 5,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -14541,7 +14525,6 @@
       "id": "enc-17",
       "x": -16,
       "y": -47,
-      "difficulty": 6,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -14602,7 +14585,6 @@
       "id": "enc-18",
       "x": -7,
       "y": -47,
-      "difficulty": 4,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -14654,7 +14636,6 @@
       "id": "enc-19",
       "x": 11,
       "y": -47,
-      "difficulty": 5,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -14715,7 +14696,6 @@
       "id": "enc-20",
       "x": -49,
       "y": -46,
-      "difficulty": 7,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -14785,7 +14765,6 @@
       "id": "enc-21",
       "x": -26,
       "y": -46,
-      "difficulty": 6,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -14846,7 +14825,6 @@
       "id": "enc-22",
       "x": 20,
       "y": -48,
-      "difficulty": 5,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -14907,7 +14885,6 @@
       "id": "enc-23",
       "x": 31,
       "y": -46,
-      "difficulty": 5,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -14968,7 +14945,6 @@
       "id": "enc-24",
       "x": 35,
       "y": -42,
-      "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -15038,7 +15014,6 @@
       "id": "enc-25",
       "x": 40,
       "y": -48,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -15099,7 +15074,6 @@
       "id": "enc-26",
       "x": 44,
       "y": -46,
-      "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -15169,7 +15143,6 @@
       "id": "enc-27",
       "x": -40,
       "y": -45,
-      "difficulty": 7,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -15239,7 +15212,6 @@
       "id": "enc-28",
       "x": -29,
       "y": -45,
-      "difficulty": 6,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -15300,7 +15272,6 @@
       "id": "enc-29",
       "x": 1,
       "y": -45,
-      "difficulty": 6,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -15361,7 +15332,6 @@
       "id": "enc-30",
       "x": 28,
       "y": -45,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -15422,7 +15392,6 @@
       "id": "enc-31",
       "x": 50,
       "y": -50,
-      "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -15492,7 +15461,6 @@
       "id": "enc-32",
       "x": 15,
       "y": -44,
-      "difficulty": 5,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -15553,7 +15521,6 @@
       "id": "enc-33",
       "x": 22,
       "y": -44,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -15614,7 +15581,6 @@
       "id": "enc-34",
       "x": 35,
       "y": -46,
-      "difficulty": 7,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -15675,7 +15641,6 @@
       "id": "enc-35",
       "x": -28,
       "y": -43,
-      "difficulty": 4,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -15736,7 +15701,6 @@
       "id": "enc-36",
       "x": -26,
       "y": -43,
-      "difficulty": 5,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -15797,7 +15761,6 @@
       "id": "enc-37",
       "x": 20,
       "y": -43,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -15858,7 +15821,6 @@
       "id": "enc-38",
       "x": 25,
       "y": -43,
-      "difficulty": 5,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -15910,7 +15872,6 @@
       "id": "enc-39",
       "x": 7,
       "y": -42,
-      "difficulty": 4,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -15962,7 +15923,6 @@
       "id": "enc-40",
       "x": -49,
       "y": -41,
-      "difficulty": 7,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -16032,7 +15992,6 @@
       "id": "enc-41",
       "x": -23,
       "y": -41,
-      "difficulty": 4,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -16084,7 +16043,6 @@
       "id": "enc-42",
       "x": -12,
       "y": -41,
-      "difficulty": 4,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -16145,7 +16103,6 @@
       "id": "enc-43",
       "x": 16,
       "y": -41,
-      "difficulty": 5,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -16206,7 +16163,6 @@
       "id": "enc-44",
       "x": 19,
       "y": -41,
-      "difficulty": 5,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -16267,7 +16223,6 @@
       "id": "enc-45",
       "x": -17,
       "y": -40,
-      "difficulty": 4,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -16319,7 +16274,6 @@
       "id": "enc-46",
       "x": -4,
       "y": -40,
-      "difficulty": 4,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -16371,7 +16325,6 @@
       "id": "enc-47",
       "x": -48,
       "y": -39,
-      "difficulty": 7,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -16441,7 +16394,6 @@
       "id": "enc-48",
       "x": -30,
       "y": -39,
-      "difficulty": 5,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -16502,7 +16454,6 @@
       "id": "enc-49",
       "x": -6,
       "y": -39,
-      "difficulty": 4,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -16554,7 +16505,6 @@
       "id": "enc-50",
       "x": 15,
       "y": -39,
-      "difficulty": 5,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -16606,7 +16556,6 @@
       "id": "enc-51",
       "x": 17,
       "y": -39,
-      "difficulty": 5,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -16667,7 +16616,6 @@
       "id": "enc-52",
       "x": 26,
       "y": -39,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -16728,7 +16676,6 @@
       "id": "enc-53",
       "x": -8,
       "y": -38,
-      "difficulty": 3,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -16780,7 +16727,6 @@
       "id": "enc-54",
       "x": 5,
       "y": -38,
-      "difficulty": 4,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -16832,7 +16778,6 @@
       "id": "enc-55",
       "x": 8,
       "y": -38,
-      "difficulty": 5,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -16893,7 +16838,6 @@
       "id": "enc-56",
       "x": 20,
       "y": -38,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -16945,7 +16889,6 @@
       "id": "enc-57",
       "x": 42,
       "y": -38,
-      "difficulty": 7,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17015,7 +16958,6 @@
       "id": "enc-58",
       "x": 48,
       "y": -38,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17076,7 +17018,6 @@
       "id": "enc-59",
       "x": -26,
       "y": -37,
-      "difficulty": 4,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -17137,7 +17078,6 @@
       "id": "enc-60",
       "x": -24,
       "y": -37,
-      "difficulty": 4,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -17189,7 +17129,6 @@
       "id": "enc-61",
       "x": 26,
       "y": -37,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17241,7 +17180,6 @@
       "id": "enc-62",
       "x": -11,
       "y": -36,
-      "difficulty": 4,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -17293,7 +17231,6 @@
       "id": "enc-63",
       "x": 31,
       "y": -38,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17354,7 +17291,6 @@
       "id": "enc-64",
       "x": 37,
       "y": -39,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17415,7 +17351,6 @@
       "id": "enc-65",
       "x": 37,
       "y": -36,
-      "difficulty": 5,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17476,7 +17411,6 @@
       "id": "enc-66",
       "x": 49,
       "y": -36,
-      "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17546,7 +17480,6 @@
       "id": "enc-67",
       "x": -41,
       "y": -38,
-      "difficulty": 5,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -17607,7 +17540,6 @@
       "id": "enc-68",
       "x": -2,
       "y": -35,
-      "difficulty": 4,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -17659,7 +17591,6 @@
       "id": "enc-69",
       "x": 23,
       "y": -35,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17711,7 +17642,6 @@
       "id": "enc-70",
       "x": -37,
       "y": -34,
-      "difficulty": 4,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -17763,7 +17693,6 @@
       "id": "enc-71",
       "x": -34,
       "y": -39,
-      "difficulty": 5,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -17815,7 +17744,6 @@
       "id": "enc-72",
       "x": 32,
       "y": -34,
-      "difficulty": 5,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17867,7 +17795,6 @@
       "id": "enc-73",
       "x": 36,
       "y": -34,
-      "difficulty": 5,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -17928,7 +17855,6 @@
       "id": "enc-74",
       "x": -49,
       "y": -33,
-      "difficulty": 7,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -17998,7 +17924,6 @@
       "id": "enc-75",
       "x": -40,
       "y": -32,
-      "difficulty": 5,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -18059,7 +17984,6 @@
       "id": "enc-76",
       "x": -33,
       "y": -32,
-      "difficulty": 5,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -18111,7 +18035,6 @@
       "id": "enc-77",
       "x": -28,
       "y": -32,
-      "difficulty": 4,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -18163,7 +18086,6 @@
       "id": "enc-78",
       "x": 5,
       "y": -32,
-      "difficulty": 3,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -18215,7 +18137,6 @@
       "id": "enc-79",
       "x": 50,
       "y": -32,
-      "difficulty": 8,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -18285,7 +18206,6 @@
       "id": "enc-80",
       "x": 2,
       "y": -31,
-      "difficulty": 3,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -18337,7 +18257,6 @@
       "id": "enc-81",
       "x": 41,
       "y": -31,
-      "difficulty": 5,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -18398,7 +18317,6 @@
       "id": "enc-82",
       "x": 4,
       "y": -30,
-      "difficulty": 3,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -18450,7 +18368,6 @@
       "id": "enc-83",
       "x": 7,
       "y": -30,
-      "difficulty": 3,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -18502,7 +18419,6 @@
       "id": "enc-84",
       "x": 15,
       "y": -30,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -18554,7 +18470,6 @@
       "id": "enc-85",
       "x": 26,
       "y": -30,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -18606,7 +18521,6 @@
       "id": "enc-86",
       "x": -34,
       "y": -29,
-      "difficulty": 4,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -18658,7 +18572,6 @@
       "id": "enc-87",
       "x": -30,
       "y": -29,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -18710,7 +18623,6 @@
       "id": "enc-88",
       "x": -12,
       "y": -29,
-      "difficulty": 3,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -18762,7 +18674,6 @@
       "id": "enc-89",
       "x": 29,
       "y": -29,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -18814,7 +18725,6 @@
       "id": "enc-90",
       "x": -46,
       "y": -29,
-      "difficulty": 5,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -18875,7 +18785,6 @@
       "id": "enc-91",
       "x": 2,
       "y": -28,
-      "difficulty": 3,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -18927,7 +18836,6 @@
       "id": "enc-92",
       "x": 38,
       "y": -28,
-      "difficulty": 6,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -18988,7 +18896,6 @@
       "id": "enc-93",
       "x": 45,
       "y": -28,
-      "difficulty": 6,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -19049,7 +18956,6 @@
       "id": "enc-94",
       "x": -42,
       "y": -27,
-      "difficulty": 4,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -19110,7 +19016,6 @@
       "id": "enc-95",
       "x": -11,
       "y": -27,
-      "difficulty": 3,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -19162,7 +19067,6 @@
       "id": "enc-96",
       "x": -5,
       "y": -27,
-      "difficulty": 3,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -19214,7 +19118,6 @@
       "id": "enc-97",
       "x": 41,
       "y": -26,
-      "difficulty": 6,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -19275,7 +19178,6 @@
       "id": "enc-98",
       "x": -45,
       "y": -25,
-      "difficulty": 4,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -19336,7 +19238,6 @@
       "id": "enc-99",
       "x": -22,
       "y": -25,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -19388,7 +19289,6 @@
       "id": "enc-100",
       "x": -7,
       "y": -25,
-      "difficulty": 3,
       "zoneType": 3,
       "keyDemon": {
         "typeId": 3,
@@ -19440,7 +19340,6 @@
       "id": "enc-101",
       "x": 38,
       "y": -25,
-      "difficulty": 5,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -19501,7 +19400,6 @@
       "id": "enc-102",
       "x": -49,
       "y": -24,
-      "difficulty": 6,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -19562,7 +19460,6 @@
       "id": "enc-103",
       "x": -34,
       "y": -24,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -19614,7 +19511,6 @@
       "id": "enc-104",
       "x": 5,
       "y": -24,
-      "difficulty": 3,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -19666,7 +19562,6 @@
       "id": "enc-105",
       "x": 46,
       "y": -24,
-      "difficulty": 5,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -19727,7 +19622,6 @@
       "id": "enc-106",
       "x": -44,
       "y": -23,
-      "difficulty": 4,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -19788,7 +19682,6 @@
       "id": "enc-107",
       "x": -27,
       "y": -23,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -19840,7 +19733,6 @@
       "id": "enc-108",
       "x": -1,
       "y": -23,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 3,
@@ -19892,7 +19784,6 @@
       "id": "enc-109",
       "x": 3,
       "y": -23,
-      "difficulty": 3,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -19944,7 +19835,6 @@
       "id": "enc-110",
       "x": 22,
       "y": -23,
-      "difficulty": 3,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -19996,7 +19886,6 @@
       "id": "enc-111",
       "x": -35,
       "y": -22,
-      "difficulty": 4,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -20057,7 +19946,6 @@
       "id": "enc-112",
       "x": -13,
       "y": -22,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 10,
@@ -20109,7 +19997,6 @@
       "id": "enc-113",
       "x": -10,
       "y": -22,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 5,
@@ -20161,7 +20048,6 @@
       "id": "enc-114",
       "x": 9,
       "y": -22,
-      "difficulty": 3,
       "zoneType": 5,
       "keyDemon": {
         "typeId": 5,
@@ -20213,7 +20099,6 @@
       "id": "enc-115",
       "x": 48,
       "y": -22,
-      "difficulty": 7,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -20274,7 +20159,6 @@
       "id": "enc-116",
       "x": -33,
       "y": -21,
-      "difficulty": 4,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -20326,7 +20210,6 @@
       "id": "enc-117",
       "x": -25,
       "y": -21,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -20378,7 +20261,6 @@
       "id": "enc-118",
       "x": 41,
       "y": -21,
-      "difficulty": 5,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -20430,7 +20312,6 @@
       "id": "enc-119",
       "x": 43,
       "y": -21,
-      "difficulty": 8,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -20500,7 +20381,6 @@
       "id": "enc-120",
       "x": -29,
       "y": -20,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -20552,7 +20432,6 @@
       "id": "enc-121",
       "x": -5,
       "y": -20,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 9,
@@ -20604,7 +20483,6 @@
       "id": "enc-122",
       "x": 32,
       "y": -24,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -20656,7 +20534,6 @@
       "id": "enc-123",
       "x": 36,
       "y": -20,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -20708,7 +20585,6 @@
       "id": "enc-124",
       "x": 46,
       "y": -20,
-      "difficulty": 5,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -20769,7 +20645,6 @@
       "id": "enc-125",
       "x": 50,
       "y": -20,
-      "difficulty": 8,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -20839,7 +20714,6 @@
       "id": "enc-126",
       "x": -16,
       "y": -19,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 4,
@@ -20891,7 +20765,6 @@
       "id": "enc-127",
       "x": -14,
       "y": -19,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 8,
@@ -20943,7 +20816,6 @@
       "id": "enc-128",
       "x": 31,
       "y": -19,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -20995,7 +20867,6 @@
       "id": "enc-129",
       "x": -38,
       "y": -18,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -21047,7 +20918,6 @@
       "id": "enc-130",
       "x": 34,
       "y": -18,
-      "difficulty": 4,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -21099,7 +20969,6 @@
       "id": "enc-131",
       "x": 38,
       "y": -18,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -21151,7 +21020,6 @@
       "id": "enc-132",
       "x": -23,
       "y": -17,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -21203,7 +21071,6 @@
       "id": "enc-133",
       "x": 12,
       "y": -17,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 5,
@@ -21255,7 +21122,6 @@
       "id": "enc-134",
       "x": 48,
       "y": -17,
-      "difficulty": 6,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -21316,7 +21182,6 @@
       "id": "enc-135",
       "x": -41,
       "y": -16,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -21368,7 +21233,6 @@
       "id": "enc-136",
       "x": -25,
       "y": -16,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -21420,7 +21284,6 @@
       "id": "enc-137",
       "x": -12,
       "y": -16,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 3,
@@ -21472,7 +21335,6 @@
       "id": "enc-138",
       "x": 29,
       "y": -16,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -21524,7 +21386,6 @@
       "id": "enc-139",
       "x": -31,
       "y": -15,
-      "difficulty": 4,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -21576,7 +21437,6 @@
       "id": "enc-140",
       "x": -28,
       "y": -15,
-      "difficulty": 3,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -21628,7 +21488,6 @@
       "id": "enc-141",
       "x": -7,
       "y": -13,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 4,
@@ -21680,7 +21539,6 @@
       "id": "enc-142",
       "x": -1,
       "y": -15,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 10,
@@ -21732,7 +21590,6 @@
       "id": "enc-143",
       "x": 45,
       "y": -15,
-      "difficulty": 5,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -21793,7 +21650,6 @@
       "id": "enc-144",
       "x": 17,
       "y": -14,
-      "difficulty": 3,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -21845,7 +21701,6 @@
       "id": "enc-145",
       "x": 19,
       "y": -14,
-      "difficulty": 3,
       "zoneType": 4,
       "keyDemon": {
         "typeId": 4,
@@ -21897,7 +21752,6 @@
       "id": "enc-146",
       "x": 33,
       "y": -14,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -21949,7 +21803,6 @@
       "id": "enc-147",
       "x": 42,
       "y": -14,
-      "difficulty": 5,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -22010,7 +21863,6 @@
       "id": "enc-148",
       "x": 6,
       "y": -19,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 5,
@@ -22062,7 +21914,6 @@
       "id": "enc-149",
       "x": 30,
       "y": -13,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -22114,7 +21965,6 @@
       "id": "enc-150",
       "x": -42,
       "y": -12,
-      "difficulty": 4,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -22175,7 +22025,6 @@
       "id": "enc-151",
       "x": 28,
       "y": -12,
-      "difficulty": 3,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -22227,7 +22076,6 @@
       "id": "enc-152",
       "x": -49,
       "y": -14,
-      "difficulty": 4,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -22288,7 +22136,6 @@
       "id": "enc-153",
       "x": 38,
       "y": -11,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -22340,7 +22187,6 @@
       "id": "enc-154",
       "x": -48,
       "y": -10,
-      "difficulty": 4,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -22401,7 +22247,6 @@
       "id": "enc-155",
       "x": 6,
       "y": -10,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 9,
@@ -22453,7 +22298,6 @@
       "id": "enc-156",
       "x": 34,
       "y": -10,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -22505,7 +22349,6 @@
       "id": "enc-157",
       "x": 43,
       "y": -10,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -22557,7 +22400,6 @@
       "id": "enc-158",
       "x": -45,
       "y": -9,
-      "difficulty": 4,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -22618,7 +22460,6 @@
       "id": "enc-159",
       "x": -31,
       "y": -9,
-      "difficulty": 2,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -22670,7 +22511,6 @@
       "id": "enc-160",
       "x": -17,
       "y": -9,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 3,
@@ -22722,7 +22562,6 @@
       "id": "enc-161",
       "x": 0,
       "y": -9,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 6,
@@ -22774,7 +22613,6 @@
       "id": "enc-162",
       "x": 40,
       "y": -9,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -22826,7 +22664,6 @@
       "id": "enc-163",
       "x": -38,
       "y": -8,
-      "difficulty": 2,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -22878,7 +22715,6 @@
       "id": "enc-164",
       "x": 23,
       "y": -8,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 2,
@@ -22930,7 +22766,6 @@
       "id": "enc-165",
       "x": 47,
       "y": -8,
-      "difficulty": 6,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -22991,7 +22826,6 @@
       "id": "enc-166",
       "x": -24,
       "y": -7,
-      "difficulty": 2,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -23043,7 +22877,6 @@
       "id": "enc-167",
       "x": 50,
       "y": -7,
-      "difficulty": 6,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -23104,7 +22937,6 @@
       "id": "enc-168",
       "x": -41,
       "y": -6,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -23156,7 +22988,6 @@
       "id": "enc-169",
       "x": -44,
       "y": -5,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -23217,7 +23048,6 @@
       "id": "enc-170",
       "x": -23,
       "y": -5,
-      "difficulty": 2,
       "zoneType": 2,
       "keyDemon": {
         "typeId": 2,
@@ -23269,7 +23099,6 @@
       "id": "enc-171",
       "x": 23,
       "y": -5,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 9,
@@ -23321,7 +23150,6 @@
       "id": "enc-172",
       "x": -16,
       "y": -4,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 7,
@@ -23373,7 +23201,6 @@
       "id": "enc-173",
       "x": 39,
       "y": -4,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -23425,7 +23252,6 @@
       "id": "enc-174",
       "x": 48,
       "y": -4,
-      "difficulty": 6,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -23486,7 +23312,6 @@
       "id": "enc-175",
       "x": -30,
       "y": -3,
-      "difficulty": 2,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -23538,7 +23363,6 @@
       "id": "enc-176",
       "x": -27,
       "y": -3,
-      "difficulty": 2,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -23599,7 +23423,6 @@
       "id": "enc-177",
       "x": -50,
       "y": -2,
-      "difficulty": 4,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -23660,7 +23483,6 @@
       "id": "enc-178",
       "x": -19,
       "y": -2,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 8,
@@ -23712,7 +23534,6 @@
       "id": "enc-179",
       "x": 28,
       "y": -2,
-      "difficulty": 3,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -23764,7 +23585,6 @@
       "id": "enc-180",
       "x": 41,
       "y": -2,
-      "difficulty": 4,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -23816,7 +23636,6 @@
       "id": "enc-181",
       "x": -42,
       "y": -1,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -23877,7 +23696,6 @@
       "id": "enc-182",
       "x": -38,
       "y": -1,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -23929,7 +23747,6 @@
       "id": "enc-183",
       "x": -34,
       "y": -1,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -23981,7 +23798,6 @@
       "id": "enc-184",
       "x": 12,
       "y": 0,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 8,
@@ -24033,7 +23849,6 @@
       "id": "enc-185",
       "x": 48,
       "y": 0,
-      "difficulty": 5,
       "zoneType": 6,
       "keyDemon": {
         "typeId": 6,
@@ -24094,7 +23909,6 @@
       "id": "enc-186",
       "x": -17,
       "y": 1,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 4,
@@ -24146,7 +23960,6 @@
       "id": "enc-187",
       "x": 32,
       "y": 1,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -24198,7 +24011,6 @@
       "id": "enc-188",
       "x": -35,
       "y": 2,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -24250,7 +24062,6 @@
       "id": "enc-189",
       "x": -7,
       "y": -4,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 6,
@@ -24302,7 +24113,6 @@
       "id": "enc-190",
       "x": -38,
       "y": 3,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -24354,7 +24164,6 @@
       "id": "enc-191",
       "x": -23,
       "y": 3,
-      "difficulty": 2,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -24406,7 +24215,6 @@
       "id": "enc-192",
       "x": 29,
       "y": 3,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -24458,7 +24266,6 @@
       "id": "enc-193",
       "x": -49,
       "y": 4,
-      "difficulty": 4,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -24519,7 +24326,6 @@
       "id": "enc-194",
       "x": -33,
       "y": 4,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -24571,7 +24377,6 @@
       "id": "enc-195",
       "x": -26,
       "y": 4,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -24623,7 +24428,6 @@
       "id": "enc-196",
       "x": -8,
       "y": 4,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 2,
@@ -24675,7 +24479,6 @@
       "id": "enc-197",
       "x": 24,
       "y": 4,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 7,
@@ -24727,7 +24530,6 @@
       "id": "enc-198",
       "x": 33,
       "y": 4,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -24779,7 +24581,6 @@
       "id": "enc-199",
       "x": 5,
       "y": 5,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 11,
@@ -24831,7 +24632,6 @@
       "id": "enc-200",
       "x": 36,
       "y": 5,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -24883,7 +24683,6 @@
       "id": "enc-201",
       "x": -45,
       "y": 6,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -24935,7 +24734,6 @@
       "id": "enc-202",
       "x": -16,
       "y": 6,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 4,
@@ -24987,7 +24785,6 @@
       "id": "enc-203",
       "x": -3,
       "y": 6,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 8,
@@ -25039,7 +24836,6 @@
       "id": "enc-204",
       "x": 32,
       "y": 6,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -25091,7 +24887,6 @@
       "id": "enc-205",
       "x": -29,
       "y": 7,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -25143,7 +24938,6 @@
       "id": "enc-206",
       "x": -25,
       "y": 7,
-      "difficulty": 2,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -25195,7 +24989,6 @@
       "id": "enc-207",
       "x": -19,
       "y": 7,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 1,
@@ -25247,7 +25040,6 @@
       "id": "enc-208",
       "x": 24,
       "y": 7,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 3,
@@ -25299,7 +25091,6 @@
       "id": "enc-209",
       "x": 35,
       "y": 8,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -25351,7 +25142,6 @@
       "id": "enc-210",
       "x": -27,
       "y": 9,
-      "difficulty": 4,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -25403,7 +25193,6 @@
       "id": "enc-211",
       "x": 41,
       "y": 9,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -25455,7 +25244,6 @@
       "id": "enc-212",
       "x": -9,
       "y": 10,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 11,
@@ -25507,7 +25295,6 @@
       "id": "enc-213",
       "x": 8,
       "y": 10,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 8,
@@ -25559,7 +25346,6 @@
       "id": "enc-214",
       "x": -16,
       "y": 11,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 7,
@@ -25611,7 +25397,6 @@
       "id": "enc-215",
       "x": -21,
       "y": 12,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 5,
@@ -25663,7 +25448,6 @@
       "id": "enc-216",
       "x": -8,
       "y": 12,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 7,
@@ -25715,7 +25499,6 @@
       "id": "enc-217",
       "x": 46,
       "y": 11,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -25767,7 +25550,6 @@
       "id": "enc-218",
       "x": -38,
       "y": 13,
-      "difficulty": 5,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -25819,7 +25601,6 @@
       "id": "enc-219",
       "x": -32,
       "y": 13,
-      "difficulty": 4,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -25871,7 +25652,6 @@
       "id": "enc-220",
       "x": -25,
       "y": 13,
-      "difficulty": 4,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -25923,7 +25703,6 @@
       "id": "enc-221",
       "x": 16,
       "y": 13,
-      "difficulty": 3,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -25975,7 +25754,6 @@
       "id": "enc-222",
       "x": 22,
       "y": 13,
-      "difficulty": 3,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -26027,7 +25805,6 @@
       "id": "enc-223",
       "x": 39,
       "y": 13,
-      "difficulty": 5,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -26088,7 +25865,6 @@
       "id": "enc-224",
       "x": 50,
       "y": 7,
-      "difficulty": 5,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -26149,7 +25925,6 @@
       "id": "enc-225",
       "x": -44,
       "y": 14,
-      "difficulty": 5,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -26210,7 +25985,6 @@
       "id": "enc-226",
       "x": -50,
       "y": 15,
-      "difficulty": 4,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -26271,7 +26045,6 @@
       "id": "enc-227",
       "x": -47,
       "y": 15,
-      "difficulty": 4,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -26332,7 +26105,6 @@
       "id": "enc-228",
       "x": -37,
       "y": 15,
-      "difficulty": 4,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -26384,7 +26156,6 @@
       "id": "enc-229",
       "x": -33,
       "y": 15,
-      "difficulty": 4,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -26436,7 +26207,6 @@
       "id": "enc-230",
       "x": 42,
       "y": 15,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -26488,7 +26258,6 @@
       "id": "enc-231",
       "x": -31,
       "y": 16,
-      "difficulty": 5,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -26540,7 +26309,6 @@
       "id": "enc-232",
       "x": 26,
       "y": 16,
-      "difficulty": 4,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -26592,7 +26360,6 @@
       "id": "enc-233",
       "x": 48,
       "y": 16,
-      "difficulty": 6,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -26653,7 +26420,6 @@
       "id": "enc-234",
       "x": -47,
       "y": 17,
-      "difficulty": 3,
       "zoneType": 1,
       "keyDemon": {
         "typeId": 1,
@@ -26705,7 +26471,6 @@
       "id": "enc-235",
       "x": -9,
       "y": 17,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 1,
@@ -26757,7 +26522,6 @@
       "id": "enc-236",
       "x": 19,
       "y": 17,
-      "difficulty": 3,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -26809,7 +26573,6 @@
       "id": "enc-237",
       "x": -36,
       "y": 18,
-      "difficulty": 6,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -26870,7 +26633,6 @@
       "id": "enc-238",
       "x": 13,
       "y": 18,
-      "difficulty": 3,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -26922,7 +26684,6 @@
       "id": "enc-239",
       "x": 17,
       "y": 18,
-      "difficulty": 3,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -26974,7 +26735,6 @@
       "id": "enc-240",
       "x": -42,
       "y": 19,
-      "difficulty": 7,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -27026,7 +26786,6 @@
       "id": "enc-241",
       "x": 38,
       "y": 19,
-      "difficulty": 5,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -27087,7 +26846,6 @@
       "id": "enc-242",
       "x": -40,
       "y": 20,
-      "difficulty": 5,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -27139,7 +26897,6 @@
       "id": "enc-243",
       "x": -35,
       "y": 20,
-      "difficulty": 5,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -27200,7 +26957,6 @@
       "id": "enc-244",
       "x": 22,
       "y": 20,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -27252,7 +27008,6 @@
       "id": "enc-245",
       "x": 25,
       "y": 20,
-      "difficulty": 3,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -27304,7 +27059,6 @@
       "id": "enc-246",
       "x": -46,
       "y": 21,
-      "difficulty": 7,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -27365,7 +27119,6 @@
       "id": "enc-247",
       "x": -20,
       "y": 21,
-      "difficulty": 4,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -27417,7 +27170,6 @@
       "id": "enc-248",
       "x": 0,
       "y": 21,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 6,
@@ -27469,7 +27221,6 @@
       "id": "enc-249",
       "x": 28,
       "y": 21,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -27521,7 +27272,6 @@
       "id": "enc-250",
       "x": -43,
       "y": 22,
-      "difficulty": 6,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -27582,7 +27332,6 @@
       "id": "enc-251",
       "x": 6,
       "y": 22,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 6,
@@ -27634,7 +27383,6 @@
       "id": "enc-252",
       "x": 32,
       "y": 22,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -27686,7 +27434,6 @@
       "id": "enc-253",
       "x": 46,
       "y": 22,
-      "difficulty": 6,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -27747,7 +27494,6 @@
       "id": "enc-254",
       "x": -34,
       "y": 23,
-      "difficulty": 5,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -27808,7 +27554,6 @@
       "id": "enc-255",
       "x": -23,
       "y": 23,
-      "difficulty": 4,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -27860,7 +27605,6 @@
       "id": "enc-256",
       "x": 3,
       "y": 23,
-      "difficulty": 2,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 1,
@@ -27912,7 +27656,6 @@
       "id": "enc-257",
       "x": 37,
       "y": 23,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -27964,7 +27707,6 @@
       "id": "enc-258",
       "x": 41,
       "y": 23,
-      "difficulty": 6,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -28025,7 +27767,6 @@
       "id": "enc-259",
       "x": -34,
       "y": 25,
-      "difficulty": 5,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -28086,7 +27827,6 @@
       "id": "enc-260",
       "x": -21,
       "y": 25,
-      "difficulty": 4,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -28138,7 +27878,6 @@
       "id": "enc-261",
       "x": -13,
       "y": 25,
-      "difficulty": 4,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -28190,7 +27929,6 @@
       "id": "enc-262",
       "x": -4,
       "y": 25,
-      "difficulty": 3,
       "zoneType": 0,
       "keyDemon": {
         "typeId": 11,
@@ -28242,7 +27980,6 @@
       "id": "enc-263",
       "x": 1,
       "y": 25,
-      "difficulty": 3,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -28294,7 +28031,6 @@
       "id": "enc-264",
       "x": 8,
       "y": 25,
-      "difficulty": 3,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -28346,7 +28082,6 @@
       "id": "enc-265",
       "x": 25,
       "y": 25,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -28398,7 +28133,6 @@
       "id": "enc-266",
       "x": 31,
       "y": 25,
-      "difficulty": 5,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -28450,7 +28184,6 @@
       "id": "enc-267",
       "x": 40,
       "y": 28,
-      "difficulty": 5,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -28502,7 +28235,6 @@
       "id": "enc-268",
       "x": 42,
       "y": 25,
-      "difficulty": 5,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -28563,7 +28295,6 @@
       "id": "enc-269",
       "x": -50,
       "y": 26,
-      "difficulty": 7,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -28624,7 +28355,6 @@
       "id": "enc-270",
       "x": 17,
       "y": 26,
-      "difficulty": 3,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -28676,7 +28406,6 @@
       "id": "enc-271",
       "x": 21,
       "y": 26,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -28728,7 +28457,6 @@
       "id": "enc-272",
       "x": 37,
       "y": 26,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -28780,7 +28508,6 @@
       "id": "enc-273",
       "x": 33,
       "y": 27,
-      "difficulty": 6,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -28841,7 +28568,6 @@
       "id": "enc-274",
       "x": -20,
       "y": 28,
-      "difficulty": 4,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -28893,7 +28619,6 @@
       "id": "enc-275",
       "x": 8,
       "y": 28,
-      "difficulty": 4,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -28945,7 +28670,6 @@
       "id": "enc-276",
       "x": 13,
       "y": 28,
-      "difficulty": 3,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -28997,7 +28721,6 @@
       "id": "enc-277",
       "x": 43,
       "y": 28,
-      "difficulty": 6,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -29058,7 +28781,6 @@
       "id": "enc-278",
       "x": -40,
       "y": 29,
-      "difficulty": 6,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -29119,7 +28841,6 @@
       "id": "enc-279",
       "x": 36,
       "y": 29,
-      "difficulty": 5,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -29171,7 +28892,6 @@
       "id": "enc-280",
       "x": -35,
       "y": 30,
-      "difficulty": 5,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -29223,7 +28943,6 @@
       "id": "enc-281",
       "x": -16,
       "y": 30,
-      "difficulty": 4,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -29275,7 +28994,6 @@
       "id": "enc-282",
       "x": -12,
       "y": 30,
-      "difficulty": 3,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -29327,7 +29045,6 @@
       "id": "enc-283",
       "x": 16,
       "y": 30,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -29379,7 +29096,6 @@
       "id": "enc-284",
       "x": -37,
       "y": 31,
-      "difficulty": 7,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -29440,7 +29156,6 @@
       "id": "enc-285",
       "x": 20,
       "y": 31,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -29492,7 +29207,6 @@
       "id": "enc-286",
       "x": 31,
       "y": 31,
-      "difficulty": 5,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -29544,7 +29258,6 @@
       "id": "enc-287",
       "x": 45,
       "y": 31,
-      "difficulty": 7,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -29605,7 +29318,6 @@
       "id": "enc-288",
       "x": 48,
       "y": 31,
-      "difficulty": 7,
       "zoneType": 7,
       "keyDemon": {
         "typeId": 7,
@@ -29675,7 +29387,6 @@
       "id": "enc-289",
       "x": -46,
       "y": 32,
-      "difficulty": 8,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -29736,7 +29447,6 @@
       "id": "enc-290",
       "x": -34,
       "y": 32,
-      "difficulty": 6,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -29797,7 +29507,6 @@
       "id": "enc-291",
       "x": -24,
       "y": 32,
-      "difficulty": 4,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -29849,7 +29558,6 @@
       "id": "enc-292",
       "x": -5,
       "y": 32,
-      "difficulty": 4,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -29901,7 +29609,6 @@
       "id": "enc-293",
       "x": 14,
       "y": 32,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -29953,7 +29660,6 @@
       "id": "enc-294",
       "x": -37,
       "y": 33,
-      "difficulty": 6,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -30014,7 +29720,6 @@
       "id": "enc-295",
       "x": -17,
       "y": 33,
-      "difficulty": 4,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -30066,7 +29771,6 @@
       "id": "enc-296",
       "x": 1,
       "y": 33,
-      "difficulty": 4,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -30118,7 +29822,6 @@
       "id": "enc-297",
       "x": 22,
       "y": 33,
-      "difficulty": 5,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -30170,7 +29873,6 @@
       "id": "enc-298",
       "x": -49,
       "y": 34,
-      "difficulty": 10,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -30240,7 +29942,6 @@
       "id": "enc-299",
       "x": -34,
       "y": 34,
-      "difficulty": 6,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -30301,7 +30002,6 @@
       "id": "enc-300",
       "x": -30,
       "y": 34,
-      "difficulty": 4,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -30353,7 +30053,6 @@
       "id": "enc-301",
       "x": 14,
       "y": 34,
-      "difficulty": 4,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -30405,7 +30104,6 @@
       "id": "enc-302",
       "x": 49,
       "y": 34,
-      "difficulty": 9,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -30475,7 +30173,6 @@
       "id": "enc-303",
       "x": -40,
       "y": 35,
-      "difficulty": 6,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -30536,7 +30233,6 @@
       "id": "enc-304",
       "x": -47,
       "y": 36,
-      "difficulty": 8,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -30597,7 +30293,6 @@
       "id": "enc-305",
       "x": -43,
       "y": 36,
-      "difficulty": 8,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -30667,7 +30362,6 @@
       "id": "enc-306",
       "x": -27,
       "y": 36,
-      "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -30719,7 +30413,6 @@
       "id": "enc-307",
       "x": 0,
       "y": 36,
-      "difficulty": 4,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -30771,7 +30464,6 @@
       "id": "enc-308",
       "x": 9,
       "y": 36,
-      "difficulty": 4,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -30823,7 +30515,6 @@
       "id": "enc-309",
       "x": 20,
       "y": 36,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -30875,7 +30566,6 @@
       "id": "enc-310",
       "x": -10,
       "y": 37,
-      "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -30927,7 +30617,6 @@
       "id": "enc-311",
       "x": 16,
       "y": 37,
-      "difficulty": 4,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -30979,7 +30668,6 @@
       "id": "enc-312",
       "x": 43,
       "y": 37,
-      "difficulty": 8,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -31049,7 +30737,6 @@
       "id": "enc-313",
       "x": -39,
       "y": 38,
-      "difficulty": 6,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -31110,7 +30797,6 @@
       "id": "enc-314",
       "x": -29,
       "y": 38,
-      "difficulty": 7,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -31171,7 +30857,6 @@
       "id": "enc-315",
       "x": 45,
       "y": 38,
-      "difficulty": 7,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -31232,7 +30917,6 @@
       "id": "enc-316",
       "x": 48,
       "y": 38,
-      "difficulty": 9,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -31302,7 +30986,6 @@
       "id": "enc-317",
       "x": -20,
       "y": 37,
-      "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -31354,7 +31037,6 @@
       "id": "enc-318",
       "x": -18,
       "y": 39,
-      "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -31415,7 +31097,6 @@
       "id": "enc-319",
       "x": -12,
       "y": 39,
-      "difficulty": 4,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -31467,7 +31148,6 @@
       "id": "enc-320",
       "x": 3,
       "y": 39,
-      "difficulty": 5,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -31519,7 +31199,6 @@
       "id": "enc-321",
       "x": 6,
       "y": 40,
-      "difficulty": 4,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -31571,7 +31250,6 @@
       "id": "enc-322",
       "x": 16,
       "y": 40,
-      "difficulty": 4,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -31623,7 +31301,6 @@
       "id": "enc-323",
       "x": 20,
       "y": 40,
-      "difficulty": 4,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -31675,7 +31352,6 @@
       "id": "enc-324",
       "x": 41,
       "y": 40,
-      "difficulty": 6,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -31736,7 +31412,6 @@
       "id": "enc-325",
       "x": -46,
       "y": 41,
-      "difficulty": 10,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -31806,7 +31481,6 @@
       "id": "enc-326",
       "x": -32,
       "y": 41,
-      "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -31867,7 +31541,6 @@
       "id": "enc-327",
       "x": -13,
       "y": 41,
-      "difficulty": 4,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -31919,7 +31592,6 @@
       "id": "enc-328",
       "x": -28,
       "y": 42,
-      "difficulty": 7,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -31980,7 +31652,6 @@
       "id": "enc-329",
       "x": 4,
       "y": 44,
-      "difficulty": 5,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -32041,7 +31712,6 @@
       "id": "enc-330",
       "x": 44,
       "y": 50,
-      "difficulty": 8,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -32111,7 +31781,6 @@
       "id": "enc-331",
       "x": 49,
       "y": 42,
-      "difficulty": 8,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -32181,7 +31850,6 @@
       "id": "enc-332",
       "x": -50,
       "y": 41,
-      "difficulty": 10,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -32251,7 +31919,6 @@
       "id": "enc-333",
       "x": -10,
       "y": 43,
-      "difficulty": 5,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -32303,7 +31970,6 @@
       "id": "enc-334",
       "x": -5,
       "y": 43,
-      "difficulty": 4,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -32355,7 +32021,6 @@
       "id": "enc-335",
       "x": 35,
       "y": 42,
-      "difficulty": 7,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -32416,7 +32081,6 @@
       "id": "enc-336",
       "x": 40,
       "y": 43,
-      "difficulty": 8,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -32477,7 +32141,6 @@
       "id": "enc-337",
       "x": 44,
       "y": 43,
-      "difficulty": 9,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -32547,7 +32210,6 @@
       "id": "enc-338",
       "x": -36,
       "y": 44,
-      "difficulty": 7,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -32608,7 +32270,6 @@
       "id": "enc-339",
       "x": 10,
       "y": 44,
-      "difficulty": 5,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -32660,7 +32321,6 @@
       "id": "enc-340",
       "x": 27,
       "y": 44,
-      "difficulty": 6,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -32712,7 +32372,6 @@
       "id": "enc-341",
       "x": -50,
       "y": 45,
-      "difficulty": 10,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -32782,7 +32441,6 @@
       "id": "enc-342",
       "x": -39,
       "y": 45,
-      "difficulty": 7,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -32843,7 +32501,6 @@
       "id": "enc-343",
       "x": -26,
       "y": 45,
-      "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -32904,7 +32561,6 @@
       "id": "enc-344",
       "x": -17,
       "y": 44,
-      "difficulty": 7,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -32965,7 +32621,6 @@
       "id": "enc-345",
       "x": -1,
       "y": 48,
-      "difficulty": 7,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -33017,7 +32672,6 @@
       "id": "enc-346",
       "x": 19,
       "y": 45,
-      "difficulty": 6,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -33069,7 +32723,6 @@
       "id": "enc-347",
       "x": -46,
       "y": 46,
-      "difficulty": 10,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -33139,7 +32792,6 @@
       "id": "enc-348",
       "x": -24,
       "y": 46,
-      "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -33200,7 +32852,6 @@
       "id": "enc-349",
       "x": -13,
       "y": 46,
-      "difficulty": 6,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -33261,7 +32912,6 @@
       "id": "enc-350",
       "x": 28,
       "y": 46,
-      "difficulty": 7,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -33322,7 +32972,6 @@
       "id": "enc-351",
       "x": -20,
       "y": 47,
-      "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -33383,7 +33032,6 @@
       "id": "enc-352",
       "x": 16,
       "y": 48,
-      "difficulty": 7,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -33444,7 +33092,6 @@
       "id": "enc-353",
       "x": 24,
       "y": 47,
-      "difficulty": 6,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -33505,7 +33152,6 @@
       "id": "enc-354",
       "x": 44,
       "y": 47,
-      "difficulty": 8,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -33575,7 +33221,6 @@
       "id": "enc-355",
       "x": 46,
       "y": 47,
-      "difficulty": 7,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -33645,7 +33290,6 @@
       "id": "enc-356",
       "x": -42,
       "y": 48,
-      "difficulty": 9,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -33715,7 +33359,6 @@
       "id": "enc-357",
       "x": -23,
       "y": 48,
-      "difficulty": 5,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -33776,7 +33419,6 @@
       "id": "enc-358",
       "x": 31,
       "y": 48,
-      "difficulty": 8,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -33846,7 +33488,6 @@
       "id": "enc-359",
       "x": -50,
       "y": 50,
-      "difficulty": 8,
       "zoneType": 11,
       "keyDemon": {
         "typeId": 11,
@@ -33916,7 +33557,6 @@
       "id": "enc-360",
       "x": 9,
       "y": 49,
-      "difficulty": 6,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -33977,7 +33617,6 @@
       "id": "enc-361",
       "x": 25,
       "y": 50,
-      "difficulty": 7,
       "zoneType": 9,
       "keyDemon": {
         "typeId": 9,
@@ -34038,7 +33677,6 @@
       "id": "enc-362",
       "x": -39,
       "y": 50,
-      "difficulty": 9,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -34108,7 +33746,6 @@
       "id": "enc-363",
       "x": -34,
       "y": 50,
-      "difficulty": 7,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -34169,7 +33806,6 @@
       "id": "enc-364",
       "x": -29,
       "y": 50,
-      "difficulty": 8,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -34239,7 +33875,6 @@
       "id": "enc-365",
       "x": -26,
       "y": 50,
-      "difficulty": 7,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -34300,7 +33935,6 @@
       "id": "enc-366",
       "x": -14,
       "y": 50,
-      "difficulty": 7,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -34361,7 +33995,6 @@
       "id": "enc-367",
       "x": -10,
       "y": 50,
-      "difficulty": 6,
       "zoneType": 10,
       "keyDemon": {
         "typeId": 10,
@@ -34422,7 +34055,6 @@
       "id": "enc-368",
       "x": 34,
       "y": 50,
-      "difficulty": 9,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -34492,7 +34124,6 @@
       "id": "enc-369",
       "x": 38,
       "y": 50,
-      "difficulty": 8,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -34553,7 +34184,6 @@
       "id": "enc-370",
       "x": 41,
       "y": 50,
-      "difficulty": 8,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,
@@ -34623,7 +34253,6 @@
       "id": "enc-371",
       "x": 50,
       "y": 50,
-      "difficulty": 9,
       "zoneType": 8,
       "keyDemon": {
         "typeId": 8,

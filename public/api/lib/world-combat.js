@@ -24,12 +24,10 @@ const {
 const DEFAULT_ENEMY_RESPAWN_SECONDS = 300;
 // Keep this in sync with WORLD_BATTLE_REPLAY_STEP_MS in public/app/js/world-ui.js.
 const WORLD_BATTLE_REPLAY_STEP_MS = 520;
-const WORLD_DISTANCE_REWARD_START = 8;
-const WORLD_DISTANCE_REWARD_CAP = 70;
-const WORLD_DISTANCE_XP_MULTIPLIER_BONUS = 2;
+const WORLD_TERROR_XP_MULTIPLIER_BONUS = 2;
 const WORLD_TERROR_START_DISTANCE = 10;
 // Passive (AFK) hunting pays a fraction of the per-kill XP that an active
-// fight is worth. xpPerCycle keeps its distance/difficulty/Terror scaling, so
+// fight is worth. xpPerCycle keeps its Terror scaling, so
 // far encounters stay strictly better — they just accrue at a reduced rate.
 // Keep this in sync with PASSIVE_HUNT_XP_MULTIPLIER in public/app/js/world-ui.js.
 const PASSIVE_HUNT_XP_MULTIPLIER = 0.20;
@@ -399,9 +397,8 @@ async function createHuntSnapshot(player, encounter) {
     throw error;
   }
 
-  const difficulty = getEncounterDifficulty(encounter);
   const battleMetrics = createHuntBattleMetrics(result, enemyTeam);
-  const xpReward = getWorldXpReward(encounter, difficulty);
+  const xpReward = getWorldXpReward(encounter);
   const soulReward = getWorldSoulReward(encounter, battleMetrics.defeatedDemons);
   const terror = getWorldTerrorPreview(encounter);
 
@@ -451,8 +448,7 @@ async function calculateHuntRewards(snapshot, stoppedAt = new Date(), options = 
   // Cycles are uncapped: XP accrues for the whole hunt, while soul income is
   // bounded by the Soul Vessel capacity below.
   const cycles = Math.floor(elapsedSeconds / killSeconds);
-  const difficulty = getEncounterDifficulty(snapshot?.encounter);
-  const xpPerCycle = getSnapshotXpPerCycle(snapshot, difficulty);
+  const xpPerCycle = getSnapshotXpPerCycle(snapshot);
   const fallbackSoulsPerCycle = getSnapshotSoulsPerCycle(snapshot);
   const soulCapacity = getSnapshotSoulCapacity(snapshot, options.soulCapacity);
 
@@ -593,16 +589,15 @@ function serializeWorldPvpTarget(player = {}, team = []) {
 }
 
 function materializeEncounterTeam(encounter, demonTypes = {}) {
-  const difficulty = Math.max(1, Number(encounter?.difficulty) || 1);
   const team = (Array.isArray(encounter?.team) ? encounter.team : []).map((member, index) => {
     const typeId = Number(member.typeId || member.type_id || member.type) || 1;
     const type = demonTypes[String(typeId)] || {};
     const rarity = String(member.rarity || 'common').toLowerCase();
     const rarityMult = positiveNumber(type.rarityMultiplier?.[rarity], 1);
-    const difficultyMult = 1 + Math.max(0, difficulty - 1) * 0.08 + (member.elite ? 0.14 : 0);
-    const hp = scaleStat(getBaseStat(type, 'hp', 80), rarityMult * difficultyMult);
-    const atk = scaleStat(getBaseStat(type, 'atk', 10), rarityMult * difficultyMult);
-    const speed = scaleStat(getBaseStat(type, 'speed', 8), rarityMult * (1 + Math.max(0, difficulty - 1) * 0.025));
+    const eliteMult = member.elite ? 1.14 : 1;
+    const hp = scaleStat(getBaseStat(type, 'hp', 80), rarityMult * eliteMult);
+    const atk = scaleStat(getBaseStat(type, 'atk', 10), rarityMult * eliteMult);
+    const speed = scaleStat(getBaseStat(type, 'speed', 8), rarityMult);
 
     return {
       instanceId: member.instanceId || `${encounter.id || 'encounter'}-enemy-${index + 1}`,
@@ -656,10 +651,9 @@ function serializeEncounter(encounter = {}) {
     id: encounter.id,
     x: Number(encounter.x) || 0,
     y: Number(encounter.y) || 0,
-    difficulty: getEncounterDifficulty(encounter),
     keyDemon: encounter.keyDemon || null,
     terror: getWorldTerrorPreview(encounter),
-    xpReward: getWorldXpReward(encounter, getEncounterDifficulty(encounter)),
+    xpReward: getWorldXpReward(encounter),
     soulReward: getWorldSoulReward(encounter, Array.isArray(encounter.team) ? encounter.team.length : 0),
     enemyRespawnSeconds: getEnemyRespawnSeconds(encounter)
   };
@@ -668,8 +662,7 @@ function serializeEncounter(encounter = {}) {
 function getEnemyRespawnSeconds(encounter = {}) {
   const explicit = Number(encounter.enemyRespawnSeconds || encounter.respawnSeconds);
   if (Number.isFinite(explicit) && explicit > 0) return Math.floor(explicit);
-  const difficulty = getEncounterDifficulty(encounter);
-  return DEFAULT_ENEMY_RESPAWN_SECONDS + Math.max(0, difficulty - 1) * 60;
+  return DEFAULT_ENEMY_RESPAWN_SECONDS;
 }
 
 function createHuntBattleMetrics(result = {}, enemyTeam = []) {
@@ -715,14 +708,14 @@ function getHuntKillSeconds(snapshot = {}) {
   return DEFAULT_ENEMY_RESPAWN_SECONDS;
 }
 
-function getSnapshotXpPerCycle(snapshot = {}, difficulty = getEncounterDifficulty(snapshot?.encounter)) {
+function getSnapshotXpPerCycle(snapshot = {}) {
   if (snapshot?.encounter) {
-    return getWorldXpReward(snapshot.encounter, difficulty, snapshot.xpReward).xpPerCycle;
+    return getWorldXpReward(snapshot.encounter, snapshot.xpReward).xpPerCycle;
   }
 
   const explicit = Number(snapshot.xpPerCycle ?? snapshot.xpPerKill);
   if (Number.isFinite(explicit) && explicit >= 0) return Math.round(explicit);
-  return getWorldXpReward(snapshot.encounter, difficulty, snapshot.xpReward).xpPerCycle;
+  return getWorldXpReward(snapshot.encounter, snapshot.xpReward).xpPerCycle;
 }
 
 function getSnapshotSoulsPerCycle(snapshot = {}) {
@@ -736,15 +729,7 @@ function getSnapshotSoulsPerCycle(snapshot = {}) {
     if (Number.isFinite(Number(soulReward.soulsPerCycle))) return soulReward.soulsPerCycle;
   }
   if (Array.isArray(snapshot.targetEnemyTeam)) return snapshot.targetEnemyTeam.length;
-  return Math.max(1, Math.ceil(getEncounterDifficulty(snapshot?.encounter) / 2));
-}
-
-function getXpPerHuntCycle(difficulty) {
-  return 5 + getEncounterDifficulty({ difficulty }) * 2;
-}
-
-function getEncounterDifficulty(encounter = {}) {
-  return Math.max(1, Number(encounter?.difficulty) || 1);
+  return Math.max(1, Array.isArray(snapshot?.encounter?.team) ? snapshot.encounter.team.length : 1);
 }
 
 function createWorldTerrorBuffs(encounter = {}) {
@@ -805,27 +790,23 @@ function getWorldSoulReward(encounter = {}, defeatedDemons = 0, fallback = {}) {
   };
 }
 
-function getWorldXpReward(encounter = {}, difficulty = getEncounterDifficulty(encounter), fallback = {}) {
-  const baseXp = Math.max(0, Math.round(Number(fallback.baseXp) || getXpPerHuntCycle(difficulty)));
-  const distance = getWorldDistance(encounter);
-  const distanceFactor = getDistanceProgress(encounter, WORLD_DISTANCE_REWARD_START, WORLD_DISTANCE_REWARD_CAP);
-  const distanceMultiplier = 1 + Math.pow(distanceFactor, 1.4) * WORLD_DISTANCE_XP_MULTIPLIER_BONUS;
+function getWorldXpReward(encounter = {}, fallback = {}) {
+  const teamSize = Array.isArray(encounter?.team)
+    ? encounter.team.length
+    : Math.max(1, Number(fallback.teamSize) || 1);
+  const baseXp = Math.max(0, Math.round(Number(fallback.baseXp) || (5 + teamSize * 2)));
+  const terrorLevel = getWorldTerrorLevel(encounter);
+  const terrorFactor = clamp(terrorLevel / WORLD_TERROR_MAX_LEVEL, 0, 1);
+  const terrorMultiplier = 1 + Math.pow(terrorFactor, 1.4) * WORLD_TERROR_XP_MULTIPLIER_BONUS;
 
   return {
     baseXp,
-    xpPerCycle: Math.ceil(baseXp * distanceMultiplier),
-    distance: roundNumber(distance, 1),
-    distanceFactor: roundNumber(distanceFactor, 3),
-    distanceMultiplier: roundMultiplier(distanceMultiplier)
+    teamSize,
+    xpPerCycle: Math.ceil(baseXp * terrorMultiplier),
+    terrorLevel,
+    terrorFactor: roundNumber(terrorFactor, 3),
+    terrorMultiplier: roundMultiplier(terrorMultiplier)
   };
-}
-
-function getDistanceProgress(encounter = {}, start, cap) {
-  return clamp((getWorldDistance(encounter) - start) / Math.max(1, cap - start), 0, 1);
-}
-
-function getWorldDistance(encounter = {}) {
-  return Math.hypot(Number(encounter?.x) || 0, Number(encounter?.y) || 0);
 }
 
 function getWorldTerrorDistance(encounter = {}) {

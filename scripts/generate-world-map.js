@@ -7,8 +7,7 @@
  *
  * Layout rules:
  *  - Distance from the center (0, 0) controls team size and rarity bands.
- *    Displayed difficulty is computed from final team size, rarity, and type
- *    weights.
+ *    Terror is the single explicit distance-based combat scaling system.
  *  - Demon TYPE is zone-based — the map is split into angular wedges and each
  *    of the 11 types predominates in its own wedge, so areas feel themed.
  *  - Roads connect camps, lairs, shrines, and portals through meandering
@@ -37,14 +36,6 @@ const MAX_ENCOUNTER_TEAM_SIZE = 6;
 const MAX_DISTANCE = Math.hypot(50, 50); // farthest corner from center
 
 const RARITY_RANK = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
-const RARITY_DIFFICULTY_SCORE = {
-  common: 1,
-  uncommon: 1.25,
-  rare: 1.6,
-  epic: 2.1,
-  legendary: 2.8,
-  mythic: 3.7
-};
 const FRONT_TYPE_IDS = [1, 5, 7, 8, 9];
 // Block layout variants are kept internal so this schema change preserves the
 // generator's existing RNG sequence and, therefore, every current map tile.
@@ -89,7 +80,6 @@ const SUPPORT_ONLY_ROLES = new Set(['healer', 'counter_tank']);
 const demonTypes = require(path.join(DATA_DIR, 'demon-types.json'));
 const demonAssets = require(path.join(DATA_DIR, 'demons.json'));
 const TYPE_WEIGHTS = demonAssets.map((asset) => Number(asset.typeWeight)).filter(Number.isFinite);
-const MIN_TYPE_WEIGHT = Math.min(...TYPE_WEIGHTS);
 const MAX_TYPE_WEIGHT = Math.max(...TYPE_WEIGHTS);
 
 function mulberry32(seed) {
@@ -126,11 +116,11 @@ function distanceFromCenter(x, y) {
 }
 
 // 0 at center, 1 at the outer edge.
-function difficultyFactor(x, y) {
+function distanceProgress(x, y) {
   return Math.min(1, distanceFromCenter(x, y) / (MAX_DISTANCE * 0.92));
 }
 
-function difficultyMeter(t) {
+function progressionBand(t) {
   return Math.max(1, Math.min(10, 1 + Math.floor(t * 10)));
 }
 
@@ -229,12 +219,6 @@ function typeWeight(typeId) {
   return Number(asset?.typeWeight) || MAX_TYPE_WEIGHT;
 }
 
-function typeDifficultyMultiplier(typeId) {
-  const range = Math.max(1, MAX_TYPE_WEIGHT - MIN_TYPE_WEIGHT);
-  const rarityBySpawnWeight = (MAX_TYPE_WEIGHT - typeWeight(typeId)) / range;
-  return 1 + rarityBySpawnWeight * 1.25;
-}
-
 function weightedTypeId(options = {}) {
   const excludedRoles = options.excludedRoles || new Set();
   const excludedTypes = options.excludedTypes || new Set();
@@ -269,19 +253,6 @@ function buildMember(typeId, rarity, instanceId, position) {
 
 function rarityRank(rarity) {
   return RARITY_RANK.indexOf(rarity);
-}
-
-function memberDifficultyScore(member) {
-  const rarityScore = RARITY_DIFFICULTY_SCORE[member.rarity] || RARITY_DIFFICULTY_SCORE.common;
-  return rarityScore * typeDifficultyMultiplier(member.typeId);
-}
-
-function teamDifficulty(members) {
-  const minScore = RARITY_DIFFICULTY_SCORE.common * typeDifficultyMultiplier(1);
-  const maxScore = 6 * RARITY_DIFFICULTY_SCORE.mythic * typeDifficultyMultiplier(11);
-  const score = members.reduce((sum, member) => sum + memberDifficultyScore(member), 0);
-  const normalized = Math.max(0, Math.min(1, (score - minScore) / (maxScore - minScore)));
-  return Math.max(1, Math.min(10, Math.round(1 + normalized * 9)));
 }
 
 function teamKey(members) {
@@ -402,8 +373,8 @@ function makeFinalTeamUnique(members, id, idNumber, rarities, usedTeamKeys) {
 }
 
 function buildEncounter(id, x, y, legacyTeamKeys, finalTeamKeys) {
-  const t = difficultyFactor(x, y);
-  const distanceMeter = difficultyMeter(t);
+  const t = distanceProgress(x, y);
+  const distanceMeter = progressionBand(t);
   const rarities = allowedRaritiesForMeter(distanceMeter);
   const rarestAllowed = rarities[rarities.length - 1];
   const rolledSize = rolledTeamSizeForFactor(t);
@@ -431,7 +402,6 @@ function buildEncounter(id, x, y, legacyTeamKeys, finalTeamKeys) {
     id,
     x,
     y,
-    difficulty: teamDifficulty(members),
     zoneType: zoneType || 0,
     keyDemon: {
       typeId: keyDemon.typeId,
@@ -859,7 +829,7 @@ function generateEncounters(occupied, roadSet) {
       if (roadSet.has(tileKey(x, y))) continue; // keep roads walkable
 
       // Denser overall, and denser still toward the dangerous outer rings.
-      const t = difficultyFactor(x, y);
+      const t = distanceProgress(x, y);
       const chance = 0.03 + t * 0.045;
       if (rng() > chance) continue;
 
@@ -895,13 +865,6 @@ function validateEncounterTeams(encounters) {
       throw new Error(`Support-only enemy team generated: ${encounter.id}`);
     }
 
-    const calculatedDifficulty = teamDifficulty(encounter.team);
-    if (encounter.difficulty !== calculatedDifficulty) {
-      throw new Error(
-        `Incorrect enemy team difficulty for ${encounter.id}: ` +
-        `${encounter.difficulty} (expected ${calculatedDifficulty})`
-      );
-    }
   });
 }
 
@@ -1039,10 +1002,6 @@ function main() {
 
   fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(map, null, 2)}\n`);
 
-  const difficultyCounts = encounters.reduce((counts, encounter) => {
-    counts[encounter.difficulty] = (counts[encounter.difficulty] || 0) + 1;
-    return counts;
-  }, {});
   const zoneCounts = encounters.reduce((counts, encounter) => {
     counts[encounter.zoneType] = (counts[encounter.zoneType] || 0) + 1;
     return counts;
@@ -1053,7 +1012,6 @@ function main() {
   console.log(`  events: ${events.length}`);
   console.log(`  blocks: ${map.blocks.length} (${SIGN_BLOCKS.length} passable signs)`);
   console.log(`  encounters: ${encounters.length}`);
-  console.log('  difficulty distribution:', difficultyCounts);
   console.log('  encounters per zone type:', zoneCounts);
 }
 
