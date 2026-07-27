@@ -1468,11 +1468,17 @@ import './bag-item-visuals.js';
     setButtonBusy(button, true, 'Claiming…');
 
     try {
-      const payload = await api('/api/world/hunting/claim', { method: 'POST' });
+      // Handle the progression transition here so the hunt-complete sound
+      // cannot race and mask the level-up celebration sound.
+      const payload = await api('/api/world/hunting/claim', {
+        method: 'POST',
+        progressionAnimation: false
+      });
       setHuntState(payload.hunt);
       applyWorldPlayerUpdate(payload.player);
       const rewards = payload.rewards || {};
-      playQuestCompleteSound();
+      const leveledUp = showHuntClaimProgression(payload.progression);
+      if (!leveledUp) playQuestCompleteSound();
       setMessage(formatHuntRewardSummary(rewards), 'success');
       return true;
     } catch (error) {
@@ -1485,6 +1491,22 @@ import './bag-item-visuals.js';
       renderEncounterPanel();
       syncHuntTicker();
     }
+  }
+
+  function showHuntClaimProgression(progression) {
+    if (!progression) return false;
+
+    const previousLevel = Number(progression.previousLevel);
+    const level = Number(progression.level);
+    const leveledUp = progression.leveledUp === true
+      && Number.isFinite(previousLevel)
+      && Number.isFinite(level)
+      && level > previousLevel;
+
+    // updateNavProgression triggers both the shared level-up animation and its
+    // dedicated sound when the server confirms the level transition.
+    window.AmongDemons.ui?.updateNavProgression?.(progression, { animate: true });
+    return leveledUp;
   }
 
   async function stopHuntingForTravel() {
