@@ -4638,13 +4638,21 @@
       "description": "A weathered altar where hunters can anchor their souls."
     },
     {
+      "x": -4,
+      "y": 7,
+      "type": "darkness-portal",
+      "title": "Darkness Portal",
+      "description": "Spend 2 Souls per map step to teleport here instantly.",
+      "summonCostPerDistance": 2
+    },
+    {
       "x": -50,
       "y": 1,
       "type": "darkness-portal",
       "title": "Darkness Portal",
       "description": "Spend 2 Souls per map step to teleport here instantly.",
       "summonCostPerDistance": 2
-    },
+    }
     {
       "x": -49,
       "y": -49,
