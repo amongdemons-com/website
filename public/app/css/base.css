@@ -7092,6 +7092,17 @@ body .game-shell-nav .game-nav-link {
     transition: background 150ms ease, color 150ms ease;
 }
 
+body .game-shell-nav .game-nav-link {
+    display: grid !important;
+    grid-template-columns: 0.92rem max-content;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+body .game-shell-nav .game-nav-dropdown-toggle {
+    grid-template-columns: 0.92rem max-content 0.72rem;
+}
+
 /* Give both the empty Lucide placeholder and the loaded SVG the same footprint. */
 body .game-shell-nav [data-lucide],
 body .game-shell-nav svg.ad-icon {
@@ -7896,20 +7907,6 @@ body .game-shell-nav .game-shell-auth-actions .btn-primary.disabled {
         grid-row: 1;
         justify-content: flex-end;
         width: 100%;
-    }
-
-    /* Fixed grid tracks reserve the icon boxes before Lucide replaces the
-       empty elements, so loading an SVG cannot change a link's width. */
-    body .game-shell-nav .game-nav-link {
-        display: grid;
-        grid-template-columns: var(--game-nav-icon-size, 0.92rem) max-content;
-    }
-
-    body .game-shell-nav .game-nav-dropdown-toggle {
-        grid-template-columns:
-            var(--game-nav-icon-size, 0.92rem)
-            max-content
-            0.72rem;
     }
 }
 
