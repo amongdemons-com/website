@@ -7092,8 +7092,7 @@ body .game-shell-nav .game-nav-link {
     transition: background 150ms ease, color 150ms ease;
 }
 
-/* Keep an empty, fixed-size icon slot before Lucide replaces each placeholder.
-   The loaded SVG uses the same slot so nav labels never move. */
+/* Give both the empty Lucide placeholder and the loaded SVG the same footprint. */
 body .game-shell-nav [data-lucide],
 body .game-shell-nav svg.ad-icon {
     display: inline-block;
@@ -7871,6 +7870,46 @@ body .game-shell-nav .game-shell-auth-actions .btn-primary.disabled {
     }
     100% {
         opacity: 0;
+    }
+}
+
+@media (min-width: 1200px) {
+    /* Keep the middle navigation in a stable column while authentication and
+       player data load into the reserved desktop account column. */
+    body .game-shell-nav .navbar-collapse {
+        --game-nav-account-slot-width: 19rem;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) var(--game-nav-account-slot-width);
+        align-items: stretch;
+    }
+
+    .game-shell-tabs {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: center;
+        margin-inline: 0 !important;
+    }
+
+    body .game-shell-nav .nav-account,
+    body .game-shell-nav .nav-auth-actions {
+        grid-column: 2;
+        grid-row: 1;
+        justify-content: flex-end;
+        width: 100%;
+    }
+
+    /* Fixed grid tracks reserve the icon boxes before Lucide replaces the
+       empty elements, so loading an SVG cannot change a link's width. */
+    body .game-shell-nav .game-nav-link {
+        display: grid;
+        grid-template-columns: var(--game-nav-icon-size, 0.92rem) max-content;
+    }
+
+    body .game-shell-nav .game-nav-dropdown-toggle {
+        grid-template-columns:
+            var(--game-nav-icon-size, 0.92rem)
+            max-content
+            0.72rem;
     }
 }
 
