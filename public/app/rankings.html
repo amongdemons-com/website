@@ -24,7 +24,7 @@
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_rankings.png">
     <meta name="twitter:image:alt" content="Among Demons dungeon rankings artwork">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=c3e00a6c9367" rel="stylesheet">
+    <link href="/app/css/base.css?v=1bfa4a5e6dea" rel="stylesheet">
   </head>
   <body class="rankings-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -108,6 +108,7 @@
             <a href="/rankings/level" class="rank-sort-link" data-sort="level">Level</a>
             <a href="/rankings/souls" class="rank-sort-link" data-sort="souls"><span class="rank-sort-label">Souls</span></a>
             <a href="/rankings/pvp" class="rank-sort-link" data-sort="pvp"><span class="rank-sort-label">PvP</span></a>
+            <a href="/rankings/ranked" class="rank-sort-link" data-sort="ranked"><span class="rank-sort-label">Ranked</span></a>
           </nav>
         </div>
         <div>
@@ -117,8 +118,8 @@
               <tr>
                 <th scope="col">#</th>
                 <th scope="col">Hunter</th>
-                <th scope="col">Top Floor</th>
-                <th scope="col">Souls</th>
+                <th scope="col" data-rank-column="floor">Top Floor</th>
+                <th scope="col" data-rank-column="metric">Souls</th>
               </tr>
             </thead>
             <tbody id="rankBody"></tbody>
@@ -126,7 +127,7 @@
         </div>
       </section>
     </main>
-    <script src="/app/dist/runtime.bundle.js?v=d04114f0a811"></script>
-    <script src="/app/js/rankings-ui.js?v=63d4ba530725"></script>
+    <script src="/app/dist/runtime.bundle.js?v=8a2f3080bcd3"></script>
+    <script src="/app/js/rankings-ui.js?v=cae4c5b7cac1"></script>
   </body>
 </html>

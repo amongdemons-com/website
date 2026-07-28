@@ -10,6 +10,7 @@
     ['/collection', '/api/collection/bootstrap'],
     ['/world', '/api/world/state'],
     ['/dungeon', '/api/runs/bootstrap'],
+    ['/ranked', '/api/ranked/bootstrap'],
     ['/bag', '/api/bag'],
     ['/skill-tree', '/api/account/stat-points']
   ];
@@ -18,19 +19,29 @@
     ['c', '/camp'],
     ['t', '/skill-tree'],
     ['i', '/bag'],
-    ['b', '/bag']
+    ['b', '/bag'],
+    ['r', '/ranked']
   ]);
-  const DEFAULT_MUSIC_ROUTE = /^\/(?:demons|bosses|events|rankings|hunter)(?:\/|$)/;
+  const DEFAULT_MUSIC_ROUTE = /^\/(?:demons|bosses|events|ranked|rankings|hunter)(?:\/|$)/;
 
   onReady(init);
 
   function init() {
     initDefaultMusic();
+    hideRankedNavigation();
     markCurrentGameNav();
     bindDisabledLinks();
     bindGlobalPageShortcuts();
     bindPlayInstantly();
     initAccountNav();
+  }
+
+  function hideRankedNavigation() {
+    document.querySelectorAll('[data-game-route="ranked"]').forEach((link) => {
+      const item = link.closest('.nav-item');
+      if (item) item.remove();
+      else link.remove();
+    });
   }
 
   function initDefaultMusic() {
@@ -113,6 +124,8 @@
         ? 'world'
         : pathname.startsWith('/dungeon')
           ? 'dungeon'
+          : pathname.startsWith('/ranked')
+            ? 'ranked'
           : pathname.startsWith('/demons')
             ? 'demons'
             : pathname.startsWith('/bosses')

@@ -1,0 +1,1617 @@
+import { registerDungeonActions } from './dungeon/registry.js';
+import { state } from './dungeon/state.js';
+import * as combat from './dungeon/combat.js';
+import {
+  renderDemonCards,
+  renderFormationSlot,
+  renderTeamUpgradeIndicator
+} from './dungeon/cards.js';
+import { createLevelPowerBuff } from './dungeon/hand.js';
+import { bindActivePactTooltips, renderActivePactIcon } from './dungeon/pacts.js';
+import {
+  renderBattlePlaybackControls,
+  renderBattleSpeedControl,
+  renderBattleSkipControl,
+  renderDemonicPactReturnControl,
+  renderReplayLogButtons,
+  setBattlePanel,
+  toggleFightLogPanel
+} from './dungeon/render.js';
+
+const api = window.AmongDemons.api;
+const audio = window.AmongDemons.audio;
+const renderCard = window.AmongDemons.ui.renderDemonCard;
+const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
+const RANKED_RARITIES = Object.freeze([
+  'common',
+  'uncommon',
+  'rare',
+  'epic',
+  'legendary',
+  'mythic'
+]);
+const RANKED_REROLL_RSOUL_COST = 2;
+const RANKED_CARD_RARITY_COSTS = Object.freeze({
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  epic: 4,
+  legendary: 5,
+  mythic: 7
+});
+const elements = {};
+const seenCombinationEvents = new Set();
+let isBusy = false;
+let serverRun = null;
+let workspace = null;
+let isReplayingBattle = false;
+let pointerDrag = null;
+let suppressDetailUntil = 0;
+let rankedSouls = 0;
+let rankedCatalog = null;
+let rankedCatalogPromise = null;
+let previewCombinationCounter = 0;
+let stagedPurchaseOfferIds = new Set();
+
+registerDungeonActions({
+  ...combat,
+  battle: startBattle,
+  getExplicitFormationRow: (demon) => normalizeSlot(demon?.formationSlot),
+  normalizeFormationRow: (slot) => normalizeSlot(slot) ?? 0,
+  shouldShowCollectionMissingTag: () => false,
+  getDemonPosition,
+  renderDemonStatus,
+  renderDungeonCenterActions,
+  renderFightLog,
+  renderFightLogActions,
+  renderRun
+});
+
+onReady(init);
+
+async function init() {
+  if (!window.AmongDemons.getToken()) {
+    window.location.href = window.AmongDemons.appUrl('/login?next=/ranked');
+    return;
+  }
+  cacheElements();
+  bindEvents();
+  bindActivePactTooltips();
+  combat.applyBattleSpeed();
+  audio?.setScene({ music: 'music.default' });
+  await loadBootstrap();
+}
+
+function cacheElements() {
+  [
+    'rankedMessage',
+    'runLoading',
+    'runEmpty',
+    'runPanel',
+    'rankedBottomPanel',
+    'rankedPreparation',
+    'dungeonHandBar',
+    'dungeonBottomControls',
+    'dungeonReplayLogBox',
+    'teamSideTitle',
+    'enemySideTitle',
+    'teamGrid',
+    'enemyGrid',
+    'dungeonCenterActions',
+    'fightLog',
+    'demonicPactOverlay',
+    'demonicPactViewToggle',
+    'rankedPactGrid'
+  ].forEach((id) => {
+    elements[id] = document.getElementById(id);
+  });
+}
+
+function bindEvents() {
+  document.addEventListener('click', async (event) => {
+    const speedButton = event.target.closest('[data-battle-speed]');
+    if (speedButton) {
+      event.preventDefault();
+      combat.setBattleSpeed(Number(speedButton.dataset.battleSpeed));
+      return;
+    }
+
+    const stepButton = event.target.closest('[data-battle-step]');
+    if (stepButton) {
+      event.preventDefault();
+      combat.stepCombatPlayback(Number(stepButton.dataset.battleStep));
+      return;
+    }
+
+    if (event.target.closest('#battlePlaybackToggleBtn')) {
+      event.preventDefault();
+      if (state.combatPlayback?.isPaused) combat.resumeCombatPlayback();
+      else combat.pauseCombatPlayback();
+      return;
+    }
+
+    if (event.target.closest('#battlePlaybackSkipBtn')) {
+      event.preventDefault();
+      combat.skipCombatPlayback();
+      return;
+    }
+
+    if (event.target.closest('#fightLogReplayBtn')) {
+      event.preventDefault();
+      await replayRankedFight();
+      return;
+    }
+
+    if (event.target.closest('#fightLogToggleBtn')) {
+      event.preventDefault();
+      toggleFightLogPanel();
+      return;
+    }
+
+    if (event.target.closest('#demonicPactViewToggle, #demonicPactReturnBtn')) {
+      event.preventDefault();
+      toggleRankedPactView();
+      return;
+    }
+
+    const action = event.target.closest('[data-ranked-action]');
+    if (action?.matches('button')) {
+      event.preventDefault();
+      await handleAction(action, event);
+      return;
+    }
+
+    if (action) {
+      event.preventDefault();
+      await handleAction(action, event);
+    }
+  });
+
+  document.addEventListener('dragstart', (event) => {
+    const card = event.target.closest('[data-ranked-workspace-id]');
+    if (!card || !event.dataTransfer || !workspace) return;
+    const instanceId = card.dataset.rankedWorkspaceId;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', instanceId);
+    card.classList.add('is-dragging');
+  });
+
+  document.addEventListener('dragend', (event) => {
+    event.target.closest('[data-ranked-workspace-id]')?.classList.remove('is-dragging');
+    suppressDetailUntil = Date.now() + 350;
+    clearDragOver();
+  });
+
+  document.addEventListener('dragover', (event) => {
+    const target = getWorkspaceDropTarget(event.target);
+    if (!target) return;
+    event.preventDefault();
+    clearDragOver();
+    target.classList.add('is-drag-over');
+  });
+
+  document.addEventListener('dragleave', (event) => {
+    const target = getWorkspaceDropTarget(event.target);
+    if (target && !target.contains(event.relatedTarget)) target.classList.remove('is-drag-over');
+  });
+
+  document.addEventListener('drop', (event) => {
+    const target = getWorkspaceDropTarget(event.target);
+    if (!target) return;
+    event.preventDefault();
+    const instanceId = event.dataTransfer?.getData('text/plain');
+    if (!instanceId) return;
+    void moveWorkspaceDemon(instanceId, target, {
+      x: event.clientX,
+      y: event.clientY
+    });
+  });
+
+  document.addEventListener('pointerdown', beginPointerDrag);
+  document.addEventListener('pointermove', updatePointerDrag);
+  document.addEventListener('pointerup', finishPointerDrag);
+  document.addEventListener('pointercancel', cancelPointerDrag);
+
+  document.addEventListener('keydown', (event) => {
+    const card = event.target.closest('.dungeon-demon-card[data-instance-id]');
+    if (!card || !['Enter', ' '].includes(event.key)) return;
+    event.preventDefault();
+    openCardDetails(card);
+  });
+}
+
+async function loadBootstrap() {
+  setLoading(true);
+  try {
+    const [payload] = await Promise.all([
+      api('/api/ranked/bootstrap'),
+      loadRankedCatalog().catch((error) => {
+        console.warn('Ranked upgrade previews will use current-card art.', error);
+        return null;
+      })
+    ]);
+    if (payload.player) acceptPlayer(payload.player);
+    if (payload.run) {
+      acceptRun(payload.run);
+    } else {
+      state.run = null;
+      serverRun = null;
+    }
+    setLoading(false);
+    renderRun();
+  } catch (error) {
+    setLoading(false);
+    showError(error);
+  }
+}
+
+async function loadRankedCatalog() {
+  if (rankedCatalog) return rankedCatalog;
+  if (!rankedCatalogPromise) {
+    rankedCatalogPromise = api('/api/game/catalog?v=20260722-request-optimization-v1')
+      .then((payload) => {
+        rankedCatalog = {
+          types: payload?.types || {},
+          demons: Array.isArray(payload?.demons) ? payload.demons : []
+        };
+        return rankedCatalog;
+      })
+      .catch((error) => {
+        rankedCatalogPromise = null;
+        throw error;
+      });
+  }
+  return rankedCatalogPromise;
+}
+
+async function startRun() {
+  const payload = await mutate('/api/ranked/start', {});
+  if (payload?.run) acceptRun(payload.run);
+}
+
+async function handleAction(button, event = null) {
+  if (isBusy) return;
+  const action = button.dataset.rankedAction;
+  if (action === 'start') return startRun();
+  if (!serverRun) return;
+
+  if (action === 'reroll') return rerollHand(getInteractionPoint(event, button));
+  if (action === 'fight') return startBattle();
+  if (action === 'continue') return continueRun();
+  if (action === 'end') {
+    if (!window.confirm('End this Ranked run and finalize its current Rank Points?')) return;
+    return performRunAction('end', {});
+  }
+  if (action === 'pact') return chooseRankedPact(button.dataset.buffId);
+}
+
+async function performRunAction(action, body) {
+  const payload = await mutate(`/api/ranked/runs/${encodeURIComponent(serverRun.runId)}/${action}`, body);
+  if (payload?.player) acceptPlayer(payload.player, { animate: true });
+  if (payload?.run) {
+    acceptRun(payload.run);
+    if (payload.rewards?.souls) {
+      showMessage(`Floor 10 cleared. ${payload.rewards.souls} Souls awarded.`, 'success');
+    }
+  }
+  return payload;
+}
+
+async function continueRun() {
+  const payload = await performRunAction('continue', {});
+  if (payload?.run?.phase === 'selection' && payload.run.floor > 10) {
+    showMessage('Endless floor unlocked.', 'success');
+  }
+}
+
+async function chooseRankedPact(buffId) {
+  const payload = await performRunAction('pact', { buffId });
+  if (payload?.run) {
+    audio?.play('sfx.dungeon.pactChoose', { volume: .9 });
+  }
+  return payload;
+}
+
+async function rerollHand(point) {
+  if (!canRerollWorkspace() || isBusy) return;
+  const payload = await performRunAction('reroll', { lineup: serializeWorkspaceLineup() });
+  if (!payload?.run) return;
+  const cost = Math.max(0, Number(payload.rerollCost) || RANKED_REROLL_RSOUL_COST);
+  showRankedSoulChange(point, -cost);
+  audio?.play('sfx.dungeon.pactReroll', { volume: .86 });
+}
+
+async function startBattle() {
+  if (!canFightWorkspace() || isBusy || state.isBattleAnimating) return;
+  setBusy(true);
+  isReplayingBattle = true;
+  try {
+    const payload = await api(
+      `/api/ranked/runs/${encodeURIComponent(serverRun.runId)}/battle`,
+      actionOptions({ lineup: serializeWorkspaceLineup() })
+    );
+    if (!payload?.run?.lastBattle) return;
+    const interest = payload.rSoulInterest;
+    acceptRun(payload.run, { render: false });
+    if (Number(interest?.earned) > 0) {
+      rankedSouls = Math.max(0, Number(interest.balanceBefore) || 0);
+    }
+    const battle = payload.run.lastBattle;
+    stageRankedBattle(battle);
+    setBattlePanel('combat');
+    renderRun();
+    await combat.playCombatLog();
+    await showBattleResult(battle.winner);
+    serverRun = payload.run;
+    rankedSouls = Math.max(0, Number(payload.run.rSouls) || 0);
+    restoreRankedBattleResult(payload.run, battle);
+    renderRun();
+    const resultMessages = [];
+    if (payload.rewards?.souls) {
+      resultMessages.push(`Victory milestone: ${payload.rewards.souls} Souls awarded.`);
+      if (payload.player) acceptPlayer(payload.player, { animate: true });
+    }
+    if (Number(interest?.earned) > 0) {
+      const earned = Math.max(0, Number(interest.earned) || 0);
+      const floorInterest = Math.max(1, Number(battle.floor) || 1);
+      const savingsInterest = Math.max(0, earned - floorInterest);
+      showRankedSoulChange(
+        getInteractionPoint(null, elements.teamSideTitle),
+        earned
+      );
+      resultMessages.push(
+        `Floor interest: +${formatNumber(earned)} rSouls (${formatNumber(floorInterest)} floor + ${formatNumber(savingsInterest)} savings).`
+      );
+    }
+    if (resultMessages.length) showMessage(resultMessages.join(' '), 'success');
+  } catch (error) {
+    showError(error);
+  } finally {
+    isReplayingBattle = false;
+    setBusy(false);
+  }
+}
+
+async function replayRankedFight() {
+  const battle = serverRun?.lastBattle;
+  if (isBusy || state.isBattleAnimating || !battle?.combatLog?.length) return;
+
+  isReplayingBattle = true;
+  setBusy(true);
+  try {
+    stageRankedBattle(battle);
+    setBattlePanel('combat');
+    renderRun();
+    elements.fightLog.innerHTML = '';
+    elements.fightLog.classList.remove('text-muted');
+    await combat.playCombatLog();
+    restoreRankedBattleResult(serverRun, battle);
+    renderRun();
+  } catch (error) {
+    showError(error);
+  } finally {
+    isReplayingBattle = false;
+    setBusy(false);
+  }
+}
+
+function stageRankedBattle(battle) {
+  state.run.team = cloneDemons(battle.playerTeamBefore || state.run.team || []);
+  state.run.active = state.run.team;
+  state.run.enemies = cloneDemons(battle.enemyTeamBefore || state.run.enemies || []);
+  state.combatLog = battle.combatLog || [];
+  state.combatDemons = combat.createCombatDemonMap();
+}
+
+function restoreRankedBattleResult(run, battle) {
+  state.run = {
+    ...run,
+    team: cloneDemons(battle.playerTeamAfter || run.team || run.active || []),
+    active: cloneDemons(battle.playerTeamAfter || run.active || run.team || []),
+    reserve: cloneDemons(run.reserve),
+    enemies: cloneDemons(battle.enemyTeamAfter || run.enemies || [])
+  };
+  state.combatLog = battle.combatLog || [];
+  state.combatDemons = combat.createCombatDemonMap();
+}
+
+async function mutate(path, body) {
+  setBusy(true);
+  try {
+    return await api(path, actionOptions(body));
+  } catch (error) {
+    showError(error);
+    return null;
+  } finally {
+    setBusy(false);
+  }
+}
+
+function actionOptions(body) {
+  const actionId = createActionId();
+  return {
+    method: 'POST',
+    headers: { 'Idempotency-Key': actionId },
+    body: { ...body, actionId }
+  };
+}
+
+function acceptRun(run, options = {}) {
+  serverRun = run;
+  rankedSouls = Math.max(0, Number(run.rSouls) || 0);
+  const battle = run.lastBattle;
+  workspace = isWorkspacePhase(run) ? createWorkspace(run) : null;
+  state.run = {
+    ...run,
+    team: cloneDemons(workspace?.active || run.active || run.team),
+    active: cloneDemons(workspace?.active || run.active || run.team),
+    reserve: cloneDemons(workspace?.reserve || run.reserve),
+    enemies: run.phase === 'result' && battle
+      ? cloneDemons(battle.enemyTeamAfter)
+      : cloneDemons(run.enemies)
+  };
+  state.combatLog = battle?.combatLog || [];
+  state.combatDemons = combat.createCombatDemonMap();
+  if (options.render !== false) renderRun();
+  announceCombinations(run.combinationEvents || []);
+}
+
+function renderRun() {
+  syncWorkspaceIntoRun();
+  const run = state.run;
+  const hasRun = Boolean(run);
+  elements.runEmpty.classList.toggle('d-none', hasRun || state.isLoading);
+  elements.runPanel.classList.toggle('d-none', !hasRun || state.isLoading);
+  elements.rankedBottomPanel.classList.toggle('d-none', !hasRun || state.isLoading);
+
+  if (!hasRun) {
+    setBattlePanel('combat');
+    elements.runEmpty.innerHTML = `
+      <div class="ranked-end-card">
+        <span class="dungeon-phase-eyebrow">Seasonal Ranked</span>
+        <h1>Draft. Adapt. Climb.</h1>
+        <p>Build a temporary standardized roster, survive with three lives, and clear Floor 10.</p>
+        <button class="btn btn-primary btn-lg" type="button" data-ranked-action="start" ${isBusy ? 'disabled' : ''}>
+          ${renderIcon('trophy')} Start Ranked Run
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  if ((run.status === 'ended' || run.phase === 'ended') && !isReplayingBattle) {
+    setBattlePanel('combat');
+    elements.runPanel.classList.add('d-none');
+    elements.rankedBottomPanel.classList.add('d-none');
+    elements.runEmpty.classList.remove('d-none');
+    elements.runEmpty.innerHTML = renderEndedRun(run);
+    renderPacts([]);
+    return;
+  }
+
+  const battlePlaybackView = isReplayingBattle || state.isBattleAnimating;
+  const combatView = battlePlaybackView || run.phase === 'result';
+  const pactTeamPreview = Boolean(state.isPactTeamPreview && run.pendingPact && !combatView);
+  const bottomControlsView = combatView || pactTeamPreview;
+  elements.enemyGrid.closest('.battle-side')?.classList.toggle('is-ranked-reserve', !combatView);
+  elements.rankedBottomPanel.classList.toggle('is-ranked-combat', bottomControlsView);
+  elements.rankedBottomPanel.classList.toggle('is-battle-active', battlePlaybackView);
+  elements.dungeonHandBar.classList.toggle('d-none', !bottomControlsView);
+  elements.dungeonHandBar.classList.toggle('is-battle-controls-mode', bottomControlsView);
+  elements.dungeonReplayLogBox.classList.toggle('d-none', !combatView);
+  if (!combatView) setBattlePanel('combat');
+  renderTeamTitle(run);
+  renderEnemyTitle(run, combatView);
+  elements.teamGrid.innerHTML = renderDemonCards(run.team || run.active || [], {
+    side: 'player',
+    allowFormationDrag: !combatView && !run.pendingPact
+  });
+  elements.enemyGrid.innerHTML = combatView
+    ? renderDemonCards(run.enemies || [], { side: 'enemy' })
+    : renderReserve(run.reserve || [], run);
+  elements.rankedPreparation.classList.toggle(
+    'd-none',
+    combatView || pactTeamPreview || run.phase === 'preparation' && state.isBattleAnimating
+  );
+  elements.rankedPreparation.innerHTML = combatView || pactTeamPreview ? '' : renderPreparation(run);
+  renderFightLogActions();
+  renderFightLog();
+  renderPacts(run.pacts?.pendingChoices || []);
+  bindCardDetails();
+  decorateWorkspaceFormation();
+  decorateCombinationCandidates();
+}
+
+function renderTeamTitle(run) {
+  const division = run.rating?.division || 'Bronze II';
+  const hearts = `${'\u2665 '.repeat(run.lives)}${'\u2661 '.repeat(Math.max(0, 3 - run.lives))}`.trim();
+  elements.teamSideTitle.innerHTML = `
+    <span class="ranked-desktop-status">${escapeHtml(division.toUpperCase())} &middot; FLOOR ${formatNumber(run.floor)} &middot; ${hearts}</span>
+    <span class="ranked-mobile-status">F${formatNumber(run.floor)} &middot; \u2665 ${run.lives}/3</span>
+  `;
+}
+
+function renderEnemyTitle(run, combatView) {
+  if (!combatView) {
+    elements.enemySideTitle.innerHTML = `
+      <span>Reserve</span>
+      <span class="ranked-header-separator" aria-hidden="true">&middot;</span>
+      <span class="ranked-rsoul-balance" aria-label="${formatNumber(rankedSouls)} Ranked Souls">
+        ${renderIcon('soul')} <span class="ranked-rsoul-value">${formatNumber(rankedSouls)}</span>
+      </span>
+    `;
+    return;
+  }
+  const name = run.opponent?.generated
+    ? 'Ranked Rival'
+    : (run.opponent?.hunterName || 'Opponent');
+  elements.enemySideTitle.innerHTML = `
+    <span>${escapeHtml(name)}</span>
+    ${run.opponent?.division ? `<span class="battle-side-count">${escapeHtml(run.opponent.division)}</span>` : ''}
+  `;
+}
+
+function getRankedProgressionBuffs(run) {
+  const locked = run.lockedBonuses || {};
+  const spentPoints = Object.values(locked.allocations || {})
+    .reduce((total, value) => total + Math.max(0, Number(value) || 0), 0);
+  const skillTree = createLevelPowerBuff({
+    spentPoints,
+    bonuses: locked.skillBonuses || {}
+  });
+  const pacts = Array.isArray(run.pacts?.activeBuffs) ? run.pacts.activeBuffs : [];
+  const otherBuffs = (Array.isArray(locked.activeBuffs) ? locked.activeBuffs : [])
+    .filter((buff) => buff?.source !== 'skill_tree');
+
+  return [
+    ...(skillTree ? [skillTree] : []),
+    ...pacts,
+    ...otherBuffs
+  ].filter((buff) => buff?.id);
+}
+
+function renderReserve(reserve, run) {
+  const slots = Array.from({ length: run.capacities.reserve }, () => null);
+  const unplaced = [];
+  reserve.forEach((demon) => {
+    const slot = normalizeReserveSlot(demon.reserveSlot);
+    if (slot !== null && !slots[slot]) {
+      slots[slot] = demon;
+    } else {
+      unplaced.push(demon);
+    }
+  });
+  unplaced.forEach((demon) => {
+    const slot = slots.findIndex((entry) => !entry);
+    if (slot >= 0) slots[slot] = demon;
+  });
+  const progressionBuffs = getRankedProgressionBuffs(run);
+  return `
+    <div class="ranked-reserve-panel">
+      <div class="battle-formation battle-formation-grid battle-formation-player ranked-reserve-formation"
+           data-ranked-zone="reserve" role="list" aria-label="Reserve">
+        ${slots.map((demon, index) => (
+          renderFormationSlot(demon, index, {
+            side: 'player',
+            allowFormationDrag: true
+          }, 'player')
+        )).join('')}
+      </div>
+      ${progressionBuffs.length ? `
+        <div class="ranked-reserve-buffs-shell">
+          <div class="dungeon-hand-pacts ranked-reserve-buffs" aria-label="Active Ranked Pacts, Skill Tree bonuses, and buffs">
+            ${progressionBuffs.map(renderActivePactIcon).join('')}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderRankedDemon(demon, options = {}) {
+  return renderCard(demon, {
+    attributes: {
+      'data-instance-id': demon.instanceId,
+      ...(options.zone !== 'enemy' ? {
+        'data-ranked-workspace-id': demon.instanceId,
+        'data-ranked-zone': options.zone,
+        draggable: options.interactive ? 'true' : 'false',
+        role: 'button',
+        tabindex: options.interactive ? '0' : '-1'
+      } : {})
+    }
+  });
+}
+
+function renderPreparation(run) {
+  const hand = workspace?.hand || [];
+  return `
+    <button class="btn btn-outline-light btn-lg ranked-side-action" type="button" data-ranked-action="reroll"
+            ${!canRerollWorkspace() || isBusy ? 'disabled' : ''}>
+      ${renderIcon('refresh-cw')} <span>Reroll</span>
+      <span class="ranked-action-cost" aria-label="${RANKED_REROLL_RSOUL_COST} Ranked Souls">
+        ${renderIcon('soul')} <span>${formatNumber(RANKED_REROLL_RSOUL_COST)}</span>
+      </span>
+    </button>
+    <div class="ranked-offer-area" data-ranked-drop-zone data-ranked-zone="hand" aria-label="Hand">
+      <div class="ranked-offer-grid">
+        ${hand.length ? hand.map((demon, index) => `
+            <div class="ranked-offer ${!demon._rankedPurchased && getRankedDemonCost(demon) > rankedSouls ? 'is-unaffordable' : ''}"
+                 data-ranked-drop-zone data-ranked-zone="hand" data-ranked-index="${index}">
+              ${renderRankedDemon(demon, { interactive: true, zone: 'hand' })}
+              <span class="ranked-offer-cost ${demon._rankedPurchased ? 'is-purchased' : ''}"
+                    aria-label="${demon._rankedPurchased ? 'Purchased' : `${getRankedDemonCost(demon)} Ranked Souls`}">
+                ${demon._rankedPurchased ? renderIcon('check') : renderIcon('soul')}
+                ${demon._rankedPurchased ? '' : `<span>${formatNumber(getRankedDemonCost(demon))}</span>`}
+              </span>
+            </div>
+          `).join('') : '<div class="ranked-hand-empty">Empty</div>'}
+      </div>
+    </div>
+    <button class="btn btn-primary btn-lg ranked-side-action" type="button" data-ranked-action="fight"
+            ${!canFightWorkspace() || isBusy ? 'disabled' : ''}>
+      ${renderIcon('swords')} <span>Fight</span>
+    </button>
+  `;
+}
+
+function renderFightLog() {
+  if (!elements.fightLog) return;
+  if (!state.combatLog?.length) {
+    elements.fightLog.innerHTML = 'Fight log will appear here after a battle.';
+    elements.fightLog.classList.add('text-muted');
+    return;
+  }
+  elements.fightLog.classList.remove('text-muted');
+  elements.fightLog.innerHTML = combat.groupCombatLog(state.combatLog)
+    .map((step, index) => combat.renderFightLogRow(step, index))
+    .join('');
+}
+
+function renderFightLogActions() {
+  const run = state.run;
+  if (!run || !elements.dungeonBottomControls || !elements.dungeonReplayLogBox) return;
+  const canReviewFight = Boolean(
+    run.phase === 'result'
+    && !state.isBattleAnimating
+    && !isReplayingBattle
+    && (run.lastBattle?.combatLog?.length || state.combatLog?.length)
+  );
+  elements.dungeonReplayLogBox.innerHTML = renderReplayLogButtons(canReviewFight, canReviewFight);
+
+  if (state.isPactTeamPreview && run.pendingPact) {
+    elements.dungeonBottomControls.innerHTML = renderDemonicPactReturnControl();
+    return;
+  }
+
+  if (state.isBattleAnimating) {
+    elements.dungeonBottomControls.innerHTML = `
+      ${renderBattlePlaybackControls()}
+      ${renderBattleSpeedControl()}
+      ${renderBattleSkipControl()}
+    `;
+    return;
+  }
+  if (run.phase === 'result') {
+    const ended = run.status === 'ended' || run.lives <= 0;
+    elements.dungeonBottomControls.innerHTML = ended ? `
+      <button class="btn btn-primary" type="button" data-ranked-action="start">New Ranked Run</button>
+    ` : `
+      <button class="btn btn-primary" type="button" data-ranked-action="continue">
+        ${run.lastBattle?.winner === 'player' ? 'Continue' : `Retry Floor ${run.floor}`}
+      </button>
+      <button class="btn btn-outline-light" type="button" data-ranked-action="end">End Run</button>
+    `;
+    return;
+  }
+  elements.dungeonBottomControls.innerHTML = '';
+}
+
+function renderPacts(choices) {
+  const visible = Boolean(choices?.length) && !state.isBattleAnimating;
+  const wasVisible = !elements.demonicPactOverlay.classList.contains('d-none');
+  elements.demonicPactOverlay.classList.toggle('d-none', !visible);
+  if (!visible) {
+    state.isPactTeamPreview = false;
+    syncRankedPactView();
+    elements.rankedPactGrid.innerHTML = '';
+    return;
+  }
+  if (!wasVisible) state.isPactTeamPreview = false;
+  elements.rankedPactGrid.innerHTML = choices.map((buff) => {
+    const rarity = String(buff.rarity || 'common').toLowerCase();
+    return `
+      <button class="demonic-pact-card is-${escapeHtml(rarity)}" type="button" data-ranked-action="pact" data-buff-id="${escapeHtml(buff.id)}">
+        <span class="demonic-pact-icon" aria-hidden="true">${renderIcon(buff.icon || 'sparkles')}</span>
+        <span class="demonic-pact-rarity ad-${escapeHtml(rarity)}">${capitalize(rarity)}</span>
+        <strong>${escapeHtml(buff.name || buff.id)}</strong>
+        <span class="demonic-pact-description">${escapeHtml(buff.description || '')}</span>
+        <span class="demonic-pact-tags">${(buff.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}</span>
+      </button>
+    `;
+  }).join('');
+  syncRankedPactView();
+  if (!wasVisible) {
+    audio?.play('sfx.dungeon.pactReveal', { volume: .88 });
+  }
+}
+
+function toggleRankedPactView() {
+  if (!elements.demonicPactOverlay || elements.demonicPactOverlay.classList.contains('d-none')) return;
+  state.isPactTeamPreview = !state.isPactTeamPreview;
+  renderRun();
+}
+
+function syncRankedPactView() {
+  const isTeamPreview = Boolean(state.isPactTeamPreview);
+  elements.demonicPactOverlay?.classList.toggle('is-team-preview', isTeamPreview);
+  if (!elements.demonicPactViewToggle) return;
+  elements.demonicPactViewToggle.classList.toggle('d-none', isTeamPreview);
+  elements.demonicPactViewToggle.textContent = 'View Team';
+  elements.demonicPactViewToggle.setAttribute('aria-expanded', String(!isTeamPreview));
+}
+
+function renderEndedRun(run) {
+  const cleared = Number(run.highestClearedFloor) || 0;
+  return `
+    <div class="ranked-end-card">
+      <span class="dungeon-phase-eyebrow">${escapeHtml(run.season?.name || 'Ranked Season')}</span>
+      <h1>${cleared >= 10 ? 'Ranked Victory' : 'Run Complete'}</h1>
+      <p>Cleared Floor ${formatNumber(cleared)} &middot; ${formatSigned(run.rating?.runDelta || 0)} Rank Points</p>
+      <p class="text-muted">${escapeHtml(run.rating?.division || '')} &middot; ${formatNumber(run.rating?.rating || 0)} RP</p>
+      <button class="btn btn-primary btn-lg" type="button" data-ranked-action="start">Start New Run</button>
+    </div>
+  `;
+}
+
+function announceCombinations(events) {
+  (events || []).forEach((event) => {
+    if (event.deferredPreview) return;
+    const key = `${event.resultInstanceId}:${event.fromRarity}:${event.toRarity}`;
+    if (seenCombinationEvents.has(key)) return;
+    seenCombinationEvents.add(key);
+    window.AmongDemons.showGameAlert?.({
+      type: 'success',
+      title: `${capitalize(event.toRarity)} combination!`,
+      message: `Three identical ${capitalize(event.fromRarity)} demons became one ${capitalize(event.toRarity)} demon.`,
+      action: `The upgraded demon stayed in ${event.destination === 'active' ? 'your formation' : 'Reserve'}.`
+    });
+    window.setTimeout(() => {
+      document.querySelector(`[data-instance-id="${cssEscape(event.resultInstanceId)}"]`)?.classList.add('is-team-upgrade');
+    }, 0);
+  });
+}
+
+function bindCardDetails() {
+  document.querySelectorAll('.dungeon-demon-card[data-instance-id]').forEach((card) => {
+    if (card.dataset.rankedDetailsBound === 'true') return;
+    card.dataset.rankedDetailsBound = 'true';
+    card.addEventListener('click', (event) => {
+      if (
+        event.defaultPrevented
+        || Date.now() < suppressDetailUntil
+        || card.classList.contains('is-dragging')
+        || card.classList.contains('suppress-detail-click')
+      ) return;
+      openCardDetails(card);
+    });
+  });
+}
+
+function openCardDetails(card) {
+  const demon = findAnyDemon(card?.dataset.instanceId);
+  if (demon) window.AmongDemons.ui?.openDemonDetailsModal?.(demon);
+}
+
+async function showBattleResult(winner) {
+  audio?.play(winner === 'player' ? 'sfx.battle.victory' : 'sfx.battle.defeat', { volume: .95 });
+  const overlay = document.createElement('div');
+  overlay.className = `battle-result-burst is-${winner === 'player' ? 'victory' : 'defeat'}`;
+  overlay.style.setProperty('--battle-result-duration', '1200ms');
+  overlay.innerHTML = `<div class="battle-result-burst-text">${winner === 'player' ? 'Victory' : 'Defeat'}</div>`;
+  document.body.appendChild(overlay);
+  await sleep(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 350 : 1200);
+  overlay.remove();
+}
+
+function findAnyDemon(instanceId) {
+  return [
+    ...(state.run?.team || []),
+    ...(state.run?.reserve || []),
+    ...(state.run?.enemies || []),
+    ...(workspace?.hand || [])
+  ].find((demon) => demon?.instanceId === instanceId);
+}
+
+function isWorkspacePhase(run) {
+  return Boolean(run?.status === 'active' && ['draft', 'selection', 'preparation'].includes(run.phase));
+}
+
+function createWorkspace(run) {
+  stagedPurchaseOfferIds = new Set(
+    (run.offers || [])
+      .filter((offer) => offer.purchased)
+      .map((offer) => String(offer.offerId))
+  );
+  const active = cloneDemons(run.active || run.team).map((demon, index) => ({
+    ...demon,
+    formationSlot: normalizeSlot(demon.formationSlot) ?? index,
+    _rankedOrigin: 'roster'
+  }));
+  const reserve = cloneDemons(run.reserve).map((demon, index) => ({
+    ...demon,
+    reserveSlot: normalizeReserveSlot(demon.reserveSlot) ?? index,
+    _rankedOrigin: 'roster'
+  }));
+  const hand = (run.offers || []).map((offer) => ({
+    ...JSON.parse(JSON.stringify(offer.demon)),
+    _rankedOrigin: 'offer',
+    _rankedOfferId: offer.offerId,
+    _rankedCost: Math.max(0, Number(offer.cost) || getRankedDemonCost(offer.demon)),
+    _rankedPurchased: Boolean(offer.purchased)
+  }));
+  return { active, reserve, hand };
+}
+
+function syncWorkspaceIntoRun() {
+  if (!workspace || !state.run || !isWorkspacePhase(serverRun)) return;
+  state.run.team = workspace.active;
+  state.run.active = workspace.active;
+  state.run.reserve = workspace.reserve;
+  state.run.offers = workspace.hand
+    .filter((demon) => demon._rankedOrigin === 'offer')
+    .map((demon) => ({ offerId: demon._rankedOfferId, demon }));
+}
+
+function serializeWorkspaceLineup() {
+  return {
+    purchasedOfferIds: [...stagedPurchaseOfferIds],
+    active: (workspace?.active || []).map((demon) => ({
+      ...serializeWorkspaceDemonReference(demon),
+      formationSlot: normalizeSlot(demon.formationSlot)
+    })),
+    reserve: (workspace?.reserve || []).map((demon) => ({
+      ...serializeWorkspaceDemonReference(demon),
+      reserveSlot: normalizeReserveSlot(demon.reserveSlot)
+    }))
+  };
+}
+
+function serializeWorkspaceDemonReference(demon) {
+  return demon?._rankedCombinationRecipe
+    ? { combination: JSON.parse(JSON.stringify(demon._rankedCombinationRecipe)) }
+    : { instanceId: demon?.instanceId };
+}
+
+function getSelectedOfferCount() {
+  return [...(workspace?.active || []), ...(workspace?.reserve || [])]
+    .filter((demon) => demon._rankedOrigin === 'offer').length;
+}
+
+function getRemainingWorkspacePicks() {
+  return Math.max(0, Number(serverRun?.picksRemaining) - getSelectedOfferCount());
+}
+
+function getDiscardedRosterCount() {
+  const keptIds = new Set(
+    [...(workspace?.active || []), ...(workspace?.reserve || [])]
+      .map((demon) => String(demon.instanceId))
+  );
+  return [...(serverRun?.active || []), ...(serverRun?.reserve || [])]
+    .filter((demon) => !keptIds.has(String(demon.instanceId))).length;
+}
+
+function canFightWorkspace() {
+  return Boolean(
+    workspace
+    && serverRun?.status === 'active'
+    && !serverRun.pendingPact
+    && workspace.active.length > 0
+    && workspace.active.length <= Number(serverRun.capacities?.active || 9)
+    && workspace.reserve.length <= Number(serverRun.capacities?.reserve || 6)
+  );
+}
+
+function canRerollWorkspace() {
+  if (
+    !workspace
+    || !['draft', 'selection'].includes(serverRun?.phase)
+    || serverRun.pendingPact
+  ) return false;
+  return rankedSouls >= RANKED_REROLL_RSOUL_COST;
+}
+
+function decorateWorkspaceFormation() {
+  if (!workspace || isReplayingBattle || state.isBattleAnimating || state.run?.phase === 'result') return;
+  elements.teamGrid.querySelectorAll('.formation-slot').forEach((slot) => {
+    const dropTarget = slot.querySelector('.formation-lane-cards');
+    if (!dropTarget) return;
+    dropTarget.dataset.rankedDropZone = '';
+    dropTarget.dataset.rankedZone = 'active';
+    dropTarget.dataset.formationSlot = slot.dataset.formationSlot;
+    const card = dropTarget.querySelector('.dungeon-demon-card[data-instance-id]');
+    if (!card) return;
+    card.dataset.rankedWorkspaceId = card.dataset.instanceId;
+    card.dataset.rankedZone = 'active';
+    card.setAttribute('draggable', 'true');
+  });
+  elements.enemyGrid.querySelectorAll('.ranked-reserve-formation .formation-slot').forEach((slot, index) => {
+    slot.setAttribute('aria-label', `Reserve slot ${index + 1}`);
+    const dropTarget = slot.querySelector('.formation-lane-cards');
+    if (!dropTarget) return;
+    dropTarget.dataset.rankedDropZone = '';
+    dropTarget.dataset.rankedZone = 'reserve';
+    dropTarget.dataset.rankedIndex = String(index);
+    const card = dropTarget.querySelector('.dungeon-demon-card[data-instance-id]');
+    if (!card) return;
+    card.dataset.rankedWorkspaceId = card.dataset.instanceId;
+    card.dataset.rankedZone = 'reserve';
+    card.setAttribute('draggable', 'true');
+  });
+}
+
+function decorateCombinationCandidates() {
+  if (!workspace || isReplayingBattle || state.isBattleAnimating || state.run?.phase === 'result') return;
+  const candidates = getCombinationCandidateIds();
+  candidates.forEach((instanceId) => {
+    const card = document.querySelector(
+      `.ranked-page .dungeon-demon-card[data-instance-id="${cssEscape(instanceId)}"]`
+    );
+    if (!card) return;
+    card.classList.add('is-ranked-combine-ready');
+    if (!card.querySelector('.dungeon-team-upgrade-indicator')) {
+      card.insertAdjacentHTML('afterbegin', renderTeamUpgradeIndicator());
+    }
+  });
+}
+
+function getCombinationCandidateIds() {
+  const groups = new Map();
+  [
+    ...(workspace?.active || []),
+    ...(workspace?.reserve || []),
+    ...(workspace?.hand || [])
+  ].forEach((demon) => {
+    const rarity = String(demon?.rarity || '').toLowerCase();
+    const typeId = Number(demon?.typeId || demon?.type_id || demon?.type);
+    if (!typeId || !getNextRankedRarity(rarity)) return;
+    const key = `${typeId}:${rarity}`;
+    const group = groups.get(key) || [];
+    group.push(String(demon.instanceId));
+    groups.set(key, group);
+  });
+  return new Set(
+    [...groups.values()]
+      .filter((group) => group.length >= 3)
+      .flat()
+  );
+}
+
+function getWorkspaceDropTarget(node) {
+  if (!workspace || !(node instanceof Element)) return null;
+  const card = node.closest('[data-ranked-workspace-id]');
+  if (card) return card;
+  return node.closest('[data-ranked-drop-zone]');
+}
+
+function getWorkspaceLocation(instanceId) {
+  for (const zone of ['active', 'reserve', 'hand']) {
+    const index = workspace?.[zone]?.findIndex((demon) => String(demon.instanceId) === String(instanceId));
+    if (index >= 0) {
+      return {
+        zone,
+        index,
+        slot: zone === 'active'
+          ? normalizeSlot(workspace[zone][index].formationSlot)
+          : (zone === 'reserve' ? normalizeReserveSlot(workspace[zone][index].reserveSlot) ?? index : null)
+      };
+    }
+  }
+  return null;
+}
+
+function describeDropTarget(target) {
+  const card = target.closest?.('[data-ranked-workspace-id]');
+  if (card) {
+    const location = getWorkspaceLocation(card.dataset.rankedWorkspaceId);
+    return location ? { ...location, occupantId: card.dataset.rankedWorkspaceId } : null;
+  }
+  const zone = target.dataset.rankedZone;
+  if (!['active', 'reserve', 'hand'].includes(zone)) return null;
+  const slot = zone === 'active'
+    ? normalizeSlot(target.dataset.formationSlot ?? target.closest('.formation-slot')?.dataset.formationSlot)
+    : (zone === 'reserve'
+      ? normalizeReserveSlot(target.dataset.rankedIndex ?? target.closest('.formation-slot')?.dataset.formationSlot)
+      : null);
+  const rawIndex = Number(target.dataset.rankedIndex);
+  const index = Number.isInteger(rawIndex) && rawIndex >= 0 ? rawIndex : workspace[zone].length;
+  return { zone, slot, index, occupantId: null };
+}
+
+async function moveWorkspaceDemon(instanceId, target, point = null) {
+  if (!workspace || isBusy || state.isBattleAnimating) return;
+  const source = getWorkspaceLocation(instanceId);
+  const destination = describeDropTarget(target);
+  if (!source || !destination || destination.occupantId === String(instanceId)) {
+    clearDragOver();
+    return;
+  }
+
+  const before = {
+    active: cloneDemons(workspace.active),
+    reserve: cloneDemons(workspace.reserve),
+    hand: cloneDemons(workspace.hand)
+  };
+  const sourceDemon = workspace[source.zone][source.index];
+  const destinationDemon = destination.occupantId
+    ? workspace[destination.zone][destination.index]
+    : null;
+  const purchaseDemon = (
+    source.zone === 'hand'
+    && sourceDemon?._rankedOrigin === 'offer'
+    && !sourceDemon._rankedPurchased
+    && ['active', 'reserve'].includes(destination.zone)
+  ) ? sourceDemon : (
+    destination.zone === 'hand'
+    && destinationDemon?._rankedOrigin === 'offer'
+    && !destinationDemon._rankedPurchased
+    && ['active', 'reserve'].includes(source.zone)
+      ? destinationDemon
+      : null
+  );
+  const purchaseCost = purchaseDemon ? getRankedDemonCost(purchaseDemon) : 0;
+  if (purchaseDemon && purchaseCost > rankedSouls) {
+    clearDragOver();
+    showMessage(`This card costs ${formatNumber(purchaseCost)} rSouls.`, 'warning');
+    renderRun();
+    return;
+  }
+  const directCombination = getDirectPurchaseCombination(
+    sourceDemon,
+    source,
+    destination,
+    destinationDemon
+  );
+  if (directCombination) {
+    removeWorkspaceDemon(instanceId);
+    stageClientPurchase(purchaseDemon, purchaseCost, point, target);
+    const combinationEvents = [
+      combineWorkspaceDemonEntries(
+        directCombination.consumed,
+        directCombination.destinationEntry,
+        directCombination.rarity
+      ),
+      ...applyClientCombinations()
+    ].filter(Boolean);
+    clearDragOver();
+    renderRun();
+    playClientCombinationFeedback(combinationEvents);
+    return;
+  }
+  const activeCapacity = Number(serverRun.capacities?.active || 9);
+  if (
+    destination.zone === 'active'
+    && source.zone !== 'active'
+    && !destination.occupantId
+    && workspace.active.length >= activeCapacity
+  ) {
+    clearDragOver();
+    showMessage(`Floor ${formatNumber(serverRun.floor)} allows ${formatNumber(activeCapacity)} active demons.`, 'warning');
+    renderRun();
+    return;
+  }
+  const demon = removeWorkspaceDemon(instanceId);
+  const occupant = destination.occupantId
+    ? removeWorkspaceDemon(destination.occupantId)
+    : null;
+  if (!demon || !placeWorkspaceDemon(demon, destination)) {
+    workspace = before;
+    clearDragOver();
+    renderRun();
+    return;
+  }
+  if (occupant && !placeWorkspaceDemon(occupant, source)) {
+    workspace = before;
+    clearDragOver();
+    renderRun();
+    return;
+  }
+  if (
+    workspace.active.length > Number(serverRun.capacities?.active || 9)
+    || workspace.reserve.length > Number(serverRun.capacities?.reserve || 6)
+  ) {
+    workspace = before;
+  }
+  if (workspace !== before && purchaseDemon) {
+    stageClientPurchase(purchaseDemon, purchaseCost, point, target);
+  }
+  const combinationEvents = workspace === before ? [] : applyClientCombinations();
+  clearDragOver();
+  renderRun();
+  playClientCombinationFeedback(combinationEvents);
+}
+
+function getDirectPurchaseCombination(sourceDemon, source, destination, destinationDemon) {
+  if (
+    source.zone !== 'hand'
+    || sourceDemon?._rankedOrigin !== 'offer'
+    || sourceDemon._rankedPurchased
+    || !['active', 'reserve'].includes(destination.zone)
+    || !destination.occupantId
+    || !destinationDemon
+  ) return null;
+
+  const rarity = String(sourceDemon.rarity || '').toLowerCase();
+  const typeId = Number(sourceDemon.typeId || sourceDemon.type_id || sourceDemon.type);
+  if (
+    !getNextRankedRarity(rarity)
+    || Number(destinationDemon.typeId || destinationDemon.type_id || destinationDemon.type) !== typeId
+    || String(destinationDemon.rarity || '').toLowerCase() !== rarity
+  ) return null;
+
+  const rosterMatches = [
+    ...workspace.active.map((demon) => ({ zone: 'active', demon })),
+    ...workspace.reserve.map((demon) => ({ zone: 'reserve', demon }))
+  ].filter((entry) => (
+    Number(entry.demon?.typeId || entry.demon?.type_id || entry.demon?.type) === typeId
+    && String(entry.demon?.rarity || '').toLowerCase() === rarity
+  ));
+  const destinationEntry = rosterMatches.find((entry) => (
+    String(entry.demon.instanceId) === String(destinationDemon.instanceId)
+  ));
+  const otherEntry = rosterMatches.find((entry) => (
+    String(entry.demon.instanceId) !== String(destinationDemon.instanceId)
+  ));
+  if (!destinationEntry || !otherEntry) return null;
+
+  return {
+    rarity,
+    destinationEntry,
+    consumed: [
+      destinationEntry,
+      otherEntry,
+      { zone: 'hand', demon: sourceDemon }
+    ]
+  };
+}
+
+function stageClientPurchase(demon, cost, point, target) {
+  if (!demon) return;
+  demon._rankedPurchased = true;
+  demon._rankedCost = cost;
+  stagedPurchaseOfferIds.add(String(demon._rankedOfferId));
+  rankedSouls = Math.max(0, rankedSouls - cost);
+  showRankedSoulChange(point || getInteractionPoint(null, target), -cost);
+  audio?.play('sfx.world.merchantPurchase', { volume: .82 });
+}
+
+function removeWorkspaceDemon(instanceId) {
+  const location = getWorkspaceLocation(instanceId);
+  if (!location) return null;
+  return workspace[location.zone].splice(location.index, 1)[0] || null;
+}
+
+function placeWorkspaceDemon(demon, location) {
+  if (!demon || !location || !workspace[location.zone]) return false;
+  if (location.zone === 'active') {
+    if (workspace.active.length >= Number(serverRun.capacities?.active || 9)) return false;
+    const slot = normalizeSlot(location.slot);
+    if (slot === null || workspace.active.some((entry) => normalizeSlot(entry.formationSlot) === slot)) return false;
+    demon.formationSlot = slot;
+    demon.position = slot % 3 === 2 ? 'front' : 'back';
+    workspace.active.push(demon);
+    workspace.active.sort((left, right) => Number(left.formationSlot) - Number(right.formationSlot));
+    return true;
+  }
+  if (location.zone === 'reserve' && workspace.reserve.length >= Number(serverRun.capacities?.reserve || 6)) {
+    return false;
+  }
+  if (location.zone === 'reserve') {
+    const slot = normalizeReserveSlot(location.slot ?? location.index);
+    if (slot === null || workspace.reserve.some((entry) => normalizeReserveSlot(entry.reserveSlot) === slot)) {
+      return false;
+    }
+    delete demon.formationSlot;
+    demon.reserveSlot = slot;
+    demon.position = demon.preferredPosition === 'back' ? 'back' : 'front';
+    workspace.reserve.push(demon);
+    return true;
+  }
+  delete demon.formationSlot;
+  delete demon.reserveSlot;
+  demon.position = demon.preferredPosition === 'back' ? 'back' : 'front';
+  const index = Math.min(Math.max(0, Number(location.index) || 0), workspace[location.zone].length);
+  workspace[location.zone].splice(index, 0, demon);
+  return true;
+}
+
+function applyClientCombinations() {
+  if (!workspace) return [];
+  const events = [];
+  let combined = true;
+
+  while (combined) {
+    combined = false;
+    for (const rarity of RANKED_RARITIES.slice(0, -1)) {
+      const groups = new Map();
+      const entries = [
+        ...workspace.active.map((demon) => ({ zone: 'active', demon })),
+        ...workspace.reserve.map((demon) => ({ zone: 'reserve', demon }))
+      ];
+      entries.forEach((entry) => {
+        if (String(entry.demon?.rarity || '').toLowerCase() !== rarity) return;
+        const key = `${Number(entry.demon?.typeId)}:${rarity}`;
+        const group = groups.get(key) || [];
+        group.push(entry);
+        groups.set(key, group);
+      });
+      const match = [...groups.values()].find((group) => group.length >= 3);
+      if (!match) continue;
+
+      const consumed = match.slice(0, 3);
+      const destinationEntry = consumed.find((entry) => entry.zone === 'active') || consumed[0];
+      events.push(combineWorkspaceDemonEntries(consumed, destinationEntry, rarity));
+      combined = true;
+      break;
+    }
+  }
+
+  return events;
+}
+
+function combineWorkspaceDemonEntries(consumed, destinationEntry, rarity) {
+  const consumedIds = new Set(consumed.map((entry) => String(entry.demon.instanceId)));
+  workspace.active = workspace.active.filter((demon) => !consumedIds.has(String(demon.instanceId)));
+  workspace.reserve = workspace.reserve.filter((demon) => !consumedIds.has(String(demon.instanceId)));
+
+  const upgraded = createClientCombinationDemon(
+    consumed.map((entry) => entry.demon),
+    getNextRankedRarity(rarity),
+    destinationEntry
+  );
+  workspace[destinationEntry.zone].push(upgraded);
+  if (destinationEntry.zone === 'active') {
+    workspace.active.sort((left, right) => Number(left.formationSlot) - Number(right.formationSlot));
+  }
+  return {
+    resultInstanceId: upgraded.instanceId,
+    fromRarity: rarity,
+    toRarity: upgraded.rarity,
+    destination: destinationEntry.zone
+  };
+}
+
+function createClientCombinationDemon(consumed, rarity, destinationEntry) {
+  const source = consumed[0] || {};
+  const typeId = Number(source.typeId || source.type_id || source.type);
+  previewCombinationCounter += 1;
+  const instanceId = `ranked-preview-combine-${Date.now()}-${previewCombinationCounter}`;
+  const type = rankedCatalog?.types?.[String(typeId)] || {};
+  const asset = rankedCatalog?.demons?.find((candidate) => (
+    Number(candidate.type) === typeId
+    && String(candidate.rarity).toLowerCase() === rarity
+  ));
+  const multiplier = Number(type.rarityMultiplier?.[rarity]) || 1;
+  const upgraded = asset ? {
+    instanceId,
+    sourceDemonId: asset.id,
+    typeId,
+    species: type.name || source.species,
+    role: type.role || source.role,
+    targeting: type.targeting || source.targeting,
+    preferredPosition: type.preferredPosition === 'back' ? 'back' : 'front',
+    rarity,
+    imageUrl: asset.image_url || asset.imageUrl,
+    maxHp: midpointRankedStat(type.baseStats?.hp, multiplier),
+    hp: midpointRankedStat(type.baseStats?.hp, multiplier),
+    atk: midpointRankedStat(type.baseStats?.atk, multiplier),
+    speed: midpointRankedStat(type.baseStats?.speed, multiplier),
+    position: type.preferredPosition === 'back' ? 'back' : 'front',
+    attackMeter: 0,
+    ranked: true
+  } : {
+    ...JSON.parse(JSON.stringify(source)),
+    instanceId,
+    rarity,
+    hp: Math.max(1, Number(source.maxHp) || Number(source.hp) || 1),
+    attackMeter: 0
+  };
+
+  delete upgraded.formationSlot;
+  delete upgraded.reserveSlot;
+  delete upgraded._rankedCost;
+  delete upgraded._rankedOfferId;
+  delete upgraded._rankedPurchased;
+  upgraded._rankedOrigin = 'combination';
+  upgraded._rankedCombinationRecipe = {
+    sources: consumed.map((demon) => serializeWorkspaceDemonReference(demon))
+  };
+  if (destinationEntry.zone === 'active') {
+    upgraded.formationSlot = normalizeSlot(destinationEntry.demon.formationSlot);
+    upgraded.position = upgraded.formationSlot % 3 === 2 ? 'front' : 'back';
+  } else {
+    upgraded.reserveSlot = normalizeReserveSlot(destinationEntry.demon.reserveSlot);
+  }
+  return upgraded;
+}
+
+function midpointRankedStat(bounds, multiplier) {
+  const min = Number(bounds?.[0]) || 1;
+  const max = Number(bounds?.[1]) || min;
+  return Math.max(1, Math.round(((min + max) / 2) * multiplier));
+}
+
+function getNextRankedRarity(rarity) {
+  const index = RANKED_RARITIES.indexOf(String(rarity || '').toLowerCase());
+  return index >= 0 && index < RANKED_RARITIES.length - 1
+    ? RANKED_RARITIES[index + 1]
+    : null;
+}
+
+function playClientCombinationFeedback(events) {
+  if (!events?.length) return;
+  window.requestAnimationFrame(() => {
+    let visibleIndex = 0;
+    events.forEach((event) => {
+      const card = document.querySelector(
+        `.ranked-page .dungeon-demon-card[data-instance-id="${cssEscape(event.resultInstanceId)}"]`
+      );
+      if (!card) return;
+      const delay = visibleIndex * 120;
+      visibleIndex += 1;
+      window.setTimeout(() => {
+        attachRankedCombinationNova(card);
+        audio?.play('sfx.progression.trainingSuccess', { volume: .88 });
+      }, delay);
+    });
+  });
+}
+
+function attachRankedCombinationNova(card) {
+  const rect = card?.getBoundingClientRect?.();
+  if (!rect) return;
+  const nova = document.createElement('span');
+  nova.className = 'ranked-combination-nova';
+  nova.setAttribute('aria-hidden', 'true');
+  nova.style.setProperty(
+    '--ranked-combination-nova-size',
+    `${Math.round(Math.max(48, rect.width, rect.height) * 1.5)}px`
+  );
+  nova.style.left = `${Math.round(rect.left + rect.width / 2)}px`;
+  nova.style.top = `${Math.round(rect.top + rect.height / 2)}px`;
+  nova.innerHTML = `
+    <span class="ranked-combination-nova-ring"></span>
+    <span class="ranked-combination-nova-ring is-delayed"></span>
+    <span class="ranked-combination-nova-core"></span>
+    ${Array.from({ length: 6 }, (_, index) => (
+      `<span class="ranked-combination-nova-ray" style="--angle: ${index * 60}deg"></span>`
+    )).join('')}
+  `;
+  document.body.appendChild(nova);
+  card.classList.add('is-ranked-upgrading');
+  nova.addEventListener('animationend', (event) => {
+    if (event.target === nova) nova.remove();
+  });
+  window.setTimeout(() => {
+    nova.remove();
+    card.classList.remove('is-ranked-upgrading');
+  }, 1000);
+}
+
+function clearDragOver() {
+  document.querySelectorAll('.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
+}
+
+function beginPointerDrag(event) {
+  if (event.button !== undefined && event.button !== 0) return;
+  const card = event.target.closest('[data-ranked-workspace-id]');
+  if (!card || !workspace || isBusy || state.isBattleAnimating) return;
+  pointerDrag = {
+    card,
+    instanceId: card.dataset.rankedWorkspaceId,
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    active: false,
+    ghost: null,
+    target: null
+  };
+  card.setPointerCapture?.(event.pointerId);
+}
+
+function updatePointerDrag(event) {
+  if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+  const distance = Math.hypot(event.clientX - pointerDrag.startX, event.clientY - pointerDrag.startY);
+  if (!pointerDrag.active && distance < 8) return;
+  if (!pointerDrag.active) activatePointerDrag(event);
+  if (event.cancelable) event.preventDefault();
+  pointerDrag.ghost.style.left = `${event.clientX}px`;
+  pointerDrag.ghost.style.top = `${event.clientY}px`;
+  pointerDrag.ghost.hidden = true;
+  const element = document.elementFromPoint(event.clientX, event.clientY);
+  pointerDrag.ghost.hidden = false;
+  const target = getWorkspaceDropTarget(element);
+  clearDragOver();
+  target?.classList.add('is-drag-over');
+  pointerDrag.target = target;
+}
+
+function activatePointerDrag(event) {
+  pointerDrag.active = true;
+  pointerDrag.card.classList.add('is-dragging', 'is-pointer-dragging', 'suppress-detail-click');
+  pointerDrag.ghost = pointerDrag.card.cloneNode(true);
+  pointerDrag.ghost.classList.add('pointer-drag-ghost');
+  pointerDrag.ghost.classList.remove('is-dragging', 'is-pointer-dragging', 'suppress-detail-click', 'is-drag-over');
+  pointerDrag.ghost.removeAttribute('role');
+  pointerDrag.ghost.removeAttribute('tabindex');
+  pointerDrag.ghost.setAttribute('aria-hidden', 'true');
+  pointerDrag.ghost.style.width = `${pointerDrag.card.getBoundingClientRect().width}px`;
+  pointerDrag.ghost.style.left = `${event.clientX}px`;
+  pointerDrag.ghost.style.top = `${event.clientY}px`;
+  document.body.appendChild(pointerDrag.ghost);
+}
+
+function finishPointerDrag(event) {
+  if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+  const drag = pointerDrag;
+  if (drag.active) {
+    if (event.cancelable) event.preventDefault();
+    event.stopPropagation();
+    suppressDetailUntil = Date.now() + 350;
+    const target = drag.target;
+    cleanupPointerDrag();
+    if (target) void moveWorkspaceDemon(drag.instanceId, target, {
+      x: event.clientX,
+      y: event.clientY
+    });
+    return;
+  }
+  cleanupPointerDrag();
+}
+
+function cancelPointerDrag(event) {
+  if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+  cleanupPointerDrag();
+}
+
+function cleanupPointerDrag() {
+  if (!pointerDrag) return;
+  pointerDrag.card?.classList.remove('is-dragging', 'is-pointer-dragging', 'suppress-detail-click');
+  pointerDrag.ghost?.remove();
+  pointerDrag = null;
+  clearDragOver();
+}
+
+function getDemonPosition(demon) {
+  return demon?.position === 'back' ? 'back' : 'front';
+}
+
+function renderDemonStatus() {
+  return '';
+}
+
+function renderDungeonCenterActions() {
+  return '';
+}
+
+function normalizeSlot(slot) {
+  const number = Number(slot);
+  return Number.isInteger(number) && number >= 0 && number < 9 ? number : null;
+}
+
+function normalizeReserveSlot(slot) {
+  const number = Number(slot);
+  const capacity = Number(serverRun?.capacities?.reserve || 6);
+  return Number.isInteger(number) && number >= 0 && number < capacity ? number : null;
+}
+
+function getRankedDemonCost(demon) {
+  const assigned = Number(demon?._rankedCost);
+  if (Number.isFinite(assigned) && assigned >= 0) return Math.floor(assigned);
+  const rarity = String(demon?.rarity || 'common').toLowerCase();
+  return RANKED_CARD_RARITY_COSTS[rarity] || RANKED_CARD_RARITY_COSTS.common;
+}
+
+function acceptPlayer(player, options = {}) {
+  if (!player) return;
+  const session = window.AmongDemons.getSession?.() || {};
+  window.AmongDemons.setSession?.({
+    ...session,
+    player: {
+      ...(session.player || {}),
+      ...player
+    }
+  });
+  window.AmongDemons.ui?.updateNavAccount?.(player, options);
+}
+
+function getInteractionPoint(event, element) {
+  if (Number.isFinite(event?.clientX) && Number.isFinite(event?.clientY) && (event.clientX || event.clientY)) {
+    return { x: event.clientX, y: event.clientY };
+  }
+  const rect = element?.getBoundingClientRect?.();
+  return rect
+    ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+    : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+}
+
+function showRankedSoulChange(point, amount) {
+  const floating = document.createElement('span');
+  const change = Number(amount) || 0;
+  floating.className = `ranked-soul-spend-float ${change > 0 ? 'is-gain' : 'is-spend'}`;
+  floating.style.left = `${Math.round(Number(point?.x) || window.innerWidth / 2)}px`;
+  floating.style.top = `${Math.round(Number(point?.y) || window.innerHeight / 2)}px`;
+  floating.innerHTML = `${renderIcon('soul')}<strong>${change > 0 ? '+' : '-'}${formatNumber(Math.abs(change))}</strong>`;
+  document.body.appendChild(floating);
+  floating.addEventListener('animationend', () => floating.remove(), { once: true });
+  window.setTimeout(() => floating.remove(), 1400);
+}
+
+function setLoading(loading) {
+  state.isLoading = Boolean(loading);
+  elements.runLoading?.classList.toggle('d-none', !loading);
+}
+
+function setBusy(busy) {
+  isBusy = Boolean(busy);
+  document.documentElement.classList.toggle('is-ranked-busy', isBusy);
+  renderRun();
+}
+
+function showError(error) {
+  console.error(error);
+  window.AmongDemons.setGameAlert(elements.rankedMessage, error, { type: 'danger' });
+}
+
+function showMessage(message, type = 'info') {
+  window.AmongDemons.setGameAlert(elements.rankedMessage, message, { type });
+}
+
+function createActionId() {
+  return crypto.randomUUID
+    ? crypto.randomUUID()
+    : `ranked-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+function cloneDemons(demons = []) {
+  return (demons || []).map((demon) => JSON.parse(JSON.stringify(demon)));
+}
+
+function capitalize(value) {
+  const text = String(value || '');
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : '';
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+function formatSigned(value) {
+  const number = Number(value) || 0;
+  return `${number > 0 ? '+' : ''}${formatNumber(number)}`;
+}
+
+function cssEscape(value) {
+  return window.CSS?.escape ? window.CSS.escape(String(value)) : String(value).replace(/["\\]/g, '\\$&');
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function onReady(callback) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', callback, { once: true });
+    return;
+  }
+  callback();
+}

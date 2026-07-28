@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Ranked | Among Demons</title>
+    <meta name="description" content="Draft a standardized demon team and climb the seasonal Among Demons Ranked ladder.">
+    <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
+    <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
+    <link href="/app/css/base.css?v=1bfa4a5e6dea" rel="stylesheet">
+    <link href="/app/css/battle.css?v=590205395580" rel="stylesheet">
+    <link href="/app/css/ranked.css?v=e3d08f53aa8b" rel="stylesheet">
+  </head>
+  <body class="dungeon-page ranked-page">
+    <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
+      <div class="container-fluid">
+        <a class="navbar-brand game-shell-brand" href="/" aria-label="Among Demons home">
+          <img src="/app/images/amongdemons_logo_250x250.png" alt="Among Demons logo" class="logo-nav" width="40" height="40" loading="eager">
+          <span class="game-shell-brand-copy"><span class="game-shell-brand-name">Among Demons</span></span>
+        </a>
+        <button class="navbar-toggler game-shell-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#rankedGameNav" aria-controls="rankedGameNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="rankedGameNav">
+          <ul class="navbar-nav game-shell-tabs me-auto">
+            <li class="nav-item"><a class="nav-link game-nav-link" href="/dungeon" data-game-route="dungeon"><span class="game-nav-icon"><i data-lucide="swords"></i></span><span>Dungeon</span></a></li>
+            <li class="nav-item"><a class="nav-link game-nav-link active" href="/ranked" data-game-route="ranked" aria-current="page"><span class="game-nav-icon"><i data-lucide="trophy"></i></span><span>Ranked</span></a></li>
+            <li class="nav-item"><a class="nav-link game-nav-link" href="/world" data-game-route="world"><span class="game-nav-icon"><i data-lucide="map"></i></span><span>World</span></a></li>
+            <li class="nav-item"><a class="nav-link game-nav-link" href="/camp" data-game-route="camp"><span class="game-nav-icon"><i data-lucide="tent"></i></span><span>Camp</span></a></li>
+            <li class="nav-item"><a class="nav-link game-nav-link" href="/bag" data-game-route="bag"><span class="game-nav-icon"><i data-lucide="amphora"></i></span><span>Bag</span></a></li>
+            <li class="nav-item"><a class="nav-link game-nav-link" href="/collection" data-game-route="collection"><span class="game-nav-icon"><i data-lucide="grid-3x3"></i></span><span>Collection</span></a></li>
+            <li class="nav-item"><a class="nav-link game-nav-link" href="/rankings" data-game-route="rankings"><span class="game-nav-icon"><i data-lucide="trophy"></i></span><span>Rankings</span></a></li>
+            <li class="nav-item dropdown game-nav-dropdown">
+              <button class="nav-link game-nav-link game-nav-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" data-game-sections="demons bosses events" aria-expanded="false" aria-label="Open guides navigation"><span class="game-nav-icon"><i data-lucide="scroll-text"></i></span><span>Guides</span><span class="game-nav-caret"><i data-lucide="chevron-down" aria-hidden="true"></i></span></button>
+              <ul class="dropdown-menu game-nav-dropdown-menu"><li><a class="dropdown-item game-nav-dropdown-item" href="/demons" data-game-route="demons"><span class="game-nav-icon"><i data-lucide="skull"></i></span><span>Demons</span></a></li><li><a class="dropdown-item game-nav-dropdown-item" href="/bosses" data-game-route="bosses"><span class="game-nav-icon"><i data-lucide="shield-alert"></i></span><span>Bosses</span></a></li><li><a class="dropdown-item game-nav-dropdown-item" href="/events" data-game-route="events"><span class="game-nav-icon"><i data-lucide="sparkles"></i></span><span>Events</span></a></li></ul>
+            </li>
+          </ul>
+          <div class="nav-auth-actions game-shell-auth-actions d-none" data-nav-auth-actions>
+            <a class="btn btn-outline-light btn-sm" href="/login">Login</a>
+            <a class="btn btn-primary btn-sm" href="/register">Register</a>
+          </div>
+          <div class="nav-account d-none" data-nav-account>
+            <span class="nav-balance" data-nav-souls role="status" aria-live="polite" aria-atomic="true" title="Soul balance">
+              <span class="soul-amount nav-soul-amount" aria-label="Souls loading"><img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" width="16" height="16" loading="lazy" aria-hidden="true"><span class="soul-amount-value">-</span><span class="soul-amount-label">Souls</span></span>
+            </span>
+            <a class="nav-player" href="/camp" title="Go to camp">
+              <span class="nav-player-avatar" aria-hidden="true"><img src="/app/images/demons/map/1.webp" alt="" width="34" height="34" loading="eager" data-nav-profile-image></span>
+              <span class="nav-player-copy"><span data-nav-player-name></span><small data-nav-player-level>Level -</small></span>
+            </a>
+            <a class="nav-settings-link" href="/settings" title="Settings" aria-label="Settings"><i data-lucide="settings"></i></a>
+            <button class="btn nav-logout-btn" id="logoutBtn" type="button" title="Logout" aria-label="Logout"><i data-lucide="log-out"></i></button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container-fluid dungeon-main px-3 px-lg-4">
+      <section class="dungeon-layout">
+        <div class="card dungeon-battle-card">
+          <div class="card-body dungeon-battle-body">
+            <div class="tab-content dungeon-tab-content">
+              <div class="tab-pane fade show active" id="combatPanel" role="tabpanel" aria-label="Combat" tabindex="0">
+                <div id="rankedMessage" class="alert d-none" role="alert"></div>
+                <div id="runLoading" class="empty-state dungeon-loading-state" aria-live="polite" aria-busy="true">
+                  <div class="dungeon-loading-mark" aria-hidden="true"></div>
+                  <div class="dungeon-loading-copy">
+                    <p class="mb-1">Opening Ranked...</p>
+                    <span>Restoring your seasonal run.</span>
+                  </div>
+                </div>
+                <div id="runEmpty" class="empty-state d-none"></div>
+                <div id="runPanel" class="d-none">
+                  <div class="dungeon-matchup dungeon-arena">
+                    <section class="battle-side battle-side-player" aria-label="Your Ranked team">
+                      <div class="battle-side-heading" id="teamSideTitle"><span>Your Team</span></div>
+                      <div id="teamGrid"></div>
+                    </section>
+                    <div class="vs-divider dungeon-vs" id="dungeonJoiner">
+                      <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
+                    </div>
+                    <section class="battle-side battle-side-enemy" aria-label="Ranked Reserve or opponent">
+                      <div class="battle-side-heading" id="enemySideTitle"><span>Reserve</span></div>
+                      <div id="enemyGrid"></div>
+                    </section>
+                  </div>
+                </div>
+              </div>
+              <div class="tab-pane fade" id="battleLogPanel" role="tabpanel" aria-label="Fight Log" tabindex="0">
+                <div id="fightLog" class="fight-log text-muted">Battle actions will appear here.</div>
+              </div>
+            </div>
+            <div id="rankedBottomPanel" class="dungeon-bottom-panel d-none">
+              <section id="rankedPreparation" class="ranked-preparation" aria-label="Ranked demon selection"></section>
+              <section id="dungeonHandBar" class="dungeon-hand-bar is-battle-controls-mode d-none" aria-label="Battle controls">
+                <div id="dungeonBottomControls" class="dungeon-bottom-controls" role="group" aria-label="Battle playback controls"></div>
+              </section>
+              <section id="dungeonReplayLogBox" class="dungeon-replaylog-box d-none" role="group" aria-label="Fight review"></section>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="demonicPactOverlay" class="demonic-pact-overlay d-none" aria-label="Demonic Pacts" aria-live="polite">
+      <div class="demonic-pact-backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
+      <button
+        class="btn btn-outline-light demonic-pact-view-toggle"
+        id="demonicPactViewToggle"
+        type="button"
+        aria-controls="demonicPactStage"
+        aria-expanded="true"
+      >View Team</button>
+      <div class="demonic-pact-stage" id="demonicPactStage">
+        <div class="demonic-pact-stage-heading">
+          <span class="dungeon-phase-eyebrow">Ranked Progression</span>
+          <h2>Choose a Demonic Pact</h2>
+        </div>
+        <div id="rankedPactGrid" class="demonic-pact-grid"></div>
+      </div>
+    </div>
+    <script src="/app/dist/runtime.bundle.js?v=8a2f3080bcd3"></script>
+    <script src="/app/dist/ranked.bundle.js?v=b67305250115"></script>
+  </body>
+</html>

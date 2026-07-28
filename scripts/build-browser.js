@@ -8,6 +8,7 @@ const APP_DIR = path.join(ROOT, 'public', 'app');
 const OUT_DIR = path.join(APP_DIR, 'dist');
 const COMMON_SCRIPT_PATTERN = /\s*<script src="(?:https:\/\/cdn\.jsdelivr\.net\/npm\/bootstrap@5\.3\.2\/dist\/js\/bootstrap\.bundle\.min\.js|\/app\/js\/(?:lucide-subset|icons|api-config|session|steam|audio|navigation|demon-cards)\.js|\/app\/dist\/runtime\.bundle\.js)(?:\?v=[^"]+)?"><\/script>/g;
 const DUNGEON_SCRIPT_PATTERN = /<script(?: type="module")? src="(?:\/app\/js\/dungeon\.js|\/app\/dist\/dungeon\.bundle\.js)(?:\?v=[^"]+)?"><\/script>/;
+const RANKED_SCRIPT_PATTERN = /<script(?: type="module")? src="(?:\/app\/js\/ranked\.js|\/app\/dist\/ranked\.bundle\.js)(?:\?v=[^"]+)?"><\/script>/;
 const WORLD_SCRIPT_PATTERN = /<script(?: type="module")? src="(?:\/app\/js\/world-ui\.js|\/app\/dist\/world\.bundle\.js)(?:\?v=[^"]+)?"><\/script>/;
 
 async function main() {
@@ -15,22 +16,26 @@ async function main() {
 
   const runtime = await bundle(path.join(__dirname, 'browser-runtime-entry.js'));
   const dungeon = await bundle(path.join(APP_DIR, 'js', 'dungeon.js'));
+  const ranked = await bundle(path.join(APP_DIR, 'js', 'ranked.js'));
   const world = await bundle(path.join(APP_DIR, 'js', 'world-ui.js'));
   const runtimeHash = contentHash(runtime);
   const dungeonHash = contentHash(dungeon);
+  const rankedHash = contentHash(ranked);
   const worldHash = contentHash(world);
 
   fs.writeFileSync(path.join(OUT_DIR, 'runtime.bundle.js'), runtime);
   fs.writeFileSync(path.join(OUT_DIR, 'dungeon.bundle.js'), dungeon);
+  fs.writeFileSync(path.join(OUT_DIR, 'ranked.bundle.js'), ranked);
   fs.writeFileSync(path.join(OUT_DIR, 'world.bundle.js'), world);
   fs.writeFileSync(path.join(OUT_DIR, 'manifest.json'), `${JSON.stringify({
     runtime: `/app/dist/runtime.bundle.js?v=${runtimeHash}`,
     dungeon: `/app/dist/dungeon.bundle.js?v=${dungeonHash}`,
+    ranked: `/app/dist/ranked.bundle.js?v=${rankedHash}`,
     world: `/app/dist/world.bundle.js?v=${worldHash}`
   }, null, 2)}\n`);
 
-  updateHtmlFiles(runtimeHash, dungeonHash, worldHash);
-  console.log(`Browser bundles: runtime ${formatBytes(runtime.length)}, dungeon ${formatBytes(dungeon.length)}, world ${formatBytes(world.length)}.`);
+  updateHtmlFiles(runtimeHash, dungeonHash, rankedHash, worldHash);
+  console.log(`Browser bundles: runtime ${formatBytes(runtime.length)}, dungeon ${formatBytes(dungeon.length)}, ranked ${formatBytes(ranked.length)}, world ${formatBytes(world.length)}.`);
 }
 
 async function bundle(entryPoint) {
@@ -46,9 +51,10 @@ async function bundle(entryPoint) {
   return result.outputFiles[0].contents;
 }
 
-function updateHtmlFiles(runtimeHash, dungeonHash, worldHash) {
+function updateHtmlFiles(runtimeHash, dungeonHash, rankedHash, worldHash) {
   const runtimeTag = `<script src="/app/dist/runtime.bundle.js?v=${runtimeHash}"></script>`;
   const dungeonTag = `<script src="/app/dist/dungeon.bundle.js?v=${dungeonHash}"></script>`;
+  const rankedTag = `<script src="/app/dist/ranked.bundle.js?v=${rankedHash}"></script>`;
   const worldTag = `<script src="/app/dist/world.bundle.js?v=${worldHash}"></script>`;
 
   for (const name of fs.readdirSync(APP_DIR).filter((entry) => entry.endsWith('.html'))) {
@@ -64,6 +70,7 @@ function updateHtmlFiles(runtimeHash, dungeonHash, worldHash) {
       return `\n    ${runtimeTag}`;
       });
     html = html.replace(DUNGEON_SCRIPT_PATTERN, dungeonTag);
+    html = html.replace(RANKED_SCRIPT_PATTERN, rankedTag);
     html = html.replace(WORLD_SCRIPT_PATTERN, worldTag);
     html = html.replace(
       /(["'])(\/app\/(?:css|js|dist)\/[^"'?]+\.(?:css|js))(?:\?v=[^"']+)?\1/g,

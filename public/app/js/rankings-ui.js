@@ -5,7 +5,7 @@
   const session = window.AmongDemons.getSession();
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const currentUsername = session.player && session.player.username;
-  const pathSorts = new Set(['floor', 'level', 'souls', 'pvp']);
+  const pathSorts = new Set(['floor', 'level', 'souls', 'pvp', 'ranked']);
   const topRankIcons = ['crown', 'trophy', 'medal'];
   let currentSort = getInitialSort();
   let activeLoadId = 0;
@@ -27,6 +27,8 @@
     elements.statPlayers = document.querySelector('[data-rank-stat="players"]');
     elements.statSouls = document.querySelector('[data-rank-stat="souls"]');
     elements.statPvpBattles = document.querySelector('[data-rank-stat="pvpBattles"]');
+    elements.floorColumn = document.querySelector('[data-rank-column="floor"]');
+    elements.metricColumn = document.querySelector('[data-rank-column="metric"]');
   }
 
   function bindSortLinks() {
@@ -87,6 +89,8 @@
 
   function renderRows(players, stats = {}) {
     updateStats(players, stats);
+    if (elements.floorColumn) elements.floorColumn.textContent = currentSort === 'ranked' ? 'Ranked Floor' : 'Top Floor';
+    if (elements.metricColumn) elements.metricColumn.textContent = currentSort === 'ranked' ? 'Rank' : 'Souls';
 
     elements.body.innerHTML = players.length
       ? players.map((player, index) => renderPlayerRow(player, index)).join('')
@@ -100,6 +104,11 @@
     const souls = Number(player.souls) || 0;
     const pvpWins = Math.max(0, Number(player.pvpWins) || 0);
     const pvpLosses = Math.max(0, Number(player.pvpLosses) || 0);
+    const isRanked = currentSort === 'ranked';
+    const rankedFloor = Math.max(0, Number(player.rankedHighestFloor) || 0);
+    const rankedRating = Math.max(0, Number(player.rankedRating) || 0);
+    const rankedVictories = Math.max(0, Number(player.rankedVictories) || 0);
+    const rankedRuns = Math.max(0, Number(player.rankedRuns) || 0);
     const hunterHref = window.AmongDemons.appUrl(`/hunter/${encodeURIComponent(player.username || '')}`);
     const topRankIcon = topRankIcons[index] || '';
     const rowClasses = [
@@ -119,16 +128,20 @@
         <td class="rank-hunter-cell" data-label="Hunter">
           <span class="rank-hunter">
             <a class="rank-hunter-name rank-hunter-name-link" href="${escapeHtml(hunterHref)}">${escapeHtml(player.username)}</a>
-            <small class="rank-hunter-meta">Level ${formatNumber(level)} &middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}</small>
+            <small class="rank-hunter-meta">${isRanked
+              ? `${formatNumber(rankedVictories)} victories &middot; ${formatNumber(rankedRuns)} runs`
+              : `Level ${formatNumber(level)} &middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`}</small>
           </span>
         </td>
         <td class="rank-floor-cell" data-label="Highest Floor">
           <span class="rank-floor">
-            <span class="rank-floor-value">${formatNumber(floor)}</span>
+            <span class="rank-floor-value">${formatNumber(isRanked ? rankedFloor : floor)}</span>
             <span class="rank-floor-label">floor</span>
           </span>
         </td>
-        <td data-label="Souls">${renderSoulAmount(formatNumber(souls), {
+        <td data-label="${isRanked ? 'Rank' : 'Souls'}">${isRanked
+          ? `<span class="rank-metric"><strong>${escapeHtml(player.rankedDivision || 'Bronze II')}</strong><small>${formatNumber(rankedRating)} RP</small></span>`
+          : renderSoulAmount(formatNumber(souls), {
           showLabel: false,
           className: 'rank-metric rank-metric-souls',
           ariaLabel: `${formatNumber(souls)} Souls`

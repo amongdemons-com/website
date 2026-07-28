@@ -1,0 +1,633 @@
+.ranked-page .dungeon-battle-card {
+  min-height: 0;
+}
+
+.ranked-page .dungeon-battle-body {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.ranked-page #runPanel,
+.ranked-page .dungeon-arena {
+  min-height: 0;
+}
+
+.ranked-mobile-status {
+  display: none;
+}
+
+.ranked-rsoul-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: .24rem;
+  color: #fff;
+  font-size: inherit;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ranked-rsoul-balance .ad-icon {
+  width: .88rem;
+  height: .88rem;
+  color: var(--ad-soul, #55ffff);
+}
+
+.ranked-rsoul-value {
+  color: #fff;
+}
+
+.ranked-header-separator {
+  color: rgba(255, 255, 255, .58);
+}
+
+/* Ranked uses Dungeon's bottom-panel height contract. */
+.ranked-page #rankedBottomPanel {
+  --ranked-offer-card-size: var(--dungeon-bottom-panel-content-height);
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  height: var(--dungeon-bottom-panel-height);
+  margin-top: .35rem;
+}
+
+.ranked-preparation {
+  box-sizing: border-box;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: var(--dungeon-bottom-panel-content-height) minmax(0, 1fr) var(--dungeon-bottom-panel-content-height);
+  align-items: stretch;
+  gap: .55rem;
+  width: 100%;
+  height: var(--dungeon-bottom-panel-height);
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(232, 199, 106, .28);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(7, 18, 20, .88), rgba(3, 9, 11, .82)),
+    radial-gradient(circle at 50% 0%, rgba(232, 199, 106, .08), transparent 54%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .04),
+    0 -14px 34px rgba(0, 0, 0, .24);
+  padding: var(--dungeon-bottom-panel-padding-y) .4rem;
+  overflow: hidden;
+}
+
+.ranked-offer-area {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: var(--dungeon-bottom-panel-content-height);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ranked-offer-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, var(--ranked-offer-card-size)));
+  align-items: end;
+  justify-content: center;
+  gap: .42rem;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ranked-offer {
+  position: relative;
+  width: var(--ranked-offer-card-size);
+  height: var(--ranked-offer-card-size);
+  min-width: 0;
+  min-height: 0;
+}
+
+.ranked-offer .dungeon-demon-card {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ranked-offer-cost,
+.ranked-action-cost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .18rem;
+  border: 1px solid rgba(232, 199, 106, .42);
+  border-radius: 999px;
+  background: rgba(3, 9, 11, .9);
+  color: #fff2ad;
+  font-size: clamp(.52rem, .72vw, .68rem);
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .42);
+}
+
+.ranked-offer-cost {
+  position: absolute;
+  top: .28rem;
+  right: .28rem;
+  z-index: 4;
+  min-height: 1.25rem;
+  padding: .2rem .34rem;
+  pointer-events: none;
+}
+
+.ranked-offer-cost .ad-icon,
+.ranked-action-cost .ad-icon {
+  width: .78rem;
+  height: .78rem;
+}
+
+.ranked-offer-cost.is-purchased {
+  border-color: rgba(111, 214, 189, .52);
+  color: #b6f5d6;
+}
+
+.ranked-offer.is-unaffordable .ranked-offer-cost {
+  border-color: rgba(226, 80, 65, .58);
+  color: #ffaaa1;
+}
+
+.ranked-page .dungeon-demon-card.is-ranked-combine-ready {
+  z-index: 2;
+  animation: team-upgrade-gold-pulse 1.4s ease-in-out infinite;
+}
+
+.ranked-page .dungeon-demon-card.is-ranked-combine-ready > .dungeon-team-upgrade-indicator {
+  position: absolute;
+  top: .18rem;
+  left: 50%;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .04rem;
+  color: #fff1a8;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 1px 1px rgba(0, 0, 0, .96))
+    drop-shadow(0 0 4px rgba(255, 184, 28, .88));
+  animation: team-upgrade-arrows-float 900ms ease-in-out infinite;
+}
+
+.ranked-page .dungeon-demon-card.is-ranked-combine-ready > .dungeon-team-upgrade-indicator .dungeon-team-upgrade-arrow {
+  width: clamp(.68rem, 13%, .88rem);
+  height: clamp(.68rem, 13%, .88rem);
+  flex: none;
+}
+
+.ranked-page .dungeon-demon-card.is-ranked-upgrading {
+  animation: ranked-upgrade-card-flash 720ms ease-out both;
+}
+
+.ranked-combination-nova {
+  position: fixed;
+  z-index: 10055;
+  width: var(--ranked-combination-nova-size, 8rem);
+  height: var(--ranked-combination-nova-size, 8rem);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: ranked-combination-nova 820ms ease-out both;
+}
+
+.ranked-combination-nova-ring,
+.ranked-combination-nova-core,
+.ranked-combination-nova-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+}
+
+.ranked-combination-nova-ring {
+  width: 42%;
+  height: 42%;
+  border: 2px solid rgba(255, 238, 160, .92);
+  border-radius: 50%;
+  box-shadow:
+    0 0 8px rgba(255, 212, 76, .82),
+    inset 0 0 8px rgba(255, 255, 255, .6);
+  transform: translate(-50%, -50%) scale(.2);
+  animation: ranked-combination-ring 680ms ease-out both;
+}
+
+.ranked-combination-nova-ring.is-delayed {
+  animation-delay: 90ms;
+}
+
+.ranked-combination-nova-core {
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: #fff8cf;
+  box-shadow:
+    0 0 10px #fff,
+    0 0 22px rgba(250, 197, 28, .95);
+  transform: translate(-50%, -50%);
+  animation: ranked-combination-core 640ms ease-out both;
+}
+
+.ranked-combination-nova-ray {
+  width: 46%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 248, 207, .96), transparent);
+  box-shadow: 0 0 5px rgba(250, 197, 28, .88);
+  transform-origin: 0 50%;
+  transform: rotate(var(--angle)) translateX(.3rem) scaleX(.1);
+  animation: ranked-combination-ray 620ms ease-out both;
+}
+
+@keyframes ranked-upgrade-card-flash {
+  0% {
+    filter: brightness(1);
+  }
+  34% {
+    filter: brightness(1.45) saturate(1.22);
+    box-shadow: 0 0 28px rgba(250, 197, 28, .72);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes ranked-combination-nova {
+  0%,
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ranked-combination-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.15);
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.1);
+  }
+}
+
+@keyframes ranked-combination-core {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.2);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(.4);
+  }
+}
+
+@keyframes ranked-combination-ray {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(.15rem) scaleX(.08);
+  }
+  28% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(.65rem) scaleX(1);
+  }
+}
+
+.ranked-side-action {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  justify-self: center;
+  width: var(--dungeon-bottom-panel-content-height);
+  height: var(--dungeon-bottom-panel-content-height);
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+  gap: .35rem;
+  padding: .45rem;
+  font-size: clamp(.72rem, .9vw, .88rem);
+  white-space: normal;
+}
+
+.ranked-action-cost {
+  min-height: 1.35rem;
+  padding: .22rem .38rem;
+}
+
+.ranked-soul-spend-float {
+  position: fixed;
+  z-index: 10050;
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  color: #fff2ad;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  line-height: 1;
+  text-shadow:
+    0 2px 2px rgba(0, 0, 0, .9),
+    0 0 12px rgba(232, 199, 106, .62);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, .55));
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: ranked-soul-spend-float 1100ms ease-out forwards;
+}
+
+.ranked-soul-spend-float .ad-icon {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.ranked-soul-spend-float.is-gain {
+  color: #b6f5d6;
+  text-shadow:
+    0 2px 2px rgba(0, 0, 0, .9),
+    0 0 12px rgba(111, 214, 189, .72);
+}
+
+@keyframes ranked-soul-spend-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(.78);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -65%) scale(1.08);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -260%) scale(.96);
+  }
+}
+
+.ranked-side-action .ad-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.ranked-hand-empty {
+  display: grid;
+  grid-column: 1 / -1;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: rgba(243, 220, 147, .62);
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ranked-reserve-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  width: 100%;
+  max-height: 100%;
+  min-height: 0;
+}
+
+.ranked-page .battle-side > #teamGrid,
+.ranked-page .battle-side > #enemyGrid {
+  /*
+   * The shared battle grid normally derives card size from viewport units.
+   * Ranked also reserves a fixed bottom strip, so the remaining arena height
+   * can be shorter than three viewport-sized rows. Make the actual grid host a
+   * size container and cap each square card against its available height.
+   */
+  container-type: size;
+}
+
+.ranked-page .battle-side .battle-formation-grid {
+  --ranked-formation-padding: clamp(.45rem, .8vw, .68rem);
+  --dungeon-demon-card-width: min(
+    15.5rem,
+    11.5vw,
+    calc(
+      (
+        100cqh
+        - var(--dungeon-formation-gap)
+        - var(--dungeon-formation-gap)
+        - var(--ranked-formation-padding)
+        - var(--ranked-formation-padding)
+        - 2px
+      ) / 3
+    )
+  );
+  --dungeon-demon-card-height: var(--dungeon-demon-card-width);
+  padding: var(--ranked-formation-padding);
+}
+
+.battle-side .ranked-reserve-formation {
+  grid-template-rows: repeat(2, minmax(0, var(--dungeon-demon-card-height)));
+  margin: 0 auto;
+}
+
+.ranked-reserve-formation .formation-empty::before {
+  content: none;
+}
+
+.battle-side-enemy.is-ranked-reserve .battle-side-heading {
+  color: #86e8b2;
+}
+
+.battle-side-enemy.is-ranked-reserve .ranked-reserve-formation {
+  border-color: rgba(111, 214, 189, .32);
+  background:
+    linear-gradient(180deg, rgba(6, 18, 21, .72), rgba(3, 9, 11, .58)),
+    radial-gradient(circle at 50% 0%, rgba(111, 214, 189, .1), transparent 60%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .05),
+    0 0 28px rgba(111, 214, 189, .08),
+    0 20px 46px rgba(0, 0, 0, .3);
+}
+
+.battle-side-enemy.is-ranked-reserve .ranked-reserve-formation .formation-slot.is-empty {
+  border-color: rgba(111, 214, 189, .18);
+}
+
+.battle-side-enemy.is-ranked-reserve .ranked-reserve-formation .formation-empty {
+  border-color: rgba(111, 214, 189, .24);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(161, 212, 201, .1), transparent 42%),
+    linear-gradient(180deg, rgba(8, 23, 26, .38), rgba(0, 0, 0, .24));
+  color: rgba(207, 226, 220, .44);
+}
+
+.battle-side-enemy.is-ranked-reserve .ranked-reserve-formation .formation-slot-placeholder-img {
+  filter: drop-shadow(0 0 12px rgba(207, 226, 220, .14));
+}
+
+.ranked-reserve-buffs-shell {
+  --dungeon-bottom-panel-content-height: clamp(4.75rem, 12vh, 6.5rem);
+  width: min(100%, calc(var(--dungeon-demon-card-width, 8rem) * 3 + var(--dungeon-formation-gap, .5rem) * 2 + 1rem));
+  max-width: 100%;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.ranked-reserve-buffs {
+  display: flex;
+  flex-flow: row wrap;
+  align-content: start;
+  justify-content: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.ranked-page #rankedBottomPanel.is-ranked-combat:not(.is-battle-active) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.ranked-page .battle-side-heading {
+  min-height: 1.35rem;
+}
+
+.ranked-offer.is-drag-over,
+.ranked-offer-area.is-drag-over {
+  border-color: rgba(250, 197, 28, .86);
+  box-shadow: 0 0 0 2px rgba(250, 197, 28, .24), 0 0 18px rgba(250, 197, 28, .2);
+}
+
+.ranked-page .pointer-drag-ghost {
+  transform: translate(-50%, -50%) rotate(1deg) scale(.98);
+}
+
+.ranked-combine-notice {
+  color: var(--bs-warning);
+  font-weight: 700;
+}
+
+.ranked-end-card {
+  max-width: 560px;
+  margin: 2rem auto;
+  text-align: center;
+}
+
+.ranked-end-card h1 {
+  font-family: var(--font-heading, Cinzel, serif);
+}
+
+@media (max-width: 991.98px) {
+  .ranked-preparation {
+    gap: .35rem;
+  }
+
+  .ranked-offer-grid {
+    justify-content: start;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .ranked-page #rankedBottomPanel {
+    --ranked-offer-card-size: clamp(3.75rem, 16.4vw, 4rem);
+    height: calc(var(--ranked-offer-card-size) + var(--dungeon-bottom-panel-padding-y) * 2 + 2px);
+  }
+
+  .ranked-preparation {
+    grid-template-columns: var(--ranked-offer-card-size) minmax(0, 1fr) var(--ranked-offer-card-size);
+    grid-template-rows: var(--ranked-offer-card-size);
+    height: calc(var(--ranked-offer-card-size) + var(--dungeon-bottom-panel-padding-y) * 2 + 2px);
+    gap: .24rem;
+  }
+
+  .ranked-offer-area {
+    grid-column: 2;
+    grid-row: 1;
+    height: var(--ranked-offer-card-size);
+  }
+
+  .ranked-offer-grid {
+    gap: .3rem;
+  }
+
+  .ranked-side-action {
+    width: var(--ranked-offer-card-size);
+    height: var(--ranked-offer-card-size);
+    gap: .18rem;
+    padding: .25rem;
+    font-size: .64rem;
+  }
+
+  .ranked-action-cost {
+    min-height: 1.05rem;
+    padding: .12rem .24rem;
+    font-size: .54rem;
+  }
+
+  .ranked-side-action .ad-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+}
+
+@media (max-width: 575.98px) {
+  .ranked-desktop-status {
+    display: none;
+  }
+
+  .ranked-mobile-status {
+    display: inline;
+  }
+
+  .ranked-rsoul-balance {
+    font-size: .6rem;
+  }
+
+  .ranked-reserve-panel {
+    gap: .3rem;
+  }
+
+  .ranked-reserve-buffs-shell {
+    --dungeon-bottom-panel-content-height: clamp(2.8rem, 10vw, 3.4rem);
+  }
+
+  .ranked-reserve-formation .formation-slot {
+    order: initial !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ranked-page .dungeon-demon-card.is-ranked-combine-ready {
+    animation: none;
+    border-color: rgba(255, 232, 130, .78);
+    box-shadow:
+      0 0 0 1px rgba(255, 213, 79, .12),
+      0 0 18px rgba(255, 184, 28, .32);
+  }
+
+  .ranked-page .dungeon-demon-card.is-ranked-combine-ready > .dungeon-team-upgrade-indicator,
+  .ranked-page .dungeon-demon-card.is-ranked-upgrading,
+  .ranked-combination-nova,
+  .ranked-combination-nova-ring,
+  .ranked-combination-nova-core,
+  .ranked-combination-nova-ray {
+    animation: none;
+  }
+}

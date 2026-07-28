@@ -49,6 +49,7 @@ router.use(require('./runs/recruit'));
 router.use(require('./runs/cashout'));
 router.use(require('./runs/end'));
 router.use(require('./world'));
+router.use(require('./ranked'));
 router.use(require('./leaderboard'));
 router.use(require('./hunters'));
 

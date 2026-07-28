@@ -575,16 +575,20 @@ function renderBattleControlsOverlay(html) {
 // Replay + fight-log buttons live in their own box between the hand bar and the
 // reward box (replay on top, log on bottom). The buttons are always present and
 // just toggle disabled so the box keeps a stable size across run states.
-function renderReplayLogBox(canReplay, canViewLog) {
-  if (!elements.dungeonReplayLogBox) return false;
-  return setElementHtml(elements.dungeonReplayLogBox, `
+function renderReplayLogButtons(canReplay, canViewLog) {
+  return `
     <button class="btn btn-glass-muted btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight" ${canReplay ? '' : 'disabled'}>
       ${renderIcon('replay')}
     </button>
     <button class="btn btn-glass-muted btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log" ${canViewLog ? '' : 'disabled'}>
       ${renderIcon('log')}
     </button>
-  `);
+  `;
+}
+
+function renderReplayLogBox(canReplay, canViewLog) {
+  if (!elements.dungeonReplayLogBox) return false;
+  return setElementHtml(elements.dungeonReplayLogBox, renderReplayLogButtons(canReplay, canViewLog));
 }
 
 function renderFightLogActions() {
@@ -956,6 +960,7 @@ export {
   renderFightLogActions,
   renderDungeonCenterActions,
   renderDungeonMobileFightBox,
+  renderReplayLogButtons,
   renderBattlePlaybackControls,
   renderBattleSpeedControl,
   renderDemonicPactReturnControl,

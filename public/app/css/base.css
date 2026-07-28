@@ -9795,6 +9795,15 @@ body.hunter-page {
     gap: 0.65rem;
 }
 
+/* Ranked remains directly accessible while its navigation entry is hidden during setup. */
+body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
+    display: none !important;
+}
+
+.hunter-stat-grid-ranked {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .hunter-stat {
     display: grid;
     align-content: center;
@@ -10055,6 +10064,10 @@ body.hunter-page {
 
 .hunter-stat-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hunter-stat-grid-ranked {
+        grid-template-columns: minmax(0, 1fr);
     }
 
 .hunter-stat {

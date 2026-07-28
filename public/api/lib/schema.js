@@ -7,6 +7,7 @@ const BASELINE_SCHEMA_MIGRATION = '20260722_baseline_schema_v1';
 const PERFORMANCE_INDEXES_MIGRATION = '20260722_performance_indexes_v3';
 const WORLD_MERCHANT_SCHEMA_MIGRATION = '20260723_world_merchant_schema_v1';
 const WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION = '20260723_world_merchant_bribe_schema_v1';
+const RANKED_SCHEMA_MIGRATION = '20260728_ranked_schema_v2';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -636,6 +637,131 @@ async function addWorldMerchantBribeSchema() {
   );
 }
 
+async function addRankedSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ranked_seasons (
+      id VARCHAR(48) NOT NULL PRIMARY KEY,
+      name VARCHAR(96) NOT NULL,
+      starts_at TIMESTAMP NOT NULL,
+      ends_at TIMESTAMP NOT NULL,
+      rules_version VARCHAR(48) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_ranked_seasons_window (starts_at, ends_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ranked_ratings (
+      player_id VARCHAR(255) NOT NULL,
+      season_id VARCHAR(48) NOT NULL,
+      rating INT NOT NULL DEFAULT 1000,
+      highest_floor INT UNSIGNED NOT NULL DEFAULT 0,
+      victories INT UNSIGNED NOT NULL DEFAULT 0,
+      runs_played INT UNSIGNED NOT NULL DEFAULT 0,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, season_id),
+      INDEX idx_ranked_ratings_season_rating (season_id, rating DESC, highest_floor DESC)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ranked_runs (
+      id VARCHAR(36) NOT NULL PRIMARY KEY,
+      player_id VARCHAR(255) NOT NULL,
+      season_id VARCHAR(48) NOT NULL,
+      seed INT UNSIGNED NOT NULL,
+      status VARCHAR(24) NOT NULL DEFAULT 'active',
+      floor INT UNSIGNED NOT NULL DEFAULT 1,
+      lives TINYINT UNSIGNED NOT NULL DEFAULT 3,
+      rating_start INT NOT NULL DEFAULT 1000,
+      rating_delta INT NOT NULL DEFAULT 0,
+      state LONGTEXT NOT NULL,
+      locked_bonuses LONGTEXT NOT NULL,
+      rules_version VARCHAR(48) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      ended_at TIMESTAMP NULL,
+      INDEX idx_ranked_runs_player_status (player_id, status, updated_at DESC),
+      INDEX idx_ranked_runs_season_floor (season_id, floor, status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ranked_opponent_snapshots (
+      id VARCHAR(36) NOT NULL PRIMARY KEY,
+      player_id VARCHAR(255) NOT NULL,
+      season_id VARCHAR(48) NOT NULL,
+      floor INT UNSIGNED NOT NULL,
+      rating INT NOT NULL,
+      hunter_name VARCHAR(64) NOT NULL,
+      snapshot LONGTEXT NOT NULL,
+      combat_version VARCHAR(48) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_ranked_snapshots_match (season_id, floor, rating, created_at),
+      INDEX idx_ranked_snapshots_player (player_id, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ranked_generated_opponents (
+      id VARCHAR(36) NOT NULL PRIMARY KEY,
+      season_id VARCHAR(48) NOT NULL,
+      floor INT UNSIGNED NOT NULL,
+      rating_bracket INT NOT NULL,
+      variant TINYINT UNSIGNED NOT NULL,
+      snapshot LONGTEXT NOT NULL,
+      combat_version VARCHAR(48) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE INDEX uniq_ranked_generated_variant (season_id, floor, rating_bracket, variant),
+      INDEX idx_ranked_generated_floor (season_id, floor, rating_bracket)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ranked_opponent_history (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      player_id VARCHAR(255) NOT NULL,
+      season_id VARCHAR(48) NOT NULL,
+      opponent_key VARCHAR(48) NOT NULL,
+      floor INT UNSIGNED NOT NULL,
+      served_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_ranked_history_player_floor (player_id, season_id, floor, served_at),
+      INDEX idx_ranked_history_opponent (opponent_key)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ranked_action_receipts (
+      player_id VARCHAR(255) NOT NULL,
+      action_id VARCHAR(64) NOT NULL,
+      run_id VARCHAR(36) NULL,
+      action_type VARCHAR(32) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, action_id),
+      INDEX idx_ranked_action_run (run_id, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  for (const [table, columns] of Object.entries({
+    ranked_seasons: ['id'],
+    ranked_ratings: ['player_id', 'season_id'],
+    ranked_runs: ['player_id', 'season_id'],
+    ranked_opponent_snapshots: ['player_id', 'season_id'],
+    ranked_generated_opponents: ['season_id'],
+    ranked_opponent_history: ['player_id', 'season_id'],
+    ranked_action_receipts: ['player_id']
+  })) {
+    for (const column of columns) {
+      const length = column === 'player_id' ? 255 : 48;
+      await normalizeUtf8Column(
+        table,
+        column,
+        `VARCHAR(${length}) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL`
+      );
+    }
+  }
+}
+
 async function initializeSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -648,6 +774,7 @@ async function initializeSchema() {
   await runMigrationOnce(PERFORMANCE_INDEXES_MIGRATION, addPerformanceIndexes);
   await runMigrationOnce(WORLD_MERCHANT_SCHEMA_MIGRATION, addWorldMerchantSchema);
   await runMigrationOnce(WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION, addWorldMerchantBribeSchema);
+  await runMigrationOnce(RANKED_SCHEMA_MIGRATION, addRankedSchema);
 }
 
 function ensureSchemaReady() {

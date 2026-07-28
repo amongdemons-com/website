@@ -5,6 +5,8 @@ const { isValidUsername, normalizeUsername } = require('./usernames');
 const { getActiveWorldTeam } = require('./world-combat');
 const worldMap = require('../data/map.json');
 const { getDemonImageUrl } = require('./demon-images');
+const { getOrCreateCurrentSeason } = require('./ranked-runs');
+const { getDivision } = require('./ranked-rules');
 
 const WORLD_SPAWN = worldMap.spawn || { x: 0, y: 0 };
 
@@ -47,9 +49,10 @@ async function getPublicHunterProfile(rawUsername) {
     level: Math.max(1, Number(row.level) || 1),
     xp: Math.max(0, Number(row.xp) || 0)
   };
-  const [worldTeam, buffs] = await Promise.all([
+  const [worldTeam, buffs, ranked] = await Promise.all([
     getActiveWorldTeam(row.id),
-    resolveActivePlayerCombatBuffs(player)
+    resolveActivePlayerCombatBuffs(player),
+    getHunterRankedRecord(row.id)
   ]);
   const visualWorldTeam = applyPreBattleBuffs(worldTeam, { activeBuffs: buffs });
 
@@ -70,7 +73,83 @@ async function getPublicHunterProfile(rawUsername) {
     },
     coordinates: serializeCoordinates(row),
     worldTeam: visualWorldTeam.map(serializeTeamMember),
-    buffs
+    buffs,
+    ranked
+  };
+}
+
+async function getHunterRankedRecord(playerId) {
+  const season = await getOrCreateCurrentSeason();
+  const [rows] = await db.query(
+    `SELECT rr.rating,
+            rr.highest_floor AS highestFloor,
+            rr.victories,
+            rr.runs_played AS runsPlayed,
+            p.level,
+            p.username
+     FROM ranked_ratings rr
+     INNER JOIN players p ON p.id = rr.player_id
+     WHERE rr.player_id = ? AND rr.season_id = ?
+     LIMIT 1`,
+    [playerId, season.id]
+  );
+  if (!rows.length) return null;
+  const row = rows[0];
+  const rating = Math.max(0, Number(row.rating) || 0);
+  const [rankRows] = await db.query(
+    `SELECT COUNT(*) + 1 AS rankPosition
+     FROM ranked_ratings other
+     INNER JOIN players other_player ON other_player.id = other.player_id
+     WHERE other.season_id = ?
+       AND (
+         other.rating > ?
+         OR (other.rating = ? AND other.highest_floor > ?)
+         OR (
+           other.rating = ?
+           AND other.highest_floor = ?
+           AND other.victories > ?
+         )
+         OR (
+           other.rating = ?
+           AND other.highest_floor = ?
+           AND other.victories = ?
+           AND other_player.level > ?
+         )
+         OR (
+           other.rating = ?
+           AND other.highest_floor = ?
+           AND other.victories = ?
+           AND other_player.level = ?
+           AND other_player.username < ?
+         )
+       )`,
+    [
+      season.id,
+      rating,
+      rating,
+      Number(row.highestFloor) || 0,
+      rating,
+      Number(row.highestFloor) || 0,
+      Number(row.victories) || 0,
+      rating,
+      Number(row.highestFloor) || 0,
+      Number(row.victories) || 0,
+      Number(row.level) || 1,
+      rating,
+      Number(row.highestFloor) || 0,
+      Number(row.victories) || 0,
+      Number(row.level) || 1,
+      row.username
+    ]
+  );
+  return {
+    season,
+    rating,
+    division: getDivision(rating).name,
+    highestFloor: Math.max(0, Number(row.highestFloor) || 0),
+    victories: Math.max(0, Number(row.victories) || 0),
+    runsPlayed: Math.max(0, Number(row.runsPlayed) || 0),
+    rank: Math.max(1, Number(rankRows[0]?.rankPosition) || 1)
   };
 }
 

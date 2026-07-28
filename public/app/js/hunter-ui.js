@@ -80,7 +80,8 @@
     elements.cta = document.querySelector('[data-hunter-cta]');
     elements.stats = {
       floor: document.querySelector('[data-hunter-stat="floor"]'),
-      coordinates: document.querySelector('[data-hunter-stat="coordinates"]')
+      coordinates: document.querySelector('[data-hunter-stat="coordinates"]'),
+      ranked: document.querySelector('[data-hunter-stat="ranked"]')
     };
   }
 
@@ -101,6 +102,9 @@
     setText(elements.subline, `Level ${formatNumber(level)} \u00b7 ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`);
     setText(elements.stats.floor, formatNumber(hunter.highestFloor || 0));
     setText(elements.stats.coordinates, formatCoordinates(coordinates));
+    setText(elements.stats.ranked, payload.ranked
+      ? `#${formatNumber(payload.ranked.rank)} ${payload.ranked.division}`
+      : 'Unranked');
 
     if (elements.avatar) {
       elements.avatar.src = profileImage;
