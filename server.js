@@ -24,6 +24,7 @@ const {
 } = require('./lib/seo-pages');
 const { renderHunterPage } = require('./lib/hunter-page');
 const { ensureSchemaReady } = require('./public/api/lib/schema');
+const { purgeDueAccounts } = require('./public/api/lib/account-deletion');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -246,6 +247,14 @@ if (require.main === module) {
 
 async function startServer() {
   await ensureSchemaReady();
+  await purgeDueAccounts();
+  const deletionCleanupTimer = setInterval(() => {
+    purgeDueAccounts().catch((error) => {
+      console.error('Unable to purge scheduled account deletions:', error);
+    });
+  }, 60 * 60 * 1000);
+  deletionCleanupTimer.unref();
+
   return app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });

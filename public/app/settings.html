@@ -8,8 +8,20 @@
     <meta name="description" content="Manage your private Among Demons player settings.">
     <link rel="canonical" href="https://amongdemons.com/settings">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
+    <script>
+      (() => {
+        const runtime = window.AmongDemonsRuntime || {};
+        const platform = String(runtime.platform || '').toLowerCase();
+        const isDesktopWrapper = Boolean(window.steamBridge)
+          || platform === 'steam'
+          || platform === 'electron'
+          || runtime.isElectron === true
+          || /\bElectron\b/i.test(window.navigator?.userAgent || '');
+        if (isDesktopWrapper) document.documentElement.dataset.desktopWrapper = '1';
+      })();
+    </script>
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=1bfa4a5e6dea" rel="stylesheet">
+    <link href="/app/css/base.css?v=20260728-account-security-v7" rel="stylesheet">
     <link href="/app/css/battle.css?v=590205395580" rel="stylesheet">
   </head>
   <body class="settings-page">
@@ -60,59 +72,6 @@
         <h1>Settings</h1>
       </header>
 
-      <section class="settings-section" aria-labelledby="profileSettingsHeading">
-        <header class="settings-section-header">
-          <span class="settings-section-icon" aria-hidden="true"><i data-lucide="user-round"></i></span>
-          <div>
-            <h2 id="profileSettingsHeading">Profile</h2>
-          </div>
-        </header>
-
-        <form id="usernameForm" class="settings-form" novalidate>
-          <div class="settings-field settings-profile-field">
-            <label class="form-label" for="settingsUsername">Username</label>
-            <div class="settings-username-row">
-              <input class="form-control" id="settingsUsername" name="username" autocomplete="username" minlength="3" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9]" title="Use 3 to 64 letters, numbers, hyphens, or underscores. Start and end with a letter or number." required disabled>
-              <button class="btn btn-primary settings-submit d-none" id="saveUsernameButton" type="submit" disabled>
-                <i data-lucide="save"></i>
-                <span id="saveUsernameLabel">Save</span>
-              </button>
-            </div>
-            <div class="d-none settings-message" id="settingsMessage" role="status" aria-live="polite" aria-atomic="true"></div>
-          </div>
-        </form>
-      </section>
-
-      <section class="settings-section" aria-labelledby="battleSettingsHeading">
-        <header class="settings-section-header">
-          <span class="settings-section-icon" aria-hidden="true"><i data-lucide="swords"></i></span>
-          <div>
-            <h2 id="battleSettingsHeading">Battle</h2>
-          </div>
-        </header>
-
-        <div class="settings-form settings-battle-form">
-          <div class="settings-field settings-toggle-field">
-            <div class="form-check form-switch settings-toggle">
-              <input class="form-check-input" type="checkbox" role="switch" id="settingsScreenShake" checked>
-              <label class="form-check-label" for="settingsScreenShake">Chu Perk screen shake</label>
-            </div>
-          </div>
-          <div class="settings-field settings-toggle-field">
-            <div class="form-check form-switch settings-toggle">
-              <input class="form-check-input" type="checkbox" role="switch" id="settingsCardShake" checked>
-              <label class="form-check-label" for="settingsCardShake">Card shake</label>
-            </div>
-          </div>
-          <div class="settings-field settings-toggle-field">
-            <div class="form-check form-switch settings-toggle">
-              <input class="form-check-input" type="checkbox" role="switch" id="settingsHideWinningAmbushes">
-              <label class="form-check-label" for="settingsHideWinningAmbushes">Do not show winning ambushes</label>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section class="settings-section" aria-labelledby="audioSettingsHeading">
         <header class="settings-section-header">
           <span class="settings-section-icon" aria-hidden="true"><i data-lucide="sliders-horizontal"></i></span>
@@ -151,9 +110,175 @@
           </div>
         </div>
       </section>
+
+      <section class="settings-section" aria-labelledby="battleSettingsHeading">
+        <header class="settings-section-header">
+          <span class="settings-section-icon" aria-hidden="true"><i data-lucide="swords"></i></span>
+          <div>
+            <h2 id="battleSettingsHeading">Battle</h2>
+          </div>
+        </header>
+
+        <div class="settings-form settings-battle-form">
+          <div class="settings-field settings-toggle-field">
+            <div class="form-check form-switch settings-toggle">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingsScreenShake" checked>
+              <label class="form-check-label" for="settingsScreenShake">Chu Perk screen shake</label>
+            </div>
+          </div>
+          <div class="settings-field settings-toggle-field">
+            <div class="form-check form-switch settings-toggle">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingsCardShake" checked>
+              <label class="form-check-label" for="settingsCardShake">Card shake</label>
+            </div>
+          </div>
+          <div class="settings-field settings-toggle-field">
+            <div class="form-check form-switch settings-toggle">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingsHideWinningAmbushes">
+              <label class="form-check-label" for="settingsHideWinningAmbushes">Do not show winning ambushes</label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="settings-section-separator" aria-hidden="true"></div>
+
+      <section class="settings-section settings-account-section" id="accountSettings" aria-labelledby="accountSettingsHeading">
+        <header class="settings-section-header">
+          <span class="settings-section-icon" aria-hidden="true"><i data-lucide="user-round"></i></span>
+          <div>
+            <h2 id="accountSettingsHeading">Account</h2>
+            <p>Manage sign-in methods and your hunter account.</p>
+          </div>
+        </header>
+
+        <div class="settings-account-groups">
+          <section class="settings-account-group" aria-labelledby="connectedAccountsHeading">
+            <div class="settings-account-heading">
+              <div>
+                <h3 id="connectedAccountsHeading">Connected accounts</h3>
+                <p>Use Google or Discord to sign in to this hunter.</p>
+              </div>
+            </div>
+
+            <div class="settings-provider-list">
+              <article class="settings-provider" data-provider-row="google">
+                <img class="settings-provider-logo" src="/app/images/assets/oauth-google.svg" alt="" width="24" height="24" aria-hidden="true">
+                <div class="settings-provider-copy">
+                  <strong>Google</strong>
+                  <span data-provider-status="google">Checking connection…</span>
+                </div>
+                <button class="btn btn-outline-light settings-provider-action" type="button" data-provider-action="google" disabled>
+                  Connect
+                </button>
+              </article>
+              <article class="settings-provider" data-provider-row="discord">
+                <img class="settings-provider-logo" src="/app/images/assets/oauth-discord.svg" alt="" width="24" height="24" aria-hidden="true">
+                <div class="settings-provider-copy">
+                  <strong>Discord</strong>
+                  <span data-provider-status="discord">Checking connection…</span>
+                </div>
+                <button class="btn btn-outline-light settings-provider-action" type="button" data-provider-action="discord" disabled>
+                  Connect
+                </button>
+              </article>
+            </div>
+            <div class="d-none settings-message" id="providerMessage" role="status" aria-live="polite" aria-atomic="true"></div>
+          </section>
+
+          <section class="settings-account-group" data-hide-in-desktop-wrapper aria-labelledby="passwordSettingsHeading">
+            <div class="settings-account-heading">
+              <div>
+                <h3 id="passwordSettingsHeading">Password</h3>
+                <p id="passwordSettingsDescription">Change the password used for username sign-in.</p>
+              </div>
+            </div>
+
+            <form id="passwordForm" class="settings-form settings-security-form settings-feedback-form" novalidate>
+              <div class="settings-field" id="currentPasswordField">
+                <label class="form-label" for="settingsCurrentPassword">Current password</label>
+                <input class="form-control" id="settingsCurrentPassword" name="currentPassword" type="password" autocomplete="current-password" disabled>
+              </div>
+              <div class="settings-field">
+                <label class="form-label" for="settingsNewPassword">New password</label>
+                <input class="form-control" id="settingsNewPassword" name="newPassword" type="password" autocomplete="new-password" minlength="6" maxlength="256" required disabled>
+              </div>
+              <div class="settings-field">
+                <label class="form-label" for="settingsConfirmPassword">Confirm new password</label>
+                <input class="form-control" id="settingsConfirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="6" maxlength="256" required disabled>
+              </div>
+              <div class="settings-form-actions">
+                <button class="btn btn-primary settings-submit" id="savePasswordButton" type="submit" disabled>
+                  <i data-lucide="shield"></i>
+                  <span id="savePasswordLabel">Change password</span>
+                </button>
+                <div class="d-none settings-message" id="passwordMessage" role="status" aria-live="polite" aria-atomic="true"></div>
+              </div>
+            </form>
+          </section>
+
+          <section class="settings-account-group" aria-labelledby="usernameSettingsHeading">
+            <div class="settings-account-heading">
+              <div>
+                <h3 id="usernameSettingsHeading">Username</h3>
+                <p>This is the name other hunters see.</p>
+              </div>
+            </div>
+
+            <form id="usernameForm" class="settings-form settings-username-form settings-feedback-form" novalidate>
+              <div class="settings-field settings-profile-field">
+                <label class="form-label" for="settingsUsername">Change username</label>
+                <input class="form-control" id="settingsUsername" name="username" autocomplete="username" minlength="3" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9_-]*[A-Za-z0-9]" title="Use 3 to 64 letters, numbers, hyphens, or underscores. Start and end with a letter or number." required disabled>
+              </div>
+              <div class="settings-form-actions">
+                <button class="btn btn-primary settings-submit" id="saveUsernameButton" type="submit" disabled>
+                  <i data-lucide="save"></i>
+                  <span id="saveUsernameLabel">Change username</span>
+                </button>
+                <div class="d-none settings-message" id="settingsMessage" role="status" aria-live="polite" aria-atomic="true"></div>
+              </div>
+            </form>
+          </section>
+
+          <section class="settings-account-group settings-danger-zone" data-hide-in-desktop-wrapper aria-labelledby="deleteAccountHeading">
+            <div class="settings-account-heading">
+              <div>
+                <h3 id="deleteAccountHeading">Delete account</h3>
+                <p>Your account remains recoverable for seven days after you schedule deletion.</p>
+              </div>
+            </div>
+
+            <div class="d-none settings-deletion-pending" id="deletionPendingPanel">
+              <div>
+                <strong>Account deletion pending</strong>
+                <p id="deletionPendingText"></p>
+              </div>
+              <button class="btn btn-outline-light" id="cancelDeletionButton" type="button">Cancel deletion</button>
+            </div>
+
+            <form id="deleteAccountForm" class="settings-form settings-security-form settings-feedback-form" novalidate>
+              <div class="settings-field">
+                <label class="form-label" for="deleteAccountConfirmation">Type your username to confirm</label>
+                <input class="form-control" id="deleteAccountConfirmation" name="confirmation" autocomplete="off" required disabled>
+              </div>
+              <div class="settings-field" id="deletePasswordField">
+                <label class="form-label" for="deleteAccountPassword">Current password</label>
+                <input class="form-control" id="deleteAccountPassword" name="currentPassword" type="password" autocomplete="current-password" disabled>
+              </div>
+              <div class="settings-form-actions">
+                <button class="btn btn-outline-danger settings-submit" id="scheduleDeletionButton" type="submit" disabled>
+                  <i data-lucide="user-minus"></i>
+                  <span id="scheduleDeletionLabel">Delete in 7 days</span>
+                </button>
+                <div class="d-none settings-message" id="deletionMessage" role="status" aria-live="polite" aria-atomic="true"></div>
+              </div>
+            </form>
+          </section>
+        </div>
+      </section>
     </main>
     <script src="/app/dist/runtime.bundle.js?v=8a2f3080bcd3"></script>
     <script src="/app/js/usernames.js?v=8ab3cb68367d"></script>
-    <script src="/app/js/settings-ui.js?v=f268ef90c1ee"></script>
+    <script src="/app/js/settings-ui.js?v=20260728-account-security-v5"></script>
   </body>
 </html>

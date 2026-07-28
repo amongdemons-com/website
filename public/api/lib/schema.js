@@ -8,6 +8,8 @@ const PERFORMANCE_INDEXES_MIGRATION = '20260722_performance_indexes_v3';
 const WORLD_MERCHANT_SCHEMA_MIGRATION = '20260723_world_merchant_schema_v1';
 const WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION = '20260723_world_merchant_bribe_schema_v1';
 const RANKED_SCHEMA_MIGRATION = '20260728_ranked_schema_v2';
+const ACCOUNT_SECURITY_SCHEMA_MIGRATION = '20260728_account_security_schema_v1';
+const ACCOUNT_PASSWORD_BACKFILL_MIGRATION = '20260728_account_password_backfill_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -762,6 +764,61 @@ async function addRankedSchema() {
   }
 }
 
+async function addAccountSecuritySchema() {
+  await addColumnIfMissing(
+    'players',
+    'password_login_enabled',
+    '`password_login_enabled` TINYINT(1) NOT NULL DEFAULT 1'
+  );
+  await addColumnIfMissing(
+    'players',
+    'deletion_requested_at',
+    '`deletion_requested_at` TIMESTAMP NULL'
+  );
+  await addColumnIfMissing(
+    'players',
+    'deletion_scheduled_for',
+    '`deletion_scheduled_for` TIMESTAMP NULL'
+  );
+  await addColumnIfMissing(
+    'oauth_states',
+    'link_player_id',
+    '`link_player_id` VARCHAR(255) NULL'
+  );
+  await normalizeUtf8Column(
+    'oauth_states',
+    'link_player_id',
+    'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL'
+  );
+  await addIndexIfMissing(
+    'players',
+    'idx_players_deletion_scheduled',
+    'INDEX idx_players_deletion_scheduled (deletion_scheduled_for)'
+  );
+
+  // Guest credentials and future OAuth-only credentials are deliberately
+  // unusable. Existing password accounts retain the default enabled value.
+  await db.query('UPDATE players SET password_login_enabled = 0 WHERE is_guest = 1');
+}
+
+async function backfillOAuthOnlyPasswordState() {
+  // OAuth-created players receive an unusable random password before their
+  // provider identity is inserted in the same transaction. The matching
+  // creation timestamp distinguishes those rows from accounts that connected
+  // a provider later and already have a working password.
+  await db.query(`
+    UPDATE players p
+    INNER JOIN (
+      SELECT player_id, MIN(created_at) AS first_link_at
+      FROM player_oauth_accounts
+      GROUP BY player_id
+    ) first_oauth
+      ON first_oauth.player_id = p.id
+    SET p.password_login_enabled = 0
+    WHERE first_oauth.first_link_at = p.created_at
+  `);
+}
+
 async function initializeSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -775,6 +832,8 @@ async function initializeSchema() {
   await runMigrationOnce(WORLD_MERCHANT_SCHEMA_MIGRATION, addWorldMerchantSchema);
   await runMigrationOnce(WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION, addWorldMerchantBribeSchema);
   await runMigrationOnce(RANKED_SCHEMA_MIGRATION, addRankedSchema);
+  await runMigrationOnce(ACCOUNT_SECURITY_SCHEMA_MIGRATION, addAccountSecuritySchema);
+  await runMigrationOnce(ACCOUNT_PASSWORD_BACKFILL_MIGRATION, backfillOAuthOnlyPasswordState);
 }
 
 function ensureSchemaReady() {

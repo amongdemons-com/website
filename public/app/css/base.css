@@ -8197,6 +8197,20 @@ body.settings-page .game-shell-nav .nav-settings-link {
     box-shadow: 0 22px 58px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.035);
 }
 
+.settings-section-separator {
+    height: 1px;
+    margin: 0.2rem 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(111,214,189,0.18) 8%,
+        rgba(111,214,189,0.5) 50%,
+        rgba(111,214,189,0.18) 92%,
+        transparent
+    );
+    box-shadow: 0 0 12px rgba(111,214,189,0.14);
+}
+
 .settings-section-header {
     display: flex;
     align-items: center;
@@ -8250,17 +8264,6 @@ body.settings-page .game-shell-nav .nav-settings-link {
 
 .settings-profile-field {
     max-width: 40rem;
-}
-
-.settings-username-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: stretch;
-    gap: 0.65rem;
-}
-
-.settings-username-row .settings-submit {
-    min-height: 2.55rem;
 }
 
 .settings-field .form-label {
@@ -8461,6 +8464,181 @@ body.settings-page .game-shell-nav .nav-settings-link {
     height: 0.95rem;
 }
 
+.settings-account-groups {
+    display: grid;
+}
+
+html[data-desktop-wrapper="1"] [data-hide-in-desktop-wrapper] {
+    display: none !important;
+}
+
+.settings-account-group {
+    display: grid;
+    gap: 0.8rem;
+    padding: 1rem 0.9rem;
+}
+
+.settings-account-group + .settings-account-group {
+    border-top: 1px solid rgba(161,212,201,0.13);
+}
+
+.settings-account-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.settings-account-heading h3 {
+    margin: 0;
+    color: var(--ad-text);
+    font-size: 0.9rem;
+    font-weight: 850;
+}
+
+.settings-account-heading p {
+    margin: 0.16rem 0 0;
+    color: var(--ad-muted);
+    font-size: 0.78rem;
+}
+
+.settings-provider-list {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.settings-provider {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 3.7rem;
+    border: 1px solid rgba(161,212,201,0.16);
+    border-radius: 8px;
+    padding: 0.6rem 0.7rem;
+    background: rgba(3,9,11,0.48);
+}
+
+.settings-provider.is-connected {
+    border-color: rgba(111,214,189,0.32);
+    background: rgba(111,214,189,0.055);
+}
+
+.settings-provider-logo {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.settings-provider-copy {
+    display: grid;
+    min-width: 0;
+}
+
+.settings-provider-copy strong {
+    color: var(--ad-text);
+    font-size: 0.85rem;
+}
+
+.settings-provider-copy span {
+    overflow: hidden;
+    color: var(--ad-muted);
+    font-size: 0.74rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-provider-action {
+    min-width: 6.5rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.settings-security-form {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+    gap: 0.65rem;
+}
+
+.settings-security-form .settings-field {
+    max-width: none;
+    padding: 0;
+}
+
+.settings-username-form .settings-field {
+    padding: 0;
+}
+
+.settings-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    grid-column: 1 / -1;
+    padding-top: 0.1rem;
+}
+
+.settings-form-actions .settings-message {
+    padding-left: 0;
+}
+
+.settings-feedback-form .settings-form-actions {
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.settings-feedback-form .settings-form-actions .settings-message {
+    order: 1;
+    width: 100%;
+}
+
+.settings-feedback-form .settings-form-actions .settings-submit {
+    align-self: flex-end;
+    order: 2;
+    gap: 0.35rem;
+    width: 9.75rem;
+    min-width: 9.75rem;
+    height: 2.1rem;
+    min-height: 2.1rem;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.72rem;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.settings-feedback-form .settings-form-actions .settings-submit .ad-icon {
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+.settings-danger-zone {
+    background: linear-gradient(135deg, rgba(169,55,55,0.08), transparent 54%);
+}
+
+.settings-danger-zone .settings-account-heading h3 {
+    color: #f3aaa2;
+}
+
+.settings-deletion-pending {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid rgba(241,145,135,0.34);
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: rgba(104,31,31,0.18);
+}
+
+.settings-deletion-pending strong {
+    color: #f3aaa2;
+    font-size: 0.84rem;
+}
+
+.settings-deletion-pending p {
+    margin: 0.12rem 0 0;
+    color: var(--ad-muted);
+    font-size: 0.76rem;
+}
+
 @media (max-width: 767.98px) {
 .settings-shell {
         width: min(100% - 1rem, 58rem);
@@ -8469,6 +8647,30 @@ body.settings-page .game-shell-nav .nav-settings-link {
 
 .settings-field {
         max-width: none;
+    }
+
+.settings-security-form {
+        grid-template-columns: 1fr;
+    }
+
+.settings-provider {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+.settings-provider-action {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+.settings-form-actions,
+.settings-deletion-pending {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+.settings-form-actions .settings-submit,
+.settings-deletion-pending .btn {
+        width: 100%;
     }
 
 }

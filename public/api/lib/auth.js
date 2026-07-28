@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const db = require('./db');
+const { isDeletionDue, purgePlayerAccount } = require('./account-deletion');
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
   const hash = crypto.pbkdf2Sync(password, salt, 120000, 64, 'sha512').toString('hex');
@@ -34,6 +35,9 @@ function cleanPlayer(row) {
     profileDemonId: row.profile_demon_id ? Number(row.profile_demon_id) : null,
     profileDemonImageUrl: row.profile_demon_image_url || null,
     isGuest: Boolean(Number(row.is_guest) || 0),
+    hasPassword: Boolean(Number(row.password_login_enabled) || 0),
+    deletionRequestedAt: row.deletion_requested_at || null,
+    deletionScheduledFor: row.deletion_scheduled_for || null,
     unlocks: JSON.parse(row.unlocks || '[]')
   };
 }
@@ -75,6 +79,11 @@ async function requireAuth(req, res, next) {
 
   if (!rows.length) {
     return res.status(401).json({ error: 'Invalid or expired token.' });
+  }
+
+  if (isDeletionDue(rows[0].deletion_scheduled_for)) {
+    await purgePlayerAccount(rows[0].id);
+    return res.status(410).json({ error: 'This account has been deleted.' });
   }
 
   req.player = cleanPlayer(rows[0]);

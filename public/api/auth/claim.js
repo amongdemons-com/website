@@ -30,7 +30,12 @@ router.post('/auth/claim', requireAuth, async (req, res) => {
     // already converted the row updates nothing and we report progress kept.
     const [result] = await db.query(
       `UPDATE players
-       SET username = ?, email = ?, password_hash = ?, password_salt = ?, is_guest = 0
+       SET username = ?,
+           email = ?,
+           password_hash = ?,
+           password_salt = ?,
+           password_login_enabled = 1,
+           is_guest = 0
        WHERE id = ? AND is_guest = 1`,
       [username, email, hash, salt, req.player.id]
     );

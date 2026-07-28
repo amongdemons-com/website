@@ -161,6 +161,82 @@ async function findOrCreateOAuthPlayer(provider, profile, options = {}) {
   }
 }
 
+async function linkOAuthPlayer(playerId, provider, profile) {
+  if (!profile || !profile.id) {
+    throw createOAuthError('Provider profile did not include a stable user id.', 502);
+  }
+
+  const providerUserId = String(profile.id);
+  const email = normalizeEmail(profile.email);
+  const displayName = cleanText(profile.displayName || profile.username || email || '');
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [playerRows] = await connection.query(
+      'SELECT * FROM players WHERE id = ? AND is_guest = 0 LIMIT 1 FOR UPDATE',
+      [playerId]
+    );
+    if (!playerRows.length) {
+      throw createOAuthError('The account to connect could not be found.', 404);
+    }
+
+    const [identityRows] = await connection.query(
+      `SELECT player_id
+       FROM player_oauth_accounts
+       WHERE provider = ?
+         AND provider_user_id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [provider, providerUserId]
+    );
+    if (identityRows.length && identityRows[0].player_id !== playerId) {
+      throw createOAuthError(`This ${PROVIDERS[provider].label} account is already connected to another hunter.`, 409);
+    }
+
+    const [providerRows] = await connection.query(
+      `SELECT provider_user_id
+       FROM player_oauth_accounts
+       WHERE player_id = ?
+         AND provider = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [playerId, provider]
+    );
+    if (providerRows.length && providerRows[0].provider_user_id !== providerUserId) {
+      throw createOAuthError(`${PROVIDERS[provider].label} is already connected to this hunter. Disconnect it first.`, 409);
+    }
+
+    if (identityRows.length) {
+      await updateOAuthAccount(connection, {
+        provider,
+        providerUserId,
+        email,
+        displayName
+      });
+    } else {
+      await connection.query(
+        `INSERT INTO player_oauth_accounts
+          (player_id, provider, provider_user_id, email, display_name)
+         VALUES (?, ?, ?, ?, ?)`,
+        [playerId, provider, providerUserId, email, displayName || null]
+      );
+    }
+
+    await connection.commit();
+    return playerRows[0];
+  } catch (error) {
+    await connection.rollback();
+    if (error.code === 'ER_DUP_ENTRY') {
+      error.status = 409;
+    }
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 async function fetchGoogleProfile(options) {
   const config = requireProviderConfig('google');
   const token = await requestJson(PROVIDERS.google.tokenUrl, {
@@ -238,7 +314,9 @@ async function createOAuthPlayer(connection, options) {
 
     try {
       await connection.query(
-        'INSERT INTO players (id, username, email, password_hash, password_salt, unlocks) VALUES (?, ?, ?, ?, ?, ?)',
+        `INSERT INTO players
+          (id, username, email, password_hash, password_salt, password_login_enabled, unlocks)
+         VALUES (?, ?, ?, ?, ?, 0, ?)`,
         [playerId, username, options.email || null, hash, salt, JSON.stringify([])]
       );
       await saveDefaultBoundShrine(playerId, connection);
@@ -438,5 +516,6 @@ module.exports = {
   findOrCreateOAuthPlayer,
   getProviderStatuses,
   isProviderConfigured,
-  isSupportedProvider
+  isSupportedProvider,
+  linkOAuthPlayer
 };

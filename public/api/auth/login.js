@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const db = require('../lib/db');
 const { cleanPlayer, createSession, hashPassword, verifyPassword } = require('../lib/auth');
+const { isDeletionDue, purgePlayerAccount } = require('../lib/account-deletion');
 const { saveDefaultBoundShrine } = require('../lib/world-shrines');
 const { grantStarterDemons } = require('../lib/starter-demon');
 
@@ -17,6 +18,11 @@ router.post('/auth/login', async (req, res) => {
 
   const [rows] = await db.query('SELECT * FROM players WHERE username = ? LIMIT 1', [username]);
   let player = rows[0];
+
+  if (player && isDeletionDue(player.deletion_scheduled_for)) {
+    await purgePlayerAccount(player.id);
+    return res.status(410).json({ error: 'This account has been deleted.' });
+  }
 
   if (!player) {
     const { salt, hash } = hashPassword(password);
@@ -34,8 +40,8 @@ router.post('/auth/login', async (req, res) => {
     }
     const [createdRows] = await db.query('SELECT * FROM players WHERE id = ? LIMIT 1', [playerId]);
     player = createdRows[0];
-  } else if (!player.password_salt) {
-    return res.status(401).json({ error: 'This account needs a password reset before API login.' });
+  } else if (!player.password_salt || Number(player.password_login_enabled) !== 1) {
+    return res.status(401).json({ error: 'Password login is disabled. Use a connected sign-in provider.' });
   } else if (!verifyPassword(password, player.password_salt, player.password_hash)) {
     return res.status(401).json({ error: 'Invalid username or password.' });
   }

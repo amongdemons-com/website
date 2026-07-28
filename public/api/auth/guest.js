@@ -25,7 +25,9 @@ router.post('/auth/guest', async (req, res) => {
 
     try {
       await db.query(
-        'INSERT INTO players (id, username, email, password_hash, password_salt, unlocks, is_guest) VALUES (?, ?, NULL, ?, ?, ?, 1)',
+        `INSERT INTO players
+          (id, username, email, password_hash, password_salt, password_login_enabled, unlocks, is_guest)
+         VALUES (?, ?, NULL, ?, ?, 0, ?, 1)`,
         [playerId, username, hash, salt, JSON.stringify([])]
       );
       await saveDefaultBoundShrine(playerId);

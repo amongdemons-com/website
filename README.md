@@ -115,7 +115,7 @@ amongdemons.com/
 | `/bag` | Stackable item bag with Echo refinement and summoning |
 | `/collection` | Collection browser with filters, sorting, missing slots, and Soul training |
 | `/skill-tree` | Account stat-point skill tree |
-| `/settings` | Account settings (username, profile demon) |
+| `/settings` | Audio, battle, username, sign-in, password, and account deletion settings |
 | `/hunter/:username` | Public hunter profile |
 | `/login`, `/register` | Auth pages |
 | `/rankings`, `/rankings/:sort` | Leaderboards; sorts: `floor`, `level`, `souls`, `pvp` (`/rank` and `/hunter` redirect here) |
@@ -159,6 +159,12 @@ All routes are mounted under `/api`.
 | Method | Route | Description |
 | --- | --- | --- |
 | `PATCH` | `/account/profile` | Update username and/or profile demon |
+| `GET` | `/account/security` | Password, provider connection, and pending deletion state |
+| `POST` | `/account/oauth/:provider/connect` | Start authenticated Google or Discord account linking |
+| `DELETE` | `/account/oauth/:provider` | Disconnect Google or Discord when another sign-in method remains |
+| `PUT` | `/account/password` | Set or change the account password and revoke other sessions |
+| `POST` | `/account/deletion` | Schedule permanent account deletion after a seven-day grace period |
+| `DELETE` | `/account/deletion` | Cancel a pending account deletion |
 | `GET` | `/account/progression` | Level, XP, Souls, and unlocks |
 | `GET` | `/account/stat-points` | Skill-tree summary: points earned, allocations, node states |
 | `POST` | `/account/stat-points` | Allocate a stat point to a skill-tree node |
@@ -324,7 +330,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 
 | Table | Purpose |
 | --- | --- |
-| `players` | Credentials, level, XP, Souls, PvP record, profile demon, unlocks |
+| `players` | Credentials, deletion schedule, level, XP, Souls, PvP record, profile demon, unlocks |
 | `player_sessions` | Bearer/session tokens with expiration |
 | `player_oauth_accounts` | Linked Google/Discord identities |
 | `oauth_states` | Short-lived OAuth CSRF state |
@@ -353,7 +359,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `public/app/js/bag-ui.js` | Bag grid, sorting, Echo details, refinement, and summoning |
 | `public/app/js/collection-ui.js` | Collection filters, sorting, missing slots, training modal |
 | `public/app/js/skill-tree-ui.js` | Skill-tree allocation UI |
-| `public/app/js/settings-ui.js` | Username and profile demon settings |
+| `public/app/js/settings-ui.js` | Audio, battle, username, sign-in, password, and deletion settings |
 | `public/app/js/hunter-ui.js` | Public hunter profile page |
 | `public/app/js/rankings-ui.js` | Leaderboard UI |
 | `public/app/js/demon-cards.js` | Shared demon card rendering |

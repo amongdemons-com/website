@@ -1,13 +1,14 @@
 const express = require('express');
 const db = require('../lib/db');
-const { cleanPlayer, createSession, createToken } = require('../lib/auth');
+const { blockGuests, cleanPlayer, createSession, createToken, requireAuth } = require('../lib/auth');
 const {
   buildAuthorizationUrl,
   fetchOAuthProfile,
   findOrCreateOAuthPlayer,
   getProviderStatuses,
   isProviderConfigured,
-  isSupportedProvider
+  isSupportedProvider,
+  linkOAuthPlayer
 } = require('../lib/oauth');
 
 const router = express.Router();
@@ -15,6 +16,37 @@ const OAUTH_STATE_TTL_MINUTES = 10;
 
 router.get('/auth/oauth/providers', async (req, res) => {
   res.json({ providers: getProviderStatuses() });
+});
+
+router.post('/account/oauth/:provider/connect', requireAuth, blockGuests, async (req, res) => {
+  const provider = normalizeProvider(req.params.provider);
+  if (!provider || !isProviderConfigured(provider)) {
+    return res.status(503).json({ error: 'This sign-in provider is not configured.' });
+  }
+
+  const state = createToken();
+  const redirectUri = getCallbackUrl(req, provider);
+  const redirectPath = '/settings?oauth=connected';
+  const authorizationUrl = buildAuthorizationUrl(provider, {
+    redirectUri,
+    state
+  });
+
+  await db.query(
+    `INSERT INTO oauth_states
+      (state, provider, mode, redirect_path, link_player_id, expires_at)
+     VALUES (?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ${OAUTH_STATE_TTL_MINUTES} MINUTE))`,
+    [state, provider, 'link', redirectPath, req.player.id]
+  );
+
+  cleanupOAuthStates().catch((error) => {
+    console.error('OAuth state cleanup failed:', error);
+  });
+
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    authorizationUrl
+  });
 });
 
 router.get('/auth/oauth/:provider', async (req, res) => {
@@ -80,9 +112,11 @@ async function handleOAuthCallback(req, res) {
       redirectUri,
       user: req.body?.user
     });
-    const player = await findOrCreateOAuthPlayer(provider, profile, {
-      claimPlayerId: oauthState.claim_player_id || null
-    });
+    const player = mode === 'link'
+      ? await linkOAuthPlayer(oauthState.link_player_id, provider, profile)
+      : await findOrCreateOAuthPlayer(provider, profile, {
+          claimPlayerId: oauthState.claim_player_id || null
+        });
     const token = await createSession(player.id);
 
     res.set('Cache-Control', 'no-store');
@@ -93,7 +127,8 @@ async function handleOAuthCallback(req, res) {
     }));
   } catch (error) {
     console.error('OAuth callback failed:', error);
-    return redirectAuthError(res, mode, 'oauth_failed');
+    const code = error.status === 409 ? 'oauth_conflict' : 'oauth_failed';
+    return redirectAuthError(res, mode, code);
   }
 }
 
@@ -113,7 +148,10 @@ async function consumeOAuthState(state, provider) {
   if (!result.affectedRows) return null;
 
   const [rows] = await db.query(
-    'SELECT mode, redirect_path, claim_player_id FROM oauth_states WHERE state = ? AND provider = ? LIMIT 1',
+    `SELECT mode, redirect_path, claim_player_id, link_player_id
+     FROM oauth_states
+     WHERE state = ? AND provider = ?
+     LIMIT 1`,
     [state, provider]
   );
 
@@ -155,7 +193,8 @@ function normalizeProvider(value) {
 }
 
 function normalizeMode(value) {
-  return String(value || '').toLowerCase() === 'register' ? 'register' : 'login';
+  const mode = String(value || '').toLowerCase();
+  return ['register', 'link'].includes(mode) ? mode : 'login';
 }
 
 function normalizeRedirectPath(value) {
@@ -171,7 +210,12 @@ function getCallbackUrl(req, provider) {
 }
 
 function redirectAuthError(res, mode, code) {
-  const target = normalizeMode(mode) === 'register' ? '/register' : '/login';
+  const normalizedMode = normalizeMode(mode);
+  const target = normalizedMode === 'register'
+    ? '/register'
+    : normalizedMode === 'link'
+      ? '/settings'
+      : '/login';
   return res.redirect(302, `${target}?oauth=${encodeURIComponent(code)}`);
 }
 
