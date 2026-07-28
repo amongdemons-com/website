@@ -52,6 +52,8 @@ function renderCollectionReinforcementModal(query = '') {
   const alreadySelectedCount = getSelectedCollectionReinforcements().length;
   const remaining = Math.max(0, limit - alreadySelectedCount);
   const selectedCount = pendingCollectionReinforcementIds.size;
+  const isStartingTeam = Number(state.run?.currentFloor) === 0;
+  const destination = isStartingTeam ? 'your starting team' : 'your hand';
   const normalizedQuery = query.trim().toLowerCase();
   const candidates = getAvailableCollectionReinforcements()
     .filter((demon) => !normalizedQuery || [
@@ -63,8 +65,8 @@ function renderCollectionReinforcementModal(query = '') {
 
   elements.teamChoiceModalTitle.textContent = 'Demon Collection';
   elements.teamChoiceModalSubtitle.textContent = remaining === 1
-    ? 'Choose one demon to add to your hand.'
-    : `Choose up to ${remaining} demons to add to your hand.`;
+    ? `Choose one demon to add to ${destination}.`
+    : `Choose up to ${remaining} demons to add to ${destination}.`;
   elements.teamChoiceModalBody.innerHTML = `
     <div class="collection-reinforcement-toolbar">
       <input class="form-control form-control-sm" id="collectionReinforcementSearch" type="search" value="${escapeHtml(query)}" placeholder="Search collection">
@@ -76,7 +78,9 @@ function renderCollectionReinforcementModal(query = '') {
   elements.teamChoiceModalFooter.innerHTML = `
     <button type="button" class="btn btn-glass-muted" data-bs-dismiss="modal">Cancel</button>
     <button type="button" class="btn btn-primary" id="addCollectionReinforcementsBtn" ${selectedCount ? '' : 'disabled'}>
-      ${selectedCount ? `Add ${selectedCount} Demon${selectedCount === 1 ? '' : 's'}` : 'Select Demons'}
+      ${selectedCount
+        ? `Add ${selectedCount} Demon${selectedCount === 1 ? '' : 's'} to ${isStartingTeam ? 'Team' : 'Hand'}`
+        : 'Select Demons'}
     </button>
   `;
 

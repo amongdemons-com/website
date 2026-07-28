@@ -21,6 +21,7 @@ export const state = {
   isEnemyPreviewDeferred: false,
   enemyRevealEffectIds: [],
   isPactRevealPending: false,
+  isPactTeamPreview: false,
   pactRevealTimer: null,
   battleHandPreview: null,
   activeHandTab: 'hand',

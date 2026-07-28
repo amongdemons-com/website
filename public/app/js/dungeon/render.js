@@ -38,6 +38,7 @@ const renderDemonCards = (...args) => dungeonActions.renderDemonCards(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const bindActivePactTooltips = (...args) => dungeonActions.bindActivePactTooltips(...args);
 const renderDemonicPacts = (...args) => dungeonActions.renderDemonicPacts(...args);
+const toggleDemonicPactView = (...args) => dungeonActions.toggleDemonicPactView(...args);
 const renderEmptyText = (...args) => dungeonActions.renderEmptyText(...args);
 const renderFightLogRow = (...args) => dungeonActions.renderFightLogRow(...args);
 const renderHandBar = (...args) => dungeonActions.renderHandBar(...args);
@@ -110,6 +111,7 @@ function renderRun() {
   const enemies = isHandStrategy && state.isEnemyPreviewDeferred ? [] : (isHandStrategy ? getRecruitPreviewEnemyTeam() : run.enemies || []);
   const isReplayOnly = Boolean(run.replayOnly);
   const isBattleLayoutActive = Boolean(state.isBattleAnimating || isReplayOnly);
+  const isPactTeamPreview = Boolean(state.isPactTeamPreview && hasPendingPacts);
   const isBattleHandPlaceholder = Boolean(!isHandStrategy && isBattleLayoutActive);
   const hand = (isHandStrategy ? getRecruitPreviewHand() : []).map(applyDungeonCombatStatPreviewToDemon);
   const handMode = isBattleHandPlaceholder ? 'battle' : 'recruit';
@@ -133,7 +135,7 @@ function renderRun() {
 
   elements.dungeonBottomPanel?.classList.toggle('d-none', !showHand);
   if (!canExtract || state.isBattleAnimating || state.isResultAnimating) state.isMobileRewardBoxOpen = false;
-  elements.dungeonBottomPanel?.classList.toggle('is-battle-active', isBattleLayoutActive);
+  elements.dungeonBottomPanel?.classList.toggle('is-battle-active', isBattleLayoutActive || isPactTeamPreview);
   elements.dungeonBottomPanel?.classList.toggle('is-mobile-reward-open', Boolean(state.isMobileRewardBoxOpen && canExtract && !state.isBattleAnimating));
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
   setElementHtml(elements.teamGrid, renderDemonCards(team, {
@@ -603,6 +605,7 @@ function renderFightLogActions() {
     state.combatPlayback
   );
   const hasPendingPacts = hasPendingBuffChoices(state.run);
+  const canShowPactControl = Boolean(state.isPactTeamPreview && hasPendingPacts);
   const hasCurrentFightLog = Boolean(isCurrentFloorBattle(state.run) && (state.run?.lastBattle?.combatLog?.length || state.combatLog.length));
   const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && !hasPendingPacts && hasCurrentFightLog);
   const canViewLog = canReplay;
@@ -628,7 +631,9 @@ function renderFightLogActions() {
   renderDungeonCenterActions(actionOptions);
   const mobileFightChanged = renderDungeonMobileFightBox(actionOptions);
 
-  const battleControlsHtml = canShowSpeedControl
+  const battleControlsHtml = canShowPactControl
+    ? renderDemonicPactReturnControl()
+    : canShowSpeedControl
     ? `${renderBattlePlaybackControls()}${renderBattleSpeedControl()}${renderBattleSkipControl()}`
     : '';
   const overlayChanged = renderBattleControlsOverlay(battleControlsHtml);
@@ -646,6 +651,7 @@ function renderFightLogActions() {
   });
   bindClicks('[data-battle-step]', (button) => stepCombatPlayback(Number(button.dataset.battleStep)));
   bindClick(document.getElementById('battlePlaybackSkipBtn'), skipCombatPlayback);
+  bindClick(document.getElementById('demonicPactReturnBtn'), toggleDemonicPactView);
   bindClick(document.getElementById('fightLogReplayBtn'), replayFight);
   bindClick(document.getElementById('fightLogToggleBtn'), toggleFightLogPanel);
 }
@@ -886,6 +892,23 @@ function renderBattleSpeedControl() {
   `;
 }
 
+function renderDemonicPactReturnControl() {
+  return `
+    <div class="battle-speed-control demonic-pact-return-control" role="group" aria-label="Demonic Pact controls">
+      <button
+        class="battle-speed-option active ad-primary-action demonic-pact-return-option"
+        id="demonicPactReturnBtn"
+        type="button"
+        title="Show Demonic Pacts"
+        aria-label="Show Demonic Pacts"
+      >
+        ${renderIcon('sparkles')}
+        <span>Show Pacts</span>
+      </button>
+    </div>
+  `;
+}
+
 function renderBattleSkipControl() {
   return `
     <div class="battle-playback-control battle-skip-control">
@@ -935,6 +958,7 @@ export {
   renderDungeonMobileFightBox,
   renderBattlePlaybackControls,
   renderBattleSpeedControl,
+  renderDemonicPactReturnControl,
   renderBattleSkipControl,
   bindPathButtons
 };

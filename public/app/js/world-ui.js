@@ -1523,6 +1523,12 @@ import './bag-item-visuals.js';
     return `Earned ${formatNumber(rewards.xp || 0)} XP and ${formatNumber(rewards.souls || 0)} Souls. Lost ${formatSoulCount(soulsLost)}.`;
   }
 
+  function hasHuntRewardOutcome(rewards = {}) {
+    return Math.max(0, Number(rewards.xp) || 0) > 0
+      || Math.max(0, Number(rewards.souls) || 0) > 0
+      || Math.max(0, Number(rewards.soulsLost) || 0) > 0;
+  }
+
   async function finishActiveHunt(options = {}) {
     if (state.huntBusy) return false;
     state.huntBusy = true;
@@ -1535,14 +1541,16 @@ import './bag-item-visuals.js';
       applyWorldPlayerUpdate(payload.player);
       const rewards = payload.rewards || {};
       if (!payload.alreadyStopped) audio?.play('sfx.world.huntStop', { volume: 0.78 });
-      setMessage(
-        payload.alreadyStopped
-          ? (options.alreadyStoppedMessage || 'Hunting already stopped.')
-          : (typeof options.stoppedMessage === 'function'
-            ? options.stoppedMessage(rewards)
-            : `Hunting stopped. ${formatHuntRewardSummary(rewards)}`),
-        'success'
-      );
+      if (payload.alreadyStopped || hasHuntRewardOutcome(rewards)) {
+        setMessage(
+          payload.alreadyStopped
+            ? (options.alreadyStoppedMessage || 'Hunting already stopped.')
+            : (typeof options.stoppedMessage === 'function'
+              ? options.stoppedMessage(rewards)
+              : `Hunting stopped. ${formatHuntRewardSummary(rewards)}`),
+          'success'
+        );
+      }
       return true;
     } catch (error) {
       if (error.status === 404) {
@@ -4249,6 +4257,9 @@ import './bag-item-visuals.js';
 
     if (reset.stoppedHunt) {
       const rewards = payload.rewards || {};
+      if (!hasHuntRewardOutcome(rewards)) {
+        return 'Hunting team updated. Hunting spots reset.';
+      }
       return `Hunting team updated. Active hunt ended. ${formatHuntRewardSummary(rewards)} Hunting spots reset.`;
     }
 

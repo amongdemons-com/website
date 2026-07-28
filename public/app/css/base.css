@@ -6219,10 +6219,47 @@ body.rankings-page {
     display: none !important;
 }
 
+.demonic-pact-view-toggle {
+    position: fixed;
+    top: max(0.72rem, env(safe-area-inset-top));
+    right: max(0.72rem, env(safe-area-inset-right));
+    z-index: 3;
+    min-width: 7.2rem;
+    border-color: rgba(232,199,106,0.5);
+    background: rgba(3,9,11,0.9);
+    color: #fff5c7;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.38);
+    font-weight: 900;
+    pointer-events: auto;
+}
+
+.demonic-pact-view-toggle:hover,
+.demonic-pact-view-toggle:focus-visible {
+    border-color: rgba(232,199,106,0.82);
+    background: rgba(11,27,29,0.96);
+    color: #fff;
+}
+
+.demonic-pact-overlay.is-team-preview {
+    background: transparent;
+    pointer-events: none;
+}
+
+.demonic-pact-overlay.is-team-preview .demonic-pact-view-toggle {
+    display: none;
+}
+
+.demonic-pact-overlay.is-team-preview .demonic-pact-backdrop,
+.demonic-pact-overlay.is-team-preview .demonic-pact-stage {
+    opacity: 0;
+    visibility: hidden;
+}
+
 .demonic-pact-backdrop {
     position: absolute;
     inset: 0;
     pointer-events: none;
+    transition: opacity 160ms ease, visibility 160ms ease;
 }
 
 .demonic-pact-backdrop::before,
@@ -6277,6 +6314,7 @@ body.rankings-page {
     grid-template-rows: auto minmax(0, auto) auto;
     gap: clamp(1rem, 2.4vw, 1.8rem);
     width: min(100%, 74rem);
+    transition: opacity 160ms ease, visibility 160ms ease;
 }
 
 .demonic-pact-stage::after {
@@ -6878,6 +6916,13 @@ body.rankings-page {
 }
 
 @media (max-width: 575.98px) {
+.demonic-pact-view-toggle {
+        min-width: 6.6rem;
+        min-height: 2.2rem;
+        padding: 0.38rem 0.58rem;
+        font-size: 0.72rem;
+    }
+
 .demonic-pact-overlay {
         place-items: start center;
         overflow-y: auto;

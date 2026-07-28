@@ -10,6 +10,7 @@ const cashOut = (...args) => dungeonActions.cashOut(...args);
 const cashOutDungeon = (...args) => dungeonActions.cashOutDungeon(...args);
 const continueShortTeam = (...args) => dungeonActions.continueShortTeam(...args);
 const syncCompressedFormationLanes = (...args) => dungeonActions.syncCompressedFormationLanes(...args);
+const toggleDemonicPactView = (...args) => dungeonActions.toggleDemonicPactView(...args);
 
 function cacheElements() {
   [
@@ -20,6 +21,7 @@ function cacheElements() {
     'runPanel',
     'dungeonBottomPanel',
     'demonicPactOverlay',
+    'demonicPactViewToggle',
     'dungeonPactGrid',
     'dungeonPactActions',
     'teamGrid',
@@ -56,6 +58,7 @@ function cacheElements() {
 function bindActions() {
   bindClick(elements.cashoutConfirmBtn, cashOutDungeon);
   bindClick(elements.confirmShortTeamBtn, continueShortTeam);
+  bindClick(elements.demonicPactViewToggle, toggleDemonicPactView);
   window.addEventListener('resize', syncCompressedFormationLanes);
 }
 

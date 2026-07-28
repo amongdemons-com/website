@@ -25,14 +25,18 @@ function getPendingBuffChoices(run = state.run) {
 function renderDemonicPacts(isVisible = hasPendingBuffChoices()) {
   if (!elements.demonicPactOverlay || !elements.dungeonPactGrid) return;
 
+  const wasVisible = !elements.demonicPactOverlay.classList.contains('d-none');
   elements.demonicPactOverlay.classList.toggle('d-none', !isVisible);
   if (!isVisible) {
+    state.isPactTeamPreview = false;
+    syncDemonicPactView();
     clearDemonicPactRecastAnimation();
     elements.dungeonPactGrid.innerHTML = '';
     if (elements.dungeonPactActions) elements.dungeonPactActions.innerHTML = '';
     return;
   }
 
+  if (!wasVisible) state.isPactTeamPreview = false;
   const choices = getPendingBuffChoices();
   elements.dungeonPactGrid.innerHTML = choices.map(renderDemonicPactCard).join('');
   if (elements.dungeonPactActions) {
@@ -40,6 +44,23 @@ function renderDemonicPacts(isVisible = hasPendingBuffChoices()) {
     bindClick(document.getElementById('demonicPactRerollBtn'), (event) => rerollDemonicPacts(event.currentTarget));
   }
   bindClicks('[data-demonic-pact-id]', (button) => chooseDemonicPact(button.dataset.demonicPactId, button), elements.dungeonPactGrid);
+  syncDemonicPactView();
+}
+
+function toggleDemonicPactView() {
+  if (!elements.demonicPactOverlay || elements.demonicPactOverlay.classList.contains('d-none')) return;
+  state.isPactTeamPreview = !state.isPactTeamPreview;
+  renderRun();
+}
+
+function syncDemonicPactView() {
+  const isTeamPreview = Boolean(state.isPactTeamPreview);
+  elements.demonicPactOverlay?.classList.toggle('is-team-preview', isTeamPreview);
+  if (!elements.demonicPactViewToggle) return;
+
+  elements.demonicPactViewToggle.classList.toggle('d-none', isTeamPreview);
+  elements.demonicPactViewToggle.textContent = 'View Team';
+  elements.demonicPactViewToggle.setAttribute('aria-expanded', String(!isTeamPreview));
 }
 
 function renderDemonicPactCard(buff) {
@@ -390,6 +411,8 @@ export {
   hasPendingBuffChoices,
   getPendingBuffChoices,
   renderDemonicPacts,
+  toggleDemonicPactView,
+  syncDemonicPactView,
   renderActivePactIcon,
   renderDemonicPactCard,
   chooseDemonicPact,

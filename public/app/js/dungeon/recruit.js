@@ -8,10 +8,13 @@ import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatS
 const clearRewardSelection = (...args) => dungeonActions.clearRewardSelection(...args);
 const getDemonFormationRow = (...args) => dungeonActions.getDemonFormationRow(...args);
 const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
+const getFormationGridAssignments = (...args) => dungeonActions.getFormationGridAssignments(...args);
+const getNextOpenFormationCell = (...args) => dungeonActions.getNextOpenFormationCell(...args);
 const getPreferredDemonPosition = (...args) => dungeonActions.getPreferredDemonPosition(...args);
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
 const refreshRecruitDraftOrder = (...args) => dungeonActions.refreshRecruitDraftOrder(...args);
 const refreshRecruitDraftPoolOrder = (...args) => dungeonActions.refreshRecruitDraftPoolOrder(...args);
+const returnTeamDemonToPool = (...args) => dungeonActions.returnTeamDemonToPool(...args);
 const syncRecruitDraftSelection = (...args) => dungeonActions.syncRecruitDraftSelection(...args);
 
 function prepareRecruitStrategyState() {
@@ -453,17 +456,54 @@ function addCollectionReinforcementToPool(demonId) {
   const demon = (state.collectionDemons || []).find((item) => Number(item.id) === Number(demonId));
   if (!demon) return;
 
-  const position = getPreferredDemonPosition(demon);
-  state.recruitDraftPool.splice(getCollectionHandInsertIndex(), 0, {
+  const stagedDemon = {
     ...getFullHpDemon(demon),
     instanceId: `collection-${demon.id}`,
     collectionDemonId: demon.id,
     recruitSource: 'collection',
-    position
-  });
+    position: getPreferredDemonPosition(demon)
+  };
+
+  if (isStartingTeamSelection()) {
+    addCollectionReinforcementToStartingTeam(stagedDemon);
+  } else {
+    state.recruitDraftPool.splice(getCollectionHandInsertIndex(), 0, stagedDemon);
+    refreshRecruitDraftPoolOrder();
+  }
+
   state.collectionReinforcementStagedInteracted = false;
-  refreshRecruitDraftPoolOrder();
   syncRecruitDraftSelection();
+}
+
+function isStartingTeamSelection() {
+  return Number(state.run?.currentFloor) === 0;
+}
+
+function addCollectionReinforcementToStartingTeam(stagedDemon) {
+  const team = state.recruitDraftTeam || [];
+  const teamLimit = getRecruitTeamLimit();
+  let formationSlot = getNextOpenFormationCell(
+    getFormationGridAssignments(team, 'player'),
+    'player',
+    stagedDemon.position
+  );
+
+  if (team.length >= teamLimit) {
+    const replacement = [...team].reverse().find((demon) => demon.recruitSource !== 'collection');
+    if (!replacement) return;
+
+    const replacementIndex = team.findIndex((demon) => demon.instanceId === replacement.instanceId);
+    stagedDemon.position = getDemonPosition(replacement, replacementIndex);
+    formationSlot = getDemonFormationRow(replacement, team, replacementIndex);
+    returnTeamDemonToPool(replacement.instanceId, 'hand');
+  }
+
+  if (formationSlot >= 0) {
+    stagedDemon.formationRow = formationSlot;
+    stagedDemon.formationSlot = formationSlot;
+  }
+  state.recruitDraftTeam.push(stagedDemon);
+  refreshRecruitDraftOrder();
 }
 
 function getCollectionHandInsertIndex() {
@@ -534,6 +574,8 @@ export {
   getSelectedCollectionReinforcement,
   getSelectedCollectionReinforcements,
   addCollectionReinforcementToPool,
+  isStartingTeamSelection,
+  addCollectionReinforcementToStartingTeam,
   getCollectionHandInsertIndex,
   removeCollectionReinforcement,
   markCollectionReinforcementPlaceholderInteracted,

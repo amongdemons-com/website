@@ -49,7 +49,7 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
   elements.dungeonHandBar.classList.add('has-pacts');
   elements.dungeonHandBar.classList.toggle('is-pacts-tab-active', activeTab === 'pacts');
   elements.dungeonHandBar.classList.toggle('has-level-power-prompt', hasLevelPowerPrompt);
-  elements.dungeonHandBar.classList.toggle('is-battle-controls-mode', mode === 'battle');
+  elements.dungeonHandBar.classList.toggle('is-battle-controls-mode', mode === 'battle' || state.isPactTeamPreview);
   elements.dungeonHandGrid.classList.toggle('is-pacts-tab', activeTab === 'pacts');
   updateHandTabs(activeTab, activeBuffs.length, hasLevelPowerPrompt);
   if (activeTab === 'pacts') {
