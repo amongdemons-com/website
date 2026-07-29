@@ -106,8 +106,11 @@
     const pvpLosses = Math.max(0, Number(player.pvpLosses) || 0);
     const isRanked = currentSort === 'ranked';
     const rankedFloor = Math.max(0, Number(player.rankedHighestFloor) || 0);
-    const rankedRating = Math.max(0, Number(player.rankedRating) || 0);
-    const rankedDivision = Number(player.hasRankedRating) > 0
+    const hasRankedRating = Number(player.hasRankedRating) > 0;
+    const rankedRating = hasRankedRating
+      ? Math.max(0, Number(player.rankedRating) || 0)
+      : 0;
+    const rankedDivision = hasRankedRating
       ? (player.rankedDivision || 'Bronze II')
       : 'Unranked';
     const hunterHref = window.AmongDemons.appUrl(`/hunter/${encodeURIComponent(player.username || '')}`);
@@ -141,7 +144,9 @@
           </span>
         </td>
         <td data-label="${isRanked ? 'Rank' : 'Souls'}">${isRanked
-          ? `<span class="rank-metric"><strong>${renderRankDivisionText(rankedDivision)}</strong><small>${formatNumber(rankedRating)} RP</small></span>`
+          ? (hasRankedRating
+            ? `<span class="rank-metric rank-metric-ranked"><strong>${formatNumber(rankedRating)}</strong></span>`
+            : '')
           : renderSoulAmount(formatNumber(souls), {
           showLabel: false,
           className: 'rank-metric rank-metric-souls',

@@ -25,6 +25,7 @@ const {
   advanceRankedFloor,
   applyRankedWorkspace,
   awardRankedSoulInterest,
+  canSelectRankedPact,
   createInitialRankedState,
   createLockedRankedBonuses,
   dealOffers,
@@ -202,6 +203,9 @@ router.post('/ranked/runs/:id/pact', requireAuth, (req, res) => (
     if (!pendingIds.includes(buffId) || !getBuffById(buffId)) {
       throwRankedError('Choose one of the offered Demonic Pacts.', 409);
     }
+    if (!canSelectRankedPact(run, buffId)) {
+      throwRankedError('That Demonic Pact is already active and cannot stack.', 409);
+    }
     selectRunBuff(run, buffId);
   })
 ));
@@ -266,6 +270,10 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
 
     if (fight.winner === 'player') {
       await applyRankedVictory(run, rating, connection, req.player.id, result);
+      if (run.floor === 10) {
+        run.state.floorTenVictoryPending = true;
+        return;
+      }
       await advanceRankedFloor(run, { offerPact: true });
       return;
     }
@@ -377,6 +385,10 @@ async function applyRankedVictory(run, rating, connection, playerId, result) {
       run.state.endlessRatingEarned = Math.max(0, Number(run.state.endlessRatingEarned) || 0) + gain;
     }
     await applyRatingDelta(run, rating, connection, gain);
+  }
+  result.rankGain = gain;
+  if (clearedFloor === 10) {
+    run.state.floorTenRankGain = gain;
   }
 
   const rewardSouls = clearedFloor === 10 && !run.state.floorTenRewardClaimed ? 25 : 0;

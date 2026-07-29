@@ -237,7 +237,7 @@ All routes are mounted under `/api`.
 | `GET` | `/game/demons` | Demon asset mappings |
 | `GET` | `/game/catalog` | Combined, versioned, immutable-cacheable demon types and asset mappings |
 | `GET` | `/hunters/:username` | Public hunter profile (level, floor, PvP record, position) |
-| `GET` | `/leaderboard?sort=floor\|level\|xp\|souls\|pvp` | Up to 100 ranked players |
+| `GET` | `/leaderboard?sort=floor\|level\|xp\|souls\|pvp\|ranked` | Up to 100 ranked players |
 
 ## Game Systems
 

@@ -3,7 +3,10 @@ const db = require('./db');
 const { calculateStatBonuses, getPlayerStatPointSummary } = require('./account-stat-points');
 const {
   applyPreBattleBuffs,
+  canSelectRunBuff,
   generateBuffChoices,
+  getNonRepeatableBuffChoiceExclusions,
+  NON_REPEATABLE_COMBAT_BUFF_IDS,
   normalizeCombatBuffState,
   selectRunBuff,
   serializeCombatBuffState
@@ -12,12 +15,13 @@ const { withDemonImageVariants } = require('./demon-images');
 const { getGameCatalog } = require('./game-data');
 const { createPlayerCombatBuffState } = require('./player-combat-buffs');
 const { createRng } = require('./rng');
-const { assignFormationSlots, getFormationSlotPosition } = require('./run-demons');
+const { getFormationSlotPosition } = require('./run-demons');
 const { getActiveWorldBossRewardBuffs, loadWorldBosses, getWorldBossRewardBuff } = require('./world-bosses');
 const {
   ACTIVE_CAPACITY,
   COMBAT_DATA_VERSION,
   ENDLESS_SKILL_CAP,
+  FORMATION_CAPACITY,
   OFFER_SIZE,
   RANKED_STARTING_RSOULS,
   RANKED_RULES_VERSION,
@@ -40,6 +44,7 @@ const {
 
 const GENERATED_VARIANTS_PER_FLOOR = 4;
 const DEFAULT_RATING = 1000;
+const RANKED_NON_REPEATABLE_PACT_IDS = NON_REPEATABLE_COMBAT_BUFF_IDS;
 
 function parseRankedRun(row) {
   if (!row) return null;
@@ -215,6 +220,8 @@ async function createInitialRankedState(seed) {
     lastBattle: null,
     highestClearedFloor: 0,
     floorTenRewardClaimed: false,
+    floorTenVictoryPending: false,
+    floorTenRankGain: 0,
     pendingRating: 0,
     protectedRating: 0,
     endlessRatingEarned: 0,
@@ -223,27 +230,17 @@ async function createInitialRankedState(seed) {
   const catalog = await getGameCatalog();
   const starterRng = createRng(hashSeed(`${seed}:starters`));
   const typeIds = Object.keys(catalog.types).map(Number).filter((typeId) => typeId > 0);
+  const starters = [];
   for (let index = 0; index < 2; index += 1) {
     const rarity = starterRng() < 0.5 ? 'common' : 'uncommon';
     const typeId = typeIds[Math.floor(starterRng() * typeIds.length)] || typeIds[0];
-    const starter = createStandardRankedDemon(catalog, {
+    starters.push(createStandardRankedDemon(catalog, {
       typeId,
       rarity,
       instanceId: nextDemonId({ state }, 'starter')
-    });
-    if (index === 0) {
-      state.active.push({
-        ...starter,
-        formationSlot: 0,
-        position: 'back'
-      });
-    } else {
-      state.reserve.push({
-        ...starter,
-        reserveSlot: 0
-      });
-    }
+    }));
   }
+  state.active = arrangeRankedFormation(starters, 'player');
   await dealOffers({ seed, floor: 1, state }, OFFER_SIZE);
   return state;
 }
@@ -314,7 +311,7 @@ async function addDemonAndCombine(run, demon, destination = null) {
   );
   if (target === 'active') {
     const used = new Set(run.state.active.map((item) => Number(item.formationSlot)));
-    const formationSlot = Array.from({ length: ACTIVE_CAPACITY }, (_, index) => index)
+    const formationSlot = Array.from({ length: FORMATION_CAPACITY }, (_, index) => index)
       .find((slot) => !used.has(slot));
     run.state.active.push({
       ...demon,
@@ -474,7 +471,7 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
 
   const active = requestedActive.map((entry) => {
     const formationSlot = Number(entry?.formationSlot);
-    if (!Number.isInteger(formationSlot) || formationSlot < 0 || formationSlot >= ACTIVE_CAPACITY) {
+    if (!Number.isInteger(formationSlot) || formationSlot < 0 || formationSlot >= FORMATION_CAPACITY) {
       throw createWorkspaceError('The lineup contains an invalid formation slot.');
     }
     if (usedSlots.has(formationSlot)) {
@@ -615,6 +612,7 @@ function prepareNextSelection(run) {
   run.state.picksRemaining = 1;
   run.state.rerolls = normalizeRerolls();
   run.state.opponent = null;
+  run.state.floorTenVictoryPending = false;
   return reuseLockedHand;
 }
 
@@ -628,7 +626,9 @@ async function advanceRankedFloor(run, options = {}) {
   if (options.offerPact && shouldOfferPact(clearedFloor, run.state.buffs?.active?.length)) {
     generateBuffChoices(
       run,
-      createRng((Number(run.seed) + Number(run.floor) * 1597334677 + 991) >>> 0)
+      createRng((Number(run.seed) + Number(run.floor) * 1597334677 + 991) >>> 0),
+      3,
+      { excludeIds: getRankedPactChoiceExclusions(run) }
     );
   }
   return {
@@ -718,6 +718,8 @@ async function serializeRankedRun(run, rating, season) {
     rosterValid: rosterValidation.valid,
     rosterErrors: rosterValidation.errors,
     floorTenRewardClaimed: Boolean(state.floorTenRewardClaimed),
+    awaitingVictoryChoice: Boolean(state.floorTenVictoryPending),
+    floorTenRankGain: Math.max(0, Number(state.floorTenRankGain) || 0),
     rulesVersion: run.rulesVersion,
     combatVersion: COMBAT_DATA_VERSION
   };
@@ -961,8 +963,19 @@ async function createGeneratedSnapshot(seasonId, floor, ratingBracket, variant) 
     run.state.reserve = combined.reserve;
   }
 
-  const desiredTeamSize = Math.min(ACTIVE_CAPACITY, Math.max(2, 2 + Math.floor(floor / 2)));
-  run.state.active = arrangeRankedFormation(run.state.active.slice(0, desiredTeamSize), 'player');
+  const desiredTeamSize = getRankedActiveCapacity(floor);
+  const generatedRoster = [...run.state.active, ...run.state.reserve];
+  while (generatedRoster.length < desiredTeamSize) {
+    const fillIndex = generatedRoster.length;
+    const typeIds = Object.keys(catalog.types).map(Number);
+    const typeId = typeIds[Math.floor(rng() * typeIds.length)] || typeIds[0];
+    generatedRoster.push(createStandardRankedDemon(catalog, {
+      typeId,
+      rarity: pickRarityFromOdds(rng, getRarityOdds(floor)),
+      instanceId: `generated-${variant}-fill-${fillIndex + 1}`
+    }));
+  }
+  run.state.active = arrangeRankedFormation(generatedRoster.slice(0, desiredTeamSize), 'player');
   resetTeamForBattle(run.state.active);
   const buffs = createGeneratedPacts(seed, floor);
   const lockedBonuses = createGeneratedLockedBonuses(floor, ratingBracket, variant);
@@ -992,11 +1005,24 @@ function createGeneratedPacts(seed, floor) {
   for (let depth = 1; depth <= floor; depth += 1) {
     simulated.floor = depth;
     if (!shouldOfferPact(depth, simulated.state.buffs.active.length)) continue;
-    generateBuffChoices(simulated, createRng(hashSeed(`${seed}:pact:${depth}`)));
+    generateBuffChoices(
+      simulated,
+      createRng(hashSeed(`${seed}:pact:${depth}`)),
+      3,
+      { excludeIds: getRankedPactChoiceExclusions(simulated) }
+    );
     const choices = simulated.state.buffs.pendingChoices;
     if (choices.length) selectRunBuff(simulated, choices[0]);
   }
   return simulated.state.buffs;
+}
+
+function getRankedPactChoiceExclusions(run) {
+  return getNonRepeatableBuffChoiceExclusions(run);
+}
+
+function canSelectRankedPact(run, pactId) {
+  return canSelectRunBuff(run, pactId);
 }
 
 function createGeneratedLockedBonuses(floor, ratingBracket, variant) {
@@ -1048,21 +1074,41 @@ function mergeSnapshotBuffs(snapshot = {}) {
 }
 
 function arrangeRankedFormation(team = [], side = 'player') {
-  return assignFormationSlots((team || []).map((demon) => {
-    const arranged = {
+  const takenSlots = new Set();
+  const frontColumn = side === 'enemy' ? 0 : 2;
+  const backColumns = side === 'enemy' ? [2, 1] : [1, 0];
+  const slotOrder = (position) => {
+    const columns = position === 'front'
+      ? [frontColumn, ...backColumns]
+      : [...backColumns, frontColumn];
+    return columns.flatMap((column) => (
+      Array.from({ length: FORMATION_CAPACITY / 3 }, (_, row) => row * 3 + column)
+    ));
+  };
+
+  return (team || []).slice(0, ACTIVE_CAPACITY).map((demon) => {
+    const explicitSlot = Number(demon.formationSlot ?? demon.formationRow);
+    const hasLegalExplicitSlot = Number.isInteger(explicitSlot)
+      && explicitSlot >= 0
+      && explicitSlot < FORMATION_CAPACITY
+      && !takenSlots.has(explicitSlot);
+    const preferredPosition = demon.preferredPosition === 'back' ? 'back' : 'front';
+    const formationSlot = hasLegalExplicitSlot
+      ? explicitSlot
+      : slotOrder(preferredPosition).find((slot) => !takenSlots.has(slot));
+    takenSlots.add(formationSlot);
+    return {
       ...demon,
-      position: demon.preferredPosition === 'back' ? 'back' : 'front'
+      formationSlot,
+      position: getFormationSlotPosition(formationSlot, side)
     };
-    delete arranged.formationSlot;
-    delete arranged.formationRow;
-    return arranged;
-  }), side);
+  });
 }
 
 function prepareOpponentTeam(team = []) {
   const mirrored = (team || []).map((demon) => {
     const slot = Number(demon.formationSlot ?? demon.formationRow);
-    if (!Number.isInteger(slot) || slot < 0 || slot >= ACTIVE_CAPACITY) {
+    if (!Number.isInteger(slot) || slot < 0 || slot >= FORMATION_CAPACITY) {
       const unplaced = {
         ...demon,
         position: demon.preferredPosition === 'back' ? 'back' : 'front'
@@ -1078,7 +1124,7 @@ function prepareOpponentTeam(team = []) {
       position: getFormationSlotPosition(mirroredSlot, 'enemy')
     };
   });
-  return assignFormationSlots(mirrored, 'enemy');
+  return arrangeRankedFormation(mirrored, 'enemy');
 }
 
 function getPlayerBattleBuffs(run) {
@@ -1126,6 +1172,7 @@ function createWorkspaceError(message) {
 module.exports = {
   COMBAT_DATA_VERSION,
   DEFAULT_RATING,
+  RANKED_NON_REPEATABLE_PACT_IDS,
   addDemonAndCombine,
   advanceRankedFloor,
   applyRankedWorkspace,
@@ -1133,6 +1180,7 @@ module.exports = {
   createInitialRankedState,
   createLockedRankedBonuses,
   createStandardRankedDemon,
+  canSelectRankedPact,
   dealOffers,
   getCurrentRankedRun,
   getOrCreateCurrentSeason,
@@ -1155,6 +1203,7 @@ module.exports = {
     createGeneratedPacts,
     createGeneratedLockedBonuses,
     ensureGeneratedOpponents,
+    getRankedPactChoiceExclusions,
     hashSeed,
     prepareOpponentTeam
   }

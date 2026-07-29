@@ -8,10 +8,10 @@
     <meta name="description" content="Draft a standardized demon team and climb the seasonal Among Demons Ranked ladder.">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=681219b8ceb0" rel="stylesheet">
-    <link href="/app/css/battle.css?v=590205395580" rel="stylesheet">
+    <link href="/app/css/base.css?v=ce9e51d5e1a9" rel="stylesheet">
+    <link href="/app/css/battle.css?v=b53ae4a78a1d" rel="stylesheet">
     <link href="/app/css/rank-divisions.css?v=e65b1b64c1f6" rel="stylesheet">
-    <link href="/app/css/ranked.css?v=9ee9c56fcf76" rel="stylesheet">
+    <link href="/app/css/ranked.css?v=0212bafa332d" rel="stylesheet">
   </head>
   <body class="dungeon-page ranked-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -121,7 +121,49 @@
         <div id="rankedPactGrid" class="demonic-pact-grid"></div>
       </div>
     </div>
+    <div
+      class="modal fade ranked-victory-modal"
+      id="rankedVictoryModal"
+      tabindex="-1"
+      aria-labelledby="rankedVictoryTitle"
+      aria-describedby="rankedVictorySummary"
+      aria-hidden="true"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body">
+            <span class="dungeon-phase-eyebrow">Floor 10 Cleared</span>
+            <h2 class="modal-title" id="rankedVictoryTitle">Ranked Victory</h2>
+            <div class="ranked-victory-rank">
+              <img
+                class="ranked-victory-rank-image"
+                id="rankedVictoryRankImage"
+                src="/app/images/assets/ranks/bronze.svg"
+                alt=""
+                width="144"
+                height="160"
+              >
+              <strong id="rankedVictoryDivision">Bronze II</strong>
+            </div>
+            <p class="ranked-victory-gain" id="rankedVictoryRankGain">+0 RP</p>
+            <p class="ranked-victory-summary" id="rankedVictorySummary">
+              Your rank has been updated. Continue into Endless or close this run.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-light" type="button" data-ranked-victory-action="endless">
+              Endless
+            </button>
+            <a class="btn btn-primary" href="/ranked" data-ranked-victory-action="new-run">
+              New Run
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="/app/dist/runtime.bundle.js?v=89fe66ba301c"></script>
-    <script src="/app/dist/ranked.bundle.js?v=a23bc947e6d9"></script>
+    <script src="/app/dist/ranked.bundle.js?v=062f078e19ce"></script>
   </body>
 </html>

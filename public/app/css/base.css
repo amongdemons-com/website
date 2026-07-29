@@ -5009,8 +5009,16 @@ body.rankings-page {
 .rank-sort-tabs {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-end;
     gap: 0.45rem;
+}
+
+.rank-sort-separator {
+    color: rgba(214,232,227,0.58);
+    font-size: 0.82rem;
+    font-weight: 900;
+    line-height: 1;
 }
 
 .rankings-page .rank-sort-link {
@@ -5304,10 +5312,16 @@ body.rankings-page {
         padding: 0.85rem;
     }
 
-.rank-sort-tabs {
+    .rank-sort-tabs {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: center;
         justify-content: stretch;
+    }
+
+    .rank-sort-separator {
+        justify-self: end;
+        text-align: center;
     }
 
 .rankings-page .rank-sort-link {

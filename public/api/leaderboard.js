@@ -19,7 +19,6 @@ router.get('/leaderboard', async (req, res) => {
     pvp: 'p.pvp_wins DESC, p.pvp_losses ASC, p.level DESC, p.xp DESC, p.highest_floor DESC, p.souls DESC',
     ranked: 'has_ranked_rating DESC, ranked_rating DESC, ranked_highest_floor DESC, ranked_victories DESC, p.level DESC, p.username ASC'
   }[sort];
-  const whereClause = sort === 'ranked' ? 'WHERE rr.player_id IS NOT NULL' : '';
   const season = await getOrCreateCurrentSeason();
 
   const [rowsResult, stats] = await Promise.all([db.query(
@@ -43,7 +42,6 @@ router.get('/leaderboard', async (req, res) => {
      LEFT JOIN ranked_ratings rr
        ON rr.player_id = p.id
       AND rr.season_id = ?
-     ${whereClause}
      ORDER BY ${orderBy}
      LIMIT 100`,
     [season.id]

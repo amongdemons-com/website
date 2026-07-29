@@ -6,7 +6,7 @@
 - [x] Reuse the existing Dungeon/World battle UI, combat replay, animations, drag-and-drop behavior, responsive layout, combat log, and speed controls.
 - [x] Keep the standard site navbar.
 - [x] Do not create a separate battle header.
-- [x] In Ranked only, replace the existing `YOUR TEAM 4/9` row content with:
+- [x] In Ranked only, replace the existing `YOUR TEAM 4/6` row content with:
   - Desktop: `BRONZE II · FLOOR 7 · ♥ ♥ ♡`
   - Mobile: a compact equivalent such as `F7 · ♥ 2/3`
 - [x] During combat, preserve the existing battle layout without additional panels or overlays.
@@ -17,11 +17,12 @@
 - [x] Do not use demons from the permanent collection.
 - [x] Do not apply permanent demon training.
 - [x] Generate standardized Ranked demons from the normal demon type and rarity data.
-- [x] Limit the number of active demons to the current floor plus one, capped at the 9-slot formation size.
+- [x] Limit the number of active demons to the current floor plus one, capped at 6 from floor 5 onward.
 - [x] Give each run 3 lives.
 - [x] On defeat, consume one life, grant floor interest, and continue to the next floor while lives remain.
 - [x] End the run when no lives remain.
 - [x] Treat clearing floor 10 as a completed Ranked victory.
+- [x] Show the new rank, gained Rank Points, and rank emblem after floor 10, then let the player choose Endless or New Run.
 - [x] Allow the player to continue beyond floor 10 until all lives are lost.
 - [x] Preserve the normal automatic combat rules and deterministic server simulation.
 
@@ -38,7 +39,7 @@
 
 ## 4. Active team and Reserve
 
-- [x] Show the player’s normal 9-slot formation on the left during preparation.
+- [x] Show the player’s normal 9-slot formation on the left during preparation while limiting the active team to 6 demon cards.
 - [x] Replace the enemy formation on the right with a limited **Reserve** during preparation.
 - [x] Start with 6 Reserve slots, displayed as the first two rows of the standard formation UI.
 - [x] Keep Reserve demons across floors.
@@ -56,7 +57,7 @@
 - [x] After each resolved floor, present five demon cards or carry the exact Hand forward when it is locked.
 - [x] Allow the player to buy any number of offered demons that fit in Team and Reserve.
 - [x] Start each Ranked run with 2 run-only Ranked Souls (`rSouls`).
-- [x] Start with 2 deterministic-random Common or Uncommon demons, placing one on the Floor 1 team and one in Reserve.
+- [x] Start with 2 deterministic-random Common or Uncommon demons, placing both on the Floor 1 team.
 - [x] Never spend the player's general Soul balance on Ranked cards or rerolls.
 - [x] Price Hand cards in rSouls by rarity: 1 Common, 2 Uncommon, 3 Rare, 4 Epic, 5 Legendary, and 7 Mythic.
 - [x] Treat moving a Hand card to Team or Reserve as its purchase point.
@@ -141,6 +142,7 @@
 
 - [x] If no real player snapshot exists for a floor, create a legal generated opponent.
 - [x] Generate opponents through the same drafting, rarity, combining, Pact, formation, and buff constraints available to players.
+- [x] Give generated opponents the exact active-team limit for their floor and simulated Pact selections.
 - [x] Do not use unexplained artificial stat multipliers.
 - [x] Seed generated opponents deterministically using the season and floor.
 - [x] Generate and cache approximately 3–5 variants per empty floor.

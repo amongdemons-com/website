@@ -120,6 +120,85 @@ function renderActivePactIcon(buff) {
   `;
 }
 
+function compactActivePacts(buffs = [], options = {}) {
+  const compacted = [];
+  const buffById = new Map();
+  const onlySource = options.onlySource ? String(options.onlySource) : '';
+
+  buffs.forEach((buff) => {
+    if (!buff?.id) return;
+    if (onlySource && String(buff.source || '') !== onlySource) {
+      compacted.push(buff);
+      return;
+    }
+
+    const existing = buffById.get(buff.id);
+    if (existing) {
+      existing.stackCount += 1;
+      return;
+    }
+
+    const compactedBuff = { ...buff, stackCount: 1 };
+    buffById.set(buff.id, compactedBuff);
+    compacted.push(compactedBuff);
+  });
+
+  return compacted;
+}
+
+function renderStackedActivePactIcon(buff, options = {}) {
+  const stackCount = Math.max(1, Math.trunc(Number(buff?.stackCount) || 1));
+  const stackClass = options.stackClass || 'active-pact-stack';
+  const countClass = options.countClass || 'active-pact-stack-count';
+  const renderedBuff = stackCount > 1
+    ? {
+        ...buff,
+        tooltip: `${buff.name || buff.id}: ${formatStackedPactDescription(buff, stackCount)}`
+      }
+    : buff;
+
+  return `
+    <span class="${escapeHtml(stackClass)}">
+      ${renderActivePactIcon(renderedBuff)}
+      ${stackCount > 1 ? `
+        <span class="${escapeHtml(countClass)}" aria-label="${stackCount} stacks">${stackCount}</span>
+      ` : ''}
+    </span>
+  `;
+}
+
+function formatStackedPactDescription(buff, stackCount) {
+  const effectPercentages = (Array.isArray(buff?.effects) ? buff.effects : [])
+    .filter((effect) => String(effect?.type || '').endsWith('_mult'))
+    .map((effect) => Math.abs((Number(effect.value) - 1) * 100))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  const description = String(buff?.description || '');
+  let replacementCount = 0;
+
+  const stackedDescription = description.replace(/(\d+(?:\.\d+)?)%/g, (match, rawValue) => {
+    const baseValue = Number(rawValue);
+    const effectIndex = effectPercentages.findIndex(
+      (value) => Math.abs(value - baseValue) < .001
+    );
+    if (effectIndex < 0) return match;
+
+    effectPercentages.splice(effectIndex, 1);
+    replacementCount += 1;
+    const totalValue = baseValue * stackCount;
+    return `${formatPactPercentage(totalValue)}% (${stackCount} x ${formatPactPercentage(baseValue)}%)`;
+  });
+  if (replacementCount > 0) return stackedDescription;
+
+  return `${description.replace(/\.$/, '')} (${stackCount} copies).`;
+}
+
+function formatPactPercentage(value) {
+  const rounded = Math.round((Number(value) || 0) * 100) / 100;
+  return Number.isInteger(rounded)
+    ? String(rounded)
+    : String(rounded).replace(/0+$/, '').replace(/\.$/, '');
+}
+
 function getActivePactTooltip(buff = {}) {
   const baseTooltip = buff.tooltip || `${buff.name || buff.id}: ${buff.description || ''}`;
   const expiryTooltip = getBuffExpiryTooltip(buff);
@@ -413,7 +492,9 @@ export {
   renderDemonicPacts,
   toggleDemonicPactView,
   syncDemonicPactView,
+  compactActivePacts,
   renderActivePactIcon,
+  renderStackedActivePactIcon,
   renderDemonicPactCard,
   chooseDemonicPact,
   rerollDemonicPacts

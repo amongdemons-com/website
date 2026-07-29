@@ -3,7 +3,7 @@ const db = require('../lib/db');
 const { cleanPlayer, requireAuth } = require('../lib/auth');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, parseRun, saveRun } = require('../lib/runs');
-const { ensureRunBuffState, generateBuffChoices, getBuffById, hasPendingBuffChoices, PACT_REROLL_SOUL_COST, selectRunBuff } = require('../lib/run-buffs');
+const { canSelectRunBuff, ensureRunBuffState, generateBuffChoices, getBuffById, hasPendingBuffChoices, PACT_REROLL_SOUL_COST, selectRunBuff } = require('../lib/run-buffs');
 const { serializeRun } = require('../lib/run-serialization');
 const achievements = require('../lib/achievements');
 
@@ -110,6 +110,10 @@ router.post('/runs/:id/buff', requireAuth, async (req, res) => {
 
   if (!run.state.buffs.pendingChoices.includes(buffId)) {
     return res.status(409).json({ error: 'Choose one of the offered Demonic Pacts.' });
+  }
+
+  if (!canSelectRunBuff(run, buffId)) {
+    return res.status(409).json({ error: 'That Demonic Pact is already active and cannot stack.' });
   }
 
   selectRunBuff(run, buffId);

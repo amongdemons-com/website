@@ -3978,6 +3978,36 @@ body .battle-speed-option.ad-primary-action:disabled {
     text-align: center;
 }
 
+.dungeon-pact-stack {
+    position: relative;
+    display: inline-grid;
+    flex: 0 0 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+.dungeon-pact-stack-count {
+    position: absolute;
+    bottom: -.42rem;
+    right: -.22rem;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 2px solid rgba(3, 9, 11, .92);
+    border-radius: 50%;
+    background: var(--ad-teal, #6fd6bd);
+    color: #04100d;
+    font-size: .72rem;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow:
+        0 0 0 1px rgba(111, 214, 189, .7),
+        0 0 10px rgba(111, 214, 189, .28);
+    pointer-events: none;
+}
+
 .dungeon-hand-pacts .active-pact-chip-tags {
     justify-content: center;
 }

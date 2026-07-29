@@ -11,6 +11,12 @@ const RARITY_WEIGHTS = {
   uncommon: 24,
   rare: 6
 };
+const NON_REPEATABLE_COMBAT_BUFF_IDS = Object.freeze([
+  'execution_mark',
+  'last_breath',
+  'overflow_healing'
+]);
+const NON_REPEATABLE_COMBAT_BUFF_ID_SET = new Set(NON_REPEATABLE_COMBAT_BUFF_IDS);
 const DEMON_RARITIES = new Set(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']);
 
 let cachedBuffs = null;
@@ -163,7 +169,10 @@ function normalizeExpiresAt(value) {
 function generateBuffChoices(run, rng, count = 3, options = {}) {
   const state = ensureCombatBuffState(run);
   const choices = [];
-  const excluded = new Set((options.excludeIds || []).map((id) => String(id)));
+  const excluded = new Set([
+    ...(options.excludeIds || []).map((id) => String(id)),
+    ...getNonRepeatableBuffChoiceExclusions(run)
+  ]);
   const available = loadCombatBuffs()
     .filter((buff) => !excluded.has(buff.id));
 
@@ -184,7 +193,7 @@ function selectRunBuff(run, buffId) {
   const state = ensureCombatBuffState(run);
   const id = String(buffId || '');
   const buff = getCombatBuffById(id);
-  if (!buff) return null;
+  if (!buff || !canSelectRunBuff(run, id)) return null;
 
   state.active.push(id);
   addTemporaryEntriesForBuff(state, buff);
@@ -193,6 +202,17 @@ function selectRunBuff(run, buffId) {
   run.state.buffs = normalizeCombatBuffState(state);
   applyRunBuffStatModifiers(run);
   return buff;
+}
+
+function getNonRepeatableBuffChoiceExclusions(run) {
+  return normalizeCombatBuffState(run?.state?.buffs).active
+    .filter((id) => NON_REPEATABLE_COMBAT_BUFF_ID_SET.has(id));
+}
+
+function canSelectRunBuff(run, buffId) {
+  const id = String(buffId || '');
+  return !NON_REPEATABLE_COMBAT_BUFF_ID_SET.has(id)
+    || !normalizeCombatBuffState(run?.state?.buffs).active.includes(id);
 }
 
 function hasPendingBuffChoices(run) {
@@ -852,12 +872,14 @@ module.exports = {
   applyPoisonModifiers,
   applyPreBattleBuffs,
   applyRunBuffStatModifiers,
+  canSelectRunBuff,
   consumeNextBattleTemporaryBuffs,
   ensureCombatBuffState,
   generateBuffChoices,
   getActiveCombatBuffs,
   getCombatBuffById,
   getBuffById,
+  getNonRepeatableBuffChoiceExclusions,
   getTemporaryTeamSizeBonus,
   handleDeathBuffTriggers,
   hasPendingBuffChoices,
@@ -868,6 +890,7 @@ module.exports = {
   serializeCombatBuffState,
   BUFF_CHOICE_FLOOR_INTERVAL,
   BUFF_REROLL_SOUL_COST,
+  NON_REPEATABLE_COMBAT_BUFF_IDS,
   PACT_CHOICE_FLOOR_INTERVAL,
   PACT_REROLL_SOUL_COST,
   selectRunBuff,

@@ -17,7 +17,8 @@ const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCar
 const renderRun = (...args) => dungeonActions.renderRun(...args);
 const getActiveBuffs = (...args) => dungeonActions.getActiveBuffs(...args);
 const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
-const renderActivePactIcon = (...args) => dungeonActions.renderActivePactIcon(...args);
+const compactActivePacts = (...args) => dungeonActions.compactActivePacts(...args);
+const renderStackedActivePactIcon = (...args) => dungeonActions.renderStackedActivePactIcon(...args);
 const shouldShowCollectionReinforcementHandPlaceholder = (...args) => dungeonActions.shouldShowCollectionReinforcementHandPlaceholder(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
 const isExtractionUnlocked = (...args) => dungeonActions.isExtractionUnlocked(...args);
@@ -175,7 +176,7 @@ function getHandBuffs() {
   return [
     ...(levelPowerBuff ? [levelPowerBuff] : []),
     ...(levelPowerPrompt ? [levelPowerPrompt] : []),
-    ...getActiveBuffs()
+    ...compactActivePacts(getActiveBuffs(), { onlySource: 'combat' })
   ];
 }
 
@@ -256,7 +257,10 @@ function renderHandPactTags(activeBuffs) {
       </button>
       <div class="dungeon-hand-scroll-viewport" data-hand-scroll-viewport>
         <div class="dungeon-hand-pacts" aria-label="Active dungeon buffs">
-          ${activeBuffs.map(renderActivePactIcon).join('')}
+          ${activeBuffs.map((buff) => renderStackedActivePactIcon(buff, {
+            stackClass: 'dungeon-pact-stack',
+            countClass: 'dungeon-pact-stack-count'
+          })).join('')}
         </div>
       </div>
       <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="1" aria-label="Scroll buffs right" title="Scroll buffs right" hidden disabled>

@@ -7,9 +7,10 @@ const RARITIES = Object.freeze([
   'mythic'
 ]);
 
-const RANKED_RULES_VERSION = 'ranked-v2';
-const COMBAT_DATA_VERSION = 'combat-v2';
-const ACTIVE_CAPACITY = 9;
+const RANKED_RULES_VERSION = 'ranked-v3';
+const COMBAT_DATA_VERSION = 'combat-v3';
+const ACTIVE_CAPACITY = 6;
+const FORMATION_CAPACITY = 9;
 const RESERVE_CAPACITY = 6;
 const STARTING_LIVES = 3;
 const STARTING_DRAFT_PICKS = 2;
@@ -381,7 +382,7 @@ function summarizeReserve(reserve = []) {
 
 function normalizeFormationSlot(slot) {
   const number = Number(slot);
-  return Number.isInteger(number) && number >= 0 && number < ACTIVE_CAPACITY ? number : null;
+  return Number.isInteger(number) && number >= 0 && number < FORMATION_CAPACITY ? number : null;
 }
 
 function normalizeReserveSlot(slot) {
@@ -424,6 +425,7 @@ module.exports = {
   ENDLESS_RATING_CAP_PER_RUN,
   ENDLESS_SKILL_CAP,
   FLOOR_TEN_SOUL_REWARD,
+  FORMATION_CAPACITY,
   OFFER_SIZE,
   RANKED_CARD_RARITY_COSTS,
   RANKED_REROLL_RSOUL_COST,
