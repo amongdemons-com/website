@@ -107,8 +107,9 @@
     const isRanked = currentSort === 'ranked';
     const rankedFloor = Math.max(0, Number(player.rankedHighestFloor) || 0);
     const rankedRating = Math.max(0, Number(player.rankedRating) || 0);
-    const rankedVictories = Math.max(0, Number(player.rankedVictories) || 0);
-    const rankedRuns = Math.max(0, Number(player.rankedRuns) || 0);
+    const rankedDivision = Number(player.hasRankedRating) > 0
+      ? (player.rankedDivision || 'Bronze II')
+      : 'Unranked';
     const hunterHref = window.AmongDemons.appUrl(`/hunter/${encodeURIComponent(player.username || '')}`);
     const topRankIcon = topRankIcons[index] || '';
     const rowClasses = [
@@ -128,9 +129,9 @@
         <td class="rank-hunter-cell" data-label="Hunter">
           <span class="rank-hunter">
             <a class="rank-hunter-name rank-hunter-name-link" href="${escapeHtml(hunterHref)}">${escapeHtml(player.username)}</a>
-            <small class="rank-hunter-meta">${isRanked
-              ? `${formatNumber(rankedVictories)} victories &middot; ${formatNumber(rankedRuns)} runs`
-              : `Level ${formatNumber(level)} &middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`}</small>
+            <small class="rank-hunter-meta">${renderRankDivisionText(rankedDivision)}
+              &middot; Level ${formatNumber(level)}
+              &middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}</small>
           </span>
         </td>
         <td class="rank-floor-cell" data-label="Highest Floor">
@@ -140,7 +141,7 @@
           </span>
         </td>
         <td data-label="${isRanked ? 'Rank' : 'Souls'}">${isRanked
-          ? `<span class="rank-metric"><strong>${escapeHtml(player.rankedDivision || 'Bronze II')}</strong><small>${formatNumber(rankedRating)} RP</small></span>`
+          ? `<span class="rank-metric"><strong>${renderRankDivisionText(rankedDivision)}</strong><small>${formatNumber(rankedRating)} RP</small></span>`
           : renderSoulAmount(formatNumber(souls), {
           showLabel: false,
           className: 'rank-metric rank-metric-souls',
@@ -204,6 +205,14 @@
     if (!iconName || typeof renderIcon !== 'function') return '';
 
     return renderIcon(iconName, { size: 16, className: 'rank-icon' });
+  }
+
+  function renderRankDivisionText(division) {
+    const label = String(division || 'Unranked').trim() || 'Unranked';
+    const slug = label.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    return `<span class="rank-division-text rank-division-text--${escapeHtml(slug)}">${escapeHtml(label)}</span>`;
   }
 
   function setStatText(element, value, options = {}) {

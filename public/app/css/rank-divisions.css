@@ -1,0 +1,45 @@
+.rank-division-text {
+    --rank-color: #98a3ad;
+    --rank-glow: rgba(152, 163, 173, 0.28);
+    color: var(--rank-color);
+    font-weight: 850;
+    text-shadow: 0 0 10px var(--rank-glow);
+}
+
+.rank-division-text--unranked {
+    --rank-color: #98a3ad;
+    --rank-glow: rgba(152, 163, 173, 0.28);
+}
+
+.rank-division-text--bronze-iii,
+.ranked-rank--bronze-iii { --rank-color: #bd7048; --rank-glow: rgba(189, 112, 72, .36); }
+.rank-division-text--bronze-ii,
+.ranked-rank--bronze-ii  { --rank-color: #d18452; --rank-glow: rgba(209, 132, 82, .4); }
+.rank-division-text--bronze-i,
+.ranked-rank--bronze-i   { --rank-color: #e69b62; --rank-glow: rgba(230, 155, 98, .44); }
+.rank-division-text--silver-iii,
+.ranked-rank--silver-iii { --rank-color: #9eafbd; --rank-glow: rgba(158, 175, 189, .36); }
+.rank-division-text--silver-ii,
+.ranked-rank--silver-ii  { --rank-color: #bdcad4; --rank-glow: rgba(189, 202, 212, .4); }
+.rank-division-text--silver-i,
+.ranked-rank--silver-i   { --rank-color: #e0eaf1; --rank-glow: rgba(224, 234, 241, .46); }
+.rank-division-text--gold-iii,
+.ranked-rank--gold-iii   { --rank-color: #d79a20; --rank-glow: rgba(215, 154, 32, .38); }
+.rank-division-text--gold-ii,
+.ranked-rank--gold-ii    { --rank-color: #efb934; --rank-glow: rgba(239, 185, 52, .44); }
+.rank-division-text--gold-i,
+.ranked-rank--gold-i     { --rank-color: #ffd866; --rank-glow: rgba(255, 216, 102, .5); }
+.rank-division-text--platinum-iii,
+.ranked-rank--platinum-iii { --rank-color: #4fb98e; --rank-glow: rgba(79, 185, 142, .4); }
+.rank-division-text--platinum-ii,
+.ranked-rank--platinum-ii  { --rank-color: #62d0a4; --rank-glow: rgba(98, 208, 164, .46); }
+.rank-division-text--platinum-i,
+.ranked-rank--platinum-i   { --rank-color: #91f0c7; --rank-glow: rgba(145, 240, 199, .54); }
+.rank-division-text--diamond-iii,
+.ranked-rank--diamond-iii  { --rank-color: #5aa7ed; --rank-glow: rgba(90, 167, 237, .42); }
+.rank-division-text--diamond-ii,
+.ranked-rank--diamond-ii   { --rank-color: #76c5ff; --rank-glow: rgba(118, 197, 255, .48); }
+.rank-division-text--diamond-i,
+.ranked-rank--diamond-i    { --rank-color: #a9e5ff; --rank-glow: rgba(169, 229, 255, .56); }
+.rank-division-text--demonic,
+.ranked-rank--demonic      { --rank-color: #e58aff; --rank-glow: rgba(202, 76, 255, .62); }

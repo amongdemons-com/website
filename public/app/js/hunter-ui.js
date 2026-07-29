@@ -80,8 +80,7 @@
     elements.cta = document.querySelector('[data-hunter-cta]');
     elements.stats = {
       floor: document.querySelector('[data-hunter-stat="floor"]'),
-      coordinates: document.querySelector('[data-hunter-stat="coordinates"]'),
-      ranked: document.querySelector('[data-hunter-stat="ranked"]')
+      coordinates: document.querySelector('[data-hunter-stat="coordinates"]')
     };
   }
 
@@ -94,17 +93,17 @@
     const level = Math.max(1, Number(hunter.level) || 1);
     const pvpWins = Math.max(0, Number(hunter.pvpWins) || 0);
     const pvpLosses = Math.max(0, Number(hunter.pvpLosses) || 0);
+    const rankedDivision = payload.ranked?.division || 'Unranked';
     const profileImage = hunter.profileDemonImageUrl || getFirstTeamImage(worldTeam) || FALLBACK_AVATAR;
 
     document.title = `${username} | Hunter Profile | Among Demons`;
     updateCanonical(username);
     setHunterName(username);
-    setText(elements.subline, `Level ${formatNumber(level)} \u00b7 ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`);
+    elements.subline.innerHTML = `${renderRankDivisionText(rankedDivision)}
+      <span aria-hidden="true">&middot;</span> Level ${formatNumber(level)}
+      <span aria-hidden="true">&middot;</span> ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`;
     setText(elements.stats.floor, formatNumber(hunter.highestFloor || 0));
     setText(elements.stats.coordinates, formatCoordinates(coordinates));
-    setText(elements.stats.ranked, payload.ranked
-      ? `#${formatNumber(payload.ranked.rank)} ${payload.ranked.division}`
-      : 'Unranked');
 
     if (elements.avatar) {
       elements.avatar.src = profileImage;
@@ -601,6 +600,14 @@
   function renderIcon(name) {
     const renderer = window.AmongDemons?.ui?.renderIcon;
     return typeof renderer === 'function' ? renderer(name, { size: 18 }) : '';
+  }
+
+  function renderRankDivisionText(division) {
+    const label = String(division || 'Unranked').trim() || 'Unranked';
+    const slug = label.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    return `<span class="rank-division-text rank-division-text--${escapeHtml(slug)}">${escapeHtml(label)}</span>`;
   }
 
   function formatNumber(value) {

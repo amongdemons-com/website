@@ -59,24 +59,6 @@
   font-weight: 950;
 }
 
-/* Every division owns a distinct color token; crest art is shared by tier. */
-.ranked-rank--bronze-iii { --rank-color: #bd7048; --rank-glow: rgba(189, 112, 72, .36); }
-.ranked-rank--bronze-ii  { --rank-color: #d18452; --rank-glow: rgba(209, 132, 82, .4); }
-.ranked-rank--bronze-i   { --rank-color: #e69b62; --rank-glow: rgba(230, 155, 98, .44); }
-.ranked-rank--silver-iii { --rank-color: #9eafbd; --rank-glow: rgba(158, 175, 189, .36); }
-.ranked-rank--silver-ii  { --rank-color: #bdcad4; --rank-glow: rgba(189, 202, 212, .4); }
-.ranked-rank--silver-i   { --rank-color: #e0eaf1; --rank-glow: rgba(224, 234, 241, .46); }
-.ranked-rank--gold-iii   { --rank-color: #d79a20; --rank-glow: rgba(215, 154, 32, .38); }
-.ranked-rank--gold-ii    { --rank-color: #efb934; --rank-glow: rgba(239, 185, 52, .44); }
-.ranked-rank--gold-i     { --rank-color: #ffd866; --rank-glow: rgba(255, 216, 102, .5); }
-.ranked-rank--platinum-iii { --rank-color: #4fb98e; --rank-glow: rgba(79, 185, 142, .4); }
-.ranked-rank--platinum-ii  { --rank-color: #62d0a4; --rank-glow: rgba(98, 208, 164, .46); }
-.ranked-rank--platinum-i   { --rank-color: #91f0c7; --rank-glow: rgba(145, 240, 199, .54); }
-.ranked-rank--diamond-iii  { --rank-color: #5aa7ed; --rank-glow: rgba(90, 167, 237, .42); }
-.ranked-rank--diamond-ii   { --rank-color: #76c5ff; --rank-glow: rgba(118, 197, 255, .48); }
-.ranked-rank--diamond-i    { --rank-color: #a9e5ff; --rank-glow: rgba(169, 229, 255, .56); }
-.ranked-rank--demonic      { --rank-color: #e58aff; --rank-glow: rgba(202, 76, 255, .62); }
-
 .ranked-rsoul-balance {
   display: inline-flex;
   align-items: center;
@@ -105,18 +87,11 @@
 /* Ranked uses Dungeon's bottom-panel height contract. */
 .ranked-page #rankedBottomPanel {
   --ranked-offer-card-size: var(--dungeon-bottom-panel-content-height);
+  position: relative;
   grid-template-columns: minmax(0, 1fr);
   width: 100%;
   height: var(--dungeon-bottom-panel-height);
   margin-top: .35rem;
-}
-
-.ranked-page #rankedBottomPanel.has-fight-review {
-  grid-template-columns: minmax(0, 1fr) auto;
-}
-
-.ranked-page #rankedBottomPanel.has-fight-review .ranked-preparation {
-  grid-column: 1;
 }
 
 .ranked-page #rankedBottomPanel.is-battle-active {
@@ -151,14 +126,38 @@
 }
 
 .ranked-preparation {
+  --ranked-preparation-side-size: var(--dungeon-bottom-panel-content-height);
+  --ranked-offer-grid-max-width: calc(
+    var(--ranked-offer-card-size)
+    + var(--ranked-offer-card-size)
+    + var(--ranked-offer-card-size)
+    + var(--ranked-offer-card-size)
+    + var(--ranked-offer-card-size)
+    + 1.68rem
+  );
+  --ranked-preparation-max-width: calc(
+    var(--ranked-offer-grid-max-width)
+    + var(--ranked-preparation-side-size)
+    + var(--ranked-preparation-side-size)
+    + var(--ranked-preparation-side-size)
+    + 1.65rem
+    + .8rem
+    + 2px
+  );
   box-sizing: border-box;
   display: grid;
   grid-column: 1 / -1;
-  grid-template-columns: var(--dungeon-bottom-panel-content-height) minmax(0, 1fr) var(--dungeon-bottom-panel-content-height);
+  grid-template-columns:
+    var(--ranked-preparation-side-size)
+    minmax(0, var(--ranked-offer-grid-max-width))
+    var(--ranked-preparation-side-size)
+    var(--ranked-preparation-side-size);
   align-items: stretch;
   gap: .55rem;
-  width: 100%;
+  position: relative;
+  width: min(100%, var(--ranked-preparation-max-width));
   height: var(--dungeon-bottom-panel-height);
+  margin-inline: auto;
   min-width: 0;
   min-height: 0;
   border: 1px solid rgba(232, 199, 106, .28);
@@ -170,17 +169,18 @@
     inset 0 0 0 1px rgba(255, 255, 255, .04),
     0 -14px 34px rgba(0, 0, 0, .24);
   padding: var(--dungeon-bottom-panel-padding-y) .4rem;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ranked-offer-area {
+  position: relative;
   display: grid;
   grid-template-rows: minmax(0, 1fr);
   width: 100%;
   height: var(--dungeon-bottom-panel-content-height);
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ranked-offer-grid {
@@ -191,7 +191,7 @@
   align-items: end;
   justify-content: safe center;
   gap: .42rem;
-  width: 100%;
+  width: min(100%, var(--ranked-offer-grid-max-width));
   height: 100%;
   min-width: 0;
   min-height: 0;
@@ -457,6 +457,149 @@
 .ranked-side-action-stack .ranked-action-cost {
   min-height: 1.05rem;
   padding: .13rem .25rem;
+}
+
+.ranked-reroll-rail,
+.ranked-action-dock {
+  display: grid;
+  align-self: stretch;
+  justify-self: center;
+  width: var(--dungeon-bottom-panel-content-height);
+  height: var(--dungeon-bottom-panel-content-height);
+  min-width: 0;
+  min-height: 0;
+  gap: .3rem;
+}
+
+.ranked-reroll-rail {
+  grid-template-rows: minmax(0, .92fr) minmax(0, 1.08fr);
+}
+
+.ranked-action-dock {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.ranked-reroll-rail .ranked-side-action-compact,
+.ranked-action-dock .ranked-side-action-compact {
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+  gap: .25rem;
+  padding: .22rem .3rem;
+  font-size: clamp(.58rem, .72vw, .7rem);
+}
+
+.ranked-reroll-rail .ranked-action-cost {
+  min-height: 1.05rem;
+  padding: .13rem .25rem;
+}
+
+.ranked-reroll-odds {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(232, 199, 106, .2);
+  border-radius: 6px;
+  background: rgba(3, 9, 11, .7);
+  padding: .2rem .26rem;
+}
+
+.ranked-reroll-odds-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+  column-gap: .18rem;
+  row-gap: .06rem;
+}
+
+.ranked-reroll-odd {
+  --ranked-odd-color: #d8e1e5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  color: var(--ranked-odd-color);
+  font-size: clamp(.5rem, .62vw, .62rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ranked-reroll-odd strong {
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.ranked-reroll-odd.is-common { --ranked-odd-color: #d8e1e5; }
+.ranked-reroll-odd.is-uncommon { --ranked-odd-color: #63d77d; }
+.ranked-reroll-odd.is-rare { --ranked-odd-color: #62b9ff; }
+.ranked-reroll-odd.is-epic { --ranked-odd-color: #c18bff; }
+.ranked-reroll-odd.is-legendary { --ranked-odd-color: #fac51c; }
+.ranked-reroll-odd.is-mythic { --ranked-odd-color: #ff7568; }
+
+.ranked-reroll-odd.is-zero {
+  opacity: .32;
+}
+
+.ranked-hand-status {
+  position: absolute;
+  bottom: calc(100% + .55rem);
+  left: 50%;
+  z-index: 8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .24rem;
+  min-height: 1.65rem;
+  border: 1px solid rgba(232, 199, 106, .28);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(7, 18, 20, .88), rgba(3, 9, 11, .82)),
+    radial-gradient(circle at 50% 0%, rgba(232, 199, 106, .08), transparent 54%);
+  color: #fff;
+  padding: .28rem .68rem;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .04),
+    0 -14px 34px rgba(0, 0, 0, .24);
+  font-size: clamp(.72rem, .9vw, .86rem);
+  font-weight: 900;
+  line-height: 1;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ranked-hand-status.d-none {
+  display: none;
+}
+
+.ranked-hand-status .ad-icon {
+  width: .92rem;
+  height: .92rem;
+  color: var(--ad-soul, #55ffff);
+}
+
+.ranked-review-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+  min-height: 0;
+  gap: .3rem;
+}
+
+.ranked-review-actions .dungeon-replaylog-btn {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .ranked-action-cost {
@@ -728,7 +871,13 @@
 
 @media (max-width: 991.98px) {
   .ranked-preparation {
+    grid-template-columns:
+      var(--ranked-preparation-side-size)
+      minmax(0, 1fr)
+      var(--ranked-preparation-side-size)
+      var(--ranked-preparation-side-size);
     gap: .35rem;
+    width: 100%;
   }
 
   .ranked-offer-grid {
@@ -746,7 +895,11 @@
   }
 
   .ranked-preparation {
-    grid-template-columns: var(--ranked-offer-card-size) minmax(0, 1fr) var(--ranked-offer-card-size);
+    grid-template-columns:
+      var(--ranked-offer-card-size)
+      minmax(0, 1fr)
+      var(--ranked-offer-card-size)
+      var(--ranked-offer-card-size);
     grid-template-rows: var(--ranked-offer-card-size);
     height: calc(var(--ranked-offer-card-size) + var(--dungeon-bottom-panel-padding-y) * 2 + 2px);
     gap: .24rem;
@@ -770,23 +923,30 @@
     font-size: .64rem;
   }
 
-  .ranked-side-action-stack {
+  .ranked-side-action-stack,
+  .ranked-reroll-rail,
+  .ranked-action-dock {
     width: var(--ranked-offer-card-size);
     height: var(--ranked-offer-card-size);
     gap: .16rem;
   }
 
-  .ranked-side-action-stack .ranked-side-action-compact {
+  .ranked-side-action-stack .ranked-side-action-compact,
+  .ranked-reroll-rail .ranked-side-action-compact,
+  .ranked-action-dock .ranked-side-action-compact {
     gap: .08rem;
     padding: .12rem .16rem;
     font-size: .48rem;
   }
 
-  .ranked-side-action-stack .ranked-side-action-compact > .ad-icon {
+  .ranked-side-action-stack .ranked-side-action-compact > .ad-icon,
+  .ranked-reroll-rail .ranked-side-action-compact > .ad-icon,
+  .ranked-action-dock .ranked-side-action-compact > .ad-icon {
     display: none;
   }
 
-  .ranked-side-action-stack .ranked-action-cost {
+  .ranked-side-action-stack .ranked-action-cost,
+  .ranked-reroll-rail .ranked-action-cost {
     min-height: .9rem;
     gap: .06rem;
     padding: .08rem .14rem;
@@ -802,6 +962,30 @@
     min-height: 1.05rem;
     padding: .12rem .24rem;
     font-size: .54rem;
+  }
+
+  .ranked-reroll-odds {
+    padding: .08rem .1rem;
+  }
+
+  .ranked-reroll-odds-grid {
+    column-gap: .04rem;
+    row-gap: .02rem;
+  }
+
+  .ranked-reroll-odd {
+    font-size: .4rem;
+  }
+
+  .ranked-hand-status {
+    bottom: calc(100% + .35rem);
+    min-height: 1.35rem;
+    padding: .2rem .44rem;
+    font-size: .56rem;
+  }
+
+  .ranked-review-actions {
+    gap: .16rem;
   }
 
   .ranked-side-action .ad-icon {
@@ -836,9 +1020,6 @@
     order: initial !important;
   }
 
-  .ranked-page #rankedBottomPanel.has-fight-review .dungeon-replaylog-box {
-    display: grid !important;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

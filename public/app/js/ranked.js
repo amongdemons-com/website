@@ -89,6 +89,7 @@ function cacheElements() {
     'runEmpty',
     'runPanel',
     'rankedBottomPanel',
+    'rankedHandStatus',
     'rankedPreparation',
     'dungeonHandBar',
     'dungeonBottomControls',
@@ -503,11 +504,11 @@ function renderRun() {
   );
   elements.enemyGrid.closest('.battle-side')?.classList.toggle('is-ranked-reserve', !combatView);
   elements.rankedBottomPanel.classList.toggle('is-ranked-combat', bottomControlsView);
-  elements.rankedBottomPanel.classList.toggle('has-fight-review', canReviewFight);
+  elements.rankedBottomPanel.classList.remove('has-fight-review');
   elements.rankedBottomPanel.classList.toggle('is-battle-active', battlePlaybackView);
   elements.dungeonHandBar.classList.toggle('d-none', !bottomControlsView);
   elements.dungeonHandBar.classList.toggle('is-battle-controls-mode', bottomControlsView);
-  elements.dungeonReplayLogBox.classList.toggle('d-none', !canReviewFight);
+  elements.dungeonReplayLogBox.classList.add('d-none');
   if (!combatView) setBattlePanel('combat');
   renderTeamTitle(run);
   renderEnemyTitle(run, combatView);
@@ -522,7 +523,18 @@ function renderRun() {
     'd-none',
     combatView || pactTeamPreview || run.phase === 'preparation' && state.isBattleAnimating
   );
-  elements.rankedPreparation.innerHTML = combatView || pactTeamPreview ? '' : renderPreparation(run);
+  const preparationView = !elements.rankedPreparation.classList.contains('d-none');
+  elements.rankedHandStatus.classList.toggle('d-none', !preparationView);
+  elements.rankedHandStatus.setAttribute(
+    'aria-label',
+    `${formatNumber(rankedSouls)} Ranked Souls`
+  );
+  elements.rankedHandStatus.innerHTML = preparationView
+    ? `${renderIcon('soul')} <span class="ranked-rsoul-value">${formatNumber(rankedSouls)}</span>`
+    : '';
+  elements.rankedPreparation.innerHTML = combatView || pactTeamPreview
+    ? ''
+    : renderPreparation(run, { canReviewFight });
   renderFightLogActions();
   renderFightLog();
   renderPacts(run.pacts?.pendingChoices || []);
@@ -549,13 +561,7 @@ function renderTeamTitle(run) {
 
 function renderEnemyTitle(run, combatView) {
   if (!combatView) {
-    elements.enemySideTitle.innerHTML = `
-      <span>Reserve</span>
-      <span class="ranked-header-separator" aria-hidden="true">&middot;</span>
-      <span class="ranked-rsoul-balance" aria-label="${formatNumber(rankedSouls)} Ranked Souls">
-        ${renderIcon('soul')} <span class="ranked-rsoul-value">${formatNumber(rankedSouls)}</span>
-      </span>
-    `;
+    elements.enemySideTitle.innerHTML = '<span>Reserve</span>';
     return;
   }
   const name = run.opponent?.generated
@@ -664,22 +670,19 @@ function renderRankedDemon(demon, options = {}) {
   });
 }
 
-function renderPreparation(run) {
+function renderPreparation(run, options = {}) {
   const hand = workspace?.hand || [];
+  const canReviewFight = Boolean(options.canReviewFight);
   return `
-    <div class="ranked-side-action-stack">
-      <button class="btn btn-outline-light ranked-side-action ranked-side-action-compact" type="button" data-ranked-action="reroll"
+    <div class="ranked-reroll-rail">
+      <button class="btn btn-outline-light ranked-side-action ranked-side-action-compact ranked-reroll-action" type="button" data-ranked-action="reroll"
               ${!canRerollWorkspace() || isBusy ? 'disabled' : ''}>
         ${renderIcon('refresh-cw')} <span>Reroll</span>
         <span class="ranked-action-cost" aria-label="${RANKED_REROLL_RSOUL_COST} Ranked Souls">
           ${renderIcon('soul')} <span>${formatNumber(RANKED_REROLL_RSOUL_COST)}</span>
         </span>
       </button>
-      <button class="btn ${run.handLocked ? 'btn-success' : 'btn-outline-light'} ranked-side-action ranked-side-action-compact"
-              type="button" data-ranked-action="lock-hand" aria-pressed="${run.handLocked ? 'true' : 'false'}"
-              title="${run.handLocked ? 'This hand will carry into the next floor.' : 'Carry this hand into the next floor.'}">
-        ${renderIcon(run.handLocked ? 'check' : 'save')} <span>${run.handLocked ? 'Locked' : 'Lock Hand'}</span>
-      </button>
+      ${renderRerollOdds(run)}
     </div>
     <div class="ranked-offer-area" data-ranked-drop-zone data-ranked-zone="hand" aria-label="Hand">
       <div class="ranked-offer-grid">
@@ -696,10 +699,40 @@ function renderPreparation(run) {
           `).join('') : '<div class="ranked-hand-empty">Empty</div>'}
       </div>
     </div>
+    <div class="ranked-action-dock">
+      <button class="btn ${run.handLocked ? 'btn-success' : 'btn-outline-light'} ranked-side-action ranked-side-action-compact ranked-lock-action"
+              type="button" data-ranked-action="lock-hand" aria-pressed="${run.handLocked ? 'true' : 'false'}"
+              title="${run.handLocked ? 'This hand will carry into the next floor.' : 'Carry this hand into the next floor.'}">
+        ${renderIcon(run.handLocked ? 'check' : 'save')} <span>${run.handLocked ? 'Locked' : 'Lock Hand'}</span>
+      </button>
+      <div class="ranked-review-actions" role="group" aria-label="Previous fight">
+        ${renderReplayLogButtons(canReviewFight, canReviewFight)}
+      </div>
+    </div>
     <button class="btn btn-primary btn-lg ranked-side-action" type="button" data-ranked-action="fight"
             ${!canFightWorkspace() || isBusy ? 'disabled' : ''}>
       ${renderIcon('swords')} <span>Fight</span>
     </button>
+  `;
+}
+
+function renderRerollOdds(run) {
+  const odds = run?.rarityOdds || {};
+  const items = RANKED_RARITIES.map((rarity) => {
+    const chance = Math.max(0, Number(odds[rarity]) || 0);
+    const label = capitalize(rarity);
+    return `
+      <span class="ranked-reroll-odd is-${rarity}${chance <= 0 ? ' is-zero' : ''}"
+            title="${escapeHtml(label)}: ${formatNumber(chance)}%"
+            aria-label="${escapeHtml(label)} ${formatNumber(chance)} percent">
+        <strong>${formatNumber(chance)}%</strong>
+      </span>
+    `;
+  }).join('');
+  return `
+    <div class="ranked-reroll-odds" aria-label="Reroll rarity odds per card">
+      <span class="ranked-reroll-odds-grid">${items}</span>
+    </div>
   `;
 }
 
@@ -719,12 +752,7 @@ function renderFightLog() {
 function renderFightLogActions() {
   const run = state.run;
   if (!run || !elements.dungeonBottomControls || !elements.dungeonReplayLogBox) return;
-  const canReviewFight = Boolean(
-    !state.isBattleAnimating
-    && !isReplayingBattle
-    && (run.lastBattle?.combatLog?.length || state.combatLog?.length)
-  );
-  elements.dungeonReplayLogBox.innerHTML = renderReplayLogButtons(canReviewFight, canReviewFight);
+  elements.dungeonReplayLogBox.innerHTML = '';
 
   if (state.isPactTeamPreview && run.pendingPact) {
     elements.dungeonBottomControls.innerHTML = renderDemonicPactReturnControl();
@@ -743,28 +771,39 @@ function renderFightLogActions() {
 }
 
 function renderPacts(choices) {
-  const visible = Boolean(choices?.length) && !state.isBattleAnimating;
+  const hasChoices = Boolean(choices?.length);
+  const visible = hasChoices
+    && !state.isBattleAnimating
+    && !state.isLoading
+    && !isReplayingBattle;
   const wasVisible = !elements.demonicPactOverlay.classList.contains('d-none');
   elements.demonicPactOverlay.classList.toggle('d-none', !visible);
   if (!visible) {
     state.isPactTeamPreview = false;
     syncRankedPactView();
-    elements.rankedPactGrid.innerHTML = '';
+    if (!hasChoices) {
+      elements.rankedPactGrid.innerHTML = '';
+      delete elements.rankedPactGrid.dataset.pactSignature;
+    }
     return;
   }
   if (!wasVisible) state.isPactTeamPreview = false;
-  elements.rankedPactGrid.innerHTML = choices.map((buff) => {
-    const rarity = String(buff.rarity || 'common').toLowerCase();
-    return `
-      <button class="demonic-pact-card is-${escapeHtml(rarity)}" type="button" data-ranked-action="pact" data-buff-id="${escapeHtml(buff.id)}">
-        <span class="demonic-pact-icon" aria-hidden="true">${renderIcon(buff.icon || 'sparkles')}</span>
-        <span class="demonic-pact-rarity ad-${escapeHtml(rarity)}">${capitalize(rarity)}</span>
-        <strong>${escapeHtml(buff.name || buff.id)}</strong>
-        <span class="demonic-pact-description">${escapeHtml(buff.description || '')}</span>
-        <span class="demonic-pact-tags">${(buff.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}</span>
-      </button>
-    `;
-  }).join('');
+  const pactSignature = choices.map((buff) => `${buff.id}:${buff.rarity || 'common'}`).join('|');
+  if (elements.rankedPactGrid.dataset.pactSignature !== pactSignature) {
+    elements.rankedPactGrid.innerHTML = choices.map((buff) => {
+      const rarity = String(buff.rarity || 'common').toLowerCase();
+      return `
+        <button class="demonic-pact-card is-${escapeHtml(rarity)}" type="button" data-ranked-action="pact" data-buff-id="${escapeHtml(buff.id)}">
+          <span class="demonic-pact-icon" aria-hidden="true">${renderIcon(buff.icon || 'sparkles')}</span>
+          <span class="demonic-pact-rarity ad-${escapeHtml(rarity)}">${capitalize(rarity)}</span>
+          <strong>${escapeHtml(buff.name || buff.id)}</strong>
+          <span class="demonic-pact-description">${escapeHtml(buff.description || '')}</span>
+          <span class="demonic-pact-tags">${(buff.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}</span>
+        </button>
+      `;
+    }).join('');
+    elements.rankedPactGrid.dataset.pactSignature = pactSignature;
+  }
   syncRankedPactView();
   if (!wasVisible) {
     audio?.play('sfx.dungeon.pactReveal', { volume: .88 });
