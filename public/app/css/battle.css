@@ -4537,6 +4537,17 @@ body .battle-speed-option.ad-primary-action:disabled {
         overflow: hidden;
     }
 
+.dungeon-hand-pacts .dungeon-pact-stack {
+        flex: 0 0 var(--dungeon-bottom-panel-content-height);
+        width: var(--dungeon-bottom-panel-content-height);
+        height: 100%;
+    }
+
+.dungeon-hand-pacts .dungeon-pact-stack-count {
+        right: 0.08rem;
+        bottom: 0.08rem;
+    }
+
 .dungeon-hand-pacts .active-pact-chip-icon {
         width: 100%;
         height: 100%;

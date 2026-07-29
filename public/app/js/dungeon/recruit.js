@@ -145,6 +145,7 @@ function getFullHpDemon(demon) {
 
   delete next.accountStatsApplied;
   delete next.accountStatsPreviewed;
+  delete next.runBuffStatsPreviewed;
   delete next.battleBuffs;
   delete next.deathBuffsHandled;
   delete next.shield;
@@ -157,24 +158,33 @@ function applyRunBuffStatPreviewToDemon(demon = {}) {
 
   const maxHpMult = getRunBuffEffectMultiplier('max_hp_mult', demon);
   const speedMult = getRunBuffEffectMultiplier('speed_mult', demon);
-  const damagePreviewMult = isRetaliateDemon(demon)
-    ? getRunBuffEffectMultiplier('retaliation_damage_mult', demon)
-    : getRunBuffAttackPreviewMultiplier(demon);
   const baseMaxHp = Math.max(1, Number(demon.runBaseMaxHp) || Number(demon.maxHp) || Number(demon.hp) || 1);
   const baseHp = Math.max(0, Number(demon.hp) || baseMaxHp);
   const hpRatio = baseMaxHp > 0 ? Math.max(0, Math.min(1, baseHp / baseMaxHp)) : 1;
   const nextMaxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
   const baseSpeed = Math.max(1, Number(demon.runBaseSpeed) || Number(demon.speed) || 1);
   const baseAtk = Math.max(0, Number(demon.runBaseAtk) || Number(demon.atk) || 0);
-
-  return {
+  const next = {
     ...demon,
-    effectiveAtk: baseAtk > 0 ? Math.max(1, Math.round(baseAtk * damagePreviewMult)) : baseAtk,
+    effectiveAtk: baseAtk,
     maxHp: nextMaxHp,
     hp: Math.max(baseHp > 0 ? 1 : 0, Math.min(nextMaxHp, Math.round(nextMaxHp * hpRatio))),
     speed: Math.max(1, Math.round(baseSpeed * speedMult)),
     runBuffStatsPreviewed: true
   };
+
+  applyDamageOutputStatPreview(next, {
+    directDamageMult: getRunBuffEffectMultiplier('direct_damage_mult', next),
+    aoeDamageMult: getRunBuffEffectMultiplier('aoe_damage_mult', next),
+    aoeDamageFlat: getRunBuffEffectSum('aoe_damage_flat', next),
+    healingMult: getRunBuffEffectMultiplier('healing_mult', next),
+    healingFlat: getRunBuffEffectSum('healing_flat', next),
+    poisonDamageMult: getRunBuffEffectMultiplier('poison_tick_damage_mult', next),
+    poisonDamageFlat: getRunBuffEffectSum('poison_damage_flat', next),
+    retaliationDamageMult: getRunBuffEffectMultiplier('retaliation_damage_mult', next)
+  });
+
+  return next;
 }
 
 function applyAccountStatBonusPreviewToDemon(demon = {}) {
@@ -182,18 +192,41 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
   // Battle replay snapshots already have player combat buffs baked in server-side; never double-apply.
   if (!demon || demon.accountStatsApplied || demon.accountStatsPreviewed) return { ...demon };
 
-  const maxHpFlat = Math.max(0, Number(bonuses.maxHpFlat) || 0) + getPlayerWorldBuffEffectSum('max_hp_flat');
-  const maxHpMult = (1 + getAccountBonusFraction(bonuses.maxHpPercent)) * getPlayerWorldBuffEffectMultiplier('max_hp_mult');
+  const maxHpFlat = Math.max(0, Number(bonuses.maxHpFlat) || 0) +
+    getRunBuffEffectSum('max_hp_flat', demon) +
+    getPlayerWorldBuffEffectSum('max_hp_flat', demon);
+  const maxHpMult = (1 + getAccountBonusFraction(bonuses.maxHpPercent)) *
+    getPlayerWorldBuffEffectMultiplier('max_hp_mult', demon);
   const receivesSkillTreeAttack = isSingleTargetAttackDemon(demon);
-  const attackFlat = (receivesSkillTreeAttack ? Math.max(0, Number(bonuses.attackFlat) || 0) : 0) + getPlayerWorldBuffEffectSum('attack_flat');
-  const attackMult = (receivesSkillTreeAttack ? 1 + getAccountBonusFraction(bonuses.attackPercent) : 1) * getPlayerWorldBuffEffectMultiplier('attack_mult');
-  const speedFlat = Math.max(0, Number(bonuses.speedFlat) || 0) + getPlayerWorldBuffEffectSum('speed_flat');
-  const speedMult = (1 + getAccountBonusFraction(bonuses.speedPercent)) * getPlayerWorldBuffEffectMultiplier('speed_mult');
-  const directDamageMult = getPlayerWorldBuffEffectMultiplier('direct_damage_mult');
-  const aoeDamageFlat = Math.max(0, Number(bonuses.aoeDamageFlat) || 0) + getPlayerWorldBuffEffectSum('aoe_damage_flat');
-  const aoeDamageMult = (1 + getAccountBonusFraction(bonuses.aoeDamagePercent)) * getPlayerWorldBuffEffectMultiplier('aoe_damage_mult');
+  const attackFlat = (receivesSkillTreeAttack ? Math.max(0, Number(bonuses.attackFlat) || 0) : 0) +
+    getRunBuffEffectSum('attack_flat', demon) +
+    getPlayerWorldBuffEffectSum('attack_flat', demon);
+  const attackMult = (receivesSkillTreeAttack ? 1 + getAccountBonusFraction(bonuses.attackPercent) : 1) *
+    getRunBuffEffectMultiplier('attack_mult', demon) *
+    getPlayerWorldBuffEffectMultiplier('attack_mult', demon);
+  const speedFlat = Math.max(0, Number(bonuses.speedFlat) || 0) +
+    getRunBuffEffectSum('speed_flat', demon) +
+    getPlayerWorldBuffEffectSum('speed_flat', demon);
+  const speedMult = (1 + getAccountBonusFraction(bonuses.speedPercent)) *
+    getPlayerWorldBuffEffectMultiplier('speed_mult', demon);
+  const directDamageMult = getPlayerWorldBuffEffectMultiplier('direct_damage_mult', demon);
+  const aoeDamageFlat = Math.max(0, Number(bonuses.aoeDamageFlat) || 0) +
+    getRunBuffEffectSum('aoe_damage_flat', demon) +
+    getPlayerWorldBuffEffectSum('aoe_damage_flat', demon);
+  const aoeDamageMult = (1 + getAccountBonusFraction(bonuses.aoeDamagePercent)) *
+    getPlayerWorldBuffEffectMultiplier('aoe_damage_mult', demon);
+  const healingFlat = Math.max(0, Number(bonuses.healingFlat) || 0) +
+    getRunBuffEffectSum('healing_flat', demon) +
+    getPlayerWorldBuffEffectSum('healing_flat', demon);
+  const healingMult = (1 + getAccountBonusFraction(bonuses.healingPercent)) *
+    getPlayerWorldBuffEffectMultiplier('healing_mult', demon);
+  const poisonDamageFlat = Math.max(0, Number(bonuses.poisonDamageFlat) || 0) +
+    getRunBuffEffectSum('poison_damage_flat', demon) +
+    getPlayerWorldBuffEffectSum('poison_damage_flat', demon);
+  const poisonDamageMult = (1 + getAccountBonusFraction(bonuses.poisonDamagePercent)) *
+    getPlayerWorldBuffEffectMultiplier('poison_tick_damage_mult', demon);
   const retaliationDamageMult = getRunBuffEffectMultiplier('retaliation_damage_mult', demon) *
-    getPlayerWorldBuffEffectMultiplier('retaliation_damage_mult');
+    getPlayerWorldBuffEffectMultiplier('retaliation_damage_mult', demon);
 
   const hasHpBonus = maxHpFlat > 0 || maxHpMult !== 1;
   const hasAttackBonus = attackFlat > 0 || attackMult !== 1;
@@ -201,6 +234,10 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
   const hasDamagePreviewBonus = directDamageMult !== 1 ||
     aoeDamageFlat > 0 ||
     aoeDamageMult !== 1 ||
+    healingFlat > 0 ||
+    healingMult !== 1 ||
+    poisonDamageFlat > 0 ||
+    poisonDamageMult !== 1 ||
     retaliationDamageMult !== 1;
   if (!hasHpBonus && !hasAttackBonus && !hasSpeedBonus && !hasDamagePreviewBonus) return { ...demon };
 
@@ -210,19 +247,19 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
   };
 
   // Skill-tree and world boss reward buffs are sent to combat as playerBuffs, so mirror
-  // applyPreBattleBuffs: HP/speed percent first, then flat; attack flat first.
+  // applyPreBattleBuffs: flat bonuses first, then percentage multipliers.
   if (hasHpBonus) {
-    if (maxHpMult !== 1) {
-      const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
-      const hpRatio = Math.max(0, Math.min(1, (Number(next.hp) || baseMaxHp) / baseMaxHp));
-      next.maxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
-      next.hp = Math.max((Number(next.hp) || 0) > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
-    }
-
     if (maxHpFlat > 0) {
       const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
       const hpRatio = Math.max(0, Math.min(1, (Number(next.hp) || baseMaxHp) / baseMaxHp));
       next.maxHp = Math.max(1, Math.round(baseMaxHp + maxHpFlat));
+      next.hp = Math.max((Number(next.hp) || 0) > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
+    }
+
+    if (maxHpMult !== 1) {
+      const baseMaxHp = Math.max(1, Number(next.maxHp) || Number(next.hp) || 1);
+      const hpRatio = Math.max(0, Math.min(1, (Number(next.hp) || baseMaxHp) / baseMaxHp));
+      next.maxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
       next.hp = Math.max((Number(next.hp) || 0) > 0 ? 1 : 0, Math.min(next.maxHp, Math.round(next.maxHp * hpRatio)));
     }
   }
@@ -238,12 +275,12 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
   }
 
   if (hasSpeedBonus) {
-    if (speedMult !== 1) {
-      next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * speedMult));
-    }
-
     if (speedFlat > 0) {
       next.speed = Math.max(1, Math.round((Number(next.speed) || 1) + speedFlat));
+    }
+
+    if (speedMult !== 1) {
+      next.speed = Math.max(1, Math.round((Number(next.speed) || 1) * speedMult));
     }
   }
 
@@ -252,6 +289,10 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
       directDamageMult: getRunBuffEffectMultiplier('direct_damage_mult', next) * directDamageMult,
       aoeDamageMult: getRunBuffEffectMultiplier('aoe_damage_mult', next) * aoeDamageMult,
       aoeDamageFlat,
+      healingMult: getRunBuffEffectMultiplier('healing_mult', next) * healingMult,
+      healingFlat,
+      poisonDamageMult: getRunBuffEffectMultiplier('poison_tick_damage_mult', next) * poisonDamageMult,
+      poisonDamageFlat,
       retaliationDamageMult
     });
   }
@@ -278,21 +319,41 @@ function applyDamageOutputStatPreview(demon, options = {}) {
   const directDamageMult = Math.max(0, Number(options.directDamageMult) || 1);
   const aoeDamageMult = Math.max(0, Number(options.aoeDamageMult) || 1);
   const aoeDamageFlat = Math.max(0, Number(options.aoeDamageFlat) || 0);
+  const healingMult = Math.max(0, Number(options.healingMult) || 1);
+  const healingFlat = Math.max(0, Number(options.healingFlat) || 0);
+  const poisonDamageMult = Math.max(0, Number(options.poisonDamageMult) || 1);
+  const poisonDamageFlat = Math.max(0, Number(options.poisonDamageFlat) || 0);
   const retaliationDamageMult = Math.max(0, Number(options.retaliationDamageMult) || 1);
   const isAoe = isAoeDemon(demon);
   const isSingleTarget = isSingleTargetAttackDemon(demon);
   const isRetaliation = isRetaliateDemon(demon);
+  const isHealing = isHealingDemon(demon);
+  const isPoison = isPoisonDemon(demon);
   const damageMult = (isSingleTarget ? directDamageMult : 1) * (isAoe ? aoeDamageMult : 1);
   const damageFlat = isAoe ? aoeDamageFlat : 0;
-  if (!isRetaliation && damageMult === 1 && damageFlat <= 0) return;
+  const hasDamageModifier = damageMult !== 1 || damageFlat > 0;
+  const hasHealingModifier = isHealing && (healingMult !== 1 || healingFlat > 0);
+  const hasPoisonModifier = isPoison && (poisonDamageMult !== 1 || poisonDamageFlat > 0);
+  if (!isRetaliation && !hasDamageModifier && !hasHealingModifier && !hasPoisonModifier) return;
 
   const baseAtk = Math.max(1, Number(demon.atk) || 1);
+  if (hasPoisonModifier) {
+    const basePoisonDamage = Math.max(1, Math.round(baseAtk * getPoisonDamageScale(demon)));
+    demon.effectiveAtk = Math.max(1, Math.round((basePoisonDamage + poisonDamageFlat) * poisonDamageMult));
+    return;
+  }
+
+  if (hasHealingModifier) {
+    demon.effectiveAtk = Math.max(1, Math.round((baseAtk + healingFlat) * healingMult));
+    return;
+  }
+
   if (isRetaliation) {
     demon.effectiveAtk = Math.max(1, Math.round(baseAtk * retaliationDamageMult));
     return;
   }
 
-  demon.effectiveAtk = Math.max(1, Math.round((baseAtk * damageMult) + damageFlat));
+  demon.effectiveAtk = Math.max(1, Math.round((baseAtk + damageFlat) * damageMult));
 }
 
 function getAccountBonusFraction(value) {
@@ -337,12 +398,16 @@ function getRunBuffEffectMultiplier(type, demon = null) {
   return getBuffEffectMultiplier(state.run?.buffs?.activeBuffs || [], type, demon);
 }
 
-function getPlayerWorldBuffEffectMultiplier(type) {
-  return getBuffEffectMultiplier(getPlayerWorldBuffs(), type);
+function getRunBuffEffectSum(type, demon = null) {
+  return getBuffEffectSum(state.run?.buffs?.activeBuffs || [], type, demon);
 }
 
-function getPlayerWorldBuffEffectSum(type) {
-  return getBuffEffectSum(getPlayerWorldBuffs(), type);
+function getPlayerWorldBuffEffectMultiplier(type, demon = null) {
+  return getBuffEffectMultiplier(getPlayerWorldBuffs(), type, demon);
+}
+
+function getPlayerWorldBuffEffectSum(type, demon = null) {
+  return getBuffEffectSum(getPlayerWorldBuffs(), type, demon);
 }
 
 function getPlayerWorldBuffs() {
@@ -362,30 +427,24 @@ function getBuffEffectMultiplier(buffs = [], type, demon = null) {
 
 function buffEffectAppliesToDemon(effect, demon = null) {
   const targetRarities = Array.isArray(effect?.targetRarities) ? effect.targetRarities : [];
-  if (!targetRarities.length) return true;
-  if (!demon) return false;
-  return targetRarities.includes(String(demon.rarity || '').toLowerCase());
+  if (targetRarities.length && (!demon || !targetRarities.includes(String(demon.rarity || '').toLowerCase()))) {
+    return false;
+  }
+  if (effect?.singleTargetOnly && !isSingleTargetAttackDemon(demon)) {
+    return false;
+  }
+  return true;
 }
 
-function getBuffEffectSum(buffs = [], type) {
+function getBuffEffectSum(buffs = [], type, demon = null) {
   return (Array.isArray(buffs) ? buffs : []).reduce((sum, buff) => {
     const effects = Array.isArray(buff?.effects) ? buff.effects : [];
     return effects.reduce((nextSum, effect) => {
-      if (effect?.type !== type) return nextSum;
+      if (effect?.type !== type || !buffEffectAppliesToDemon(effect, demon)) return nextSum;
       const value = Number(effect.value);
       return Number.isFinite(value) ? nextSum + value : nextSum;
     }, sum);
   }, 0);
-}
-
-function getRunBuffAttackPreviewMultiplier(demon) {
-  let multiplier = isSingleTargetAttackDemon(demon)
-    ? getRunBuffEffectMultiplier('direct_damage_mult', demon)
-    : 1;
-  if (isAoeDemon(demon)) {
-    multiplier *= getRunBuffEffectMultiplier('aoe_damage_mult', demon);
-  }
-  return multiplier;
 }
 
 function isAoeDemon(demon) {
@@ -421,6 +480,26 @@ function isRetaliateDemon(demon) {
     role === 'counter_tank' ||
     targeting === 'none' ||
     abilityKind === 'retaliate';
+}
+
+function isHealingDemon(demon) {
+  const typeId = Number(demon?.typeId || demon?.type_id || demon?.type);
+  const role = String(demon?.role || '').toLowerCase();
+  const abilityKind = String(demon?.abilityKind || demon?.ability?.kind || '').toLowerCase();
+  return typeId === 10 || role === 'healer' || abilityKind === 'heal';
+}
+
+function isPoisonDemon(demon) {
+  const typeId = Number(demon?.typeId || demon?.type_id || demon?.type);
+  const role = String(demon?.role || '').toLowerCase();
+  const abilityKind = String(demon?.abilityKind || demon?.ability?.kind || '').toLowerCase();
+  return typeId === 3 || role === 'poisoner' || abilityKind === 'poison';
+}
+
+function getPoisonDamageScale(demon) {
+  const explicitScale = Number(demon?.ability?.damagePerTickScale || demon?.ability?.damagePerTurnScale);
+  if (Number.isFinite(explicitScale) && explicitScale > 0) return explicitScale;
+  return Number(demon?.typeId || demon?.type_id || demon?.type) === 3 ? 1.15 : 1;
 }
 
 function getRecruitTeamLimit() {

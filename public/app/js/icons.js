@@ -353,7 +353,10 @@
       nextState.level > authoritativePreviousLevel;
     const shouldAnimateLevelUp = options.animate !== false &&
       confirmedLevelUp &&
-      nextState.level > getSeenLevelUpLevel(data);
+      (
+        options.forceLevelUpAnimation === true ||
+        nextState.level > getSeenLevelUpLevel(data)
+      );
 
     if (shouldAnimateLevelUp) {
       const view = root.defaultView || window;

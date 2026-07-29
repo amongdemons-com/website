@@ -319,7 +319,10 @@ function syncActionButtons(fallbackButton) {
 
 function showDungeonResultProgression(progression) {
   if (!progression?.leveledUp) return;
-  window.AmongDemons.ui?.updateNavProgression?.(progression, { animate: true });
+  window.AmongDemons.ui?.updateNavProgression?.(progression, {
+    animate: true,
+    forceLevelUpAnimation: true
+  });
 }
 
 function capitalize(value) {
