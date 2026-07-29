@@ -124,6 +124,7 @@
   function api(path, options = {}) {
     const toApiUrl = window.AmongDemons?.apiUrl || ((value) => value);
     const url = toApiUrl(path);
+    const method = (options.method || 'GET').toUpperCase();
     const headers = {
       Accept: 'application/json',
       ...(options.headers || {})
@@ -134,14 +135,17 @@
       headers.Authorization = `Bearer ${token}`;
     }
 
-    if (options.body && !headers['Content-Type']) {
+    const hasBody = options.body !== undefined && options.body !== null;
+    const shouldSendEmptyJson = !hasBody && isMutationMethod(method);
+    const requestBody = shouldSendEmptyJson ? {} : options.body;
+
+    if ((hasBody || shouldSendEmptyJson) && !hasHeader(headers, 'content-type')) {
       headers['Content-Type'] = 'application/json';
     }
 
-    const body = options.body && typeof options.body !== 'string'
-      ? JSON.stringify(options.body)
-      : options.body;
-    const method = (options.method || 'GET').toUpperCase();
+    const body = requestBody !== undefined && requestBody !== null && typeof requestBody !== 'string'
+      ? JSON.stringify(requestBody)
+      : requestBody;
     const canShareRead = (method === 'GET' || method === 'HEAD')
       && !body
       && !options.signal
@@ -169,17 +173,13 @@
     const fetchOptions = { ...options, headers, body };
     delete fetchOptions.dedupe;
     delete fetchOptions.progressionAnimation;
+    delete fetchOptions.retryOpaqueBadRequest;
 
     if (shouldUseNativeHttp()) {
       return nativeApi(url, fetchOptions, headers, body, path, { progressionAnimation });
     }
 
-    let response;
-    try {
-      response = await fetch(url, fetchOptions);
-    } catch (error) {
-      throw createNetworkError(error, path);
-    }
+    let response = await fetchApiResponse(url, fetchOptions, path);
 
     // The hosting CDN rate-limits request bursts (fast page navigation) with
     // 429s; one delayed retry absorbs the blip for idempotent reads instead
@@ -190,22 +190,58 @@
         ? Math.min(retryAfter * 1000, 5000)
         : 1500;
       await new Promise((resolve) => setTimeout(resolve, delayMs));
-      try {
-        response = await fetch(url, fetchOptions);
-      } catch (error) {
-        throw createNetworkError(error, path);
-      }
+      response = await fetchApiResponse(url, fetchOptions, path);
     }
 
-    const text = await response.text();
+    let text = await response.text();
+    let payload = text ? parsePayload(text) : null;
+
+    // Every application-level API error is JSON. A bare or HTML 400 therefore
+    // came from request parsing or an upstream edge before a route could run,
+    // making one retry safe even for mutations. Normalizing empty mutations to
+    // `{}` above also avoids browser/proxy differences around bodyless POSTs.
+    if (
+      response.status === 400
+      && isMutationMethod(method)
+      && options.retryOpaqueBadRequest !== false
+      && !hasApiErrorPayload(payload)
+    ) {
+      response = await fetchApiResponse(url, fetchOptions, path);
+      text = await response.text();
+      payload = text ? parsePayload(text) : null;
+    }
 
     return handleApiResponse(
       response.ok,
       response.status,
-      text ? parsePayload(text) : null,
+      payload,
       path,
-      { progressionAnimation }
+      {
+        progressionAnimation,
+        responseContentType: response.headers.get('Content-Type') || ''
+      }
     );
+  }
+
+  async function fetchApiResponse(url, fetchOptions, path) {
+    try {
+      return await fetch(url, fetchOptions);
+    } catch (error) {
+      throw createNetworkError(error, path);
+    }
+  }
+
+  function isMutationMethod(method) {
+    return !['GET', 'HEAD', 'OPTIONS'].includes(String(method || '').toUpperCase());
+  }
+
+  function hasApiErrorPayload(payload) {
+    return Boolean(payload && typeof payload === 'object' && payload.error);
+  }
+
+  function hasHeader(headers, expectedName) {
+    const normalizedName = String(expectedName || '').toLowerCase();
+    return Object.keys(headers || {}).some((name) => name.toLowerCase() === normalizedName);
   }
 
   function createReadRequestKey(method, url, headers) {
@@ -255,6 +291,7 @@
       error.status = status;
       error.payload = payload;
       error.path = path;
+      error.responseContentType = options.responseContentType || '';
       throw error;
     }
 

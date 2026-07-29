@@ -58,6 +58,7 @@ app.use(compression());
 app.use(enforceCanonicalHost);
 app.use(applyRobotsHeaders);
 app.use(express.json());
+app.use(handleJsonParseError);
 app.use('/api', apiRoutes);
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found.' });
@@ -289,6 +290,25 @@ function applyRobotsHeaders(req, res, next) {
   }
 
   next();
+}
+
+function handleJsonParseError(error, req, res, next) {
+  const isInvalidJson = error?.type === 'entity.parse.failed'
+    || (error instanceof SyntaxError && error?.status === 400 && Object.hasOwn(error, 'body'));
+  if (!isInvalidJson || !normalizePath(req.path).startsWith('/api/')) {
+    return next(error);
+  }
+
+  console.warn('Rejected invalid API JSON body.', {
+    method: req.method,
+    path: req.originalUrl,
+    contentType: req.get('content-type') || '',
+    contentLength: req.get('content-length') || ''
+  });
+  return res.status(400).json({
+    error: 'The request body was not valid JSON.',
+    code: 'INVALID_JSON'
+  });
 }
 
 function normalizePath(value) {
