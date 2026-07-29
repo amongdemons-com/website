@@ -1281,7 +1281,7 @@ function groupCombatLog(combatLog) {
       previous?.isAoe &&
       previous.tick === entry.tick &&
       previous.attacker === entry.attacker;
-    const isSameCounterattack = (entry.effect === 'retaliate' || entry.effect === 'thorns') &&
+    const isSameCounterattack = entry.effect === 'thorns' &&
       previous &&
       previous.tick === entry.tick &&
       previous.entries.some((previousEntry) => previousEntry.attacker === entry.target && previousEntry.target === entry.attacker);

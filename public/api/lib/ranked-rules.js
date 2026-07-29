@@ -7,8 +7,8 @@ const RARITIES = Object.freeze([
   'mythic'
 ]);
 
-const RANKED_RULES_VERSION = 'ranked-v1';
-const COMBAT_DATA_VERSION = 'combat-v1';
+const RANKED_RULES_VERSION = 'ranked-v2';
+const COMBAT_DATA_VERSION = 'combat-v2';
 const ACTIVE_CAPACITY = 9;
 const RESERVE_CAPACITY = 6;
 const STARTING_LIVES = 3;
@@ -77,7 +77,7 @@ function getNextRarity(rarity) {
 }
 
 function getRankedActiveCapacity(floor) {
-  return Math.min(ACTIVE_CAPACITY, Math.max(1, Math.floor(Number(floor) || 1)));
+  return Math.min(ACTIVE_CAPACITY, Math.max(2, Math.floor(Number(floor) || 1) + 1));
 }
 
 function combineRoster(source, createUpgrade) {
@@ -297,8 +297,7 @@ function resolveDefeat(lives) {
   const nextLives = Math.max(0, Math.floor(Number(lives) || 0) - 1);
   return {
     lives: nextLives,
-    ended: nextLives === 0,
-    retrySameFloor: nextLives > 0
+    ended: nextLives === 0
   };
 }
 

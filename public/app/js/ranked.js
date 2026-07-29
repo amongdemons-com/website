@@ -276,6 +276,7 @@ async function handleAction(button, event = null) {
   if (!serverRun) return;
 
   if (action === 'reroll') return rerollHand(getInteractionPoint(event, button));
+  if (action === 'lock-hand') return toggleHandLock();
   if (action === 'fight') return startBattle();
   if (action === 'continue') return continueRun();
   if (action === 'end') {
@@ -314,7 +315,10 @@ async function chooseRankedPact(buffId) {
 
 async function rerollHand(point) {
   if (!canRerollWorkspace() || isBusy) return;
-  const payload = await performRunAction('reroll', { lineup: serializeWorkspaceLineup() });
+  const payload = await performRunAction('reroll', {
+    lineup: serializeWorkspaceLineup(),
+    lockHand: Boolean(serverRun.handLocked)
+  });
   if (!payload?.run) return;
   const cost = Math.max(0, Number(payload.rerollCost) || RANKED_REROLL_RSOUL_COST);
   showRankedSoulChange(point, -cost);
@@ -328,7 +332,10 @@ async function startBattle() {
   try {
     const payload = await api(
       `/api/ranked/runs/${encodeURIComponent(serverRun.runId)}/battle`,
-      actionOptions({ lineup: serializeWorkspaceLineup() })
+      actionOptions({
+        lineup: serializeWorkspaceLineup(),
+        lockHand: Boolean(serverRun.handLocked)
+      })
     );
     if (!payload?.run?.lastBattle) return;
     const interest = payload.rSoulInterest;
@@ -370,6 +377,14 @@ async function startBattle() {
     isReplayingBattle = false;
     setBusy(false);
   }
+}
+
+function toggleHandLock() {
+  if (!serverRun || !isWorkspacePhase(serverRun)) return;
+  const handLocked = !serverRun.handLocked;
+  serverRun.handLocked = handLocked;
+  state.run.handLocked = handLocked;
+  renderRun();
 }
 
 async function replayRankedFight() {
@@ -626,13 +641,20 @@ function renderRankedDemon(demon, options = {}) {
 function renderPreparation(run) {
   const hand = workspace?.hand || [];
   return `
-    <button class="btn btn-outline-light btn-lg ranked-side-action" type="button" data-ranked-action="reroll"
-            ${!canRerollWorkspace() || isBusy ? 'disabled' : ''}>
-      ${renderIcon('refresh-cw')} <span>Reroll</span>
-      <span class="ranked-action-cost" aria-label="${RANKED_REROLL_RSOUL_COST} Ranked Souls">
-        ${renderIcon('soul')} <span>${formatNumber(RANKED_REROLL_RSOUL_COST)}</span>
-      </span>
-    </button>
+    <div class="ranked-side-action-stack">
+      <button class="btn btn-outline-light ranked-side-action ranked-side-action-compact" type="button" data-ranked-action="reroll"
+              ${!canRerollWorkspace() || isBusy ? 'disabled' : ''}>
+        ${renderIcon('refresh-cw')} <span>Reroll</span>
+        <span class="ranked-action-cost" aria-label="${RANKED_REROLL_RSOUL_COST} Ranked Souls">
+          ${renderIcon('soul')} <span>${formatNumber(RANKED_REROLL_RSOUL_COST)}</span>
+        </span>
+      </button>
+      <button class="btn ${run.handLocked ? 'btn-success' : 'btn-outline-light'} ranked-side-action ranked-side-action-compact"
+              type="button" data-ranked-action="lock-hand" aria-pressed="${run.handLocked ? 'true' : 'false'}"
+              title="${run.handLocked ? 'This hand will carry into the next floor.' : 'Carry this hand into the next floor.'}">
+        ${renderIcon(run.handLocked ? 'check' : 'save')} <span>${run.handLocked ? 'Locked' : 'Lock Hand'}</span>
+      </button>
+    </div>
     <div class="ranked-offer-area" data-ranked-drop-zone data-ranked-zone="hand" aria-label="Hand">
       <div class="ranked-offer-grid">
         ${hand.length ? hand.map((demon, index) => `
@@ -698,7 +720,7 @@ function renderFightLogActions() {
       <button class="btn btn-primary" type="button" data-ranked-action="start">New Ranked Run</button>
     ` : `
       <button class="btn btn-primary" type="button" data-ranked-action="continue">
-        ${run.lastBattle?.winner === 'player' ? 'Continue' : `Retry Floor ${run.floor}`}
+        Continue
       </button>
       <button class="btn btn-outline-light" type="button" data-ranked-action="end">End Run</button>
     `;
@@ -836,12 +858,14 @@ function createWorkspace(run) {
   const active = cloneDemons(run.active || run.team).map((demon, index) => ({
     ...demon,
     formationSlot: normalizeSlot(demon.formationSlot) ?? index,
-    _rankedOrigin: 'roster'
+    _rankedOrigin: 'roster',
+    _rankedPurchased: true
   }));
   const reserve = cloneDemons(run.reserve).map((demon, index) => ({
     ...demon,
     reserveSlot: normalizeReserveSlot(demon.reserveSlot) ?? index,
-    _rankedOrigin: 'roster'
+    _rankedOrigin: 'roster',
+    _rankedPurchased: true
   }));
   const hand = (run.offers || []).map((offer) => ({
     ...JSON.parse(JSON.stringify(offer.demon)),
@@ -873,7 +897,8 @@ function serializeWorkspaceLineup() {
     reserve: (workspace?.reserve || []).map((demon) => ({
       ...serializeWorkspaceDemonReference(demon),
       reserveSlot: normalizeReserveSlot(demon.reserveSlot)
-    }))
+    })),
+    hand: (workspace?.hand || []).map((demon) => serializeWorkspaceDemonReference(demon))
   };
 }
 

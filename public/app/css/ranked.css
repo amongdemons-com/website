@@ -85,14 +85,18 @@
 .ranked-offer-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, var(--ranked-offer-card-size)));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, var(--ranked-offer-card-size));
   align-items: end;
-  justify-content: center;
+  justify-content: safe center;
   gap: .42rem;
   width: 100%;
   height: 100%;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
 }
 
 .ranked-offer {
@@ -325,6 +329,33 @@
   padding: .45rem;
   font-size: clamp(.72rem, .9vw, .88rem);
   white-space: normal;
+}
+
+.ranked-side-action-stack {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  justify-self: center;
+  width: var(--dungeon-bottom-panel-content-height);
+  height: var(--dungeon-bottom-panel-content-height);
+  gap: .3rem;
+}
+
+.ranked-side-action-stack .ranked-side-action-compact {
+  flex: 1 1 0;
+  flex-direction: row;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: auto;
+  gap: .25rem;
+  padding: .22rem .3rem;
+  font-size: clamp(.58rem, .72vw, .7rem);
+}
+
+.ranked-side-action-stack .ranked-action-cost {
+  min-height: 1.05rem;
+  padding: .13rem .25rem;
 }
 
 .ranked-action-cost {
@@ -572,6 +603,34 @@
     gap: .18rem;
     padding: .25rem;
     font-size: .64rem;
+  }
+
+  .ranked-side-action-stack {
+    width: var(--ranked-offer-card-size);
+    height: var(--ranked-offer-card-size);
+    gap: .16rem;
+  }
+
+  .ranked-side-action-stack .ranked-side-action-compact {
+    gap: .08rem;
+    padding: .12rem .16rem;
+    font-size: .48rem;
+  }
+
+  .ranked-side-action-stack .ranked-side-action-compact > .ad-icon {
+    display: none;
+  }
+
+  .ranked-side-action-stack .ranked-action-cost {
+    min-height: .9rem;
+    gap: .06rem;
+    padding: .08rem .14rem;
+    font-size: .46rem;
+  }
+
+  .ranked-side-action-stack .ranked-action-cost .ad-icon {
+    width: .62rem;
+    height: .62rem;
   }
 
   .ranked-action-cost {

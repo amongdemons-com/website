@@ -11,6 +11,7 @@ const { withDemonImageVariants } = require('./demon-images');
 const { getGameCatalog } = require('./game-data');
 const { createPlayerCombatBuffState } = require('./player-combat-buffs');
 const { createRng } = require('./rng');
+const { assignFormationSlots, getFormationSlotPosition } = require('./run-demons');
 const { getActiveWorldBossRewardBuffs, loadWorldBosses, getWorldBossRewardBuff } = require('./world-bosses');
 const {
   ACTIVE_CAPACITY,
@@ -206,6 +207,8 @@ async function createInitialRankedState(seed) {
     rerolls: normalizeRerolls(),
     buffs: normalizeCombatBuffState(),
     combinationEvents: [],
+    handLocked: false,
+    lockedHand: [],
     opponent: null,
     lastBattle: null,
     highestClearedFloor: 0,
@@ -346,6 +349,7 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
 
   const requestedActive = Array.isArray(lineup?.active) ? lineup.active : [];
   const requestedReserve = Array.isArray(lineup?.reserve) ? lineup.reserve : [];
+  const requestedHand = Array.isArray(lineup?.hand) ? lineup.hand : [];
   const floor = Math.max(1, Number(run.floor) || 1);
   const activeCapacity = getRankedActiveCapacity(floor);
   if (requestedActive.length > activeCapacity) {
@@ -396,7 +400,7 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
         throw createWorkspaceError('The lineup contains an invalid combination.');
       }
       const resolvedSources = sources.map((source) => (
-        resolveWorkspaceDemon(source, destination, depth + 1)
+        resolveWorkspaceDemon(source, destination === 'hand' ? 'hand-combination' : destination, depth + 1)
       ));
       const first = resolvedSources[0]?.demon;
       const typeId = Number(first?.typeId);
@@ -446,6 +450,16 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
       offer
       && !offer.purchased
       && !stagedPurchaseOfferIds.has(String(offer.offerId || ''))
+      && destination === 'hand-combination'
+    ) {
+      throw createWorkspaceError('Stage Hand cards as purchased before combining them.');
+    }
+    if (
+      offer
+      && !offer.purchased
+      && !stagedPurchaseOfferIds.has(String(offer.offerId || ''))
+      && destination !== 'hand'
+      && destination !== 'hand-combination'
     ) {
       throw createWorkspaceError('Stage Hand cards as purchased before adding them to your lineup.');
     }
@@ -490,6 +504,29 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
     return demon;
   });
 
+  const lockedHand = options.preserveHand
+    ? requestedHand.map((entry) => {
+      const resolved = resolveWorkspaceDemon(entry, 'hand');
+      const directOffer = resolved.sourceInstanceIds.length === 1
+        ? offersByInstanceId.get(String(resolved.sourceInstanceIds[0]))
+        : null;
+      const directOfferId = String(directOffer?.offerId || '');
+      const purchased = directOffer
+        ? Boolean(directOffer.purchased || stagedPurchaseOfferIds.has(directOfferId))
+        : true;
+      const demon = resolved.demon;
+      delete demon.formationSlot;
+      delete demon.reserveSlot;
+      demon.position = demon.preferredPosition === 'back' ? 'back' : 'front';
+      return {
+        offerId: directOfferId || crypto.randomUUID(),
+        demon,
+        cost: getRankedCardCost(demon),
+        purchased
+      };
+    })
+    : [];
+
   if (options.requireActive !== false && active.length < 1) {
     throw createWorkspaceError('At least one active demon is required.');
   }
@@ -521,6 +558,8 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
   state.reserve = combined.reserve;
   state.picksRemaining = Math.max(0, picksRemaining - selectedOfferCount);
   state.offers = [];
+  state.handLocked = Boolean(options.preserveHand);
+  state.lockedHand = lockedHand;
   state.combinationEvents = [...combinationEvents, ...combined.events];
 
   return {
@@ -564,11 +603,14 @@ function awardRankedSoulInterest(run) {
 }
 
 function prepareNextSelection(run) {
+  const reuseLockedHand = Boolean(run.state.handLocked && Array.isArray(run.state.lockedHand));
   run.state.phase = 'selection';
-  run.state.offers = [];
+  run.state.offers = reuseLockedHand ? cloneJson(run.state.lockedHand) : [];
+  run.state.lockedHand = [];
   run.state.picksRemaining = 1;
   run.state.rerolls = normalizeRerolls();
   run.state.opponent = null;
+  return reuseLockedHand;
 }
 
 function prepareForFight(run) {
@@ -621,6 +663,7 @@ async function serializeRankedRun(run, rating, season) {
       cost: getRankedCardCost(offer.demon)
     })),
     picksRemaining: Math.max(0, Number(state.picksRemaining) || 0),
+    handLocked: Boolean(state.handLocked),
     rarityOdds: getRarityOdds(run.floor),
     rerolls: {
       ...normalizeRerolls(state.rerolls),
@@ -732,7 +775,7 @@ async function selectOpponent(run, rating, queryable = db) {
       generated: false,
       rating: Number(row.rating) || rating.rating,
       division: getDivision(row.rating).name,
-      team: cloneJson(snapshot.team || []),
+      team: prepareOpponentTeam(snapshot.team || []),
       buffs: mergeSnapshotBuffs(snapshot)
     };
   } else {
@@ -779,26 +822,31 @@ async function selectGeneratedOpponent(run, rating, queryable = db) {
     generated: true,
     rating: bracket,
     division: getDivision(bracket).name,
-    team: cloneJson(snapshot.team || []),
+    team: prepareOpponentTeam(snapshot.team || []),
     buffs: mergeSnapshotBuffs(snapshot)
   };
 }
 
 async function ensureGeneratedOpponents(seasonId, floor, ratingBracket, queryable = db) {
   const [existing] = await queryable.query(
-    `SELECT variant
+    `SELECT variant, combat_version
      FROM ranked_generated_opponents
      WHERE season_id = ? AND floor = ? AND rating_bracket = ?`,
     [seasonId, floor, ratingBracket]
   );
-  const variants = new Set(existing.map((row) => Number(row.variant)));
+  const versionsByVariant = new Map(
+    existing.map((row) => [Number(row.variant), String(row.combat_version || '')])
+  );
   for (let variant = 0; variant < GENERATED_VARIANTS_PER_FLOOR; variant += 1) {
-    if (variants.has(variant)) continue;
+    if (versionsByVariant.get(variant) === COMBAT_DATA_VERSION) continue;
     const snapshot = await createGeneratedSnapshot(seasonId, floor, ratingBracket, variant);
     await queryable.query(
-      `INSERT IGNORE INTO ranked_generated_opponents
+      `INSERT INTO ranked_generated_opponents
          (id, season_id, floor, rating_bracket, variant, snapshot, combat_version)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         snapshot = VALUES(snapshot),
+         combat_version = VALUES(combat_version)`,
       [
         crypto.randomUUID(),
         seasonId,
@@ -853,11 +901,7 @@ async function createGeneratedSnapshot(seasonId, floor, ratingBracket, variant) 
   }
 
   const desiredTeamSize = Math.min(ACTIVE_CAPACITY, Math.max(2, 2 + Math.floor(floor / 2)));
-  run.state.active = run.state.active.slice(0, desiredTeamSize).map((demon, slot) => ({
-    ...demon,
-    formationSlot: slot,
-    position: slot % 3 === 2 ? 'front' : 'back'
-  }));
+  run.state.active = arrangeRankedFormation(run.state.active.slice(0, desiredTeamSize), 'player');
   resetTeamForBattle(run.state.active);
   const buffs = createGeneratedPacts(seed, floor);
   const lockedBonuses = createGeneratedLockedBonuses(floor, ratingBracket, variant);
@@ -942,6 +986,40 @@ function mergeSnapshotBuffs(snapshot = {}) {
   });
 }
 
+function arrangeRankedFormation(team = [], side = 'player') {
+  return assignFormationSlots((team || []).map((demon) => {
+    const arranged = {
+      ...demon,
+      position: demon.preferredPosition === 'back' ? 'back' : 'front'
+    };
+    delete arranged.formationSlot;
+    delete arranged.formationRow;
+    return arranged;
+  }), side);
+}
+
+function prepareOpponentTeam(team = []) {
+  const mirrored = (team || []).map((demon) => {
+    const slot = Number(demon.formationSlot ?? demon.formationRow);
+    if (!Number.isInteger(slot) || slot < 0 || slot >= ACTIVE_CAPACITY) {
+      const unplaced = {
+        ...demon,
+        position: demon.preferredPosition === 'back' ? 'back' : 'front'
+      };
+      delete unplaced.formationSlot;
+      delete unplaced.formationRow;
+      return unplaced;
+    }
+    const mirroredSlot = Math.floor(slot / 3) * 3 + (2 - (slot % 3));
+    return {
+      ...demon,
+      formationSlot: mirroredSlot,
+      position: getFormationSlotPosition(mirroredSlot, 'enemy')
+    };
+  });
+  return assignFormationSlots(mirrored, 'enemy');
+}
+
 function getPlayerBattleBuffs(run) {
   return normalizeCombatBuffState({
     active: run.state.buffs?.active || [],
@@ -1010,9 +1088,12 @@ module.exports = {
   selectOpponent,
   serializeRankedRun,
   _test: {
+    arrangeRankedFormation,
     createGeneratedSnapshot,
     createGeneratedPacts,
     createGeneratedLockedBonuses,
-    hashSeed
+    ensureGeneratedOpponents,
+    hashSeed,
+    prepareOpponentTeam
   }
 };

@@ -157,7 +157,9 @@ function applyRunBuffStatPreviewToDemon(demon = {}) {
 
   const maxHpMult = getRunBuffEffectMultiplier('max_hp_mult', demon);
   const speedMult = getRunBuffEffectMultiplier('speed_mult', demon);
-  const damagePreviewMult = getRunBuffAttackPreviewMultiplier(demon);
+  const damagePreviewMult = isRetaliateDemon(demon)
+    ? getRunBuffEffectMultiplier('retaliation_damage_mult', demon)
+    : getRunBuffAttackPreviewMultiplier(demon);
   const baseMaxHp = Math.max(1, Number(demon.runBaseMaxHp) || Number(demon.maxHp) || Number(demon.hp) || 1);
   const baseHp = Math.max(0, Number(demon.hp) || baseMaxHp);
   const hpRatio = baseMaxHp > 0 ? Math.max(0, Math.min(1, baseHp / baseMaxHp)) : 1;
@@ -190,11 +192,16 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
   const directDamageMult = getPlayerWorldBuffEffectMultiplier('direct_damage_mult');
   const aoeDamageFlat = Math.max(0, Number(bonuses.aoeDamageFlat) || 0) + getPlayerWorldBuffEffectSum('aoe_damage_flat');
   const aoeDamageMult = (1 + getAccountBonusFraction(bonuses.aoeDamagePercent)) * getPlayerWorldBuffEffectMultiplier('aoe_damage_mult');
+  const retaliationDamageMult = getRunBuffEffectMultiplier('retaliation_damage_mult', demon) *
+    getPlayerWorldBuffEffectMultiplier('retaliation_damage_mult');
 
   const hasHpBonus = maxHpFlat > 0 || maxHpMult !== 1;
   const hasAttackBonus = attackFlat > 0 || attackMult !== 1;
   const hasSpeedBonus = speedFlat > 0 || speedMult !== 1;
-  const hasDamagePreviewBonus = directDamageMult !== 1 || aoeDamageFlat > 0 || aoeDamageMult !== 1;
+  const hasDamagePreviewBonus = directDamageMult !== 1 ||
+    aoeDamageFlat > 0 ||
+    aoeDamageMult !== 1 ||
+    retaliationDamageMult !== 1;
   if (!hasHpBonus && !hasAttackBonus && !hasSpeedBonus && !hasDamagePreviewBonus) return { ...demon };
 
   const next = {
@@ -244,7 +251,8 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
     applyDamageOutputStatPreview(next, {
       directDamageMult: getRunBuffEffectMultiplier('direct_damage_mult', next) * directDamageMult,
       aoeDamageMult: getRunBuffEffectMultiplier('aoe_damage_mult', next) * aoeDamageMult,
-      aoeDamageFlat
+      aoeDamageFlat,
+      retaliationDamageMult
     });
   }
 
@@ -270,13 +278,20 @@ function applyDamageOutputStatPreview(demon, options = {}) {
   const directDamageMult = Math.max(0, Number(options.directDamageMult) || 1);
   const aoeDamageMult = Math.max(0, Number(options.aoeDamageMult) || 1);
   const aoeDamageFlat = Math.max(0, Number(options.aoeDamageFlat) || 0);
+  const retaliationDamageMult = Math.max(0, Number(options.retaliationDamageMult) || 1);
   const isAoe = isAoeDemon(demon);
   const isSingleTarget = isSingleTargetAttackDemon(demon);
+  const isRetaliation = isRetaliateDemon(demon);
   const damageMult = (isSingleTarget ? directDamageMult : 1) * (isAoe ? aoeDamageMult : 1);
   const damageFlat = isAoe ? aoeDamageFlat : 0;
-  if (damageMult === 1 && damageFlat <= 0) return;
+  if (!isRetaliation && damageMult === 1 && damageFlat <= 0) return;
 
   const baseAtk = Math.max(1, Number(demon.atk) || 1);
+  if (isRetaliation) {
+    demon.effectiveAtk = Math.max(1, Math.round(baseAtk * retaliationDamageMult));
+    return;
+  }
+
   demon.effectiveAtk = Math.max(1, Math.round((baseAtk * damageMult) + damageFlat));
 }
 
@@ -393,6 +408,19 @@ function isSingleTargetAttackDemon(demon) {
   const typeId = Number(demon.typeId || demon.type_id || demon.type);
   const abilityKind = String(demon.abilityKind || demon.ability?.kind || '').toLowerCase();
   return ![3, 8, 10].includes(typeId) && !['heal', 'poison', 'retaliate'].includes(abilityKind);
+}
+
+function isRetaliateDemon(demon) {
+  if (!demon) return false;
+
+  const typeId = Number(demon.typeId || demon.type_id || demon.type);
+  const role = String(demon.role || '').toLowerCase();
+  const targeting = String(demon.targeting || '').toLowerCase();
+  const abilityKind = String(demon.abilityKind || demon.ability?.kind || '').toLowerCase();
+  return typeId === 8 ||
+    role === 'counter_tank' ||
+    targeting === 'none' ||
+    abilityKind === 'retaliate';
 }
 
 function getRecruitTeamLimit() {

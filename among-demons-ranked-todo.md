@@ -17,9 +17,9 @@
 - [x] Do not use demons from the permanent collection.
 - [x] Do not apply permanent demon training.
 - [x] Generate standardized Ranked demons from the normal demon type and rarity data.
-- [x] Limit the number of active demons to the current floor number, capped at the 9-slot formation size.
+- [x] Limit the number of active demons to the current floor plus one, capped at the 9-slot formation size.
 - [x] Give each run 3 lives.
-- [x] On defeat, consume one life and keep the player on the same floor.
+- [x] On defeat, consume one life, grant floor interest, and continue to the next floor while lives remain.
 - [x] End the run when no lives remain.
 - [x] Treat clearing floor 10 as a completed Ranked victory.
 - [x] Allow the player to continue beyond floor 10 until all lives are lost.
@@ -53,7 +53,7 @@
 ## 5. Demon drafting
 
 - [x] Begin the run with a five-card Hand.
-- [x] After a cleared floor, present five demon cards.
+- [x] After each resolved floor, present five demon cards or carry the exact Hand forward when it is locked.
 - [x] Allow the player to buy any number of offered demons that fit in Team and Reserve.
 - [x] Start each Ranked run with 2 run-only Ranked Souls (`rSouls`).
 - [x] Start with 2 deterministic-random Common or Uncommon demons, placing one on the Floor 1 team and one in Reserve.
@@ -62,7 +62,7 @@
 - [x] Treat moving a Hand card to Team or Reserve as its purchase point.
 - [x] Keep formation space, Reserve space, rSoul prices, and upgrade commitments as the Ranked economy.
 - [x] Let the player freely arrange Team, Reserve, and Hand before committing.
-- [x] Do not show a Skip Recruit button; pressing Fight with cards left in Hand discards them.
+- [x] Let the player lock the current Hand when fighting; otherwise pressing Fight with cards left in Hand discards them.
 - [x] Define floor-based rarity odds so higher rarities gradually enter offers.
 - [x] Keep lower rarities available at deep floors so completing combinations remains possible.
 - [x] Keep rarity chances server-defined without adding Hand metadata or a rarity-odds header to the compact bottom strip.
@@ -184,7 +184,7 @@
   - [x] Commit Team/Reserve and reroll the discarded Hand
   - [x] Choose Pact
   - [x] Commit Team/Reserve, discard Hand, and resolve battle
-  - [x] Continue/retry floor
+  - [x] Continue to the next floor
   - [x] End/finalize run
 - [x] Keep preparation edits local and make Fight/Reroll commits transactional and server-authoritative.
 - [x] Prevent replayed requests, duplicated recruits, duplicated combinations, reroll abuse, and duplicate reward claims.
@@ -192,7 +192,7 @@
 
 ## 15. Testing and balancing
 
-- [x] Unit-test lives, floor retries, drafting, Reserve limits, banishing, rerolls, combining, Pact stacking, snapshots, and rewards.
+- [x] Unit-test lives, floor progression, Hand locking, drafting, Reserve limits, banishing, rerolls, combining, Pact stacking, snapshots, and rewards.
 - [x] Test that newly recruited demons cannot generate infinite same-phase rerolls.
 - [x] Test combinations spanning active formation and Reserve.
 - [x] Test generated opponents at floors no player has reached.

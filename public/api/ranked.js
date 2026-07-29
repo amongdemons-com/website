@@ -187,6 +187,8 @@ router.post('/ranked/runs/:id/reroll', requireAuth, (req, res) => (
       requireActive: false,
       additionalRSoulCost: RANKED_REROLL_RSOUL_COST
     });
+    run.state.handLocked = Boolean(req.body?.lockHand);
+    run.state.lockedHand = [];
     result.purchaseCost = committed.purchaseCost;
     result.rSoulBalance = committed.rSoulBalance;
     result.rerollCost = RANKED_REROLL_RSOUL_COST;
@@ -210,7 +212,9 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
     if (!['draft', 'selection', 'preparation'].includes(run.state.phase)) {
       throwRankedError('The Ranked lineup cannot fight right now.', 409);
     }
-    const committed = await applyRankedWorkspace(run, req.body?.lineup);
+    const committed = await applyRankedWorkspace(run, req.body?.lineup, {
+      preserveHand: Boolean(req.body?.lockHand)
+    });
     result.purchaseCost = committed.purchaseCost;
     prepareForFight(run);
     const validation = getRosterValidation(run.state);
@@ -267,7 +271,9 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
     run.lives = defeat.lives;
     if (defeat.ended) {
       await finalizeRankedRun(run, rating, connection, { defeated: true });
+      return;
     }
+    result.rSoulInterest = awardRankedSoulInterest(run);
   })
 ));
 
@@ -276,20 +282,19 @@ router.post('/ranked/runs/:id/continue', requireAuth, (req, res) => (
     if (run.state.phase !== 'result' || !run.state.lastBattle) {
       throwRankedError('No Ranked battle result is waiting.', 409);
     }
-    if (run.state.lastBattle.winner === 'player') {
-      run.floor += 1;
-      prepareNextSelection(run);
-      await dealOffers(run);
-      if (shouldOfferPact(run.state.highestClearedFloor, run.state.buffs?.active?.length)) {
-        generateBuffChoices(
-          run,
-          createRng((Number(run.seed) + Number(run.floor) * 1597334677 + 991) >>> 0)
-        );
-      }
-      return;
-    }
     if (run.lives <= 0) throwRankedError('The Ranked run has ended.', 409);
-    prepareForFight(run);
+
+    run.floor += 1;
+    const reusedLockedHand = prepareNextSelection(run);
+    if (!reusedLockedHand) {
+      await dealOffers(run);
+    }
+    if (shouldOfferPact(run.floor - 1, run.state.buffs?.active?.length)) {
+      generateBuffChoices(
+        run,
+        createRng((Number(run.seed) + Number(run.floor) * 1597334677 + 991) >>> 0)
+      );
+    }
   })
 ));
 
