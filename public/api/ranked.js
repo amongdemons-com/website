@@ -4,7 +4,7 @@ const db = require('./lib/db');
 const { cleanPlayer, requireAuth } = require('./lib/auth');
 const { simulateFight } = require('./lib/combat');
 const {
-  generateBuffChoices,
+  applyPreBattleBuffs,
   getBuffById,
   selectRunBuff,
   serializeCombatBuffState
@@ -19,10 +19,10 @@ const {
   getFloorRatingGain,
   getRankedCardCost,
   getRosterValidation,
-  resolveDefeat,
-  shouldOfferPact
+  resolveDefeat
 } = require('./lib/ranked-rules');
 const {
+  advanceRankedFloor,
   applyRankedWorkspace,
   awardRankedSoulInterest,
   createInitialRankedState,
@@ -34,7 +34,6 @@ const {
   getPlayerBattleBuffs,
   getRankedRun,
   prepareForFight,
-  prepareNextSelection,
   resetTeamForBattle,
   saveRankedRun,
   saveReadySnapshot,
@@ -227,24 +226,27 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
     resetTeamForBattle(run.state.active);
     const opponent = await selectOpponent(run, rating, connection);
     resetTeamForBattle(opponent.team);
-    const playerTeamBefore = cloneJson(run.state.active);
-    const enemyTeamBefore = cloneJson(opponent.team);
+    const playerTeamBase = cloneJson(run.state.active);
+    const enemyTeamBase = cloneJson(opponent.team);
+    const playerBattleBuffs = getPlayerBattleBuffs(run);
+    const playerTeamBefore = applyPreBattleBuffs(playerTeamBase, playerBattleBuffs);
+    const enemyTeamBefore = applyPreBattleBuffs(enemyTeamBase, opponent.buffs);
     const demonTypes = await getDemonTypes();
     const fight = simulateFight(
       createRng((Number(run.seed) + Number(run.floor) * 2654435761) >>> 0),
-      playerTeamBefore,
-      enemyTeamBefore,
+      playerTeamBase,
+      enemyTeamBase,
       {
         combatType: 'ranked',
         demonTypes,
-        playerBuffs: getPlayerBattleBuffs(run),
+        playerBuffs: playerBattleBuffs,
         enemyBuffs: opponent.buffs
       }
     );
     // Ranked demons carry standardized base stats between floors. The battle
     // result contains temporary Pact/Skill/World-buff stats, so keep the base
     // roster here and store the buffed result only in the immutable replay.
-    run.state.active = cloneJson(playerTeamBefore);
+    run.state.active = cloneJson(playerTeamBase);
     run.state.phase = 'result';
     run.state.lastBattle = {
       floor: run.floor,
@@ -256,7 +258,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       enemyTeamBefore,
       playerTeamAfter: cloneJson(fight.playerTeam),
       enemyTeamAfter: cloneJson(fight.enemyTeam),
-      playerBuffs: serializeCombatBuffState(getPlayerBattleBuffs(run)).activeBuffs,
+      playerBuffs: serializeCombatBuffState(playerBattleBuffs).activeBuffs,
       enemyBuffs: serializeCombatBuffState(opponent.buffs).activeBuffs
     };
     result.winner = fight.winner;
@@ -264,6 +266,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
 
     if (fight.winner === 'player') {
       await applyRankedVictory(run, rating, connection, req.player.id, result);
+      await advanceRankedFloor(run, { offerPact: true });
       return;
     }
 
@@ -274,6 +277,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       return;
     }
     result.rSoulInterest = awardRankedSoulInterest(run);
+    await advanceRankedFloor(run);
   })
 ));
 
@@ -284,17 +288,9 @@ router.post('/ranked/runs/:id/continue', requireAuth, (req, res) => (
     }
     if (run.lives <= 0) throwRankedError('The Ranked run has ended.', 409);
 
-    run.floor += 1;
-    const reusedLockedHand = prepareNextSelection(run);
-    if (!reusedLockedHand) {
-      await dealOffers(run);
-    }
-    if (shouldOfferPact(run.floor - 1, run.state.buffs?.active?.length)) {
-      generateBuffChoices(
-        run,
-        createRng((Number(run.seed) + Number(run.floor) * 1597334677 + 991) >>> 0)
-      );
-    }
+    await advanceRankedFloor(run, {
+      offerPact: run.state.lastBattle.winner === 'player'
+    });
   })
 ));
 

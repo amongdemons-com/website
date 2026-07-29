@@ -233,6 +233,9 @@ async function loadBootstrap() {
     if (payload.player) acceptPlayer(payload.player);
     if (payload.run) {
       acceptRun(payload.run);
+      if (payload.run.status === 'active' && payload.run.phase === 'result') {
+        await continueRun();
+      }
     } else {
       state.run = null;
       serverRun = null;
@@ -349,10 +352,7 @@ async function startBattle() {
     renderRun();
     await combat.playCombatLog();
     await showBattleResult(battle.winner);
-    serverRun = payload.run;
-    rankedSouls = Math.max(0, Number(payload.run.rSouls) || 0);
-    restoreRankedBattleResult(payload.run, battle);
-    renderRun();
+    acceptRun(payload.run, { render: false });
     const resultMessages = [];
     if (payload.rewards?.souls) {
       resultMessages.push(`Victory milestone: ${payload.rewards.souls} Souls awarded.`);
@@ -376,6 +376,7 @@ async function startBattle() {
   } finally {
     isReplayingBattle = false;
     setBusy(false);
+    renderRun();
   }
 }
 
@@ -400,13 +401,13 @@ async function replayRankedFight() {
     elements.fightLog.innerHTML = '';
     elements.fightLog.classList.remove('text-muted');
     await combat.playCombatLog();
-    restoreRankedBattleResult(serverRun, battle);
-    renderRun();
+    acceptRun(serverRun, { render: false });
   } catch (error) {
     showError(error);
   } finally {
     isReplayingBattle = false;
     setBusy(false);
+    renderRun();
   }
 }
 
@@ -414,18 +415,6 @@ function stageRankedBattle(battle) {
   state.run.team = cloneDemons(battle.playerTeamBefore || state.run.team || []);
   state.run.active = state.run.team;
   state.run.enemies = cloneDemons(battle.enemyTeamBefore || state.run.enemies || []);
-  state.combatLog = battle.combatLog || [];
-  state.combatDemons = combat.createCombatDemonMap();
-}
-
-function restoreRankedBattleResult(run, battle) {
-  state.run = {
-    ...run,
-    team: cloneDemons(battle.playerTeamAfter || run.team || run.active || []),
-    active: cloneDemons(battle.playerTeamAfter || run.active || run.team || []),
-    reserve: cloneDemons(run.reserve),
-    enemies: cloneDemons(battle.enemyTeamAfter || run.enemies || [])
-  };
   state.combatLog = battle.combatLog || [];
   state.combatDemons = combat.createCombatDemonMap();
 }
@@ -505,15 +494,20 @@ function renderRun() {
   }
 
   const battlePlaybackView = isReplayingBattle || state.isBattleAnimating;
-  const combatView = battlePlaybackView || run.phase === 'result';
+  const combatView = battlePlaybackView;
   const pactTeamPreview = Boolean(state.isPactTeamPreview && run.pendingPact && !combatView);
   const bottomControlsView = combatView || pactTeamPreview;
+  const canReviewFight = Boolean(
+    !bottomControlsView
+    && (run.lastBattle?.combatLog?.length || state.combatLog?.length)
+  );
   elements.enemyGrid.closest('.battle-side')?.classList.toggle('is-ranked-reserve', !combatView);
   elements.rankedBottomPanel.classList.toggle('is-ranked-combat', bottomControlsView);
+  elements.rankedBottomPanel.classList.toggle('has-fight-review', canReviewFight);
   elements.rankedBottomPanel.classList.toggle('is-battle-active', battlePlaybackView);
   elements.dungeonHandBar.classList.toggle('d-none', !bottomControlsView);
   elements.dungeonHandBar.classList.toggle('is-battle-controls-mode', bottomControlsView);
-  elements.dungeonReplayLogBox.classList.toggle('d-none', !combatView);
+  elements.dungeonReplayLogBox.classList.toggle('d-none', !canReviewFight);
   if (!combatView) setBattlePanel('combat');
   renderTeamTitle(run);
   renderEnemyTitle(run, combatView);
@@ -539,10 +533,17 @@ function renderRun() {
 
 function renderTeamTitle(run) {
   const division = run.rating?.division || 'Bronze II';
+  const rank = getRankPresentation(division);
   const hearts = `${'\u2665 '.repeat(run.lives)}${'\u2661 '.repeat(Math.max(0, 3 - run.lives))}`.trim();
   elements.teamSideTitle.innerHTML = `
-    <span class="ranked-desktop-status">${escapeHtml(division.toUpperCase())} &middot; FLOOR ${formatNumber(run.floor)} &middot; ${hearts}</span>
-    <span class="ranked-mobile-status">F${formatNumber(run.floor)} &middot; \u2665 ${run.lives}/3</span>
+    <span class="ranked-desktop-status">
+      ${renderRankBadge(rank, { showLabel: true })}
+      <span aria-hidden="true">&middot;</span> FLOOR ${formatNumber(run.floor)} <span aria-hidden="true">&middot;</span> ${hearts}
+    </span>
+    <span class="ranked-mobile-status">
+      ${renderRankBadge(rank)}
+      F${formatNumber(run.floor)} <span aria-hidden="true">&middot;</span> \u2665 ${run.lives}/3
+    </span>
   `;
 }
 
@@ -560,9 +561,34 @@ function renderEnemyTitle(run, combatView) {
   const name = run.opponent?.generated
     ? 'Ranked Rival'
     : (run.opponent?.hunterName || 'Opponent');
+  const opponentRank = getRankPresentation(run.opponent?.division);
   elements.enemySideTitle.innerHTML = `
     <span>${escapeHtml(name)}</span>
-    ${run.opponent?.division ? `<span class="battle-side-count">${escapeHtml(run.opponent.division)}</span>` : ''}
+    ${run.opponent?.division ? renderRankBadge(opponentRank, { showLabel: true, compact: true }) : ''}
+  `;
+}
+
+function getRankPresentation(division = 'Bronze III') {
+  const normalized = String(division || 'Bronze III').trim().toLowerCase();
+  const slug = normalized.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const tier = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'demonic']
+    .find((candidate) => normalized.startsWith(candidate)) || 'bronze';
+  return {
+    division: String(division || 'Bronze III'),
+    slug,
+    tier,
+    imageUrl: `/app/images/assets/ranks/${tier}.svg`
+  };
+}
+
+function renderRankBadge(rank, options = {}) {
+  const compactClass = options.compact ? ' is-compact' : '';
+  return `
+    <span class="ranked-rank ranked-rank--${escapeHtml(rank.slug)}${compactClass}"
+          aria-label="${escapeHtml(rank.division)} rank">
+      <img class="ranked-rank-image" src="${escapeHtml(rank.imageUrl)}" alt="" width="72" height="80" aria-hidden="true">
+      ${options.showLabel ? `<span class="ranked-rank-label">${escapeHtml(rank.division.toUpperCase())}</span>` : ''}
+    </span>
   `;
 }
 
@@ -694,8 +720,7 @@ function renderFightLogActions() {
   const run = state.run;
   if (!run || !elements.dungeonBottomControls || !elements.dungeonReplayLogBox) return;
   const canReviewFight = Boolean(
-    run.phase === 'result'
-    && !state.isBattleAnimating
+    !state.isBattleAnimating
     && !isReplayingBattle
     && (run.lastBattle?.combatLog?.length || state.combatLog?.length)
   );
@@ -711,18 +736,6 @@ function renderFightLogActions() {
       ${renderBattlePlaybackControls()}
       ${renderBattleSpeedControl()}
       ${renderBattleSkipControl()}
-    `;
-    return;
-  }
-  if (run.phase === 'result') {
-    const ended = run.status === 'ended' || run.lives <= 0;
-    elements.dungeonBottomControls.innerHTML = ended ? `
-      <button class="btn btn-primary" type="button" data-ranked-action="start">New Ranked Run</button>
-    ` : `
-      <button class="btn btn-primary" type="button" data-ranked-action="continue">
-        Continue
-      </button>
-      <button class="btn btn-outline-light" type="button" data-ranked-action="end">End Run</button>
     `;
     return;
   }
@@ -822,7 +835,35 @@ function bindCardDetails() {
 
 function openCardDetails(card) {
   const demon = findAnyDemon(card?.dataset.instanceId);
-  if (demon) window.AmongDemons.ui?.openDemonDetailsModal?.(demon);
+  if (demon) {
+    window.AmongDemons.ui?.openDemonDetailsModal?.(demon, {
+      detailHtml: renderRankedPactPreview(state.run)
+    });
+  }
+}
+
+function renderRankedPactPreview(run) {
+  const pacts = Array.isArray(run?.pacts?.activeBuffs) ? run.pacts.activeBuffs : [];
+  if (!pacts.length) return '';
+  return `
+    <section class="ranked-card-pacts" aria-label="Active Demonic Pacts affecting this preview">
+      <h3>Active Demonic Pacts</h3>
+      <div class="ranked-card-pact-list">
+        ${pacts.map((pact) => {
+          const rarity = String(pact.rarity || 'common').toLowerCase();
+          return `
+            <div class="ranked-card-pact is-${escapeHtml(rarity)}">
+              <span class="ranked-card-pact-icon" aria-hidden="true">${renderIcon(pact.icon || 'sparkles')}</span>
+              <span>
+                <strong>${escapeHtml(pact.name || pact.id)}</strong>
+                <small>${escapeHtml(pact.description || '')}</small>
+              </span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </section>
+  `;
 }
 
 async function showBattleResult(winner) {
@@ -856,25 +897,38 @@ function createWorkspace(run) {
       .map((offer) => String(offer.offerId))
   );
   const active = cloneDemons(run.active || run.team).map((demon, index) => ({
-    ...demon,
+    ...applyRankedDemonPreview(demon, run),
     formationSlot: normalizeSlot(demon.formationSlot) ?? index,
     _rankedOrigin: 'roster',
     _rankedPurchased: true
   }));
   const reserve = cloneDemons(run.reserve).map((demon, index) => ({
-    ...demon,
+    ...applyRankedDemonPreview(demon, run),
     reserveSlot: normalizeReserveSlot(demon.reserveSlot) ?? index,
     _rankedOrigin: 'roster',
     _rankedPurchased: true
   }));
   const hand = (run.offers || []).map((offer) => ({
-    ...JSON.parse(JSON.stringify(offer.demon)),
+    ...applyRankedDemonPreview(offer.demon, run),
     _rankedOrigin: 'offer',
     _rankedOfferId: offer.offerId,
     _rankedCost: Math.max(0, Number(offer.cost) || getRankedDemonCost(offer.demon)),
     _rankedPurchased: Boolean(offer.purchased)
   }));
   return { active, reserve, hand };
+}
+
+function applyRankedDemonPreview(demon = {}, run = serverRun) {
+  const clone = JSON.parse(JSON.stringify(demon));
+  const key = `${Number(clone.typeId || clone.type_id || clone.type)}:${String(clone.rarity || 'common').toLowerCase()}`;
+  const preview = run?.previewStats?.[key];
+  if (!preview) return clone;
+  return {
+    ...clone,
+    ...JSON.parse(JSON.stringify(preview)),
+    hp: Math.max(1, Number(preview.maxHp) || Number(preview.hp) || 1),
+    _rankedPactPreviewApplied: true
+  };
 }
 
 function syncWorkspaceIntoRun() {
@@ -1357,7 +1411,7 @@ function createClientCombinationDemon(consumed, rarity, destinationEntry) {
   } else {
     upgraded.reserveSlot = normalizeReserveSlot(destinationEntry.demon.reserveSlot);
   }
-  return upgraded;
+  return applyRankedDemonPreview(upgraded);
 }
 
 function midpointRankedStat(bounds, multiplier) {
@@ -1580,7 +1634,6 @@ function setLoading(loading) {
 function setBusy(busy) {
   isBusy = Boolean(busy);
   document.documentElement.classList.toggle('is-ranked-busy', isBusy);
-  renderRun();
 }
 
 function showError(error) {

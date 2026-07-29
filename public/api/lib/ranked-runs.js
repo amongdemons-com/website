@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const db = require('./db');
 const { calculateStatBonuses, getPlayerStatPointSummary } = require('./account-stat-points');
 const {
+  applyPreBattleBuffs,
   generateBuffChoices,
   normalizeCombatBuffState,
   selectRunBuff,
@@ -20,6 +21,7 @@ const {
   OFFER_SIZE,
   RANKED_STARTING_RSOULS,
   RANKED_RULES_VERSION,
+  RARITIES,
   RESERVE_CAPACITY,
   combineRoster,
   createSnapshotPayload,
@@ -606,11 +608,33 @@ function prepareNextSelection(run) {
   const reuseLockedHand = Boolean(run.state.handLocked && Array.isArray(run.state.lockedHand));
   run.state.phase = 'selection';
   run.state.offers = reuseLockedHand ? cloneJson(run.state.lockedHand) : [];
+  // A lock carries the current Hand for exactly one floor. The reused cards
+  // remain in the Hand, but the player must opt in again to carry them farther.
+  run.state.handLocked = false;
   run.state.lockedHand = [];
   run.state.picksRemaining = 1;
   run.state.rerolls = normalizeRerolls();
   run.state.opponent = null;
   return reuseLockedHand;
+}
+
+async function advanceRankedFloor(run, options = {}) {
+  const clearedFloor = Math.max(1, Number(run.floor) || 1);
+  run.floor = clearedFloor + 1;
+  const reusedLockedHand = prepareNextSelection(run);
+  if (!reusedLockedHand) {
+    await dealOffers(run);
+  }
+  if (options.offerPact && shouldOfferPact(clearedFloor, run.state.buffs?.active?.length)) {
+    generateBuffChoices(
+      run,
+      createRng((Number(run.seed) + Number(run.floor) * 1597334677 + 991) >>> 0)
+    );
+  }
+  return {
+    clearedFloor,
+    reusedLockedHand
+  };
 }
 
 function prepareForFight(run) {
@@ -637,6 +661,7 @@ async function serializeRankedRun(run, rating, season) {
   const currentRating = Math.max(0, Number(rating?.rating) || DEFAULT_RATING);
   const projectedRating = Math.max(0, currentRating + Number(state.pendingRating || 0));
   const pacts = serializeCombatBuffState(state.buffs || {});
+  const previewStats = await createRankedPreviewStats(run);
 
   return {
     runId: run.id,
@@ -670,6 +695,7 @@ async function serializeRankedRun(run, rating, season) {
       available: getAvailableRerolls(state.rerolls)
     },
     pacts,
+    previewStats,
     pendingPact: pacts.pendingChoices.length > 0,
     lockedBonuses: run.lockedBonuses,
     combinationEvents: state.combinationEvents || [],
@@ -695,6 +721,41 @@ async function serializeRankedRun(run, rating, season) {
     rulesVersion: run.rulesVersion,
     combatVersion: COMBAT_DATA_VERSION
   };
+}
+
+async function createRankedPreviewStats(run) {
+  const state = run.state || {};
+  const typeIds = new Set([
+    ...(state.active || []),
+    ...(state.reserve || []),
+    ...(state.offers || []).map((offer) => offer?.demon)
+  ].map((demon) => Number(demon?.typeId)).filter((typeId) => typeId > 0));
+  if (!typeIds.size) return {};
+
+  const catalog = await getGameCatalog();
+  const buffs = getPlayerBattleBuffs(run);
+  const previews = {};
+  typeIds.forEach((typeId) => {
+    RARITIES.forEach((rarity) => {
+      const base = createStandardRankedDemon(catalog, {
+        typeId,
+        rarity,
+        instanceId: `ranked-preview-${typeId}-${rarity}`
+      });
+      const preview = applyPreBattleBuffs([base], buffs)[0];
+      previews[`${typeId}:${rarity}`] = {
+        maxHp: preview.maxHp,
+        hp: preview.maxHp,
+        atk: preview.atk,
+        speed: preview.speed,
+        ...(Number.isFinite(Number(preview.effectiveAtk))
+          ? { effectiveAtk: preview.effectiveAtk }
+          : {}),
+        battleBuffs: preview.battleBuffs || {}
+      };
+    });
+  });
+  return previews;
 }
 
 async function saveReadySnapshot(run, rating, username, queryable = db) {
@@ -1066,6 +1127,7 @@ module.exports = {
   COMBAT_DATA_VERSION,
   DEFAULT_RATING,
   addDemonAndCombine,
+  advanceRankedFloor,
   applyRankedWorkspace,
   awardRankedSoulInterest,
   createInitialRankedState,

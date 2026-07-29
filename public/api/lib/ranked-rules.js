@@ -38,7 +38,13 @@ const DIVISIONS = Object.freeze([
   { minimum: 1700, name: 'Gold III' },
   { minimum: 1875, name: 'Gold II' },
   { minimum: 2050, name: 'Gold I' },
-  { minimum: 2250, name: 'Demonbound' }
+  { minimum: 2250, name: 'Platinum III' },
+  { minimum: 2475, name: 'Platinum II' },
+  { minimum: 2700, name: 'Platinum I' },
+  { minimum: 2950, name: 'Diamond III' },
+  { minimum: 3225, name: 'Diamond II' },
+  { minimum: 3500, name: 'Diamond I' },
+  { minimum: 3800, name: 'Demonic' }
 ]);
 
 function getRarityOdds(floor) {

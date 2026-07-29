@@ -19,7 +19,7 @@ const renderRun = (...args) => dungeonActions.renderRun(...args);
 function prepareCombatPlayback(options = {}) {
   if (!state.run) return null;
 
-  const steps = groupCombatLog(state.combatLog);
+  const steps = groupCombatLog(state.combatLog, { combineCounters: true });
   const combatPlayback = {
     currentIndex: 0,
     isPaused: false,
@@ -128,7 +128,9 @@ function applyCombatStep(step, index = -1, options = {}) {
   // card update feels synced to the projectile landing rather than the step start.
   setActiveLogRow(index);
   const attackerSide = getDemonSide(step.attacker);
-  const isAoe = Boolean(step.isAoe) || (step.entries || []).length > 1;
+  const primaryEntries = getPrimaryActionEntries(step);
+  const primaryEntryIndexes = new Map(primaryEntries.map((entry, index) => [entry, index]));
+  const isAoe = Boolean(step.isAoe) || primaryEntries.length > 1;
   playCombatStepSound(step);
   if (step.primaryEffect !== 'poison') {
     animateAttackerCard(step.attacker, step.primaryEffect, step.entries[0]?.target);
@@ -139,9 +141,12 @@ function applyCombatStep(step, index = -1, options = {}) {
   // reactions (HP/floating numbers/burst) still run, lined up just after the detonation.
   const fireGroup = getFireGroupPlan(step);
   if (fireGroup) drawGroupFireball(step.attacker, fireGroup.targetIds, { effect: step.primaryEffect, travel: fireGroup.travel });
+  const cleaveGroup = getCleaveGroupPlan(step);
+  if (cleaveGroup) drawSwordSwing(step.attacker, cleaveGroup.targetId);
 
-  step.entries.forEach((entry, entryIndex) => {
-    animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGroup);
+  step.entries.forEach((entry) => {
+    const entryIndex = primaryEntryIndexes.get(entry) ?? 0;
+    animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGroup, cleaveGroup);
   });
 }
 
@@ -173,14 +178,25 @@ function playCombatStepSound(step) {
   }
 
   audio?.play(key, { volume: 0.72, minInterval: 55 });
+  if (!isCounterattackEntry(primaryEntry) && (step.entries || []).some(isCounterattackEntry)) {
+    audio?.play('sfx.battle.abilities.thornsRetaliate', { volume: 0.66, minInterval: 55 });
+  }
 }
 
 // Damage effects that route through the standard projectile branch (everything that isn't a
 // status/heal special-case). Used to decide which entries the grouped fire shot covers.
 const NON_DAMAGE_EFFECTS = new Set(['poison', 'heal', 'last_breath', 'shared_pain', 'poison_apply']);
 
-function isGroupedFireEntry(entry) {
-  return !NON_DAMAGE_EFFECTS.has(entry.effect);
+function isCounterattackEntry(entry) {
+  return entry?.effect === 'retaliate' || entry?.effect === 'thorns';
+}
+
+function getPrimaryActionEntries(step) {
+  return (step.entries || []).filter((entry) => !isCounterattackEntry(entry));
+}
+
+function isPrimaryDamageEntry(entry) {
+  return !isCounterattackEntry(entry) && !NON_DAMAGE_EFFECTS.has(entry.effect);
 }
 
 // Returns the grouped-fire plan for a step, or null when the step shouldn't use it
@@ -189,7 +205,7 @@ function getFireGroupPlan(step) {
   if (prefersReducedMotion()) return null;
   if (step.targeting === 'chaotic') return null;
   if (Number(getCombatDemon(step.attacker)?.typeId) !== 4) return null;
-  const damageEntries = (step.entries || []).filter(isGroupedFireEntry);
+  const damageEntries = (step.entries || []).filter(isPrimaryDamageEntry);
   if (!damageEntries.length) return null;
   return {
     targetIds: damageEntries.map((entry) => entry.target),
@@ -198,10 +214,22 @@ function getFireGroupPlan(step) {
   };
 }
 
+// Type 7 cleaves one row in a single sweep. Pick the middle target only to orient the
+// shared slash; every target still receives its own synchronized impact reaction.
+function getCleaveGroupPlan(step) {
+  if (prefersReducedMotion()) return null;
+  if (Number(getCombatDemon(step.attacker)?.typeId) !== 7) return null;
+  const damageEntries = (step.entries || []).filter(isPrimaryDamageEntry);
+  if (!damageEntries.length) return null;
+  return {
+    targetId: damageEntries[Math.floor((damageEntries.length - 1) / 2)].target
+  };
+}
+
 // Routes a single combat-log entry to the right visual treatment. Damage/heal/poison
 // reactions (HP bar, floating number, impact burst, card shake) are scheduled at the
 // attack's impact moment via scheduleImpact so they line up with the travelling effect.
-function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGroup = null) {
+function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGroup = null, cleaveGroup = null) {
   const reduced = prefersReducedMotion();
 
   if (entry.effect === 'poison') {
@@ -256,11 +284,13 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
   }
 
   const profile = getAttackProfile(entry);
-  // Grouped fire draws one shared fireball in applyCombatStep, so skip the per-entry
-  // projectile and hold the impact reactions until just after the nova detonates.
-  const grouped = fireGroup && isGroupedFireEntry(entry);
+  // Grouped fire and cleave attacks draw one shared attack animation in applyCombatStep.
+  // Counter entries are excluded, so their thorn burst still starts in parallel.
+  const groupedFire = fireGroup && isPrimaryDamageEntry(entry);
+  const groupedCleave = cleaveGroup && isPrimaryDamageEntry(entry);
+  const grouped = groupedFire || groupedCleave;
   if (!reduced && !grouped) profile.draw();
-  const impactDelay = grouped
+  const impactDelay = groupedFire
     ? fireGroup.travel + fireGroup.lead + entryIndex * 50
     : profile.travel + (isAoe ? entryIndex * 70 : 0);
   scheduleImpact(impactDelay, () => {
@@ -273,7 +303,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
       effect: entry.effect,
       heavy: profile.heavy,
       variant: profile.key,
-      aoe: isAoe
+      aoe: isAoe && !isCounterattackEntry(entry)
     });
     hitTargetCard(entry.target, profile.heavy);
     if (profile.screenShake) triggerScreenShake();
@@ -512,6 +542,16 @@ function setAttackerLunge(card, targetId) {
 // the duplicated per-type animation branches the old code had.
 function getAttackProfile(entry) {
   const { attacker, target, effect } = entry;
+
+  if (isCounterattackEntry(entry)) {
+    return {
+      key: 'thorn',
+      travel: 210,
+      heavy: false,
+      screenShake: false,
+      draw: () => drawThornBurst(attacker, target)
+    };
+  }
 
   if (entry.targeting === 'chaotic') {
     return {
@@ -1171,16 +1211,19 @@ function getAttackGeometry(attacker, target) {
 // short hold so the floating number/burst can register before the next step begins.
 function getCombatStepDelay(step) {
   const entries = step.entries || [];
-  const isAoe = Boolean(step.isAoe) || entries.length > 1;
+  const primaryEntries = getPrimaryActionEntries(step);
+  const primaryEntryIndexes = new Map(primaryEntries.map((entry, index) => [entry, index]));
+  const isAoe = Boolean(step.isAoe) || primaryEntries.length > 1;
   const IMPACT_HOLD = 240;
 
   return Math.max(
     340,
-    ...entries.map((entry, index) => {
+    ...entries.map((entry) => {
       if (entry.effect === 'heal' || entry.effect === 'last_breath') return 500;
       if (entry.effect === 'poison') return 380;
       if (entry.effect === 'poison_apply') return 460;
       if (entry.effect === 'shared_pain') return 320;
+      const index = primaryEntryIndexes.get(entry) ?? 0;
       const stagger = isAoe ? index * 70 : 0;
       return getAttackProfile(entry).travel + stagger + IMPACT_HOLD;
     })
@@ -1252,6 +1295,7 @@ function playTemporaryCardClass(card, className, duration) {
 
 function renderFightLogRow(step, index) {
   const primaryEntry = step.entries[0];
+  const playbackIndex = Number.isInteger(step.playbackIndex) ? step.playbackIndex : index;
   const damageText = getFightLogAmountText(step);
   const hpText = primaryEntry.effect === 'poison_apply'
     ? 'Poisoned'
@@ -1262,7 +1306,7 @@ function renderFightLogRow(step, index) {
         : `${primaryEntry.targetHp} HP`;
 
   return `
-    <div class="fight-log-row ${getLogRowClass(primaryEntry)}" data-log-index="${index}">
+    <div class="fight-log-row ${getLogRowClass(primaryEntry)}" data-log-index="${playbackIndex}">
       <span class="text-secondary">T${primaryEntry.tick}</span>
       <span class="fight-log-side">${getLogSideLabel(primaryEntry)}</span>
       <span class="fight-log-action">${getFightLogActionText(step)}</span>
@@ -1272,26 +1316,40 @@ function renderFightLogRow(step, index) {
   `;
 }
 
-function groupCombatLog(combatLog) {
+function groupCombatLog(combatLog, options = {}) {
   const steps = [];
+  const combineCounters = options.combineCounters === true;
 
   for (const entry of combatLog || []) {
     const previous = steps[steps.length - 1];
-    const isSameAoe = (entry.targeting === 'all' || entry.targeting === 'cleave') &&
-      previous?.isAoe &&
-      previous.tick === entry.tick &&
-      previous.attacker === entry.attacker;
-    const isSameCounterattack = entry.effect === 'thorns' &&
-      previous &&
-      previous.tick === entry.tick &&
-      previous.entries.some((previousEntry) => previousEntry.attacker === entry.target && previousEntry.target === entry.attacker);
+    const matchingAoeStep = (entry.targeting === 'all' || entry.targeting === 'cleave')
+      ? [...steps].reverse().find((step) => (
+          step.isAoe &&
+          step.tick === entry.tick &&
+          step.attacker === entry.attacker
+        ))
+      : null;
+    const canCombineCounter = (
+      entry.effect === 'thorns' ||
+      (combineCounters && entry.effect === 'retaliate')
+    );
+    const matchingCounterStep = canCombineCounter
+      ? [...steps].reverse().find((step) => (
+          step.tick === entry.tick &&
+          step.entries.some((previousEntry) => (
+            previousEntry.attacker === entry.target &&
+            previousEntry.target === entry.attacker
+          ))
+        ))
+      : null;
     const isSamePoisonBurst = entry.effect === 'poison' &&
       previous?.primaryEffect === 'poison' &&
       previous.tick === entry.tick &&
       previous.entries.every((previousEntry) => previousEntry.target === entry.target);
 
-    if (isSameAoe || isSameCounterattack || isSamePoisonBurst) {
-      previous.entries.push(entry);
+    const matchingStep = matchingAoeStep || matchingCounterStep || (isSamePoisonBurst ? previous : null);
+    if (matchingStep) {
+      matchingStep.entries.push(entry);
       continue;
     }
 
@@ -1301,6 +1359,17 @@ function groupCombatLog(combatLog) {
       isAoe: entry.targeting === 'all' || entry.targeting === 'cleave',
       primaryEffect: entry.effect || null,
       entries: [entry]
+    });
+  }
+
+  if (!combineCounters) {
+    const playbackSteps = groupCombatLog(combatLog, { combineCounters: true });
+    const playbackIndexByEntry = new Map();
+    playbackSteps.forEach((step, index) => {
+      step.entries.forEach((entry) => playbackIndexByEntry.set(entry, index));
+    });
+    steps.forEach((step) => {
+      step.playbackIndex = playbackIndexByEntry.get(step.entries[0]);
     });
   }
 
@@ -1314,6 +1383,7 @@ function renderLogPosition(position) {
 
 function getFightLogActionText(step) {
   const entry = step.entries[0];
+  const primaryEntryCount = getPrimaryActionEntries(step).length;
   const attacker = renderFightLogDemonName(entry.attacker);
   const target = `${renderFightLogDemonName(entry.target)} ${renderLogPosition(entry.targetPosition)}`;
 
@@ -1327,8 +1397,8 @@ function getFightLogActionText(step) {
   if (entry.effect === 'thorns') return `${attacker} reflected damage to ${target}`;
   if (entry.knockback) return `${attacker} crushed ${target} back`;
   if (entry.targeting === 'chaotic') return `${attacker} chaotically struck ${target}`;
-  if (entry.targeting === 'cleave') return `${attacker} cleaved ${step.entries.length} demons`;
-  if (step.isAoe) return `${attacker} splashed ${step.entries.length} enemies`;
+  if (entry.targeting === 'cleave') return `${attacker} cleaved ${primaryEntryCount} demons`;
+  if (step.isAoe) return `${attacker} splashed ${primaryEntryCount} enemies`;
   return `${attacker} ${getFightLogVerb(entry)} ${target}`;
 }
 
@@ -1348,6 +1418,7 @@ function getFightLogVerb(entry) {
 
 function getFightLogAmountText(step) {
   const entry = step.entries[0];
+  const primaryEntryCount = getPrimaryActionEntries(step).length;
   const counterEntry = step.entries.find((item) => item.effect === 'retaliate' || item.effect === 'thorns');
   if (entry.effect === 'poison_apply') return 'poison';
   if (entry.effect === 'poison') {
@@ -1361,11 +1432,16 @@ function getFightLogAmountText(step) {
   if (entry.effect === 'retaliate') return `${entry.dmg || 0} retaliation`;
   if (counterEntry) {
     const label = counterEntry.effect === 'thorns' ? 'thorns' : 'retaliation';
-    return `${entry.dmg} dmg, ${counterEntry.dmg} ${label}`;
+    const damage = entry.targeting === 'cleave'
+      ? `${primaryEntryCount} x ${entry.dmg} cleave`
+      : step.isAoe
+        ? `${primaryEntryCount} x ${entry.dmg} dmg`
+        : `${entry.dmg} dmg`;
+    return `${damage}, ${counterEntry.dmg} ${label}`;
   }
   if (entry.knockback) return `${entry.dmg} dmg, push`;
-  if (entry.targeting === 'cleave') return `${step.entries.length} x ${entry.dmg} cleave`;
-  if (step.isAoe) return `${step.entries.length} x ${entry.dmg} dmg`;
+  if (entry.targeting === 'cleave') return `${primaryEntryCount} x ${entry.dmg} cleave`;
+  if (step.isAoe) return `${primaryEntryCount} x ${entry.dmg} dmg`;
   return `${entry.dmg} dmg`;
 }
 

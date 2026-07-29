@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 80" role="img" aria-labelledby="title">
+  <title id="title">Silver rank crest</title>
+  <defs>
+    <linearGradient id="metal" x1="10" y1="5" x2="60" y2="73" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f5fbff"/>
+      <stop offset=".46" stop-color="#aebdca"/>
+      <stop offset="1" stop-color="#53616e"/>
+    </linearGradient>
+  </defs>
+  <path fill="#10171d" stroke="#d9e5ee" stroke-width="3" d="M36 3 65 14v24c0 19-12 31-29 39C19 69 7 57 7 38V14L36 3Z"/>
+  <path fill="url(#metal)" d="M36 9 59 18v19c0 15-9 25-23 33-14-8-23-18-23-33V18l23-9Z"/>
+  <path fill="#25313a" d="m18 42 10-18 8 10 8-10 10 18-8 16H26l-8-16Z"/>
+  <path fill="#f7fcff" d="m36 38 8 6-3 8H31l-3-8 8-6Z"/>
+  <path fill="#fff" opacity=".72" d="m18 20 18-6 7 3-22 8-4 15h-3V22l4-2Z"/>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 80" role="img" aria-labelledby="title">
+  <title id="title">Diamond rank crest</title>
+  <defs>
+    <linearGradient id="metal" x1="10" y1="4" x2="61" y2="74" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e9fbff"/>
+      <stop offset=".42" stop-color="#62bfff"/>
+      <stop offset="1" stop-color="#174c98"/>
+    </linearGradient>
+  </defs>
+  <path fill="#071426" stroke="#8edaff" stroke-width="3" d="M36 3 65 14v24c0 19-12 31-29 39C19 69 7 57 7 38V14L36 3Z"/>
+  <path fill="url(#metal)" d="M36 9 59 18v19c0 15-9 25-23 33-14-8-23-18-23-33V18l23-9Z"/>
+  <path fill="#10376e" d="m14 38 12-16h20l12 16-22 25-22-25Z"/>
+  <path fill="#d9f7ff" d="m26 28-6 10 16 18 16-18-6-10H26Zm3 5h14l3 5-10 11-10-11 3-5Z"/>
+  <path fill="#fff" opacity=".76" d="m18 20 18-6 7 3-22 8-4 15h-3V22l4-2Z"/>
+</svg>

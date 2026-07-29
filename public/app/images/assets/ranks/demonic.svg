@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 80" role="img" aria-labelledby="title">
+  <title id="title">Demonic rank crest</title>
+  <defs>
+    <linearGradient id="metal" x1="10" y1="4" x2="61" y2="74" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#eac8ff"/>
+      <stop offset=".42" stop-color="#a74fe0"/>
+      <stop offset="1" stop-color="#401054"/>
+    </linearGradient>
+  </defs>
+  <path fill="#16091c" stroke="#dc82ff" stroke-width="3" d="M36 3 65 14v24c0 19-12 31-29 39C19 69 7 57 7 38V14L36 3Z"/>
+  <path fill="url(#metal)" d="M36 9 59 18v19c0 15-9 25-23 33-14-8-23-18-23-33V18l23-9Z"/>
+  <path fill="#260b31" d="M14 22 27 7l-2 20 11 8 11-8-2-20 13 15-4 14 4 9-12 16H26L14 45l4-9-4-14Z"/>
+  <path fill="#f4c9ff" d="m26 39 7 4-5 5-5-5 3-4Zm20 0 3 4-5 5-5-5 7-4ZM31 54h10l-5 8-5-8Z"/>
+  <path fill="#fff" opacity=".66" d="m18 21 18-7 7 3-22 9-3 13h-4V23l4-2Z"/>
+</svg>
