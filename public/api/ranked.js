@@ -14,6 +14,8 @@ const { createRng } = require('./lib/rng');
 const {
   RANKED_RULES_VERSION,
   RANKED_REROLL_RSOUL_COST,
+  RANKED_VICTORY_FLOOR,
+  RANKED_VICTORY_SOUL_REWARD,
   STARTING_LIVES,
   getEarlyRunRatingAdjustment,
   getFloorRatingGain,
@@ -270,8 +272,8 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
 
     if (fight.winner === 'player') {
       await applyRankedVictory(run, rating, connection, req.player.id, result);
-      if (run.floor === 10) {
-        run.state.floorTenVictoryPending = true;
+      if (run.floor === RANKED_VICTORY_FLOOR) {
+        run.state.victoryPending = true;
         return;
       }
       await advanceRankedFloor(run, { offerPact: true });
@@ -285,7 +287,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       return;
     }
     result.rSoulInterest = awardRankedSoulInterest(run);
-    await advanceRankedFloor(run);
+    await advanceRankedFloor(run, { offerPact: true });
   })
 ));
 
@@ -375,10 +377,10 @@ async function applyRankedVictory(run, rating, connection, playerId, result) {
   );
   result.rSoulInterest = awardRankedSoulInterest(run);
   let gain = getFloorRatingGain(clearedFloor, run.state.endlessRatingEarned);
-  if (clearedFloor <= 9) {
+  if (clearedFloor < RANKED_VICTORY_FLOOR) {
     run.state.pendingRating = Math.max(0, Number(run.state.pendingRating) || 0) + gain;
   } else {
-    if (clearedFloor === 10) {
+    if (clearedFloor === RANKED_VICTORY_FLOOR) {
       gain += Math.max(0, Number(run.state.pendingRating) || 0);
       run.state.pendingRating = 0;
     } else {
@@ -387,17 +389,19 @@ async function applyRankedVictory(run, rating, connection, playerId, result) {
     await applyRatingDelta(run, rating, connection, gain);
   }
   result.rankGain = gain;
-  if (clearedFloor === 10) {
-    run.state.floorTenRankGain = gain;
+  if (clearedFloor === RANKED_VICTORY_FLOOR) {
+    run.state.victoryRankGain = gain;
   }
 
-  const rewardSouls = clearedFloor === 10 && !run.state.floorTenRewardClaimed ? 25 : 0;
+  const rewardSouls = clearedFloor === RANKED_VICTORY_FLOOR && !run.state.victoryRewardClaimed
+    ? RANKED_VICTORY_SOUL_REWARD
+    : 0;
   if (rewardSouls) {
     await connection.query(
       'UPDATE players SET souls = souls + ? WHERE id = ?',
       [rewardSouls, playerId]
     );
-    run.state.floorTenRewardClaimed = true;
+    run.state.victoryRewardClaimed = true;
     result.rewards = { souls: rewardSouls };
     const [players] = await connection.query('SELECT * FROM players WHERE id = ? LIMIT 1', [playerId]);
     result.player = cleanPlayer(players[0]);
@@ -408,7 +412,7 @@ async function applyRankedVictory(run, rating, connection, playerId, result) {
      SET highest_floor = GREATEST(highest_floor, ?),
          victories = victories + ?
      WHERE player_id = ? AND season_id = ?`,
-    [clearedFloor, clearedFloor === 10 ? 1 : 0, run.playerId, run.seasonId]
+    [clearedFloor, clearedFloor === RANKED_VICTORY_FLOOR ? 1 : 0, run.playerId, run.seasonId]
   );
 }
 

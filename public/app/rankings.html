@@ -4,25 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
-    <title>Dungeon Rankings | Among Demons Browser RPG</title>
-    <meta name="description" content="View Among Demons dungeon rankings for the browser RPG roguelike auto-battler and compare the deepest surviving teams.">
+    <title>Dungeon Leaderboard | Among Demons Browser RPG</title>
+    <meta name="description" content="View the Among Demons leaderboard for the browser RPG roguelike auto-battler and compare the deepest surviving teams.">
     <meta name="keywords" content="demon collection game, browser RPG, roguelike dungeon game, auto-battler, collect demons, build your team, survive dungeon runs">
-    <link rel="canonical" href="https://amongdemons.com/rankings">
+    <link rel="canonical" href="https://amongdemons.com/leaderboard">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <meta property="og:site_name" content="Among Demons">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Dungeon Rankings | Among Demons Browser RPG">
-    <meta property="og:description" content="View Among Demons dungeon rankings for the browser RPG roguelike auto-battler and compare the deepest surviving teams.">
-    <meta property="og:url" content="https://amongdemons.com/rankings">
+    <meta property="og:title" content="Dungeon Leaderboard | Among Demons Browser RPG">
+    <meta property="og:description" content="View the Among Demons leaderboard for the browser RPG roguelike auto-battler and compare the deepest surviving teams.">
+    <meta property="og:url" content="https://amongdemons.com/leaderboard">
     <meta property="og:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_rankings.png">
     <meta property="og:image:width" content="1600">
     <meta property="og:image:height" content="900">
-    <meta property="og:image:alt" content="Among Demons dungeon rankings artwork">
+    <meta property="og:image:alt" content="Among Demons dungeon leaderboard artwork">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Dungeon Rankings | Among Demons Browser RPG">
-    <meta name="twitter:description" content="View Among Demons dungeon rankings for the browser RPG roguelike auto-battler and compare the deepest surviving teams.">
+    <meta name="twitter:title" content="Dungeon Leaderboard | Among Demons Browser RPG">
+    <meta name="twitter:description" content="View the Among Demons leaderboard for the browser RPG roguelike auto-battler and compare the deepest surviving teams.">
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_rankings.png">
-    <meta name="twitter:image:alt" content="Among Demons dungeon rankings artwork">
+    <meta name="twitter:image:alt" content="Among Demons dungeon leaderboard artwork">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
     <link href="/app/css/base.css?v=ce9e51d5e1a9" rel="stylesheet">
     <link href="/app/css/rank-divisions.css?v=e65b1b64c1f6" rel="stylesheet">
@@ -44,7 +44,7 @@
             <li class="nav-item"><a class="nav-link game-nav-link" href="/camp" data-game-route="camp"><span class="game-nav-icon"><i data-lucide="tent"></i></span><span>Camp</span></a></li>
             <li class="nav-item"><a class="nav-link game-nav-link" href="/bag" data-game-route="bag"><span class="game-nav-icon"><i data-lucide="amphora"></i></span><span>Bag</span></a></li>
             <li class="nav-item"><a class="nav-link game-nav-link" href="/collection" data-game-route="collection"><span class="game-nav-icon"><i data-lucide="grid-3x3"></i></span><span>Collection</span></a></li>
-            <li class="nav-item"><a class="nav-link game-nav-link active" href="/rankings" data-game-route="rankings" aria-current="page"><span class="game-nav-icon"><i data-lucide="trophy"></i></span><span>Rankings</span></a></li>
+            <li class="nav-item"><a class="nav-link game-nav-link active" href="/leaderboard" data-game-route="leaderboard" aria-current="page"><span class="game-nav-icon"><i data-lucide="trophy"></i></span><span>Leaderboard</span></a></li>
             <li class="nav-item dropdown game-nav-dropdown">
               <button class="nav-link game-nav-link game-nav-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" data-game-sections="demons bosses events" aria-expanded="false" aria-label="Open guides navigation"><span class="game-nav-icon"><i data-lucide="scroll-text"></i></span><span>Guides</span><span class="game-nav-caret"><i data-lucide="chevron-down" aria-hidden="true"></i></span></button>
               <ul class="dropdown-menu game-nav-dropdown-menu"><li><a class="dropdown-item game-nav-dropdown-item" href="/demons" data-game-route="demons"><span class="game-nav-icon"><i data-lucide="skull"></i></span><span>Demons</span></a></li><li><a class="dropdown-item game-nav-dropdown-item" href="/bosses" data-game-route="bosses"><span class="game-nav-icon"><i data-lucide="shield-alert"></i></span><span>Bosses</span></a></li><li><a class="dropdown-item game-nav-dropdown-item" href="/events" data-game-route="events"><span class="game-nav-icon"><i data-lucide="sparkles"></i></span><span>Events</span></a></li></ul>
@@ -77,7 +77,7 @@
       <section class="rankings-hero" aria-labelledby="rankingsTitle">
         <div class="rankings-hero-copy">
           <span class="rankings-kicker">Among Demons</span>
-          <h1 id="rankingsTitle">Rankings</h1>
+          <h1 id="rankingsTitle">Leaderboard</h1>
           <p>Compare hunters by dungeon progress, account level, and Souls.</p>
         </div>
         <div class="rankings-stats" aria-label="Leaderboard summary">
@@ -105,12 +105,12 @@
             <p>Top 100 hunters across the server.</p>
           </div>
           <nav class="rank-sort-tabs" aria-label="Ranking sort">
-            <a href="/rankings" class="rank-sort-link" data-sort="floor">Extraction</a>
-            <a href="/rankings/level" class="rank-sort-link" data-sort="level">Level</a>
-            <a href="/rankings/souls" class="rank-sort-link" data-sort="souls"><span class="rank-sort-label">Souls</span></a>
+            <a href="/leaderboard" class="rank-sort-link" data-sort="floor">Extraction</a>
+            <a href="/leaderboard/level" class="rank-sort-link" data-sort="level">Level</a>
+            <a href="/leaderboard/souls" class="rank-sort-link" data-sort="souls"><span class="rank-sort-label">Souls</span></a>
             <span class="rank-sort-separator" aria-hidden="true">&middot;</span>
-            <a href="/rankings/ranked" class="rank-sort-link" data-sort="ranked"><span class="rank-sort-label">Ranked</span></a>
-            <a href="/rankings/pvp" class="rank-sort-link" data-sort="pvp"><span class="rank-sort-label">Duels</span></a>
+            <a href="/leaderboard/ranked" class="rank-sort-link" data-sort="ranked"><span class="rank-sort-label">Ranked</span></a>
+            <a href="/leaderboard/pvp" class="rank-sort-link" data-sort="pvp"><span class="rank-sort-label">Duels</span></a>
           </nav>
         </div>
         <div>
@@ -129,7 +129,7 @@
         </div>
       </section>
     </main>
-    <script src="/app/dist/runtime.bundle.js?v=89fe66ba301c"></script>
-    <script src="/app/js/rankings-ui.js?v=7eb855cf7477"></script>
+    <script src="/app/dist/runtime.bundle.js?v=827c7d67eb1c"></script>
+    <script src="/app/js/rankings-ui.js?v=d53b8e7cfe34"></script>
   </body>
 </html>

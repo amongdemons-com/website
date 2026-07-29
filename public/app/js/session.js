@@ -716,14 +716,14 @@
         type: 'warning',
         title: 'No hunter found.',
         message: 'That name has no public record.',
-        action: 'Check the spelling or return to Rankings.'
+        action: 'Check the spelling or return to the Leaderboard.'
       };
     }
 
     if (/could not load rankings|load rankings/.test(lower)) {
       return {
         type: 'error',
-        title: 'Rankings are veiled.',
+        title: 'The Leaderboard is veiled.',
         message: 'The hunter board could not be loaded.',
         action: 'Try again in a moment.'
       };

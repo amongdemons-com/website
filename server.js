@@ -211,7 +211,7 @@ app.get(['/inventory', '/inventory/', '/app/inventory.html'], (req, res) => {
 });
 
 app.get(['/hunter', '/hunter/'], (req, res) => {
-  res.redirect(302, '/rankings');
+  res.redirect(302, '/leaderboard');
 });
 
 app.get(['/hunter/:username', '/hunter/:username/'], async (req, res) => {
@@ -220,19 +220,31 @@ app.get(['/hunter/:username', '/hunter/:username/'], async (req, res) => {
 });
 
 app.get(['/rank', '/rank/'], (req, res) => {
-  res.redirect(302, '/rankings');
+  res.redirect(302, '/leaderboard');
+});
+
+app.get(['/leaderboard', '/leaderboard/'], (req, res) => {
+  sendAppPage(res, 'rankings.html');
+});
+
+app.get(['/leaderboard/:sort', '/leaderboard/:sort/'], (req, res) => {
+  if (!['floor', 'level', 'souls', 'pvp', 'ranked'].includes(req.params.sort)) {
+    return res.redirect(302, '/leaderboard');
+  }
+
+  sendAppPage(res, 'rankings.html');
 });
 
 app.get(['/rankings', '/rankings/'], (req, res) => {
-  sendAppPage(res, 'rankings.html');
+  res.redirect(301, '/leaderboard');
 });
 
 app.get(['/rankings/:sort', '/rankings/:sort/'], (req, res) => {
   if (!['floor', 'level', 'souls', 'pvp', 'ranked'].includes(req.params.sort)) {
-    return res.redirect(302, '/rankings');
+    return res.redirect(301, '/leaderboard');
   }
 
-  sendAppPage(res, 'rankings.html');
+  res.redirect(301, `/leaderboard/${req.params.sort}`);
 });
 
 // ============================================================================

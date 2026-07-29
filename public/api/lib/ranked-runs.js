@@ -12,6 +12,13 @@ const {
   serializeCombatBuffState
 } = require('./combat-buffs');
 const { withDemonImageVariants } = require('./demon-images');
+const {
+  MAX_ENEMY_MELEE_DEMONS,
+  countEnemyMeleeDemons,
+  getAllowedEnemyTypeIds,
+  isMeleeEnemyDemon,
+  isThornsDemon
+} = require('./enemy-team-rules');
 const { getGameCatalog } = require('./game-data');
 const { createPlayerCombatBuffState } = require('./player-combat-buffs');
 const { createRng } = require('./rng');
@@ -219,9 +226,9 @@ async function createInitialRankedState(seed) {
     opponent: null,
     lastBattle: null,
     highestClearedFloor: 0,
-    floorTenRewardClaimed: false,
-    floorTenVictoryPending: false,
-    floorTenRankGain: 0,
+    victoryRewardClaimed: false,
+    victoryPending: false,
+    victoryRankGain: 0,
     pendingRating: 0,
     protectedRating: 0,
     endlessRatingEarned: 0,
@@ -612,7 +619,7 @@ function prepareNextSelection(run) {
   run.state.picksRemaining = 1;
   run.state.rerolls = normalizeRerolls();
   run.state.opponent = null;
-  run.state.floorTenVictoryPending = false;
+  run.state.victoryPending = false;
   return reuseLockedHand;
 }
 
@@ -717,9 +724,9 @@ async function serializeRankedRun(run, rating, season) {
       && getRosterValidation(state, { requireActive: false }).valid,
     rosterValid: rosterValidation.valid,
     rosterErrors: rosterValidation.errors,
-    floorTenRewardClaimed: Boolean(state.floorTenRewardClaimed),
-    awaitingVictoryChoice: Boolean(state.floorTenVictoryPending),
-    floorTenRankGain: Math.max(0, Number(state.floorTenRankGain) || 0),
+    victoryRewardClaimed: Boolean(state.victoryRewardClaimed),
+    awaitingVictoryChoice: Boolean(state.victoryPending),
+    victoryRankGain: Math.max(0, Number(state.victoryRankGain) || 0),
     rulesVersion: run.rulesVersion,
     combatVersion: COMBAT_DATA_VERSION
   };
@@ -764,6 +771,7 @@ async function saveReadySnapshot(run, rating, username, queryable = db) {
   const validation = getRosterValidation(run.state);
   if (run.status !== 'active' || run.state.phase !== 'preparation' || !validation.valid) return null;
   if (serializeCombatBuffState(run.state.buffs).pendingChoices.length) return null;
+  if (countEnemyMeleeDemons(run.state.active) > MAX_ENEMY_MELEE_DEMONS) return null;
   const catalog = await getGameCatalog();
   const id = crypto.randomUUID();
   const snapshot = createSnapshotPayload(run, {
@@ -825,13 +833,19 @@ async function selectOpponent(run, rating, queryable = db) {
     ]
   );
 
+  const eligibleSnapshots = rows
+    .map((row) => ({ row, snapshot: parseJson(row.snapshot, {}) }))
+    .filter(({ snapshot }) => (
+      countEnemyMeleeDemons(snapshot.team || []) <= MAX_ENEMY_MELEE_DEMONS
+    ));
+
   let opponent;
-  if (rows.length) {
+  if (eligibleSnapshots.length) {
     const rng = createRng(hashSeed(`${run.seed}:opponent:${run.floor}`));
-    const unseen = rows.filter((row) => !row.previously_served);
-    const pool = unseen.length ? unseen : rows;
-    const row = pool[Math.floor(rng() * Math.min(pool.length, 5))] || pool[0];
-    const snapshot = parseJson(row.snapshot, {});
+    const unseen = eligibleSnapshots.filter(({ row }) => !row.previously_served);
+    const pool = unseen.length ? unseen : eligibleSnapshots;
+    const selected = pool[Math.floor(rng() * Math.min(pool.length, 5))] || pool[0];
+    const { row, snapshot } = selected;
     opponent = {
       id: row.id,
       hunterName: row.hunter_name,
@@ -935,7 +949,9 @@ async function createGeneratedSnapshot(seasonId, floor, ratingBracket, variant) 
   const draftCount = Math.min(28, 2 + Math.max(1, floor) * 2);
   for (let index = 0; index < draftCount; index += 1) {
     const typeIds = Object.keys(catalog.types).map(Number);
-    const typeId = typeIds[Math.floor(rng() * typeIds.length)] || typeIds[0];
+    const generatedRoster = [...run.state.active, ...run.state.reserve];
+    const availableTypeIds = getAllowedEnemyTypeIds(typeIds, generatedRoster, catalog.types);
+    const typeId = availableTypeIds[Math.floor(rng() * availableTypeIds.length)] || availableTypeIds[0];
     const rarity = pickRarityFromOdds(rng, getRarityOdds(Math.max(1, Math.ceil((index + 1) / 2))));
     const demon = createStandardRankedDemon(catalog, {
       typeId,
@@ -968,14 +984,18 @@ async function createGeneratedSnapshot(seasonId, floor, ratingBracket, variant) 
   while (generatedRoster.length < desiredTeamSize) {
     const fillIndex = generatedRoster.length;
     const typeIds = Object.keys(catalog.types).map(Number);
-    const typeId = typeIds[Math.floor(rng() * typeIds.length)] || typeIds[0];
+    const availableTypeIds = getAllowedEnemyTypeIds(typeIds, generatedRoster, catalog.types);
+    const typeId = availableTypeIds[Math.floor(rng() * availableTypeIds.length)] || availableTypeIds[0];
     generatedRoster.push(createStandardRankedDemon(catalog, {
       typeId,
       rarity: pickRarityFromOdds(rng, getRarityOdds(floor)),
       instanceId: `generated-${variant}-fill-${fillIndex + 1}`
     }));
   }
-  run.state.active = arrangeRankedFormation(generatedRoster.slice(0, desiredTeamSize), 'player');
+  run.state.active = arrangeRankedFormation(
+    orderRankedGhostTeam(generatedRoster.slice(0, desiredTeamSize), catalog.types),
+    'player'
+  );
   resetTeamForBattle(run.state.active);
   const buffs = createGeneratedPacts(seed, floor);
   const lockedBonuses = createGeneratedLockedBonuses(floor, ratingBracket, variant);
@@ -1106,25 +1126,32 @@ function arrangeRankedFormation(team = [], side = 'player') {
 }
 
 function prepareOpponentTeam(team = []) {
-  const mirrored = (team || []).map((demon) => {
-    const slot = Number(demon.formationSlot ?? demon.formationRow);
-    if (!Number.isInteger(slot) || slot < 0 || slot >= FORMATION_CAPACITY) {
-      const unplaced = {
-        ...demon,
-        position: demon.preferredPosition === 'back' ? 'back' : 'front'
-      };
-      delete unplaced.formationSlot;
-      delete unplaced.formationRow;
-      return unplaced;
-    }
-    const mirroredSlot = Math.floor(slot / 3) * 3 + (2 - (slot % 3));
-    return {
-      ...demon,
-      formationSlot: mirroredSlot,
-      position: getFormationSlotPosition(mirroredSlot, 'enemy')
-    };
-  });
-  return arrangeRankedFormation(mirrored, 'enemy');
+  return arrangeRankedFormation(orderRankedGhostTeam(team), 'enemy');
+}
+
+function orderRankedGhostTeam(team = [], demonTypes) {
+  return (team || [])
+    .map((demon, index) => ({
+      demon: clearFormationPlacement(demon),
+      index,
+      priority: isMeleeEnemyDemon(demon, demonTypes)
+        ? 0
+        : isThornsDemon(demon, demonTypes)
+          ? 1
+          : 2
+    }))
+    .sort((left, right) => left.priority - right.priority || left.index - right.index)
+    .map(({ demon }) => demon);
+}
+
+function clearFormationPlacement(demon = {}) {
+  const unplaced = {
+    ...demon,
+    position: demon.preferredPosition === 'back' ? 'back' : 'front'
+  };
+  delete unplaced.formationSlot;
+  delete unplaced.formationRow;
+  return unplaced;
 }
 
 function getPlayerBattleBuffs(run) {

@@ -278,16 +278,19 @@ function renderFightLog() {
   elements.fightLog.innerHTML = logContent;
 }
 
-function showBattleResultOverlay(type) {
+function showBattleResultOverlay(type, options = {}) {
   const existing = document.querySelector('.battle-result-burst');
   if (existing) existing.remove();
   const isDefeat = type === 'defeat';
+  const syncResultActions = options.syncActions !== false;
   const reducedMotion = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   const duration = reducedMotion ? 900 : (isDefeat ? 3000 : 2200);
   state.isResultAnimating = true;
   audio?.play(type === 'victory' ? 'sfx.battle.victory' : 'sfx.battle.defeat', { volume: 0.96 });
-  renderFightLogActions();
-  syncActionButtons();
+  if (syncResultActions) {
+    renderFightLogActions();
+    syncActionButtons();
+  }
 
   const overlay = document.createElement('div');
   overlay.className = `battle-result-burst is-${type}`;
@@ -309,8 +312,10 @@ function showBattleResultOverlay(type) {
     setTimeout(() => {
       overlay.remove();
       state.isResultAnimating = false;
-      renderFightLogActions();
-      syncActionButtons();
+      if (syncResultActions) {
+        renderFightLogActions();
+        syncActionButtons();
+      }
       resolve();
     }, duration);
   });

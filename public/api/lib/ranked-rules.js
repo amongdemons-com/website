@@ -7,15 +7,15 @@ const RARITIES = Object.freeze([
   'mythic'
 ]);
 
-const RANKED_RULES_VERSION = 'ranked-v3';
-const COMBAT_DATA_VERSION = 'combat-v3';
+const RANKED_RULES_VERSION = 'ranked-v5';
+const COMBAT_DATA_VERSION = 'combat-v4';
 const ACTIVE_CAPACITY = 6;
 const FORMATION_CAPACITY = 9;
 const RESERVE_CAPACITY = 6;
 const STARTING_LIVES = 3;
 const STARTING_DRAFT_PICKS = 2;
 const OFFER_SIZE = 5;
-const RANKED_STARTING_RSOULS = 2;
+const RANKED_STARTING_RSOULS = 10;
 const RANKED_REROLL_RSOUL_COST = 2;
 const RANKED_CARD_RARITY_COSTS = Object.freeze({
   common: 1,
@@ -25,7 +25,8 @@ const RANKED_CARD_RARITY_COSTS = Object.freeze({
   legendary: 5,
   mythic: 7
 });
-const FLOOR_TEN_SOUL_REWARD = 25;
+const RANKED_VICTORY_FLOOR = 20;
+const RANKED_VICTORY_SOUL_REWARD = 25;
 const ENDLESS_RATING_CAP_PER_RUN = 100;
 const ENDLESS_SKILL_CAP = 10;
 
@@ -310,19 +311,19 @@ function resolveDefeat(lives) {
 
 function getFloorRatingGain(floor, endlessAlreadyEarned = 0) {
   const depth = Math.max(0, Math.floor(Number(floor) || 0));
-  if (depth <= 4) return 0;
-  if (depth <= 9) return 6;
-  if (depth === 10) return 75;
+  if (depth <= 9) return 0;
+  if (depth < RANKED_VICTORY_FLOOR) return 3;
+  if (depth === RANKED_VICTORY_FLOOR) return 75;
   const remaining = Math.max(0, ENDLESS_RATING_CAP_PER_RUN - Math.max(0, Number(endlessAlreadyEarned) || 0));
   if (!remaining) return 0;
-  const diminishing = Math.max(2, Math.ceil(10 / Math.sqrt(depth - 10)));
+  const diminishing = Math.max(2, Math.ceil(10 / Math.sqrt(depth - RANKED_VICTORY_FLOOR)));
   return Math.min(remaining, diminishing);
 }
 
 function getEarlyRunRatingAdjustment(highestClearedFloor) {
   const floor = Math.max(0, Math.floor(Number(highestClearedFloor) || 0));
-  if (floor >= 10) return 0;
-  if (floor < 5) return -20;
+  if (floor >= RANKED_VICTORY_FLOOR) return 0;
+  if (floor < RANKED_VICTORY_FLOOR / 2) return -20;
   return -5;
 }
 
@@ -331,13 +332,13 @@ function getDivision(rating) {
   return [...DIVISIONS].reverse().find((division) => value >= division.minimum) || DIVISIONS[0];
 }
 
-function getFloorTenReward(state = {}) {
-  const eligible = Math.max(0, Number(state.highestClearedFloor) || 0) >= 10;
-  const claimed = Boolean(state.floorTenRewardClaimed);
+function getRankedVictoryReward(state = {}) {
+  const eligible = Math.max(0, Number(state.highestClearedFloor) || 0) >= RANKED_VICTORY_FLOOR;
+  const claimed = Boolean(state.victoryRewardClaimed);
   return {
     eligible,
     claimed,
-    souls: eligible && !claimed ? FLOOR_TEN_SOUL_REWARD : 0
+    souls: eligible && !claimed ? RANKED_VICTORY_SOUL_REWARD : 0
   };
 }
 
@@ -424,13 +425,14 @@ module.exports = {
   DIVISIONS,
   ENDLESS_RATING_CAP_PER_RUN,
   ENDLESS_SKILL_CAP,
-  FLOOR_TEN_SOUL_REWARD,
   FORMATION_CAPACITY,
   OFFER_SIZE,
   RANKED_CARD_RARITY_COSTS,
   RANKED_REROLL_RSOUL_COST,
   RANKED_STARTING_RSOULS,
   RANKED_RULES_VERSION,
+  RANKED_VICTORY_FLOOR,
+  RANKED_VICTORY_SOUL_REWARD,
   RARITIES,
   RESERVE_CAPACITY,
   STARTING_DRAFT_PICKS,
@@ -444,7 +446,7 @@ module.exports = {
   getDivision,
   getEarlyRunRatingAdjustment,
   getFloorRatingGain,
-  getFloorTenReward,
+  getRankedVictoryReward,
   getFormationSlotPosition,
   getNextRarity,
   getRankedActiveCapacity,

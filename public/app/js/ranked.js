@@ -19,6 +19,7 @@ import {
   renderDemonicPactReturnControl,
   renderReplayLogButtons,
   setBattlePanel,
+  showBattleResultOverlay,
   toggleFightLogPanel
 } from './dungeon/render.js';
 
@@ -35,6 +36,7 @@ const RANKED_RARITIES = Object.freeze([
   'mythic'
 ]);
 const RANKED_REROLL_RSOUL_COST = 2;
+const RANKED_VICTORY_FLOOR = 20;
 const RANKED_CARD_RARITY_COSTS = Object.freeze({
   common: 1,
   uncommon: 2,
@@ -57,6 +59,7 @@ let rankedCatalogPromise = null;
 let previewCombinationCounter = 0;
 let stagedPurchaseOfferIds = new Set();
 let shownVictoryKey = null;
+let pendingInterestGain = 0;
 
 registerDungeonActions({
   ...combat,
@@ -320,7 +323,7 @@ async function performRunAction(action, body) {
   if (payload?.run) {
     acceptRun(payload.run);
     if (payload.rewards?.souls) {
-      showMessage(`Floor 10 cleared. ${payload.rewards.souls} Souls awarded.`, 'success');
+      showMessage(`Floor ${RANKED_VICTORY_FLOOR} cleared. ${payload.rewards.souls} Souls awarded.`, 'success');
     }
   }
   return payload;
@@ -328,7 +331,7 @@ async function performRunAction(action, body) {
 
 async function continueRun() {
   const payload = await performRunAction('continue', {});
-  if (payload?.run?.phase === 'selection' && payload.run.floor > 10) {
+  if (payload?.run?.phase === 'selection' && payload.run.floor > RANKED_VICTORY_FLOOR) {
     showMessage('Endless floor unlocked.', 'success');
   }
 }
@@ -337,6 +340,11 @@ async function chooseRankedPact(buffId) {
   const payload = await performRunAction('pact', { buffId });
   if (payload?.run) {
     audio?.play('sfx.dungeon.pactChoose', { volume: .9 });
+    if (!payload.run.pendingPact && pendingInterestGain > 0) {
+      const earned = pendingInterestGain;
+      pendingInterestGain = 0;
+      window.requestAnimationFrame(() => showRankedSoulInterest(earned));
+    }
   }
   return payload;
 }
@@ -355,7 +363,7 @@ async function rerollHand(point) {
 
 async function startBattle() {
   if (!canFightWorkspace() || isBusy || state.isBattleAnimating) return;
-  let earnedInterest = 0;
+  pendingInterestGain = 0;
   setBusy(true);
   isReplayingBattle = true;
   try {
@@ -385,7 +393,7 @@ async function startBattle() {
       if (payload.player) acceptPlayer(payload.player, { animate: true });
     }
     if (Number(interest?.earned) > 0) {
-      earnedInterest = Math.max(0, Number(interest.earned) || 0);
+      pendingInterestGain = Math.max(0, Number(interest.earned) || 0);
     }
     showMessage(resultMessages.length ? resultMessages.join(' ') : '', 'success');
     if (payload.run.awaitingVictoryChoice) {
@@ -397,9 +405,6 @@ async function startBattle() {
     isReplayingBattle = false;
     setBusy(false);
     renderRun();
-    if (earnedInterest > 0) {
-      window.requestAnimationFrame(() => showRankedSoulInterest(earnedInterest));
-    }
   }
 }
 
@@ -497,7 +502,7 @@ function renderRun() {
       <div class="ranked-end-card">
         <span class="dungeon-phase-eyebrow">Seasonal Ranked</span>
         <h1>Draft. Adapt. Climb.</h1>
-        <p>Build a temporary standardized roster, survive with three lives, and clear Floor 10.</p>
+        <p>Build a temporary standardized roster, survive with three lives, and clear Floor ${RANKED_VICTORY_FLOOR}.</p>
         <button class="btn btn-primary btn-lg" type="button" data-ranked-action="start" ${isBusy ? 'disabled' : ''}>
           ${renderIcon('trophy')} Start Ranked Run
         </button>
@@ -563,8 +568,7 @@ function renderRun() {
     ? `
       <span class="ranked-lives" aria-hidden="true">${hearts}</span>
       <span class="ranked-hand-status-separator" aria-hidden="true">&middot;</span>
-      ${renderIcon('soul')}
-      <span class="ranked-rsoul-value">${formatNumber(rankedSouls)}</span>
+      ${renderRankedSoulBalance(run)}
     `
     : '';
   elements.rankedPreparation.innerHTML = combatView || pactTeamPreview
@@ -581,12 +585,33 @@ function renderRun() {
 function renderTeamTitle(run) {
   const division = run.rating?.division || 'Bronze II';
   const rank = getRankPresentation(division);
+  const team = Array.isArray(run.team) ? run.team : (run.active || []);
+  const maxSlots = Math.max(1, Number(run.capacities?.active) || 6);
+  const occupiedSlots = Math.min(maxSlots, team.length);
   elements.teamSideTitle.innerHTML = `
     <span class="ranked-desktop-status">
-      ${renderRankBadge(rank, { showLabel: true })}
+      ${renderRankBadge(rank, { showLabel: true, occupiedSlots, maxSlots })}
     </span>
     <span class="ranked-mobile-status">
-      ${renderRankBadge(rank)}
+      ${renderRankBadge(rank, { showLabel: true, occupiedSlots, maxSlots, compact: true })}
+    </span>
+  `;
+}
+
+function renderRankedSoulBalance(run) {
+  const floor = Math.max(1, Number(run?.floor) || 1);
+  const balanceInterest = Math.floor(rankedSouls / 10);
+  const earned = floor + balanceInterest;
+  const tooltip = (
+    `Interest after a win or surviving loss: Floor ${formatNumber(floor)} + `
+    + `${formatNumber(balanceInterest)} (${formatNumber(rankedSouls)} unspent rSouls \u00f7 10, rounded down) `
+    + `= ${formatNumber(earned)} rSouls.`
+  );
+  return `
+    <span class="ranked-rsoul-balance" tabindex="0" aria-describedby="rankedRSoulTooltip">
+      ${renderIcon('soul')}
+      <span class="ranked-rsoul-value">${formatNumber(rankedSouls)}</span>
+      <span class="ranked-rsoul-tooltip" id="rankedRSoulTooltip" role="tooltip">${escapeHtml(tooltip)}</span>
     </span>
   `;
 }
@@ -621,11 +646,19 @@ function getRankPresentation(division = 'Bronze III') {
 
 function renderRankBadge(rank, options = {}) {
   const compactClass = options.compact ? ' is-compact' : '';
+  const hasTeamSlots = Number.isFinite(options.occupiedSlots) && Number.isFinite(options.maxSlots);
+  const teamSlots = hasTeamSlots
+    ? `${Math.max(0, options.occupiedSlots)}/${Math.max(1, options.maxSlots)}`
+    : '';
   return `
     <span class="ranked-rank ranked-rank--${escapeHtml(rank.slug)}${compactClass}"
           aria-label="${escapeHtml(rank.division)} rank">
       <img class="ranked-rank-image" src="${escapeHtml(rank.imageUrl)}" alt="" width="72" height="80" aria-hidden="true">
       ${options.showLabel ? `<span class="ranked-rank-label">${escapeHtml(rank.division.toUpperCase())}</span>` : ''}
+      ${hasTeamSlots ? `
+        <span class="ranked-rank-separator" aria-hidden="true">&middot;</span>
+        <span class="ranked-team-slots" aria-label="${escapeHtml(`${teamSlots} team slots occupied`)}">${escapeHtml(teamSlots)}</span>
+      ` : ''}
     </span>
   `;
 }
@@ -800,19 +833,47 @@ function renderFightLogActions() {
   elements.dungeonReplayLogBox.innerHTML = '';
 
   if (state.isPactTeamPreview && run.pendingPact) {
-    elements.dungeonBottomControls.innerHTML = renderDemonicPactReturnControl();
+    setRankedBattleControls('pact', renderDemonicPactReturnControl());
     return;
   }
 
   if (state.isBattleAnimating) {
-    elements.dungeonBottomControls.innerHTML = `
+    setRankedBattleControls('battle', `
       ${renderBattlePlaybackControls()}
       ${renderBattleSpeedControl()}
       ${renderBattleSkipControl()}
-    `;
+    `);
+    syncRankedBattleControls();
     return;
   }
-  elements.dungeonBottomControls.innerHTML = '';
+  setRankedBattleControls('empty', '');
+}
+
+function setRankedBattleControls(mode, html) {
+  if (elements.dungeonBottomControls.dataset.rankedControlMode === mode) return;
+  elements.dungeonBottomControls.innerHTML = html;
+  elements.dungeonBottomControls.dataset.rankedControlMode = mode;
+}
+
+function syncRankedBattleControls() {
+  const controls = elements.dungeonBottomControls;
+  const playback = state.combatPlayback || {};
+  const currentIndex = Number(playback.currentIndex) || 0;
+  const totalSteps = Number(playback.totalSteps) || 0;
+  const isPaused = Boolean(playback.isPaused);
+  const toggleLabel = isPaused ? 'Play' : 'Pause';
+
+  const previousButton = controls.querySelector('[data-battle-step="-1"]');
+  const nextButton = controls.querySelector('[data-battle-step="1"]');
+  const toggleButton = controls.querySelector('#battlePlaybackToggleBtn');
+  if (previousButton) previousButton.disabled = currentIndex <= 0;
+  if (nextButton) nextButton.disabled = currentIndex >= totalSteps;
+  if (toggleButton && toggleButton.getAttribute('aria-label') !== toggleLabel) {
+    toggleButton.title = toggleLabel;
+    toggleButton.setAttribute('aria-label', toggleLabel);
+    toggleButton.innerHTML = renderIcon(isPaused ? 'play' : 'pause');
+  }
+  combat.syncBattleSpeedButtons();
 }
 
 function renderPacts(choices) {
@@ -875,7 +936,7 @@ function renderEndedRun(run) {
   return `
     <div class="ranked-end-card">
       <span class="dungeon-phase-eyebrow">${escapeHtml(run.season?.name || 'Ranked Season')}</span>
-      <h1>${cleared >= 10 ? 'Ranked Victory' : 'Run Complete'}</h1>
+      <h1>${cleared >= RANKED_VICTORY_FLOOR ? 'Ranked Victory' : 'Run Complete'}</h1>
       <p>Cleared Floor ${formatNumber(cleared)} &middot; ${formatSigned(run.rating?.runDelta || 0)} Rank Points</p>
       <p class="text-muted">${escapeHtml(run.rating?.division || '')} &middot; ${formatNumber(run.rating?.rating || 0)} RP</p>
       <button class="btn btn-primary btn-lg" type="button" data-ranked-action="start">Start New Run</button>
@@ -925,14 +986,10 @@ function openCardDetails(card) {
 }
 
 async function showBattleResult(winner) {
-  audio?.play(winner === 'player' ? 'sfx.battle.victory' : 'sfx.battle.defeat', { volume: .95 });
-  const overlay = document.createElement('div');
-  overlay.className = `battle-result-burst is-${winner === 'player' ? 'victory' : 'defeat'}`;
-  overlay.style.setProperty('--battle-result-duration', '1200ms');
-  overlay.innerHTML = `<div class="battle-result-burst-text">${winner === 'player' ? 'Victory' : 'Defeat'}</div>`;
-  document.body.appendChild(overlay);
-  await sleep(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 350 : 1200);
-  overlay.remove();
+  await showBattleResultOverlay(
+    winner === 'player' ? 'victory' : 'defeat',
+    { syncActions: false }
+  );
 }
 
 function showRankedVictoryModal(run, options = {}) {
@@ -941,10 +998,10 @@ function showRankedVictoryModal(run, options = {}) {
   const rank = getRankPresentation(division);
   const rankGain = Math.max(
     0,
-    Number(options.rankGain ?? run?.floorTenRankGain ?? run?.rating?.runDelta) || 0
+    Number(options.rankGain ?? run?.victoryRankGain ?? run?.rating?.runDelta) || 0
   );
   const rating = Math.max(0, Number(run?.rating?.rating) || 0);
-  const victoryKey = `${run?.runId || 'ranked'}:10`;
+  const victoryKey = `${run?.runId || 'ranked'}:${RANKED_VICTORY_FLOOR}`;
   const rankShell = elements.rankedVictoryRankImage?.closest('.ranked-victory-rank');
 
   rankShell?.classList.forEach((className) => {
@@ -1762,13 +1819,9 @@ function getInteractionPoint(event, element) {
 function showRankedSoulInterest(amount) {
   const total = elements.rankedHandStatus?.querySelector('.ranked-rsoul-value');
   showRankedSoulChange(
-    getInteractionPoint(null, elements.teamSideTitle),
+    getInteractionPoint(null, total),
     amount,
-    {
-      interest: true,
-      target: getInteractionPoint(null, total),
-      targetElement: total
-    }
+    { interest: true }
   );
 }
 
@@ -1777,8 +1830,6 @@ function showRankedSoulChange(point, amount, options = {}) {
   const change = Number(amount) || 0;
   const startX = Math.round(Number(point?.x) || window.innerWidth / 2);
   const startY = Math.round(Number(point?.y) || window.innerHeight / 2);
-  const targetX = Math.round(Number(options.target?.x) || startX);
-  const targetY = Math.round(Number(options.target?.y) || startY);
   floating.className = [
     'ranked-soul-spend-float',
     change > 0 ? 'is-gain' : 'is-spend',
@@ -1786,17 +1837,11 @@ function showRankedSoulChange(point, amount, options = {}) {
   ].filter(Boolean).join(' ');
   floating.style.left = `${startX}px`;
   floating.style.top = `${startY}px`;
-  floating.style.setProperty('--ranked-soul-target-x', `${targetX - startX}px`);
-  floating.style.setProperty('--ranked-soul-target-y', `${targetY - startY}px`);
   floating.innerHTML = options.interest
     ? `<strong>+</strong>${renderIcon('soul')}<strong>${formatNumber(Math.abs(change))}</strong>`
     : `${renderIcon('soul')}<strong>${change > 0 ? '+' : '-'}${formatNumber(Math.abs(change))}</strong>`;
   document.body.appendChild(floating);
-  floating.addEventListener('animationend', () => {
-    floating.remove();
-    options.targetElement?.classList.add('is-interest-gain');
-    window.setTimeout(() => options.targetElement?.classList.remove('is-interest-gain'), 420);
-  }, { once: true });
+  floating.addEventListener('animationend', () => floating.remove(), { once: true });
   window.setTimeout(() => floating.remove(), 1400);
 }
 

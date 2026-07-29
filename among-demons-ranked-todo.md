@@ -21,9 +21,9 @@
 - [x] Give each run 3 lives.
 - [x] On defeat, consume one life, grant floor interest, and continue to the next floor while lives remain.
 - [x] End the run when no lives remain.
-- [x] Treat clearing floor 10 as a completed Ranked victory.
-- [x] Show the new rank, gained Rank Points, and rank emblem after floor 10, then let the player choose Endless or New Run.
-- [x] Allow the player to continue beyond floor 10 until all lives are lost.
+- [x] Treat clearing floor 20 as a completed Ranked victory.
+- [x] Show the new rank, gained Rank Points, and rank emblem after floor 20, then let the player choose Endless or New Run.
+- [x] Allow the player to continue beyond floor 20 until all lives are lost.
 - [x] Preserve the normal automatic combat rules and deterministic server simulation.
 
 ## 3. Connection to the main game
@@ -154,21 +154,21 @@
 ## 12. Rank progression
 
 - [x] Add seasonal Ranked rating and named divisions.
-- [x] Make floor 10 the primary victory milestone.
-- [x] Award a meaningful rating increase for clearing floor 10.
+- [x] Make floor 20 the primary victory milestone.
+- [x] Award a meaningful rating increase for clearing floor 20.
 - [x] Allow endless floors after 10 to contribute additional rating.
 - [x] Initially test:
   - [x] Floors 1–4: no positive Rank Points
   - [x] Floors 5–9: small progress per cleared floor
-  - [x] Floor 10: large victory bonus
+  - [x] Floor 20: large victory bonus
   - [x] Floor 11+: additional progress per cleared floor
-- [x] Decide whether rating earned after floor 10 is immediately protected or finalized only when the run ends.
-- [x] Decide how much rating is lost for runs ending before floor 5 or floor 10.
+- [x] Decide whether rating earned after floor 20 is immediately protected or finalized only when the run ends.
+- [x] Decide how much rating is lost for runs ending before floor 10 or floor 20.
 - [x] Prevent unlimited playtime alone from overpowering actual performance in seasonal rankings.
 
 ## 13. Rewards
 
-- [x] Award Souls after a full floor-10 victory.
+- [x] Award Souls after a full floor-20 victory.
 - [x] Decide whether deeper floors increase the Soul reward or only Rank Points.
 - [x] Keep the reward below a level that turns Ranked into the dominant Soul farm.
 - [x] Decide whether Echoes or other main-game rewards are included.
@@ -213,7 +213,7 @@
 - [x] Award Pacts after victories only.
 - [x] Award one Pact after every cleared floor with no floor-frequency cap.
 - [x] After each cleared floor, award the cleared floor number in rSouls plus 1 rSoul interest for every 10 unspent rSouls.
-- [x] Use no positive RP on floors 1-4, +6 pending RP on floors 5-9, +75 protected RP at floor 10, diminishing endless RP, a 100 RP endless-run cap, and bounded early-exit penalties of -20/-5.
-- [x] Award 25 Souls once for clearing floor 10.
+- [x] Use no positive RP on floors 1-9, +3 pending RP on floors 10-19, +75 protected RP at floor 20, diminishing endless RP, a 100 RP endless-run cap, and bounded early-exit penalties of -20/-5.
+- [x] Award 25 Souls once for clearing floor 20.
 - [x] Do not award additional Souls on deeper floors.
 - [x] Apply combat Skill Tree effects, ignore noncombat effects, and cap `Endless` masteries at 10 per node.

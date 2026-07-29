@@ -22,7 +22,7 @@
     ['b', '/bag'],
     ['r', '/ranked']
   ]);
-  const DEFAULT_MUSIC_ROUTE = /^\/(?:demons|bosses|events|ranked|rankings|hunter)(?:\/|$)/;
+  const DEFAULT_MUSIC_ROUTE = /^\/(?:demons|bosses|events|ranked|leaderboard|hunter)(?:\/|$)/;
 
   onReady(init);
 
@@ -136,8 +136,8 @@
               ? 'collection'
               : pathname.startsWith('/bag')
                 ? 'bag'
-                : pathname.startsWith('/rank')
-                  ? 'rankings'
+                : pathname.startsWith('/leaderboard')
+                  ? 'leaderboard'
                   : '';
 
     document.querySelectorAll('[data-game-route], [data-game-sections]').forEach((link) => {

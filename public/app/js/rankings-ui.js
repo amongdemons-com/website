@@ -41,7 +41,7 @@
         if (nextSort === currentSort) return;
 
         currentSort = nextSort;
-        const nextPath = currentSort === 'floor' ? '/rankings' : `/rankings/${currentSort}`;
+        const nextPath = currentSort === 'floor' ? '/leaderboard' : `/leaderboard/${currentSort}`;
         window.history.replaceState({}, '', window.AmongDemons.appUrl(nextPath));
         syncSortLinks();
         await loadRank({ preserveRows: true });

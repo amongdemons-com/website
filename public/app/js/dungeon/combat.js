@@ -1261,6 +1261,7 @@ function syncBattleSpeedButtons() {
   document.querySelectorAll('[data-battle-speed]').forEach((button) => {
     const active = Number(button.dataset.battleSpeed) === state.battleSpeed;
     button.classList.toggle('active', active);
+    button.classList.toggle('ad-primary-action', active);
     button.setAttribute('aria-pressed', active ? 'true' : 'false');
   });
 }
