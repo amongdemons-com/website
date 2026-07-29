@@ -233,6 +233,8 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
     const attackMult = getEffectMultiplier(state, 'attack_mult', demon);
     const directDamagePreviewMult = getEffectMultiplier(state, 'direct_damage_mult', demon);
     const aoeDamagePreviewMult = getEffectMultiplier(state, 'aoe_damage_mult', demon);
+    const healingPreviewMult = getEffectMultiplier(state, 'healing_mult', demon);
+    const poisonDamagePreviewMult = getEffectMultiplier(state, 'poison_tick_damage_mult', demon);
     const maxHpFlat = getEffectSum(state, 'max_hp_flat', demon);
     const attackFlat = getEffectSum(state, 'attack_flat', demon);
     const speedFlat = getEffectSum(state, 'speed_flat', demon);
@@ -316,7 +318,11 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
     applyDamageOutputStatPreview(next, {
       directDamageMult: directDamagePreviewMult,
       aoeDamageMult: aoeDamagePreviewMult * accountAoeDamageMult,
-      aoeDamageFlat: accountAoeDamageFlat + getEffectSum(state, 'aoe_damage_flat', demon)
+      aoeDamageFlat: accountAoeDamageFlat + getEffectSum(state, 'aoe_damage_flat', demon),
+      healingMult: healingPreviewMult * accountHealingMult,
+      healingFlat: accountHealingFlat + getEffectSum(state, 'healing_flat', demon),
+      poisonDamageMult: poisonDamagePreviewMult * accountPoisonDamageMult,
+      poisonDamageFlat: accountPoisonDamageFlat + getEffectSum(state, 'poison_damage_flat', demon)
     });
 
     return next;
@@ -338,15 +344,39 @@ function applyDamageOutputStatPreview(demon, options = {}) {
   const directDamageMult = positiveNumber(options.directDamageMult, 1);
   const aoeDamageMult = positiveNumber(options.aoeDamageMult, 1);
   const aoeDamageFlat = Math.max(0, Number(options.aoeDamageFlat) || 0);
+  const healingMult = positiveNumber(options.healingMult, 1);
+  const healingFlat = Math.max(0, Number(options.healingFlat) || 0);
+  const poisonDamageMult = positiveNumber(options.poisonDamageMult, 1);
+  const poisonDamageFlat = Math.max(0, Number(options.poisonDamageFlat) || 0);
+  const ability = getDemonAbility(demon);
+  const abilityKind = String(ability.kind || '').toLowerCase();
   const isAoe = isAoeDemon(demon);
   const isSingleTarget = isSingleTargetAttackDemon(demon);
   const damageMult = (isSingleTarget ? directDamageMult : 1) * (isAoe ? aoeDamageMult : 1);
   const damageFlat = isAoe ? aoeDamageFlat : 0;
+  const baseAtk = Math.max(1, Number(options.baseAtk) || Number(demon.atk) || 1);
+
+  if (abilityKind === 'poison' && (poisonDamageMult !== 1 || poisonDamageFlat > 0)) {
+    const basePoisonDamage = Math.max(1, Math.round(
+      baseAtk * positiveNumber(ability.damagePerTickScale || ability.damagePerTurnScale, 1)
+    ));
+    demon.effectiveAtk = Math.max(1, Math.round((basePoisonDamage + poisonDamageFlat) * poisonDamageMult));
+    return;
+  }
+
+  if (abilityKind === 'heal' && (healingMult !== 1 || healingFlat > 0)) {
+    demon.effectiveAtk = Math.max(1, Math.round((baseAtk + healingFlat) * healingMult));
+    return;
+  }
 
   if (damageMult === 1 && damageFlat <= 0) return;
-
-  const baseAtk = Math.max(1, Number(demon.atk) || 1);
   demon.effectiveAtk = Math.max(1, Math.round((baseAtk + damageFlat) * damageMult));
+}
+
+function getDemonAbility(demon = {}) {
+  const typeId = Number(demon.typeId || demon.type_id || demon.type);
+  const type = DEFAULT_DEMON_TYPES[String(typeId)] || {};
+  return demon.ability || type.ability || {};
 }
 
 function applyRunBuffStatModifiers(run) {
@@ -365,23 +395,35 @@ function applyRunBuffStatModifiers(run) {
     const hpRatio = currentMaxHp > 0
       ? clamp((Number(demon.hp) || currentMaxHp) / currentMaxHp, 0, 1)
       : 1;
-    const damagePreviewMult = (isSingleTargetAttackDemon(demon) ? directDamageMult : 1) *
-      (isAoeDemon(demon) ? aoeDamageMult : 1);
-    const nextEffectiveAtk = baseAtk > 0 ? Math.max(1, Math.round(baseAtk * damagePreviewMult)) : baseAtk;
     const nextMaxHp = Math.max(1, Math.round(baseMaxHp * maxHpMult));
     const nextSpeed = Math.max(1, Math.round(baseSpeed * speedMult));
-
-    return {
+    const next = {
       ...demon,
       runBaseAtk: baseAtk,
       runBaseMaxHp: baseMaxHp,
       runBaseSpeed: baseSpeed,
       runBuffStatsApplied: true,
-      effectiveAtk: nextEffectiveAtk,
       maxHp: nextMaxHp,
       hp: Math.max(demon.hp > 0 ? 1 : 0, Math.min(nextMaxHp, Math.round(nextMaxHp * hpRatio))),
       speed: nextSpeed
     };
+
+    delete next.effectiveAtk;
+    applyDamageOutputStatPreview(next, {
+      baseAtk,
+      directDamageMult,
+      aoeDamageMult,
+      aoeDamageFlat: getEffectSum(state, 'aoe_damage_flat', demon),
+      healingMult: getEffectMultiplier(state, 'healing_mult', demon),
+      healingFlat: getEffectSum(state, 'healing_flat', demon),
+      poisonDamageMult: getEffectMultiplier(state, 'poison_tick_damage_mult', demon),
+      poisonDamageFlat: getEffectSum(state, 'poison_damage_flat', demon)
+    });
+    if (!Number.isFinite(Number(next.effectiveAtk)) && baseAtk > 0) {
+      next.effectiveAtk = baseAtk;
+    }
+
+    return next;
   });
 
   run.state.hp = run.state.team.reduce((sum, demon) => sum + Math.max(0, Number(demon.hp) || 0), 0);
