@@ -36,7 +36,7 @@ ${e}`:e}function So(e){let o=new Map;return e.querySelectorAll(".dungeon-demon-c
         ${l?"":'<a class="btn btn-glass-muted" href="/camp">Leave</a>'}
         ${c.endedReplayRun?.lastBattle?.combatLog?.length?`
           <button class="btn btn-glass-muted btn-icon-only" id="replayEndedDungeonBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
-            ${K("replay")}
+            ${K("list-restart")}
           </button>
         `:""}
         ${l?`
@@ -102,7 +102,7 @@ ${e}`:e}function So(e){let o=new Map;return e.querySelectorAll(".dungeon-demon-c
     ${e?`<span class="dungeon-floor-marker" aria-label="Current floor ${e}"><span>Floor</span><strong>${e}</strong></span>`:""}
   `,E.dungeonCenterActions=document.getElementById("dungeonCenterActions")}function td(){zn("combat")}function Mo(){let e=document.getElementById("battleLogPanel")?.classList.contains("show");zn(e?"combat":"log")}function zn(e){let o=e==="log";document.getElementById("combatPanel")?.classList.toggle("show",!o),document.getElementById("combatPanel")?.classList.toggle("active",!o),document.getElementById("battleLogPanel")?.classList.toggle("show",o),document.getElementById("battleLogPanel")?.classList.toggle("active",o)}function nd(){Ot&&Ot.disconnect();let e=Array.from(document.querySelectorAll(".battle-side .formation-lane-cards")),o=Array.from(document.querySelectorAll(".battle-side > #teamGrid, .battle-side > #enemyGrid"));if(!e.length&&!o.length)return;let s=new ResizeObserver(()=>Dr());Su(s),e.forEach(l=>s.observe(l)),o.forEach(l=>s.observe(l)),document.querySelectorAll(".battle-side .dungeon-demon-card-image img").forEach(l=>{l.complete||l.addEventListener("load",Dr,{once:!0})}),Br(),Dr()}function Dr(){Br(),requestAnimationFrame(()=>{Br();let e=[],o=Array.from(document.querySelectorAll(".battle-side .formation-lane-cards"));if(o.forEach(l=>{let d=Array.from(l.querySelectorAll(".dungeon-demon-card"));if(l.classList.remove("is-compressed"),l.style.removeProperty("--dungeon-demon-card-width"),l.style.removeProperty("--dungeon-demon-card-height"),!d.length)return;let p=l.getBoundingClientRect();if(!(d[d.length-1].getBoundingClientRect().bottom>p.bottom+1||l.scrollHeight>l.clientHeight+1))return;let w=parseFloat(getComputedStyle(l).rowGap||getComputedStyle(l).gap)||0,D=getComputedStyle(l).flexDirection.startsWith("row"),C=D?p.height:(p.height-w*(d.length-1))/d.length,A=D?(p.width-w*(d.length-1))/d.length:C,$=Math.max(46,Math.min(148,C,A));e.push($)}),!e.length)return;let s=Math.min(...e);o.forEach(l=>{l.style.setProperty("--dungeon-demon-card-width",`${s}px`),l.style.setProperty("--dungeon-demon-card-height",`${s}px`),l.classList.add("is-compressed")})})}function Br(){Array.from(document.querySelectorAll(".battle-side .battle-formation-grid")).forEach(o=>{let s=o.parentElement;if(!s)return;let l=s.getBoundingClientRect();if(l.width<=0||l.height<=0)return;let d=getComputedStyle(o),p=3,y=3,v=1,w=Bo(d.gap||d.rowGap||d.columnGap),D=Bo(d.paddingLeft)+Bo(d.paddingRight),C=Bo(d.paddingTop)+Bo(d.paddingBottom),A=(l.width-D-w*(p-1))/p,$=(l.height-C-w*(y-1))/(y*v),Y=Math.max(42,Math.min(260,A,$));Number.isFinite(Y)&&n0(o,Y,Y*v)})}function Ku(e){let o=e?.querySelector?.(".battle-formation-grid"),s=o?.style.getPropertyValue("--dungeon-demon-card-width"),l=o?.style.getPropertyValue("--dungeon-demon-card-height");return!s||!l?"":`--dungeon-demon-card-width: ${s}; --dungeon-demon-card-height: ${l};`}function n0(e,o,s){let l=`${o}px`,d=`${s}px`;e.style.getPropertyValue("--dungeon-demon-card-width")!==l&&e.style.setProperty("--dungeon-demon-card-width",l),e.style.getPropertyValue("--dungeon-demon-card-height")!==d&&e.style.setProperty("--dungeon-demon-card-height",d)}function Bo(e){let o=parseFloat(e);return Number.isFinite(o)?o:0}function od(){E.dungeonRewardStrip&&(E.dungeonRewardStrip.innerHTML="")}function rd(){return c.endNotice?`<div class="${c.endNotice.type==="warning"?"fight-log-notice fight-log-end-notice text-warning":"fight-log-notice fight-log-end-notice text-success"}">${c.endNotice.html||F(c.endNotice.text)}</div>`:""}function Uu(e){return E.dungeonBottomControls?Ce(E.dungeonBottomControls,e):!1}function ad(e,o){return`
     <button class="btn btn-glass-muted btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight" ${e?"":"disabled"}>
-      ${K("replay")}
+      ${K("list-restart")}
     </button>
     <button class="btn btn-glass-muted btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log" ${o?"":"disabled"}>
       ${K("log")}
@@ -162,7 +162,7 @@ ${e}`:e}function So(e){let o=new Map;return e.querySelectorAll(".dungeon-demon-c
       aria-label="Replay Fight"
       ${d?"":"disabled"}
     >
-      ${K("replay")}
+      ${K("list-restart")}
       <span class="visually-hidden">Replay Fight</span>
     </button>
     <button
@@ -835,7 +835,7 @@ ${e}`:e}function So(e){let o=new Map;return e.querySelectorAll(".dungeon-demon-c
         </span>
         ${u?`
           <button class="btn btn-outline-light btn-sm world-travel-replay-btn" type="button" data-view-world-battle="${n}" title="Replay Ambush" aria-label="Replay Ambush">
-            ${l("replay")}
+            ${l("list-restart")}
             <span>Replay</span>
           </button>
         `:""}
@@ -891,7 +891,7 @@ ${e}`:e}function So(e){let o=new Map;return e.querySelectorAll(".dungeon-demon-c
             ${l("next-attack")}
           </button>
           <button class="battle-playback-btn" type="button" data-world-battle-replay title="Replay Fight" aria-label="Replay Fight" ${a.worldBattleReplayPlaying||!t?"disabled":""}>
-            ${l("replay")}
+            ${l("list-restart")}
           </button>
         </div>
         <div class="battle-speed-control" role="group" aria-label="Battle animation speed">
@@ -951,7 +951,7 @@ ${e}`:e}function So(e){let o=new Map;return e.querySelectorAll(".dungeon-demon-c
         <strong>${W(u)}</strong>
         <span class="world-dungeon-result-actions">
           <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-replay title="Replay Fight" aria-label="Replay Fight" ${f?"":"disabled"}>
-            ${l("replay")}
+            ${l("list-restart")}
           </button>
           <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-log title="Fight Log" aria-label="Fight Log" aria-pressed="false" ${f?"":"disabled"}>
             ${l("log")}

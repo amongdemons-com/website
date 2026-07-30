@@ -228,7 +228,11 @@ app.get(['/leaderboard', '/leaderboard/'], (req, res) => {
 });
 
 app.get(['/leaderboard/:sort', '/leaderboard/:sort/'], (req, res) => {
-  if (!['floor', 'level', 'souls', 'pvp', 'ranked'].includes(req.params.sort)) {
+  if (req.params.sort === 'pvp') {
+    return res.redirect(301, '/leaderboard/duels');
+  }
+
+  if (!['floor', 'level', 'souls', 'duels', 'ranked'].includes(req.params.sort)) {
     return res.redirect(302, '/leaderboard');
   }
 
@@ -240,11 +244,12 @@ app.get(['/rankings', '/rankings/'], (req, res) => {
 });
 
 app.get(['/rankings/:sort', '/rankings/:sort/'], (req, res) => {
-  if (!['floor', 'level', 'souls', 'pvp', 'ranked'].includes(req.params.sort)) {
+  const sort = req.params.sort === 'pvp' ? 'duels' : req.params.sort;
+  if (!['floor', 'level', 'souls', 'duels', 'ranked'].includes(sort)) {
     return res.redirect(301, '/leaderboard');
   }
 
-  res.redirect(301, `/leaderboard/${req.params.sort}`);
+  res.redirect(301, `/leaderboard/${sort}`);
 });
 
 // ============================================================================

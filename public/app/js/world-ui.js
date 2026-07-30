@@ -5839,7 +5839,7 @@ import './bag-item-visuals.js';
         </span>
         ${canReplay ? `
           <button class="btn btn-outline-light btn-sm world-travel-replay-btn" type="button" data-view-world-battle="${index}" title="Replay Ambush" aria-label="Replay Ambush">
-            ${renderIcon('replay')}
+            ${renderIcon('list-restart')}
             <span>Replay</span>
           </button>
         ` : ''}
@@ -6225,7 +6225,7 @@ import './bag-item-visuals.js';
             ${renderIcon('next-attack')}
           </button>
           <button class="battle-playback-btn" type="button" data-world-battle-replay title="Replay Fight" aria-label="Replay Fight" ${state.worldBattleReplayPlaying || !total ? 'disabled' : ''}>
-            ${renderIcon('replay')}
+            ${renderIcon('list-restart')}
           </button>
         </div>
         <div class="battle-speed-control" role="group" aria-label="Battle animation speed">
@@ -7083,7 +7083,7 @@ import './bag-item-visuals.js';
         <strong>${escapeHtml(label)}</strong>
         <span class="world-dungeon-result-actions">
           <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-replay title="Replay Fight" aria-label="Replay Fight" ${canReplay ? '' : 'disabled'}>
-            ${renderIcon('replay')}
+            ${renderIcon('list-restart')}
           </button>
           <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-log title="Fight Log" aria-label="Fight Log" aria-pressed="false" ${canReplay ? '' : 'disabled'}>
             ${renderIcon('log')}

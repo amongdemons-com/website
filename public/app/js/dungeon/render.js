@@ -217,7 +217,7 @@ function renderDungeonEndScreen() {
         ${isDefeat ? '' : '<a class="btn btn-glass-muted" href="/camp">Leave</a>'}
         ${state.endedReplayRun?.lastBattle?.combatLog?.length ? `
           <button class="btn btn-glass-muted btn-icon-only" id="replayEndedDungeonBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
-            ${renderIcon('replay')}
+            ${renderIcon('list-restart')}
           </button>
         ` : ''}
         ${isDefeat ? `
@@ -583,7 +583,7 @@ function renderBattleControlsOverlay(html) {
 function renderReplayLogButtons(canReplay, canViewLog) {
   return `
     <button class="btn btn-glass-muted btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight" ${canReplay ? '' : 'disabled'}>
-      ${renderIcon('replay')}
+      ${renderIcon('list-restart')}
     </button>
     <button class="btn btn-glass-muted btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogToggleBtn" type="button" title="Fight Log" aria-label="Fight Log" ${canViewLog ? '' : 'disabled'}>
       ${renderIcon('log')}
@@ -773,7 +773,7 @@ function renderDungeonMobileFightBox(options = {}) {
       aria-label="Replay Fight"
       ${canReplay ? '' : 'disabled'}
     >
-      ${renderIcon('replay')}
+      ${renderIcon('list-restart')}
       <span class="visually-hidden">Replay Fight</span>
     </button>
     <button

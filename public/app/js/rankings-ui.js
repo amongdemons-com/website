@@ -5,7 +5,14 @@
   const session = window.AmongDemons.getSession();
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const currentUsername = session.player && session.player.username;
-  const pathSorts = new Set(['floor', 'level', 'souls', 'pvp', 'ranked']);
+  const sortPaths = {
+    floor: 'floor',
+    level: 'level',
+    souls: 'souls',
+    pvp: 'duels',
+    ranked: 'ranked'
+  };
+  const querySorts = new Set(Object.keys(sortPaths));
   const topRankIcons = ['crown', 'trophy', 'medal'];
   let currentSort = getInitialSort();
   let activeLoadId = 0;
@@ -41,7 +48,7 @@
         if (nextSort === currentSort) return;
 
         currentSort = nextSort;
-        const nextPath = currentSort === 'floor' ? '/leaderboard' : `/leaderboard/${currentSort}`;
+        const nextPath = getSortPath(currentSort);
         window.history.replaceState({}, '', window.AmongDemons.appUrl(nextPath));
         syncSortLinks();
         await loadRank({ preserveRows: true });
@@ -132,8 +139,10 @@
         <td class="rank-hunter-cell" data-label="Hunter">
           <span class="rank-hunter">
             <a class="rank-hunter-name rank-hunter-name-link" href="${escapeHtml(hunterHref)}">${escapeHtml(player.username)}</a>
-            <small class="rank-hunter-meta">${renderRankDivisionText(rankedDivision)}
-              &middot; Level ${formatNumber(level)}
+            <small class="rank-hunter-meta">${hasRankedRating
+              ? `${renderRankDivisionText(rankedDivision)}
+              &middot; Level`
+              : 'Level'} ${formatNumber(level)}
               &middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}</small>
           </span>
         </td>
@@ -177,12 +186,18 @@
 
   function getInitialSort() {
     const querySort = new URLSearchParams(window.location.search).get('sort');
-    if (pathSorts.has(querySort)) return querySort;
+    if (querySorts.has(querySort)) return querySort;
 
     const normalizedPath = window.location.pathname.replace(/\/$/, '');
-    const maybeSort = normalizedPath.slice(normalizedPath.lastIndexOf('/') + 1);
+    const pathSlug = normalizedPath.slice(normalizedPath.lastIndexOf('/') + 1);
+    const pathSort = Object.keys(sortPaths).find((sort) => sortPaths[sort] === pathSlug);
 
-    return pathSorts.has(maybeSort) ? maybeSort : 'floor';
+    return pathSort || 'floor';
+  }
+
+  function getSortPath(sort) {
+    const currentSort = sortPaths[sort] || 'floor';
+    return currentSort === 'floor' ? '/leaderboard' : `/leaderboard/${currentSort}`;
   }
 
   function setMessage(text, type) {

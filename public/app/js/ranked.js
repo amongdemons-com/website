@@ -157,13 +157,13 @@ function bindEvents() {
       return;
     }
 
-    if (event.target.closest('#fightLogReplayBtn')) {
+    if (event.target.closest('#fightLogReplayBtn, #rankedMobileReplayBtn')) {
       event.preventDefault();
       await replayRankedFight();
       return;
     }
 
-    if (event.target.closest('#fightLogToggleBtn')) {
+    if (event.target.closest('#fightLogToggleBtn, #rankedMobileLogBtn')) {
       event.preventDefault();
       toggleFightLogPanel();
       return;
@@ -747,10 +747,16 @@ function renderRankedDemon(demon, options = {}) {
 function renderPreparation(run, options = {}) {
   const hand = workspace?.hand || [];
   const canReviewFight = Boolean(options.canReviewFight);
+  const canReroll = canRerollWorkspace() && !isBusy;
+  const canFight = canFightWorkspace() && !isBusy;
+  const rerollLabel = `Reroll hand for ${RANKED_REROLL_RSOUL_COST} Ranked Souls`;
+  const lockLabel = run.handLocked
+    ? 'Unlock hand for the next floor'
+    : 'Lock hand for the next floor';
   return `
     <div class="ranked-reroll-rail">
       <button class="btn btn-secondary ranked-side-action ranked-side-action-compact ranked-reroll-action" type="button" data-ranked-action="reroll"
-              ${!canRerollWorkspace() || isBusy ? 'disabled' : ''}>
+              title="${rerollLabel}" aria-label="${rerollLabel}" ${canReroll ? '' : 'disabled'}>
         <span class="ranked-reroll-main">
           ${renderIcon('refresh-cw')}
           <span>Reroll</span>
@@ -780,7 +786,7 @@ function renderPreparation(run, options = {}) {
     <div class="ranked-action-dock">
       <button class="btn ${run.handLocked ? 'btn-success' : 'btn-outline-light'} ranked-side-action ranked-side-action-compact ranked-lock-action"
               type="button" data-ranked-action="lock-hand" aria-pressed="${run.handLocked ? 'true' : 'false'}"
-              title="${run.handLocked ? 'This hand will carry into the next floor.' : 'Carry this hand into the next floor.'}">
+              title="${lockLabel}" aria-label="${lockLabel}">
         ${renderIcon(run.handLocked ? 'check' : 'save')} <span>${run.handLocked ? 'Locked' : 'Lock Hand'}</span>
       </button>
       <div class="ranked-review-actions" role="group" aria-label="Previous fight">
@@ -788,9 +794,47 @@ function renderPreparation(run, options = {}) {
       </div>
     </div>
     <button class="btn btn-primary btn-lg ranked-side-action ranked-fight-action" type="button" data-ranked-action="fight"
-            ${!canFightWorkspace() || isBusy ? 'disabled' : ''}>
+            title="Start Ranked fight" aria-label="Start Ranked fight" ${canFight ? '' : 'disabled'}>
       ${renderIcon('swords')} <span>Fight</span>
     </button>
+    <div class="ranked-mobile-nav" role="group" aria-label="Ranked preparation controls">
+      <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn" type="button" data-ranked-action="reroll"
+              title="${rerollLabel}" aria-label="${rerollLabel}" ${canReroll ? '' : 'disabled'}>
+        ${renderIcon('refresh-cw')}
+        <span class="visually-hidden">Reroll</span>
+      </button>
+      <details class="ranked-mobile-odds">
+        <summary class="dungeon-mobile-nav-btn ranked-mobile-nav-btn" title="Reroll rarity odds" aria-label="Reroll rarity odds">
+          ${renderIcon('info')}
+          <span class="visually-hidden">Reroll rarity odds</span>
+        </summary>
+        <div class="ranked-mobile-odds-popover">
+          ${renderRerollOdds(run)}
+        </div>
+      </details>
+      <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn ${run.handLocked ? 'active' : ''}" type="button"
+              data-ranked-action="lock-hand" title="${lockLabel}" aria-label="${lockLabel}"
+              aria-pressed="${run.handLocked ? 'true' : 'false'}">
+        ${renderIcon(run.handLocked ? 'check' : 'save')}
+        <span class="visually-hidden">${run.handLocked ? 'Unlock hand' : 'Lock hand'}</span>
+      </button>
+      <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn" id="rankedMobileReplayBtn" type="button"
+              title="Replay Fight" aria-label="Replay Fight" ${canReviewFight ? '' : 'disabled'}>
+        ${renderIcon('list-restart')}
+        <span class="visually-hidden">Replay Fight</span>
+      </button>
+      <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn" id="rankedMobileLogBtn" type="button"
+              title="Fight Log" aria-label="Fight Log" ${canReviewFight ? '' : 'disabled'}>
+        ${renderIcon('log')}
+        <span class="visually-hidden">Fight Log</span>
+      </button>
+      <button class="dungeon-mobile-nav-btn dungeon-mobile-fight-btn ranked-mobile-nav-btn ad-primary-action"
+              type="button" data-ranked-action="fight" title="Start Ranked fight" aria-label="Start Ranked fight"
+              ${canFight ? '' : 'disabled'}>
+        ${renderIcon('swords')}
+        <span class="visually-hidden">Fight</span>
+      </button>
+    </div>
   `;
 }
 

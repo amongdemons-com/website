@@ -1,6 +1,6 @@
 {
-  "runtime": "/app/dist/runtime.bundle.js?v=2e66eccaaae6",
-  "dungeon": "/app/dist/dungeon.bundle.js?v=3b42dd441a6a",
-  "ranked": "/app/dist/ranked.bundle.js?v=429cd61b3dab",
-  "world": "/app/dist/world.bundle.js?v=72bc97320378"
+  "runtime": "/app/dist/runtime.bundle.js?v=fd84ff8f76ca",
+  "dungeon": "/app/dist/dungeon.bundle.js?v=f35530d251e7",
+  "ranked": "/app/dist/ranked.bundle.js?v=fb86604314af",
+  "world": "/app/dist/world.bundle.js?v=ab95fec7940a"
 }
