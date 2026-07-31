@@ -556,7 +556,7 @@ function getSelectedCollectionReinforcements() {
   ].filter((demon) => demon.recruitSource === 'collection');
 }
 
-function addCollectionReinforcementToPool(demonId) {
+function addCollectionReinforcementToPool(demonId, options = {}) {
   ensureRecruitDraft();
   if (getSelectedCollectionReinforcements().length >= getCollectionReinforcementLimit()) return;
 
@@ -571,7 +571,9 @@ function addCollectionReinforcementToPool(demonId) {
     position: getPreferredDemonPosition(demon)
   };
 
-  if (isStartingTeamSelection()) {
+  if (addCollectionReinforcementToTargetSlot(stagedDemon, options.formationTarget)) {
+    // The clicked team slot takes priority over the normal hand/team destination.
+  } else if (isStartingTeamSelection()) {
     addCollectionReinforcementToStartingTeam(stagedDemon);
   } else {
     state.recruitDraftPool.splice(getCollectionHandInsertIndex(), 0, stagedDemon);
@@ -580,6 +582,27 @@ function addCollectionReinforcementToPool(demonId) {
 
   state.collectionReinforcementStagedInteracted = false;
   syncRecruitDraftSelection();
+}
+
+function addCollectionReinforcementToTargetSlot(stagedDemon, target) {
+  const formationSlot = Math.floor(Number(target?.formationSlot));
+  const position = target?.position === 'front' ? 'front' : target?.position === 'back' ? 'back' : null;
+  const team = state.recruitDraftTeam || [];
+  if (
+    !Number.isInteger(formationSlot) ||
+    formationSlot < 0 ||
+    formationSlot >= FORMATION_GRID_SIZE ||
+    !position ||
+    team.length >= getRecruitTeamLimit() ||
+    getFormationGridAssignments(team, 'player')[formationSlot]
+  ) return false;
+
+  stagedDemon.position = position;
+  stagedDemon.formationRow = formationSlot;
+  stagedDemon.formationSlot = formationSlot;
+  team.push(stagedDemon);
+  refreshRecruitDraftOrder();
+  return true;
 }
 
 function isStartingTeamSelection() {

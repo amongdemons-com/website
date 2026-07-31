@@ -3365,6 +3365,24 @@ body:not(.dungeon-page) > .navbar {
     font-weight: 900;
 }
 
+.battle-side-player .collection-reinforcement-team-slot {
+    padding: 0;
+    border: 1px dashed rgba(141,231,255,0.34);
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.battle-side-player .collection-reinforcement-team-slot:hover,
+.battle-side-player .collection-reinforcement-team-slot:focus-visible {
+    border-color: rgba(141,231,255,0.72);
+    background:
+        radial-gradient(circle at 50% 42%, rgba(141,231,255,0.16), transparent 42%),
+        linear-gradient(180deg, rgba(8,30,36,0.56), rgba(0,0,0,0.28));
+    box-shadow: inset 0 0 26px rgba(82,183,255,0.12), 0 0 16px rgba(82,183,255,0.16);
+    outline: none;
+}
+
 .battle-side-enemy .formation-empty {
     border-color: rgba(226,80,65,0.24);
     background:

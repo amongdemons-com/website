@@ -12,6 +12,7 @@ const findCollectionReplacement = (...args) => dungeonActions.findCollectionRepl
 const getAvailableCollectionReinforcements = (...args) => dungeonActions.getAvailableCollectionReinforcements(...args);
 const getCollectionStatPreviewDemon = (...args) => dungeonActions.getCollectionStatPreviewDemon(...args);
 const getCollectionReinforcementLimit = (...args) => dungeonActions.getCollectionReinforcementLimit(...args);
+const getPreferredDemonPosition = (...args) => dungeonActions.getPreferredDemonPosition(...args);
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
@@ -22,28 +23,48 @@ const getSelectedCollectionReinforcements = (...args) => dungeonActions.getSelec
 const getSelectedRewardCandidate = (...args) => dungeonActions.getSelectedRewardCandidate(...args);
 const markCollectionReinforcementPlaceholderInteracted = (...args) => dungeonActions.markCollectionReinforcementPlaceholderInteracted(...args);
 const markCollectionReinforcementStagedInteracted = (...args) => dungeonActions.markCollectionReinforcementStagedInteracted(...args);
+const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const renderEmptyText = (...args) => dungeonActions.renderEmptyText(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
 const setRewardSelection = (...args) => dungeonActions.setRewardSelection(...args);
 let pendingCollectionReinforcementIds = new Set();
+let pendingCollectionReinforcementTarget = null;
 
-async function openCollectionReinforcementModal() {
-  if (!state.run?.collectionReinforcementAvailable) return;
+async function openCollectionReinforcementModal(options = {}) {
+  if (!canOpenCollectionReinforcementModal()) return;
 
   try {
     await ensureCollectionLoaded();
     markCollectionReinforcementPlaceholderInteracted();
     pendingCollectionReinforcementIds = new Set();
+    pendingCollectionReinforcementTarget = normalizeCollectionReinforcementTarget(options.formationTarget);
     renderCollectionReinforcementModal('');
     elements.teamChoiceModal.classList.add('is-collection-reinforcement-modal');
     elements.teamChoiceModal.addEventListener('hidden.bs.modal', () => {
       elements.teamChoiceModal.classList.remove('is-collection-reinforcement-modal');
+      pendingCollectionReinforcementTarget = null;
     }, { once: true });
     getModal(elements.teamChoiceModal).show();
   } catch (error) {
     showError(error);
   }
+}
+
+function normalizeCollectionReinforcementTarget(target) {
+  const formationSlot = Math.floor(Number(target?.formationSlot));
+  const position = target?.position === 'front' ? 'front' : target?.position === 'back' ? 'back' : null;
+  if (!Number.isInteger(formationSlot) || formationSlot < 0 || !position) return null;
+  return { formationSlot, position };
+}
+
+function canOpenCollectionReinforcementModal() {
+  return Boolean(
+    state.run?.awaitingRecruit &&
+    state.isRecruiting &&
+    state.run?.collectionReinforcementAvailable &&
+    getSelectedCollectionReinforcements().length < getCollectionReinforcementLimit()
+  );
 }
 
 function renderCollectionReinforcementModal(query = '') {
@@ -53,7 +74,9 @@ function renderCollectionReinforcementModal(query = '') {
   const remaining = Math.max(0, limit - alreadySelectedCount);
   const selectedCount = pendingCollectionReinforcementIds.size;
   const isStartingTeam = Number(state.run?.currentFloor) === 0;
-  const destination = isStartingTeam ? 'your starting team' : 'your hand';
+  const destination = pendingCollectionReinforcementTarget
+    ? `team slot ${pendingCollectionReinforcementTarget.formationSlot + 1}`
+    : isStartingTeam ? 'your starting team' : 'your hand';
   const normalizedQuery = query.trim().toLowerCase();
   const candidates = getAvailableCollectionReinforcements()
     .filter((demon) => !normalizedQuery || [
@@ -79,7 +102,7 @@ function renderCollectionReinforcementModal(query = '') {
     <button type="button" class="btn btn-glass-muted" data-bs-dismiss="modal">Cancel</button>
     <button type="button" class="btn btn-primary" id="addCollectionReinforcementsBtn" ${selectedCount ? '' : 'disabled'}>
       ${selectedCount
-        ? `Add ${selectedCount} Demon${selectedCount === 1 ? '' : 's'} to ${isStartingTeam ? 'Team' : 'Hand'}`
+        ? `Add ${selectedCount} Demon${selectedCount === 1 ? '' : 's'} to ${(pendingCollectionReinforcementTarget || isStartingTeam) ? 'Team' : 'Hand'}`
         : 'Select Demons'}
     </button>
   `;
@@ -100,11 +123,40 @@ function renderCollectionReinforcementModal(query = '') {
     renderCollectionReinforcementModal(query);
   }, elements.teamChoiceModalBody);
   bindClick(document.getElementById('addCollectionReinforcementsBtn'), () => {
-    pendingCollectionReinforcementIds.forEach((demonId) => addCollectionReinforcementToPool(demonId));
+    addPendingCollectionReinforcements();
     pendingCollectionReinforcementIds = new Set();
     getModal(elements.teamChoiceModal).hide();
     renderRun();
   });
+}
+
+function addPendingCollectionReinforcements() {
+  const selectedIds = Array.from(pendingCollectionReinforcementIds);
+  const targetedDemonId = getBestCollectionReinforcementForTarget(selectedIds, pendingCollectionReinforcementTarget)?.id;
+  const orderedIds = targetedDemonId
+    ? [Number(targetedDemonId), ...selectedIds.filter((demonId) => Number(demonId) !== Number(targetedDemonId))]
+    : selectedIds;
+
+  orderedIds.forEach((demonId) => addCollectionReinforcementToPool(demonId, {
+    formationTarget: Number(demonId) === Number(targetedDemonId)
+      ? pendingCollectionReinforcementTarget
+      : null
+  }));
+}
+
+function getBestCollectionReinforcementForTarget(selectedIds, target) {
+  if (!target || !selectedIds.length) return null;
+  const selected = new Set(selectedIds.map(Number));
+  return getAvailableCollectionReinforcements()
+    .filter((demon) => selected.has(Number(demon.id)))
+    .sort((a, b) => (
+      getCollectionTargetFitScore(b, target) - getCollectionTargetFitScore(a, target) ||
+      compareCollectionReinforcementDemons(a, b)
+    ))[0] || null;
+}
+
+function getCollectionTargetFitScore(demon, target) {
+  return getPreferredDemonPosition(demon) === target?.position ? 1 : 0;
 }
 
 function renderCollectionReinforcementChoice(demon) {
@@ -207,10 +259,18 @@ async function confirmCollectionReplacement(incomingDemon) {
 }
 
 function bindCollectionReinforcementPlaceholders() {
-  document.querySelectorAll('.collection-reinforcement-placeholder').forEach((placeholder) => {
+  document.querySelectorAll('.collection-reinforcement-placeholder, .collection-reinforcement-team-slot').forEach((placeholder) => {
     if (placeholder.dataset.collectionReinforcementBound === 'true') return;
     placeholder.dataset.collectionReinforcementBound = 'true';
-    placeholder.addEventListener('click', () => openCollectionReinforcementModal());
+    placeholder.addEventListener('click', () => {
+      const slot = placeholder.closest('#teamGrid .formation-slot');
+      openCollectionReinforcementModal({
+        formationTarget: slot ? {
+          formationSlot: slot.dataset.formationSlot,
+          position: slot.dataset.formationPosition
+        } : null
+      });
+    });
   });
 }
 
@@ -281,8 +341,8 @@ function getDungeonDetailActions(extractionCandidate = null) {
       variant: 'primary',
       onClick: () => {
         setRewardSelection(extractionCandidate);
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('demonDetailModal')).hide();
         renderRun();
+        transitionFromDemonDetailsToCashout();
       }
     });
   }
@@ -298,6 +358,17 @@ function getDungeonDetailActions(extractionCandidate = null) {
   // }
 
   return actions;
+}
+
+function transitionFromDemonDetailsToCashout() {
+  const detailModalElement = document.getElementById('demonDetailModal');
+  if (!detailModalElement?.classList.contains('show')) {
+    openCashoutModal();
+    return;
+  }
+
+  detailModalElement.addEventListener('hidden.bs.modal', openCashoutModal, { once: true });
+  getModal(detailModalElement).hide();
 }
 
 function isStrategyPhase() {

@@ -8,6 +8,7 @@ import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatS
 const battle = (...args) => dungeonActions.battle(...args);
 const getCollectionReinforcementLimit = (...args) => dungeonActions.getCollectionReinforcementLimit(...args);
 const getExplicitFormationRow = (...args) => dungeonActions.getExplicitFormationRow(...args);
+const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
 const getSelectedCollectionReinforcement = (...args) => dungeonActions.getSelectedCollectionReinforcement(...args);
 const getSelectedCollectionReinforcements = (...args) => dungeonActions.getSelectedCollectionReinforcements(...args);
 const normalizeFormationRow = (...args) => dungeonActions.normalizeFormationRow(...args);
@@ -34,9 +35,10 @@ function renderFormationSlot(demon, cellIndex, options, side) {
   const placeholder = shouldShowCollectionReinforcementPlaceholders(options)
     ? renderCollectionReinforcementPlaceholder(position)
     : '';
+  const collectionTeamTrigger = !demon && shouldEnableCollectionReinforcementTeamSlot(options, side);
   const slotContent = demon
     ? renderDemonCard(demon, options)
-    : (placeholder || renderEmptyFormationSlot(position, slotNumber));
+    : (placeholder || renderEmptyFormationSlot(position, slotNumber, { collectionTeamTrigger }));
 
   return `
     <div class="formation-slot formation-lane formation-slot-${position} ${laneClass} ${demon ? 'has-demon' : 'is-empty'}" data-formation-position="${position}" data-formation-lane="${lane}" data-formation-row="${cellIndex}" data-formation-slot="${cellIndex}" role="listitem" aria-label="${escapeHtml(`${sideLabel} slot ${slotNumber}`)}">
@@ -146,12 +148,32 @@ function getDemonsForFormationRow(demons, position, rowIndex) {
   return demon ? [demon] : [];
 }
 
-function renderEmptyFormationSlot(position, slotNumber) {
+function renderEmptyFormationSlot(position, slotNumber, options = {}) {
+  if (options.collectionTeamTrigger) {
+    return `
+      <button class="formation-empty formation-empty-${position} collection-reinforcement-team-slot" type="button" data-slot-number="${slotNumber}" aria-label="Add a Collection demon to team slot ${slotNumber}" title="Add from collection">
+        <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" width="1024" height="1024" loading="lazy" decoding="async" draggable="false">
+      </button>
+    `;
+  }
+
   return `
     <div class="formation-empty formation-empty-${position}" aria-hidden="true" data-slot-number="${slotNumber}">
       <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" width="1024" height="1024" loading="lazy" decoding="async" draggable="false">
     </div>
   `;
+}
+
+function shouldEnableCollectionReinforcementTeamSlot(options, side) {
+  return Boolean(
+    side === 'player' &&
+    options.side === 'player' &&
+    state.isRecruiting &&
+    state.run?.awaitingRecruit &&
+    state.run?.collectionReinforcementAvailable &&
+    (state.recruitDraftTeam || []).length < getRecruitTeamLimit() &&
+    getSelectedCollectionReinforcements().length < getCollectionReinforcementLimit()
+  );
 }
 
 function renderButtonMeleeIcon() {
