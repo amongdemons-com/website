@@ -101,17 +101,26 @@ body.skill-tree-page {
     cursor: grabbing;
 }
 
+.ascension-zoom-sizer {
+    position: relative;
+    flex: 0 0 auto;
+    min-width: 100%;
+    min-height: 100%;
+    overflow: visible;
+}
+
 .ascension-map {
     --ascension-map-height: 72rem;
     --ascension-map-top-clearance: clamp(3rem, 7vh, 5rem);
-    position: relative;
-    flex: 1 0 auto;
+    position: absolute;
+    flex: none;
     min-width: 75rem;
     min-height: calc(var(--ascension-map-top-clearance) + var(--ascension-map-height) + var(--ascension-action-clearance));
     padding-top: var(--ascension-map-top-clearance);
     padding-bottom: var(--ascension-action-clearance);
     isolation: isolate;
     overflow: visible;
+    transform-origin: 0 0;
     background:
         radial-gradient(circle at 50% 50%, rgba(217, 185, 111, 0.09), transparent 8.5rem),
         radial-gradient(circle at 20% 50%, rgba(217, 109, 112, 0.055), transparent 24rem),
@@ -510,6 +519,23 @@ body.skill-tree-page {
     align-items: stretch;
     justify-content: center;
     min-width: 3.8rem;
+}
+
+.ascension-reset-cost.is-projected {
+    display: grid;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+.ascension-reset-cost-preview-label {
+    color: rgba(225, 214, 182, 0.58);
+    font-size: 0.44rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
 }
 
 .ascension-reset-cost-chip {

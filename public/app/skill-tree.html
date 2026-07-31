@@ -8,8 +8,8 @@
     <meta name="description" content="Allocate permanent account upgrades for your demons in Among Demons.">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=fc8ad364f53e" rel="stylesheet">
-    <link href="/app/css/skill-tree.css?v=f757a99e1ab9" rel="stylesheet">
+    <link href="/app/css/base.css?v=df4671956732" rel="stylesheet">
+    <link href="/app/css/skill-tree.css?v=b09035d487dd" rel="stylesheet">
   </head>
   <body class="skill-tree-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -55,7 +55,8 @@
       <section class="ascension-screen" aria-labelledby="skillTreeAllocationHeading">
         <h1 class="visually-hidden" id="skillTreeAllocationHeading">Demonic Ascension</h1>
 
-        <div class="ascension-viewport" id="skillTreeViewport" tabindex="0" aria-label="Scrollable skill tree">
+        <div class="ascension-viewport" id="skillTreeViewport" tabindex="0" aria-label="Scrollable and pinch-zoomable skill tree">
+          <div class="ascension-zoom-sizer" id="skillTreeZoomSizer">
           <div class="ascension-map" id="skillTreeGrid">
             <div class="ascension-map-stage">
             <svg class="ascension-connections" viewBox="0 0 1200 960" preserveAspectRatio="none" aria-hidden="true">
@@ -201,6 +202,7 @@
             </article>
             </div>
           </div>
+          </div>
         </div>
 
         <div class="ascension-node-tooltip" id="skillTreeNodeTooltip" role="tooltip">
@@ -216,7 +218,7 @@
         </footer>
       </section>
     </main>
-    <script src="/app/dist/runtime.bundle.js?v=fd84ff8f76ca"></script>
-    <script src="/app/js/skill-tree-ui.js?v=48fefdfb16ce"></script>
+    <script src="/app/dist/runtime.bundle.js?v=d43126913af6"></script>
+    <script src="/app/js/skill-tree-ui.js?v=99ba2d0bd090"></script>
   </body>
 </html>

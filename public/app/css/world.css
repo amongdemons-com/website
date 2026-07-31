@@ -1986,6 +1986,25 @@ body.is-world-side-collapsed .world-map-controls {
     border-color: rgba(111,214,189,0.32);
 }
 
+@media (min-width: 900px) {
+    .world-team-editor-board,
+    .world-team-editor-board.battle-side-player {
+        grid-template-rows: auto auto;
+        align-content: center;
+        gap: 0.5rem;
+    }
+
+    .world-team-editor-grid-host,
+    .world-team-editor-board.battle-side-player .world-team-editor-grid-host {
+        height: auto;
+        align-content: start;
+    }
+
+    .world-team-editor-board .battle-formation-grid {
+        margin: 0 auto;
+    }
+}
+
 .world-team-editor-collection {
     position: relative;
     display: grid;
@@ -3464,7 +3483,7 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto minmax(0, 1fr);
         gap: 0.62rem;
-        padding: 0.62rem;
+        padding: 0.62rem 0.62rem calc(0.62rem + env(safe-area-inset-bottom, 0px));
     }
 
 .world-team-editor-collection {
@@ -3485,11 +3504,15 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
 .world-team-editor-grid-host,
     .world-team-editor-board.battle-side-player .world-team-editor-grid-host {
         order: initial;
+        align-content: start;
+        align-items: start;
     }
 
 .world-team-editor-board .battle-formation-grid {
-        --dungeon-demon-card-width: clamp(3.35rem, calc((100vw - 3.8rem) / 3), 6.15rem);
+        --dungeon-demon-card-width: clamp(3rem, min(calc((100vw - 3.8rem) / 3), calc((100dvh - 15rem) / 3)), 6.15rem);
         --dungeon-formation-gap: 0.26rem;
+        align-self: start;
+        margin: 0.2rem auto 0;
     }
 
 .world-team-editor-board .battle-formation-grid .formation-slot:nth-child(1) { order: 6; }
@@ -3511,21 +3534,25 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
 .world-team-editor-board .battle-formation-grid .formation-slot:nth-child(9) { order: 2; }
 
 .world-team-editor-collection-grid {
-        --world-team-collection-card: clamp(5rem, 16vh, 7.2rem);
+        --world-team-collection-card: clamp(4.35rem, 13vh, 6.25rem);
         grid-auto-flow: column;
         grid-template-columns: none;
-        grid-template-rows: repeat(2, var(--world-team-collection-card));
+        grid-template-rows: var(--world-team-collection-card);
         grid-auto-columns: var(--world-team-collection-card);
         justify-content: start;
         gap: 0.42rem;
         overflow: auto hidden;
         overscroll-behavior-x: contain;
         padding: 0.42rem;
-        scroll-padding-inline: 2.5rem;
+        scroll-padding-inline: 0.42rem;
+    }
+
+.world-team-editor-collection.is-scrollable .world-team-editor-scroll {
+        display: none;
     }
 
 .world-team-editor-collection-grid .world-empty-text {
-        grid-row: 1 / -1;
+        grid-row: 1;
         align-self: center;
     }
 

@@ -39,7 +39,7 @@ import './bag-item-visuals.js';
   const ZONE_ROTATION = 0.045;
   // Keep terrain colors/effects aligned with the generated encounter zones.
   const ZONE_TYPE_REMAP = { 4: 5, 5: 4 };
-  const MIN_ZOOM = 0.55;
+  const MIN_ZOOM = 0.3;
   const MAX_ZOOM = 2.15;
   const AVERAGE_TERRAIN_COST = 2;
   const ROAD_MOVE_COST = AVERAGE_TERRAIN_COST - 1;

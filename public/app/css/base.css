@@ -8105,6 +8105,10 @@ body .game-shell-nav .nav-player {
 }
 
 @media (max-width: 1199.98px) {
+:root {
+        --game-nav-height: 3.15rem;
+    }
+
 body .game-shell-nav .navbar-collapse {
         position: absolute;
         top: 100%;
@@ -8124,6 +8128,7 @@ body .game-shell-nav .navbar-collapse {
 .game-shell-tabs {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: start;
         gap: 0.28rem;
         width: 100%;
         margin: 0;
@@ -8131,6 +8136,7 @@ body .game-shell-nav .navbar-collapse {
 
 .game-shell-tabs .nav-item,
     .game-shell-tabs .nav-item:last-child {
+        align-self: start;
         border: 0;
     }
 
@@ -8161,6 +8167,17 @@ body .game-shell-nav .nav-account,
         padding-top: 0.5rem;
         border-top: 1px solid rgba(161,212,201,0.12);
     }
+
+.game-shell-brand .logo-nav {
+        width: 2.1rem !important;
+        height: 2.1rem !important;
+        flex-basis: 2.1rem;
+    }
+
+.game-shell-toggle {
+        width: 2.15rem;
+        height: 2.15rem;
+    }
 }
 
 @media (max-width: 767.98px) {
@@ -8178,78 +8195,96 @@ body .game-shell-nav .nav-account,
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-body .game-shell-nav .nav-account {
-        grid-template-columns: minmax(0, 1fr) repeat(2, 2.42rem);
+body .game-shell-nav .nav-account:not(.is-guest) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto repeat(2, 2.15rem);
+        gap: 0.25rem;
     }
 
-body .game-shell-nav .nav-balance {
-        grid-column: 1;
-        grid-row: 2;
-        height: 2.42rem;
-        min-height: 2.42rem;
+body .game-shell-nav .nav-account:not(.is-guest) .nav-balance {
+        grid-column: 2;
+        grid-row: 1;
+        height: 2.15rem;
+        min-height: 2.15rem;
         justify-content: center;
     }
 
-body .game-shell-nav .nav-player {
-        grid-column: 1 / -1;
+body .game-shell-nav .nav-account:not(.is-guest) .nav-player {
+        grid-column: 1;
         grid-row: 1;
         width: auto;
         min-width: 0;
         max-width: none;
+        height: 2.15rem;
+        min-height: 2.15rem;
     }
 
-body .game-shell-nav .nav-settings-link,
-    body .game-shell-nav .nav-logout-btn {
-        grid-row: 2;
+body .game-shell-nav .nav-account:not(.is-guest) .nav-settings-link,
+    body .game-shell-nav .nav-account:not(.is-guest) .nav-logout-btn {
+        grid-row: 1;
+        width: 2.15rem;
+        min-width: 2.15rem;
+        height: 2.15rem;
+        min-height: 2.15rem;
     }
 
-body .game-shell-nav .nav-settings-link {
-        grid-column: 2;
-    }
-
-body .game-shell-nav .nav-logout-btn {
+body .game-shell-nav .nav-account:not(.is-guest) .nav-settings-link {
         grid-column: 3;
+    }
+
+body .game-shell-nav .nav-account:not(.is-guest) .nav-logout-btn {
+        grid-column: 4;
     }
 }
 
 @media (max-width: 767.98px) {
     body .game-shell-nav .nav-account.is-guest {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) 2.42rem;
-        gap: 0.5rem;
+        grid-template-columns: minmax(0, 1fr) auto auto 2.15rem;
+        gap: 0.25rem;
         width: 100%;
     }
 
     body .game-shell-nav .nav-account.is-guest .nav-player {
-        grid-column: 1 / -1;
+        grid-column: 1;
         grid-row: 1;
         width: 100%;
         min-width: 0;
         max-width: none;
+        height: 2.15rem;
+        min-height: 2.15rem;
     }
 
     body .game-shell-nav .nav-account.is-guest .nav-balance {
-        grid-column: 1;
-        grid-row: 2;
+        grid-column: 2;
+        grid-row: 1;
         width: max-content;
-        min-width: 2.42rem;
+        min-width: 2.15rem;
+        height: 2.15rem;
+        min-height: 2.15rem;
         justify-content: center;
     }
 
     body .game-shell-nav .nav-account.is-guest .nav-guest-save-btn {
-        grid-column: 2;
-        grid-row: 2;
+        grid-column: 3;
+        grid-row: 1;
         width: max-content;
         max-width: 100%;
         min-width: 0;
         justify-self: end;
         justify-content: center;
-        padding-inline: 0.7rem;
+        height: 2.15rem;
+        min-height: 2.15rem;
+        padding-inline: 0.55rem;
     }
 
     body .game-shell-nav .nav-account.is-guest .nav-settings-link {
-        grid-column: 3;
-        grid-row: 2;
+        grid-column: 4;
+        grid-row: 1;
+        width: 2.15rem;
+        min-width: 2.15rem;
+        height: 2.15rem;
+        min-height: 2.15rem;
     }
 }
 

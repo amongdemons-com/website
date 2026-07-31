@@ -29,6 +29,8 @@
   const STAT_KEYS = Object.keys(NODE_DEFINITIONS);
   const RESET_SOULS_PER_POINT = 10;
   const PAN_CLICK_THRESHOLD = 5;
+  const MIN_VIEWPORT_ZOOM = 0.5;
+  const MAX_VIEWPORT_ZOOM = 2;
   const state = {
     summary: null,
     draft: null,
@@ -37,6 +39,14 @@
     busyAction: '',
     viewportCenterScheduled: false,
     viewportPointer: null,
+    viewportPointers: new Map(),
+    viewportPinch: null,
+    viewportGestureWasPinch: false,
+    viewportZoom: 1,
+    viewportBaseWidth: 0,
+    viewportBaseHeight: 0,
+    viewportOffsetX: 0,
+    viewportOffsetY: 0,
     suppressNextClick: false,
     visibleTooltipTrigger: null,
     tooltipPinned: false
@@ -53,6 +63,7 @@
 
     audio?.setScene({ music: 'music.default' });
     cacheElements();
+    initializeViewportZoom();
     bindControls();
 
     try {
@@ -70,6 +81,7 @@
       'appMessage',
       'skillTreeGrid',
       'skillTreeViewport',
+      'skillTreeZoomSizer',
       'skillTreeTotal',
       'skillTreeSpent',
       'skillTreeUnspent',
@@ -149,7 +161,7 @@
     elements.skillTreeViewport?.addEventListener('scroll', positionVisibleTooltip, { passive: true });
     document.addEventListener('pointerdown', onDocumentPointerDown);
     document.addEventListener('keydown', onTooltipKeyDown);
-    window.addEventListener('resize', positionVisibleTooltip);
+    window.addEventListener('resize', onViewportResize);
     window.addEventListener('blur', () => {
       clearViewportPointer();
       hideSkillTooltip({ force: true });
@@ -193,7 +205,8 @@
     const valid = ready && isDraftValid(state.draft) && unspent >= 0;
     const dirty = ready && STAT_KEYS.some((key) => Number(state.draft[key]) !== Number(state.summary.allocations?.[key] || 0));
     const savedSpent = ready ? getSpent(state.summary.allocations) : 0;
-    const resetCost = ready ? getResetCost() : 0;
+    const resetCost = ready ? getResetCost(state.summary.allocations) : 0;
+    const projectedResetCost = ready ? getResetCost(state.draft) : 0;
     const playerSouls = getPlayerSouls();
     const canAffordReset = resetCost <= 0 || playerSouls >= resetCost;
 
@@ -270,10 +283,11 @@
 
     renderResetCost({
       ready,
-      savedSpent,
-      resetCost,
+      spent,
+      resetCost: projectedResetCost,
       playerSouls,
-      canAffordReset
+      canAffordReset: projectedResetCost <= 0 || playerSouls >= projectedResetCost,
+      projected: dirty
     });
   }
 
@@ -383,8 +397,9 @@
     return STAT_KEYS.reduce((sum, key) => sum + (Number(allocations?.[key]) || 0), 0);
   }
 
-  function getResetCost() {
-    return Math.max(0, Number(state.summary?.resetCost) || getSpent(state.summary?.allocations) * RESET_SOULS_PER_POINT);
+  function getResetCost(allocations = state.summary?.allocations) {
+    const isSavedAllocation = allocations === state.summary?.allocations;
+    return Math.max(0, isSavedAllocation ? Number(state.summary?.resetCost) || 0 : 0, getSpent(allocations) * RESET_SOULS_PER_POINT);
   }
 
   function getPlayerSouls() {
@@ -396,16 +411,18 @@
     return 'Reset';
   }
 
-  function renderResetCost({ ready, savedSpent, resetCost, playerSouls, canAffordReset }) {
+  function renderResetCost({ ready, spent, resetCost, playerSouls, canAffordReset, projected }) {
     const element = elements.skillTreeResetCost;
     if (!element) return;
 
-    const visible = ready && savedSpent > 0 && resetCost > 0;
+    const visible = ready && spent > 0 && resetCost > 0;
     element.classList.toggle('d-none', !visible);
     element.classList.toggle('is-disabled', visible && !canAffordReset);
+    element.classList.toggle('is-projected', visible && projected);
 
     if (!visible) {
       element.innerHTML = '';
+      element.classList.remove('is-projected');
       element.removeAttribute('title');
       element.removeAttribute('aria-label');
       return;
@@ -413,16 +430,18 @@
 
     const deficit = Math.max(0, resetCost - playerSouls);
     const formattedCost = formatNumber(resetCost);
-    const title = canAffordReset
-      ? `Reset costs ${formattedCost} Soul${resetCost === 1 ? '' : 's'}.`
-      : `Need ${formatNumber(deficit)} more Soul${deficit === 1 ? '' : 's'} to reset.`;
+    const title = projected
+      ? `After saving, reset will cost ${formattedCost} Soul${resetCost === 1 ? '' : 's'}.`
+      : canAffordReset
+        ? `Reset costs ${formattedCost} Soul${resetCost === 1 ? '' : 's'}.`
+        : `Need ${formatNumber(deficit)} more Soul${deficit === 1 ? '' : 's'} to reset.`;
 
     element.title = title;
-    element.innerHTML = renderSoulAmount(`-${formattedCost}`, {
+    element.innerHTML = `${renderSoulAmount(`-${formattedCost}`, {
       className: 'soul-chip ascension-reset-cost-chip',
       ariaLabel: title,
       showLabel: false
-    });
+    })}${projected ? '<small class="ascension-reset-cost-preview-label">after save</small>' : ''}`;
   }
 
   function handleError(error) {
@@ -450,26 +469,51 @@
     const viewport = elements.skillTreeViewport;
     if (!viewport) return;
 
-    clearViewportPointer();
-
-    state.viewportPointer = {
+    const pointer = {
       id: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
+      clientX: event.clientX,
+      clientY: event.clientY,
       startScrollLeft: viewport.scrollLeft,
       startScrollTop: viewport.scrollTop,
       lastX: event.clientX,
       lastY: event.clientY,
       dragging: false
     };
+    state.viewportPointers.set(event.pointerId, pointer);
+    viewport.setPointerCapture?.(event.pointerId);
 
-    document.addEventListener('pointermove', onViewportPointerMove, { passive: false });
-    document.addEventListener('pointerup', onViewportPointerUp);
-    document.addEventListener('pointercancel', onViewportPointerUp);
+    if (state.viewportPointers.size >= 2) {
+      state.viewportPointer = null;
+      state.viewportGestureWasPinch = true;
+      state.viewportPinch = getViewportPinchState();
+      viewport.classList.add('is-panning');
+    } else {
+      state.viewportPointer = pointer;
+    }
+
+    if (state.viewportPointers.size === 1) {
+      document.addEventListener('pointermove', onViewportPointerMove, { passive: false });
+      document.addEventListener('pointerup', onViewportPointerUp);
+      document.addEventListener('pointercancel', onViewportPointerUp);
+    }
   }
 
   function onViewportPointerMove(event) {
     const viewport = elements.skillTreeViewport;
+    const activePointer = state.viewportPointers.get(event.pointerId);
+    if (!viewport || !activePointer) return;
+
+    activePointer.clientX = event.clientX;
+    activePointer.clientY = event.clientY;
+
+    if (state.viewportPointers.size >= 2) {
+      if (event.cancelable) event.preventDefault();
+      updateViewportPinchZoom();
+      return;
+    }
+
     const pointer = state.viewportPointer;
     if (!viewport || !pointer || pointer.id !== event.pointerId) return;
 
@@ -493,10 +537,36 @@
 
   function onViewportPointerUp(event) {
     const viewport = elements.skillTreeViewport;
-    const pointer = state.viewportPointer;
-    if (!viewport || !pointer || pointer.id !== event.pointerId) return;
+    if (!viewport || !state.viewportPointers.has(event.pointerId)) return;
 
-    if (pointer.dragging) suppressNextNodeClick();
+    const pointer = state.viewportPointer;
+    const shouldSuppressClick = Boolean(pointer?.dragging || state.viewportGestureWasPinch);
+    viewport.releasePointerCapture?.(event.pointerId);
+    state.viewportPointers.delete(event.pointerId);
+
+    if (state.viewportPointers.size >= 2) {
+      state.viewportPointer = null;
+      state.viewportPinch = getViewportPinchState();
+      return;
+    }
+
+    if (state.viewportPointers.size === 1) {
+      const remaining = Array.from(state.viewportPointers.values())[0];
+      state.viewportPinch = null;
+      state.viewportPointer = {
+        ...remaining,
+        startX: remaining.clientX,
+        startY: remaining.clientY,
+        startScrollLeft: viewport.scrollLeft,
+        startScrollTop: viewport.scrollTop,
+        lastX: remaining.clientX,
+        lastY: remaining.clientY,
+        dragging: true
+      };
+      return;
+    }
+
+    if (shouldSuppressClick) suppressNextNodeClick();
 
     clearViewportPointer();
   }
@@ -507,6 +577,134 @@
     document.removeEventListener('pointercancel', onViewportPointerUp);
     elements.skillTreeViewport?.classList.remove('is-panning');
     state.viewportPointer = null;
+    state.viewportPointers.clear();
+    state.viewportPinch = null;
+    state.viewportGestureWasPinch = false;
+  }
+
+  function initializeViewportZoom() {
+    const viewport = elements.skillTreeViewport;
+    const map = elements.skillTreeGrid;
+    if (!viewport || !map || !elements.skillTreeZoomSizer) return;
+
+    state.viewportBaseWidth = Math.max(1200, viewport.clientWidth, map.offsetWidth);
+    map.style.width = `${state.viewportBaseWidth}px`;
+    state.viewportBaseHeight = map.offsetHeight;
+    applyViewportZoomLayout();
+  }
+
+  function applyViewportZoomLayout() {
+    const viewport = elements.skillTreeViewport;
+    const sizer = elements.skillTreeZoomSizer;
+    const map = elements.skillTreeGrid;
+    if (!viewport || !sizer || !map) return;
+
+    const zoom = clamp(state.viewportZoom, MIN_VIEWPORT_ZOOM, MAX_VIEWPORT_ZOOM);
+    const baseWidth = Math.max(1200, state.viewportBaseWidth || map.offsetWidth);
+    map.style.width = `${baseWidth}px`;
+    const baseHeight = Math.max(1, map.offsetHeight, state.viewportBaseHeight || 0);
+    state.viewportBaseWidth = baseWidth;
+    state.viewportBaseHeight = baseHeight;
+
+    const scaledWidth = baseWidth * zoom;
+    const scaledHeight = baseHeight * zoom;
+    const sizerWidth = Math.max(viewport.clientWidth, scaledWidth);
+    const sizerHeight = Math.max(viewport.clientHeight, scaledHeight);
+    const offsetX = Math.max(0, (sizerWidth - scaledWidth) / 2);
+    const offsetY = Math.max(0, (sizerHeight - scaledHeight) / 2);
+
+    state.viewportOffsetX = offsetX;
+    state.viewportOffsetY = offsetY;
+    sizer.style.width = `${Math.ceil(sizerWidth)}px`;
+    sizer.style.height = `${Math.ceil(sizerHeight)}px`;
+    map.style.left = `${offsetX}px`;
+    map.style.top = `${offsetY}px`;
+    map.style.transform = `scale(${zoom})`;
+    viewport.setAttribute('aria-label', `Scrollable and pinch-zoomable skill tree, ${Math.round(zoom * 100)}% zoom`);
+  }
+
+  function onViewportResize() {
+    const viewport = elements.skillTreeViewport;
+    if (!viewport) return;
+
+    const anchor = {
+      x: viewport.clientWidth / 2,
+      y: viewport.clientHeight / 2
+    };
+    const content = getViewportContentPoint(anchor.x, anchor.y);
+    state.viewportBaseHeight = 0;
+    applyViewportZoomLayout();
+    viewport.scrollLeft = content.x * state.viewportZoom + state.viewportOffsetX - anchor.x;
+    viewport.scrollTop = content.y * state.viewportZoom + state.viewportOffsetY - anchor.y;
+    positionVisibleTooltip();
+  }
+
+  function getViewportPinchState() {
+    const pinch = getViewportPinchMetrics();
+    if (!pinch) return null;
+
+    return {
+      distance: pinch.distance,
+      zoom: state.viewportZoom,
+      contentCenter: getViewportContentPoint(pinch.center.x, pinch.center.y)
+    };
+  }
+
+  function updateViewportPinchZoom() {
+    const pinch = getViewportPinchMetrics();
+    const start = state.viewportPinch;
+    if (!pinch || !start) return;
+
+    const ratio = pinch.distance / Math.max(1, start.distance);
+    setViewportZoom(start.zoom * ratio, {
+      anchor: pinch.center,
+      content: start.contentCenter
+    });
+  }
+
+  function getViewportPinchMetrics() {
+    const viewport = elements.skillTreeViewport;
+    const pointers = Array.from(state.viewportPointers.values()).slice(0, 2);
+    if (!viewport || pointers.length < 2) return null;
+
+    const rect = viewport.getBoundingClientRect();
+    const [a, b] = pointers;
+    return {
+      distance: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+      center: {
+        x: (a.clientX + b.clientX) / 2 - rect.left,
+        y: (a.clientY + b.clientY) / 2 - rect.top
+      }
+    };
+  }
+
+  function setViewportZoom(value, { anchor, content } = {}) {
+    const viewport = elements.skillTreeViewport;
+    if (!viewport) return;
+
+    const nextZoom = clamp(value, MIN_VIEWPORT_ZOOM, MAX_VIEWPORT_ZOOM);
+    if (nextZoom === state.viewportZoom) return;
+
+    const focalPoint = anchor || {
+      x: viewport.clientWidth / 2,
+      y: viewport.clientHeight / 2
+    };
+    const contentPoint = content || getViewportContentPoint(focalPoint.x, focalPoint.y);
+
+    state.viewportZoom = nextZoom;
+    applyViewportZoomLayout();
+    viewport.scrollLeft = contentPoint.x * nextZoom + state.viewportOffsetX - focalPoint.x;
+    viewport.scrollTop = contentPoint.y * nextZoom + state.viewportOffsetY - focalPoint.y;
+    positionVisibleTooltip();
+  }
+
+  function getViewportContentPoint(viewportX, viewportY) {
+    const viewport = elements.skillTreeViewport;
+    const zoom = Math.max(MIN_VIEWPORT_ZOOM, state.viewportZoom || 1);
+    return {
+      x: ((viewport?.scrollLeft || 0) + viewportX - state.viewportOffsetX) / zoom,
+      y: ((viewport?.scrollTop || 0) + viewportY - state.viewportOffsetY) / zoom
+    };
   }
 
   function suppressNextNodeClick() {

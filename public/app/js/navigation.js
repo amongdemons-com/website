@@ -29,6 +29,7 @@
   function init() {
     initDefaultMusic();
     hideRankedNavigation();
+    createHunterNavigation();
     markCurrentGameNav();
     bindDisabledLinks();
     bindGlobalPageShortcuts();
@@ -42,6 +43,36 @@
       if (item) item.remove();
       else link.remove();
     });
+  }
+
+  function createHunterNavigation() {
+    const tabs = document.querySelector('.game-shell-tabs');
+    if (!tabs || tabs.querySelector('[data-game-sections~="skill-tree"]')) return;
+
+    const bagLink = tabs.querySelector('[data-game-route="bag"]');
+    const collectionLink = tabs.querySelector('[data-game-route="collection"]');
+    const insertionPoint = bagLink?.closest('.nav-item') || collectionLink?.closest('.nav-item');
+    if (!insertionPoint) return;
+
+    const item = document.createElement('li');
+    item.className = 'nav-item dropdown game-nav-dropdown';
+    item.innerHTML = `
+      <button class="nav-link game-nav-link game-nav-dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" data-game-sections="skill-tree bag collection" aria-expanded="false" aria-label="Open hunter navigation">
+        <span class="game-nav-icon"><i data-lucide="user-round"></i></span>
+        <span>Hunter</span>
+        <span class="game-nav-caret"><i data-lucide="chevron-down" aria-hidden="true"></i></span>
+      </button>
+      <ul class="dropdown-menu game-nav-dropdown-menu">
+        <li><a class="dropdown-item game-nav-dropdown-item" href="/skill-tree" data-game-route="skill-tree"><span class="game-nav-icon"><i data-lucide="stars"></i></span><span>Skill Tree</span></a></li>
+        <li><a class="dropdown-item game-nav-dropdown-item" href="/bag" data-game-route="bag"><span class="game-nav-icon"><i data-lucide="amphora"></i></span><span>Bag</span></a></li>
+        <li><a class="dropdown-item game-nav-dropdown-item" href="/collection" data-game-route="collection"><span class="game-nav-icon"><i data-lucide="grid-3x3"></i></span><span>Collection</span></a></li>
+      </ul>
+    `;
+
+    insertionPoint.before(item);
+    bagLink?.closest('.nav-item')?.remove();
+    collectionLink?.closest('.nav-item')?.remove();
+    window.AmongDemons?.ui?.replaceStaticIcons?.();
   }
 
   function initDefaultMusic() {
@@ -136,6 +167,8 @@
               ? 'collection'
               : pathname.startsWith('/bag')
                 ? 'bag'
+                : pathname.startsWith('/skill-tree')
+                  ? 'skill-tree'
                 : pathname.startsWith('/leaderboard')
                   ? 'leaderboard'
                   : '';
