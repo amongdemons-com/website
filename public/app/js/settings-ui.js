@@ -2,6 +2,7 @@
   'use strict';
 
   const api = window.AmongDemons.api;
+  const apiUrl = window.AmongDemons.apiUrl || ((value) => value);
   const usernames = window.AmongDemons.usernames;
   const audio = window.AmongDemons.audio;
   // Keep in sync with the battle-feel keys in js/dungeon/config.js.
@@ -12,6 +13,7 @@
   const elements = {};
   const providerElements = new Map();
   let currentUsername = '';
+  let isGuestAccount = false;
   let securityState = {
     hasPassword: true,
     providers: [],
@@ -36,12 +38,14 @@
       const payload = await api('/api/auth/me');
       syncPlayer(payload.player);
       setUsernameFormEnabled(true);
+      isGuestAccount = Boolean(payload.player?.isGuest);
 
-      if (payload.player?.isGuest) {
+      if (isGuestAccount) {
+        await loadGuestProviders();
         showMessage(
           elements.providerMessage,
-          'Save your guest hunter before managing account sign-in.',
-          'warning'
+          'Connect Google or Discord to save this hunter and keep all progress.',
+          'info'
         );
       } else {
         await loadSecurity();
@@ -121,6 +125,15 @@
   async function loadSecurity() {
     const payload = await api('/api/account/security');
     applySecurityState(payload);
+  }
+
+  async function loadGuestProviders() {
+    const payload = await api('/api/auth/oauth/providers');
+    securityState.providers = (payload.providers || []).map((provider) => ({
+      ...provider,
+      connected: false
+    }));
+    syncProviderRows();
   }
 
   function applySecurityState(payload = {}) {
@@ -213,6 +226,17 @@
         });
         await loadSecurity();
         showMessage(elements.providerMessage, `${label} disconnected.`, 'success');
+        return;
+      }
+
+      if (isGuestAccount) {
+        const claimToken = window.AmongDemons.getToken?.() || '';
+        const params = new URLSearchParams({
+          mode: 'register',
+          claimToken,
+          returnTo: '/settings?oauth=connected'
+        });
+        window.location.href = apiUrl(`/api/auth/oauth/${encodeURIComponent(provider)}?${params}`);
         return;
       }
 

@@ -289,7 +289,8 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
   const groupedFire = fireGroup && isPrimaryDamageEntry(entry);
   const groupedCleave = cleaveGroup && isPrimaryDamageEntry(entry);
   const grouped = groupedFire || groupedCleave;
-  if (!reduced && !grouped) profile.draw();
+  const shouldDrawProfile = !isCounterattackEntry(entry) || shouldDrawCounterattackAnimation(entry, step);
+  if (!reduced && !grouped && shouldDrawProfile) profile.draw();
   const impactDelay = groupedFire
     ? fireGroup.travel + fireGroup.lead + entryIndex * 50
     : profile.travel + (isAoe ? entryIndex * 70 : 0);
@@ -309,6 +310,28 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
     if (profile.screenShake) triggerScreenShake();
     maybePlayDeath(entry.target, entry.targetHp);
   });
+}
+
+// AOE can produce several thorns log entries when team-wide thorns bonuses are
+// active. Keep every damage number and HP update, but only draw the thorn burst
+// on actual retaliation demons. Multiple counter entries from the same demon
+// also share one visual.
+function shouldDrawCounterattackAnimation(entry, step) {
+  if (!isCounterattackEntry(entry)) return true;
+
+  const counterEntries = (step?.entries || []).filter(isCounterattackEntry);
+  const retaliationEntries = counterEntries.filter((counterEntry) => (
+    counterEntry.effect === 'retaliate' || isRetaliationDemon(counterEntry.attacker)
+  ));
+  const visualEntries = retaliationEntries.length ? retaliationEntries : counterEntries;
+  return visualEntries.find((counterEntry) => counterEntry.attacker === entry.attacker) === entry;
+}
+
+function isRetaliationDemon(instanceId) {
+  const demon = getCombatDemon(instanceId) || {};
+  const role = String(demon.role || '').toLowerCase();
+  const abilityKind = String(demon.abilityKind || demon.ability_kind || demon.ability?.kind || '').toLowerCase();
+  return Number(demon.typeId) === 8 || role === 'counter_tank' || abilityKind === 'retaliate';
 }
 
 async function waitForCombatPlaybackReady() {
