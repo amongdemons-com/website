@@ -113,6 +113,7 @@
     const pvpLosses = Math.max(0, Number(player.pvpLosses) || 0);
     const isRanked = currentSort === 'ranked';
     const rankedFloor = Math.max(0, Number(player.rankedHighestFloor) || 0);
+    const displayedFloor = isRanked ? rankedFloor : floor;
     const hasRankedRating = Number(player.hasRankedRating) > 0;
     const rankedRating = hasRankedRating
       ? Math.max(0, Number(player.rankedRating) || 0)
@@ -148,11 +149,11 @@
         </td>
         <td class="rank-floor-cell" data-label="Highest Floor">
           <span class="rank-floor">
-            <span class="rank-floor-value">${formatNumber(isRanked ? rankedFloor : floor)}</span>
-            <span class="rank-floor-label">floor</span>
+            <span class="rank-floor-value">${formatNumber(displayedFloor)}</span>
+            <span class="rank-floor-label">${displayedFloor === 1 ? 'floor' : 'floors'}</span>
           </span>
         </td>
-        <td data-label="${isRanked ? 'Rank' : 'Souls'}">${isRanked
+        <td class="rank-metric-cell" data-label="${isRanked ? 'Rank' : 'Souls'}">${isRanked
           ? (hasRankedRating
             ? `<span class="rank-metric rank-metric-ranked"><strong>${formatNumber(rankedRating)}</strong></span>`
             : '')

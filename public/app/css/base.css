@@ -5399,6 +5399,99 @@ body.rankings-page {
         justify-content: flex-end;
     }
 
+    .rankings-page .rank-table tr.rank-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        border-radius: 10px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.24);
+    }
+
+    .rankings-page .rank-table tr.rank-row + tr.rank-row {
+        margin-top: 0.72rem;
+    }
+
+    .rankings-page .rank-table .rank-row td {
+        display: flex;
+        width: auto;
+        min-width: 0;
+        grid-template-columns: none;
+        gap: 0;
+        border: 0;
+        background: transparent !important;
+        box-shadow: none;
+        text-align: left;
+    }
+
+    .rankings-page .rank-table .rank-row td::before {
+        display: none;
+    }
+
+    .rankings-page .rank-table .rank-position-cell {
+        grid-column: 1;
+        grid-row: 1 / 3;
+        align-self: stretch;
+        padding: 0.78rem 0.3rem 0.78rem 0.78rem !important;
+    }
+
+    .rankings-page .rank-table .rank-hunter-cell {
+        grid-column: 2;
+        grid-row: 1 / 3;
+        align-self: stretch;
+        align-items: center;
+        padding: 0.78rem 0.55rem 0.78rem 0.42rem;
+    }
+
+    .rankings-page .rank-table .rank-floor-cell {
+        grid-column: 3;
+        grid-row: 1;
+        align-self: end;
+        justify-content: flex-end;
+        padding: 0.78rem 0.78rem 0.12rem 0.35rem;
+        transform: translateY(-0.22rem);
+    }
+
+    .rankings-page .rank-table .rank-metric-cell {
+        grid-column: 3;
+        grid-row: 2;
+        align-self: start;
+        justify-content: flex-end;
+        padding: 0.12rem 0.78rem 0.78rem 0.35rem;
+        transform: translateY(-0.22rem);
+    }
+
+    .rankings-page .rank-table .rank-position,
+    .rankings-page .rank-table .rank-floor,
+    .rankings-page .rank-table .rank-metric {
+        min-width: 0;
+    }
+
+    .rankings-page .rank-table .rank-position {
+        position: relative;
+        width: 2.35rem;
+        flex: 0 0 2.35rem;
+    }
+
+    .rankings-page .rank-table .rank-hunter {
+        align-items: flex-start;
+    }
+
+    .rankings-page .rank-table .rank-position-icon {
+        display: inline-flex;
+        width: 1.05rem;
+        flex: 0 0 1.05rem;
+    }
+
+    .rankings-page .rank-table .rank-position-icon:empty {
+        display: inline-flex;
+    }
+
+    .rankings-page .rank-table .rank-position-icon:empty + .rank-position-number {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
 .rank-empty-row {
         border: 0;
         background: transparent;
