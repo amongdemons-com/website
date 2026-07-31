@@ -1003,11 +1003,12 @@ function syncRankedPactView() {
 
 function renderEndedRun(run) {
   const cleared = Number(run.highestClearedFloor) || 0;
+  const reached = Math.max(cleared, Number(run.floor) || 1);
   return `
     <div class="ranked-end-card">
       <span class="dungeon-phase-eyebrow">${escapeHtml(run.season?.name || 'Ranked Season')}</span>
       <h1>${cleared >= RANKED_VICTORY_FLOOR ? 'Ranked Victory' : 'Run Complete'}</h1>
-      <p>Cleared Floor ${formatNumber(cleared)} &middot; ${formatSigned(run.rating?.runDelta || 0)} Rank Points</p>
+      <p>Reached Floor ${formatNumber(reached)} &middot; Cleared Floor ${formatNumber(cleared)} &middot; ${formatSigned(run.rating?.runDelta || 0)} Rank Points</p>
       <p class="text-muted">${escapeHtml(run.rating?.division || '')} &middot; ${formatNumber(run.rating?.rating || 0)} RP</p>
       <button class="btn btn-primary btn-lg" type="button" data-ranked-action="start">Start New Run</button>
     </div>

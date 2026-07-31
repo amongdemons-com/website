@@ -210,7 +210,7 @@ async function createLockedRankedBonuses(player) {
   };
 }
 
-async function createInitialRankedState(seed) {
+async function createInitialRankedState(seed, runId = null) {
   const state = {
     phase: 'draft',
     active: [],
@@ -234,7 +234,9 @@ async function createInitialRankedState(seed) {
     pendingRating: 0,
     protectedRating: 0,
     endlessRatingEarned: 0,
-    lastSnapshotId: null
+    floorRetryCount: 0,
+    lastSnapshotId: null,
+    demonIdNamespace: String(runId || Number(seed).toString(36))
   };
   const catalog = await getGameCatalog();
   const starterRng = createRng(hashSeed(`${seed}:starters`));
@@ -637,6 +639,7 @@ function prepareNextSelection(run) {
 async function advanceRankedFloor(run, options = {}) {
   const clearedFloor = Math.max(1, Number(run.floor) || 1);
   run.floor = clearedFloor + 1;
+  run.state.floorRetryCount = 0;
   const reusedLockedHand = prepareNextSelection(run);
   if (!reusedLockedHand) {
     await dealOffers(run);
@@ -1130,6 +1133,33 @@ function getGeneratedDemonProfile(demon, demonTypes = {}) {
   };
 }
 
+async function retryRankedFloor(run, options = {}) {
+  const retryFloor = Math.max(1, Number(run.floor) || 1);
+  run.state.floorRetryCount = Math.max(0, Number(run.state.floorRetryCount) || 0) + 1;
+  const reusedLockedHand = prepareNextSelection(run);
+  if (!reusedLockedHand) {
+    await dealOffers(run);
+  }
+  if (options.offerPact && shouldOfferPact(retryFloor, run.state.buffs?.active?.length)) {
+    generateBuffChoices(
+      run,
+      createRng((
+        Number(run.seed)
+        + retryFloor * 1597334677
+        + run.state.floorRetryCount * 2654435761
+        + 991
+      ) >>> 0),
+      3,
+      { excludeIds: getRankedPactChoiceExclusions(run) }
+    );
+  }
+  return {
+    retryFloor,
+    retryCount: run.state.floorRetryCount,
+    reusedLockedHand
+  };
+}
+
 function getRankedPactChoiceExclusions(run) {
   return getNonRepeatableBuffChoiceExclusions(run);
 }
@@ -1222,6 +1252,14 @@ function prepareOpponentTeam(team = []) {
   return arrangeRankedFormation(orderRankedGhostTeam(team), 'enemy');
 }
 
+function namespaceRankedOpponentTeam(team, opponentKey = 'opponent') {
+  const namespace = hashSeed(opponentKey).toString(36);
+  return (Array.isArray(team) ? team : []).map((demon, index) => ({
+    ...demon,
+    instanceId: `ranked-enemy-${namespace}-${index + 1}`
+  }));
+}
+
 function orderRankedGhostTeam(team = [], demonTypes) {
   return (team || [])
     .map((demon, index) => ({
@@ -1263,7 +1301,13 @@ function midpointStat(bounds, multiplier) {
 
 function nextDemonId(run, prefix) {
   run.state.rollCounter = Math.max(0, Number(run.state.rollCounter) || 0) + 1;
-  return `ranked-${prefix}-${run.state.rollCounter}`;
+  const namespace = String(
+    run.state.demonIdNamespace
+    || run.id
+    || (Number(run.seed) ? Number(run.seed).toString(36) : 'legacy')
+  );
+  run.state.demonIdNamespace = namespace;
+  return `ranked-${namespace}-${prefix}-${run.state.rollCounter}`;
 }
 
 function hashSeed(value) {
@@ -1308,9 +1352,11 @@ module.exports = {
   getPlayerBattleBuffs,
   getRankedSoulBalance,
   getRankedRun,
+  namespaceRankedOpponentTeam,
   parseRankedRun,
   prepareForFight,
   prepareNextSelection,
+  retryRankedFloor,
   spendRankedSouls,
   resetTeamForBattle,
   saveRankedRun,
@@ -1325,6 +1371,7 @@ module.exports = {
     ensureGeneratedOpponents,
     getRankedPactChoiceExclusions,
     hashSeed,
+    namespaceRankedOpponentTeam,
     prepareOpponentTeam,
     scoreGeneratedPactForFormation,
     selectGeneratedPactForFormation

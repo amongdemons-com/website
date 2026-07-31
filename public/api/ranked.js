@@ -36,8 +36,10 @@ const {
   getOrCreateRankedRating,
   getPlayerBattleBuffs,
   getRankedRun,
+  namespaceRankedOpponentTeam,
   prepareForFight,
   resetTeamForBattle,
+  retryRankedFloor,
   saveRankedRun,
   saveReadySnapshot,
   selectOpponent,
@@ -129,7 +131,7 @@ router.post('/ranked/start', requireAuth, async (req, res) => {
     const rating = await getOrCreateRankedRating(req.player.id, season.id, connection, { forUpdate: true });
     const runId = crypto.randomUUID();
     const seed = crypto.randomInt(1, 4294967295);
-    const state = await createInitialRankedState(seed);
+    const state = await createInitialRankedState(seed, runId);
     const run = {
       id: runId,
       playerId: req.player.id,
@@ -235,7 +237,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
     const opponent = await selectOpponent(run, rating, connection);
     resetTeamForBattle(opponent.team);
     const playerTeamBase = cloneJson(run.state.active);
-    const enemyTeamBase = cloneJson(opponent.team);
+    const enemyTeamBase = namespaceRankedOpponentTeam(cloneJson(opponent.team), opponent.id);
     const playerBattleBuffs = getPlayerBattleBuffs(run);
     const playerTeamBefore = applyPreBattleBuffs(playerTeamBase, playerBattleBuffs);
     const enemyTeamBefore = applyPreBattleBuffs(enemyTeamBase, opponent.buffs);
@@ -289,7 +291,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       return;
     }
     result.rSoulInterest = awardRankedSoulInterest(run);
-    await advanceRankedFloor(run, { offerPact: true });
+    await retryRankedFloor(run, { offerPact: true });
   })
 ));
 

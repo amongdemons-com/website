@@ -1005,6 +1005,16 @@
   }
 }
 
+@media (min-width: 992px) and (max-height: 950px) {
+  .ranked-page .battle-side {
+    gap: .45rem;
+  }
+
+  .ranked-page .battle-side .battle-formation-grid {
+    --dungeon-demon-card-width: clamp(5.5rem, min(10.5vw, 18.5vh), 12.5rem);
+  }
+}
+
 .battle-side .ranked-reserve-formation {
   grid-template-rows: repeat(2, minmax(0, var(--dungeon-demon-card-height)));
   margin: 0 auto;

@@ -256,7 +256,7 @@ function chooseTargets(rng, attacker, enemies, demonTypes, targetSide = 'enemy')
 }
 
 function chooseChaoticTargets(rng, actor, players, enemies, ability = {}) {
-  const actorIsPlayer = players.some((demon) => demon.instanceId === actor.instanceId);
+  const actorIsPlayer = players.includes(actor);
   const enemyTargets = actorIsPlayer ? enemies : players;
   const targetPool = ability.targetPool || 'any_unit';
   const living = targetPool === 'enemy' || targetPool === 'enemies' || targetPool === 'random_enemy'
@@ -702,7 +702,7 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
     for (const actor of actors) {
       if (actor.hp <= 0) continue;
 
-      const actorIsPlayer = players.some((demon) => demon.instanceId === actor.instanceId);
+      const actorIsPlayer = players.includes(actor);
       const allies = actorIsPlayer ? players : enemies;
       const targets = actorIsPlayer ? enemies : players;
       const targetSide = actorIsPlayer ? 'enemy' : 'player';
