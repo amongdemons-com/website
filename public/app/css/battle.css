@@ -3199,6 +3199,18 @@ body:not(.dungeon-page) > .navbar {
     padding: clamp(0.45rem, 0.8vw, 0.68rem);
 }
 
+@media (min-width: 992px) {
+    .battle-side {
+        grid-template-rows: auto auto;
+        align-content: center;
+    }
+
+    .battle-side > #teamGrid,
+    .battle-side > #enemyGrid {
+        height: auto;
+    }
+}
+
 .battle-side-player .battle-formation-grid {
     border-color: rgba(111,214,189,0.32);
     box-shadow:

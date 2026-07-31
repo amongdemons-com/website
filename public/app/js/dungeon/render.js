@@ -436,25 +436,23 @@ function renderEnemyPressureChip(pressure = null) {
   const speedBonus = formatBonusPercent(pressure.speedBonusPct);
   const level = Math.max(0, Math.round(Number(pressure.level) || 0));
   if (level <= 0) return '';
-
-  const tooltip = [
-    `Terror ${level}`,
-    pressure.description || 'Demons grow stronger in darkness.',
-    `Enemy HP ${hpBonus}`,
-    `Enemy Attack ${atkBonus}`,
-    `Enemy Speed ${speedBonus}`
-  ].join('\n');
-  const escapedTooltip = escapeTooltipAttribute(tooltip);
+  const tooltipId = 'battle-enemy-terror-tooltip';
 
   return `
     <span
-      class="enemy-pressure-chip"
+      class="enemy-pressure-chip terror-pressure-chip"
       tabindex="0"
-      data-tooltip="${escapedTooltip}"
-      aria-label="${escapedTooltip}"
+      aria-label="${escapeHtml(`Terror ${level}. Enemy HP ${hpBonus}. Enemy Attack ${atkBonus}. Enemy Speed ${speedBonus}.`)}"
+      aria-describedby="${tooltipId}"
     >
       <span>Terror</span>
       <strong>${escapeHtml(String(level))}</strong>
+      <span class="terror-pressure-tooltip" id="${tooltipId}" role="tooltip">
+        <strong class="terror-pressure-title">Terror ${escapeHtml(String(level))}</strong>
+        <span class="terror-pressure-stat">Enemy HP ${hpBonus}</span>
+        <span class="terror-pressure-stat">Enemy Attack ${atkBonus}</span>
+        <span class="terror-pressure-stat">Enemy Speed ${speedBonus}</span>
+      </span>
     </span>
   `;
 }

@@ -2023,7 +2023,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     min-height: 1.35rem;
     padding: 0.16rem 0.46rem;
     border: 1px solid rgba(255,119,112,0.42);
-    border-radius: 999px;
+    border-radius: 4px;
     color: #ffc0a6;
     background: rgba(92,21,17,0.46);
     box-shadow:
@@ -8188,6 +8188,10 @@ body .game-shell-nav .nav-account,
     content: none;
 }
 
+.terror-pressure-chip::after {
+    content: none;
+}
+
 .battle-buff-summary-chip.is-player-buffs {
     border-color: rgba(111,214,189,0.48);
     color: #b8f5e6;
@@ -8216,7 +8220,8 @@ body .game-shell-nav .nav-account,
     color: #effffb;
 }
 
-.battle-buff-summary-tooltip {
+.battle-buff-summary-tooltip,
+.terror-pressure-tooltip {
     position: absolute;
     z-index: 35;
     top: calc(100% + 0.42rem);
@@ -8240,6 +8245,26 @@ body .game-shell-nav .nav-account,
     pointer-events: none;
     transform: translate(-50%, -0.16rem);
     transition: opacity 0.14s ease, transform 0.14s ease;
+}
+
+.terror-pressure-tooltip {
+    gap: 0.08rem;
+}
+
+.terror-pressure-title,
+.terror-pressure-stat {
+    display: block;
+}
+
+.terror-pressure-tooltip .terror-pressure-title {
+    margin-bottom: 0.08rem;
+    color: #ff625b;
+    font-weight: 850;
+}
+
+.terror-pressure-stat {
+    color: #d8e1df;
+    font-weight: 600;
 }
 
 .battle-buff-summary-row,
@@ -8266,13 +8291,21 @@ body .game-shell-nav .nav-account,
     transform: translate(-50%, 0);
 }
 
+.terror-pressure-chip:hover .terror-pressure-tooltip,
+.terror-pressure-chip:focus .terror-pressure-tooltip,
+.terror-pressure-chip:focus-visible .terror-pressure-tooltip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
 @media (max-width: 767.98px) {
     .battle-side-heading {
         flex-wrap: wrap;
         row-gap: 0.18rem;
     }
 
-    .battle-buff-summary-tooltip {
+    .battle-buff-summary-tooltip,
+    .terror-pressure-tooltip {
         width: min(16rem, 84vw);
         font-size: 0.66rem;
     }
