@@ -27,7 +27,7 @@
     pending: false,
     pendingAction: null,
     filter: 'all',
-    sort: 'ready',
+    sort: 'type',
     inspectedKey: null,
     lastPointerType: 'mouse',
     slotCapacity: 24,
@@ -236,10 +236,7 @@
     const rarity = normalizeRarity(item.rarity);
     const color = getRarityColor(rarity);
     const progress = Math.min(100, Math.round((Number(item.summonProgress) / Math.max(1, Number(item.summonRequirement))) * 100));
-    const summonTitle = item.owned ? 'Already summoned' : 'Permanent summoning';
-    const summonCopy = item.owned
-      ? 'This demon is already in your Collection. New Echoes remain safely banked for refinement.'
-      : `Gather ${item.summonRequirement} exact ${Number(item.summonRequirement) === 1 ? 'Echo' : 'Echoes'} to manifest this demon permanently.`;
+    const summonCopy = `Gather ${item.summonRequirement} exact ${Number(item.summonRequirement) === 1 ? 'Echo' : 'Echoes'} to manifest this demon permanently.`;
     const discoveryCopy = item.naturallyDiscovered
       ? 'Naturally extracted'
       : item.owned
@@ -259,13 +256,13 @@
         <button type="button" class="btn-close bag-detail-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="bag-detail-body">
-        <section class="bag-detail-panel">
-          <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
-            <h3 class="mb-0">${escapeHtml(summonTitle)}</h3>
-            <strong>x${escapeHtml(formatNumber(item.quantity))}</strong>
-          </div>
-          <p class="small text-muted">${escapeHtml(summonCopy)}</p>
-          ${item.owned ? '' : `
+        ${item.owned ? '' : `
+          <section class="bag-detail-panel">
+            <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
+              <h3 class="mb-0">Permanent summoning</h3>
+              <strong>x${escapeHtml(formatNumber(item.quantity))}</strong>
+            </div>
+            <p class="small text-muted">${escapeHtml(summonCopy)}</p>
             <div class="d-flex justify-content-between small mb-1"><span>Echo progress</span><strong>${escapeHtml(`${item.summonProgress}/${item.summonRequirement}`)}</strong></div>
             <div class="bag-progress-track" aria-label="${escapeHtml(`${progress}% of Echoes gathered`)}"><div class="bag-progress-fill" style="width: ${progress}%"></div></div>
             ${item.summonReady ? `
@@ -274,8 +271,8 @@
                 <span>${state.pendingAction === 'summon' ? 'Summoning...' : 'Summon Demon'}</span>
               </button>
             ` : ''}
-          `}
-        </section>
+          </section>
+        `}
         ${renderRefinementPanel(item)}
       </div>
       <div class="bag-detail-actions">
@@ -521,6 +518,7 @@
   }
 
   function compareItems(a, b) {
+    if (state.sort === 'type') return compareType(a, b) || compareRarity(a, b) || compareName(a, b);
     if (state.sort === 'ready') {
       return Number(Boolean(b.summonReady)) - Number(Boolean(a.summonReady)) || compareRarity(b, a) || compareName(a, b);
     }
@@ -531,6 +529,10 @@
 
   function compareRarity(a, b) {
     return (RARITY_RANK[a.rarity] || 0) - (RARITY_RANK[b.rarity] || 0);
+  }
+
+  function compareType(a, b) {
+    return Number(a.typeId || 0) - Number(b.typeId || 0);
   }
 
   function compareName(a, b) {
