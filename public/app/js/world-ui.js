@@ -6915,6 +6915,9 @@ import './bag-item-visuals.js';
     const enemyBuffs = isWorldBossBattle(battle, meta)
       ? getWorldBattleEnemySideBuffs(battle)
       : [];
+    const enemyTeamBuffs = isWorldPvpBattle(battle, meta)
+      ? getWorldBattleEnemySideBuffs(battle)
+      : [];
 
     return {
       runId: `world-${meta.type || 'battle'}-${Date.now()}`,
@@ -6931,6 +6934,8 @@ import './bag-item-visuals.js';
       nextEnemyPressure: enemyPressure,
       enemyBuffs,
       nextEnemyBuffs: enemyBuffs,
+      enemyTeamBuffs,
+      nextEnemyTeamBuffs: enemyTeamBuffs,
       buffs: {
         activeBuffs: normalizeWorldDungeonBuffs(battle.playerBuffs),
         pendingChoices: []
@@ -7944,6 +7949,12 @@ import './bag-item-visuals.js';
     return meta.type === 'world_boss'
       || battle.combatType === 'world_boss'
       || Boolean(battle.boss);
+  }
+
+  function isWorldPvpBattle(battle = {}, meta = {}) {
+    return meta.type === 'pvp_challenge'
+      || battle.combatType === 'pvp_challenge'
+      || Boolean(battle.targetPlayer);
   }
 
   function getWorldBattleEnemySideBuffs(battle = {}) {

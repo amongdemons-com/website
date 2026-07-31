@@ -37,6 +37,8 @@ const renderDemonCard = (...args) => dungeonActions.renderDemonCard(...args);
 const renderDemonCards = (...args) => dungeonActions.renderDemonCards(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const bindActivePactTooltips = (...args) => dungeonActions.bindActivePactTooltips(...args);
+const getActiveBuffs = (...args) => dungeonActions.getActiveBuffs(...args);
+const createLevelPowerBuff = (...args) => dungeonActions.createLevelPowerBuff(...args);
 const renderDemonicPacts = (...args) => dungeonActions.renderDemonicPacts(...args);
 const toggleDemonicPactView = (...args) => dungeonActions.toggleDemonicPactView(...args);
 const renderEmptyText = (...args) => dungeonActions.renderEmptyText(...args);
@@ -154,7 +156,8 @@ function renderRun() {
   renderTeamSideTitle(isHandStrategy ? team.length : null, isHandStrategy ? getRecruitTeamLimit() : null);
   renderEnemySideTitle(
     isHandStrategy ? run.nextEnemyPressure : run.enemyPressure,
-    isHandStrategy ? run.nextEnemyBuffs : run.enemyBuffs
+    isHandStrategy ? run.nextEnemyBuffs : run.enemyBuffs,
+    isHandStrategy ? run.nextEnemyTeamBuffs : run.enemyTeamBuffs
   );
   updateDungeonJoiner();
   bindFormationDragAndDrop();
@@ -328,14 +331,101 @@ function renderTeamSideTitle(teamCount = null, teamLimit = null) {
     ? `<span class="battle-side-count" aria-label="${teamCount} of ${teamLimit} team slots used">${teamCount}/${teamLimit}</span>`
     : '';
 
-  elements.teamSideTitle.innerHTML = `<span>Your Team</span>${countHtml ? ` ${countHtml}` : ''}`;
+  const buffs = getFriendlyTeamBuffs();
+  elements.teamSideTitle.innerHTML = `
+    <span>Your Team</span>
+    ${countHtml ? ` ${countHtml}` : ''}
+    ${renderBattleBuffSummaryChip(buffs, { side: 'player' })}
+  `;
 }
 
-function renderEnemySideTitle(pressure = null, buffs = []) {
+function renderEnemySideTitle(pressure = null, buffs = [], teamBuffs = []) {
   if (!elements.enemySideTitle) return;
 
   const label = state.run?.enemyLabel || 'Enemies';
-  elements.enemySideTitle.innerHTML = `<span>${escapeHtml(label)}</span>${renderEnemyPressureChip(pressure)}${renderEnemyBuffChips(buffs)}`;
+  elements.enemySideTitle.innerHTML = `
+    <span>${escapeHtml(label)}</span>
+    ${renderEnemyPressureChip(pressure)}
+    ${renderEnemyBuffChips(buffs)}
+    ${renderBattleBuffSummaryChip(teamBuffs, { side: 'enemy' })}
+  `;
+}
+
+function getFriendlyTeamBuffs(run = state.run) {
+  if (!run) return [];
+
+  const levelPower = state.statPoints ? createLevelPowerBuff(state.statPoints) : null;
+  return [
+    ...(levelPower ? [levelPower] : []),
+    ...getActiveBuffs(run)
+  ].filter((buff) => buff?.id || buff?.name);
+}
+
+function renderBattleBuffSummaryChip(buffs = [], options = {}) {
+  const activeBuffs = compactBattleBuffSummary(buffs);
+  if (!activeBuffs.length) return '';
+
+  const count = activeBuffs.reduce((total, buff) => total + buff.stackCount, 0);
+  const side = options.side === 'enemy' ? 'enemy' : 'player';
+  const label = options.label || 'Buffs';
+  const tooltipId = `battle-${side}-buff-summary-tooltip`;
+
+  return `
+    <span
+      class="enemy-pressure-chip battle-buff-summary-chip is-${side}-buffs"
+      tabindex="0"
+      aria-label="${escapeHtml(`${label}, ${count} active`)}"
+      aria-describedby="${tooltipId}"
+    >
+      ${renderIcon('sparkles')}
+      <span>${escapeHtml(label)}</span>
+      <strong>${count}</strong>
+      <span class="battle-buff-summary-tooltip" id="${tooltipId}" role="tooltip">
+        ${activeBuffs.map(formatBattleBuffSummaryRow).join('')}
+      </span>
+    </span>
+  `;
+}
+
+function compactBattleBuffSummary(buffs = []) {
+  const compacted = [];
+  const byId = new Map();
+
+  (Array.isArray(buffs) ? buffs : []).forEach((buff, index) => {
+    if (!buff) return;
+    const normalized = typeof buff === 'string'
+      ? { id: buff, name: buff, description: '' }
+      : buff;
+    const id = String(normalized.id || normalized.name || `buff-${index + 1}`);
+    const stackCount = Math.max(1, Math.trunc(Number(normalized.stackCount) || 1));
+    const existing = byId.get(id);
+    if (existing) {
+      existing.stackCount += stackCount;
+      return;
+    }
+
+    const entry = { ...normalized, id, stackCount };
+    byId.set(id, entry);
+    compacted.push(entry);
+  });
+
+  return compacted;
+}
+
+function formatBattleBuffSummaryRow(buff = {}) {
+  const name = String(buff.name || buff.id || 'Buff');
+  const stackLabel = buff.stackCount > 1 ? ` ×${buff.stackCount}` : '';
+  const rawDetail = String(buff.description || buff.tooltip || '').trim();
+  const detail = rawDetail.startsWith(`${name}\n`)
+    ? rawDetail.slice(name.length + 1).trim()
+    : rawDetail;
+
+  return `
+    <span class="battle-buff-summary-row">
+      <strong class="battle-buff-summary-name">${escapeHtml(name)}${stackLabel}</strong>
+      ${detail ? `<span class="battle-buff-summary-description">${escapeHtml(detail).replace(/\n/g, '<br>')}</span>` : ''}
+    </span>
+  `;
 }
 
 function renderEnemyPressureChip(pressure = null) {
@@ -953,6 +1043,7 @@ export {
   showBattleResultOverlay,
   renderTeamSideTitle,
   renderEnemySideTitle,
+  renderBattleBuffSummaryChip,
   updateDungeonJoiner,
   showCombatPanel,
   toggleFightLogPanel,

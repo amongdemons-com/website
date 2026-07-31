@@ -14,6 +14,7 @@ import {
 } from './dungeon/pacts.js';
 import {
   renderBattlePlaybackControls,
+  renderBattleBuffSummaryChip,
   renderBattleSpeedControl,
   renderBattleSkipControl,
   renderDemonicPactReturnControl,
@@ -595,6 +596,7 @@ function renderTeamTitle(run) {
     <span class="ranked-mobile-status">
       ${renderRankBadge(rank, { showLabel: true, occupiedSlots, maxSlots, compact: true })}
     </span>
+    ${renderBattleBuffSummaryChip(getRankedProgressionBuffs(run), { side: 'player' })}
   `;
 }
 
@@ -628,6 +630,7 @@ function renderEnemyTitle(run, combatView) {
   elements.enemySideTitle.innerHTML = `
     <span>${escapeHtml(name)}</span>
     ${run.opponent?.division ? renderRankBadge(opponentRank, { showLabel: true, compact: true }) : ''}
+    ${renderBattleBuffSummaryChip(run.lastBattle?.enemyBuffs || [], { side: 'enemy' })}
   `;
 }
 

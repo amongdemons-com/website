@@ -482,13 +482,17 @@
       dragging: false
     };
     state.viewportPointers.set(event.pointerId, pointer);
-    viewport.setPointerCapture?.(event.pointerId);
+    // Do not capture a single pointer yet: capture retargets the eventual click
+    // to the viewport, preventing the pressed skill node from receiving it.
 
     if (state.viewportPointers.size >= 2) {
       state.viewportPointer = null;
       state.viewportGestureWasPinch = true;
       state.viewportPinch = getViewportPinchState();
       viewport.classList.add('is-panning');
+      state.viewportPointers.forEach((_, pointerId) => {
+        viewport.setPointerCapture?.(pointerId);
+      });
     } else {
       state.viewportPointer = pointer;
     }
@@ -523,6 +527,7 @@
     if (!pointer.dragging && Math.hypot(totalDx, totalDy) >= PAN_CLICK_THRESHOLD) {
       pointer.dragging = true;
       viewport.classList.add('is-panning');
+      viewport.setPointerCapture?.(event.pointerId);
     }
 
     if (pointer.dragging) {
@@ -541,7 +546,9 @@
 
     const pointer = state.viewportPointer;
     const shouldSuppressClick = Boolean(pointer?.dragging || state.viewportGestureWasPinch);
-    viewport.releasePointerCapture?.(event.pointerId);
+    if (viewport.hasPointerCapture?.(event.pointerId)) {
+      viewport.releasePointerCapture(event.pointerId);
+    }
     state.viewportPointers.delete(event.pointerId);
 
     if (state.viewportPointers.size >= 2) {
