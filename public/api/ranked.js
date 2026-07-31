@@ -192,6 +192,7 @@ router.post('/ranked/runs/:id/reroll', requireAuth, (req, res) => (
     run.state.handLocked = Boolean(req.body?.lockHand);
     run.state.lockedHand = [];
     result.purchaseCost = committed.purchaseCost;
+    result.saleCredit = committed.saleCredit;
     result.rSoulBalance = committed.rSoulBalance;
     result.rerollCost = RANKED_REROLL_RSOUL_COST;
     await dealOffers(run);
@@ -221,6 +222,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       preserveHand: Boolean(req.body?.lockHand)
     });
     result.purchaseCost = committed.purchaseCost;
+    result.saleCredit = committed.saleCredit;
     prepareForFight(run);
     const validation = getRosterValidation(run.state);
     if (!validation.valid) throwRankedError(validation.errors[0], 409);

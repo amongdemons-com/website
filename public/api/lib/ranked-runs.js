@@ -5,6 +5,7 @@ const {
   applyPreBattleBuffs,
   canSelectRunBuff,
   generateBuffChoices,
+  getCombatBuffById,
   getNonRepeatableBuffChoiceExclusions,
   NON_REPEATABLE_COMBAT_BUFF_IDS,
   normalizeCombatBuffState,
@@ -50,6 +51,7 @@ const {
 } = require('./ranked-rules');
 
 const GENERATED_VARIANTS_PER_FLOOR = 4;
+const GENERATED_OPPONENT_COMBAT_VERSION = `${COMBAT_DATA_VERSION}:formation-pacts-v1`;
 const DEFAULT_RATING = 1000;
 const RANKED_NON_REPEATABLE_PACT_IDS = NON_REPEATABLE_COMBAT_BUFF_IDS;
 
@@ -356,6 +358,7 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
   const requestedActive = Array.isArray(lineup?.active) ? lineup.active : [];
   const requestedReserve = Array.isArray(lineup?.reserve) ? lineup.reserve : [];
   const requestedHand = Array.isArray(lineup?.hand) ? lineup.hand : [];
+  const requestedSold = Array.isArray(lineup?.sold) ? lineup.sold : [];
   const floor = Math.max(1, Number(run.floor) || 1);
   const activeCapacity = getRankedActiveCapacity(floor);
   if (requestedActive.length > activeCapacity) {
@@ -510,6 +513,8 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
     return demon;
   });
 
+  const sold = requestedSold.map((entry) => resolveWorkspaceDemon(entry, 'sold').demon);
+
   const lockedHand = options.preserveHand
     ? requestedHand.map((entry) => {
       const resolved = resolveWorkspaceDemon(entry, 'hand');
@@ -543,11 +548,15 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
     .map((offerId) => offersByOfferId.get(offerId))
     .filter((offer) => offer && !offer.purchased)
     .reduce((sum, offer) => sum + getRankedCardCost(offer.demon), 0);
+  const saleCredit = sold.reduce(
+    (sum, demon) => sum + Math.ceil(getRankedCardCost(demon) / 2),
+    0
+  );
   const additionalCost = Math.max(0, Math.floor(Number(options.additionalRSoulCost) || 0));
   const totalCost = purchaseCost + additionalCost;
   const balanceBefore = getRankedSoulBalance(run);
-  if (balanceBefore < totalCost) {
-    throw createWorkspaceError(`This action costs ${totalCost} rSouls.`);
+  if (balanceBefore + saleCredit < totalCost) {
+    throw createWorkspaceError(`This action costs ${totalCost - saleCredit} rSouls after sales.`);
   }
 
   const combined = combineRoster({ active, reserve }, ({ typeId, rarity, destination }) => {
@@ -559,7 +568,7 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
     });
   });
   state.rollCounter = nextWorkspaceRollCounter;
-  state.rSouls = balanceBefore - totalCost;
+  state.rSouls = balanceBefore + saleCredit - totalCost;
   state.active = combined.active;
   state.reserve = combined.reserve;
   state.picksRemaining = Math.max(0, picksRemaining - selectedOfferCount);
@@ -571,6 +580,8 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
   return {
     selectedOfferCount,
     purchaseCost,
+    saleCredit,
+    soldCount: sold.length,
     additionalCost,
     totalCost,
     rSoulBalance: state.rSouls,
@@ -886,7 +897,7 @@ async function selectGeneratedOpponent(run, rating, queryable = db) {
        AND generated.rating_bracket = ?
        AND generated.combat_version = ?
      ORDER BY history.opponent_key IS NULL DESC, generated.variant ASC`,
-    [run.playerId, run.seasonId, run.floor, run.seasonId, run.floor, bracket, COMBAT_DATA_VERSION]
+    [run.playerId, run.seasonId, run.floor, run.seasonId, run.floor, bracket, GENERATED_OPPONENT_COMBAT_VERSION]
   );
   const unseen = rows.filter((row) => !row.previously_served);
   const pool = unseen.length ? unseen : rows;
@@ -915,7 +926,7 @@ async function ensureGeneratedOpponents(seasonId, floor, ratingBracket, queryabl
     existing.map((row) => [Number(row.variant), String(row.combat_version || '')])
   );
   for (let variant = 0; variant < GENERATED_VARIANTS_PER_FLOOR; variant += 1) {
-    if (versionsByVariant.get(variant) === COMBAT_DATA_VERSION) continue;
+    if (versionsByVariant.get(variant) === GENERATED_OPPONENT_COMBAT_VERSION) continue;
     const snapshot = await createGeneratedSnapshot(seasonId, floor, ratingBracket, variant);
     await queryable.query(
       `INSERT INTO ranked_generated_opponents
@@ -931,7 +942,7 @@ async function ensureGeneratedOpponents(seasonId, floor, ratingBracket, queryabl
         ratingBracket,
         variant,
         JSON.stringify(snapshot),
-        COMBAT_DATA_VERSION
+        GENERATED_OPPONENT_COMBAT_VERSION
       ]
     );
   }
@@ -997,7 +1008,7 @@ async function createGeneratedSnapshot(seasonId, floor, ratingBracket, variant) 
     'player'
   );
   resetTeamForBattle(run.state.active);
-  const buffs = createGeneratedPacts(seed, floor);
+  const buffs = createGeneratedPacts(seed, floor, run.state.active, catalog.types);
   const lockedBonuses = createGeneratedLockedBonuses(floor, ratingBracket, variant);
 
   return {
@@ -1020,7 +1031,7 @@ async function createGeneratedSnapshot(seasonId, floor, ratingBracket, variant) 
   };
 }
 
-function createGeneratedPacts(seed, floor) {
+function createGeneratedPacts(seed, floor, team = [], demonTypes = {}) {
   const simulated = { floor: 0, state: { buffs: normalizeCombatBuffState() } };
   for (let depth = 1; depth <= floor; depth += 1) {
     simulated.floor = depth;
@@ -1032,9 +1043,91 @@ function createGeneratedPacts(seed, floor) {
       { excludeIds: getRankedPactChoiceExclusions(simulated) }
     );
     const choices = simulated.state.buffs.pendingChoices;
-    if (choices.length) selectRunBuff(simulated, choices[0]);
+    const selectedPact = selectGeneratedPactForFormation(choices, team, demonTypes);
+    if (selectedPact) selectRunBuff(simulated, selectedPact);
   }
   return simulated.state.buffs;
+}
+
+function selectGeneratedPactForFormation(choices, team, demonTypes = {}) {
+  return (Array.isArray(choices) ? choices : []).reduce((best, pactId) => {
+    const score = scoreGeneratedPactForFormation(pactId, team, demonTypes);
+    return !best || score > best.score ? { pactId, score } : best;
+  }, null)?.pactId || null;
+}
+
+function scoreGeneratedPactForFormation(pactOrId, team, demonTypes = {}) {
+  const pact = typeof pactOrId === 'string' ? getCombatBuffById(pactOrId) : pactOrId;
+  const formation = (Array.isArray(team) ? team : []).filter(Boolean);
+  if (!pact || !formation.length) return 0;
+
+  return (Array.isArray(pact.effects) ? pact.effects : []).reduce((score, effect) => {
+    const targetRarities = new Set(
+      (Array.isArray(effect?.targetRarities) ? effect.targetRarities : [])
+        .map((rarity) => String(rarity).toLowerCase())
+    );
+    const eligible = targetRarities.size
+      ? formation.filter((demon) => targetRarities.has(String(demon.rarity || '').toLowerCase()))
+      : formation;
+    if (!eligible.length) return score;
+
+    const profiles = eligible.map((demon) => getGeneratedDemonProfile(demon, demonTypes));
+    const allProfiles = formation.map((demon) => getGeneratedDemonProfile(demon, demonTypes));
+    const effectType = String(effect?.type || '');
+    let affinity = 0;
+
+    if (['direct_damage_mult', 'damage_vs_low_hp_mult', 'damage_vs_higher_max_hp_mult'].includes(effectType)) {
+      affinity = profiles.filter((profile) => profile.singleTarget).length;
+    } else if (effectType === 'direct_damage_vs_poisoned_mult') {
+      const poisoners = allProfiles.filter((profile) => profile.poison).length;
+      affinity = poisoners
+        ? profiles.filter((profile) => profile.singleTarget).length + poisoners * 0.5
+        : 0;
+    } else if (effectType === 'aoe_damage_mult') {
+      affinity = profiles.filter((profile) => profile.aoe).length;
+    } else if (['poison_tick_damage_mult', 'poison_duration_mult'].includes(effectType)) {
+      affinity = profiles.filter((profile) => profile.poison).length;
+    } else if (effectType === 'retaliation_damage_mult') {
+      affinity = profiles.filter((profile) => profile.retaliation).length;
+    } else if (['healing_mult', 'overheal_to_shield'].includes(effectType)) {
+      affinity = profiles.filter((profile) => profile.healer).length;
+    } else if (effectType === 'max_hp_mult') {
+      affinity = profiles.reduce((total, profile) => total + (profile.front ? 1.35 : 0.75), 0);
+    } else if (effectType === 'speed_mult') {
+      affinity = profiles.reduce((total, profile) => total + (profile.front ? 0.85 : 1.15), 0);
+    } else if (['ally_death_direct_damage_mult', 'first_ally_death_survive'].includes(effectType)) {
+      affinity = profiles.length;
+    } else {
+      affinity = profiles.length * 0.5;
+    }
+
+    const value = Number(effect?.value);
+    const isTriggeredEffect = ['overheal_to_shield', 'first_ally_death_survive'].includes(effectType);
+    const strength = isTriggeredEffect ? 0.2 : (Number.isFinite(value) ? value - 1 : 0.1);
+    return score + affinity * strength;
+  }, 0);
+}
+
+function getGeneratedDemonProfile(demon, demonTypes = {}) {
+  const typeId = Number(demon?.typeId || demon?.type_id || demon?.type);
+  const type = demonTypes[String(typeId)] || {};
+  const role = String(demon?.role || type.role || '').toLowerCase();
+  const targeting = String(demon?.targeting || type.targeting || '').toLowerCase();
+  const abilityKind = String(demon?.abilityKind || demon?.ability?.kind || type.ability?.kind || '').toLowerCase();
+  const aoe = typeId === 4 || typeId === 7 || role === 'aoe' || targeting === 'all'
+    || targeting === 'cleave' || abilityKind === 'aoe_attack' || abilityKind === 'cleave_attack';
+  const poison = role === 'poisoner' || abilityKind === 'poison';
+  const retaliation = role === 'counter_tank' || abilityKind === 'retaliate';
+  const healer = role === 'healer' || abilityKind === 'heal';
+
+  return {
+    aoe,
+    poison,
+    retaliation,
+    healer,
+    singleTarget: !aoe && !poison && !retaliation && !healer,
+    front: demon?.position === 'front' || Number(demon?.formationSlot) % 3 === 2
+  };
 }
 
 function getRankedPactChoiceExclusions(run) {
@@ -1232,6 +1325,8 @@ module.exports = {
     ensureGeneratedOpponents,
     getRankedPactChoiceExclusions,
     hashSeed,
-    prepareOpponentTeam
+    prepareOpponentTeam,
+    scoreGeneratedPactForFormation,
+    selectGeneratedPactForFormation
   }
 };

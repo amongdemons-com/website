@@ -53,12 +53,14 @@ let serverRun = null;
 let workspace = null;
 let isReplayingBattle = false;
 let pointerDrag = null;
+let nativeDragActive = false;
 let suppressDetailUntil = 0;
 let rankedSouls = 0;
 let rankedCatalog = null;
 let rankedCatalogPromise = null;
 let previewCombinationCounter = 0;
 let stagedPurchaseOfferIds = new Set();
+let stagedSoldDemons = [];
 let shownVictoryKey = null;
 let pendingInterestGain = 0;
 
@@ -193,6 +195,8 @@ function bindEvents() {
     const card = event.target.closest('[data-ranked-workspace-id]');
     if (!card || !event.dataTransfer || !workspace) return;
     const instanceId = card.dataset.rankedWorkspaceId;
+    nativeDragActive = true;
+    beginRankedSaleDrag(instanceId);
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', instanceId);
     card.classList.add('is-dragging');
@@ -201,6 +205,8 @@ function bindEvents() {
   document.addEventListener('dragend', (event) => {
     event.target.closest('[data-ranked-workspace-id]')?.classList.remove('is-dragging');
     suppressDetailUntil = Date.now() + 350;
+    nativeDragActive = false;
+    endRankedSaleDrag();
     clearDragOver();
   });
 
@@ -223,6 +229,8 @@ function bindEvents() {
     event.preventDefault();
     const instanceId = event.dataTransfer?.getData('text/plain');
     if (!instanceId) return;
+    nativeDragActive = false;
+    endRankedSaleDrag();
     void moveWorkspaceDemon(instanceId, target, {
       x: event.clientX,
       y: event.clientY
@@ -470,8 +478,9 @@ function actionOptions(body) {
 }
 
 function acceptRun(run, options = {}) {
+  endRankedSaleDrag();
   serverRun = run;
-  rankedSouls = Math.max(0, Number(run.rSouls) || 0);
+  rankedSouls = Math.max(0, Math.floor(Number(run.rSouls) || 0));
   const battle = run.lastBattle;
   workspace = isWorkspacePhase(run) ? createWorkspace(run) : null;
   state.run = {
@@ -589,12 +598,20 @@ function renderTeamTitle(run) {
   const team = Array.isArray(run.team) ? run.team : (run.active || []);
   const maxSlots = Math.max(1, Number(run.capacities?.active) || 6);
   const occupiedSlots = Math.min(maxSlots, team.length);
+  const teamSlots = `${occupiedSlots}/${maxSlots}`;
+  const teamCount = `
+    <span class="battle-side-count" aria-label="${escapeHtml(`${occupiedSlots} of ${maxSlots} team slots used`)}">
+      ${escapeHtml(teamSlots)}
+    </span>
+  `;
   elements.teamSideTitle.innerHTML = `
     <span class="ranked-desktop-status">
-      ${renderRankBadge(rank, { showLabel: true, occupiedSlots, maxSlots })}
+      ${renderRankBadge(rank, { showLabel: true })}
+      ${teamCount}
     </span>
     <span class="ranked-mobile-status">
-      ${renderRankBadge(rank, { showLabel: true, occupiedSlots, maxSlots, compact: true })}
+      ${renderRankBadge(rank, { showLabel: true, compact: true })}
+      ${teamCount}
     </span>
     ${renderBattleBuffSummaryChip(getRankedProgressionBuffs(run), { side: 'player' })}
   `;
@@ -604,16 +621,18 @@ function renderRankedSoulBalance(run) {
   const floor = Math.max(1, Number(run?.floor) || 1);
   const balanceInterest = Math.floor(rankedSouls / 10);
   const earned = floor + balanceInterest;
-  const tooltip = (
-    `Interest after a win or surviving loss: Floor ${formatNumber(floor)} + `
-    + `${formatNumber(balanceInterest)} (${formatNumber(rankedSouls)} unspent rSouls \u00f7 10, rounded down) `
-    + `= ${formatNumber(earned)} rSouls.`
-  );
   return `
     <span class="ranked-rsoul-balance" tabindex="0" aria-describedby="rankedRSoulTooltip">
       ${renderIcon('soul')}
       <span class="ranked-rsoul-value">${formatNumber(rankedSouls)}</span>
-      <span class="ranked-rsoul-tooltip" id="rankedRSoulTooltip" role="tooltip">${escapeHtml(tooltip)}</span>
+      <span class="ranked-rsoul-tooltip" id="rankedRSoulTooltip" role="tooltip">
+        <span class="ranked-rsoul-tooltip-main">
+          <strong>Interest:</strong>
+          ${renderIcon('soul')}
+          <strong>${formatNumber(earned)}</strong>
+        </span>
+        <span class="ranked-rsoul-tooltip-formula">Floor number + 1 every 10 souls</span>
+      </span>
     </span>
   `;
 }
@@ -657,7 +676,7 @@ function renderRankBadge(rank, options = {}) {
     <span class="ranked-rank ranked-rank--${escapeHtml(rank.slug)}${compactClass}"
           aria-label="${escapeHtml(rank.division)} rank">
       <img class="ranked-rank-image" src="${escapeHtml(rank.imageUrl)}" alt="" width="72" height="80" aria-hidden="true">
-      ${options.showLabel ? `<span class="ranked-rank-label">${escapeHtml(rank.division.toUpperCase())}</span>` : ''}
+      ${options.showLabel ? `<span class="ranked-rank-label rank-division-text rank-division-text--${escapeHtml(rank.slug)}">${escapeHtml(rank.division.toUpperCase())}</span>` : ''}
       ${hasTeamSlots ? `
         <span class="ranked-rank-separator" aria-hidden="true">&middot;</span>
         <span class="ranked-team-slots" aria-label="${escapeHtml(`${teamSlots} team slots occupied`)}">${escapeHtml(teamSlots)}</span>
@@ -784,6 +803,10 @@ function renderPreparation(run, options = {}) {
               </span>
             </div>
           `).join('') : '<div class="ranked-hand-empty">Empty</div>'}
+      </div>
+      <div class="ranked-hand-sale-prompt" aria-hidden="true" hidden>
+        <strong>Sell Demon</strong>
+        <span>Drop team or reserve demon here</span>
       </div>
     </div>
     <div class="ranked-action-dock">
@@ -1133,6 +1156,7 @@ function isWorkspacePhase(run) {
 }
 
 function createWorkspace(run) {
+  stagedSoldDemons = [];
   stagedPurchaseOfferIds = new Set(
     (run.offers || [])
       .filter((offer) => offer.purchased)
@@ -1186,6 +1210,7 @@ function syncWorkspaceIntoRun() {
 function serializeWorkspaceLineup() {
   return {
     purchasedOfferIds: [...stagedPurchaseOfferIds],
+    sold: stagedSoldDemons.map((demon) => serializeWorkspaceDemonReference(demon)),
     active: (workspace?.active || []).map((demon) => ({
       ...serializeWorkspaceDemonReference(demon),
       formationSlot: normalizeSlot(demon.formationSlot)
@@ -1367,6 +1392,12 @@ async function moveWorkspaceDemon(instanceId, target, point = null) {
   const destinationDemon = destination.occupantId
     ? workspace[destination.zone][destination.index]
     : null;
+  if (source.zone !== 'hand' && destination.zone === 'hand') {
+    stageClientSale(sourceDemon, point, target);
+    clearDragOver();
+    renderRun();
+    return;
+  }
   const purchaseDemon = (
     source.zone === 'hand'
     && sourceDemon?._rankedOrigin === 'offer'
@@ -1503,6 +1534,21 @@ function stageClientPurchase(demon, cost, point, target) {
   stagedPurchaseOfferIds.add(String(demon._rankedOfferId));
   rankedSouls = Math.max(0, rankedSouls - cost);
   showRankedSoulChange(point || getInteractionPoint(null, target), -cost);
+  audio?.play('sfx.world.merchantPurchase', { volume: .82 });
+}
+
+function stageClientSale(demon, point, target) {
+  if (!demon) return;
+  const sold = removeWorkspaceDemon(demon.instanceId);
+  if (!sold) return;
+  const amount = getRankedDemonSellValue(sold);
+  stagedSoldDemons.push(sold);
+  rankedSouls += amount;
+  showRankedSoulChange(
+    point || getInteractionPoint(null, target),
+    amount,
+    { interest: true }
+  );
   audio?.play('sfx.world.merchantPurchase', { volume: .82 });
 }
 
@@ -1723,6 +1769,32 @@ function clearDragOver() {
   document.querySelectorAll('.is-drag-over').forEach((target) => target.classList.remove('is-drag-over'));
 }
 
+function beginRankedSaleDrag(instanceId) {
+  const source = getWorkspaceLocation(instanceId);
+  setRankedSaleTargetState(Boolean(source && source.zone !== 'hand'));
+}
+
+function endRankedSaleDrag() {
+  setRankedSaleTargetState(false);
+}
+
+function setRankedSaleTargetState(active) {
+  const selling = Boolean(active);
+  const offerArea = elements.rankedPreparation?.querySelector('.ranked-offer-area');
+  const offerGrid = offerArea?.querySelector('.ranked-offer-grid');
+  const prompt = offerArea?.querySelector('.ranked-hand-sale-prompt');
+  document.documentElement.classList.toggle('is-ranked-selling-demon', selling);
+  elements.rankedBottomPanel?.classList.toggle('is-ranked-selling-demon', selling);
+  offerArea?.classList.toggle('is-ranked-sale-target', selling);
+  offerArea?.setAttribute('aria-label', selling ? 'Sell Demon' : 'Hand');
+  offerGrid?.toggleAttribute('hidden', selling);
+  offerArea?.querySelectorAll('.ranked-offer, .ranked-hand-empty').forEach((card) => {
+    card.toggleAttribute('hidden', selling);
+  });
+  prompt?.toggleAttribute('hidden', !selling);
+  prompt?.setAttribute('aria-hidden', String(!selling));
+}
+
 function beginPointerDrag(event) {
   if (event.button !== undefined && event.button !== 0) return;
   const card = event.target.closest('[data-ranked-workspace-id]');
@@ -1737,6 +1809,7 @@ function beginPointerDrag(event) {
     ghost: null,
     target: null
   };
+  beginRankedSaleDrag(pointerDrag.instanceId);
   card.setPointerCapture?.(event.pointerId);
 }
 
@@ -1759,6 +1832,7 @@ function updatePointerDrag(event) {
 
 function activatePointerDrag(event) {
   pointerDrag.active = true;
+  beginRankedSaleDrag(pointerDrag.instanceId);
   pointerDrag.card.classList.add('is-dragging', 'is-pointer-dragging', 'suppress-detail-click');
   pointerDrag.ghost = pointerDrag.card.cloneNode(true);
   pointerDrag.ghost.classList.add('pointer-drag-ghost');
@@ -1792,14 +1866,15 @@ function finishPointerDrag(event) {
 
 function cancelPointerDrag(event) {
   if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
-  cleanupPointerDrag();
+  cleanupPointerDrag({ preserveSaleTarget: nativeDragActive });
 }
 
-function cleanupPointerDrag() {
+function cleanupPointerDrag(options = {}) {
   if (!pointerDrag) return;
   pointerDrag.card?.classList.remove('is-dragging', 'is-pointer-dragging', 'suppress-detail-click');
   pointerDrag.ghost?.remove();
   pointerDrag = null;
+  if (!options.preserveSaleTarget) endRankedSaleDrag();
   clearDragOver();
 }
 
@@ -1838,6 +1913,10 @@ function getRankedDemonCost(demon) {
   if (Number.isFinite(assigned) && assigned >= 0) return Math.floor(assigned);
   const rarity = String(demon?.rarity || 'common').toLowerCase();
   return RANKED_CARD_RARITY_COSTS[rarity] || RANKED_CARD_RARITY_COSTS.common;
+}
+
+function getRankedDemonSellValue(demon) {
+  return Math.ceil(getRankedDemonCost(demon) / 2);
 }
 
 function acceptPlayer(player, options = {}) {

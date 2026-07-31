@@ -18,7 +18,7 @@
 .ranked-desktop-status,
 .ranked-mobile-status {
   align-items: center;
-  gap: .32rem;
+  gap: 0;
 }
 
 .ranked-desktop-status {
@@ -124,6 +124,30 @@
   transition: opacity 120ms ease, transform 120ms ease;
   visibility: hidden;
   pointer-events: none;
+}
+
+.ranked-rsoul-tooltip-main,
+.ranked-rsoul-tooltip-formula {
+  display: flex;
+  align-items: center;
+}
+
+.ranked-rsoul-tooltip-main {
+  gap: .24rem;
+  color: #f4f8f7;
+}
+
+.ranked-rsoul-tooltip-main .ad-icon {
+  width: .8rem;
+  height: .8rem;
+  color: var(--ad-soul, #55ffff);
+}
+
+.ranked-rsoul-tooltip-formula {
+  margin-top: .16rem;
+  color: #d8bd72;
+  font-size: .66rem;
+  font-weight: 750;
 }
 
 .ranked-rsoul-balance:hover .ranked-rsoul-tooltip,
@@ -273,6 +297,77 @@
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
+}
+
+.ranked-hand-sale-prompt {
+  position: absolute;
+  inset: 0;
+  display: none;
+  grid-auto-rows: max-content;
+  align-content: center;
+  justify-items: center;
+  row-gap: .22rem;
+  z-index: 4;
+  border-radius: 8px;
+  background: rgba(12, 17, 18, .92);
+  box-shadow: inset 0 0 28px rgba(232, 199, 106, .12);
+  color: #fff2ad;
+  font-size: clamp(.8rem, 1.15vw, 1rem);
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-align: center;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.ranked-hand-sale-prompt strong,
+.ranked-hand-sale-prompt span {
+  display: block;
+  line-height: 1.1;
+}
+
+.ranked-hand-sale-prompt span {
+  margin-top: 0;
+  color: rgba(244, 239, 210, .76);
+  font-size: clamp(.58rem, .82vw, .72rem);
+  font-weight: 750;
+  letter-spacing: .035em;
+  text-transform: none;
+}
+
+.is-ranked-selling-demon .ranked-offer-grid,
+.ranked-offer-area.is-ranked-sale-target .ranked-offer-grid {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.is-ranked-selling-demon .ranked-hand-sale-prompt,
+.ranked-offer-area.is-ranked-sale-target .ranked-hand-sale-prompt {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.is-ranked-selling-demon .ranked-offer,
+.is-ranked-selling-demon .ranked-hand-empty,
+.ranked-offer-area.is-ranked-sale-target .ranked-offer,
+.ranked-offer-area.is-ranked-sale-target .ranked-hand-empty {
+  display: none !important;
+}
+
+.is-ranked-selling-demon .ranked-offer-area,
+.ranked-offer-area.is-ranked-sale-target {
+  border: 1px dashed rgba(232, 199, 106, .56);
+  border-radius: 8px;
+  background: rgba(232, 199, 106, .06);
+}
+
+.is-ranked-selling-demon .ranked-offer-area.is-drag-over,
+.ranked-offer-area.is-ranked-sale-target.is-drag-over {
+  border-color: rgba(250, 197, 28, .92);
+  background: rgba(250, 197, 28, .12);
 }
 
 .ranked-offer {
@@ -893,6 +988,23 @@
   padding: var(--ranked-formation-padding);
 }
 
+@media (min-width: 992px) {
+  .ranked-page .battle-side {
+    grid-template-rows: auto auto;
+    align-content: center;
+  }
+
+  .ranked-page .battle-side > #teamGrid,
+  .ranked-page .battle-side > #enemyGrid {
+    height: auto;
+    container-type: normal;
+  }
+
+  .ranked-page .battle-side .battle-formation-grid {
+    --dungeon-demon-card-width: clamp(6rem, min(11.5vw, 22vh), 15.5rem);
+  }
+}
+
 .battle-side .ranked-reserve-formation {
   grid-template-rows: repeat(2, minmax(0, var(--dungeon-demon-card-height)));
   margin: 0 auto;
@@ -1325,9 +1437,29 @@
 
   .ranked-hand-status {
     bottom: calc(100% + .35rem);
+    right: .2rem;
+    left: auto;
     min-height: 1.35rem;
     padding: .2rem .44rem;
     font-size: .56rem;
+    transform: none;
+  }
+
+  .ranked-page #teamSideTitle {
+    justify-content: flex-start;
+    padding-inline: .2rem;
+    text-align: left;
+  }
+
+  .ranked-hand-status .ranked-rsoul-tooltip {
+    right: 0;
+    left: auto;
+    transform: translateY(.2rem);
+  }
+
+  .ranked-hand-status .ranked-rsoul-balance:hover .ranked-rsoul-tooltip,
+  .ranked-hand-status .ranked-rsoul-balance:focus-visible .ranked-rsoul-tooltip {
+    transform: none;
   }
 
   .ranked-page .dungeon-center-actions {
