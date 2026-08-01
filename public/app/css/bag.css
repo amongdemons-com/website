@@ -649,6 +649,15 @@
     filter: drop-shadow(0 0 24px color-mix(in srgb, var(--item-rarity, #8de7ff) 50%, transparent));
 }
 
+.bag-action-echo-result > .bag-item-count {
+    right: 0.25rem;
+    bottom: 0.2rem;
+    min-width: 3rem;
+    padding: 0.36rem 0.62rem;
+    font-size: 1rem;
+    line-height: 1;
+}
+
 .bag-action-error {
     padding: 0.72rem;
     border: 1px solid rgba(228, 104, 94, 0.32);

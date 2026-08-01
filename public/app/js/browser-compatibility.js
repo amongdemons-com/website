@@ -2,13 +2,16 @@ import compatibility from '../../../lib/browser-compatibility.js';
 
 const CHROME_APP_STORE_URL = 'https://apps.apple.com/app/google-chrome/id535886823';
 const NOTICE_ID = 'iosSafariCompatibilityNotice';
+const SAFARI_OVERRIDE_KEY = 'amongDemons.iosSafariCompatibilityOverride';
+let safariOverrideEnabled = false;
 
 onReady(initIosSafariCompatibilityNotice);
 
 function initIosSafariCompatibilityNotice() {
-  if (!compatibility.isIosSafari(window.navigator)) return;
+  if (!compatibility.isIosSafari(window.navigator) || hasIosSafariOverride()) return;
 
   document.addEventListener('click', (event) => {
+    if (hasIosSafariOverride()) return;
     const target = event.target instanceof Element ? event.target : event.target?.parentElement;
     const playTrigger = target?.closest('[data-play-instantly]');
     if (!playTrigger) return;
@@ -57,6 +60,9 @@ function showIosSafariCompatibilityNotice(destination = '') {
           ${renderIcon('copy')}
           <span>Copy game link</span>
         </button>
+        <button class="btn btn-glass-muted browser-compatibility-continue" type="button" data-continue-in-safari>
+          <span>Continue in Safari anyway</span>
+        </button>
       </div>
       <p class="browser-compatibility-status" data-browser-compatibility-status aria-live="polite">Already have Chrome? Copy the link, then paste it into Chrome.</p>
       <a class="browser-compatibility-home" href="/">Return to homepage</a>
@@ -69,6 +75,9 @@ function showIosSafariCompatibilityNotice(destination = '') {
   notice.querySelector('[data-copy-game-link]')?.addEventListener('click', (event) => {
     copyGameLink(gameUrl, event.currentTarget, notice);
   });
+  notice.querySelector('[data-continue-in-safari]')?.addEventListener('click', () => {
+    continueInSafari(notice, destination);
+  });
   trapNoticeFocus(notice);
   window.AmongDemons?.ui?.replaceStaticIcons?.(notice);
   notice.querySelector('.browser-compatibility-download')?.focus({ preventScroll: true });
@@ -80,6 +89,45 @@ function lockPageBehindNotice(notice) {
     element.setAttribute('inert', '');
     element.dataset.compatibilityInert = 'true';
   });
+}
+
+function continueInSafari(notice, destination = '') {
+  safariOverrideEnabled = true;
+  try {
+    window.sessionStorage.setItem(SAFARI_OVERRIDE_KEY, 'true');
+  } catch (error) {
+    // The in-memory override still allows the current page to continue.
+  }
+
+  unlockPageBehindNotice();
+  notice.remove();
+  document.body.classList.remove('has-browser-compatibility-gate');
+
+  const nextDestination = getSafeGameDestination(destination);
+  if (nextDestination) window.location.assign(nextDestination);
+}
+
+function unlockPageBehindNotice() {
+  document.querySelectorAll('[data-compatibility-inert="true"]').forEach((element) => {
+    element.removeAttribute('inert');
+    delete element.dataset.compatibilityInert;
+  });
+}
+
+function hasIosSafariOverride() {
+  if (safariOverrideEnabled) return true;
+  try {
+    return window.sessionStorage.getItem(SAFARI_OVERRIDE_KEY) === 'true';
+  } catch (error) {
+    return false;
+  }
+}
+
+function getSafeGameDestination(destination = '') {
+  if (!destination) return '';
+  const resolved = new URL(destination, window.location.origin);
+  if (resolved.origin !== window.location.origin) return '/camp';
+  return `${resolved.pathname}${resolved.search}${resolved.hash}`;
 }
 
 function trapNoticeFocus(notice) {

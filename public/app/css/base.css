@@ -10442,6 +10442,23 @@ body.has-browser-compatibility-gate {
     color: #b8efc3;
 }
 
+.browser-compatibility-continue {
+    grid-column: 1 / -1;
+    min-height: 2.45rem !important;
+    border-color: rgba(161,212,201,0.12);
+    background: transparent;
+    color: rgba(202,219,214,0.72);
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+}
+
+.browser-compatibility-continue:hover,
+.browser-compatibility-continue:focus-visible {
+    border-color: rgba(161,212,201,0.32);
+    background: rgba(74,130,123,0.08);
+    color: #e7f0ed;
+}
+
 .browser-compatibility-status {
     min-height: 2.4em;
     margin: 0.72rem auto 0;

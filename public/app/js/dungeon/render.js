@@ -346,20 +346,20 @@ function renderDungeonExtractionScreen(summary = {}) {
         <div class="dungeon-end-actions dungeon-result-actions">
           <a class="btn btn-primary dungeon-result-primary" href="/dungeon">
             ${renderIcon('play')}
-            Begin Another Descent
+            <span>Begin Another Descent</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/bag">
             ${renderIcon('amphora')}
-            View Bag
+            <span>View Bag</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/camp">
             ${renderIcon('tent')}
-            Return to Camp
+            <span>Return to Camp</span>
           </a>
           ${canReplay ? `
             <button class="btn btn-glass-muted dungeon-result-replay" id="replayEndedDungeonBtn" type="button">
               ${renderIcon('list-restart')}
-              Replay Last Fight
+              <span>Replay Last Fight</span>
             </button>
           ` : ''}
         </div>
@@ -404,20 +404,20 @@ function renderDungeonDefeatScreen(summary = {}) {
         <div class="dungeon-end-actions dungeon-result-actions">
           <a class="btn btn-primary dungeon-result-primary" href="/dungeon">
             ${renderIcon('play')}
-            Begin a New Descent
+            <span>Begin a New Descent</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" id="trainDemonsBtn" href="/collection">
             ${renderIcon('swords')}
-            Train Demons
+            <span>Train Demons</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/camp">
             ${renderIcon('tent')}
-            Return to Camp
+            <span>Return to Camp</span>
           </a>
           ${canReplay ? `
             <button class="btn btn-glass-muted dungeon-result-replay" id="replayEndedDungeonBtn" type="button">
               ${renderIcon('list-restart')}
-              Replay Last Fight
+              <span>Replay Last Fight</span>
             </button>
           ` : ''}
         </div>

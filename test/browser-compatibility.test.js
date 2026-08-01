@@ -54,3 +54,15 @@ test('Safari compatibility interception loads before Play Instantly navigation',
   assert.match(compatibilityUi, /closest\('\[data-play-instantly\]'\)/);
   assert.match(compatibilityUi, /stopImmediatePropagation\(\)/);
 });
+
+test('Safari compatibility notice offers an explicit session-scoped override', () => {
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'app', 'js', 'browser-compatibility.js'),
+    'utf8'
+  );
+
+  assert.match(source, /data-continue-in-safari/);
+  assert.match(source, /Continue in Safari anyway/);
+  assert.match(source, /sessionStorage\.setItem\(SAFARI_OVERRIDE_KEY, 'true'\)/);
+  assert.match(source, /removeAttribute\('inert'\)/);
+});

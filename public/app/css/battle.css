@@ -836,6 +836,12 @@ body:not(.dungeon-page) {
     width: min(100%, 58rem);
     padding: clamp(1rem, 4vh, 2.8rem) 1rem;
     overflow: hidden auto;
+    scrollbar-width: none;
+}
+
+.dungeon-end-screen.is-defeat::-webkit-scrollbar,
+.dungeon-end-screen.is-extraction::-webkit-scrollbar {
+    display: none;
 }
 
 .dungeon-end-screen.is-defeat::before,
@@ -1113,7 +1119,9 @@ body:not(.dungeon-page) {
 
 .dungeon-result-reward > .soul-amount {
     display: grid;
-    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    place-items: flex-end;
     min-height: 0;
     border: 0;
     background: transparent;
@@ -1177,6 +1185,14 @@ body:not(.dungeon-page) {
     line-height: 1.2;
 }
 
+.dungeon-result-actions .btn > span:last-child {
+    display: grid;
+    min-height: 2.3em;
+    align-content: center;
+    text-align: left;
+    text-wrap: balance;
+}
+
 .dungeon-result-primary,
 .dungeon-result-replay {
     grid-column: 1 / -1;
@@ -1207,6 +1223,7 @@ body:not(.dungeon-page) {
     min-height: 2.15rem !important;
     border-color: transparent;
     background: transparent;
+    box-shadow: none;
     color: rgba(194,216,211,0.82);
     font-size: 0.84rem !important;
 }
@@ -1214,8 +1231,10 @@ body:not(.dungeon-page) {
 .dungeon-result-replay:hover,
 .dungeon-result-replay:focus-visible {
     border-color: transparent;
-    background: rgba(74,130,123,0.08);
+    background: transparent;
+    box-shadow: none;
     color: #dceae6;
+    transform: none;
 }
 
 .dungeon-result-actions .game-icon {
@@ -1353,6 +1372,94 @@ body:not(.dungeon-page) {
 
     .dungeon-result-actions {
         margin-top: 0.7rem;
+    }
+}
+
+@media (max-height: 860px) and (min-width: 576px) {
+    .dungeon-end-screen.is-defeat,
+    .dungeon-end-screen.is-extraction {
+        padding: 0.35rem 1rem;
+    }
+
+    .dungeon-result-panel {
+        padding: 0.4rem 1rem;
+    }
+
+    .dungeon-result-sigil {
+        width: clamp(3rem, 7vh, 3.7rem);
+        margin-bottom: 0.3rem;
+    }
+
+    .dungeon-result-sigil-core .game-icon {
+        width: 1.8rem;
+        height: 1.8rem;
+    }
+
+    .dungeon-result-copy h2 {
+        margin-bottom: 0.4rem;
+        font-size: clamp(1.75rem, 4.8vh, 2.65rem);
+    }
+
+    .dungeon-extraction-copy > p,
+    .dungeon-defeat-guidance {
+        font-size: 0.82rem !important;
+        line-height: 1.35;
+    }
+
+    .dungeon-extraction-prize {
+        gap: 0.3rem;
+        margin-top: 0.45rem;
+    }
+
+    .dungeon-extraction-prize .dungeon-end-demon {
+        width: min(7.5rem, 19vh);
+    }
+
+    .dungeon-extraction-prize-label {
+        font-size: 0.68rem;
+    }
+
+    .dungeon-result-divider {
+        margin-block: 0.5rem;
+    }
+
+    .dungeon-result-spoils-label {
+        margin-bottom: 0.2rem;
+        font-size: 0.59rem;
+    }
+
+    .dungeon-result-spoils .dungeon-result-reward {
+        padding-block: 0.2rem;
+    }
+
+    .dungeon-result-actions {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: min(100%, 38rem);
+        gap: 0.45rem;
+        margin-top: 0.55rem;
+    }
+
+    .dungeon-result-primary {
+        grid-column: span 2;
+    }
+
+    .dungeon-result-replay {
+        grid-column: 1 / -1;
+    }
+
+    .dungeon-result-actions .btn {
+        min-height: 2.35rem;
+        font-size: 0.8rem;
+    }
+
+    .dungeon-result-primary {
+        min-height: 2.55rem !important;
+        font-size: 0.77rem !important;
+    }
+
+    .dungeon-result-replay {
+        min-height: 1.95rem !important;
+        font-size: 0.78rem !important;
     }
 }
 

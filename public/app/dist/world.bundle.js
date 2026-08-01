@@ -77,20 +77,20 @@ ${e}`:e}function Po(e){let o=new Map;return e.querySelectorAll(".dungeon-demon-c
         <div class="dungeon-end-actions dungeon-result-actions">
           <a class="btn btn-primary dungeon-result-primary" href="/dungeon">
             ${O("play")}
-            Begin Another Descent
+            <span>Begin Another Descent</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/bag">
             ${O("amphora")}
-            View Bag
+            <span>View Bag</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/camp">
             ${O("tent")}
-            Return to Camp
+            <span>Return to Camp</span>
           </a>
           ${p?`
             <button class="btn btn-glass-muted dungeon-result-replay" id="replayEndedDungeonBtn" type="button">
               ${O("list-restart")}
-              Replay Last Fight
+              <span>Replay Last Fight</span>
             </button>
           `:""}
         </div>
@@ -127,20 +127,20 @@ ${e}`:e}function Po(e){let o=new Map;return e.querySelectorAll(".dungeon-demon-c
         <div class="dungeon-end-actions dungeon-result-actions">
           <a class="btn btn-primary dungeon-result-primary" href="/dungeon">
             ${O("play")}
-            Begin a New Descent
+            <span>Begin a New Descent</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" id="trainDemonsBtn" href="/collection">
             ${O("swords")}
-            Train Demons
+            <span>Train Demons</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/camp">
             ${O("tent")}
-            Return to Camp
+            <span>Return to Camp</span>
           </a>
           ${l?`
             <button class="btn btn-glass-muted dungeon-result-replay" id="replayEndedDungeonBtn" type="button">
               ${O("list-restart")}
-              Replay Last Fight
+              <span>Replay Last Fight</span>
             </button>
           `:""}
         </div>
