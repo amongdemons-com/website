@@ -43,6 +43,7 @@ const {
   getRankedActiveCapacity,
   getRarityOdds,
   getRankedCardCost,
+  getRunEndRatingDelta,
   getRosterValidation,
   normalizeReserveSlot,
   normalizeRerolls,
@@ -683,8 +684,17 @@ function resetTeamForBattle(team = []) {
 async function serializeRankedRun(run, rating, season) {
   const state = run.state || {};
   const rosterValidation = getRosterValidation(state, { requireActive: false });
-  const currentRating = Math.max(0, Number(rating?.rating) || DEFAULT_RATING);
-  const projectedRating = Math.max(0, currentRating + Number(state.pendingRating || 0));
+  const rawCurrentRating = Number(rating?.rating);
+  const currentRating = Math.max(
+    0,
+    Number.isFinite(rawCurrentRating) ? rawCurrentRating : DEFAULT_RATING
+  );
+  const pendingRating = Math.max(0, Number(state.pendingRating) || 0);
+  const projectedRating = Math.max(0, currentRating + pendingRating);
+  const runDelta = Number(run.ratingDelta) || 0;
+  const endDelta = run.status === 'active'
+    ? getRunEndRatingDelta(run.floor, pendingRating)
+    : 0;
   const pacts = serializeCombatBuffState(state.buffs || {});
   const previewStats = await createRankedPreviewStats(run);
 
@@ -694,6 +704,8 @@ async function serializeRankedRun(run, rating, season) {
     phase: state.phase,
     season,
     floor: run.floor,
+    endReason: state.endReason || null,
+    endReachedFloor: Math.max(1, Number(state.endReachedFloor) || Number(run.floor) || 1),
     rSouls: getRankedSoulBalance(run),
     highestClearedFloor: Math.max(0, Number(state.highestClearedFloor) || 0),
     lives: run.lives,
@@ -728,8 +740,11 @@ async function serializeRankedRun(run, rating, season) {
     rating: {
       ...rating,
       projected: projectedRating,
-      runDelta: Number(run.ratingDelta) || 0,
-      pending: Number(state.pendingRating) || 0
+      runDelta,
+      pending: pendingRating,
+      endDelta,
+      projectedEnd: Math.max(0, currentRating + endDelta),
+      projectedRunDelta: runDelta + endDelta
     },
     capacities: {
       active: getRankedActiveCapacity(run.floor),
@@ -876,6 +891,7 @@ async function selectOpponent(run, rating, queryable = db) {
   } else {
     opponent = await selectGeneratedOpponent(run, rating, queryable);
   }
+  opponent.team = empowerEndlessGhostTeam(opponent.team, run.floor);
 
   await queryable.query(
     `INSERT INTO ranked_opponent_history
@@ -1256,6 +1272,34 @@ function prepareOpponentTeam(team = []) {
   return arrangeRankedFormation(orderRankedGhostTeam(team), 'enemy');
 }
 
+function empowerEndlessGhostTeam(team = [], floor = 0) {
+  const endlessDepth = Math.min(60, Math.max(0, Math.floor(Number(floor) || 0) - 20));
+  if (!endlessDepth) return team;
+  const maxHpMultiplier = 1 + endlessDepth * 0.25;
+  const attackMultiplier = 1 + endlessDepth * 0.18;
+  const speedBonus = Math.min(10, Math.ceil(endlessDepth / 2));
+
+  return (Array.isArray(team) ? team : []).map((demon) => {
+    const baseMaxHp = Math.max(1, Number(demon.maxHp) || Number(demon.hp) || 1);
+    const currentHp = Math.max(0, Number(demon.hp) || baseMaxHp);
+    const hpRatio = Math.max(0, Math.min(1, currentHp / baseMaxHp));
+    const maxHp = Math.max(1, Math.round(baseMaxHp * maxHpMultiplier));
+    const empowered = {
+      ...demon,
+      maxHp,
+      hp: currentHp > 0 ? Math.max(1, Math.round(maxHp * hpRatio)) : 0,
+      atk: Math.max(1, Math.round((Number(demon.atk) || 1) * attackMultiplier)),
+      speed: Math.max(1, Math.round(Number(demon.speed) || 1) + speedBonus)
+    };
+    delete empowered.runBaseAtk;
+    delete empowered.runBaseMaxHp;
+    delete empowered.runBaseSpeed;
+    delete empowered.runBuffStatsApplied;
+    delete empowered.effectiveAtk;
+    return empowered;
+  });
+}
+
 function namespaceRankedOpponentTeam(team, opponentKey = 'opponent') {
   const namespace = hashSeed(opponentKey).toString(36);
   return (Array.isArray(team) ? team : []).map((demon, index) => ({
@@ -1373,6 +1417,7 @@ module.exports = {
     createGeneratedSnapshot,
     createGeneratedPacts,
     createGeneratedLockedBonuses,
+    empowerEndlessGhostTeam,
     ensureGeneratedOpponents,
     getRankedPactChoiceExclusions,
     hashSeed,

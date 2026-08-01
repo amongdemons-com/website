@@ -17,7 +17,7 @@
 }
 
 .ranked-battle-side-content {
-  --ranked-side-heading-padding: .45rem;
+  --ranked-side-heading-padding: .75rem;
   --ranked-side-heading-space: calc(1.55rem + var(--ranked-side-heading-padding));
   display: grid;
   grid-template-rows: auto auto;
@@ -522,16 +522,21 @@
   display: flex;
   align-items: center;
   flex: 0 0 auto;
+  box-sizing: border-box;
   width: 100%;
   min-height: var(--ranked-card-footer-height);
   margin: 0;
   border-top: 1px solid color-mix(in srgb, var(--rarity-color, #d1d5d8) 38%, transparent);
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--rarity-color, #d1d5d8) 17%, #03090b), rgba(2, 7, 9, .99) 72%);
-  padding: clamp(.24rem, 3.4cqh, .4rem) var(--ranked-card-footer-padding-inline);
+  padding:
+    clamp(.24rem, 3.4cqh, .4rem)
+    calc(var(--ranked-card-footer-padding-inline) + var(--ranked-card-cost-space))
+    clamp(.24rem, 3.4cqh, .4rem)
+    var(--ranked-card-footer-padding-inline);
   font-family: var(--font-heading, Georgia, serif);
   font-size: clamp(.5rem, 9.8cqw, .86rem);
-  line-height: 1;
+  line-height: 1.2;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .04),
     0 -9px 18px rgba(2, 8, 10, .34);
@@ -540,7 +545,15 @@
 
 .ranked-offer .ranked-preparation-demon-card .dungeon-demon-card-title .text-white {
   display: block;
-  max-width: calc(100% - var(--ranked-card-cost-space));
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+  overflow-y: visible;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  line-height: 1.2;
   font-weight: 900;
 }
 
@@ -823,7 +836,7 @@
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 
-.ranked-action-dock.is-endless {
+.ranked-action-dock.has-end-run {
   grid-template-rows: repeat(3, minmax(0, 1fr));
 }
 
@@ -850,7 +863,7 @@
   line-height: 1;
 }
 
-.ranked-action-dock .ranked-endless-end-action {
+.ranked-action-dock .ranked-end-run-control {
   align-items: center;
   justify-content: center;
   gap: .32rem;
@@ -858,87 +871,7 @@
   line-height: 1;
 }
 
-/* End Run is intentionally distinct from the gold Fight action while keeping
- * the same framed, dark-metal button treatment used across the game. */
-.ranked-end-run-action {
-  --ranked-end-frame-gradient:
-    linear-gradient(180deg, #b69bd3 0%, #9579b8 42%, #59456f 100%);
-  box-sizing: border-box;
-  position: relative;
-  border: 1px solid var(--ad-violet, #9c7ac8);
-  border-image: var(--ranked-end-frame-gradient) 1 !important;
-  border-radius: var(--primary-radius) !important;
-  background: linear-gradient(180deg, #493b5b, #282233);
-  color: #ddd0ed;
-  box-shadow:
-    0 0 0 1px rgba(3, 11, 21, .96),
-    0 2px 4px rgba(0, 0, 0, .5);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, .96);
-}
-
-.ranked-end-run-action::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  box-sizing: border-box;
-  border: 1px solid transparent;
-  border-image: var(--ranked-end-frame-gradient) 1;
-  box-shadow:
-    inset 0 0 0 1px var(--primary-inner-keyline),
-    inset 0 0 3px 1px rgba(0, 0, 0, .68);
-  pointer-events: none;
-}
-
-.ranked-end-run-action:not(:disabled):hover {
-  --ranked-end-frame-gradient:
-    linear-gradient(180deg, #cbb5e2 0%, #aa8dca 42%, #695181 100%);
-  border-color: #b69bd3;
-  background: linear-gradient(180deg, #58466d, #332940);
-  color: #f0e7f8;
-  box-shadow:
-    0 0 0 1px rgba(3, 11, 21, .96),
-    0 3px 6px rgba(0, 0, 0, .54),
-    0 0 14px rgba(156, 122, 200, .14);
-}
-
-.ranked-end-run-action:focus-visible {
-  --ranked-end-frame-gradient:
-    linear-gradient(180deg, #cbb5e2 0%, #aa8dca 42%, #695181 100%);
-  border-color: #cbb5e2;
-  background: linear-gradient(180deg, #58466d, #332940);
-  color: #f0e7f8;
-  box-shadow:
-    0 0 0 1px rgba(3, 11, 21, .96),
-    0 2px 4px rgba(0, 0, 0, .5),
-    0 0 0 .16rem rgba(156, 122, 200, .24);
-  outline: 2px solid rgba(182, 155, 211, .46);
-  outline-offset: 2px;
-}
-
-.ranked-end-run-action:not(:disabled):active {
-  --ranked-end-frame-gradient:
-    linear-gradient(180deg, #9174b2 0%, #73598e 44%, #463654 100%);
-  border-color: #73598e;
-  background: linear-gradient(180deg, #382d46, #211b2a);
-  color: #ddd0ed;
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, .48),
-    0 0 0 1px rgba(3, 11, 21, .98),
-    0 1px 2px rgba(0, 0, 0, .52);
-}
-
-.ranked-end-run-action:disabled {
-  --ranked-end-frame-gradient:
-    linear-gradient(180deg, rgba(156, 122, 200, .46), rgba(73, 56, 91, .44));
-  border-color: rgba(156, 122, 200, .42);
-  background: linear-gradient(180deg, rgba(59, 48, 72, .72), rgba(35, 29, 44, .7));
-  color: rgba(221, 208, 237, .56);
-  box-shadow: 0 0 0 1px rgba(3, 11, 21, .68);
-  cursor: not-allowed;
-  opacity: .58;
-}
-
-.ranked-action-dock .ranked-endless-end-action .ad-icon {
+.ranked-action-dock .ranked-end-run-control .ad-icon {
   width: clamp(.9rem, 1.1vw, 1.12rem);
   height: clamp(.9rem, 1.1vw, 1.12rem);
   flex: 0 0 auto;
@@ -1784,6 +1717,205 @@
   height: 1.15rem;
 }
 
+.ranked-results-card {
+  width: min(100%, 46rem);
+  max-width: 46rem;
+  gap: 0;
+  margin-block: clamp(.7rem, 3vh, 2rem);
+  padding: clamp(1.25rem, 3vw, 2rem) clamp(1rem, 4vw, 2.6rem) clamp(1.2rem, 3vw, 1.8rem);
+}
+
+.ranked-results-card .ranked-start-card-glow {
+  top: 5.5rem;
+  width: 16rem;
+  height: 16rem;
+}
+
+.ranked-results-sigil {
+  display: grid;
+  place-items: center;
+  width: 3.7rem;
+  height: 3.7rem;
+  margin-top: .65rem;
+  border: 1px solid color-mix(in srgb, var(--rank-color, #fac51c) 68%, transparent);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--rank-color, #fac51c) 24%, transparent), rgba(4, 12, 14, .92));
+  color: var(--rank-color, #fac51c);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .08),
+    0 0 24px var(--rank-glow, rgba(250, 197, 28, .32));
+}
+
+.ranked-results-sigil .ad-icon {
+  width: 1.65rem;
+  height: 1.65rem;
+}
+
+.ranked-results-card h1 {
+  margin-top: .55rem;
+}
+
+.ranked-results-summary {
+  max-width: 34rem;
+  margin: .55rem 0 0;
+  color: rgba(228, 238, 239, .74);
+  line-height: 1.5;
+}
+
+.ranked-results-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  margin-top: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(161, 212, 201, .15);
+  border-radius: 8px;
+  background: rgba(3, 12, 14, .66);
+}
+
+.ranked-results-progress > div {
+  display: grid;
+  justify-items: center;
+  gap: .22rem;
+  padding: .65rem .35rem;
+}
+
+.ranked-results-progress > div + div {
+  border-left: 1px solid rgba(161, 212, 201, .13);
+}
+
+.ranked-results-progress span,
+.ranked-results-rank small {
+  color: rgba(207, 226, 220, .54);
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.ranked-results-progress strong {
+  color: #e7f0ee;
+  font-size: clamp(.9rem, 2.2vw, 1.08rem);
+  font-weight: 900;
+}
+
+.ranked-results-rank {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+  margin-top: .75rem;
+  border: 1px solid color-mix(in srgb, var(--rank-color, #fac51c) 30%, transparent);
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--rank-color, #fac51c) 10%, transparent), transparent 48%),
+    rgba(4, 12, 14, .82);
+  padding: .55rem clamp(.65rem, 2.5vw, 1rem);
+  text-align: left;
+}
+
+.ranked-results-emblem {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(4.1rem, 12vw, 5.5rem);
+  height: clamp(4.5rem, 13vw, 6rem);
+  margin-right: clamp(.5rem, 2vw, .85rem);
+}
+
+.ranked-results-emblem::before {
+  content: '';
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  background: var(--rank-glow, rgba(250, 197, 28, .3));
+  filter: blur(13px);
+}
+
+.ranked-results-emblem img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 13px var(--rank-glow, rgba(250, 197, 28, .42)));
+}
+
+.ranked-results-rank-copy,
+.ranked-results-delta {
+  display: grid;
+  gap: .15rem;
+}
+
+.ranked-results-rank-copy > strong {
+  font-family: "Arial Black", "Trebuchet MS", Arial, Helvetica, sans-serif;
+  font-size: clamp(.88rem, 2.5vw, 1.08rem);
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.ranked-results-rank-copy > span {
+  color: rgba(238, 244, 245, .72);
+  font-size: .8rem;
+  font-weight: 800;
+}
+
+.ranked-results-delta {
+  justify-items: end;
+  padding-left: clamp(.6rem, 2vw, 1rem);
+  text-align: right;
+}
+
+.ranked-results-delta strong {
+  color: rgba(229, 239, 239, .82);
+  font-size: clamp(1rem, 3.3vw, 1.35rem);
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.ranked-results-delta.is-positive strong {
+  color: #8ff0c4;
+}
+
+.ranked-results-delta.is-negative strong {
+  color: #f0aa92;
+}
+
+.ranked-results-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: min(100%, 14rem);
+  gap: .5rem;
+  margin-top: 1rem;
+}
+
+.ranked-results-action .ad-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+@media (max-width: 600px) {
+  .ranked-results-rank {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .ranked-results-delta {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr auto;
+    justify-items: stretch;
+    align-items: center;
+    width: 100%;
+    border-top: 1px solid rgba(161, 212, 201, .12);
+    padding: .5rem 0 0;
+    text-align: left;
+  }
+
+  .ranked-results-delta strong {
+    justify-self: end;
+  }
+}
+
 .ranked-victory-modal .modal-content {
   --ranked-victory-color: #fac51c;
   overflow: hidden;
@@ -2111,7 +2243,7 @@
 
 @media (max-width: 600px) and (orientation: portrait) {
   .ranked-page .ranked-battle-side-content {
-    --ranked-side-heading-padding: .3rem;
+    --ranked-side-heading-padding: .75rem;
     --ranked-side-heading-space: calc(1.25rem + var(--ranked-side-heading-padding));
   }
 
@@ -2236,7 +2368,11 @@
 
   .ranked-offer .ranked-preparation-demon-card .dungeon-demon-card-title {
     min-height: var(--ranked-card-footer-height);
-    padding: clamp(.2rem, 2.8cqh, .28rem) var(--ranked-card-footer-padding-inline);
+    padding:
+      clamp(.2rem, 2.8cqh, .28rem)
+      calc(var(--ranked-card-footer-padding-inline) + var(--ranked-card-cost-space))
+      clamp(.2rem, 2.8cqh, .28rem)
+      var(--ranked-card-footer-padding-inline);
     font-size: clamp(.46rem, 9cqw, .64rem);
   }
 
@@ -2280,7 +2416,7 @@
     padding: calc(var(--dungeon-bottom-panel-padding-y) * .5);
   }
 
-  .ranked-mobile-nav.is-endless {
+  .ranked-mobile-nav.has-end-run {
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 

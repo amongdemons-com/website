@@ -11,7 +11,7 @@
     <link href="/app/css/base.css?v=14be75bf71e6" rel="stylesheet">
     <link href="/app/css/battle.css?v=cf4fb0047115" rel="stylesheet">
     <link href="/app/css/rank-divisions.css?v=1d73edafa9a8" rel="stylesheet">
-    <link href="/app/css/ranked.css?v=de969b2e0f46" rel="stylesheet">
+    <link href="/app/css/ranked.css?v=b0e5a1a001e0" rel="stylesheet">
   </head>
   <body class="dungeon-page ranked-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -139,10 +139,10 @@
         <div class="modal-content">
           <div class="modal-body">
             <div class="ranked-end-run-icon" aria-hidden="true"><i data-lucide="flag"></i></div>
-            <span class="dungeon-phase-eyebrow" id="rankedEndRunEyebrow">Endless Run</span>
+            <span class="dungeon-phase-eyebrow" id="rankedEndRunEyebrow">Concede Ranked Run</span>
             <h2 class="modal-title" id="rankedEndRunTitle">End this run?</h2>
             <p class="ranked-end-run-summary" id="rankedEndRunSummary">
-              Your earned Rank Points are secured. Ending now records your progress and closes this temporary roster.
+              Your final rank will be calculated from the floor reached, then this temporary roster will be retired.
             </p>
             <div class="ranked-end-run-progress" aria-label="Current Ranked run progress">
               <div>
@@ -150,18 +150,18 @@
                 <strong id="rankedEndRunFloor">21</strong>
               </div>
               <div>
-                <span>Run RP</span>
+                <span>Run Result</span>
                 <strong id="rankedEndRunGain">+0</strong>
               </div>
               <div>
-                <span>Total RP</span>
+                <span>Final RP</span>
                 <strong id="rankedEndRunRating">0</strong>
               </div>
             </div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Keep Playing</button>
-            <button class="btn ranked-end-run-action ranked-end-run-confirm" type="button" data-ranked-end-confirm>
+            <button class="btn btn-secondary ranked-end-run-confirm" type="button" data-ranked-end-confirm>
               <i data-lucide="flag" aria-hidden="true"></i>
               <span>End Run</span>
               <span class="dungeon-action-spinner ranked-end-run-spinner" aria-hidden="true"></span>
@@ -213,6 +213,6 @@
       </div>
     </div>
     <script src="/app/dist/runtime.bundle.js?v=b54e137948d0"></script>
-    <script src="/app/dist/ranked.bundle.js?v=79c6d989e60d"></script>
+    <script src="/app/dist/ranked.bundle.js?v=09fc406ce5fa"></script>
   </body>
 </html>

@@ -17,9 +17,9 @@ const {
   RANKED_VICTORY_FLOOR,
   RANKED_VICTORY_SOUL_REWARD,
   STARTING_LIVES,
-  getEarlyRunRatingAdjustment,
   getFloorRatingGain,
   getRankedCardCost,
+  getRunEndRatingDelta,
   getRosterValidation,
   resolveDefeat
 } = require('./lib/ranked-rules');
@@ -420,12 +420,16 @@ async function applyRankedVictory(run, rating, connection, playerId, result) {
   );
 }
 
-async function finalizeRankedRun(run, rating, connection) {
+async function finalizeRankedRun(run, rating, connection, options = {}) {
   if (run.status === 'ended') return;
   const pending = Math.max(0, Number(run.state.pendingRating) || 0);
-  const adjustment = getEarlyRunRatingAdjustment(run.state.highestClearedFloor);
-  await applyRatingDelta(run, rating, connection, pending + adjustment);
+  const ratingDelta = getRunEndRatingDelta(run.floor, pending);
+  await applyRatingDelta(run, rating, connection, ratingDelta);
   run.state.pendingRating = 0;
+  run.state.endReason = options.defeated
+    ? 'defeated'
+    : (options.abandoned ? 'conceded' : 'completed');
+  run.state.endReachedFloor = Math.max(1, Number(run.floor) || 1);
   run.state.phase = 'ended';
   run.status = 'ended';
   run.endedAt = new Date();

@@ -29,6 +29,7 @@ const RANKED_VICTORY_FLOOR = 20;
 const RANKED_VICTORY_SOUL_REWARD = 25;
 const ENDLESS_RATING_CAP_PER_RUN = 100;
 const ENDLESS_SKILL_CAP = 10;
+const EARLY_RUN_RATING_LOSS = 20;
 
 const DIVISIONS = Object.freeze([
   { minimum: 0, name: 'Bronze III' },
@@ -327,6 +328,16 @@ function getEarlyRunRatingAdjustment(highestClearedFloor) {
   return -5;
 }
 
+function getRunEndRatingDelta(reachedFloor, pendingRating = 0) {
+  const floor = Math.max(1, Math.floor(Number(reachedFloor) || 1));
+  const pending = Math.max(0, Math.floor(Number(pendingRating) || 0));
+  const delta = pending + getEarlyRunRatingAdjustment(floor);
+  if (floor < RANKED_VICTORY_FLOOR / 2) {
+    return Math.min(-EARLY_RUN_RATING_LOSS, delta);
+  }
+  return delta;
+}
+
 function getDivision(rating) {
   const value = Math.max(0, Math.floor(Number(rating) || 0));
   return [...DIVISIONS].reverse().find((division) => value >= division.minimum) || DIVISIONS[0];
@@ -423,6 +434,7 @@ module.exports = {
   ACTIVE_CAPACITY,
   COMBAT_DATA_VERSION,
   DIVISIONS,
+  EARLY_RUN_RATING_LOSS,
   ENDLESS_RATING_CAP_PER_RUN,
   ENDLESS_SKILL_CAP,
   FORMATION_CAPACITY,
@@ -452,6 +464,7 @@ module.exports = {
   getRankedActiveCapacity,
   getRarityOdds,
   getRankedCardCost,
+  getRunEndRatingDelta,
   getRosterValidation,
   moveRosterDemon,
   normalizeFormationSlot,

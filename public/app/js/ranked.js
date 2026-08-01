@@ -119,6 +119,7 @@ function cacheElements() {
     'rankedPactGrid',
     'rankedEndRunModal',
     'rankedEndRunEyebrow',
+    'rankedEndRunSummary',
     'rankedEndRunFloor',
     'rankedEndRunGain',
     'rankedEndRunRating',
@@ -359,11 +360,19 @@ async function handleAction(button, event = null) {
 function showRankedEndRunModal() {
   if (!serverRun || !elements.rankedEndRunModal || !window.bootstrap?.Modal) return;
   const floor = Math.max(1, Number(serverRun.floor) || 1);
-  const runDelta = Number(serverRun.rating?.runDelta) || 0;
-  const rating = Math.max(0, Number(serverRun.rating?.rating) || 0);
+  const runDelta = Number(serverRun.rating?.projectedRunDelta ?? serverRun.rating?.runDelta) || 0;
+  const rating = Math.max(
+    0,
+    Number(serverRun.rating?.projectedEnd ?? serverRun.rating?.rating) || 0
+  );
 
   if (elements.rankedEndRunEyebrow) {
-    elements.rankedEndRunEyebrow.textContent = `Endless · Floor ${formatNumber(floor)}`;
+    elements.rankedEndRunEyebrow.textContent = `Concede · Floor ${formatNumber(floor)}`;
+  }
+  if (elements.rankedEndRunSummary) {
+    elements.rankedEndRunSummary.textContent = (
+      `Ending now calculates your final rank from reaching Floor ${formatNumber(floor)} and retires this temporary roster.`
+    );
   }
   if (elements.rankedEndRunFloor) elements.rankedEndRunFloor.textContent = formatNumber(floor);
   if (elements.rankedEndRunGain) {
@@ -908,7 +917,6 @@ function renderRankedDemon(demon, options = {}) {
 function renderPreparation(run, options = {}) {
   const hand = workspace?.hand || [];
   const canReviewFight = Boolean(options.canReviewFight);
-  const isEndless = Number(run.floor) > RANKED_VICTORY_FLOOR;
   const canReroll = canRerollWorkspace() && !isBusy;
   const canFight = canFightWorkspace() && !isBusy;
   const rerollLabel = `Reroll hand for ${RANKED_REROLL_RSOUL_COST} Ranked Souls`;
@@ -951,7 +959,7 @@ function renderPreparation(run, options = {}) {
         <span>Drop team or reserve demon here</span>
       </div>
     </div>
-    <div class="ranked-action-dock${isEndless ? ' is-endless' : ''}">
+    <div class="ranked-action-dock has-end-run">
       <button class="btn ${run.handLocked ? 'btn-success' : 'btn-outline-light'} ranked-side-action ranked-side-action-compact ranked-lock-action"
               type="button" data-ranked-action="lock-hand" aria-pressed="${run.handLocked ? 'true' : 'false'}"
               title="${lockLabel}" aria-label="${lockLabel}">
@@ -960,18 +968,16 @@ function renderPreparation(run, options = {}) {
       <div class="ranked-review-actions" role="group" aria-label="Previous fight">
         ${renderReplayLogButtons(canReviewFight, canReviewFight)}
       </div>
-      ${isEndless ? `
-        <button class="btn ranked-end-run-action ranked-side-action ranked-side-action-compact ranked-endless-end-action"
-                type="button" data-ranked-action="end" title="End Endless run" aria-label="End Endless run">
-          ${renderIcon('flag')} <span>End Run</span>
-        </button>
-      ` : ''}
+      <button class="btn btn-secondary ranked-side-action ranked-side-action-compact ranked-end-run-control"
+              type="button" data-ranked-action="end" title="Concede Ranked run" aria-label="Concede Ranked run">
+        ${renderIcon('flag')} <span>End Run</span>
+      </button>
     </div>
     <button class="btn btn-primary btn-lg ranked-side-action ranked-fight-action" type="button" data-ranked-action="fight"
             title="Start Ranked fight" aria-label="Start Ranked fight" ${canFight ? '' : 'disabled'}>
       ${renderIcon('swords')} <span>Fight</span>
     </button>
-    <div class="ranked-mobile-nav${isEndless ? ' is-endless' : ''}" role="group" aria-label="Ranked preparation controls">
+    <div class="ranked-mobile-nav has-end-run" role="group" aria-label="Ranked preparation controls">
       <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn ranked-mobile-reroll-btn" type="button" data-ranked-action="reroll"
               title="${rerollLabel}" aria-label="${rerollLabel}" ${canReroll ? '' : 'disabled'}>
         <span class="ranked-mobile-reroll-icon" aria-hidden="true">${renderIcon('refresh-cw')}</span>
@@ -1005,13 +1011,11 @@ function renderPreparation(run, options = {}) {
         ${renderIcon('log')}
         <span class="visually-hidden">Fight Log</span>
       </button>
-      ${isEndless ? `
-        <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn ranked-mobile-end-action ranked-end-run-action" type="button"
-                data-ranked-action="end" title="End Endless run" aria-label="End Endless run">
-          ${renderIcon('flag')}
-          <span class="visually-hidden">End Run</span>
-        </button>
-      ` : ''}
+      <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn ranked-mobile-end-action" type="button"
+              data-ranked-action="end" title="Concede Ranked run" aria-label="Concede Ranked run">
+        ${renderIcon('flag')}
+        <span class="visually-hidden">End Run</span>
+      </button>
       <button class="dungeon-mobile-nav-btn dungeon-mobile-fight-btn ranked-mobile-nav-btn ad-primary-action"
               type="button" data-ranked-action="fight" title="Start Ranked fight" aria-label="Start Ranked fight"
               ${canFight ? '' : 'disabled'}>
@@ -1165,14 +1169,51 @@ function syncRankedPactView() {
 
 function renderEndedRun(run) {
   const cleared = Number(run.highestClearedFloor) || 0;
-  const reached = Math.max(cleared, Number(run.floor) || 1);
+  const reached = Math.max(cleared, Number(run.endReachedFloor ?? run.floor) || 1);
+  const rating = Math.max(0, Number(run.rating?.rating) || 0);
+  const delta = Number(run.rating?.runDelta) || 0;
+  const rank = getRankPresentation(run.rating?.division || 'Bronze III');
+  const reason = run.endReason || (Number(run.lives) <= 0 ? 'defeated' : 'completed');
+  const victory = cleared >= RANKED_VICTORY_FLOOR;
+  const title = victory
+    ? 'Ranked Victory'
+    : (reason === 'conceded' ? 'Run Conceded' : (reason === 'defeated' ? 'Run Defeated' : 'Run Complete'));
+  const icon = victory ? 'trophy' : (reason === 'defeated' ? 'skull' : 'flag');
+  const summary = victory
+    ? 'Floor 20 was conquered and your climb has been recorded.'
+    : (reason === 'conceded'
+      ? `Your final rank was calculated from reaching Floor ${formatNumber(reached)}.`
+      : 'All three lives were lost. Your rank now reflects the floor you reached.');
+  const deltaClass = delta > 0 ? 'is-positive' : (delta < 0 ? 'is-negative' : 'is-neutral');
   return `
-    <div class="ranked-end-card">
+    <div class="ranked-end-card ranked-start-card ranked-results-card ranked-rank--${escapeHtml(rank.slug)} ${deltaClass}">
+      <div class="ranked-start-card-glow" aria-hidden="true"></div>
       <span class="dungeon-phase-eyebrow">${escapeHtml(run.season?.name || 'Ranked Season')}</span>
-      <h1>${cleared >= RANKED_VICTORY_FLOOR ? 'Ranked Victory' : 'Run Complete'}</h1>
-      <p>Reached Floor ${formatNumber(reached)} &middot; Cleared Floor ${formatNumber(cleared)} &middot; ${formatSigned(run.rating?.runDelta || 0)} Rank Points</p>
-      <p class="text-muted">${escapeHtml(run.rating?.division || '')} &middot; ${formatNumber(run.rating?.rating || 0)} RP</p>
-      <button class="btn btn-primary btn-lg" type="button" data-ranked-action="start">Start New Run</button>
+      <span class="ranked-results-sigil" aria-hidden="true">${renderIcon(icon)}</span>
+      <h1>${escapeHtml(title)}</h1>
+      <p class="ranked-results-summary">${escapeHtml(summary)}</p>
+      <div class="ranked-results-progress" aria-label="Run progress">
+        <div><span>Reached</span><strong>Floor ${formatNumber(reached)}</strong></div>
+        <div><span>Cleared</span><strong>Floor ${formatNumber(cleared)}</strong></div>
+        <div><span>Lives Left</span><strong>${formatNumber(run.lives || 0)}</strong></div>
+      </div>
+      <div class="ranked-results-rank" aria-label="Final rank ${escapeHtml(rank.division)}, ${formatNumber(rating)} Rank Points">
+        <span class="ranked-results-emblem" aria-hidden="true">
+          <img src="${escapeHtml(rank.imageUrl)}" alt="" width="112" height="124">
+        </span>
+        <span class="ranked-results-rank-copy">
+          <small>Final Rank</small>
+          <strong class="rank-division-text rank-division-text--${escapeHtml(rank.slug)}">${escapeHtml(rank.division.toUpperCase())}</strong>
+          <span>${formatNumber(rating)} RP</span>
+        </span>
+        <span class="ranked-results-delta ${deltaClass}">
+          <small>Run Result</small>
+          <strong>${formatSigned(delta)} RP</strong>
+        </span>
+      </div>
+      <button class="btn btn-primary btn-lg ranked-results-action" type="button" data-ranked-action="start">
+        ${renderIcon('trophy')} <span>Start New Run</span>
+      </button>
     </div>
   `;
 }
