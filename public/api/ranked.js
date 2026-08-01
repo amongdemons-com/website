@@ -39,7 +39,6 @@ const {
   namespaceRankedOpponentTeam,
   prepareForFight,
   resetTeamForBattle,
-  retryRankedFloor,
   saveRankedRun,
   saveReadySnapshot,
   selectOpponent,
@@ -221,7 +220,8 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       throwRankedError('The Ranked lineup cannot fight right now.', 409);
     }
     const committed = await applyRankedWorkspace(run, req.body?.lineup, {
-      preserveHand: Boolean(req.body?.lockHand)
+      preserveHand: Boolean(req.body?.lockHand),
+      autoSellPurchasedHand: true
     });
     result.purchaseCost = committed.purchaseCost;
     result.saleCredit = committed.saleCredit;
@@ -260,6 +260,13 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
     run.state.phase = 'result';
     run.state.lastBattle = {
       floor: run.floor,
+      opponent: {
+        id: opponent.id,
+        hunterName: opponent.generated ? null : opponent.hunterName,
+        generated: Boolean(opponent.generated),
+        division: opponent.division,
+        rating: opponent.rating
+      },
       winner: fight.winner,
       endReason: fight.endReason,
       ticks: fight.ticks,
@@ -269,7 +276,8 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       playerTeamAfter: cloneJson(fight.playerTeam),
       enemyTeamAfter: cloneJson(fight.enemyTeam),
       playerBuffs: serializeCombatBuffState(playerBattleBuffs).activeBuffs,
-      enemyBuffs: serializeCombatBuffState(opponent.buffs).activeBuffs
+      enemyBuffs: serializeCombatBuffState(opponent.buffs).activeBuffs,
+      enemySkillTree: opponent.skillTree || null
     };
     result.winner = fight.winner;
     result.endReason = fight.endReason;
@@ -291,7 +299,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       return;
     }
     result.rSoulInterest = awardRankedSoulInterest(run);
-    await retryRankedFloor(run, { offerPact: true });
+    await advanceRankedFloor(run, { offerPact: false });
   })
 ));
 

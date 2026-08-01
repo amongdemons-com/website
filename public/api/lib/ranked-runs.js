@@ -33,6 +33,7 @@ const {
   OFFER_SIZE,
   RANKED_STARTING_RSOULS,
   RANKED_RULES_VERSION,
+  RANKED_VICTORY_FLOOR,
   RARITIES,
   RESERVE_CAPACITY,
   combineRoster,
@@ -231,6 +232,8 @@ async function createInitialRankedState(seed, runId = null) {
     handLocked: false,
     lockedHand: [],
     opponent: null,
+    lastOpponentKey: null,
+    lastOpponentPlayerId: null,
     lastBattle: null,
     highestClearedFloor: 0,
     victoryRewardClaimed: false,
@@ -399,6 +402,22 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
   ) {
     throw createWorkspaceError('The lineup contains an invalid staged purchase.');
   }
+  const automaticallySoldHand = options.autoSellPurchasedHand
+    ? requestedHand.filter((entry) => isOwnedRankedHandReference(
+      entry,
+      offersByInstanceId,
+      stagedPurchaseOfferIds
+    ))
+    : [];
+  const automaticallySoldIds = new Set(
+    automaticallySoldHand
+      .map((entry) => String(entry?.instanceId || ''))
+      .filter(Boolean)
+  );
+  const retainedRequestedHand = requestedHand.filter((entry) => (
+    !automaticallySoldIds.has(String(entry?.instanceId || ''))
+    && !automaticallySoldHand.includes(entry)
+  ));
   const rosterIds = new Set(rosterDemons.map((demon) => String(demon.instanceId)));
   const usedIds = new Set();
   const usedSlots = new Set();
@@ -520,10 +539,11 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
     return demon;
   });
 
-  const sold = requestedSold.map((entry) => resolveWorkspaceDemon(entry, 'sold').demon);
+  const sold = [...requestedSold, ...automaticallySoldHand]
+    .map((entry) => resolveWorkspaceDemon(entry, 'sold').demon);
 
   const lockedHand = options.preserveHand
-    ? requestedHand.map((entry) => {
+    ? retainedRequestedHand.map((entry) => {
       const resolved = resolveWorkspaceDemon(entry, 'hand');
       const directOffer = resolved.sourceInstanceIds.length === 1
         ? offersByInstanceId.get(String(resolved.sourceInstanceIds[0]))
@@ -580,7 +600,7 @@ async function applyRankedWorkspace(run, lineup, options = {}) {
   state.reserve = combined.reserve;
   state.picksRemaining = Math.max(0, picksRemaining - selectedOfferCount);
   state.offers = [];
-  state.handLocked = Boolean(options.preserveHand);
+  state.handLocked = Boolean(options.preserveHand && lockedHand.length);
   state.lockedHand = lockedHand;
   state.combinationEvents = [...combinationEvents, ...combined.events];
 
@@ -602,6 +622,16 @@ function getRankedSoulBalance(run) {
   return Number.isFinite(value) && value >= 0
     ? Math.floor(value)
     : RANKED_STARTING_RSOULS;
+}
+
+function isOwnedRankedHandReference(entry, offersByInstanceId, stagedPurchaseOfferIds) {
+  if (entry?.combination) return true;
+  const offer = offersByInstanceId.get(String(entry?.instanceId || ''));
+  if (!offer) return true;
+  return Boolean(
+    offer.purchased
+    || stagedPurchaseOfferIds.has(String(offer.offerId || ''))
+  );
 }
 
 function spendRankedSouls(run, cost) {
@@ -833,12 +863,13 @@ async function saveReadySnapshot(run, rating, username, queryable = db) {
 }
 
 async function selectOpponent(run, rating, queryable = db) {
+  const policy = getRankedMatchmakingPolicy(run, rating);
   const [rows] = await queryable.query(
     `SELECT snapshots.*,
             history.opponent_key AS previously_served
      FROM ranked_opponent_snapshots snapshots
      LEFT JOIN (
-       SELECT opponent_key
+       SELECT DISTINCT opponent_key
        FROM ranked_opponent_history
        WHERE player_id = ? AND season_id = ? AND floor = ?
      ) history ON history.opponent_key = snapshots.id
@@ -847,51 +878,73 @@ async function selectOpponent(run, rating, queryable = db) {
        AND snapshots.player_id <> ?
        AND snapshots.combat_version = ?
        AND snapshots.created_at < CURRENT_TIMESTAMP
-       AND snapshots.rating BETWEEN ? AND ?
+       AND snapshots.id = (
+         SELECT latest.id
+         FROM ranked_opponent_snapshots latest
+         WHERE latest.season_id = snapshots.season_id
+           AND latest.floor = snapshots.floor
+           AND latest.player_id = snapshots.player_id
+           AND latest.combat_version = snapshots.combat_version
+           AND latest.created_at < CURRENT_TIMESTAMP
+         ORDER BY latest.created_at DESC, latest.id DESC
+         LIMIT 1
+       )
+       AND (? = 1 OR snapshots.rating BETWEEN ? AND ?)
      ORDER BY history.opponent_key IS NULL DESC,
-              ABS(snapshots.rating - ?) ASC,
-              snapshots.created_at ASC
-     LIMIT 12`,
+              CASE WHEN ? = 0 THEN ABS(snapshots.rating - ?) ELSE 0 END ASC,
+              snapshots.created_at DESC
+     LIMIT 100`,
     [
       run.playerId,
       run.seasonId,
-      run.floor,
+      policy.floor,
       run.seasonId,
-      run.floor,
+      policy.floor,
       run.playerId,
       COMBAT_DATA_VERSION,
-      rating.rating - 300,
-      rating.rating + 300,
-      rating.rating
+      policy.endless ? 1 : 0,
+      policy.minRating,
+      policy.maxRating,
+      policy.endless ? 1 : 0,
+      policy.rating
     ]
   );
 
-  const eligibleSnapshots = rows
+  const eligibleSnapshots = deduplicatePlayerSnapshots(rows
     .map((row) => ({ row, snapshot: parseJson(row.snapshot, {}) }))
     .filter(({ snapshot }) => (
       countEnemyMeleeDemons(snapshot.team || []) <= MAX_ENEMY_MELEE_DEMONS
-    ));
+    )))
+    .filter(({ row }) => !isImmediatePlayerRepeat(row, run.state));
 
   let opponent;
   if (eligibleSnapshots.length) {
-    const rng = createRng(hashSeed(`${run.seed}:opponent:${run.floor}`));
+    const retryCount = Math.max(0, Number(run.state.floorRetryCount) || 0);
+    const rng = createRng(hashSeed(`${run.seed}:opponent:${run.floor}:${retryCount}`));
     const unseen = eligibleSnapshots.filter(({ row }) => !row.previously_served);
     const pool = unseen.length ? unseen : eligibleSnapshots;
-    const selected = pool[Math.floor(rng() * Math.min(pool.length, 5))] || pool[0];
+    const selectionSize = policy.endless ? pool.length : Math.min(pool.length, 5);
+    const selected = pool[Math.floor(rng() * selectionSize)] || pool[0];
     const { row, snapshot } = selected;
     opponent = {
       id: row.id,
+      playerId: row.player_id,
       hunterName: row.hunter_name,
       generated: false,
       rating: Number(row.rating) || rating.rating,
       division: getDivision(row.rating).name,
       team: prepareOpponentTeam(snapshot.team || []),
-      buffs: mergeSnapshotBuffs(snapshot)
+      buffs: mergeSnapshotBuffs(snapshot),
+      skillTree: getSnapshotSkillTreeSummary(snapshot)
     };
   } else {
-    opponent = await selectGeneratedOpponent(run, rating, queryable);
+    opponent = await selectGeneratedOpponent(run, rating, queryable, {
+      excludeOpponentKey: run.state.lastOpponentKey
+    });
   }
-  opponent.team = empowerEndlessGhostTeam(opponent.team, run.floor);
+  if (opponent.generated) {
+    opponent.team = empowerEndlessGhostTeam(opponent.team, run.floor);
+  }
 
   await queryable.query(
     `INSERT INTO ranked_opponent_history
@@ -900,10 +953,42 @@ async function selectOpponent(run, rating, queryable = db) {
     [run.playerId, run.seasonId, opponent.id, run.floor]
   );
   run.state.opponent = opponent;
+  run.state.lastOpponentKey = opponent.id;
+  run.state.lastOpponentPlayerId = opponent.generated ? null : opponent.playerId;
   return opponent;
 }
 
-async function selectGeneratedOpponent(run, rating, queryable = db) {
+function getRankedMatchmakingPolicy(run, rating) {
+  const floor = Math.max(1, Number(run?.floor) || 1);
+  const rawRating = Number(rating?.rating);
+  const currentRating = Number.isFinite(rawRating) ? Math.max(0, rawRating) : DEFAULT_RATING;
+  const endless = floor > RANKED_VICTORY_FLOOR;
+  return {
+    floor,
+    endless,
+    rating: currentRating,
+    minRating: Math.max(0, currentRating - 300),
+    maxRating: currentRating + 300
+  };
+}
+
+function deduplicatePlayerSnapshots(candidates = []) {
+  const seenPlayerIds = new Set();
+  return candidates.filter(({ row }) => {
+    const playerId = String(row?.player_id || '');
+    if (!playerId || seenPlayerIds.has(playerId)) return false;
+    seenPlayerIds.add(playerId);
+    return true;
+  });
+}
+
+function isImmediatePlayerRepeat(row, state = {}) {
+  const previousPlayerId = String(state.lastOpponentPlayerId || '');
+  if (previousPlayerId) return String(row?.player_id || '') === previousPlayerId;
+  return String(row?.id || '') === String(state.lastOpponentKey || '');
+}
+
+async function selectGeneratedOpponent(run, rating, queryable = db, options = {}) {
   const bracket = Math.round(rating.rating / 200) * 200;
   await ensureGeneratedOpponents(run.seasonId, run.floor, bracket, queryable);
   const [rows] = await queryable.query(
@@ -922,9 +1007,14 @@ async function selectGeneratedOpponent(run, rating, queryable = db) {
      ORDER BY history.opponent_key IS NULL DESC, generated.variant ASC`,
     [run.playerId, run.seasonId, run.floor, run.seasonId, run.floor, bracket, GENERATED_OPPONENT_COMBAT_VERSION]
   );
-  const unseen = rows.filter((row) => !row.previously_served);
-  const pool = unseen.length ? unseen : rows;
-  const index = hashSeed(`${run.seed}:generated:${run.floor}`) % Math.max(1, pool.length);
+  const nonRepeating = rows.filter((row) => (
+    String(row.id) !== String(options.excludeOpponentKey || '')
+  ));
+  const candidates = nonRepeating.length ? nonRepeating : rows;
+  const unseen = candidates.filter((row) => !row.previously_served);
+  const pool = unseen.length ? unseen : candidates;
+  const retryCount = Math.max(0, Number(run.state.floorRetryCount) || 0);
+  const index = hashSeed(`${run.seed}:generated:${run.floor}:${retryCount}`) % Math.max(1, pool.length);
   const row = pool[index] || rows[0];
   const snapshot = parseJson(row.snapshot, {});
   return {
@@ -934,7 +1024,8 @@ async function selectGeneratedOpponent(run, rating, queryable = db) {
     rating: bracket,
     division: getDivision(bracket).name,
     team: prepareOpponentTeam(snapshot.team || []),
-    buffs: mergeSnapshotBuffs(snapshot)
+    buffs: mergeSnapshotBuffs(snapshot),
+    skillTree: getSnapshotSkillTreeSummary(snapshot)
   };
 }
 
@@ -1300,6 +1391,58 @@ function empowerEndlessGhostTeam(team = [], floor = 0) {
   });
 }
 
+function getSnapshotSkillTreeSummary(snapshot = {}) {
+  const locked = snapshot.lockedBuffs || {};
+  const allocations = locked.allocations || {};
+  const activeBuffs = Array.isArray(locked.activeBuffs) ? locked.activeBuffs : [];
+  const skillBuffs = activeBuffs.filter((buff) => buff?.source === 'skill_tree');
+  const storedBonuses = locked.skillBonuses && typeof locked.skillBonuses === 'object'
+    ? locked.skillBonuses
+    : null;
+  const bonuses = storedBonuses || summarizeSkillTreeEffects(skillBuffs);
+  const spentPoints = Object.values(allocations)
+    .reduce((total, value) => total + Math.max(0, Number(value) || 0), 0);
+  const hasBonuses = Object.values(bonuses).some((value) => Number(value) > 0);
+  if (!spentPoints && !skillBuffs.length && !hasBonuses) return null;
+  return {
+    spentPoints: Math.max(1, spentPoints),
+    bonuses
+  };
+}
+
+function summarizeSkillTreeEffects(skillBuffs = []) {
+  const bonuses = {};
+  const effectMap = {
+    max_hp_flat: ['maxHpFlat', 'flat'],
+    max_hp_mult: ['maxHpPercent', 'multiplier'],
+    healing_flat: ['healingFlat', 'flat'],
+    healing_mult: ['healingPercent', 'multiplier'],
+    thorns_flat: ['thornsFlat', 'flat'],
+    thorns_percent: ['thornsPercent', 'flat'],
+    speed_flat: ['speedFlat', 'flat'],
+    speed_mult: ['speedPercent', 'multiplier'],
+    attack_flat: ['attackFlat', 'flat'],
+    attack_mult: ['attackPercent', 'multiplier'],
+    aoe_damage_flat: ['aoeDamageFlat', 'flat'],
+    aoe_damage_mult: ['aoeDamagePercent', 'multiplier'],
+    poison_damage_flat: ['poisonDamageFlat', 'flat'],
+    poison_tick_damage_mult: ['poisonDamagePercent', 'multiplier']
+  };
+
+  skillBuffs.forEach((buff) => {
+    (Array.isArray(buff?.effects) ? buff.effects : []).forEach((effect) => {
+      const mapping = effectMap[String(effect?.type || '')];
+      if (!mapping) return;
+      const [key, kind] = mapping;
+      const rawValue = Number(effect.value);
+      if (!Number.isFinite(rawValue)) return;
+      const value = kind === 'multiplier' ? (rawValue - 1) * 100 : rawValue;
+      bonuses[key] = Math.round(((Number(bonuses[key]) || 0) + value) * 10) / 10;
+    });
+  });
+  return bonuses;
+}
+
 function namespaceRankedOpponentTeam(team, opponentKey = 'opponent') {
   const namespace = hashSeed(opponentKey).toString(36);
   return (Array.isArray(team) ? team : []).map((demon, index) => ({
@@ -1419,7 +1562,10 @@ module.exports = {
     createGeneratedLockedBonuses,
     empowerEndlessGhostTeam,
     ensureGeneratedOpponents,
+    getRankedMatchmakingPolicy,
     getRankedPactChoiceExclusions,
+    getSnapshotSkillTreeSummary,
+    isImmediatePlayerRepeat,
     hashSeed,
     namespaceRankedOpponentTeam,
     prepareOpponentTeam,

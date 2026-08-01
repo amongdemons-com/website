@@ -43,13 +43,35 @@
   display: inline-flex;
 }
 
-.ranked-page #teamSideTitle .ranked-rank-image {
+.ranked-page #teamSideTitle .battle-side-count {
+  margin-left: 0;
+  margin-right: .42rem;
+}
+
+.ranked-page #teamSideTitle .ranked-rank-image,
+.ranked-page #enemySideTitle .ranked-rank-image {
   width: 1rem;
   height: 1.12rem;
 }
 
-.ranked-page #teamSideTitle .ranked-rank-label {
+.ranked-page #teamSideTitle .ranked-rank-label,
+.ranked-page #enemySideTitle .ranked-rank-label {
   color: var(--rank-color);
+}
+
+.ranked-opponent-link {
+  position: relative;
+  z-index: 2;
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: .16em;
+  pointer-events: auto;
+}
+
+.ranked-opponent-link:hover,
+.ranked-opponent-link:focus-visible {
+  color: #fff;
+  text-decoration: underline;
 }
 
 .ranked-rank-separator {
@@ -863,18 +885,19 @@
   line-height: 1;
 }
 
-.ranked-action-dock .ranked-end-run-control {
+.ranked-action-dock .ranked-side-action-compact.ranked-end-run-control {
   align-items: center;
   justify-content: center;
-  gap: .32rem;
-  font-size: clamp(.62rem, .75vw, .76rem);
+  gap: .38rem;
+  font-size: clamp(.68rem, .82vw, .82rem);
   line-height: 1;
 }
 
 .ranked-action-dock .ranked-end-run-control .ad-icon {
-  width: clamp(.9rem, 1.1vw, 1.12rem);
-  height: clamp(.9rem, 1.1vw, 1.12rem);
+  width: clamp(1.05rem, 1.35vw, 1.3rem);
+  height: clamp(1.05rem, 1.35vw, 1.3rem);
   flex: 0 0 auto;
+  margin: 0;
 }
 
 .ranked-reroll-rail .ranked-side-action-compact,
@@ -1261,6 +1284,27 @@
   text-transform: uppercase;
 }
 
+.ranked-detail-sell-action {
+  min-width: 6.5rem !important;
+}
+
+.ranked-detail-sell-action .ad-icon {
+  order: 2;
+  color: var(--ad-soul, #55ffff);
+}
+
+.ranked-detail-sell-action > span {
+  order: 3;
+}
+
+.ranked-detail-sell-action small {
+  order: 1;
+  color: inherit;
+  font-size: inherit;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .ranked-reserve-panel {
   --ranked-reserve-pact-size: clamp(2.15rem, 4.7vh, 2.75rem);
   display: flex;
@@ -1370,34 +1414,36 @@
 }
 
 .battle-side-enemy.is-ranked-reserve .battle-side-heading {
-  color: #86e8b2;
+  color: #e1ba7e;
+  text-shadow: 0 0 16px rgba(0, 0, 0, .72);
 }
 
 .battle-side-enemy.is-ranked-reserve .ranked-reserve-formation {
-  border-color: rgba(111, 214, 189, .32);
+  border-color: rgba(188, 132, 76, .32);
   background:
-    linear-gradient(180deg, rgba(6, 18, 21, .72), rgba(3, 9, 11, .58)),
-    radial-gradient(circle at 50% 0%, rgba(111, 214, 189, .1), transparent 60%);
+    linear-gradient(180deg, rgba(28, 18, 12, .72), rgba(10, 7, 5, .58)),
+    radial-gradient(circle at 50% 0%, rgba(188, 132, 76, .1), transparent 60%);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, .05),
-    0 0 28px rgba(111, 214, 189, .08),
+    0 0 28px rgba(188, 132, 76, .08),
     0 20px 46px rgba(0, 0, 0, .3);
 }
 
 .battle-side-enemy.is-ranked-reserve .ranked-reserve-formation .formation-slot.is-empty {
-  border-color: rgba(111, 214, 189, .18);
+  border-color: rgba(188, 132, 76, .18);
 }
 
 .battle-side-enemy.is-ranked-reserve .ranked-reserve-formation .formation-empty {
-  border-color: rgba(111, 214, 189, .24);
+  border-color: rgba(188, 132, 76, .24);
   background:
-    radial-gradient(circle at 50% 42%, rgba(161, 212, 201, .1), transparent 42%),
-    linear-gradient(180deg, rgba(8, 23, 26, .38), rgba(0, 0, 0, .24));
-  color: rgba(207, 226, 220, .44);
+    radial-gradient(circle at 50% 42%, rgba(188, 132, 76, .1), transparent 42%),
+    linear-gradient(180deg, rgba(38, 25, 17, .38), rgba(0, 0, 0, .24));
+  color: rgba(222, 184, 131, .44);
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, .16);
 }
 
 .battle-side-enemy.is-ranked-reserve .ranked-reserve-formation .formation-slot-placeholder-img {
-  filter: drop-shadow(0 0 12px rgba(207, 226, 220, .14));
+  filter: sepia(.55) drop-shadow(0 0 12px rgba(211, 154, 89, .14));
 }
 
 .ranked-reserve-buffs-shell {
@@ -2416,10 +2462,6 @@
     padding: calc(var(--dungeon-bottom-panel-padding-y) * .5);
   }
 
-  .ranked-mobile-nav.has-end-run {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
-
   .ranked-mobile-nav-btn {
     align-self: stretch;
     justify-self: stretch;
@@ -2503,7 +2545,8 @@
     margin: 0;
   }
 
-  .ranked-mobile-odds {
+  .ranked-mobile-odds,
+  .ranked-mobile-review-menu {
     position: relative;
     width: 100%;
     height: 100%;
@@ -2511,16 +2554,19 @@
     min-height: 0;
   }
 
-  .ranked-mobile-odds > summary {
+  .ranked-mobile-odds > summary,
+  .ranked-mobile-review-menu > summary {
     list-style: none;
     cursor: pointer;
   }
 
-  .ranked-mobile-odds > summary::-webkit-details-marker {
+  .ranked-mobile-odds > summary::-webkit-details-marker,
+  .ranked-mobile-review-menu > summary::-webkit-details-marker {
     display: none;
   }
 
-  .ranked-mobile-odds[open] > summary {
+  .ranked-mobile-odds[open] > summary,
+  .ranked-mobile-review-menu[open] > summary {
     border-color: rgba(111, 214, 189, .56);
     background:
       linear-gradient(180deg, rgba(111, 214, 189, .18), rgba(3, 9, 11, .2)),
@@ -2529,6 +2575,49 @@
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, .08),
       0 0 12px rgba(111, 214, 189, .14);
+  }
+
+  .ranked-mobile-review-menu.is-disabled > summary {
+    opacity: .5;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .ranked-mobile-review-popover {
+    position: absolute;
+    bottom: calc(100% + .35rem);
+    left: 50%;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .25rem;
+    width: min(11.5rem, calc(100vw - 2rem));
+    border: 1px solid rgba(232, 199, 106, .34);
+    border-radius: 7px;
+    background: rgba(4, 11, 14, .97);
+    padding: .3rem;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .5);
+    transform: translateX(-50%);
+  }
+
+  .ranked-mobile-review-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.35rem;
+    padding: .3rem .4rem;
+    font-size: .64rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .ranked-mobile-review-action .ad-icon {
+    width: .95rem;
+    height: .95rem;
+    flex: 0 0 auto;
   }
 
   .ranked-mobile-odds-popover {
@@ -2564,6 +2653,10 @@
 
   .ranked-page .battle-side {
     gap: 0;
+  }
+
+  .ranked-page .dungeon-arena:not(:has(.ranked-reserve-buffs-shell)) > .dungeon-vs {
+    margin-top: .18rem;
   }
 
   .ranked-page .battle-side-heading {
@@ -2631,7 +2724,7 @@
   }
 
   .ranked-reserve-panel:has(.ranked-reserve-buffs-shell) .ranked-reserve-formation {
-    --ranked-reserve-buff-space: calc(var(--ranked-reserve-pact-size) + .75rem);
+    --ranked-reserve-buff-space: calc(var(--ranked-reserve-pact-size) + .95rem);
   }
 
   .ranked-reserve-panel {
@@ -2640,6 +2733,11 @@
 
   .ranked-reserve-buffs-shell {
     flex: 0 0 auto;
+    margin-top: .2rem;
+  }
+
+  .ranked-reserve-buffs {
+    justify-content: safe center;
   }
 
   .ranked-hand-status {
@@ -2652,10 +2750,11 @@
     transform: none;
   }
 
+  .ranked-page .battle-side-heading,
   .ranked-page #teamSideTitle {
-    justify-content: flex-start;
+    justify-content: center;
     padding-inline: .2rem;
-    text-align: left;
+    text-align: center;
   }
 
   .ranked-hand-status .ranked-rsoul-tooltip {
