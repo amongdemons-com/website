@@ -14,7 +14,7 @@
     "build": "npm run assets:backgrounds && npm run assets:demon-atlas && npm run build:browser",
     "db:reset-players": "node scripts/reset-player-database.js",
     "simulate:dungeon": "node scripts/simulate-dungeon-balance.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test"
   },
   "dependencies": {
     "bootstrap": "^5.3.2",

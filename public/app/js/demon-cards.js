@@ -85,7 +85,7 @@
     const hasHp = hasNumber(demon.hp) || hasNumber(demon.maxHp);
     const hasAtk = hasNumber(demon.atk);
     const hasSpeed = hasNumber(demon.speed) && !options.hideSpeed && !isRetaliateDemon(demon);
-    const attackValue = hasNumber(demon.effectiveAtk) ? demon.effectiveAtk : demon.atk;
+    const attackStat = getAttackStat(demon);
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || currentHp || 1);
     const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
@@ -96,7 +96,7 @@
     return `
       ${hasAtk || hasSpeed ? `
         <div class="combat-stat-strip" aria-label="Combat stats">
-          ${hasAtk ? `<span>${renderAttackIcon()}${escapeHtml(attackValue)}</span>` : ''}
+          ${hasAtk ? `<span title="${escapeHtml(attackStat.description)}" aria-label="${escapeHtml(attackStat.description)}">${renderAttackIcon()}${escapeHtml(attackStat.value)}</span>` : ''}
           ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(demon.speed)}</span>` : ''}
         </div>
       ` : ''}
@@ -119,7 +119,7 @@
     const titleHtml = renderDetailTitle(title, demon);
     const imageUrl = demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
     const rarity = capitalize(demon.rarity || 'common');
-    const attackValue = hasNumber(demon.effectiveAtk) ? demon.effectiveAtk : demon.atk;
+    const attackStat = getAttackStat(demon);
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || Number(demon.hp) || 1);
 
@@ -139,7 +139,7 @@
           </div>
 
           <div class="demon-detail-stats" aria-label="Combat stats">
-            ${hasNumber(demon.atk) ? renderDetailStat(renderAttackIcon(), 'Attack', attackValue) : ''}
+            ${hasNumber(demon.atk) ? renderDetailStat(renderAttackIcon(), attackStat.label, attackStat.value, attackStat.description) : ''}
             ${hasNumber(demon.speed) && !isRetaliateDemon(demon) ? renderDetailStat(renderSpeedIcon(), 'Speed', demon.speed) : ''}
             ${hasNumber(demon.hp) || hasNumber(demon.maxHp) ? renderDetailStat(renderIcon('hp'), 'HP', `${currentHp} / ${maxHp}`) : ''}
           </div>
@@ -186,11 +186,11 @@
     detailsModalElement = document.getElementById('demonDetailModal');
   }
 
-  function renderDetailStat(icon, label, value) {
+  function renderDetailStat(icon, label, value, description = label) {
     const iconHtml = String(icon).includes('<svg') ? icon : renderIcon(icon);
 
     return `
-      <span class="demon-detail-stat" title="${escapeHtml(label)}" data-detail-stat="${escapeHtml(getDetailStatKey(label))}">
+      <span class="demon-detail-stat" title="${escapeHtml(description)}" aria-label="${escapeHtml(description)}" data-detail-stat="${escapeHtml(getDetailStatKey(label))}">
         ${iconHtml}
         <span class="demon-detail-stat-value">${escapeHtml(value)}</span>
       </span>
@@ -199,9 +199,20 @@
 
   function getDetailStatKey(label) {
     const normalized = String(label || '').toLowerCase();
-    if (normalized === 'attack') return 'atk';
+    if (normalized === 'attack' || normalized === 'retaliation') return 'atk';
     if (normalized === 'hp') return 'hp';
     return normalized;
+  }
+
+  function getAttackStat(demon = {}) {
+    const value = hasNumber(demon.effectiveAtk) ? demon.effectiveAtk : demon.atk;
+    const label = isRetaliateDemon(demon) ? 'Retaliation' : 'Attack';
+
+    return {
+      value,
+      label,
+      description: `${label}: ${value}`
+    };
   }
 
   function renderDetailMeta(demon) {

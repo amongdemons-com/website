@@ -343,6 +343,8 @@ function applyPreBattleBuffs(team, buffs, accountBonuses = {}) {
       healingFlat: accountHealingFlat + getEffectSum(state, 'healing_flat', demon),
       poisonDamageMult: poisonDamagePreviewMult * accountPoisonDamageMult,
       poisonDamageFlat: accountPoisonDamageFlat + getEffectSum(state, 'poison_damage_flat', demon),
+      thornsFlat: next.battleBuffs.thornsFlat,
+      thornsPercent: next.battleBuffs.thornsPercent,
       retaliationDamageMult: getEffectMultiplier(state, 'retaliation_damage_mult', demon)
     });
 
@@ -369,6 +371,8 @@ function applyDamageOutputStatPreview(demon, options = {}) {
   const healingFlat = Math.max(0, Number(options.healingFlat) || 0);
   const poisonDamageMult = positiveNumber(options.poisonDamageMult, 1);
   const poisonDamageFlat = Math.max(0, Number(options.poisonDamageFlat) || 0);
+  const thornsFlat = Math.max(0, Number(options.thornsFlat) || 0);
+  const thornsPercent = Math.max(0, Number(options.thornsPercent) || 0);
   const retaliationDamageMult = positiveNumber(options.retaliationDamageMult, 1);
   const ability = getDemonAbility(demon);
   const abilityKind = String(ability.kind || '').toLowerCase();
@@ -391,12 +395,15 @@ function applyDamageOutputStatPreview(demon, options = {}) {
     return;
   }
 
-  if (abilityKind === 'retaliate' && retaliationDamageMult !== 1) {
+  if (abilityKind === 'retaliate') {
     const configuredDamage = Number(ability.damage);
     const baseRetaliationDamage = Number.isFinite(configuredDamage) && configuredDamage > 0
       ? configuredDamage
       : baseAtk;
-    demon.effectiveAtk = Math.max(1, Math.round(baseRetaliationDamage * retaliationDamageMult));
+    const skillTreeDamage = Math.max(1, Math.round(
+      (baseRetaliationDamage + thornsFlat) * (1 + (thornsPercent / 100))
+    ));
+    demon.effectiveAtk = Math.max(1, Math.round(skillTreeDamage * retaliationDamageMult));
     return;
   }
 
@@ -449,6 +456,8 @@ function applyRunBuffStatModifiers(run) {
       healingFlat: getEffectSum(state, 'healing_flat', demon),
       poisonDamageMult: getEffectMultiplier(state, 'poison_tick_damage_mult', demon),
       poisonDamageFlat: getEffectSum(state, 'poison_damage_flat', demon),
+      thornsFlat: getEffectSum(state, 'thorns_flat', demon),
+      thornsPercent: getEffectSum(state, 'thorns_percent', demon),
       retaliationDamageMult: getEffectMultiplier(state, 'retaliation_damage_mult', demon)
     });
     if (!Number.isFinite(Number(next.effectiveAtk)) && baseAtk > 0) {

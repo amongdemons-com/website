@@ -137,17 +137,21 @@ function getPoisonStackLimit(ability = {}) {
 }
 
 function getRetaliationDamage(target, ability = {}) {
+  const displayedDamage = Number(target.effectiveAtk);
+  if (Number.isFinite(displayedDamage) && displayedDamage > 0) {
+    return Math.max(1, Math.round(displayedDamage));
+  }
+
   const configuredDamage = Number(ability.damage);
-  if (Number.isFinite(configuredDamage) && configuredDamage > 0) {
-    return Math.max(1, Math.round(configuredDamage));
-  }
+  const baseDamage = Number.isFinite(configuredDamage) && configuredDamage > 0
+    ? configuredDamage
+    : Math.max(1, Number(target.atk) || 1);
+  const thornsFlat = Math.max(0, Number(target.battleBuffs?.thornsFlat) || 0);
+  const thornsPercent = Math.max(0, Number(target.battleBuffs?.thornsPercent) || 0);
 
-  const damageSource = ability.damageSource || 'atk';
-  if (damageSource === 'atk') {
-    return Math.max(1, Number(target.atk) || 1);
-  }
-
-  return Math.max(1, Number(target.atk) || 1);
+  return Math.max(1, Math.round(
+    (baseDamage + thornsFlat) * (1 + (thornsPercent / 100))
+  ));
 }
 
 function getSyncedPoisonNextTick(poisonStacks, fallback) {
@@ -460,32 +464,9 @@ function applyDamage({
     cause: damageKind
   });
 
-  applyThornsDamage({
-    tick,
-    defender: target,
-    defenderSide: targetSide,
-    attacker,
-    attackerSide,
-    receivedDamage: damageResult.damage,
-    combatLog,
-    context
-  });
-
   const targetAbility = getAbility(target, demonTypes);
   if (target.hp > 0 && targetAbility.kind === 'retaliate' && attacker.hp > 0) {
-    const retaliationDamage = applyDamageModifiers({
-      attacker: target,
-      attackerSide: targetSide,
-      target: attacker,
-      targetSide: attackerSide,
-      damage: getRetaliationDamage(target, targetAbility),
-      damageKind: 'retaliation',
-      targeting: 'retaliate',
-      isAoe: false,
-      buffs: context.buffs,
-      playerBuffs: context.playerBuffs,
-      enemyBuffs: context.enemyBuffs
-    });
+    const retaliationDamage = getRetaliationDamage(target, targetAbility);
     const retaliationResult = dealDamage(attacker, retaliationDamage);
 
     combatLog.push({
@@ -510,64 +491,7 @@ function applyDamage({
       targetSide: attackerSide,
       cause: 'retaliation'
     });
-
-    applyThornsDamage({
-      tick,
-      defender: attacker,
-      defenderSide: attackerSide,
-      attacker: target,
-      attackerSide: targetSide,
-      receivedDamage: retaliationResult.damage,
-      combatLog,
-      context
-    });
   }
-}
-
-function applyThornsDamage({
-  tick,
-  defender,
-  defenderSide,
-  attacker,
-  attackerSide,
-  receivedDamage,
-  combatLog,
-  context
-}) {
-  if (!defender || !attacker || attacker.hp <= 0 || receivedDamage <= 0) return;
-
-  const thornsPercent = Math.max(0, Number(defender.battleBuffs?.thornsPercent) || 0);
-  const thornsFlat = Math.max(0, Number(defender.battleBuffs?.thornsFlat) || 0);
-  const thornsMultiplier = 1 + (thornsPercent / 100);
-  const thornsDamage = Math.max(0, Math.round(
-    (receivedDamage * (thornsPercent / 100)) +
-    (thornsFlat * thornsMultiplier)
-  ));
-  if (thornsDamage <= 0) return;
-
-  const damageResult = dealDamage(attacker, thornsDamage);
-  combatLog.push({
-    tick,
-    attacker: defender.instanceId,
-    attackerPosition: normalizePosition(defender.position),
-    target: attacker.instanceId,
-    targetPosition: normalizePosition(attacker.position),
-    targeting: 'thorns',
-    effect: 'thorns',
-    dmg: damageResult.damage,
-    shieldDamage: damageResult.shieldDamage,
-    targetShield: attacker.shield || 0,
-    targetHp: attacker.hp
-  });
-
-  handleDeathBuffTriggers({
-    ...context,
-    tick,
-    target: attacker,
-    attackerSide: defenderSide || getOpposingSide(attackerSide),
-    targetSide: attackerSide,
-    cause: 'thorns'
-  });
 }
 
 function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {

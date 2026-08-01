@@ -17,7 +17,7 @@
 }
 
 .ranked-battle-side-content {
-  --ranked-side-heading-padding: .3rem;
+  --ranked-side-heading-padding: .45rem;
   --ranked-side-heading-space: calc(1.55rem + var(--ranked-side-heading-padding));
   display: grid;
   grid-template-rows: auto auto;
@@ -2111,7 +2111,7 @@
 
 @media (max-width: 600px) and (orientation: portrait) {
   .ranked-page .ranked-battle-side-content {
-    --ranked-side-heading-padding: .18rem;
+    --ranked-side-heading-padding: .3rem;
     --ranked-side-heading-space: calc(1.25rem + var(--ranked-side-heading-padding));
   }
 

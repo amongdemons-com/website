@@ -181,6 +181,8 @@ function applyRunBuffStatPreviewToDemon(demon = {}) {
     healingFlat: getRunBuffEffectSum('healing_flat', next),
     poisonDamageMult: getRunBuffEffectMultiplier('poison_tick_damage_mult', next),
     poisonDamageFlat: getRunBuffEffectSum('poison_damage_flat', next),
+    thornsFlat: getRunBuffEffectSum('thorns_flat', next),
+    thornsPercent: getRunBuffEffectSum('thorns_percent', next),
     retaliationDamageMult: getRunBuffEffectMultiplier('retaliation_damage_mult', next)
   });
 
@@ -227,10 +229,17 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
     getPlayerWorldBuffEffectMultiplier('poison_tick_damage_mult', demon);
   const retaliationDamageMult = getRunBuffEffectMultiplier('retaliation_damage_mult', demon) *
     getPlayerWorldBuffEffectMultiplier('retaliation_damage_mult', demon);
+  const thornsFlat = Math.max(0, Number(bonuses.thornsFlat) || 0) +
+    getRunBuffEffectSum('thorns_flat', demon) +
+    getPlayerWorldBuffEffectSum('thorns_flat', demon);
+  const thornsPercent = Math.max(0, Number(bonuses.thornsPercent) || 0) +
+    getRunBuffEffectSum('thorns_percent', demon) +
+    getPlayerWorldBuffEffectSum('thorns_percent', demon);
 
   const hasHpBonus = maxHpFlat > 0 || maxHpMult !== 1;
   const hasAttackBonus = attackFlat > 0 || attackMult !== 1;
   const hasSpeedBonus = speedFlat > 0 || speedMult !== 1;
+  const hasThornsModifier = isRetaliateDemon(demon) && (thornsFlat > 0 || thornsPercent > 0);
   const hasDamagePreviewBonus = directDamageMult !== 1 ||
     aoeDamageFlat > 0 ||
     aoeDamageMult !== 1 ||
@@ -239,7 +248,7 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
     poisonDamageFlat > 0 ||
     poisonDamageMult !== 1 ||
     retaliationDamageMult !== 1;
-  if (!hasHpBonus && !hasAttackBonus && !hasSpeedBonus && !hasDamagePreviewBonus) return { ...demon };
+  if (!hasHpBonus && !hasAttackBonus && !hasSpeedBonus && !hasDamagePreviewBonus && !hasThornsModifier) return { ...demon };
 
   const next = {
     ...demon,
@@ -284,7 +293,7 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
     }
   }
 
-  if (hasAttackBonus || hasDamagePreviewBonus) {
+  if (hasAttackBonus || hasDamagePreviewBonus || hasThornsModifier) {
     applyDamageOutputStatPreview(next, {
       directDamageMult: getRunBuffEffectMultiplier('direct_damage_mult', next) * directDamageMult,
       aoeDamageMult: getRunBuffEffectMultiplier('aoe_damage_mult', next) * aoeDamageMult,
@@ -293,6 +302,8 @@ function applyAccountStatBonusPreviewToDemon(demon = {}) {
       healingFlat,
       poisonDamageMult: getRunBuffEffectMultiplier('poison_tick_damage_mult', next) * poisonDamageMult,
       poisonDamageFlat,
+      thornsFlat,
+      thornsPercent,
       retaliationDamageMult
     });
   }
@@ -323,6 +334,8 @@ function applyDamageOutputStatPreview(demon, options = {}) {
   const healingFlat = Math.max(0, Number(options.healingFlat) || 0);
   const poisonDamageMult = Math.max(0, Number(options.poisonDamageMult) || 1);
   const poisonDamageFlat = Math.max(0, Number(options.poisonDamageFlat) || 0);
+  const thornsFlat = Math.max(0, Number(options.thornsFlat) || 0);
+  const thornsPercent = Math.max(0, Number(options.thornsPercent) || 0);
   const retaliationDamageMult = Math.max(0, Number(options.retaliationDamageMult) || 1);
   const isAoe = isAoeDemon(demon);
   const isSingleTarget = isSingleTargetAttackDemon(demon);
@@ -349,7 +362,10 @@ function applyDamageOutputStatPreview(demon, options = {}) {
   }
 
   if (isRetaliation) {
-    demon.effectiveAtk = Math.max(1, Math.round(baseAtk * retaliationDamageMult));
+    const skillTreeDamage = Math.max(1, Math.round(
+      (baseAtk + thornsFlat) * (1 + (thornsPercent / 100))
+    ));
+    demon.effectiveAtk = Math.max(1, Math.round(skillTreeDamage * retaliationDamageMult));
     return;
   }
 
