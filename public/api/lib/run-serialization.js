@@ -10,6 +10,7 @@ const { getActiveWorldBossRewardBuffs } = require('./world-bosses');
 
 async function serializeRun(run, options = {}) {
   applyRunBuffStatModifiers(run);
+  const playerLevel = getRunPlayerLevel(run, options);
   const collectionReinforcementLimit = getCollectionReinforcementLimit(run);
   const collectionReinforcementAvailable = collectionReinforcementLimit > 0;
   const worldBuffs = await getSerializedWorldBuffs(run, options);
@@ -24,9 +25,9 @@ async function serializeRun(run, options = {}) {
     hp: run.state.hp,
     team: run.state.team,
     enemies: run.state.enemies,
-    nextEnemies: await getNextEnemiesPreview(run),
-    enemyPressure: getEnemyPressurePreview(run, run.floor),
-    nextEnemyPressure: getEnemyPressurePreview(run, Number(run.floor) + 1),
+    nextEnemies: await getNextEnemiesPreview(run, { playerLevel }),
+    enemyPressure: getEnemyPressurePreview(run, run.floor, { playerLevel }),
+    nextEnemyPressure: getEnemyPressurePreview(run, Number(run.floor) + 1, { playerLevel }),
     enemyBuffs: serializeEncounterBuffs(encounterProfile),
     nextEnemyBuffs: serializeEncounterBuffs(nextEncounterProfile),
     rewards: run.rewards,
@@ -35,7 +36,7 @@ async function serializeRun(run, options = {}) {
     collectionReinforcementAvailable,
     collectionReinforcementLimit,
     teamLimit: getSerializedTeamLimit(run),
-    buffs: serializeRunBuffState(run.state.buffs || {}),
+    buffs: serializeRunBuffState(run.state.buffs || {}, { playerLevel }),
     worldBuffs,
     extractChoice: run.state.extractChoice || null,
     lastBattle: run.state.lastBattle || null,
@@ -51,9 +52,13 @@ async function getSerializedWorldBuffs(run, options = {}) {
   return normalizeRunBuffState({ activeBuffs }).activeBuffs;
 }
 
-function getEnemyPressurePreview(run, floor) {
+function getEnemyPressurePreview(run, floor, options = {}) {
   const floorNumber = Math.max(1, Number(floor) || 1);
-  const pressure = getEnemyPressureMultipliers(floorNumber, { buffs: run.state.buffs, rarityRebalanced: true });
+  const pressure = getEnemyPressureMultipliers(floorNumber, {
+    buffs: run.state.buffs,
+    playerLevel: options.playerLevel,
+    rarityRebalanced: true
+  });
   const activePactCount = normalizeRunBuffState(run.state.buffs || {}).active.length;
   const level = getEnemyPressureLevel(pressure);
 
@@ -68,7 +73,7 @@ function getEnemyPressurePreview(run, floor) {
     atkBonusPct: getBonusPercent(pressure.atk),
     speedBonusPct: getBonusPercent(pressure.speed),
     active: level > 0,
-    description: 'Floor depth, rarity balance, and sealed Pacts strengthen this formation.'
+    description: 'Floor depth, hunter level, rarity balance, and sealed Pacts strengthen this formation.'
   };
 }
 
@@ -92,13 +97,18 @@ function getEnemyPressureLevel(pressure = {}) {
   return Math.max(0, Math.round(((Number(pressure.hp) || 1) - 1) / 0.045));
 }
 
-async function getNextEnemiesPreview(run) {
+async function getNextEnemiesPreview(run, options = {}) {
   if (!run.state.awaitingRecruit || run.status !== 'active') return [];
 
   const nextFloor = Number(run.floor) + 1;
   return createDungeonEnemies(createRng(run.seed + nextFloor), nextFloor, (run.state.team || []).length, {
-    buffs: run.state.buffs
+    buffs: run.state.buffs,
+    playerLevel: options.playerLevel
   });
+}
+
+function getRunPlayerLevel(run, options = {}) {
+  return Math.max(1, Math.floor(Number(options.playerLevel ?? run?.state?.playerLevel) || 1));
 }
 
 function getSerializedTeamLimit(run) {

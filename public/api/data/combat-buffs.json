@@ -362,5 +362,25 @@
         "targetRarities": ["epic", "legendary"]
       }
     ]
+  },
+  {
+    "id": "mythic_ascendancy",
+    "name": "Mythic Ascendancy",
+    "description": "[Mythic] demons gain 25% single-target attack damage and 20% max HP.",
+    "rarity": "rare",
+    "icon": "sparkles",
+    "tags": ["rarity", "damage", "health"],
+    "effects": [
+      {
+        "type": "direct_damage_mult",
+        "value": 1.25,
+        "targetRarities": ["mythic"]
+      },
+      {
+        "type": "max_hp_mult",
+        "value": 1.2,
+        "targetRarities": ["mythic"]
+      }
+    ]
   }
 ]

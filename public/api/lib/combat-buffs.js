@@ -6,6 +6,7 @@ const BUFF_DATA_PATH = path.join(__dirname, '..', 'data', 'combat-buffs.json');
 const TEMPORARY_TEAM_SIZE_EFFECT = 'next_battle_team_size_add';
 const BUFF_CHOICE_FLOOR_INTERVAL = 3;
 const BUFF_REROLL_SOUL_COST = 10;
+const BUFF_REROLL_SOUL_COST_PER_LEVEL = 2;
 const RARITY_WEIGHTS = {
   common: 70,
   uncommon: 24,
@@ -67,7 +68,7 @@ function ensureCombatBuffState(run) {
   return run.state.buffs;
 }
 
-function serializeCombatBuffState(source = {}) {
+function serializeCombatBuffState(source = {}, options = {}) {
   const state = normalizeCombatBuffState(source);
   const activeBuffs = getActiveCombatBuffs(state);
 
@@ -77,7 +78,7 @@ function serializeCombatBuffState(source = {}) {
     pendingChoices: state.pendingChoices.map(getCombatBuffById).filter(Boolean),
     temporary: state.temporary,
     rerolls: state.rerolls,
-    rerollCost: BUFF_REROLL_SOUL_COST
+    rerollCost: getPactRerollCost(options.playerLevel)
   };
 }
 
@@ -171,7 +172,7 @@ function generateBuffChoices(run, rng, count = 3, options = {}) {
   const choices = [];
   const excluded = new Set([
     ...(options.excludeIds || []).map((id) => String(id)),
-    ...getNonRepeatableBuffChoiceExclusions(run)
+    ...getNonRepeatableBuffChoiceExclusions(run, options)
   ]);
   const available = loadCombatBuffs()
     .filter((buff) => !excluded.has(buff.id));
@@ -189,11 +190,11 @@ function generateBuffChoices(run, rng, count = 3, options = {}) {
   return choices;
 }
 
-function selectRunBuff(run, buffId) {
+function selectRunBuff(run, buffId, options = {}) {
   const state = ensureCombatBuffState(run);
   const id = String(buffId || '');
   const buff = getCombatBuffById(id);
-  if (!buff || !canSelectRunBuff(run, id)) return null;
+  if (!buff || !canSelectRunBuff(run, id, options)) return null;
 
   state.active.push(id);
   addTemporaryEntriesForBuff(state, buff);
@@ -204,15 +205,27 @@ function selectRunBuff(run, buffId) {
   return buff;
 }
 
-function getNonRepeatableBuffChoiceExclusions(run) {
+function getNonRepeatableBuffChoiceExclusions(run, options = {}) {
   return normalizeCombatBuffState(run?.state?.buffs).active
-    .filter((id) => NON_REPEATABLE_COMBAT_BUFF_ID_SET.has(id));
+    .filter((id) => isNonRepeatableCombatBuff(id, options));
 }
 
-function canSelectRunBuff(run, buffId) {
+function canSelectRunBuff(run, buffId, options = {}) {
   const id = String(buffId || '');
-  return !NON_REPEATABLE_COMBAT_BUFF_ID_SET.has(id)
+  return !isNonRepeatableCombatBuff(id, options)
     || !normalizeCombatBuffState(run?.state?.buffs).active.includes(id);
+}
+
+function isNonRepeatableCombatBuff(buffId, options = {}) {
+  const id = String(buffId || '');
+  if (NON_REPEATABLE_COMBAT_BUFF_ID_SET.has(id)) return true;
+  return options.uniqueRarityPacts === true
+    && (getCombatBuffById(id)?.tags?.includes('rarity') || false);
+}
+
+function getPactRerollCost(playerLevel) {
+  const level = Math.max(1, Math.floor(Number(playerLevel) || 1));
+  return BUFF_REROLL_SOUL_COST + (level - 1) * BUFF_REROLL_SOUL_COST_PER_LEVEL;
 }
 
 function hasPendingBuffChoices(run) {
@@ -889,6 +902,7 @@ module.exports = {
   getCombatBuffById,
   getBuffById,
   getNonRepeatableBuffChoiceExclusions,
+  getPactRerollCost,
   getTemporaryTeamSizeBonus,
   handleDeathBuffTriggers,
   hasPendingBuffChoices,
@@ -899,6 +913,7 @@ module.exports = {
   serializeCombatBuffState,
   BUFF_CHOICE_FLOOR_INTERVAL,
   BUFF_REROLL_SOUL_COST,
+  BUFF_REROLL_SOUL_COST_PER_LEVEL,
   NON_REPEATABLE_COMBAT_BUFF_IDS,
   PACT_CHOICE_FLOOR_INTERVAL,
   PACT_REROLL_SOUL_COST,

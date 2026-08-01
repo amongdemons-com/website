@@ -768,7 +768,7 @@ function createWorldTerrorBuffs(encounter = {}) {
 
 function getWorldTerrorPreview(encounter = {}) {
   const level = getWorldTerrorLevel(encounter);
-  const pressure = getEnemyPressureMultipliers(DUNGEON_TERROR_START_FLOOR + level);
+  const pressure = getEnemyPressureMultipliers(DUNGEON_TERROR_START_FLOOR + level, { terrorScaling: 'linear' });
 
   return {
     level,

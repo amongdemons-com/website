@@ -28,7 +28,7 @@ router.get('/runs/bootstrap', requireAuth, async (req, res) => {
     progression: getAccountProgressionPayload(req.player),
     statPoints,
     collection,
-    run: run ? await serializeRun(run) : null,
+    run: run ? await serializeRun(run, { playerLevel: req.player.level }) : null,
     startOptions: run ? null : await createStartOptions(req.player.id, collection, { includeCollection: false })
   });
 });
@@ -70,6 +70,7 @@ router.post('/runs/start', requireAuth, async (req, res) => {
     awaitingRecruit: true,
     awaitingCollectionReinforcement: true,
     collectionReinforcementLimit: 2,
+    playerLevel: Math.max(1, Number(req.player.level) || 1),
     buffs: {
       active: [],
       pendingChoices: [],
@@ -107,7 +108,7 @@ router.post('/runs/start', requireAuth, async (req, res) => {
     runId,
     seed,
     startingHand,
-    run: await serializeRun(run)
+    run: await serializeRun(run, { playerLevel: req.player.level })
   });
 });
 

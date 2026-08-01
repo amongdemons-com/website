@@ -3,7 +3,7 @@ const db = require('../lib/db');
 const { cleanPlayer, requireAuth } = require('../lib/auth');
 const { createRng } = require('../lib/rng');
 const { getRunForPlayer, parseRun, saveRun } = require('../lib/runs');
-const { canSelectRunBuff, ensureRunBuffState, generateBuffChoices, getBuffById, hasPendingBuffChoices, PACT_REROLL_SOUL_COST, selectRunBuff } = require('../lib/run-buffs');
+const { canSelectRunBuff, ensureRunBuffState, generateBuffChoices, getBuffById, getPactRerollCost, hasPendingBuffChoices, selectRunBuff } = require('../lib/run-buffs');
 const { serializeRun } = require('../lib/run-serialization');
 const achievements = require('../lib/achievements');
 
@@ -45,9 +45,10 @@ router.post('/runs/:id/buff/reroll', requireAuth, async (req, res) => {
     }
 
     const playerSouls = Number(player.souls) || 0;
-    if (playerSouls < PACT_REROLL_SOUL_COST) {
+    const rerollCost = getPactRerollCost(player.level);
+    if (playerSouls < rerollCost) {
       await connection.rollback();
-      return res.status(400).json({ error: `Recast costs ${PACT_REROLL_SOUL_COST} Souls.` });
+      return res.status(400).json({ error: `Recast costs ${rerollCost} Souls.` });
     }
 
     const state = ensureRunBuffState(run);
@@ -55,7 +56,8 @@ router.post('/runs/:id/buff/reroll', requireAuth, async (req, res) => {
     state.rerolls += 1;
     const nextChoices = generateBuffChoices(run, createBuffChoiceRng(run, state.rerolls), 3, {
       excludeIds: previousChoices,
-      preserveRerolls: true
+      preserveRerolls: true,
+      uniqueRarityPacts: true
     });
 
     if (!nextChoices.length) {
@@ -67,15 +69,15 @@ router.post('/runs/:id/buff/reroll', requireAuth, async (req, res) => {
 
     await connection.query(
       'UPDATE players SET souls = souls - ? WHERE id = ?',
-      [PACT_REROLL_SOUL_COST, req.player.id]
+      [rerollCost, req.player.id]
     );
     await saveRunWithConnection(connection, run);
     await connection.commit();
 
-    player.souls = playerSouls - PACT_REROLL_SOUL_COST;
+    player.souls = playerSouls - rerollCost;
 
     res.json({
-      run: await serializeRun(run),
+      run: await serializeRun(run, { playerLevel: player.level }),
       player: cleanPlayer(player)
     });
   } catch (error) {
@@ -112,15 +114,15 @@ router.post('/runs/:id/buff', requireAuth, async (req, res) => {
     return res.status(409).json({ error: 'Choose one of the offered Demonic Pacts.' });
   }
 
-  if (!canSelectRunBuff(run, buffId)) {
+  if (!canSelectRunBuff(run, buffId, { uniqueRarityPacts: true })) {
     return res.status(409).json({ error: 'That Demonic Pact is already active and cannot stack.' });
   }
 
-  selectRunBuff(run, buffId);
+  selectRunBuff(run, buffId, { uniqueRarityPacts: true });
   await saveRun(run);
   await achievements.grantAchievements(req.player.id, ['pactbound']);
 
-  res.json(await serializeRun(run));
+  res.json(await serializeRun(run, { playerLevel: req.player.level }));
 });
 
 function validatePendingRunBuffChoice(run) {

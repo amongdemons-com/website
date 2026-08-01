@@ -85,7 +85,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     clearPoisonEffects(run.state.team);
     clearPoisonEffects(run.state.enemies);
     if (shouldOfferRunBuffChoices(run)) {
-      generateBuffChoices(run, createBuffChoiceRng(run));
+      generateBuffChoices(run, createBuffChoiceRng(run), 3, { uniqueRarityPacts: true });
     }
     run.state.awaitingRecruit = true;
     if (run.floor === COLLECTION_REINFORCEMENT_FLOOR && !run.state.collectionReinforcementUsed) {
@@ -120,13 +120,13 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 
   const worldBuffs = (skillBuffs.activeBuffs || [])
     .filter((buff) => buff?.source === 'world_boss_reward');
-  const serializedRun = await serializeRun(run, { worldBuffs });
+  const serializedRun = await serializeRun(run, { worldBuffs, playerLevel: req.player.level });
 
   res.json({
     winner: result.winner,
     endReason: result.endReason,
     ticks: result.ticks,
-    buffs: serializeRunBuffState(run.state.buffs),
+    buffs: serializeRunBuffState(run.state.buffs, { playerLevel: req.player.level }),
     rewards,
     run: serializedRun
   });

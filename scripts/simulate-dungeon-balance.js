@@ -31,7 +31,7 @@ async function main() {
     const pressure = getEnemyPressureMultipliers(floor, { rarityRebalanced: true });
     const pactPressure = getEnemyPressureMultipliers(floor, {
       rarityRebalanced: true,
-      buffs: { active: ['many_below', 'crimson_standard', 'fallen_nobility'] }
+      buffs: { active: ['many_below', 'crimson_standard', 'fallen_nobility', 'mythic_ascendancy'] }
     });
     const hpBudget = expectedRarity * pressure.hp;
     const attackBudget = expectedRarity * pressure.atk;
@@ -86,10 +86,10 @@ async function main() {
   }
 
   const floor30 = rows.find((row) => row.floor === 30);
-  const oldMythicHpBudget = 1.7 * (1 + (30 - 18) * 0.045);
-  const redesignedRatio = Number(floor30.hpBudget) / oldMythicHpBudget;
-  if (redesignedRatio < 0.97 || redesignedRatio > 1.03) {
-    throw new Error(`Floor 30 HP budget drifted too far from the old Mythic baseline: ${redesignedRatio.toFixed(3)}.`);
+  const legacyMythicHpBudget = 1.7 * (1 + (30 - 18) * 0.045);
+  const redesignedRatio = Number(floor30.hpBudget) / legacyMythicHpBudget;
+  if (redesignedRatio <= 1 || redesignedRatio > 1.2) {
+    throw new Error(`Floor 30 exponential HP budget escaped its intended range: ${redesignedRatio.toFixed(3)}.`);
   }
 
   console.log(`Reference roster: 6 demons (${REFERENCE_RARITIES.join(', ')}), ${SAMPLE_COUNT} seeded fights per floor.`);
@@ -109,7 +109,7 @@ async function main() {
       hpBudget: (rarityPower * pressure.hp).toFixed(3)
     };
   }));
-  console.log(`Floor 30 redesigned/old-Mythic HP budget ratio: ${redesignedRatio.toFixed(3)}.`);
+  console.log(`Floor 30 exponential/legacy-Mythic HP budget ratio: ${redesignedRatio.toFixed(3)}.`);
 }
 
 async function createReferenceTeam() {

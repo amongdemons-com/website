@@ -52,12 +52,12 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     }
     run.state.awaitingCollectionReinforcement = false;
     settleDiscardedSoulRewards(run);
-    await advanceFloor(run);
+    await advanceFloor(run, req.player.level);
     await saveRun(run);
     return res.json({
       team: run.state.team,
       skipped: true,
-      run: await serializeRun(run)
+      run: await serializeRun(run, { playerLevel: req.player.level })
     });
   }
 
@@ -90,7 +90,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     settleDiscardedSoulRewards(run);
 
     if (run.status === 'active') {
-      await advanceFloor(run);
+      await advanceFloor(run, req.player.level);
     }
 
     await saveRun(run);
@@ -100,7 +100,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     ]);
     return res.json({
       team: run.state.team,
-      run: await serializeRun(run)
+      run: await serializeRun(run, { playerLevel: req.player.level })
     });
   }
 
@@ -144,7 +144,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   if (run.status === 'active') {
     run.state.awaitingCollectionReinforcement = false;
     settleDiscardedSoulRewards(run);
-    await advanceFloor(run);
+    await advanceFloor(run, req.player.level);
   }
 
   await saveRun(run);
@@ -152,20 +152,22 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   res.json({
     team: run.state.team,
     reward,
-    run: await serializeRun(run)
+    run: await serializeRun(run, { playerLevel: req.player.level })
   });
 });
 
-async function advanceFloor(run) {
+async function advanceFloor(run, playerLevel) {
   run.state.team = assignFormationSlots(
     run.state.team.map((demon) => resetRunDemon(demon, demon.instanceId)),
     'player'
   );
   run.floor += 1;
   run.state.currentFloor = run.floor;
+  run.state.playerLevel = Math.max(1, Math.floor(Number(playerLevel ?? run.state.playerLevel) || 1));
   applyRunBuffStatModifiers(run);
   run.state.enemies = await createDungeonEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length, {
-    buffs: run.state.buffs
+    buffs: run.state.buffs,
+    playerLevel: run.state.playerLevel
   });
   run.state.awaitingRecruit = false;
   run.state.awaitingCollectionReinforcement = false;

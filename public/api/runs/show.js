@@ -12,7 +12,7 @@ router.get('/runs/current', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Run not found.' });
   }
 
-  res.json(await serializeRun(run));
+  res.json(await serializeRun(run, { playerLevel: req.player.level }));
 });
 
 router.get('/runs/:id', requireAuth, async (req, res) => {
@@ -22,7 +22,7 @@ router.get('/runs/:id', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'Run not found.' });
   }
 
-  res.json(await serializeRun(run));
+  res.json(await serializeRun(run, { playerLevel: req.player.level }));
 });
 
 module.exports = router;
