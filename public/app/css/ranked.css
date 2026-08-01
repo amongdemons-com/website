@@ -220,9 +220,9 @@
 .ranked-preparation {
   --ranked-preparation-side-size: var(--dungeon-bottom-panel-content-height);
   --ranked-reroll-width: clamp(
-    var(--ranked-preparation-side-size),
+    8rem,
     12vw,
-    calc(var(--ranked-preparation-side-size) * 1.4)
+    calc(var(--ranked-preparation-side-size) * 1.55)
   );
   --ranked-offer-grid-max-width: calc(
     var(--ranked-offer-card-size)
@@ -644,7 +644,7 @@
 .ranked-reroll-rail {
   grid-template-rows: repeat(2, minmax(0, 1fr));
   justify-self: start;
-  width: max-content;
+  width: var(--ranked-reroll-width);
 }
 
 .ranked-action-dock {
@@ -664,21 +664,62 @@
 }
 
 .ranked-reroll-rail .ranked-reroll-action {
+  position: relative;
+  isolation: isolate;
   display: grid;
-  grid-template-columns: auto 1px auto;
+  grid-template-columns: minmax(4rem, 1fr) clamp(2.35rem, 3.15vw, 3.1rem);
+  grid-template-rows: auto auto;
   align-items: center;
+  align-content: center;
   justify-self: start;
-  width: auto;
-  column-gap: .25rem;
-  border-color: rgba(111, 214, 189, .32);
-  padding: .36rem 10px;
+  width: 100%;
+  column-gap: 0;
+  row-gap: .06rem;
+  overflow: hidden;
+  border: 2px solid var(--primary-frame);
+  border-radius: 2px;
+  background:
+    radial-gradient(circle at 82% 48%, rgba(232, 199, 106, .16), transparent 28%),
+    linear-gradient(180deg, rgba(20, 22, 19, .98), rgba(5, 10, 11, .98));
+  padding: .16rem .32rem .16rem .44rem;
   font-size: clamp(.66rem, .76vw, .82rem);
   font-weight: 800;
   white-space: nowrap;
+  box-shadow:
+    inset 0 0 0 2px rgba(2, 6, 8, .95),
+    inset 0 0 0 3px rgba(232, 199, 106, .16),
+    0 8px 20px rgba(0, 0, 0, .32);
+}
+
+.ranked-reroll-rail .ranked-reroll-action::before {
+  content: '';
+  position: absolute;
+  inset: 3px auto 3px 3px;
+  z-index: -1;
+  width: 72%;
+  clip-path: polygon(0 0, 80% 0, 100% 100%, 0 100%);
+  background:
+    linear-gradient(105deg, rgba(105, 98, 78, .48), rgba(46, 45, 38, .62) 72%, rgba(16, 20, 20, .2));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+
+.ranked-reroll-rail .ranked-reroll-action:not(:disabled):hover,
+.ranked-reroll-rail .ranked-reroll-action:not(:disabled):focus-visible {
+  border-color: var(--primary-hover-border);
+  background:
+    radial-gradient(circle at 82% 48%, rgba(232, 199, 106, .25), transparent 30%),
+    linear-gradient(180deg, rgba(28, 28, 22, .98), rgba(7, 12, 12, .98));
+  box-shadow:
+    inset 0 0 0 2px rgba(2, 6, 8, .95),
+    inset 0 0 0 3px rgba(245, 218, 133, .22),
+    0 0 16px rgba(232, 199, 106, .14),
+    0 10px 24px rgba(0, 0, 0, .34);
 }
 
 .ranked-reroll-rail .ranked-reroll-action:disabled {
-  border-color: var(--secondary-disabled-border);
+  border-color: var(--primary-disabled-border);
+  background: rgba(4, 12, 14, .72);
+  box-shadow: none;
 }
 
 .ranked-reroll-main,
@@ -691,40 +732,74 @@
 }
 
 .ranked-reroll-main {
-  overflow: hidden;
+  display: contents;
 }
 
-.ranked-reroll-main > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
+.ranked-reroll-icon {
+  display: grid;
+  grid-column: 2;
+  grid-row: 1 / -1;
+  place-items: center;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(232, 199, 106, .17), transparent 64%);
 }
 
-.ranked-reroll-divider {
-  width: 1px;
-  height: 58%;
-  min-height: 2rem;
-  background: rgba(220, 244, 238, .3);
+.ranked-reroll-copy {
+  z-index: 1;
+  display: flex;
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-content: flex-start;
+  min-width: 0;
+  line-height: 1.12;
+  text-align: left;
+}
+
+.ranked-reroll-copy strong {
+  overflow: visible;
+  text-overflow: clip;
+  color: #f3ead4;
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 1.08em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .8);
 }
 
 .ranked-reroll-cost {
-  color: #fff2ad;
-  font-size: 1.08em;
+  z-index: 1;
+  grid-column: 1;
+  grid-row: 2;
+  align-self: center;
+  justify-content: flex-start;
+  flex: none;
+  color: #e6cf8a;
+  gap: .22rem;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 1.02em;
   font-weight: 900;
+  line-height: 1.08;
 }
 
 .ranked-reroll-action .ranked-reroll-main .ad-icon {
-  width: clamp(1.05rem, 1.2vw, 1.25rem);
-  height: clamp(1.05rem, 1.2vw, 1.25rem);
+  width: clamp(1.45rem, 2.2vw, 2.05rem);
+  height: clamp(1.45rem, 2.2vw, 2.05rem);
   flex: none;
-  color: #72f4f5;
-  filter: drop-shadow(0 0 6px rgba(85, 255, 255, .38));
+  color: #e4c86f;
+  filter:
+    drop-shadow(0 1px 1px rgba(0, 0, 0, .9))
+    drop-shadow(0 0 7px rgba(232, 199, 106, .24));
 }
 
 .ranked-reroll-action .ranked-reroll-cost .ad-icon {
-  width: clamp(1rem, 1.1vw, 1.15rem);
-  height: clamp(1rem, 1.1vw, 1.15rem);
+  width: clamp(.82rem, 1vw, 1rem);
+  height: clamp(.82rem, 1vw, 1rem);
   flex: none;
-  color: var(--ad-soul, #55ffff);
+  color: #d9bd66;
 }
 
 .ranked-reroll-odds {
@@ -947,6 +1022,7 @@
 }
 
 .ranked-reserve-panel {
+  --ranked-reserve-pact-size: clamp(2.45rem, 5.4vh, 3.15rem);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -975,6 +1051,16 @@
     11.5vw,
     calc(
       (
+        100cqw
+        - var(--dungeon-formation-gap)
+        - var(--dungeon-formation-gap)
+        - var(--ranked-formation-padding)
+        - var(--ranked-formation-padding)
+        - 2px
+      ) / 3
+    ),
+    calc(
+      (
         100cqh
         - var(--dungeon-formation-gap)
         - var(--dungeon-formation-gap)
@@ -991,7 +1077,9 @@
 @media (min-width: 992px) {
   .ranked-page .battle-side {
     grid-template-rows: auto auto;
-    align-content: center;
+    align-content: start;
+    box-sizing: border-box;
+    padding-top: clamp(.65rem, 1.8vh, 1.25rem);
   }
 
   .ranked-page .battle-side > #teamGrid,
@@ -1001,17 +1089,7 @@
   }
 
   .ranked-page .battle-side .battle-formation-grid {
-    --dungeon-demon-card-width: clamp(6rem, min(11.5vw, 22vh), 15.5rem);
-  }
-}
-
-@media (min-width: 992px) and (max-height: 950px) {
-  .ranked-page .battle-side {
-    gap: .45rem;
-  }
-
-  .ranked-page .battle-side .battle-formation-grid {
-    --dungeon-demon-card-width: clamp(5.5rem, min(10.5vw, 18.5vh), 12.5rem);
+    --dungeon-demon-card-width: min(13.5rem, 10.5vw, 18vh);
   }
 }
 
@@ -1056,28 +1134,87 @@
 }
 
 .ranked-reserve-buffs-shell {
-  --dungeon-bottom-panel-content-height: clamp(4.75rem, 12vh, 6.5rem);
-  width: min(100%, calc(var(--dungeon-demon-card-width, 8rem) * 3 + var(--dungeon-formation-gap, .5rem) * 2 + 1rem));
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  width: max-content;
   max-width: 100%;
-  min-height: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
+  height: calc(var(--ranked-reserve-pact-size) + .72rem);
+  min-height: calc(var(--ranked-reserve-pact-size) + .72rem);
+  padding: .04rem .3rem 0 .08rem;
+  overflow: visible;
+}
+
+.ranked-reserve-buffs-viewport {
+  grid-column: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: visible;
+  scrollbar-width: none;
+}
+
+.ranked-reserve-buffs-viewport::-webkit-scrollbar {
+  display: none;
 }
 
 .ranked-reserve-buffs {
+  --dungeon-bottom-panel-content-height: var(--ranked-reserve-pact-size);
+  --dungeon-hand-pact-height: var(--ranked-reserve-pact-size);
+  --dungeon-hand-pact-width: var(--ranked-reserve-pact-size);
   display: flex;
-  flex-flow: row wrap;
-  align-content: start;
+  flex-flow: row nowrap;
+  align-items: stretch;
+  align-content: normal;
   justify-content: start;
-  width: 100%;
-  min-width: 0;
+  width: max-content;
+  min-width: 100%;
+  height: var(--ranked-reserve-pact-size);
+  min-height: var(--ranked-reserve-pact-size);
+  max-height: var(--ranked-reserve-pact-size);
+  gap: clamp(.18rem, .5vw, .3rem);
 }
 
 .ranked-pact-stack {
   position: relative;
   display: inline-grid;
-  flex: 0 0 auto;
+  flex: 0 0 var(--ranked-reserve-pact-size);
+  width: var(--ranked-reserve-pact-size);
+  height: var(--ranked-reserve-pact-size);
+  min-width: 0;
+  min-height: 0;
+}
+
+.ranked-reserve-buffs .active-pact-chip {
+  --active-pact-icon-size: clamp(
+    1.45rem,
+    calc(var(--ranked-reserve-pact-size) - .9rem),
+    2rem
+  );
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+}
+
+.ranked-reserve-buffs .active-pact-chip-icon {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ranked-reserve-buffs .active-pact-chip-icon .ad-icon {
+  width: var(--active-pact-icon-size);
+  height: var(--active-pact-icon-size);
+  max-width: 72%;
+  max-height: 72%;
+}
+
+.ranked-pact-scroll-btn {
+  display: none;
 }
 
 .ranked-pact-stack-count {
@@ -1207,9 +1344,113 @@
   min-height: 2.8rem;
 }
 
+@media (max-width: 1199.98px) {
+  .ranked-reserve-buffs-shell {
+    position: relative;
+    grid-template-columns: minmax(0, 1fr);
+    width: min(100%, 36rem);
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding-inline: 0;
+    box-shadow: none;
+  }
+
+  .ranked-reserve-buffs-shell.has-scroll-overflow {
+    grid-template-columns: 1.6rem minmax(0, 1fr) 1.6rem;
+    gap: .14rem;
+  }
+
+  .ranked-reserve-buffs-shell.has-scroll-overflow.is-scroll-start {
+    grid-template-columns: minmax(0, 1fr) 1.6rem;
+  }
+
+  .ranked-reserve-buffs-shell.has-scroll-overflow.is-scroll-end {
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+  }
+
+  .ranked-reserve-buffs-viewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ranked-reserve-buffs-shell.has-scroll-overflow .ranked-reserve-buffs-viewport {
+    grid-column: 2;
+    scroll-padding-inline: 1.9rem;
+  }
+
+  .ranked-reserve-buffs-shell.has-scroll-overflow.is-scroll-start .ranked-reserve-buffs-viewport {
+    grid-column: 1;
+  }
+
+  .ranked-pact-scroll-btn:not([hidden]) {
+    display: grid;
+    place-items: center;
+    align-self: start;
+    width: 100%;
+    height: 1.6rem;
+    margin-top: calc((var(--ranked-reserve-pact-size) - 1.6rem) / 2);
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid rgba(232, 199, 106, .3);
+    border-radius: 7px;
+    background:
+      linear-gradient(180deg, rgba(81, 78, 60, .92), rgba(8, 14, 15, .96)),
+      rgba(3, 9, 11, .94);
+    color: #f3dc94;
+    padding: 0;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .06),
+      0 0 0 2px rgba(3, 9, 11, .52),
+      0 0 14px rgba(232, 199, 106, .12);
+    transition:
+      border-color 140ms ease,
+      background 140ms ease,
+      color 140ms ease,
+      opacity 140ms ease;
+  }
+
+  .ranked-pact-scroll-btn.is-previous {
+    grid-column: 1;
+  }
+
+  .ranked-pact-scroll-btn.is-next {
+    grid-column: 3;
+  }
+
+  .ranked-reserve-buffs-shell.is-scroll-start .ranked-pact-scroll-btn.is-next {
+    grid-column: 2;
+  }
+
+  .ranked-pact-scroll-btn:not(:disabled):hover,
+  .ranked-pact-scroll-btn:not(:disabled):focus-visible {
+    border-color: rgba(232, 199, 106, .58);
+    background:
+      linear-gradient(180deg, rgba(232, 199, 106, .16), rgba(3, 9, 11, .2)),
+      rgba(8, 20, 21, .94);
+    color: #fff2ad;
+    outline: 0;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .08),
+      0 0 14px rgba(232, 199, 106, .12);
+  }
+
+  .ranked-pact-scroll-btn:disabled {
+    display: none;
+  }
+
+  .ranked-pact-scroll-btn .ad-icon {
+    width: .92rem;
+    height: .92rem;
+  }
+}
+
 @media (max-width: 991.98px) {
   .ranked-preparation {
-    --ranked-reroll-width: var(--ranked-preparation-side-size);
     grid-template-columns:
       max-content
       minmax(0, 1fr)
@@ -1304,6 +1545,76 @@
     justify-self: stretch;
     width: 100%;
     height: 100%;
+  }
+
+  .ranked-mobile-reroll-btn {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+    place-items: center;
+    overflow: hidden;
+    border: 2px solid var(--primary-frame);
+    border-radius: 2px;
+    background:
+      radial-gradient(circle at 72% 50%, rgba(232, 199, 106, .18), transparent 34%),
+      linear-gradient(180deg, rgba(20, 22, 19, .98), rgba(4, 10, 11, .98));
+    color: #e4c86f;
+    padding: .14rem;
+    box-shadow:
+      inset 0 0 0 2px rgba(2, 6, 8, .92),
+      inset 0 0 0 3px rgba(232, 199, 106, .14);
+  }
+
+  .ranked-mobile-reroll-btn::before {
+    content: '';
+    position: absolute;
+    inset: 3px auto 3px 3px;
+    z-index: -1;
+    width: 57%;
+    clip-path: polygon(0 0, 74% 0, 100% 100%, 0 100%);
+    background: linear-gradient(105deg, rgba(105, 98, 78, .48), rgba(42, 42, 36, .56));
+  }
+
+  .ranked-mobile-reroll-icon {
+    z-index: 1;
+    display: grid;
+    grid-column: 2;
+    place-items: center;
+    color: #e4c86f;
+  }
+
+  .ranked-mobile-reroll-cost {
+    position: static;
+    z-index: 1;
+    display: inline-flex;
+    grid-column: 1;
+    grid-row: 1;
+    align-items: center;
+    justify-content: center;
+    gap: .12rem;
+    min-height: 0;
+    border: 0;
+    background: transparent;
+    color: #e6cf8a;
+    padding: 0;
+    font-size: .64rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .ranked-mobile-reroll-btn .ranked-mobile-reroll-cost .ad-icon {
+    width: .64rem;
+    height: .64rem;
+    color: #d9bd66;
+  }
+
+  .ranked-mobile-reroll-btn .ranked-mobile-reroll-icon .ad-icon {
+    width: clamp(1.2rem, 5.6vw, 1.55rem);
+    height: clamp(1.2rem, 5.6vw, 1.55rem);
+    color: #e4c86f;
+    filter: drop-shadow(0 0 6px rgba(232, 199, 106, .2));
   }
 
   .ranked-mobile-nav-btn .ad-icon {
@@ -1438,7 +1749,11 @@
   }
 
   .ranked-reserve-panel:has(.ranked-reserve-buffs-shell) .ranked-reserve-formation {
-    --ranked-reserve-buff-space: clamp(3rem, 11vw, 3.7rem);
+    --ranked-reserve-buff-space: calc(var(--ranked-reserve-pact-size) + .95rem);
+  }
+
+  .ranked-reserve-panel {
+    --ranked-reserve-pact-size: clamp(2.15rem, 9vw, 2.55rem);
   }
 
   .ranked-reserve-buffs-shell {
@@ -1506,10 +1821,6 @@
 
   .ranked-reserve-panel {
     gap: .3rem;
-  }
-
-  .ranked-reserve-buffs-shell {
-    --dungeon-bottom-panel-content-height: clamp(2.8rem, 10vw, 3.4rem);
   }
 
   .ranked-reserve-formation .formation-slot {

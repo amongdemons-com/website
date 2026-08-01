@@ -63,6 +63,7 @@ let stagedPurchaseOfferIds = new Set();
 let stagedSoldDemons = [];
 let shownVictoryKey = null;
 let pendingInterestGain = 0;
+let rankedPactScrollSyncFrame = 0;
 
 registerDungeonActions({
   ...combat,
@@ -126,6 +127,13 @@ function cacheElements() {
 
 function bindEvents() {
   document.addEventListener('click', async (event) => {
+    const pactScrollButton = event.target.closest('[data-ranked-pact-scroll]');
+    if (pactScrollButton) {
+      event.preventDefault();
+      scrollRankedPacts(pactScrollButton);
+      return;
+    }
+
     const victoryAction = event.target.closest('[data-ranked-victory-action]');
     if (victoryAction) {
       event.preventDefault();
@@ -248,6 +256,12 @@ function bindEvents() {
     event.preventDefault();
     openCardDetails(card);
   });
+
+  document.addEventListener('scroll', (event) => {
+    const viewport = event.target?.closest?.('[data-ranked-pact-scroll-viewport]');
+    if (viewport) syncRankedPactScrollControls(viewport.closest('.ranked-reserve-buffs-shell'));
+  }, { capture: true, passive: true });
+  window.addEventListener('resize', scheduleRankedPactScrollControlsSync);
 }
 
 async function loadBootstrap() {
@@ -590,6 +604,7 @@ function renderRun() {
   bindCardDetails();
   decorateWorkspaceFormation();
   decorateCombinationCandidates();
+  scheduleRankedPactScrollControlsSync();
 }
 
 function renderTeamTitle(run) {
@@ -742,13 +757,82 @@ function renderReserve(reserve, run) {
       </div>
       ${progressionBuffs.length ? `
         <div class="ranked-reserve-buffs-shell">
-          <div class="dungeon-hand-pacts ranked-reserve-buffs" aria-label="Active Ranked Pacts, Skill Tree bonuses, and buffs">
-            ${progressionBuffs.map(renderRankedProgressionBuff).join('')}
+          <button class="ranked-pact-scroll-btn is-previous" type="button" data-ranked-pact-scroll="-1"
+                  aria-label="Scroll active buffs left" title="Scroll active buffs left" hidden disabled>
+            ${renderIcon('chevron-left')}
+          </button>
+          <div class="ranked-reserve-buffs-viewport" data-ranked-pact-scroll-viewport tabindex="0"
+               role="region" aria-label="Active Ranked Pacts, Skill Tree bonuses, and buffs">
+            <div class="dungeon-hand-pacts ranked-reserve-buffs">
+              ${progressionBuffs.map(renderRankedProgressionBuff).join('')}
+            </div>
           </div>
+          <button class="ranked-pact-scroll-btn is-next" type="button" data-ranked-pact-scroll="1"
+                  aria-label="Scroll active buffs right" title="Scroll active buffs right" hidden disabled>
+            ${renderIcon('chevron-right')}
+          </button>
         </div>
       ` : ''}
     </div>
   `;
+}
+
+function scrollRankedPacts(button) {
+  const shell = button.closest('.ranked-reserve-buffs-shell');
+  const viewport = shell?.querySelector('[data-ranked-pact-scroll-viewport]');
+  if (!viewport || button.disabled) return;
+
+  const row = viewport.querySelector('.ranked-reserve-buffs');
+  const tile = row?.querySelector('.ranked-pact-stack');
+  const rowStyles = row ? window.getComputedStyle(row) : null;
+  const columnGap = parseFloat(rowStyles?.columnGap || '');
+  const fallbackGap = parseFloat(rowStyles?.gap || '');
+  const gap = Number.isFinite(columnGap)
+    ? columnGap
+    : (Number.isFinite(fallbackGap) ? fallbackGap : 0);
+  const tileWidth = tile?.getBoundingClientRect().width || 0;
+  const direction = Number(button.dataset.rankedPactScroll) || 0;
+  const amount = Math.max(tileWidth + gap, viewport.clientWidth * .72, 1);
+
+  viewport.scrollBy({ left: direction * amount, behavior: 'smooth' });
+}
+
+function scheduleRankedPactScrollControlsSync() {
+  if (rankedPactScrollSyncFrame) window.cancelAnimationFrame(rankedPactScrollSyncFrame);
+  rankedPactScrollSyncFrame = window.requestAnimationFrame(() => {
+    rankedPactScrollSyncFrame = 0;
+    syncRankedPactScrollControls();
+  });
+}
+
+function syncRankedPactScrollControls(targetShell = null) {
+  const shells = targetShell
+    ? [targetShell]
+    : Array.from(elements.enemyGrid?.querySelectorAll('.ranked-reserve-buffs-shell') || []);
+  const compactLayout = window.matchMedia('(max-width: 1199.98px)').matches;
+
+  shells.forEach((shell) => {
+    const viewport = shell?.querySelector('[data-ranked-pact-scroll-viewport]');
+    const buttons = Array.from(shell?.querySelectorAll('[data-ranked-pact-scroll]') || []);
+    if (!viewport || !buttons.length) return;
+
+    if (!compactLayout && viewport.scrollLeft) viewport.scrollLeft = 0;
+
+    const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+    const hasOverflow = compactLayout && maxScroll > 1;
+    const atStart = viewport.scrollLeft <= 1;
+    const atEnd = viewport.scrollLeft >= maxScroll - 1;
+
+    shell.classList.toggle('has-scroll-overflow', hasOverflow);
+    shell.classList.toggle('is-scroll-start', hasOverflow && atStart);
+    shell.classList.toggle('is-scroll-end', hasOverflow && atEnd);
+    buttons.forEach((button) => {
+      const direction = Number(button.dataset.rankedPactScroll) || 0;
+      const unavailable = direction < 0 ? atStart : atEnd;
+      button.hidden = !hasOverflow || unavailable;
+      button.disabled = !hasOverflow || unavailable;
+    });
+  });
 }
 
 function renderRankedDemon(demon, options = {}) {
@@ -780,12 +864,13 @@ function renderPreparation(run, options = {}) {
       <button class="btn btn-secondary ranked-side-action ranked-side-action-compact ranked-reroll-action" type="button" data-ranked-action="reroll"
               title="${rerollLabel}" aria-label="${rerollLabel}" ${canReroll ? '' : 'disabled'}>
         <span class="ranked-reroll-main">
-          ${renderIcon('refresh-cw')}
-          <span>Reroll</span>
+          <span class="ranked-reroll-icon" aria-hidden="true">${renderIcon('refresh-cw')}</span>
+          <span class="ranked-reroll-copy">
+            <strong>Reroll</strong>
+          </span>
         </span>
-        <span class="ranked-reroll-divider" aria-hidden="true"></span>
         <span class="ranked-reroll-cost" aria-label="${RANKED_REROLL_RSOUL_COST} Ranked Souls">
-          ${renderIcon('soul')} <span>${formatNumber(RANKED_REROLL_RSOUL_COST)}</span>
+          ${renderIcon('soul')} <strong>${formatNumber(RANKED_REROLL_RSOUL_COST)}</strong>
         </span>
       </button>
       ${renderRerollOdds(run)}
@@ -824,9 +909,12 @@ function renderPreparation(run, options = {}) {
       ${renderIcon('swords')} <span>Fight</span>
     </button>
     <div class="ranked-mobile-nav" role="group" aria-label="Ranked preparation controls">
-      <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn" type="button" data-ranked-action="reroll"
+      <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn ranked-mobile-reroll-btn" type="button" data-ranked-action="reroll"
               title="${rerollLabel}" aria-label="${rerollLabel}" ${canReroll ? '' : 'disabled'}>
-        ${renderIcon('refresh-cw')}
+        <span class="ranked-mobile-reroll-icon" aria-hidden="true">${renderIcon('refresh-cw')}</span>
+        <span class="ranked-mobile-reroll-cost" aria-hidden="true">
+          ${renderIcon('soul')} <strong>${formatNumber(RANKED_REROLL_RSOUL_COST)}</strong>
+        </span>
         <span class="visually-hidden">Reroll</span>
       </button>
       <details class="ranked-mobile-odds">
