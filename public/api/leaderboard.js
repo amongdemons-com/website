@@ -2,6 +2,8 @@ const express = require('express');
 const db = require('./lib/db');
 const { getOrCreateCurrentSeason } = require('./lib/ranked-runs');
 const { getDivision } = require('./lib/ranked-rules');
+const { getPlayerBadgesByPlayerIds } = require('./lib/player-badges');
+const { RANKED_BOT_ID_PATTERN } = require('./lib/system-players');
 
 const router = express.Router();
 const STATS_CACHE_MS = 15000;
@@ -22,7 +24,8 @@ router.get('/leaderboard', async (req, res) => {
   const season = await getOrCreateCurrentSeason();
 
   const [rowsResult, stats] = await Promise.all([db.query(
-    `SELECT p.username,
+    `SELECT p.id AS playerId,
+            p.username,
             p.level,
             p.xp,
             p.souls,
@@ -42,13 +45,18 @@ router.get('/leaderboard', async (req, res) => {
      LEFT JOIN ranked_ratings rr
        ON rr.player_id = p.id
       AND rr.season_id = ?
+     WHERE p.id NOT LIKE ?
      ORDER BY ${orderBy}
      LIMIT 100`,
-    [season.id]
+    [season.id, RANKED_BOT_ID_PATTERN]
   ), getLeaderboardStats()]);
-  const rows = rowsResult[0].map((row) => ({
+  const badgesByPlayer = await getPlayerBadgesByPlayerIds(
+    rowsResult[0].map((row) => row.playerId)
+  );
+  const rows = rowsResult[0].map(({ playerId, ...row }) => ({
     ...row,
-    rankedDivision: getDivision(row.rankedRating).name
+    rankedDivision: getDivision(row.rankedRating).name,
+    badges: badgesByPlayer.get(String(playerId)) || []
   }));
 
   res.json({
@@ -71,9 +79,11 @@ async function getLeaderboardStats() {
   if (!statsPromise) {
     statsPromise = db.query(
       `SELECT COUNT(*) AS players,
-              COALESCE(SUM(souls), 0) AS souls,
-              COALESCE(SUM(pvp_wins), 0) AS pvpBattles
-       FROM players`
+              COALESCE(SUM(p.souls), 0) AS souls,
+              COALESCE(SUM(p.pvp_wins), 0) AS pvpBattles
+       FROM players p
+       WHERE p.id NOT LIKE ?`,
+      [RANKED_BOT_ID_PATTERN]
     ).then(([rows]) => {
       const value = rows[0] || {};
       statsCache = { cachedAt: Date.now(), value };
@@ -86,3 +96,4 @@ async function getLeaderboardStats() {
 }
 
 module.exports = router;
+module.exports._test = { RANKED_BOT_ID_PATTERN };

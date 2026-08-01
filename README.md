@@ -73,6 +73,8 @@ The database schema is created automatically on first API use - `public/api/lib/
 | `npm start` | `node server.js` | Start the Express server |
 | `npm run dev` | `nodemon server.js` | Start with automatic restarts |
 | `npm test` | `node --test test/*.test.js` | Run the unit test suite |
+| `npm run seed:ranked` | `node scripts/generate-ranked-population.js` | Dry-run the deterministic RankedBot optimizer; pass `-- --apply` to persist it |
+| `npm run badge:award` | `node scripts/award-player-badge.js` | Preview a public player badge award; add `--apply` to persist it |
 
 ## Project Structure
 
@@ -407,6 +409,7 @@ CSS is split per page - `base.css` loads everywhere; `battle.css`, `camp.css`, `
 | `scripts/generate-demon-map-variants.js` | Generates small WebP demon variants for map tokens and avatars |
 | `scripts/split-main-css.js` | Re-runnable splitter that produced the per-page CSS files |
 | `scripts/simulate-dungeon-balance.js` | Checks milestone pressure, deep rarity availability, all Convergences, and the old floor-30 baseline |
+| `scripts/generate-ranked-population.js` | Builds legal RankedBot rosters, combat-tests candidate lineups, and optionally seeds labeled player runs and exact-floor opponent snapshots |
 
 ## Caching
 
@@ -424,6 +427,20 @@ Run the deterministic dungeon balance report (optional argument: samples per mil
 
 ```bash
 npm run simulate:dungeon -- 30
+```
+
+Preview the deterministic RankedBot population without writing to the database, then explicitly apply the reviewed population:
+
+```bash
+npm run seed:ranked
+npm run seed:ranked -- --apply
+```
+
+Preview a player badge award, then explicitly apply it:
+
+```bash
+npm run badge:award -- chosen_before_dawn HunterName
+npm run badge:award -- chosen_before_dawn HunterName --apply
 ```
 
 Syntax-check the server and all backend/frontend scripts (PowerShell):

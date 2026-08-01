@@ -241,7 +241,6 @@ async function createInitialRankedState(seed, runId = null) {
     victoryRankGain: 0,
     pendingRating: 0,
     protectedRating: 0,
-    endlessRatingEarned: 0,
     floorRetryCount: 0,
     lastSnapshotId: null,
     demonIdNamespace: String(runId || Number(seed).toString(36))

@@ -4973,7 +4973,7 @@ body.rankings-page {
 }
 
 .rankings-panel {
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid rgba(161,212,201,0.17);
     border-radius: 8px;
     background:
@@ -5396,7 +5396,7 @@ body.rankings-page {
     }
 
 .rank-row {
-        overflow: hidden;
+        overflow: visible;
         border: 1px solid var(--rank-border);
         border-radius: 8px;
         background: var(--rank-row-bg);
@@ -7315,6 +7315,116 @@ body.dungeon-page:not(.ranked-page) .demonic-pact-reroll-cost {
         font-weight: 900;
         line-height: 1;
     }
+}
+
+.rank-hunter-name-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.player-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+}
+
+.player-badge {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 1.28rem;
+    height: 1.28rem;
+    border: 0;
+    border-radius: 4px;
+    color: #a98ac4;
+    background: transparent;
+    box-shadow: none;
+    cursor: help;
+    line-height: 1;
+    outline: none;
+}
+
+.player-badge:hover,
+.player-badge:focus-visible {
+    color: #c9addf;
+}
+
+.player-badge:focus-visible {
+    outline: 1px solid rgba(169, 138, 196, 0.72);
+    outline-offset: 2px;
+}
+
+.player-badge-mark {
+    display: grid;
+    place-items: center;
+    filter: drop-shadow(0 0 6px rgba(111, 73, 147, 0.58));
+}
+
+.player-badge-mark .game-icon {
+    width: 1.18rem;
+    height: 1.18rem;
+}
+
+.player-badge-tooltip {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 0.52rem);
+    left: 50%;
+    display: grid;
+    gap: 0.28rem;
+    width: max-content;
+    max-width: min(17rem, calc(100vw - 2rem));
+    border: 1px solid rgba(235, 198, 112, 0.34);
+    border-radius: 8px;
+    background: rgba(18, 13, 27, 0.98);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48), 0 0 18px rgba(111, 73, 147, 0.2);
+    padding: 0.62rem 0.7rem;
+    opacity: 0;
+    pointer-events: none;
+    text-align: left;
+    transform: translate(-50%, -0.2rem);
+    transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.player-badge-tooltip::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    border-right: 0.32rem solid transparent;
+    border-bottom: 0.38rem solid rgba(235, 198, 112, 0.34);
+    border-left: 0.32rem solid transparent;
+    transform: translateX(-50%);
+}
+
+.player-badge-tooltip strong,
+.player-badge-tooltip > span {
+    display: block;
+}
+
+.player-badge-tooltip strong {
+    color: #ffe9a0;
+    font-size: 0.78rem;
+    font-weight: 900;
+    line-height: 1.15;
+}
+
+.player-badge-tooltip > span {
+    color: rgba(239, 235, 244, 0.72);
+    font-size: 0.72rem;
+    font-weight: 650;
+    line-height: 1.35;
+}
+
+.player-badge:hover .player-badge-tooltip,
+.player-badge:focus .player-badge-tooltip,
+.player-badge:focus-visible .player-badge-tooltip {
+    opacity: 1;
+    transform: translate(-50%, 0);
 }
 
 @media (max-width: 575.98px) and (max-height: 540px) and (orientation: portrait) {
@@ -10684,11 +10794,18 @@ body.hunter-page {
     min-width: 0;
 }
 
+.hunter-avatar-frame {
+    position: relative;
+    display: grid;
+    width: clamp(4.5rem, 9vw, 6rem);
+    height: clamp(4.5rem, 9vw, 6rem);
+}
+
 .hunter-avatar {
     display: grid;
     place-items: center;
-    width: clamp(4.5rem, 9vw, 6rem);
-    height: clamp(4.5rem, 9vw, 6rem);
+    width: 100%;
+    height: 100%;
     border: 1px solid rgba(232, 199, 106, 0.36);
     border-radius: 8px;
     background: rgba(0, 0, 0, 0.24);
@@ -10704,6 +10821,33 @@ body.hunter-page {
 
 .hunter-title-block {
     min-width: 0;
+}
+
+.hunter-name-line {
+    display: flex;
+    align-items: center;
+    gap: 0.62rem;
+    min-width: 0;
+}
+
+.hunter-avatar-frame > .player-badges--hunter {
+    position: absolute;
+    z-index: 3;
+    right: auto;
+    bottom: -0.78rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.hunter-avatar-frame .player-badge {
+    width: 1.65rem;
+    height: 1.65rem;
+}
+
+.hunter-avatar-frame .player-badge-mark .game-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: #091316;
 }
 
 .hunter-kicker {
@@ -11040,6 +11184,11 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
 
 .hunter-stat {
         min-height: 4.25rem;
+    }
+
+.hunter-name-line {
+        justify-content: center;
+        flex-wrap: wrap;
     }
 }
 

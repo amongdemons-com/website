@@ -27,7 +27,6 @@ const RANKED_CARD_RARITY_COSTS = Object.freeze({
 });
 const RANKED_VICTORY_FLOOR = 20;
 const RANKED_VICTORY_SOUL_REWARD = 25;
-const ENDLESS_RATING_CAP_PER_RUN = 100;
 const ENDLESS_SKILL_CAP = 10;
 const EARLY_RUN_RATING_LOSS = 20;
 
@@ -310,15 +309,12 @@ function resolveDefeat(lives) {
   };
 }
 
-function getFloorRatingGain(floor, endlessAlreadyEarned = 0) {
+function getFloorRatingGain(floor) {
   const depth = Math.max(0, Math.floor(Number(floor) || 0));
   if (depth <= 9) return 0;
   if (depth < RANKED_VICTORY_FLOOR) return 3;
   if (depth === RANKED_VICTORY_FLOOR) return 75;
-  const remaining = Math.max(0, ENDLESS_RATING_CAP_PER_RUN - Math.max(0, Number(endlessAlreadyEarned) || 0));
-  if (!remaining) return 0;
-  const diminishing = Math.max(2, Math.ceil(10 / Math.sqrt(depth - RANKED_VICTORY_FLOOR)));
-  return Math.min(remaining, diminishing);
+  return 0;
 }
 
 function getEarlyRunRatingAdjustment(highestClearedFloor) {
@@ -435,7 +431,6 @@ module.exports = {
   COMBAT_DATA_VERSION,
   DIVISIONS,
   EARLY_RUN_RATING_LOSS,
-  ENDLESS_RATING_CAP_PER_RUN,
   ENDLESS_SKILL_CAP,
   FORMATION_CAPACITY,
   OFFER_SIZE,

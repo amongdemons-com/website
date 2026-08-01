@@ -10,6 +10,7 @@ const WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION = '20260723_world_merchant_bribe_sch
 const RANKED_SCHEMA_MIGRATION = '20260728_ranked_schema_v2';
 const ACCOUNT_SECURITY_SCHEMA_MIGRATION = '20260728_account_security_schema_v1';
 const ACCOUNT_PASSWORD_BACKFILL_MIGRATION = '20260728_account_password_backfill_v1';
+const PLAYER_BADGES_SCHEMA_MIGRATION = '20260801_player_badges_schema_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -764,6 +765,28 @@ async function addRankedSchema() {
   }
 }
 
+async function addPlayerBadgesSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_badges (
+      player_id VARCHAR(255) NOT NULL,
+      badge_key VARCHAR(48) NOT NULL,
+      awarded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, badge_key),
+      INDEX idx_player_badges_key (badge_key, awarded_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column(
+    'player_badges',
+    'player_id',
+    'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+  );
+  await normalizeUtf8Column(
+    'player_badges',
+    'badge_key',
+    'VARCHAR(48) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+  );
+}
+
 async function addAccountSecuritySchema() {
   await addColumnIfMissing(
     'players',
@@ -834,6 +857,7 @@ async function initializeSchema() {
   await runMigrationOnce(RANKED_SCHEMA_MIGRATION, addRankedSchema);
   await runMigrationOnce(ACCOUNT_SECURITY_SCHEMA_MIGRATION, addAccountSecuritySchema);
   await runMigrationOnce(ACCOUNT_PASSWORD_BACKFILL_MIGRATION, backfillOAuthOnlyPasswordState);
+  await runMigrationOnce(PLAYER_BADGES_SCHEMA_MIGRATION, addPlayerBadgesSchema);
 }
 
 function ensureSchemaReady() {

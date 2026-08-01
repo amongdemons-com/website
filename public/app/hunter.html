@@ -24,7 +24,7 @@
     <!--HUNTER_META_END-->
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=4efae12b0891" rel="stylesheet">
+    <link href="/app/css/base.css?v=6fa3b26f022a" rel="stylesheet">
     <link href="/app/css/rank-divisions.css?v=1d73edafa9a8" rel="stylesheet">
     <link href="/app/css/battle.css?v=08cd2f1a0ce8" rel="stylesheet">
   </head>
@@ -79,12 +79,17 @@
 
       <section class="hunter-hero" aria-labelledby="hunterName">
         <div class="hunter-identity">
-          <span class="hunter-avatar" aria-hidden="true">
-            <img id="hunterAvatar" src="/app/images/amongdemons_logo_250x250.png" alt="" width="96" height="96" loading="eager" decoding="async">
+          <span class="hunter-avatar-frame">
+            <span class="hunter-avatar" aria-hidden="true">
+              <img id="hunterAvatar" src="/app/images/amongdemons_logo_250x250.png" alt="" width="96" height="96" loading="eager" decoding="async">
+            </span>
+            <span id="hunterBadges" class="player-badges player-badges--hunter" aria-label="Hunter badges"></span>
           </span>
           <div class="hunter-title-block">
             <span class="hunter-kicker">Hunter Profile</span>
-            <h1 id="hunterName">Hunter</h1>
+            <div class="hunter-name-line">
+              <h1 id="hunterName">Hunter</h1>
+            </div>
             <p id="hunterSubline">Loading public record...</p>
           </div>
         </div>
@@ -134,6 +139,7 @@
 
     <!--HUNTER_DATA-->
     <script src="/app/dist/runtime.bundle.js?v=2de1b9b71593"></script>
-    <script src="/app/js/hunter-ui.js?v=31b3e600af5e"></script>
+    <script src="/app/js/player-badges.js?v=42111b65aa87"></script>
+    <script src="/app/js/hunter-ui.js?v=fd4504b5cf2d"></script>
   </body>
 </html>

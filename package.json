@@ -10,9 +10,11 @@
     "db:migrate": "node -e \"require('./public/api/lib/schema').initializeSchema().then(() => console.log('Database migrations complete.'))\"",
     "assets:backgrounds": "node scripts/generate-background-variants.js",
     "assets:demon-atlas": "node scripts/generate-demon-map-atlas.js",
+    "badge:award": "node scripts/award-player-badge.js",
     "build:browser": "node scripts/build-browser.js",
     "build": "npm run assets:backgrounds && npm run assets:demon-atlas && npm run build:browser",
     "db:reset-players": "node scripts/reset-player-database.js",
+    "seed:ranked": "node scripts/generate-ranked-population.js",
     "simulate:dungeon": "node scripts/simulate-dungeon-balance.js",
     "test": "node --test"
   },

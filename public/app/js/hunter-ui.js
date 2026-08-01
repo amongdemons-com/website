@@ -71,6 +71,7 @@
   function cacheElements() {
     elements.message = document.getElementById('hunterMessage');
     elements.name = document.getElementById('hunterName');
+    elements.badges = document.getElementById('hunterBadges');
     elements.subline = document.getElementById('hunterSubline');
     elements.avatar = document.getElementById('hunterAvatar');
     elements.team = document.getElementById('hunterWorldTeam');
@@ -99,6 +100,7 @@
     document.title = `${username} | Hunter Profile | Among Demons`;
     updateCanonical(username);
     setHunterName(username);
+    renderHunterBadges(payload.badges);
     elements.subline.innerHTML = `${renderRankDivisionText(rankedDivision)}
       <span aria-hidden="true">&middot;</span> Level ${formatNumber(level)}
       <span aria-hidden="true">&middot;</span> ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`;
@@ -514,6 +516,7 @@
 
   function setLoading(username) {
     setHunterName(username);
+    renderHunterBadges([]);
     setText(elements.subline, 'Loading public record...');
     if (elements.team) elements.team.innerHTML = renderFormationGrid([]);
     if (elements.buffs) elements.buffs.innerHTML = renderEmpty('Loading buffs...');
@@ -521,6 +524,7 @@
 
   function showNotFound(username = '') {
     setHunterName(username || 'Hunter');
+    renderHunterBadges([]);
     setText(elements.subline, 'No public record found.');
     Object.values(elements.stats).forEach((element) => setText(element, '-'));
     if (elements.avatar) elements.avatar.src = FALLBACK_AVATAR;
@@ -642,6 +646,19 @@
     elements.name.setAttribute('aria-label', username);
     elements.name.classList.toggle('is-compact-name', isCompact);
     elements.name.classList.toggle('is-clamped-name', isClamped);
+  }
+
+  function renderHunterBadges(badges = []) {
+    if (!elements.badges) return;
+    const renderPlayerBadges = window.AmongDemons?.ui?.renderPlayerBadges;
+    if (typeof renderPlayerBadges !== 'function') {
+      elements.badges.innerHTML = '';
+      return;
+    }
+    const rendered = document.createElement('template');
+    rendered.innerHTML = renderPlayerBadges(badges, { context: 'hunter' }).trim();
+    const badgeContainer = rendered.content.firstElementChild;
+    elements.badges.replaceChildren(...(badgeContainer?.childNodes || []));
   }
 
   function escapeHtml(value) {

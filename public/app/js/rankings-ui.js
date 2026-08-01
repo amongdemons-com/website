@@ -4,6 +4,7 @@
   const elements = {};
   const session = window.AmongDemons.getSession();
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
+  const renderPlayerBadges = window.AmongDemons.ui.renderPlayerBadges || (() => '');
   const currentUsername = session.player && session.player.username;
   const sortPaths = {
     floor: 'floor',
@@ -139,7 +140,10 @@
         </td>
         <td class="rank-hunter-cell" data-label="Hunter">
           <span class="rank-hunter">
-            <a class="rank-hunter-name rank-hunter-name-link" href="${escapeHtml(hunterHref)}">${escapeHtml(player.username)}</a>
+            <span class="rank-hunter-name-line">
+              <a class="rank-hunter-name rank-hunter-name-link" href="${escapeHtml(hunterHref)}">${escapeHtml(player.username)}</a>
+              ${renderPlayerBadges(player.badges, { context: 'leaderboard' })}
+            </span>
             <small class="rank-hunter-meta">${hasRankedRating
               ? `${renderRankDivisionText(rankedDivision)}
               &middot; Level`

@@ -156,13 +156,13 @@
 - [x] Add seasonal Ranked rating and named divisions.
 - [x] Make floor 20 the primary victory milestone.
 - [x] Award a meaningful rating increase for clearing floor 20.
-- [x] Allow endless floors after 10 to contribute additional rating.
+- [x] Keep Endless as a highest-floor challenge without additional rating after floor 20.
 - [x] Initially test:
-  - [x] Floors 1–4: no positive Rank Points
-  - [x] Floors 5–9: small progress per cleared floor
-  - [x] Floor 20: large victory bonus
-  - [x] Floor 11+: additional progress per cleared floor
-- [x] Decide whether rating earned after floor 20 is immediately protected or finalized only when the run ends.
+  - [x] Floors 1–9: no positive Rank Points
+  - [x] Floors 10–19: +3 pending Rank Points per cleared floor
+  - [x] Floor 20: +75 Rank Points plus pending progress
+  - [x] Floor 21+: highest-floor prestige without additional Rank Points
+- [x] Award no rating after floor 20; Endless progression is tracked by highest floor only.
 - [x] Decide how much rating is lost for runs ending before floor 10 or floor 20.
 - [x] Prevent unlimited playtime alone from overpowering actual performance in seasonal rankings.
 
@@ -213,7 +213,7 @@
 - [x] Award Pacts after victories only.
 - [x] Award one Pact after every cleared floor with no floor-frequency cap.
 - [x] After each cleared floor, award the cleared floor number in rSouls plus 1 rSoul interest for every 10 unspent rSouls.
-- [x] Use no positive RP on floors 1-9, +3 pending RP on floors 10-19, +75 protected RP at floor 20, diminishing endless RP, a 100 RP endless-run cap, and bounded early-exit penalties of -20/-5.
+- [x] Use no positive RP on floors 1-9, +3 pending RP on floors 10-19, +75 protected RP at floor 20, no Endless RP, and bounded early-exit penalties of -20/-5.
 - [x] Award 25 Souls once for clearing floor 20.
 - [x] Do not award additional Souls on deeper floors.
 - [x] Apply combat Skill Tree effects, ignore noncombat effects, and cap `Endless` masteries at 10 per node.

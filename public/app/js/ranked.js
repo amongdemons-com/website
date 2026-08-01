@@ -1411,7 +1411,7 @@ function showRankedVictoryModal(run, options = {}) {
   }
   if (elements.rankedVictorySummary) {
     elements.rankedVictorySummary.textContent = (
-      `${formatNumber(rating)} total RP. Continue into Endless or close this run and begin again.`
+      `${formatNumber(rating)} total RP. Endless records your highest floor but awards no additional RP.`
     );
   }
   setRankedVictoryChoiceBusy(false);

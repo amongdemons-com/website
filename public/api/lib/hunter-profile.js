@@ -7,6 +7,8 @@ const worldMap = require('../data/map.json');
 const { getDemonImageUrl } = require('./demon-images');
 const { getOrCreateCurrentSeason } = require('./ranked-runs');
 const { getDivision } = require('./ranked-rules');
+const { getPlayerBadges } = require('./player-badges');
+const { RANKED_BOT_ID_PATTERN } = require('./system-players');
 
 const WORLD_SPAWN = worldMap.spawn || { x: 0, y: 0 };
 
@@ -49,10 +51,11 @@ async function getPublicHunterProfile(rawUsername) {
     level: Math.max(1, Number(row.level) || 1),
     xp: Math.max(0, Number(row.xp) || 0)
   };
-  const [worldTeam, buffs, ranked] = await Promise.all([
+  const [worldTeam, buffs, ranked, badges] = await Promise.all([
     getActiveWorldTeam(row.id),
     resolveActivePlayerCombatBuffs(player),
-    getHunterRankedRecord(row.id)
+    getHunterRankedRecord(row.id),
+    getPlayerBadges(row.id)
   ]);
   const visualWorldTeam = applyPreBattleBuffs(worldTeam, { activeBuffs: buffs });
 
@@ -74,7 +77,8 @@ async function getPublicHunterProfile(rawUsername) {
     coordinates: serializeCoordinates(row),
     worldTeam: visualWorldTeam.map(serializeTeamMember),
     buffs,
-    ranked
+    ranked,
+    badges
   };
 }
 
@@ -101,6 +105,7 @@ async function getHunterRankedRecord(playerId) {
      FROM ranked_ratings other
      INNER JOIN players other_player ON other_player.id = other.player_id
      WHERE other.season_id = ?
+       AND other_player.id NOT LIKE ?
        AND (
          other.rating > ?
          OR (other.rating = ? AND other.highest_floor > ?)
@@ -125,6 +130,7 @@ async function getHunterRankedRecord(playerId) {
        )`,
     [
       season.id,
+      RANKED_BOT_ID_PATTERN,
       rating,
       rating,
       Number(row.highestFloor) || 0,

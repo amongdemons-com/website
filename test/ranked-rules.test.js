@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  getFloorRatingGain,
   getRankedCardCost,
   getRunEndRatingDelta,
   resolveDefeat
@@ -18,6 +19,15 @@ const {
   getSnapshotSkillTreeSummary,
   isImmediatePlayerRepeat
 } = require('../public/api/lib/ranked-runs')._test;
+
+test('Endless floors track prestige without awarding additional rating', () => {
+  assert.equal(getFloorRatingGain(9), 0);
+  assert.equal(getFloorRatingGain(10), 3);
+  assert.equal(getFloorRatingGain(19), 3);
+  assert.equal(getFloorRatingGain(20), 75);
+  assert.equal(getFloorRatingGain(21), 0);
+  assert.equal(getFloorRatingGain(50), 0);
+});
 
 test('losing all three Ranked lives early always costs rating', () => {
   let lives = 3;

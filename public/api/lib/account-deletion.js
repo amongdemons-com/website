@@ -7,6 +7,7 @@ const PLAYER_DATA_TABLES = [
   'ranked_opponent_snapshots',
   'ranked_runs',
   'ranked_ratings',
+  'player_badges',
   'player_world_merchant_stock',
   'player_world_merchant_purchases',
   'player_achievements',

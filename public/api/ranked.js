@@ -388,15 +388,13 @@ async function applyRankedVictory(run, rating, connection, playerId, result) {
     clearedFloor
   );
   result.rSoulInterest = awardRankedSoulInterest(run);
-  let gain = getFloorRatingGain(clearedFloor, run.state.endlessRatingEarned);
+  let gain = getFloorRatingGain(clearedFloor);
   if (clearedFloor < RANKED_VICTORY_FLOOR) {
     run.state.pendingRating = Math.max(0, Number(run.state.pendingRating) || 0) + gain;
   } else {
     if (clearedFloor === RANKED_VICTORY_FLOOR) {
       gain += Math.max(0, Number(run.state.pendingRating) || 0);
       run.state.pendingRating = 0;
-    } else {
-      run.state.endlessRatingEarned = Math.max(0, Number(run.state.endlessRatingEarned) || 0) + gain;
     }
     await applyRatingDelta(run, rating, connection, gain);
   }
