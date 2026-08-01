@@ -6,6 +6,42 @@
     text-shadow: 0 0 10px var(--rank-glow);
 }
 
+/* Shared division badge used by Ranked and player-facing profile surfaces. */
+.ranked-rank {
+    --rank-color: #c98052;
+    --rank-glow: rgba(201, 128, 82, .35);
+    display: inline-flex;
+    align-items: center;
+    gap: .28rem;
+    color: var(--rank-color);
+    line-height: 1;
+    text-shadow: 0 0 10px var(--rank-glow);
+    white-space: nowrap;
+}
+
+.ranked-rank-image {
+    width: 1.32rem;
+    height: 1.46rem;
+    object-fit: contain;
+    filter: drop-shadow(0 0 5px var(--rank-glow));
+}
+
+.ranked-rank.is-compact {
+    gap: .18rem;
+    font-size: .68rem;
+}
+
+.ranked-rank.is-compact .ranked-rank-image {
+    width: 1rem;
+    height: 1.12rem;
+}
+
+.ranked-rank-label {
+    color: var(--rank-color);
+    font-family: "Arial Black", "Trebuchet MS", Arial, Helvetica, sans-serif;
+    font-weight: 900;
+}
+
 .rank-division-text--unranked {
     --rank-color: #98a3ad;
     --rank-glow: rgba(152, 163, 173, 0.28);

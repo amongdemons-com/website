@@ -296,8 +296,9 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
     : profile.travel + (isAoe ? entryIndex * 70 : 0);
   scheduleImpact(impactDelay, () => {
     updateTargetCard(entry.target, entry.targetHp, attackerSide);
-    if (Number(entry.dmg) > 0) {
-      showFloatingDamage(entry.target, entry.dmg, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
+    const floatingDamage = getFloatingDamageAmount(entry, step);
+    if (floatingDamage > 0) {
+      showFloatingDamage(entry.target, floatingDamage, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
     }
     spawnImpactBurst(entry.target, {
       attackerId: entry.attacker,
@@ -312,10 +313,26 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
   });
 }
 
+// Retaliation demons can produce an innate retaliation and a Thorns-bonus hit
+// in the same step. Preserve each HP update and log entry, but display one
+// combined floating number per counter target so the values do not overlap.
+function getFloatingDamageAmount(entry, step) {
+  const damage = Math.max(0, Number(entry?.dmg) || 0);
+  if (!isCounterattackEntry(entry)) return damage;
+
+  const matchingEntries = (step?.entries || []).filter((counterEntry) => (
+    isCounterattackEntry(counterEntry) && counterEntry.target === entry.target
+  ));
+  if (matchingEntries[0] !== entry) return 0;
+
+  return matchingEntries.reduce((total, counterEntry) => (
+    total + Math.max(0, Number(counterEntry.dmg) || 0)
+  ), 0);
+}
+
 // AOE can produce several thorns log entries when team-wide thorns bonuses are
-// active. Keep every damage number and HP update, but only draw the thorn burst
-// on actual retaliation demons. Multiple counter entries from the same demon
-// also share one visual.
+// active. Only draw the thorn burst on actual retaliation demons. Multiple
+// counter entries from the same demon also share one visual.
 function shouldDrawCounterattackAnimation(entry, step) {
   if (!isCounterattackEntry(entry)) return true;
 
@@ -1530,6 +1547,7 @@ export {
   setActiveLogRow,
   animateAttackerCard,
   animateCombatEntry,
+  getFloatingDamageAmount,
   getAttackProfile,
   prefersReducedMotion,
   scheduleImpact,

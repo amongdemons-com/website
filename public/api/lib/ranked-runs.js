@@ -158,6 +158,10 @@ async function getOrCreateRankedRating(playerId, seasonId, queryable = db, optio
      ON DUPLICATE KEY UPDATE player_id = VALUES(player_id)`,
     [playerId, seasonId, DEFAULT_RATING]
   );
+  return (await getRankedRating(playerId, seasonId, queryable, options)) || serializeRating();
+}
+
+async function getRankedRating(playerId, seasonId, queryable = db, options = {}) {
   const [rows] = await queryable.query(
     `SELECT *
      FROM ranked_ratings
@@ -165,7 +169,7 @@ async function getOrCreateRankedRating(playerId, seasonId, queryable = db, optio
      LIMIT 1${options.forUpdate ? ' FOR UPDATE' : ''}`,
     [playerId, seasonId]
   );
-  return serializeRating(rows[0]);
+  return rows.length ? serializeRating(rows[0]) : null;
 }
 
 function serializeRating(row = {}) {
@@ -1349,6 +1353,7 @@ module.exports = {
   getCurrentRankedRun,
   getOrCreateCurrentSeason,
   getOrCreateRankedRating,
+  getRankedRating,
   getPlayerBattleBuffs,
   getRankedSoulBalance,
   getRankedRun,

@@ -18,6 +18,7 @@
   const state = {
     player: session.player || null,
     progression: null,
+    ranked: null,
     questData: null,
     statPoints: null,
     collection: [],
@@ -340,6 +341,7 @@
 
       state.player = payload.player;
       state.progression = payload.progression;
+      state.ranked = payload.ranked || null;
       state.questData = payload.questData;
       state.statPoints = payload.statPoints;
       state.collection = payload.demons || [];
@@ -380,7 +382,7 @@
     setText(elements.welcomeText, player.username
       ? 'Rest, plan, and push deeper.'
       : 'Rest, plan, and push deeper.');
-    setText(elements.playerTitle, 'Demon Hunter');
+    renderPlayerTitle(state.ranked);
 
     renderLevelProgress(progression, player);
     setText(elements.floorStat, formatNumber(bestFloor));
@@ -391,6 +393,28 @@
       className: 'stat-soul-amount',
       ariaLabel: `${formatNumber(souls)} Souls`
     }));
+  }
+
+  function renderPlayerTitle(ranked) {
+    const division = String(ranked?.division || '').trim();
+    if (!division) {
+      setText(elements.playerTitle, 'Demon Hunter');
+      setClassName(elements.playerTitle, 'camp-player-title');
+      return;
+    }
+
+    const slug = division.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    const tier = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'demonic']
+      .find((candidate) => division.toLowerCase().startsWith(candidate)) || 'bronze';
+    setClassName(elements.playerTitle, 'camp-player-title');
+    setHtml(elements.playerTitle, `
+      <span class="ranked-rank ranked-rank--${slug}" aria-label="${escapeHtml(division)} rank">
+        <img class="ranked-rank-image" src="/app/images/assets/ranks/${tier}.svg" alt="" width="72" height="80" aria-hidden="true">
+        <span class="ranked-rank-label rank-division-text rank-division-text--${slug}">${escapeHtml(division.toUpperCase())}</span>
+      </span>
+    `);
   }
 
   function renderLevelProgress(progression, player) {

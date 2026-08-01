@@ -27,6 +27,7 @@ import {
 const api = window.AmongDemons.api;
 const audio = window.AmongDemons.audio;
 const renderCard = window.AmongDemons.ui.renderDemonCard;
+const renderCombatStats = window.AmongDemons.ui.renderCombatStats;
 const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
 const RANKED_RARITIES = Object.freeze([
   'common',
@@ -64,6 +65,7 @@ let stagedSoldDemons = [];
 let shownVictoryKey = null;
 let pendingInterestGain = 0;
 let rankedPactScrollSyncFrame = 0;
+let rankedRating = null;
 
 registerDungeonActions({
   ...combat,
@@ -115,6 +117,11 @@ function cacheElements() {
     'demonicPactOverlay',
     'demonicPactViewToggle',
     'rankedPactGrid',
+    'rankedEndRunModal',
+    'rankedEndRunEyebrow',
+    'rankedEndRunFloor',
+    'rankedEndRunGain',
+    'rankedEndRunRating',
     'rankedVictoryModal',
     'rankedVictoryRankImage',
     'rankedVictoryDivision',
@@ -127,6 +134,13 @@ function cacheElements() {
 
 function bindEvents() {
   document.addEventListener('click', async (event) => {
+    const endRunConfirm = event.target.closest('[data-ranked-end-confirm]');
+    if (endRunConfirm) {
+      event.preventDefault();
+      await confirmRankedEndRun();
+      return;
+    }
+
     const pactScrollButton = event.target.closest('[data-ranked-pact-scroll]');
     if (pactScrollButton) {
       event.preventDefault();
@@ -210,6 +224,10 @@ function bindEvents() {
     card.classList.add('is-dragging');
   });
 
+  elements.rankedEndRunModal?.addEventListener('hidden.bs.modal', () => {
+    setRankedEndRunBusy(false);
+  });
+
   document.addEventListener('dragend', (event) => {
     event.target.closest('[data-ranked-workspace-id]')?.classList.remove('is-dragging');
     suppressDetailUntil = Date.now() + 350;
@@ -275,6 +293,7 @@ async function loadBootstrap() {
       })
     ]);
     if (payload.player) acceptPlayer(payload.player);
+    rankedRating = payload.rating || null;
     if (payload.run) {
       acceptRun(payload.run);
       if (
@@ -333,11 +352,49 @@ async function handleAction(button, event = null) {
   if (action === 'lock-hand') return toggleHandLock();
   if (action === 'fight') return startBattle();
   if (action === 'continue') return continueRun();
-  if (action === 'end') {
-    if (!window.confirm('End this Ranked run and finalize its current Rank Points?')) return;
-    return performRunAction('end', {});
-  }
+  if (action === 'end') return showRankedEndRunModal();
   if (action === 'pact') return chooseRankedPact(button.dataset.buffId);
+}
+
+function showRankedEndRunModal() {
+  if (!serverRun || !elements.rankedEndRunModal || !window.bootstrap?.Modal) return;
+  const floor = Math.max(1, Number(serverRun.floor) || 1);
+  const runDelta = Number(serverRun.rating?.runDelta) || 0;
+  const rating = Math.max(0, Number(serverRun.rating?.rating) || 0);
+
+  if (elements.rankedEndRunEyebrow) {
+    elements.rankedEndRunEyebrow.textContent = `Endless · Floor ${formatNumber(floor)}`;
+  }
+  if (elements.rankedEndRunFloor) elements.rankedEndRunFloor.textContent = formatNumber(floor);
+  if (elements.rankedEndRunGain) {
+    elements.rankedEndRunGain.textContent = formatSigned(runDelta);
+    elements.rankedEndRunGain.classList.toggle('is-negative', runDelta < 0);
+  }
+  if (elements.rankedEndRunRating) elements.rankedEndRunRating.textContent = formatNumber(rating);
+  setRankedEndRunBusy(false);
+  window.bootstrap.Modal.getOrCreateInstance(elements.rankedEndRunModal).show();
+}
+
+async function confirmRankedEndRun() {
+  if (isBusy || !serverRun || serverRun.status !== 'active') return;
+  setRankedEndRunBusy(true);
+  const payload = await performRunAction('end', {});
+  if (payload?.run?.status === 'ended') {
+    window.bootstrap?.Modal.getOrCreateInstance(elements.rankedEndRunModal)?.hide();
+    return;
+  }
+  setRankedEndRunBusy(false);
+}
+
+function setRankedEndRunBusy(busy) {
+  const modal = elements.rankedEndRunModal;
+  if (!modal) return;
+  modal.querySelectorAll('button').forEach((button) => {
+    button.disabled = Boolean(busy);
+  });
+  const confirm = modal.querySelector('[data-ranked-end-confirm]');
+  confirm?.classList.toggle('is-busy', Boolean(busy));
+  confirm?.setAttribute('aria-busy', busy ? 'true' : 'false');
 }
 
 async function performRunAction(action, body) {
@@ -494,6 +551,7 @@ function actionOptions(body) {
 function acceptRun(run, options = {}) {
   endRankedSaleDrag();
   serverRun = run;
+  rankedRating = run.rating || rankedRating;
   rankedSouls = Math.max(0, Math.floor(Number(run.rSouls) || 0));
   const battle = run.lastBattle;
   workspace = isWorkspacePhase(run) ? createWorkspace(run) : null;
@@ -522,16 +580,7 @@ function renderRun() {
 
   if (!hasRun) {
     setBattlePanel('combat');
-    elements.runEmpty.innerHTML = `
-      <div class="ranked-end-card">
-        <span class="dungeon-phase-eyebrow">Seasonal Ranked</span>
-        <h1>Draft. Adapt. Climb.</h1>
-        <p>Build a temporary standardized roster, survive with three lives, and clear Floor ${RANKED_VICTORY_FLOOR}.</p>
-        <button class="btn btn-primary btn-lg" type="button" data-ranked-action="start" ${isBusy ? 'disabled' : ''}>
-          ${renderIcon('trophy')} Start Ranked Run
-        </button>
-      </div>
-    `;
+    elements.runEmpty.innerHTML = renderRankedStartCard();
     return;
   }
 
@@ -836,7 +885,13 @@ function syncRankedPactScrollControls(targetShell = null) {
 }
 
 function renderRankedDemon(demon, options = {}) {
+  const statsHtml = renderCombatStats?.(demon, { hideHpBar: true }) || '';
   return renderCard(demon, {
+    className: 'ranked-preparation-demon-card',
+    showStats: false,
+    overlayHtml: statsHtml
+      ? `<div class="ranked-preparation-stats" aria-label="Combat stats">${statsHtml}</div>`
+      : '',
     attributes: {
       'data-instance-id': demon.instanceId,
       ...(options.zone !== 'enemy' ? {
@@ -853,12 +908,14 @@ function renderRankedDemon(demon, options = {}) {
 function renderPreparation(run, options = {}) {
   const hand = workspace?.hand || [];
   const canReviewFight = Boolean(options.canReviewFight);
+  const isEndless = Number(run.floor) > RANKED_VICTORY_FLOOR;
   const canReroll = canRerollWorkspace() && !isBusy;
   const canFight = canFightWorkspace() && !isBusy;
   const rerollLabel = `Reroll hand for ${RANKED_REROLL_RSOUL_COST} Ranked Souls`;
   const lockLabel = run.handLocked
     ? 'Unlock hand for the next floor'
     : 'Lock hand for the next floor';
+  const lockIcon = renderHandLockIcon(run.handLocked);
   return `
     <div class="ranked-reroll-rail">
       <button class="btn btn-secondary ranked-side-action ranked-side-action-compact ranked-reroll-action" type="button" data-ranked-action="reroll"
@@ -894,21 +951,27 @@ function renderPreparation(run, options = {}) {
         <span>Drop team or reserve demon here</span>
       </div>
     </div>
-    <div class="ranked-action-dock">
+    <div class="ranked-action-dock${isEndless ? ' is-endless' : ''}">
       <button class="btn ${run.handLocked ? 'btn-success' : 'btn-outline-light'} ranked-side-action ranked-side-action-compact ranked-lock-action"
               type="button" data-ranked-action="lock-hand" aria-pressed="${run.handLocked ? 'true' : 'false'}"
               title="${lockLabel}" aria-label="${lockLabel}">
-        ${renderIcon(run.handLocked ? 'check' : 'save')} <span>${run.handLocked ? 'Locked' : 'Lock Hand'}</span>
+        ${lockIcon} <span>${run.handLocked ? 'Locked' : 'Lock Hand'}</span>
       </button>
       <div class="ranked-review-actions" role="group" aria-label="Previous fight">
         ${renderReplayLogButtons(canReviewFight, canReviewFight)}
       </div>
+      ${isEndless ? `
+        <button class="btn ranked-end-run-action ranked-side-action ranked-side-action-compact ranked-endless-end-action"
+                type="button" data-ranked-action="end" title="End Endless run" aria-label="End Endless run">
+          ${renderIcon('flag')} <span>End Run</span>
+        </button>
+      ` : ''}
     </div>
     <button class="btn btn-primary btn-lg ranked-side-action ranked-fight-action" type="button" data-ranked-action="fight"
             title="Start Ranked fight" aria-label="Start Ranked fight" ${canFight ? '' : 'disabled'}>
       ${renderIcon('swords')} <span>Fight</span>
     </button>
-    <div class="ranked-mobile-nav" role="group" aria-label="Ranked preparation controls">
+    <div class="ranked-mobile-nav${isEndless ? ' is-endless' : ''}" role="group" aria-label="Ranked preparation controls">
       <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn ranked-mobile-reroll-btn" type="button" data-ranked-action="reroll"
               title="${rerollLabel}" aria-label="${rerollLabel}" ${canReroll ? '' : 'disabled'}>
         <span class="ranked-mobile-reroll-icon" aria-hidden="true">${renderIcon('refresh-cw')}</span>
@@ -929,7 +992,7 @@ function renderPreparation(run, options = {}) {
       <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn ${run.handLocked ? 'active' : ''}" type="button"
               data-ranked-action="lock-hand" title="${lockLabel}" aria-label="${lockLabel}"
               aria-pressed="${run.handLocked ? 'true' : 'false'}">
-        ${renderIcon(run.handLocked ? 'check' : 'save')}
+        ${lockIcon}
         <span class="visually-hidden">${run.handLocked ? 'Unlock hand' : 'Lock hand'}</span>
       </button>
       <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn" id="rankedMobileReplayBtn" type="button"
@@ -942,6 +1005,13 @@ function renderPreparation(run, options = {}) {
         ${renderIcon('log')}
         <span class="visually-hidden">Fight Log</span>
       </button>
+      ${isEndless ? `
+        <button class="dungeon-mobile-nav-btn ranked-mobile-nav-btn ranked-mobile-end-action ranked-end-run-action" type="button"
+                data-ranked-action="end" title="End Endless run" aria-label="End Endless run">
+          ${renderIcon('flag')}
+          <span class="visually-hidden">End Run</span>
+        </button>
+      ` : ''}
       <button class="dungeon-mobile-nav-btn dungeon-mobile-fight-btn ranked-mobile-nav-btn ad-primary-action"
               type="button" data-ranked-action="fight" title="Start Ranked fight" aria-label="Start Ranked fight"
               ${canFight ? '' : 'disabled'}>
@@ -950,6 +1020,10 @@ function renderPreparation(run, options = {}) {
       </button>
     </div>
   `;
+}
+
+function renderHandLockIcon(isLocked) {
+  return isLocked ? renderIcon('lock') : renderIcon('lock-open');
 }
 
 function renderRerollOdds(run) {
@@ -1099,6 +1173,38 @@ function renderEndedRun(run) {
       <p>Reached Floor ${formatNumber(reached)} &middot; Cleared Floor ${formatNumber(cleared)} &middot; ${formatSigned(run.rating?.runDelta || 0)} Rank Points</p>
       <p class="text-muted">${escapeHtml(run.rating?.division || '')} &middot; ${formatNumber(run.rating?.rating || 0)} RP</p>
       <button class="btn btn-primary btn-lg" type="button" data-ranked-action="start">Start New Run</button>
+    </div>
+  `;
+}
+
+function renderRankedStartCard() {
+  const division = rankedRating?.division || 'Bronze III';
+  const rating = Math.max(0, Number(rankedRating?.rating) || 0);
+  const rank = getRankPresentation(division);
+  return `
+    <div class="ranked-end-card ranked-start-card ranked-rank--${escapeHtml(rank.slug)}">
+      <div class="ranked-start-card-glow" aria-hidden="true"></div>
+      <span class="dungeon-phase-eyebrow">Seasonal Ranked</span>
+      <h1>Draft. Adapt. Climb.</h1>
+      <p class="ranked-start-summary">
+        Build a temporary standardized roster, survive with three lives, and clear Floor ${RANKED_VICTORY_FLOOR}.
+      </p>
+      <div class="ranked-start-rank" aria-label="Current rank ${escapeHtml(rank.division)}, ${formatNumber(rating)} Rank Points">
+        <span class="ranked-start-rank-eyebrow">Current Rank</span>
+        <span class="ranked-start-rank-emblem" aria-hidden="true">
+          <img src="${escapeHtml(rank.imageUrl)}" alt="" width="144" height="160">
+        </span>
+        <strong class="rank-division-text rank-division-text--${escapeHtml(rank.slug)}">${escapeHtml(rank.division.toUpperCase())}</strong>
+        <span class="ranked-start-rating">${formatNumber(rating)} RP</span>
+      </div>
+      <div class="ranked-start-rules" aria-label="Ranked run rules">
+        <span>${renderIcon('heart')} Three lives</span>
+        <span>${renderIcon('shield-check')} Standardized roster</span>
+        <span>${renderIcon('flag')} Floor ${RANKED_VICTORY_FLOOR} victory</span>
+      </div>
+      <button class="btn btn-primary btn-lg ranked-start-action" type="button" data-ranked-action="start" ${isBusy ? 'disabled' : ''}>
+        ${renderIcon('trophy')} <span>Start Ranked Run</span>
+      </button>
     </div>
   `;
 }

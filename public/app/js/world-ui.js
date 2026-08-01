@@ -5952,7 +5952,8 @@ import './bag-item-visuals.js';
       state.activeWorldBattleLogIndex = index;
       applyWorldBattleLogEntry(combatLog[index], state.activeWorldBattleTeams);
       renderWorldBattleReplay(battle);
-      highlightWorldBattleLogEntry(combatLog[index], token);
+      const visualEntry = getWorldBattleVisualEntry(combatLog, index);
+      if (visualEntry) highlightWorldBattleLogEntry(visualEntry, token);
       await waitForWorldBattlePlaybackDelay(getWorldBattleReplayDelay(combatLog[index]));
     }
 
@@ -6466,6 +6467,39 @@ import './bag-item-visuals.js';
       attackerCard?.classList.remove('is-attacking', 'is-player-attack', 'is-enemy-attack');
       targetCard?.classList.remove('is-hit', 'is-poison-tick');
     }, Math.max(120, getWorldBattleReplayDelay(entry) - 80));
+  }
+
+  function getWorldBattleVisualEntry(combatLog, index) {
+    const entry = combatLog?.[index];
+    if (!isWorldBattleCounterEntry(entry)) return entry;
+
+    for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+      const candidate = combatLog[cursor];
+      if (candidate?.tick !== entry.tick) break;
+      if (isMatchingWorldBattleCounter(candidate, entry)) return null;
+    }
+
+    let damage = Math.max(0, Number(entry.dmg) || 0);
+    for (let cursor = index + 1; cursor < combatLog.length; cursor += 1) {
+      const candidate = combatLog[cursor];
+      if (candidate?.tick !== entry.tick) break;
+      if (isMatchingWorldBattleCounter(candidate, entry)) {
+        damage += Math.max(0, Number(candidate.dmg) || 0);
+      }
+    }
+
+    return damage === Number(entry.dmg) ? entry : { ...entry, dmg: damage };
+  }
+
+  function isMatchingWorldBattleCounter(candidate, entry) {
+    return isWorldBattleCounterEntry(candidate) &&
+      candidate.tick === entry.tick &&
+      candidate.attacker === entry.attacker &&
+      candidate.target === entry.target;
+  }
+
+  function isWorldBattleCounterEntry(entry) {
+    return entry?.effect === 'retaliate' || entry?.effect === 'thorns';
   }
 
   function drawWorldBattleAttackEffect(entry, token) {

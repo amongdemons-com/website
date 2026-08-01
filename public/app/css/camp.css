@@ -439,8 +439,20 @@ body.camp-page > .camp-lobby {
 }
 
 .camp-player-title {
+    display: inline-flex;
+    align-items: center;
     color: var(--camp-ember-hot);
     font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.camp-player-title .ranked-rank-image {
+    width: 1rem;
+    height: 1.12rem;
+}
+
+.camp-player-title .ranked-rank-label {
+    color: var(--rank-color);
     font-weight: 900;
 }
 
@@ -2495,6 +2507,7 @@ body.camp-page {
     gap: 0.3rem;
     border-top: 1px solid rgba(161,212,201,0.12);
     padding-top: 0.44rem;
+    padding-bottom: 1em;
 }
 
 .camp-skill-tree-stat {

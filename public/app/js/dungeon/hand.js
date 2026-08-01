@@ -322,10 +322,6 @@ function findWeakerTeamDemon(candidate, team = []) {
 }
 
 function isBetterDemon(candidate, current) {
-  const candidateRarity = getUpgradeRarityRank(candidate?.rarity);
-  const currentRarity = getUpgradeRarityRank(current?.rarity);
-  if (candidateRarity !== currentRarity) return candidateRarity > currentRarity;
-
   const ratios = [
     [candidate?.maxHp || candidate?.hp, current?.maxHp || current?.hp],
     [candidate?.atk, current?.atk],
@@ -339,17 +335,6 @@ function isBetterDemon(candidate, current) {
     sum + (Number.isFinite(next) ? next / previous : 0)
   ), 0) / ratios.length;
   return relativePower > 1.000001;
-}
-
-function getUpgradeRarityRank(rarity) {
-  return {
-    common: 1,
-    uncommon: 2,
-    rare: 3,
-    epic: 4,
-    legendary: 5,
-    mythic: 6
-  }[String(rarity || '').toLowerCase()] || 0;
 }
 
 function renderEmptyHand(mode = 'recruit') {
@@ -603,7 +588,6 @@ export {
   shouldHighlightHandUpgrades,
   findWeakerTeamDemon,
   isBetterDemon,
-  getUpgradeRarityRank,
   renderEmptyHand,
   renderRewardBox,
   renderRewardPayout,

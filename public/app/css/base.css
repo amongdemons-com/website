@@ -5201,16 +5201,24 @@ body.rankings-page {
 }
 
 .rank-floor {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.32rem;
+    --rank-floor-value-size: 1.12rem;
+    --rank-floor-alignment-height: var(--rank-floor-value-size);
+    display: inline-grid;
+    grid-auto-flow: column;
+    align-items: center;
+    align-content: center;
+    column-gap: 0.32rem;
     white-space: nowrap;
 }
 
 .rank-floor-value {
+    display: inline-flex;
+    align-items: center;
+    height: var(--rank-floor-alignment-height);
     color: var(--ad-text);
-    font-size: 1.12rem;
+    font-size: var(--rank-floor-value-size);
     font-weight: 860;
+    line-height: 1;
 }
 
 .rank-top .rank-floor-value {
@@ -5218,8 +5226,8 @@ body.rankings-page {
     text-shadow: 0 0 16px var(--rank-border);
 }
 
-.rank-top-1 .rank-floor-value {
-    font-size: 1.34rem;
+.rank-top-1 .rank-floor {
+    --rank-floor-value-size: 1.34rem;
 }
 
 .rank-floor-label,
@@ -5227,6 +5235,17 @@ body.rankings-page {
     color: var(--ad-muted);
     font-size: 0.88rem;
     font-weight: 760;
+}
+
+.rank-floor-label {
+    display: inline-flex;
+    align-items: center;
+    height: var(--rank-floor-alignment-height);
+    line-height: 1;
+}
+
+.rankings-page .rank-table .rank-floor {
+    align-items: center;
 }
 
 .rank-metric {
@@ -5252,6 +5271,27 @@ body.rankings-page {
 .rank-metric-souls .soul-icon {
     width: 1.08em;
     height: 1.08em;
+}
+
+@media (min-width: 768px) {
+    .rankings-page .rank-table .rank-row td {
+        vertical-align: middle;
+    }
+
+    .rankings-page .rank-table .rank-position,
+    .rankings-page .rank-table .rank-hunter,
+    .rankings-page .rank-table .rank-floor,
+    .rankings-page .rank-table .rank-metric {
+        min-height: 2.4rem;
+    }
+
+    .rankings-page .rank-table .rank-hunter {
+        justify-content: center;
+    }
+
+    .rankings-page .rank-table .rank-metric {
+        align-items: center;
+    }
 }
 
 .rank-sort-label {
@@ -10421,6 +10461,17 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
     width: 100%;
     min-width: 0;
     overflow: visible;
+}
+
+/* The shared battle layout fills its parent vertically. On a public profile the
+ * board follows a separate panel header, so filling the parent makes the grid
+ * consume the panel's bottom padding. Let the formation define the board's
+ * height and keep the complete grid inside the panel box. */
+.hunter-team-board.battle-side {
+    grid-template-rows: auto;
+    align-content: start;
+    height: auto;
+    min-height: 0;
 }
 
 /*

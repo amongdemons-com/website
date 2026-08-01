@@ -8,10 +8,10 @@
     <meta name="description" content="Draft a standardized demon team and climb the seasonal Among Demons Ranked ladder.">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=4a2de97a3816" rel="stylesheet">
-    <link href="/app/css/battle.css?v=1be4424dd72c" rel="stylesheet">
-    <link href="/app/css/rank-divisions.css?v=c7e33e1bbb59" rel="stylesheet">
-    <link href="/app/css/ranked.css?v=f06fc23791dd" rel="stylesheet">
+    <link href="/app/css/base.css?v=14be75bf71e6" rel="stylesheet">
+    <link href="/app/css/battle.css?v=cf4fb0047115" rel="stylesheet">
+    <link href="/app/css/rank-divisions.css?v=1d73edafa9a8" rel="stylesheet">
+    <link href="/app/css/ranked.css?v=97b36433f0f3" rel="stylesheet">
   </head>
   <body class="dungeon-page ranked-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -74,15 +74,19 @@
                 <div id="runPanel" class="d-none">
                   <div class="dungeon-matchup dungeon-arena">
                     <section class="battle-side battle-side-player" aria-label="Your Ranked team">
-                      <div class="battle-side-heading" id="teamSideTitle"><span>Your Team</span></div>
-                      <div id="teamGrid"></div>
+                      <div class="ranked-battle-side-content">
+                        <div class="battle-side-heading" id="teamSideTitle"><span>Your Team</span></div>
+                        <div id="teamGrid"></div>
+                      </div>
                     </section>
                     <div class="vs-divider dungeon-vs" id="dungeonJoiner">
                       <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
                     </div>
                     <section class="battle-side battle-side-enemy" aria-label="Ranked Reserve or opponent">
-                      <div class="battle-side-heading" id="enemySideTitle"><span>Reserve</span></div>
-                      <div id="enemyGrid"></div>
+                      <div class="ranked-battle-side-content">
+                        <div class="battle-side-heading" id="enemySideTitle"><span>Reserve</span></div>
+                        <div id="enemyGrid"></div>
+                      </div>
                     </section>
                   </div>
                 </div>
@@ -119,6 +123,51 @@
           <h2>Choose a Demonic Pact</h2>
         </div>
         <div id="rankedPactGrid" class="demonic-pact-grid"></div>
+      </div>
+    </div>
+    <div
+      class="modal fade ranked-end-run-modal"
+      id="rankedEndRunModal"
+      tabindex="-1"
+      aria-labelledby="rankedEndRunTitle"
+      aria-describedby="rankedEndRunSummary"
+      aria-hidden="true"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="ranked-end-run-icon" aria-hidden="true"><i data-lucide="flag"></i></div>
+            <span class="dungeon-phase-eyebrow" id="rankedEndRunEyebrow">Endless Run</span>
+            <h2 class="modal-title" id="rankedEndRunTitle">End this run?</h2>
+            <p class="ranked-end-run-summary" id="rankedEndRunSummary">
+              Your earned Rank Points are secured. Ending now records your progress and closes this temporary roster.
+            </p>
+            <div class="ranked-end-run-progress" aria-label="Current Ranked run progress">
+              <div>
+                <span>Current Floor</span>
+                <strong id="rankedEndRunFloor">21</strong>
+              </div>
+              <div>
+                <span>Run RP</span>
+                <strong id="rankedEndRunGain">+0</strong>
+              </div>
+              <div>
+                <span>Total RP</span>
+                <strong id="rankedEndRunRating">0</strong>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Keep Playing</button>
+            <button class="btn ranked-end-run-action ranked-end-run-confirm" type="button" data-ranked-end-confirm>
+              <i data-lucide="flag" aria-hidden="true"></i>
+              <span>End Run</span>
+              <span class="dungeon-action-spinner ranked-end-run-spinner" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     <div
@@ -163,7 +212,7 @@
         </div>
       </div>
     </div>
-    <script src="/app/dist/runtime.bundle.js?v=d43126913af6"></script>
-    <script src="/app/dist/ranked.bundle.js?v=14aa082bb365"></script>
+    <script src="/app/dist/runtime.bundle.js?v=7ae400c6a832"></script>
+    <script src="/app/dist/ranked.bundle.js?v=79c6d989e60d"></script>
   </body>
 </html>

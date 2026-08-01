@@ -11,6 +11,24 @@
   min-height: 0;
 }
 
+.ranked-page .battle-side {
+  display: block;
+  gap: 0;
+}
+
+.ranked-battle-side-content {
+  --ranked-side-heading-padding: .3rem;
+  --ranked-side-heading-space: calc(1.55rem + var(--ranked-side-heading-padding));
+  display: grid;
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  container-type: size;
+}
+
 .ranked-mobile-status {
   display: none;
 }
@@ -25,43 +43,9 @@
   display: inline-flex;
 }
 
-.ranked-rank {
-  --rank-color: #c98052;
-  --rank-glow: rgba(201, 128, 82, .35);
-  display: inline-flex;
-  align-items: center;
-  gap: .28rem;
-  color: var(--rank-color);
-  line-height: 1;
-  text-shadow: 0 0 10px var(--rank-glow);
-  white-space: nowrap;
-}
-
-.ranked-rank-image {
-  width: 1.32rem;
-  height: 1.46rem;
-  object-fit: contain;
-  filter: drop-shadow(0 0 5px var(--rank-glow));
-}
-
 .ranked-page #teamSideTitle .ranked-rank-image {
   width: 1rem;
   height: 1.12rem;
-}
-
-.ranked-rank.is-compact {
-  gap: .18rem;
-  font-size: .68rem;
-}
-
-.ranked-rank.is-compact .ranked-rank-image {
-  width: 1rem;
-  height: 1.12rem;
-}
-
-.ranked-rank-label {
-  color: var(--rank-color);
-  font-weight: 950;
 }
 
 .ranked-page #teamSideTitle .ranked-rank-label {
@@ -170,6 +154,7 @@
 /* Ranked uses Dungeon's bottom-panel height contract. */
 .ranked-page #rankedBottomPanel {
   --ranked-offer-card-size: var(--dungeon-bottom-panel-content-height);
+  --ranked-offer-card-height: var(--ranked-offer-card-size);
   position: relative;
   grid-template-columns: minmax(0, 1fr);
   width: 100%;
@@ -276,7 +261,7 @@
   display: grid;
   grid-template-rows: minmax(0, 1fr);
   width: 100%;
-  height: var(--dungeon-bottom-panel-content-height);
+  height: var(--ranked-offer-card-height);
   min-width: 0;
   min-height: 0;
   overflow: visible;
@@ -371,9 +356,17 @@
 }
 
 .ranked-offer {
+  --ranked-card-footer-height: clamp(
+    1.05rem,
+    calc(var(--ranked-offer-card-height) * .2),
+    1.8rem
+  );
+  --ranked-card-footer-padding-inline: clamp(.36rem, 4.4cqw, .54rem);
+  --ranked-card-cost-space: clamp(1.2rem, 22cqw, 2rem);
   position: relative;
+  container-type: size;
   width: var(--ranked-offer-card-size);
-  height: var(--ranked-offer-card-size);
+  height: var(--ranked-offer-card-height);
   min-width: 0;
   min-height: 0;
 }
@@ -383,6 +376,172 @@
   height: 100%;
   min-width: 0;
   min-height: 0;
+}
+
+/* Ranked drafting uses a denser, shop-card treatment: the art stays dominant,
+ * with a top-right stat cluster and a dedicated name/price footer. */
+.ranked-offer .ranked-preparation-demon-card {
+  container-type: size;
+  overflow: hidden;
+  border-width: 1px;
+  border-top-width: clamp(3px, 3.5cqh, 5px);
+  background: #071012;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .06),
+    0 7px 18px rgba(0, 0, 0, .42),
+    0 0 12px color-mix(in srgb, var(--rarity-color, #d1d5d8) 14%, transparent);
+}
+
+.ranked-offer .ranked-preparation-demon-card .dungeon-demon-card-image img {
+  transform: scale(1.16);
+  transform-origin: center 24%;
+}
+
+.ranked-offer .ranked-preparation-demon-card .dungeon-demon-card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0;
+  min-height: 55%;
+  overflow: visible;
+  padding: 0;
+  background: linear-gradient(
+    to top,
+    rgba(1, 6, 8, .99) 0%,
+    rgba(2, 9, 11, .92) 30%,
+    rgba(3, 12, 14, .64) 55%,
+    rgba(3, 12, 14, .2) 76%,
+    transparent 100%
+  );
+}
+
+.ranked-offer .ranked-preparation-demon-card .combat-hp-bar {
+  display: none;
+}
+
+.ranked-preparation-stats {
+  --ranked-stat-icon-size: clamp(.5rem, 8.4cqw, .78rem);
+  --ranked-stat-row-gap: clamp(.07rem, 1.2cqh, .14rem);
+  position: absolute;
+  top: clamp(.28rem, 3.5cqh, .46rem);
+  right: clamp(.26rem, 3.3cqw, .44rem);
+  z-index: 3;
+  box-sizing: border-box;
+  display: grid;
+  justify-content: end;
+  width: max-content;
+  min-width: clamp(2.7rem, 38cqw, 3.9rem);
+  gap: var(--ranked-stat-row-gap);
+  max-width: 58%;
+  border: 1px solid rgba(184, 220, 224, .22);
+  border-right: 2px solid color-mix(in srgb, var(--rarity-color, #d1d5d8) 76%, #fff 8%);
+  border-radius: clamp(.18rem, 2.2cqw, .3rem) 0 0 clamp(.18rem, 2.2cqw, .3rem);
+  background: linear-gradient(155deg, #203745, rgba(2, 8, 10, .2));
+  padding: clamp(.28rem, 3.5cqh, .42rem) clamp(.28rem, 3.6cqw, .42rem);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .055),
+    0 4px 10px rgba(0, 0, 0, .42);
+  backdrop-filter: blur(3px);
+  pointer-events: none;
+}
+
+.ranked-offer .ranked-preparation-demon-card .combat-stat-strip,
+.ranked-offer .ranked-preparation-demon-card .combat-hp-meta {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #f5f8f8;
+  box-shadow: none;
+  backdrop-filter: none;
+  font-size: clamp(.46rem, 8.2cqw, .72rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .92);
+}
+
+.ranked-offer .ranked-preparation-demon-card .combat-stat-strip {
+  display: grid;
+  justify-content: end;
+  justify-items: end;
+  gap: var(--ranked-stat-row-gap);
+  margin: 0;
+  padding: 0;
+  text-align: right;
+}
+
+.ranked-offer .ranked-preparation-demon-card .combat-stat-strip span {
+  display: grid;
+  grid-template-columns: minmax(2ch, 1fr) var(--ranked-stat-icon-size);
+  align-items: center;
+  justify-items: end;
+  width: 100%;
+  column-gap: clamp(.1rem, 1.8cqw, .18rem);
+  text-align: right;
+}
+
+.ranked-offer .ranked-preparation-demon-card .combat-hp-meta {
+  display: grid;
+  grid-template-columns: minmax(2ch, 1fr) var(--ranked-stat-icon-size);
+  align-items: center;
+  justify-items: end;
+  column-gap: clamp(.1rem, 1.8cqw, .18rem);
+  margin: 0;
+  border: 0;
+  padding: 0;
+  text-align: right;
+}
+
+.ranked-offer .ranked-preparation-demon-card .combat-hp-meta.is-separated {
+  border-top: 0;
+}
+
+.ranked-offer .ranked-preparation-demon-card .combat-hp-meta .combat-current-hp {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+  line-height: 1;
+}
+
+.ranked-offer .ranked-preparation-demon-card .combat-stat-strip .ad-icon,
+.ranked-offer .ranked-preparation-demon-card .combat-stat-icon,
+.ranked-offer .ranked-preparation-demon-card .combat-hp-meta .ad-icon {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  display: block;
+  width: var(--ranked-stat-icon-size);
+  height: var(--ranked-stat-icon-size);
+  color: #a8bbc0;
+}
+
+.ranked-offer .ranked-preparation-demon-card .dungeon-demon-card-title {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: var(--ranked-card-footer-height);
+  margin: 0;
+  border-top: 1px solid color-mix(in srgb, var(--rarity-color, #d1d5d8) 38%, transparent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--rarity-color, #d1d5d8) 17%, #03090b), rgba(2, 7, 9, .99) 72%);
+  padding: clamp(.24rem, 3.4cqh, .4rem) var(--ranked-card-footer-padding-inline);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: clamp(.5rem, 9.8cqw, .86rem);
+  line-height: 1;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .04),
+    0 -9px 18px rgba(2, 8, 10, .34);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .96);
+}
+
+.ranked-offer .ranked-preparation-demon-card .dungeon-demon-card-title .text-white {
+  display: block;
+  max-width: calc(100% - var(--ranked-card-cost-space));
+  font-weight: 900;
 }
 
 .ranked-offer-cost,
@@ -403,11 +562,18 @@
 
 .ranked-offer-cost {
   position: absolute;
-  top: .28rem;
-  right: .28rem;
+  right: var(--ranked-card-footer-padding-inline);
+  bottom: 0;
   z-index: 4;
-  min-height: 1.25rem;
-  padding: .2rem .34rem;
+  height: var(--ranked-card-footer-height);
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  color: #fff;
+  font-size: clamp(.5rem, 9cqw, .78rem);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .96);
   pointer-events: none;
 }
 
@@ -415,6 +581,12 @@
 .ranked-action-cost .ad-icon {
   width: .78rem;
   height: .78rem;
+}
+
+.ranked-offer-cost .ad-icon {
+  width: clamp(.58rem, 10cqw, .86rem);
+  height: clamp(.58rem, 10cqw, .86rem);
+  color: var(--ad-soul, #55ffff);
 }
 
 .ranked-offer-cost.is-purchased {
@@ -649,6 +821,127 @@
 
 .ranked-action-dock {
   grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.ranked-action-dock.is-endless {
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+.ranked-action-dock .ranked-side-action-compact.ranked-lock-action {
+  align-items: center;
+  justify-content: center;
+  gap: .38rem;
+  padding: .22rem .36rem;
+  font-size: clamp(.68rem, .82vw, .82rem);
+  line-height: 1;
+  text-align: center;
+}
+
+.ranked-action-dock .ranked-lock-action .ad-icon {
+  width: clamp(1.05rem, 1.35vw, 1.3rem);
+  height: clamp(1.05rem, 1.35vw, 1.3rem);
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.ranked-action-dock .ranked-lock-action span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.ranked-action-dock .ranked-endless-end-action {
+  align-items: center;
+  justify-content: center;
+  gap: .32rem;
+  font-size: clamp(.62rem, .75vw, .76rem);
+  line-height: 1;
+}
+
+/* End Run is intentionally distinct from the gold Fight action while keeping
+ * the same framed, dark-metal button treatment used across the game. */
+.ranked-end-run-action {
+  --ranked-end-frame-gradient:
+    linear-gradient(180deg, #b69bd3 0%, #9579b8 42%, #59456f 100%);
+  box-sizing: border-box;
+  position: relative;
+  border: 1px solid var(--ad-violet, #9c7ac8);
+  border-image: var(--ranked-end-frame-gradient) 1 !important;
+  border-radius: var(--primary-radius) !important;
+  background: linear-gradient(180deg, #493b5b, #282233);
+  color: #ddd0ed;
+  box-shadow:
+    0 0 0 1px rgba(3, 11, 21, .96),
+    0 2px 4px rgba(0, 0, 0, .5);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .96);
+}
+
+.ranked-end-run-action::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-image: var(--ranked-end-frame-gradient) 1;
+  box-shadow:
+    inset 0 0 0 1px var(--primary-inner-keyline),
+    inset 0 0 3px 1px rgba(0, 0, 0, .68);
+  pointer-events: none;
+}
+
+.ranked-end-run-action:not(:disabled):hover {
+  --ranked-end-frame-gradient:
+    linear-gradient(180deg, #cbb5e2 0%, #aa8dca 42%, #695181 100%);
+  border-color: #b69bd3;
+  background: linear-gradient(180deg, #58466d, #332940);
+  color: #f0e7f8;
+  box-shadow:
+    0 0 0 1px rgba(3, 11, 21, .96),
+    0 3px 6px rgba(0, 0, 0, .54),
+    0 0 14px rgba(156, 122, 200, .14);
+}
+
+.ranked-end-run-action:focus-visible {
+  --ranked-end-frame-gradient:
+    linear-gradient(180deg, #cbb5e2 0%, #aa8dca 42%, #695181 100%);
+  border-color: #cbb5e2;
+  background: linear-gradient(180deg, #58466d, #332940);
+  color: #f0e7f8;
+  box-shadow:
+    0 0 0 1px rgba(3, 11, 21, .96),
+    0 2px 4px rgba(0, 0, 0, .5),
+    0 0 0 .16rem rgba(156, 122, 200, .24);
+  outline: 2px solid rgba(182, 155, 211, .46);
+  outline-offset: 2px;
+}
+
+.ranked-end-run-action:not(:disabled):active {
+  --ranked-end-frame-gradient:
+    linear-gradient(180deg, #9174b2 0%, #73598e 44%, #463654 100%);
+  border-color: #73598e;
+  background: linear-gradient(180deg, #382d46, #211b2a);
+  color: #ddd0ed;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, .48),
+    0 0 0 1px rgba(3, 11, 21, .98),
+    0 1px 2px rgba(0, 0, 0, .52);
+}
+
+.ranked-end-run-action:disabled {
+  --ranked-end-frame-gradient:
+    linear-gradient(180deg, rgba(156, 122, 200, .46), rgba(73, 56, 91, .44));
+  border-color: rgba(156, 122, 200, .42);
+  background: linear-gradient(180deg, rgba(59, 48, 72, .72), rgba(35, 29, 44, .7));
+  color: rgba(221, 208, 237, .56);
+  box-shadow: 0 0 0 1px rgba(3, 11, 21, .68);
+  cursor: not-allowed;
+  opacity: .58;
+}
+
+.ranked-action-dock .ranked-endless-end-action .ad-icon {
+  width: clamp(.9rem, 1.1vw, 1.12rem);
+  height: clamp(.9rem, 1.1vw, 1.12rem);
+  flex: 0 0 auto;
 }
 
 .ranked-reroll-rail .ranked-side-action-compact,
@@ -916,7 +1209,16 @@
   position: static;
   grid-column: auto;
   grid-row: auto;
+  gap: clamp(.2rem, .55vw, .34rem);
   transform: none;
+}
+
+.ranked-page .dungeon-center-actions .ranked-floor-marker > span {
+  font-size: clamp(.72rem, .78vw, .88rem);
+}
+
+.ranked-page .dungeon-center-actions .ranked-floor-marker > strong {
+  font-size: clamp(2.75rem, 4.4vw, 4.2rem);
 }
 
 .ranked-fight-action {
@@ -946,6 +1248,11 @@
   min-height: 0;
   margin: 0;
   padding: 0;
+}
+
+.ranked-review-actions .dungeon-replaylog-btn .ad-icon {
+  width: clamp(1.25rem, 1.65vw, 1.65rem);
+  height: clamp(1.25rem, 1.65vw, 1.65rem);
 }
 
 .ranked-mobile-nav {
@@ -1022,26 +1329,35 @@
 }
 
 .ranked-reserve-panel {
-  --ranked-reserve-pact-size: clamp(2.45rem, 5.4vh, 3.15rem);
+  --ranked-reserve-pact-size: clamp(2.15rem, 4.7vh, 2.75rem);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: .65rem;
+  gap: .5rem;
   width: 100%;
   max-height: 100%;
   min-height: 0;
 }
 
-.ranked-page .battle-side > #teamGrid,
-.ranked-page .battle-side > #enemyGrid {
+.ranked-page .ranked-battle-side-content > #teamGrid,
+.ranked-page .ranked-battle-side-content > #enemyGrid {
   /*
    * The shared battle grid normally derives card size from viewport units.
    * Ranked also reserves a fixed bottom strip, so the remaining arena height
-   * can be shorter than three viewport-sized rows. Make the actual grid host a
-   * size container and cap each square card against its available height.
+   * can be shorter than three viewport-sized rows. Use the full-height side
+   * wrapper as the size container and cap each square card against its
+   * available height, keeping the heading and formation together as one
+   * centered block.
    */
-  container-type: size;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  align-content: center;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  container-type: normal;
 }
 
 .ranked-page .battle-side .battle-formation-grid {
@@ -1062,6 +1378,7 @@
     calc(
       (
         100cqh
+        - var(--ranked-side-heading-space)
         - var(--dungeon-formation-gap)
         - var(--dungeon-formation-gap)
         - var(--ranked-formation-padding)
@@ -1075,21 +1392,38 @@
 }
 
 @media (min-width: 992px) {
-  .ranked-page .battle-side {
+  .ranked-page .ranked-battle-side-content {
     grid-template-rows: auto auto;
-    align-content: start;
+    align-content: center;
     box-sizing: border-box;
-    padding-top: clamp(.65rem, 1.8vh, 1.25rem);
+    min-height: 0;
   }
 
-  .ranked-page .battle-side > #teamGrid,
-  .ranked-page .battle-side > #enemyGrid {
+  .ranked-page .ranked-battle-side-content > #teamGrid,
+  .ranked-page .ranked-battle-side-content > #enemyGrid {
     height: auto;
     container-type: normal;
   }
 
-  .ranked-page .battle-side .battle-formation-grid {
-    --dungeon-demon-card-width: min(13.5rem, 10.5vw, 18vh);
+  .ranked-page .battle-side-player .battle-formation-grid,
+  .ranked-page .battle-side-enemy:not(.is-ranked-reserve) .battle-formation-grid {
+    width: fit-content;
+    height: auto;
+    max-height: 100%;
+  }
+
+  .ranked-page .battle-side-enemy.is-ranked-reserve .ranked-battle-side-content {
+    grid-template-rows: auto auto;
+    align-content: center;
+  }
+
+  .ranked-page .battle-side-enemy.is-ranked-reserve .ranked-battle-side-content > #enemyGrid {
+    height: auto;
+    container-type: normal;
+  }
+
+  .ranked-page .battle-side-enemy.is-ranked-reserve .ranked-reserve-formation {
+    --dungeon-demon-card-width: min(14.5rem, 11.25vw, 19.5vh);
   }
 }
 
@@ -1140,8 +1474,8 @@
   align-items: start;
   width: max-content;
   max-width: 100%;
-  height: calc(var(--ranked-reserve-pact-size) + .72rem);
-  min-height: calc(var(--ranked-reserve-pact-size) + .72rem);
+  height: calc(var(--ranked-reserve-pact-size) + .56rem);
+  min-height: calc(var(--ranked-reserve-pact-size) + .56rem);
   padding: .04rem .3rem 0 .08rem;
   overflow: visible;
 }
@@ -1246,6 +1580,7 @@
 
 .ranked-page .battle-side-heading {
   min-height: 1.35rem;
+  padding-bottom: var(--ranked-side-heading-padding);
 }
 
 .ranked-offer.is-drag-over,
@@ -1271,6 +1606,182 @@
 
 .ranked-end-card h1 {
   font-family: var(--font-heading, Cinzel, serif);
+}
+
+.ranked-start-card {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  justify-items: center;
+  width: min(100%, 42rem);
+  max-width: 42rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--rank-color, #fac51c) 46%, transparent);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 33%, color-mix(in srgb, var(--rank-color, #fac51c) 18%, transparent), transparent 36%),
+    linear-gradient(180deg, rgba(12, 24, 27, .98), rgba(3, 9, 11, .99));
+  padding: clamp(1.6rem, 4vw, 2.4rem) clamp(1.2rem, 5vw, 3rem) clamp(1.4rem, 4vw, 2rem);
+  box-shadow:
+    0 0 40px color-mix(in srgb, var(--rank-glow, rgba(250, 197, 28, .3)) 65%, transparent),
+    0 24px 70px rgba(0, 0, 0, .5),
+    inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+
+.ranked-start-card::before,
+.ranked-start-card::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.ranked-start-card::before {
+  inset: 6px;
+  border: 1px solid rgba(232, 199, 106, .12);
+  border-radius: 8px;
+}
+
+.ranked-start-card::after {
+  top: 0;
+  left: 50%;
+  width: min(72%, 25rem);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rank-color, #fac51c), transparent);
+  box-shadow: 0 0 16px var(--rank-glow, rgba(250, 197, 28, .4));
+  transform: translateX(-50%);
+}
+
+.ranked-start-card-glow {
+  position: absolute;
+  top: 7.4rem;
+  left: 50%;
+  z-index: -1;
+  width: 13rem;
+  height: 13rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--rank-color, #fac51c) 14%, transparent);
+  filter: blur(36px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.ranked-start-card .dungeon-phase-eyebrow {
+  color: #e8c76a;
+  letter-spacing: .2em;
+}
+
+.ranked-start-card h1 {
+  margin: .35rem 0 0;
+  color: #fff0b2;
+  font-size: clamp(1.85rem, 5vw, 3rem);
+  line-height: 1.05;
+  text-shadow: 0 0 22px rgba(250, 197, 28, .28);
+}
+
+.ranked-start-summary {
+  max-width: 32rem;
+  margin: .7rem 0 0;
+  color: rgba(228, 238, 239, .76);
+  font-size: clamp(.88rem, 2vw, 1rem);
+  line-height: 1.6;
+}
+
+.ranked-start-rank {
+  display: grid;
+  justify-items: center;
+  gap: .18rem;
+  margin-top: 1rem;
+}
+
+.ranked-start-rank-eyebrow {
+  color: rgba(228, 238, 239, .58);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.ranked-start-rank-emblem {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(6rem, 17vw, 8.2rem);
+  height: clamp(6.6rem, 19vw, 9rem);
+}
+
+.ranked-start-rank-emblem::before {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: var(--rank-glow, rgba(250, 197, 28, .35));
+  filter: blur(18px);
+}
+
+.ranked-start-rank-emblem img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px var(--rank-glow, rgba(250, 197, 28, .46)));
+}
+
+.ranked-start-rank > strong {
+  color: var(--rank-color, #fac51c);
+  font-family: "Arial Black", "Trebuchet MS", Arial, Helvetica, sans-serif;
+  font-size: clamp(.95rem, 2.6vw, 1.15rem);
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-shadow: 0 0 12px var(--rank-glow, rgba(250, 197, 28, .35));
+}
+
+.ranked-start-rating {
+  color: rgba(238, 244, 245, .7);
+  font-size: .8rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.ranked-start-rules {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .45rem;
+  margin-top: 1rem;
+}
+
+.ranked-start-rules > span {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  border: 1px solid rgba(111, 214, 189, .2);
+  border-radius: 999px;
+  background: rgba(7, 22, 24, .72);
+  color: rgba(229, 240, 240, .78);
+  padding: .35rem .58rem;
+  font-size: .7rem;
+  font-weight: 750;
+}
+
+.ranked-start-rules .ad-icon {
+  width: .8rem;
+  height: .8rem;
+  color: #7fe1c4;
+}
+
+.ranked-start-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-width: min(100%, 14rem);
+  margin-top: 1.15rem;
+}
+
+.ranked-start-action .ad-icon {
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .ranked-victory-modal .modal-content {
@@ -1342,6 +1853,135 @@
   align-items: center;
   justify-content: center;
   min-height: 2.8rem;
+}
+
+.ranked-end-run-modal .modal-dialog {
+  max-width: min(30rem, calc(100vw - 1.5rem));
+}
+
+.ranked-end-run-modal .modal-content {
+  overflow: hidden;
+  border-color: var(--primary-frame);
+  background:
+    radial-gradient(circle at 50% 5%, rgba(232, 199, 106, .16), transparent 38%),
+    linear-gradient(180deg, rgba(15, 22, 24, .99), rgba(4, 9, 11, .99));
+  box-shadow:
+    0 0 40px rgba(232, 199, 106, .12),
+    0 26px 80px rgba(0, 0, 0, .6);
+}
+
+.ranked-end-run-modal .modal-body {
+  display: grid;
+  justify-items: center;
+  gap: .65rem;
+  padding: 1.75rem 1.5rem 1.25rem;
+  text-align: center;
+}
+
+.ranked-end-run-icon {
+  display: grid;
+  place-items: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border: 1px solid var(--primary-frame);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(232, 199, 106, .2), rgba(45, 35, 24, .78));
+  color: var(--primary-label-hover);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .08),
+    0 0 24px rgba(232, 199, 106, .16);
+}
+
+.ranked-end-run-icon .ad-icon,
+.ranked-end-run-icon svg {
+  width: 1.65rem;
+  height: 1.65rem;
+}
+
+.ranked-end-run-modal .modal-title {
+  margin: 0;
+  color: var(--primary-label-hover);
+  font-family: var(--font-heading, Cinzel, serif);
+  font-size: clamp(1.55rem, 5vw, 2.2rem);
+  text-shadow: 0 0 18px rgba(232, 199, 106, .2);
+}
+
+.ranked-end-run-summary {
+  max-width: 25rem;
+  margin: 0;
+  color: rgba(228, 238, 239, .72);
+  line-height: 1.55;
+}
+
+.ranked-end-run-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  margin-top: .3rem;
+  overflow: hidden;
+  border: 1px solid rgba(161, 212, 201, .15);
+  border-radius: 8px;
+  background: rgba(3, 12, 14, .66);
+}
+
+.ranked-end-run-progress > div {
+  display: grid;
+  justify-items: center;
+  gap: .24rem;
+  padding: .72rem .35rem;
+}
+
+.ranked-end-run-progress > div + div {
+  border-left: 1px solid rgba(161, 212, 201, .13);
+}
+
+.ranked-end-run-progress span {
+  color: rgba(207, 226, 220, .56);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.ranked-end-run-progress strong {
+  color: #8ce5c5;
+  font-size: 1.1rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.ranked-end-run-progress strong.is-negative {
+  color: var(--ad-gold);
+}
+
+.ranked-end-run-modal .modal-footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.ranked-end-run-modal .modal-footer .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.8rem;
+  gap: .42rem;
+}
+
+.ranked-end-run-confirm .ad-icon,
+.ranked-end-run-confirm svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.ranked-end-run-spinner {
+  display: none;
+}
+
+.ranked-end-run-confirm.is-busy .ranked-end-run-spinner {
+  display: inline-block;
 }
 
 @media (max-width: 1199.98px) {
@@ -1470,15 +2110,37 @@
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
+  .ranked-page .ranked-battle-side-content {
+    --ranked-side-heading-padding: .18rem;
+    --ranked-side-heading-space: calc(1.25rem + var(--ranked-side-heading-padding));
+  }
+
+  .ranked-page .battle-side-player .ranked-battle-side-content {
+    grid-template-rows: auto auto;
+  }
+
+  .ranked-page .battle-side-player .ranked-battle-side-content > #teamSideTitle {
+    order: 1;
+  }
+
+  .ranked-page .battle-side-player .ranked-battle-side-content > #teamGrid {
+    order: 2;
+  }
+
   .ranked-page #rankedBottomPanel {
-    --ranked-offer-card-size: clamp(3.1rem, calc((100vw - 4rem) / 5), 6.5rem);
+    --ranked-offer-card-size: clamp(3.85rem, calc((100vw - 4rem) / 5), 6.5rem);
+    --ranked-offer-card-height: clamp(
+      4.45rem,
+      calc(var(--ranked-offer-card-size) * 1.18),
+      7.4rem
+    );
     --ranked-mobile-nav-height: clamp(2.7rem, 12vw, 3.25rem);
     height: calc(var(--ranked-offer-card-size) + var(--dungeon-bottom-panel-padding-y) * 2 + 2px);
   }
 
   .ranked-page #rankedBottomPanel:not(.is-ranked-combat) {
     height: calc(
-      var(--ranked-offer-card-size)
+      var(--ranked-offer-card-height)
       + var(--ranked-mobile-nav-height)
       + var(--dungeon-bottom-panel-padding-y) * 2
       + .24rem
@@ -1488,7 +2150,7 @@
 
   .ranked-preparation {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: var(--ranked-offer-card-size) var(--ranked-mobile-nav-height);
+    grid-template-rows: var(--ranked-offer-card-height) var(--ranked-mobile-nav-height);
     justify-content: stretch;
     width: 100%;
     max-width: none;
@@ -1500,16 +2162,94 @@
   .ranked-offer-area {
     grid-column: 1;
     grid-row: 1;
-    height: var(--ranked-offer-card-size);
+    height: var(--ranked-offer-card-height);
   }
 
   .ranked-offer-grid {
     grid-template-columns: repeat(5, minmax(0, var(--ranked-offer-card-size)));
     grid-auto-columns: minmax(0, var(--ranked-offer-card-size));
-    justify-content: center;
+    justify-content: safe center;
     width: 100%;
     gap: .3rem;
-    overflow-x: hidden;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ranked-offer-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ranked-offer {
+    --ranked-card-footer-height: clamp(
+      .98rem,
+      calc(var(--ranked-offer-card-height) * .19),
+      1.25rem
+    );
+    --ranked-card-footer-padding-inline: clamp(.3rem, 4.5cqw, .42rem);
+    --ranked-card-cost-space: clamp(1rem, 21cqw, 1.35rem);
+  }
+
+  .ranked-offer .ranked-preparation-demon-card .dungeon-demon-card-body {
+    min-height: 50%;
+    background: linear-gradient(
+      to top,
+      rgba(1, 6, 8, .99) 0%,
+      rgba(2, 9, 11, .94) 42%,
+      rgba(3, 12, 14, .48) 72%,
+      transparent 100%
+    );
+  }
+
+  .ranked-preparation-stats {
+    --ranked-stat-icon-size: clamp(.4rem, 8.2cqw, .55rem);
+    --ranked-stat-row-gap: clamp(.03rem, .65cqh, .06rem);
+    top: clamp(.18rem, 2.8cqh, .28rem);
+    right: clamp(.16rem, 2.8cqw, .28rem);
+    gap: var(--ranked-stat-row-gap);
+    min-width: clamp(2.25rem, 56cqw, 3rem);
+    max-width: 64%;
+    border-right-width: 1px;
+    padding: clamp(.18rem, 2.5cqh, .27rem) clamp(.18rem, 2.8cqw, .25rem);
+  }
+
+  .ranked-offer .ranked-preparation-demon-card .combat-stat-strip,
+  .ranked-offer .ranked-preparation-demon-card .combat-hp-meta {
+    width: 100%;
+    min-height: 0;
+    font-size: clamp(.4rem, 7.5cqw, .54rem);
+  }
+
+  .ranked-offer .ranked-preparation-demon-card .combat-stat-strip span {
+    column-gap: clamp(.04rem, 1.2cqw, .08rem);
+  }
+
+  .ranked-offer .ranked-preparation-demon-card .combat-hp-meta,
+  .ranked-offer .ranked-preparation-demon-card .combat-hp-meta.is-separated {
+    column-gap: clamp(.04rem, 1.2cqw, .08rem);
+    margin: 0;
+    border: 0;
+    padding: 0;
+  }
+
+  .ranked-offer .ranked-preparation-demon-card .dungeon-demon-card-title {
+    min-height: var(--ranked-card-footer-height);
+    padding: clamp(.2rem, 2.8cqh, .28rem) var(--ranked-card-footer-padding-inline);
+    font-size: clamp(.46rem, 9cqw, .64rem);
+  }
+
+  .ranked-offer-cost {
+    right: var(--ranked-card-footer-padding-inline);
+    bottom: 0;
+    gap: .1rem;
+    font-size: clamp(.46rem, 8.2cqw, .6rem);
+  }
+
+  .ranked-offer-cost .ad-icon {
+    width: clamp(.48rem, 9cqw, .62rem);
+    height: clamp(.48rem, 9cqw, .62rem);
   }
 
   .ranked-reroll-rail,
@@ -1538,6 +2278,10 @@
       inset 0 0 0 1px rgba(255, 255, 255, .04),
       0 -10px 30px rgba(0, 0, 0, .2);
     padding: calc(var(--dungeon-bottom-panel-padding-y) * .5);
+  }
+
+  .ranked-mobile-nav.is-endless {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 
   .ranked-mobile-nav-btn {
@@ -1591,7 +2335,7 @@
     grid-column: 1;
     grid-row: 1;
     align-items: center;
-    justify-content: center;
+    justify-content: safe center;
     gap: .12rem;
     min-height: 0;
     border: 0;
@@ -1683,7 +2427,7 @@
   }
 
   .ranked-page .battle-side {
-    gap: .08rem;
+    gap: 0;
   }
 
   .ranked-page .battle-side-heading {
@@ -1707,6 +2451,7 @@
       calc(
         (
           100cqh
+          - var(--ranked-side-heading-space)
           - var(--dungeon-formation-gap)
           - var(--dungeon-formation-gap)
           - var(--ranked-formation-padding)
@@ -1738,6 +2483,7 @@
       calc(
         (
           100cqh
+          - var(--ranked-side-heading-space)
           - var(--ranked-reserve-buff-space)
           - var(--dungeon-formation-gap)
           - var(--ranked-formation-padding)
@@ -1749,11 +2495,11 @@
   }
 
   .ranked-reserve-panel:has(.ranked-reserve-buffs-shell) .ranked-reserve-formation {
-    --ranked-reserve-buff-space: calc(var(--ranked-reserve-pact-size) + .95rem);
+    --ranked-reserve-buff-space: calc(var(--ranked-reserve-pact-size) + .75rem);
   }
 
   .ranked-reserve-panel {
-    --ranked-reserve-pact-size: clamp(2.15rem, 9vw, 2.55rem);
+    --ranked-reserve-pact-size: clamp(1.9rem, 8vw, 2.25rem);
   }
 
   .ranked-reserve-buffs-shell {
@@ -1792,6 +2538,18 @@
     grid-column: 2;
     grid-row: 1;
     min-height: 0;
+  }
+
+  .ranked-page .dungeon-center-actions .ranked-floor-marker {
+    gap: .12rem;
+  }
+
+  .ranked-page .dungeon-center-actions .ranked-floor-marker > span {
+    font-size: clamp(.48rem, 2.4vw, .62rem);
+  }
+
+  .ranked-page .dungeon-center-actions .ranked-floor-marker > strong {
+    font-size: clamp(1.8rem, 9vw, 2.45rem);
   }
 
   .ranked-page .dungeon-fight-mark {
