@@ -30,27 +30,27 @@ main {
     display: none;
 }
 
-.ad-common {
+.rarity-common {
     color: #D1D5D8;
 }
 
-.ad-uncommon {
+.rarity-uncommon {
     color: #41A85F;
 }
 
-.ad-rare {
+.rarity-rare {
     color: #2C82C9;
 }
 
-.ad-epic {
+.rarity-epic {
     color: #9365B8;
 }
 
-.ad-legendary {
+.rarity-legendary {
     color: #FAC51C;
 }
 
-.ad-mythic {
+.rarity-mythic {
     color: #E25041;
 }
 
@@ -66,7 +66,7 @@ main {
     font-weight: bold;
 }
 
-.ad-icon {
+.game-icon {
     width: 1em;
     height: 1em;
     flex: 0 0 auto;
@@ -164,16 +164,16 @@ main {
     vertical-align: -0.2em;
 }
 
-.ad-icon-fill {
+.game-icon-fill {
     fill: currentColor;
 }
 
-.btn .ad-icon {
+.btn .game-icon {
     margin-right: 0.35rem;
 }
 
-.btn-icon-only .ad-icon,
-.btn[title] .ad-icon:only-child {
+.btn-icon-only .game-icon,
+.btn[title] .game-icon:only-child {
     margin-right: 0;
 }
 
@@ -464,7 +464,7 @@ main {
     place-items: center;
 }
 
-.password-toggle-icon .ad-icon {
+.password-toggle-icon .game-icon {
     width: 1.12rem;
     height: 1.12rem;
     margin-right: 0;
@@ -1086,7 +1086,7 @@ main {
     white-space: nowrap;
 }
 
-.combat-stat-strip .ad-icon {
+.combat-stat-strip .game-icon {
     color: #7d858d;
     width: 0.78rem;
     height: 0.78rem;
@@ -1132,7 +1132,7 @@ main {
     border-top: 1px solid rgba(161,212,201,0.16);
 }
 
-.combat-hp-meta .ad-icon {
+.combat-hp-meta .game-icon {
     color: #7d858d;
     width: 0.76rem;
     height: 0.76rem;
@@ -1553,7 +1553,7 @@ main {
     color: #fff;
 }
 
-.demon-status-badge .ad-icon {
+.demon-status-badge .game-icon {
     color: inherit;
     width: 0.92rem;
     height: 0.92rem;
@@ -1873,7 +1873,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     white-space: nowrap;
 }
 
-.demon-detail-stat .ad-icon,
+.demon-detail-stat .game-icon,
 .demon-detail-stat .combat-stat-icon {
     color: #8b949d;
     width: 1rem;
@@ -2061,7 +2061,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
         0 0 17px color-mix(in srgb, var(--enemy-buff-color, #f2c35e) 25%, transparent);
 }
 
-.enemy-buff-chip .ad-icon {
+.enemy-buff-chip .game-icon {
     width: 0.72rem;
     height: 0.72rem;
     flex: 0 0 auto;
@@ -2201,8 +2201,8 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     }
 
 .combat-stat-icon,
-    .combat-stat-strip .ad-icon,
-    .combat-hp-meta .ad-icon {
+    .combat-stat-strip .game-icon,
+    .combat-hp-meta .game-icon {
         width: 0.52rem;
         height: 0.52rem;
     }
@@ -2388,7 +2388,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     text-transform: uppercase;
 }
 
-.cashout-status-pill .ad-icon {
+.cashout-status-pill .game-icon {
     width: 1rem;
     height: 1rem;
 }
@@ -2433,7 +2433,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     color: var(--ad-soul, #55FFFF);
 }
 
-.cashout-reward-chips .ad-icon {
+.cashout-reward-chips .game-icon {
     width: 1.05rem;
     height: 1.05rem;
     color: #f3c55c;
@@ -2457,7 +2457,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     padding: 0.85rem 1rem;
 }
 
-.cashout-extract-note .ad-icon {
+.cashout-extract-note .game-icon {
     flex: 0 0 auto;
     width: 1.1rem;
     height: 1.1rem;
@@ -3415,7 +3415,7 @@ a:hover {
     text-decoration: none;
 }
 
-.nav-player .ad-icon {
+.nav-player .game-icon {
     color: var(--ad-teal);
     margin-right: 0;
 }
@@ -3700,7 +3700,7 @@ a:hover {
 }
 
 .btn-primary,
-.ad-primary-action,
+.game-primary-action,
 .level-points-save,
 .skill-tree-save {
     --primary-current-frame-gradient: var(--primary-frame-gradient);
@@ -3735,7 +3735,7 @@ a:hover {
 }
 
 .btn-primary::before,
-.ad-primary-action::before,
+.game-primary-action::before,
 .level-points-save::before,
 .skill-tree-save::before {
     content: "";
@@ -3751,7 +3751,7 @@ a:hover {
 }
 
 .btn-primary:not(:disabled, .disabled):hover,
-.ad-primary-action:not(:disabled, [aria-disabled="true"]):hover,
+.game-primary-action:not(:disabled, [aria-disabled="true"]):hover,
 .level-points-save:not(:disabled):hover,
 .skill-tree-save:not(:disabled):hover {
     --primary-current-frame-gradient: var(--primary-hover-frame-gradient);
@@ -3762,7 +3762,7 @@ a:hover {
 }
 
 .btn-primary:focus-visible,
-.ad-primary-action:focus-visible,
+.game-primary-action:focus-visible,
 .level-points-save:focus-visible,
 .skill-tree-save:focus-visible {
     --primary-current-frame-gradient: var(--primary-hover-frame-gradient);
@@ -3777,7 +3777,7 @@ a:hover {
 .btn-primary:not(:disabled, .disabled):active,
 .btn-primary.active:not(.disabled),
 .btn-primary.show,
-.ad-primary-action:not(:disabled, [aria-disabled="true"]):active,
+.game-primary-action:not(:disabled, [aria-disabled="true"]):active,
 .level-points-save:not(:disabled):active,
 .skill-tree-save:not(:disabled):active {
     --primary-current-frame-gradient: var(--primary-active-frame-gradient);
@@ -3789,8 +3789,8 @@ a:hover {
 
 .btn-primary:disabled,
 .btn-primary.disabled,
-.ad-primary-action:disabled,
-.ad-primary-action[aria-disabled="true"],
+.game-primary-action:disabled,
+.game-primary-action[aria-disabled="true"],
 .level-points-save:disabled,
 .skill-tree-save:disabled {
     --primary-current-frame-gradient: var(--primary-disabled-frame-gradient);
@@ -4002,7 +4002,7 @@ body.seo-page {
     gap: 0.35rem;
 }
 
-.seo-event-category .ad-icon {
+.seo-event-category .game-icon {
     width: 0.95rem;
     height: 0.95rem;
 }
@@ -4045,7 +4045,7 @@ body.seo-page {
     font-weight: 800;
 }
 
-.seo-event-link .ad-icon {
+.seo-event-link .game-icon {
     width: 0.9rem;
     height: 0.9rem;
 }
@@ -5963,7 +5963,7 @@ body.rankings-page {
     box-shadow: 0 0 16px rgba(111,214,189,0.16);
 }
 
-.profile-demon-edit-hint .ad-icon {
+.profile-demon-edit-hint .game-icon {
     width: 1rem;
     height: 1rem;
     margin: 0;
@@ -5992,7 +5992,7 @@ body.rankings-page {
     white-space: nowrap;
 }
 
-.quest-requirement .ad-icon {
+.quest-requirement .game-icon {
     width: 0.76rem;
     height: 0.76rem;
     flex: 0 0 auto;
@@ -6066,7 +6066,7 @@ body.rankings-page {
     line-height: 1 !important;
 }
 
-.quest-reward .ad-icon {
+.quest-reward .game-icon {
     width: 1rem;
     height: 1rem;
     margin: 0;
@@ -6289,7 +6289,7 @@ body.rankings-page {
     color: var(--ad-teal, #6fd6bd);
 }
 
-.profile-demon-selected-mark .ad-icon {
+.profile-demon-selected-mark .game-icon {
     width: 0.9rem;
     height: 0.9rem;
     margin: 0;
@@ -6618,7 +6618,7 @@ body.rankings-page {
         0 0 26px rgba(232,199,106,0.18);
 }
 
-.demonic-pact-icon .ad-icon {
+.demonic-pact-icon .game-icon {
     width: 52%;
     height: 52%;
 }
@@ -6727,7 +6727,7 @@ body.rankings-page {
     opacity: 0.62;
 }
 
-.demonic-pact-reroll-btn .ad-icon {
+.demonic-pact-reroll-btn .game-icon {
     margin-right: 0;
 }
 
@@ -6834,7 +6834,7 @@ body.rankings-page {
     place-items: center;
 }
 
-.active-pact-chip-icon .ad-icon {
+.active-pact-chip-icon .game-icon {
     width: var(--active-pact-icon-size);
     height: var(--active-pact-icon-size);
 }
@@ -7324,7 +7324,7 @@ body .game-shell-nav .game-nav-dropdown-toggle {
 
 /* Give both the empty Lucide placeholder and the loaded SVG the same footprint. */
 body .game-shell-nav [data-lucide],
-body .game-shell-nav svg.ad-icon {
+body .game-shell-nav svg.game-icon {
     display: inline-block;
     width: var(--game-nav-icon-size, 0.92rem);
     min-width: var(--game-nav-icon-size, 0.92rem);
@@ -7334,7 +7334,7 @@ body .game-shell-nav svg.ad-icon {
     vertical-align: -0.125em;
 }
 
-body .game-shell-nav .game-nav-link .ad-icon {
+body .game-shell-nav .game-nav-link .game-icon {
     width: var(--game-nav-icon-size, 0.92rem);
     min-width: var(--game-nav-icon-size, 0.92rem);
     height: var(--game-nav-icon-size, 0.92rem);
@@ -7425,7 +7425,7 @@ body .game-shell-nav .game-nav-dropdown-item {
     text-transform: uppercase;
 }
 
-body .game-shell-nav .game-nav-dropdown-item .ad-icon {
+body .game-shell-nav .game-nav-dropdown-item .game-icon {
     width: 0.92rem;
     height: 0.92rem;
     color: rgba(111,214,189,0.78);
@@ -7539,8 +7539,8 @@ body .game-shell-nav .nav-settings-link:focus-visible {
     color: #f8fbf9;
 }
 
-body .game-shell-nav .nav-settings-link .ad-icon,
-body .game-shell-nav .nav-logout-btn .ad-icon {
+body .game-shell-nav .nav-settings-link .game-icon,
+body .game-shell-nav .nav-logout-btn .game-icon {
     width: 0.96rem;
     height: 0.96rem;
     margin: 0;
@@ -7574,7 +7574,7 @@ body .game-shell-nav .nav-account .nav-guest-save-btn {
     white-space: nowrap;
 }
 
-body .game-shell-nav .nav-account .nav-guest-save-btn .ad-icon {
+body .game-shell-nav .nav-account .nav-guest-save-btn .game-icon {
     width: 0.96rem;
     height: 0.96rem;
     margin: 0;
@@ -8263,7 +8263,7 @@ body .game-shell-nav .nav-account,
         0 0 16px rgba(242,195,94,0.16);
 }
 
-.battle-buff-summary-chip .ad-icon {
+.battle-buff-summary-chip .game-icon {
     width: 0.72rem;
     height: 0.72rem;
     flex: 0 0 auto;
@@ -8555,7 +8555,7 @@ body.settings-page .game-shell-nav .nav-settings-link {
     text-transform: uppercase;
 }
 
-.settings-kicker .ad-icon {
+.settings-kicker .game-icon {
     width: 0.82rem;
     height: 0.82rem;
 }
@@ -8613,7 +8613,7 @@ body.settings-page .game-shell-nav .nav-settings-link {
     color: var(--ad-teal);
 }
 
-.settings-section-icon .ad-icon {
+.settings-section-icon .game-icon {
     width: 1rem;
     height: 1rem;
 }
@@ -8840,7 +8840,7 @@ body.settings-page .game-shell-nav .nav-settings-link {
     font-weight: 850;
 }
 
-.settings-submit .ad-icon {
+.settings-submit .game-icon {
     width: 0.95rem;
     height: 0.95rem;
 }
@@ -8985,7 +8985,7 @@ html[data-desktop-wrapper="1"] [data-hide-in-desktop-wrapper] {
     white-space: nowrap;
 }
 
-.settings-feedback-form .settings-form-actions .settings-submit .ad-icon {
+.settings-feedback-form .settings-form-actions .settings-submit .game-icon {
     width: 0.8rem;
     height: 0.8rem;
 }
@@ -9323,7 +9323,7 @@ body.skill-tree-page {
     text-transform: uppercase;
 }
 
-.skill-tree-kicker .ad-icon {
+.skill-tree-kicker .game-icon {
     width: 0.95rem;
     height: 0.95rem;
     margin: 0;
@@ -9459,7 +9459,7 @@ body.skill-tree-page {
     font-size: 0.64rem;
 }
 
-.skill-tree-rule .ad-icon {
+.skill-tree-rule .game-icon {
     width: 0.88rem;
     height: 0.88rem;
     margin: 0;
@@ -9501,7 +9501,7 @@ body.skill-tree-page {
     color: #f3dc93;
 }
 
-.skill-tree-origin-icon .ad-icon {
+.skill-tree-origin-icon .game-icon {
     width: 1.15rem;
     height: 1.15rem;
     margin: 0;
@@ -9584,7 +9584,7 @@ body.skill-tree-page {
     color: var(--branch-accent);
 }
 
-.skill-branch-emblem .ad-icon {
+.skill-branch-emblem .game-icon {
     width: 1.15rem;
     height: 1.15rem;
     margin: 0;
@@ -9682,7 +9682,7 @@ body.skill-tree-page {
     box-shadow: 0 0 18px color-mix(in srgb, var(--branch-accent) 12%, transparent);
 }
 
-.skill-tree-stat-icon .ad-icon {
+.skill-tree-stat-icon .game-icon {
     width: 1.35rem;
     height: 1.35rem;
     margin: 0;
@@ -9760,7 +9760,7 @@ body.skill-tree-page {
     color: var(--branch-accent);
 }
 
-.skill-path-echo .ad-icon {
+.skill-path-echo .game-icon {
     width: 1.15rem;
     height: 1.15rem;
     margin: 0;
@@ -9796,7 +9796,7 @@ body.skill-tree-page {
     color: var(--branch-accent);
 }
 
-.skill-path-keystone .ad-icon {
+.skill-path-keystone .game-icon {
     width: 1.4rem;
     height: 1.4rem;
     margin: 0;
@@ -9847,7 +9847,7 @@ body.skill-tree-page {
     font-size: 0.66rem;
 }
 
-.skill-tree-actions p .ad-icon {
+.skill-tree-actions p .game-icon {
     width: 0.9rem;
     height: 0.9rem;
     margin: 0;
@@ -10078,7 +10078,7 @@ body.skill-tree-page {
     flex: 0 0 auto;
 }
 
-.game-alert-icon .ad-icon {
+.game-alert-icon .game-icon {
     width: 1.15rem;
     height: 1.15rem;
     margin: 0;
@@ -10275,6 +10275,215 @@ body.is-world-battle-instant-close .modal-backdrop {
     opacity: 0 !important;
 }
 
+body.has-browser-compatibility-gate {
+    overflow: hidden !important;
+}
+
+.browser-compatibility-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: grid;
+    min-height: 100vh;
+    min-height: 100dvh;
+    place-items: center;
+    overflow-y: auto;
+    padding:
+        max(1rem, env(safe-area-inset-top, 0px))
+        max(1rem, env(safe-area-inset-right, 0px))
+        max(1rem, env(safe-area-inset-bottom, 0px))
+        max(1rem, env(safe-area-inset-left, 0px));
+    background:
+        radial-gradient(circle at 50% 12%, rgba(78,132,122,0.18), transparent 21rem),
+        radial-gradient(circle at 85% 85%, rgba(232,199,106,0.09), transparent 22rem),
+        linear-gradient(155deg, #071114, #030708 72%);
+    color: #edf5f2;
+    -webkit-overflow-scrolling: touch;
+}
+
+.browser-compatibility-card {
+    position: relative;
+    width: min(100%, 34rem);
+    margin: auto;
+    border: 1px solid rgba(161,212,201,0.24);
+    border-top-color: rgba(232,199,106,0.52);
+    border-radius: 12px;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.035), transparent 32%),
+        rgba(5,13,16,0.98);
+    box-shadow: 0 1.5rem 5rem rgba(0,0,0,0.58), inset 0 0 0 1px rgba(255,255,255,0.018);
+    padding: clamp(1.35rem, 6vw, 2.35rem);
+    text-align: center;
+}
+
+.browser-compatibility-card::before,
+.browser-compatibility-card::after {
+    content: "";
+    position: absolute;
+    top: -1px;
+    width: 22%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,199,106,0.86));
+}
+
+.browser-compatibility-card::before {
+    left: 8%;
+}
+
+.browser-compatibility-card::after {
+    right: 8%;
+    transform: scaleX(-1);
+}
+
+.browser-compatibility-brand {
+    display: grid;
+    width: 4.5rem;
+    height: 4.5rem;
+    place-items: center;
+    margin: 0 auto 0.9rem;
+    border: 1px solid rgba(232,199,106,0.3);
+    border-radius: 50%;
+    background: rgba(232,199,106,0.045);
+    box-shadow: 0 0 2rem rgba(232,199,106,0.09);
+}
+
+.browser-compatibility-brand img {
+    width: 3.65rem;
+    height: 3.65rem;
+    object-fit: contain;
+}
+
+.browser-compatibility-kicker {
+    margin: 0 0 0.45rem;
+    color: #e8c76a;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.browser-compatibility-card h1 {
+    margin: 0;
+    color: #fff8dc;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.72rem, 7vw, 2.45rem);
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.browser-compatibility-description {
+    max-width: 29rem;
+    margin: 0.9rem auto 0;
+    color: rgba(222,235,232,0.82);
+    font-size: 0.96rem;
+    line-height: 1.55;
+}
+
+.browser-compatibility-note {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 0.65rem;
+    margin: 1.25rem 0 0;
+    border-top: 1px solid rgba(161,212,201,0.14);
+    border-bottom: 1px solid rgba(161,212,201,0.14);
+    padding: 0.9rem 0.2rem;
+    color: rgba(190,211,206,0.72);
+    text-align: left;
+}
+
+.browser-compatibility-note > span {
+    display: inline-flex;
+    margin-top: 0.1rem;
+    color: #a1d4c9;
+}
+
+.browser-compatibility-note .game-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.browser-compatibility-note p {
+    margin: 0;
+    font-size: 0.79rem;
+    line-height: 1.45;
+}
+
+.browser-compatibility-note strong {
+    color: rgba(238,246,243,0.9);
+}
+
+.browser-compatibility-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 0.65rem;
+    margin-top: 1.25rem;
+}
+
+.browser-compatibility-actions .btn {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.48rem;
+    border-radius: 7px;
+    font-size: 0.86rem;
+    font-weight: 800;
+}
+
+.browser-compatibility-actions .game-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.browser-compatibility-copy.is-copied {
+    border-color: rgba(128,214,151,0.48);
+    color: #b8efc3;
+}
+
+.browser-compatibility-status {
+    min-height: 2.4em;
+    margin: 0.72rem auto 0;
+    color: rgba(180,201,196,0.58);
+    font-size: 0.72rem;
+    line-height: 1.4;
+}
+
+.browser-compatibility-home {
+    display: inline-block;
+    margin-top: 0.45rem;
+    color: rgba(169,203,196,0.72);
+    font-size: 0.76rem;
+    font-weight: 750;
+    text-underline-offset: 0.2em;
+}
+
+.browser-compatibility-home:hover,
+.browser-compatibility-home:focus-visible {
+    color: #eef7f4;
+}
+
+@media (max-width: 430px) {
+    .browser-compatibility-actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .browser-compatibility-card {
+        padding: 1.25rem 1rem;
+    }
+
+    .browser-compatibility-brand {
+        width: 4rem;
+        height: 4rem;
+    }
+
+    .browser-compatibility-brand img {
+        width: 3.2rem;
+        height: 3.2rem;
+    }
+}
+
 body.hunter-page {
     min-height: 100vh;
     background:
@@ -10463,7 +10672,7 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
     background: rgba(232, 199, 106, 0.08);
 }
 
-.hunter-panel-icon .ad-icon {
+.hunter-panel-icon .game-icon {
     width: 1.05rem;
     height: 1.05rem;
 }
@@ -10593,7 +10802,7 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
     line-height: 1.1;
 }
 
-.hunter-buff-expiry .ad-icon {
+.hunter-buff-expiry .game-icon {
     width: 0.82rem;
     height: 0.82rem;
     flex: 0 0 auto;
@@ -10678,7 +10887,7 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
     white-space: nowrap;
 }
 
-.nav-guest-save-btn .ad-icon {
+.nav-guest-save-btn .game-icon {
     width: 1rem;
     height: 1rem;
 }
@@ -10735,7 +10944,7 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
     outline: 0;
 }
 
-.hunter-share-btn .ad-icon,
+.hunter-share-btn .game-icon,
 .hunter-brand-icon {
     width: 1.05rem;
     height: 1.05rem;
@@ -10787,7 +10996,7 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
     outline: 0;
 }
 
-.hunter-copy-dropdown .ad-icon {
+.hunter-copy-dropdown .game-icon {
     width: 1rem;
     height: 1rem;
 }
@@ -10830,7 +11039,7 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
     gap: 0.45rem;
 }
 
-.hunter-cta-card .btn .ad-icon {
+.hunter-cta-card .btn .game-icon {
     width: 1.05rem;
     height: 1.05rem;
 }

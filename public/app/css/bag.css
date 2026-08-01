@@ -379,7 +379,7 @@
     font-size: 0.7rem;
 }
 
-.bag-detail-discovery .ad-icon {
+.bag-detail-discovery .game-icon {
     width: 0.8rem;
     height: 0.8rem;
     color: #8de7ff;
@@ -643,6 +643,7 @@
 }
 
 .bag-action-echo-result {
+    position: relative;
     width: min(12rem, 56vw);
     height: min(12rem, 56vw);
     filter: drop-shadow(0 0 24px color-mix(in srgb, var(--item-rarity, #8de7ff) 50%, transparent));

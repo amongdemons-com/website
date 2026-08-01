@@ -1055,7 +1055,7 @@ function renderPreparation(run, options = {}) {
         ${renderIcon('flag')}
         <span class="visually-hidden">End Run</span>
       </button>
-      <button class="dungeon-mobile-nav-btn dungeon-mobile-fight-btn ranked-mobile-nav-btn ad-primary-action"
+      <button class="dungeon-mobile-nav-btn dungeon-mobile-fight-btn ranked-mobile-nav-btn game-primary-action"
               type="button" data-ranked-action="fight" title="Start Ranked fight" aria-label="Start Ranked fight"
               ${canFight ? '' : 'disabled'}>
         ${renderIcon('swords')}
@@ -1176,7 +1176,7 @@ function renderPacts(choices) {
       return `
         <button class="demonic-pact-card is-${escapeHtml(rarity)}" type="button" data-ranked-action="pact" data-buff-id="${escapeHtml(buff.id)}">
           <span class="demonic-pact-icon" aria-hidden="true">${renderIcon(buff.icon || 'sparkles')}</span>
-          <span class="demonic-pact-rarity ad-${escapeHtml(rarity)}">${capitalize(rarity)}</span>
+          <span class="demonic-pact-rarity rarity-${escapeHtml(rarity)}">${capitalize(rarity)}</span>
           <strong>${escapeHtml(buff.name || buff.id)}</strong>
           <span class="demonic-pact-description">${escapeHtml(buff.description || '')}</span>
           <span class="demonic-pact-tags">${(buff.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}</span>

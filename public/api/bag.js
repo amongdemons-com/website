@@ -5,6 +5,7 @@ const { saveCollectionDemon } = require('./lib/collection-demons');
 const {
   REFINEMENT_COSTS,
   SUMMON_REQUIREMENTS,
+  getEchoRefinementBatch,
   getNextEchoRarity,
   normalizeEchoRarity
 } = require('./lib/echo-config');
@@ -53,24 +54,40 @@ router.post('/bag/echoes/refine', requireAuth, async (req, res) => {
     getEchoDefinition(typeId, targetRarity)
   ]);
   const connection = await db.getConnection();
+  let refinementQuantity = 0;
+  let consumedQuantity = 0;
 
   try {
     await connection.beginTransaction();
-    const [result] = await connection.query(
+    const [sourceRows] = await connection.query(
+      `SELECT quantity
+       FROM player_bag
+       WHERE player_id = ? AND item_key = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [req.player.id, source.itemKey]
+    );
+    const batch = getEchoRefinementBatch(sourceRows[0]?.quantity, rarity);
+    refinementQuantity = batch.refinedQuantity;
+    if (!refinementQuantity) {
+      throw createHttpError(`You need ${cost} ${capitalize(rarity)} Echoes to refine.`, 409);
+    }
+    consumedQuantity = batch.consumedQuantity;
+
+    await connection.query(
       `UPDATE player_bag
        SET quantity = quantity - ?, updated_at = CURRENT_TIMESTAMP
-       WHERE player_id = ? AND item_key = ? AND quantity >= ?`,
-      [cost, req.player.id, source.itemKey, cost]
+       WHERE player_id = ? AND item_key = ?`,
+      [consumedQuantity, req.player.id, source.itemKey]
     );
-    if (!result.affectedRows) throw createHttpError(`You need ${cost} ${capitalize(rarity)} Echoes to refine.`, 409);
 
     await connection.query(
       `INSERT INTO player_bag (player_id, item_key, item_type, quantity)
-       VALUES (?, ?, 'echo', 1)
+       VALUES (?, ?, 'echo', ?)
        ON DUPLICATE KEY UPDATE
-         quantity = quantity + 1,
+         quantity = quantity + VALUES(quantity),
          updated_at = CURRENT_TIMESTAMP`,
-      [req.player.id, target.itemKey]
+      [req.player.id, target.itemKey, refinementQuantity]
     );
     await connection.commit();
   } catch (error) {
@@ -81,7 +98,14 @@ router.post('/bag/echoes/refine', requireAuth, async (req, res) => {
   }
 
   res.json({
-    refinement: { typeId, sourceRarity: rarity, targetRarity, cost, quantity: 1 },
+    refinement: {
+      typeId,
+      sourceRarity: rarity,
+      targetRarity,
+      recipeCost: cost,
+      cost: consumedQuantity,
+      quantity: refinementQuantity
+    },
     ...(await getPlayerBag(req.player.id))
   });
 });

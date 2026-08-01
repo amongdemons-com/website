@@ -310,7 +310,7 @@ body.skill-tree-page {
     pointer-events: none;
 }
 
-.ascension-node-orb .ad-icon {
+.ascension-node-orb .game-icon {
     width: 1.55rem;
     height: 1.55rem;
     margin: 0;
@@ -483,14 +483,14 @@ body.skill-tree-page {
     text-transform: uppercase;
 }
 
-.ascension-actions button:not(.ad-primary-action) {
+.ascension-actions button:not(.game-primary-action) {
     border: 1px solid rgba(111, 214, 189, 0.28);
     background: rgba(8, 15, 16, 0.9);
     color: rgba(220, 244, 238, 0.76);
 }
 
-.ascension-actions button:not(.ad-primary-action, :disabled):hover,
-.ascension-actions button:not(.ad-primary-action, :disabled):focus-visible {
+.ascension-actions button:not(.game-primary-action, :disabled):hover,
+.ascension-actions button:not(.game-primary-action, :disabled):focus-visible {
     border-color: rgba(111, 214, 189, 0.62);
     background:
         linear-gradient(180deg, rgba(111,214,189,0.15), rgba(3,9,11,0.18)),
@@ -500,7 +500,7 @@ body.skill-tree-page {
     outline: 0;
 }
 
-.ascension-actions button:not(.ad-primary-action):disabled {
+.ascension-actions button:not(.game-primary-action):disabled {
     cursor: not-allowed;
     opacity: 0.32;
 }

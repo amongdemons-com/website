@@ -809,7 +809,7 @@ body.camp-page > .camp-lobby {
     color: #ffd46c;
 }
 
-.camp-action-icon .ad-icon {
+.camp-action-icon .game-icon {
     width: 1.65rem;
     height: 1.65rem;
     margin: 0;
@@ -934,7 +934,7 @@ body.camp-page > .camp-lobby {
     color: var(--ad-gold);
 }
 
-.camp-page .play-objective-icon .ad-icon {
+.camp-page .play-objective-icon .game-icon {
     margin: 0;
 }
 
@@ -1304,7 +1304,7 @@ body.camp-page::before {
     font-size: 0.92rem;
 }
 
-.camp-panel-kicker .ad-icon {
+.camp-panel-kicker .game-icon {
     margin: 0;
 }
 
@@ -1663,7 +1663,7 @@ body.camp-page::before {
     color: #f3dc93;
 }
 
-.camp-action-icon .ad-icon {
+.camp-action-icon .game-icon {
     width: 3rem;
     height: 3rem;
     stroke-width: 1.8;
@@ -1734,7 +1734,7 @@ body.camp-page::before {
     color: var(--ad-teal, #6fd6bd);
 }
 
-.camp-quests-complete-icon .ad-icon {
+.camp-quests-complete-icon .game-icon {
     width: 1.25rem;
     height: 1.25rem;
 }
@@ -1819,7 +1819,7 @@ body.camp-page::before {
     background: rgba(111,214,189,0.075);
 }
 
-.camp-page .play-objective-icon .ad-icon {
+.camp-page .play-objective-icon .game-icon {
     width: 1.5rem;
     height: 1.5rem;
 }
@@ -1844,7 +1844,7 @@ body.camp-page::before {
     line-height: 1;
 }
 
-.camp-daily-value .ad-icon {
+.camp-daily-value .game-icon {
     width: 0.92rem;
     height: 0.92rem;
 }
@@ -2373,8 +2373,8 @@ body.camp-page {
     outline: 0;
 }
 
-.camp-level-points-link .ad-icon,
-.skill-tree-back .ad-icon {
+.camp-level-points-link .game-icon,
+.skill-tree-back .game-icon {
     width: 0.88rem;
     height: 0.88rem;
     margin: 0;
@@ -2478,7 +2478,7 @@ body.camp-page {
     color: var(--ad-teal, #6fd6bd);
 }
 
-.camp-skill-tree-icon .ad-icon {
+.camp-skill-tree-icon .game-icon {
     width: 1rem;
     height: 1rem;
     margin: 0;
@@ -2617,7 +2617,7 @@ body.camp-page {
         width: 2rem;
     }
 
-.camp-action-icon .ad-icon {
+.camp-action-icon .game-icon {
         width: 1.35rem;
         height: 1.35rem;
     }

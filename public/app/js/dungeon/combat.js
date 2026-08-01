@@ -1301,7 +1301,7 @@ function syncBattleSpeedButtons() {
   document.querySelectorAll('[data-battle-speed]').forEach((button) => {
     const active = Number(button.dataset.battleSpeed) === state.battleSpeed;
     button.classList.toggle('active', active);
-    button.classList.toggle('ad-primary-action', active);
+    button.classList.toggle('game-primary-action', active);
     button.setAttribute('aria-pressed', active ? 'true' : 'false');
   });
 }
@@ -1532,7 +1532,7 @@ function renderFightLogDemonName(instanceId) {
     .find((item) => item.instanceId === instanceId) || state.combatDemons.get(instanceId);
 
   if (!demon) return escapeHtml(instanceId);
-  return `<span class="ad-${escapeHtml(demon.rarity)}">${escapeHtml(demon.species || 'Demon')}</span>`;
+  return `<span class="rarity-${escapeHtml(demon.rarity)}">${escapeHtml(demon.species || 'Demon')}</span>`;
 }
 
 export {

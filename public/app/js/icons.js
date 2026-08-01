@@ -61,9 +61,9 @@
     if (!iconNode) return '';
 
     const className = [
-      'ad-icon',
-      isPoisonIcon(name) ? 'ad-icon-poison' : '',
-      shouldFillIcon(name) ? 'ad-icon-fill' : '',
+      'game-icon',
+      isPoisonIcon(name) ? 'game-icon-poison' : '',
+      shouldFillIcon(name) ? 'game-icon-fill' : '',
       options.className || ''
     ].filter(Boolean).join(' ');
     const attributes = {
@@ -674,7 +674,7 @@
 
   function renderImageIcon(src, name, options = {}) {
     const className = [
-      'ad-icon',
+      'game-icon',
       `${name}-icon`,
       options.className || ''
     ].filter(Boolean).join(' ');
@@ -697,7 +697,7 @@
     if (!window.lucide || typeof window.lucide.createIcons !== 'function') return;
     window.lucide.createIcons({
       attrs: {
-        class: 'ad-icon',
+        class: 'game-icon',
         'aria-hidden': 'true',
         focusable: 'false',
         'stroke-width': 2.25

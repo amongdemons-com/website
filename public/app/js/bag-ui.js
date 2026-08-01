@@ -295,23 +295,25 @@
     const sourceLabel = `${capitalize(item.rarity)} ${item.species}`;
     const targetLabel = `${capitalize(item.nextRarity)} ${item.species}`;
     const lacking = Math.max(0, Number(item.refinementCost) - Number(item.quantity));
+    const refinementCount = Math.floor(Number(item.quantity) / Number(item.refinementCost));
+    const consumedQuantity = refinementCount * Number(item.refinementCost);
     const lockedCopy = lacking > 0
       ? `Gather ${lacking} more ${sourceLabel} ${lacking === 1 ? 'Echo' : 'Echoes'} to refine.`
-      : `Consume ${item.refinementCost} ${sourceLabel} Echoes to create one ${targetLabel} Echo.`;
+      : `Consume ${consumedQuantity} ${sourceLabel} Echoes to create ${refinementCount} ${targetLabel} ${refinementCount === 1 ? 'Echo' : 'Echoes'}.`;
 
     return `
       <section class="bag-detail-panel">
         <h3>Refinement</h3>
-        <div class="bag-recipe" aria-label="${escapeHtml(`${item.refinementCost} ${sourceLabel} Echoes become 1 ${targetLabel} Echo`)}">
-          <div class="bag-recipe-item"><strong>x${escapeHtml(item.refinementCost)}</strong><small class="d-block bag-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.rarity))}">${escapeHtml(capitalize(item.rarity))}</small></div>
+        <div class="bag-recipe" aria-label="${escapeHtml(`${consumedQuantity || item.refinementCost} ${sourceLabel} Echoes become ${refinementCount || 1} ${targetLabel} ${refinementCount === 1 ? 'Echo' : 'Echoes'}`)}">
+          <div class="bag-recipe-item"><strong>x${escapeHtml(consumedQuantity || item.refinementCost)}</strong><small class="d-block bag-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.rarity))}">${escapeHtml(capitalize(item.rarity))}</small></div>
           <span aria-hidden="true">${renderIcon('arrow-right')}</span>
-          <div class="bag-recipe-item"><strong>x1</strong><small class="d-block bag-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.nextRarity))}">${escapeHtml(capitalize(item.nextRarity))}</small></div>
+          <div class="bag-recipe-item"><strong>x${escapeHtml(refinementCount || 1)}</strong><small class="d-block bag-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.nextRarity))}">${escapeHtml(capitalize(item.nextRarity))}</small></div>
         </div>
         <p class="small text-muted">${escapeHtml(lockedCopy)}</p>
         ${state.detailError ? `<div class="bag-action-error mb-3" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
         <button class="btn btn-sm btn-primary bag-refine-action" type="button" data-bag-action="refine" ${item.canRefine && !state.pending ? '' : 'disabled'}>
           ${state.pendingAction === 'refine' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
-          <span>${state.pendingAction === 'refine' ? 'Refining...' : 'Refine Echo'}</span>
+          <span>${state.pendingAction === 'refine' ? 'Refining...' : 'Refine All'}</span>
         </button>
       </section>
     `;
@@ -382,6 +384,7 @@
     const targetItem = getRefinementTargetItem(sourceItem, payload);
     const targetRarity = normalizeRarity(targetItem.rarity);
     const targetSpecies = targetItem.species || sourceItem.species;
+    const refinedQuantity = Math.max(1, Number(payload.refinement?.quantity) || 1);
     elements.bagRefineContent.style.setProperty('--item-rarity', getRarityColor(targetRarity));
     elements.bagRefineContent.innerHTML = `
       <div class="modal-header">
@@ -392,8 +395,16 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body bag-action-result-body">
-        <div class="bag-action-echo-result">${renderItemVisual(targetItem, { context: 'detail' })}</div>
-        <p class="bag-action-description" id="bagRefineDescription">Your refined Echo has been added to Bag.</p>
+        <div class="bag-action-echo-result">
+          ${renderItemVisual(targetItem, { context: 'detail' })}
+          ${refinedQuantity > 1 ? `<span class="bag-item-count">x${escapeHtml(formatNumber(refinedQuantity))}</span>` : ''}
+        </div>
+        <p class="bag-action-description" id="bagRefineDescription">${escapeHtml(refinedQuantity === 1
+          ? 'Your refined Echo has been added to Bag.'
+          : `${refinedQuantity} refined Echoes have been added to Bag.`)}</p>
+      </div>
+      <div class="modal-footer bag-action-footer-centered">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
       </div>
     `;
     transitionBetweenModals(elements.bagDetailModal, elements.bagRefineModal);

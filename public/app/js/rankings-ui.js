@@ -157,7 +157,7 @@
           ? (hasRankedRating
             ? `<span class="rank-metric rank-metric-ranked"><strong>${formatNumber(rankedRating)}</strong></span>`
             : '')
-          : renderSoulAmount(formatNumber(souls), {
+          : renderSoulAmount(formatCompactNumber(souls), {
           showLabel: false,
           className: 'rank-metric rank-metric-souls',
           ariaLabel: `${formatNumber(souls)} Souls`

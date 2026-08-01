@@ -10,6 +10,9 @@ const MERCHANT_MOVE_INTERVAL_SECONDS = 30 * 60;
 const MERCHANT_STOCK_SIZE = 4;
 const MERCHANT_STOCK_VERSION = 1;
 const MERCHANT_BRIBE_COST = 50;
+const MERCHANT_BRIBE_COST_PER_LEVEL = 5;
+const MERCHANT_LEVELS_PER_LUCK_REROLL = 50;
+const MERCHANT_MAX_LEVEL_LUCK_REROLL_CHANCE = 1;
 // At the outer edge, every slot gets a second baseline rarity roll. Keeping the
 // better result makes distant shops meaningfully stronger while the Echo count,
 // exact demon type, and Soul price still gate completed high-rarity summons.
@@ -91,6 +94,7 @@ function resolveMerchantPosition(spawnId) {
 async function getWorldMerchantForPlayer(playerId, options = {}) {
   const merchant = getActiveWorldMerchant(options.now);
   const queryable = options.queryable || db;
+  const playerLevel = normalizePlayerLevel(options.playerLevel);
   const [catalog, purchasedSlots, rerollCount] = await Promise.all([
     getEchoCatalog(),
     getPurchasedMerchantSlots(playerId, merchant.spawnId, queryable),
@@ -99,10 +103,10 @@ async function getWorldMerchantForPlayer(playerId, options = {}) {
 
   return {
     ...merchant,
-    stockId: getMerchantStockId(merchant.spawnId, rerollCount),
+    stockId: getMerchantStockId(merchant.spawnId, rerollCount, playerLevel),
     rerollCount,
-    bribeCost: MERCHANT_BRIBE_COST,
-    itemSlots: buildMerchantStock(playerId, merchant.spawnId, catalog, purchasedSlots, rerollCount)
+    bribeCost: getMerchantBribeCost(playerLevel),
+    itemSlots: buildMerchantStock(playerId, merchant.spawnId, catalog, purchasedSlots, rerollCount, playerLevel)
   };
 }
 
@@ -127,7 +131,14 @@ async function getPurchasedMerchantSlots(playerId, spawnId, queryable = db) {
   return new Set(rows.map((row) => Math.max(0, Math.floor(Number(row.slot) || 0))));
 }
 
-function buildMerchantStock(playerId, spawnId, catalog, purchasedSlots = new Set(), rerollCount = 0) {
+function buildMerchantStock(
+  playerId,
+  spawnId,
+  catalog,
+  purchasedSlots = new Set(),
+  rerollCount = 0,
+  playerLevel = 1
+) {
   const definitions = [...(catalog instanceof Map ? catalog.values() : [])]
     .filter((definition) => definition?.itemKey && MERCHANT_RARITY_PRICES[definition.rarity])
     .sort((left, right) => String(left.itemKey).localeCompare(String(right.itemKey)));
@@ -142,15 +153,23 @@ function buildMerchantStock(playerId, spawnId, catalog, purchasedSlots = new Set
   const rerollSeed = normalizedRerollCount > 0 ? `:reroll:${normalizedRerollCount}` : '';
   const stockSeed = `merchant-stock:v${MERCHANT_STOCK_VERSION}:${spawnId}:${String(playerId || '')}${rerollSeed}`;
   const rng = seededRng(hashSeed(stockSeed));
-  // A separate stream keeps the original stock roll sequence stable unless a
-  // slot actually benefits from distance luck.
+  // Separate streams keep the original stock roll sequence stable unless a
+  // slot actually benefits from distance or player-level luck.
   const luckRng = seededRng(hashSeed(`${stockSeed}:distance-luck:v1`));
+  const levelLuckRng = seededRng(hashSeed(`${stockSeed}:level-luck:v1`));
   const luckRerollChance = getMerchantLuckRerollChance(resolveMerchantPosition(spawnId));
+  const levelLuckRerollChance = getMerchantLevelLuckRerollChance(playerLevel);
   const usedKeys = new Set();
   const usedTypeIds = new Set();
 
   return Array.from({ length: MERCHANT_STOCK_SIZE }, (unused, slot) => {
-    const rarity = rollMerchantRarity(rng, luckRerollChance, luckRng);
+    const rarity = rollMerchantRarity(
+      rng,
+      luckRerollChance,
+      luckRng,
+      levelLuckRerollChance,
+      levelLuckRng
+    );
     const rarityPool = byRarity.get(rarity) || definitions;
     let candidates = rarityPool.filter((definition) => (
       !usedKeys.has(definition.itemKey) && !usedTypeIds.has(Number(definition.typeId))
@@ -182,19 +201,30 @@ function buildMerchantStock(playerId, spawnId, catalog, purchasedSlots = new Set
   });
 }
 
-function rollMerchantRarity(rng = Math.random, luckRerollChance = 0, luckRng = rng) {
-  const firstRarity = rollBaseMerchantRarity(rng);
+function rollMerchantRarity(
+  rng = Math.random,
+  luckRerollChance = 0,
+  luckRng = rng,
+  levelLuckRerollChance = 0,
+  levelLuckRng = luckRng
+) {
+  let rarity = rollBaseMerchantRarity(rng);
+  rarity = maybeUpgradeMerchantRarity(rarity, luckRerollChance, luckRng);
+  return maybeUpgradeMerchantRarity(rarity, levelLuckRerollChance, levelLuckRng);
+}
+
+function maybeUpgradeMerchantRarity(currentRarity, rerollChance, rng = Math.random) {
   const normalizedLuck = Math.min(
     MERCHANT_MAX_DISTANCE_LUCK_REROLL_CHANCE,
-    Math.max(0, Number(luckRerollChance) || 0)
+    Math.max(0, Number(rerollChance) || 0)
   );
-  if (normalizedLuck <= 0 || luckRng() >= normalizedLuck) return firstRarity;
+  if (normalizedLuck <= 0 || rng() >= normalizedLuck) return currentRarity;
 
-  const secondRarity = rollBaseMerchantRarity(luckRng);
+  const secondRarity = rollBaseMerchantRarity(rng);
   const rarityOrder = Object.keys(MERCHANT_RARITY_WEIGHTS);
-  return rarityOrder.indexOf(secondRarity) > rarityOrder.indexOf(firstRarity)
+  return rarityOrder.indexOf(secondRarity) > rarityOrder.indexOf(currentRarity)
     ? secondRarity
-    : firstRarity;
+    : currentRarity;
 }
 
 function rollBaseMerchantRarity(rng = Math.random) {
@@ -232,6 +262,17 @@ function getMerchantLuckRerollChance(position = {}) {
   return distanceProgress * MERCHANT_MAX_DISTANCE_LUCK_REROLL_CHANCE;
 }
 
+function getMerchantLevelLuckRerollChance(playerLevel = 1) {
+  return Math.min(
+    MERCHANT_MAX_LEVEL_LUCK_REROLL_CHANCE,
+    (normalizePlayerLevel(playerLevel) - 1) / MERCHANT_LEVELS_PER_LUCK_REROLL
+  );
+}
+
+function getMerchantBribeCost(playerLevel = 1) {
+  return MERCHANT_BRIBE_COST + ((normalizePlayerLevel(playerLevel) - 1) * MERCHANT_BRIBE_COST_PER_LEVEL);
+}
+
 async function purchaseWorldMerchantItem(
   playerId,
   requestedSpawnId,
@@ -258,22 +299,6 @@ async function purchaseWorldMerchantItem(
   try {
     await connection.beginTransaction();
     const rerollCount = await lockMerchantRerollCount(connection, playerId, merchant.spawnId);
-    const stockId = getMerchantStockId(merchant.spawnId, rerollCount);
-    if (String(requestedStockId || '') !== stockId) {
-      throw createHttpError('Crowley has already replaced these offers.', 409);
-    }
-    const stock = buildMerchantStock(playerId, merchant.spawnId, catalog, new Set(), rerollCount);
-    const item = stock[slot];
-
-    const [positionRows] = await connection.query(
-      'SELECT x, y FROM player_world_positions WHERE player_id = ? LIMIT 1 FOR UPDATE',
-      [playerId]
-    );
-    const position = positionRows[0];
-    if (!position || Number(position.x) !== merchant.x || Number(position.y) !== merchant.y) {
-      throw createHttpError('Stand beside the merchant before buying from his shop.', 409);
-    }
-
     const [playerRows] = await connection.query(
       `SELECT p.*, pd.image_url AS profile_demon_image_url
        FROM players p
@@ -286,6 +311,22 @@ async function purchaseWorldMerchantItem(
       [playerId]
     );
     if (!playerRows.length) throw createHttpError('Hunter not found.', 404);
+    const playerLevel = normalizePlayerLevel(playerRows[0].level);
+    const stockId = getMerchantStockId(merchant.spawnId, rerollCount, playerLevel);
+    if (String(requestedStockId || '') !== stockId) {
+      throw createHttpError('Crowley has already replaced these offers.', 409);
+    }
+    const stock = buildMerchantStock(playerId, merchant.spawnId, catalog, new Set(), rerollCount, playerLevel);
+    const item = stock[slot];
+
+    const [positionRows] = await connection.query(
+      'SELECT x, y FROM player_world_positions WHERE player_id = ? LIMIT 1 FOR UPDATE',
+      [playerId]
+    );
+    const position = positionRows[0];
+    if (!position || Number(position.x) !== merchant.x || Number(position.y) !== merchant.y) {
+      throw createHttpError('Stand beside the merchant before buying from his shop.', 409);
+    }
 
     const [purchaseResult] = await connection.query(
       `INSERT IGNORE INTO player_world_merchant_purchases
@@ -353,7 +394,20 @@ async function bribeWorldMerchant(playerId, requestedSpawnId, requestedStockId, 
   try {
     await connection.beginTransaction();
     const rerollCount = await lockMerchantRerollCount(connection, playerId, merchant.spawnId);
-    const stockId = getMerchantStockId(merchant.spawnId, rerollCount);
+    const [playerRows] = await connection.query(
+      `SELECT p.*, pd.image_url AS profile_demon_image_url
+       FROM players p
+       LEFT JOIN player_demons pd
+         ON pd.id = p.profile_demon_id
+        AND pd.player_id = p.id
+       WHERE p.id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [playerId]
+    );
+    if (!playerRows.length) throw createHttpError('Hunter not found.', 404);
+    const playerLevel = normalizePlayerLevel(playerRows[0].level);
+    const stockId = getMerchantStockId(merchant.spawnId, rerollCount, playerLevel);
     if (String(requestedStockId || '') !== stockId) {
       throw createHttpError('Crowley has already replaced these offers.', 409);
     }
@@ -367,22 +421,10 @@ async function bribeWorldMerchant(playerId, requestedSpawnId, requestedStockId, 
       throw createHttpError('Stand beside Crowley before bribing him.', 409);
     }
 
-    const [playerRows] = await connection.query(
-      `SELECT p.*, pd.image_url AS profile_demon_image_url
-       FROM players p
-       LEFT JOIN player_demons pd
-         ON pd.id = p.profile_demon_id
-        AND pd.player_id = p.id
-       WHERE p.id = ?
-       LIMIT 1
-       FOR UPDATE`,
-      [playerId]
-    );
-    if (!playerRows.length) throw createHttpError('Hunter not found.', 404);
-
     const availableSouls = Math.max(0, Math.floor(Number(playerRows[0].souls) || 0));
-    if (availableSouls < MERCHANT_BRIBE_COST) {
-      throw createHttpError(`You need ${formatSoulCount(MERCHANT_BRIBE_COST)} to bribe Crowley.`, 409);
+    const bribeCost = getMerchantBribeCost(playerLevel);
+    if (availableSouls < bribeCost) {
+      throw createHttpError(`You need ${formatSoulCount(bribeCost)} to bribe Crowley.`, 409);
     }
 
     const nextRerollCount = rerollCount + 1;
@@ -398,7 +440,7 @@ async function bribeWorldMerchant(playerId, requestedSpawnId, requestedStockId, 
     );
     await connection.query(
       'UPDATE players SET souls = souls - ? WHERE id = ?',
-      [MERCHANT_BRIBE_COST, playerId]
+      [bribeCost, playerId]
     );
 
     await connection.commit();
@@ -406,10 +448,10 @@ async function bribeWorldMerchant(playerId, requestedSpawnId, requestedStockId, 
 
     return {
       rerollCount: nextRerollCount,
-      stockId: getMerchantStockId(merchant.spawnId, nextRerollCount),
+      stockId: getMerchantStockId(merchant.spawnId, nextRerollCount, playerLevel),
       player: cleanPlayer({
         ...playerRows[0],
-        souls: availableSouls - MERCHANT_BRIBE_COST
+        souls: availableSouls - bribeCost
       })
     };
   } catch (error) {
@@ -447,8 +489,12 @@ async function lockMerchantRerollCount(connection, playerId, spawnId) {
   return Math.max(0, Math.floor(Number(rows[0]?.reroll_count) || 0));
 }
 
-function getMerchantStockId(spawnId, rerollCount = 0) {
-  return `${String(spawnId || '')}:${Math.max(0, Math.floor(Number(rerollCount) || 0))}`;
+function getMerchantStockId(spawnId, rerollCount = 0, playerLevel = 1) {
+  return `${String(spawnId || '')}:${Math.max(0, Math.floor(Number(rerollCount) || 0))}:level:${normalizePlayerLevel(playerLevel)}`;
+}
+
+function normalizePlayerLevel(playerLevel) {
+  return Math.max(1, Math.floor(Number(playerLevel) || 1));
 }
 
 function toWorldMapImageUrl(url) {
@@ -503,7 +549,10 @@ function createHttpError(message, status = 400) {
 
 module.exports = {
   MERCHANT_BRIBE_COST,
+  MERCHANT_BRIBE_COST_PER_LEVEL,
   MERCHANT_ID,
+  MERCHANT_LEVELS_PER_LUCK_REROLL,
+  MERCHANT_MAX_LEVEL_LUCK_REROLL_CHANCE,
   MERCHANT_MOVE_INTERVAL_SECONDS,
   MERCHANT_MAX_DISTANCE_LUCK_REROLL_CHANCE,
   MERCHANT_RARITY_PRICES,
@@ -513,6 +562,8 @@ module.exports = {
   buildMerchantStock,
   getActiveWorldMerchant,
   getMerchantLuckRerollChance,
+  getMerchantLevelLuckRerollChance,
+  getMerchantBribeCost,
   getMerchantSpawnId,
   getMerchantStockId,
   getWorldMerchantForPlayer,

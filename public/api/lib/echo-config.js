@@ -35,6 +35,20 @@ function getEchoItemKey(typeId, rarity) {
   return `echo:${normalizedTypeId}:${normalizedRarity}`;
 }
 
+function getEchoRefinementBatch(quantity, rarity) {
+  const sourceQuantity = Math.max(0, Math.floor(Number(quantity) || 0));
+  const recipeCost = REFINEMENT_COSTS[normalizeEchoRarity(rarity)] || 0;
+  const refinedQuantity = recipeCost ? Math.floor(sourceQuantity / recipeCost) : 0;
+  const consumedQuantity = refinedQuantity * recipeCost;
+
+  return {
+    recipeCost,
+    refinedQuantity,
+    consumedQuantity,
+    remainingQuantity: sourceQuantity - consumedQuantity
+  };
+}
+
 function parseEchoItemKey(value) {
   const match = /^echo:(\d+):(common|uncommon|rare|epic|legendary|mythic)$/.exec(String(value || ''));
   if (!match) return null;
@@ -55,6 +69,7 @@ module.exports = {
   SUMMON_REQUIREMENTS,
   getEchoConfig,
   getEchoItemKey,
+  getEchoRefinementBatch,
   getNextEchoRarity,
   normalizeEchoRarity,
   parseEchoItemKey

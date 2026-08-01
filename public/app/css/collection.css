@@ -36,7 +36,7 @@
     justify-content: center;
 }
 
-.collection-reinforcement-placeholder-icon .ad-icon {
+.collection-reinforcement-placeholder-icon .game-icon {
     width: 3rem;
     height: 3rem;
 }
@@ -78,7 +78,7 @@
     white-space: normal;
 }
 
-.collection-train-action .ad-icon,
+.collection-train-action .game-icon,
 .collection-train-action-icon {
     width: 1.18rem;
     height: 1.18rem;
@@ -231,7 +231,7 @@
     min-height: 2.8rem;
 }
 
-.collection-auto-train-submit .ad-icon,
+.collection-auto-train-submit .game-icon,
 .collection-auto-train-submit svg {
     width: 1.1rem;
     height: 1.1rem;
@@ -812,7 +812,7 @@ body.collection-page {
     min-width: 0;
 }
 
-.collection-training-stat-line .ad-icon,
+.collection-training-stat-line .game-icon,
 .collection-training-stat-line .combat-stat-icon {
     width: 0.82rem;
     height: 0.82rem;
@@ -960,7 +960,7 @@ body.collection-page {
         inset 0 0 0 1px rgba(255,255,255,0.1);
 }
 
-.collection-training-result-pop .ad-icon,
+.collection-training-result-pop .game-icon,
 .collection-training-result-pop .combat-stat-icon {
     width: 1.22rem;
     height: 1.22rem;

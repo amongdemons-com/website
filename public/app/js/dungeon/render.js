@@ -178,69 +178,9 @@ function renderRun() {
 
 function renderDungeonEndScreen() {
   const summary = state.endSummary || {};
-  const demon = summary.demon;
-  const echo = summary.echo;
-  const isDefeat = summary.outcome === 'defeat';
-  const eyebrow = isDefeat ? 'Defeat' : 'Extraction';
-
-  return `
-    <div class="dungeon-end-screen ${isDefeat ? 'is-defeat' : 'is-extraction'}">
-      <div class="dungeon-end-copy">
-        <span class="dungeon-phase-eyebrow">${eyebrow}</span>
-        <h2>${escapeHtml(summary.title || 'Run complete')}</h2>
-        <p>${escapeHtml(summary.message || 'Run extracted.')}</p>
-      </div>
-      ${demon ? `
-        <div class="dungeon-end-demon" aria-label="Collected demon">
-          ${renderDungeonDemonCard(demon, {
-            className: 'dungeon-end-demon-card',
-            suppressCollectionMissingTag: true,
-            attributes: { 'data-instance-id': demon.instanceId || `end-${demon.id || 'demon'}` }
-          })}
-        </div>
-      ` : ''}
-      ${echo ? `
-        <div
-          class="dungeon-end-demon dungeon-end-echo"
-          style="--item-rarity: ${escapeHtml(getRarityColor(echo.rarity || 'common'))}"
-          aria-label="Extracted ${escapeHtml(`${capitalize(echo.rarity || 'common')} ${echo.species || 'Demon'} Echo`)}"
-        >
-          <span class="dungeon-end-echo-visual">
-            ${renderBagItemVisual(echo, { context: 'slot' })}
-          </span>
-        </div>
-      ` : ''}
-      <div class="dungeon-end-rewards" aria-label="Rewards obtained">
-        ${demon ? `<span>${renderIcon('stars')}${escapeHtml(demon.species || 'Demon')}</span>` : ''}
-        ${echo ? `<span>${renderIcon('sparkles')}${escapeHtml(`${capitalize(echo.rarity || 'common')} ${echo.species || 'Demon'} Echo`)}</span>` : ''}
-        <span>${Number(summary.xp) || 0} XP</span>
-        ${renderSoulAmount(Number(summary.souls) || 0, { className: 'soul-chip dungeon-end-soul-amount' })}
-      </div>
-      <div class="dungeon-end-actions">
-        ${isDefeat ? '' : '<a class="btn btn-glass-muted" href="/camp">Leave</a>'}
-        ${state.endedReplayRun?.lastBattle?.combatLog?.length ? `
-          <button class="btn btn-glass-muted btn-icon-only" id="replayEndedDungeonBtn" type="button" title="Replay Fight" aria-label="Replay Fight">
-            ${renderIcon('list-restart')}
-          </button>
-        ` : ''}
-        ${isDefeat ? `
-          <a class="btn btn-glass-muted" id="trainDemonsBtn" href="/collection">
-            ${renderIcon('swords')}
-            Train Demons
-          </a>
-        ` : `
-          <a class="btn btn-glass-muted" href="/bag">
-            ${renderIcon('amphora')}
-            View Bag
-          </a>
-        `}
-        <a class="btn btn-primary" href="/dungeon">
-          ${renderIcon('play')}
-          New Dungeon
-        </a>
-      </div>
-    </div>
-  `;
+  return summary.outcome === 'defeat'
+    ? renderDungeonDefeatScreen(summary)
+    : renderDungeonExtractionScreen(summary);
 }
 
 function renderDungeonStartPrompt() {
@@ -336,6 +276,153 @@ function renderTeamSideTitle(teamCount = null, teamLimit = null) {
     <span>Your Team</span>
     ${countHtml ? ` ${countHtml}` : ''}
     ${renderBattleBuffSummaryChip(buffs, { side: 'player' })}
+  `;
+}
+
+function renderDungeonExtractionScreen(summary = {}) {
+  const demon = summary.demon;
+  const echo = summary.echo;
+  const xp = Number(summary.xp) || 0;
+  const souls = Number(summary.souls) || 0;
+  const canReplay = Boolean(state.endedReplayRun?.lastBattle?.combatLog?.length);
+  const echoName = echo
+    ? `${capitalize(echo.rarity || 'common')} ${echo.species || 'Demon'} Echo`
+    : '';
+
+  return `
+    <div class="dungeon-end-screen is-extraction">
+      <div class="dungeon-extraction-motes" aria-hidden="true">
+        ${Array.from({ length: 8 }, () => '<span></span>').join('')}
+      </div>
+      <section class="dungeon-result-panel dungeon-extraction-panel" aria-labelledby="dungeonExtractionTitle">
+        <div class="dungeon-result-sigil dungeon-extraction-sigil" aria-hidden="true">
+          <span class="dungeon-result-sigil-ring"></span>
+          <span class="dungeon-result-sigil-core">${renderIcon('shield-check')}</span>
+        </div>
+        <div class="dungeon-end-copy dungeon-result-copy dungeon-extraction-copy">
+          <h2 id="dungeonExtractionTitle">${escapeHtml(summary.title || 'Extraction complete')}</h2>
+          <p>${escapeHtml(summary.message || 'You left the dungeon with your rewards.')}</p>
+        </div>
+        ${demon ? `
+          <div class="dungeon-extraction-prize">
+            <div class="dungeon-end-demon" aria-label="Collected ${escapeHtml(demon.species || 'demon')}">
+              ${renderDungeonDemonCard(demon, {
+                className: 'dungeon-end-demon-card',
+                suppressCollectionMissingTag: true,
+                attributes: { 'data-instance-id': demon.instanceId || `end-${demon.id || 'demon'}` }
+              })}
+            </div>
+            <span class="dungeon-extraction-prize-label">${renderIcon('stars')} ${escapeHtml(demon.species || 'Demon')} joined your collection</span>
+          </div>
+        ` : ''}
+        ${echo ? `
+          <div class="dungeon-extraction-prize">
+            <div
+              class="dungeon-end-demon dungeon-end-echo"
+              style="--item-rarity: ${escapeHtml(getRarityColor(echo.rarity || 'common'))}"
+              aria-label="Extracted ${escapeHtml(echoName)}"
+            >
+              <span class="dungeon-end-echo-visual">
+                ${renderBagItemVisual(echo, { context: 'slot' })}
+              </span>
+            </div>
+            <span class="dungeon-extraction-prize-label">${renderIcon('sparkles')} ${escapeHtml(echoName)} secured</span>
+          </div>
+        ` : ''}
+        <div class="dungeon-result-divider" aria-hidden="true"><span></span></div>
+        <div class="dungeon-result-spoils" aria-label="Rewards extracted from this run">
+          <span class="dungeon-result-spoils-label">Carried safely from the depths</span>
+          <div class="dungeon-end-rewards">
+            <span class="dungeon-result-reward">
+              ${renderIcon('stars')}
+              <span><small>Experience earned</small><strong>${escapeHtml(String(xp))} XP</strong></span>
+            </span>
+            <span class="dungeon-result-reward dungeon-result-reward-souls">
+              ${renderSoulAmount(souls, { className: 'soul-chip dungeon-end-soul-amount', showLabel: false })}
+              <span><small>Souls secured</small><strong>${escapeHtml(String(souls))}</strong></span>
+            </span>
+          </div>
+        </div>
+        <div class="dungeon-end-actions dungeon-result-actions">
+          <a class="btn btn-primary dungeon-result-primary" href="/dungeon">
+            ${renderIcon('play')}
+            Begin Another Descent
+          </a>
+          <a class="btn btn-glass-muted dungeon-result-secondary" href="/bag">
+            ${renderIcon('amphora')}
+            View Bag
+          </a>
+          <a class="btn btn-glass-muted dungeon-result-secondary" href="/camp">
+            ${renderIcon('tent')}
+            Return to Camp
+          </a>
+          ${canReplay ? `
+            <button class="btn btn-glass-muted dungeon-result-replay" id="replayEndedDungeonBtn" type="button">
+              ${renderIcon('list-restart')}
+              Replay Last Fight
+            </button>
+          ` : ''}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderDungeonDefeatScreen(summary = {}) {
+  const xp = Number(summary.xp) || 0;
+  const souls = Number(summary.souls) || 0;
+  const canReplay = Boolean(state.endedReplayRun?.lastBattle?.combatLog?.length);
+
+  return `
+    <div class="dungeon-end-screen is-defeat">
+      <div class="dungeon-defeat-ash" aria-hidden="true">
+        ${Array.from({ length: 9 }, () => '<span></span>').join('')}
+      </div>
+      <section class="dungeon-result-panel" aria-labelledby="dungeonDefeatTitle">
+        <div class="dungeon-result-sigil" aria-hidden="true">
+          <span class="dungeon-result-sigil-ring"></span>
+          <span class="dungeon-result-sigil-core">${renderIcon('shield-off')}</span>
+        </div>
+        <div class="dungeon-end-copy dungeon-result-copy">
+          <h2 id="dungeonDefeatTitle">${escapeHtml(summary.message || summary.title || 'Your team was defeated.')}</h2>
+          <p class="dungeon-defeat-guidance">Every fall leaves a lesson. Strengthen your demons, reshape your team, and descend again.</p>
+        </div>
+        <div class="dungeon-result-divider" aria-hidden="true"><span></span></div>
+        <div class="dungeon-result-spoils" aria-label="Rewards retained from this run">
+          <span class="dungeon-result-spoils-label">Carried from the darkness</span>
+          <div class="dungeon-end-rewards">
+            <span class="dungeon-result-reward">
+              ${renderIcon('stars')}
+              <span><small>Experience kept</small><strong>${escapeHtml(String(xp))} XP</strong></span>
+            </span>
+            <span class="dungeon-result-reward dungeon-result-reward-souls">
+              ${renderSoulAmount(souls, { className: 'soul-chip dungeon-end-soul-amount', showLabel: false })}
+              <span><small>Souls recovered</small><strong>${escapeHtml(String(souls))}</strong></span>
+            </span>
+          </div>
+        </div>
+        <div class="dungeon-end-actions dungeon-result-actions">
+          <a class="btn btn-primary dungeon-result-primary" href="/dungeon">
+            ${renderIcon('play')}
+            Begin a New Descent
+          </a>
+          <a class="btn btn-glass-muted dungeon-result-secondary" id="trainDemonsBtn" href="/collection">
+            ${renderIcon('swords')}
+            Train Demons
+          </a>
+          <a class="btn btn-glass-muted dungeon-result-secondary" href="/camp">
+            ${renderIcon('tent')}
+            Return to Camp
+          </a>
+          ${canReplay ? `
+            <button class="btn btn-glass-muted dungeon-result-replay" id="replayEndedDungeonBtn" type="button">
+              ${renderIcon('list-restart')}
+              Replay Last Fight
+            </button>
+          ` : ''}
+        </div>
+      </section>
+    </div>
   `;
 }
 
@@ -888,7 +975,7 @@ function renderDungeonMobileFightBox(options = {}) {
       <span class="visually-hidden">Extract</span>
     </button>
     <button
-      class="dungeon-mobile-nav-btn dungeon-fight-btn dungeon-mobile-fight-btn ad-primary-action ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
+      class="dungeon-mobile-nav-btn dungeon-fight-btn dungeon-mobile-fight-btn game-primary-action ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
       id="dungeonMobileFightBtn"
       type="button"
       title="${title}"
@@ -949,7 +1036,7 @@ function renderBattlePlaybackControls() {
         ${renderIcon('last-attack')}
       </button>
       <button
-        class="battle-playback-btn ad-primary-action"
+        class="battle-playback-btn game-primary-action"
         id="battlePlaybackToggleBtn"
         type="button"
         title="${isPaused ? 'Play' : 'Pause'}"
@@ -976,7 +1063,7 @@ function renderBattleSpeedControl() {
     <div class="battle-speed-control" role="group" aria-label="Battle animation speed">
       ${BATTLE_SPEED_OPTIONS.map((speed) => `
         <button
-          class="battle-speed-option ${state.battleSpeed === speed ? 'active ad-primary-action' : ''}"
+          class="battle-speed-option ${state.battleSpeed === speed ? 'active game-primary-action' : ''}"
           type="button"
           data-battle-speed="${speed}"
           aria-pressed="${state.battleSpeed === speed ? 'true' : 'false'}"
@@ -993,7 +1080,7 @@ function renderDemonicPactReturnControl() {
   return `
     <div class="battle-speed-control demonic-pact-return-control" role="group" aria-label="Demonic Pact controls">
       <button
-        class="battle-speed-option active ad-primary-action demonic-pact-return-option"
+        class="battle-speed-option active game-primary-action demonic-pact-return-option"
         id="demonicPactReturnBtn"
         type="button"
         title="Show Demonic Pacts"

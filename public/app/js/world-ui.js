@@ -5742,7 +5742,7 @@ import './bag-item-visuals.js';
   function renderSoulAmount(value) {
     return `
       <span class="soul-amount">
-        <img src="/app/images/assets/soul.svg" class="ad-icon soul-icon" alt="" width="16" height="16" aria-hidden="true">
+        <img src="/app/images/assets/soul.svg" class="game-icon soul-icon" alt="" width="16" height="16" aria-hidden="true">
         <span class="soul-amount-value">${escapeHtml(formatNumber(Math.max(0, Number(value) || 0)))}</span>
         <span class="soul-amount-label">Souls</span>
       </span>
@@ -6219,7 +6219,7 @@ import './bag-item-visuals.js';
           <button class="battle-playback-btn" type="button" data-world-battle-step="-1" title="Last attack" aria-label="Last attack" ${canStepBack ? '' : 'disabled'}>
             ${renderIcon('last-attack')}
           </button>
-          <button class="battle-playback-btn ad-primary-action" type="button" data-world-battle-toggle-play title="${isPaused ? 'Play' : 'Pause'}" aria-label="${isPaused ? 'Play' : 'Pause'}" ${total ? '' : 'disabled'}>
+          <button class="battle-playback-btn game-primary-action" type="button" data-world-battle-toggle-play title="${isPaused ? 'Play' : 'Pause'}" aria-label="${isPaused ? 'Play' : 'Pause'}" ${total ? '' : 'disabled'}>
             ${renderIcon(isPaused ? 'play' : 'pause')}
           </button>
           <button class="battle-playback-btn" type="button" data-world-battle-step="1" title="Next attack" aria-label="Next attack" ${canStepForward ? '' : 'disabled'}>
@@ -6231,7 +6231,7 @@ import './bag-item-visuals.js';
         </div>
         <div class="battle-speed-control" role="group" aria-label="Battle animation speed">
           ${BATTLE_SPEED_OPTIONS.map((speed) => `
-            <button class="battle-speed-option ${state.worldBattleSpeed === speed ? 'active ad-primary-action' : ''}" type="button" data-world-battle-speed="${speed}" aria-pressed="${state.worldBattleSpeed === speed ? 'true' : 'false'}" title="${formatWorldBattleSpeed(speed)} battle speed">
+            <button class="battle-speed-option ${state.worldBattleSpeed === speed ? 'active game-primary-action' : ''}" type="button" data-world-battle-speed="${speed}" aria-pressed="${state.worldBattleSpeed === speed ? 'true' : 'false'}" title="${formatWorldBattleSpeed(speed)} battle speed">
               ${formatWorldBattleSpeed(speed)}
             </button>
           `).join('')}
@@ -8824,7 +8824,9 @@ import './bag-item-visuals.js';
     const bosses = state.bosses || [];
     if (!bosses.length) return;
     const boss = bosses[Math.floor(Math.random() * bosses.length)];
-    const showAfterClick = () => {
+    const showAfterClick = (event) => {
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      if (target?.closest('#worldSidePanel')) return;
       document.removeEventListener('click', showAfterClick, true);
       window.setTimeout(() => showWorldBossIntro(boss), 0);
     };

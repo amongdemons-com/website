@@ -230,15 +230,15 @@ body.is-world-side-collapsed .world-map-controls {
     outline: 0;
 }
 
-.world-map-status .ad-icon,
-.world-position-button .ad-icon {
+.world-map-status .game-icon,
+.world-position-button .game-icon {
     width: 0.92rem;
     height: 0.92rem;
     margin: 0;
     color: var(--ad-gold, #e8c76a);
 }
 
-.world-position-button .ad-icon {
+.world-position-button .game-icon {
     width: 1.05rem;
     height: 1.05rem;
     color: currentColor;
@@ -533,7 +533,7 @@ body.is-world-side-collapsed .world-map-controls {
     pointer-events: auto;
 }
 
-.world-target-summon-button .ad-icon {
+.world-target-summon-button .game-icon {
     width: 0.86rem;
     height: 0.86rem;
     margin: 0;
@@ -749,7 +749,7 @@ body.is-world-side-collapsed .world-map-controls {
     white-space: nowrap;
 }
 
-.world-side-toggle .ad-icon {
+.world-side-toggle .game-icon {
     flex: 0 0 auto;
     width: 0.92rem;
     height: 0.92rem;
@@ -786,16 +786,16 @@ body.is-world-side-collapsed .world-map-controls {
     display: none;
 }
 
-.world-side-panel:not(.is-collapsed) .world-side-toggle .ad-icon {
+.world-side-panel:not(.is-collapsed) .world-side-toggle .game-icon {
     transform: rotate(180deg);
 }
 
 @media (min-width: 900px) {
-.world-side-panel.is-collapsed .world-side-toggle .ad-icon {
+.world-side-panel.is-collapsed .world-side-toggle .game-icon {
         transform: rotate(180deg);
     }
 
-.world-side-panel:not(.is-collapsed) .world-side-toggle .ad-icon {
+.world-side-panel:not(.is-collapsed) .world-side-toggle .game-icon {
         transform: none;
     }
 }
@@ -850,7 +850,7 @@ body.is-world-side-collapsed .world-map-controls {
     outline: 0;
 }
 
-.world-icon-button .ad-icon {
+.world-icon-button .game-icon {
     width: 0.95rem;
     height: 0.95rem;
     margin: 0;
@@ -890,7 +890,7 @@ body.is-world-side-collapsed .world-map-controls {
     line-height: 1;
 }
 
-.world-side-panel .btn .ad-icon {
+.world-side-panel .btn .game-icon {
     width: 0.82rem;
     height: 0.82rem;
     margin: 0;
@@ -969,7 +969,7 @@ body.is-world-side-collapsed .world-map-controls {
         0 0 10px rgba(232,176,74,0.12);
 }
 
-.world-travel-team-mark .ad-icon {
+.world-travel-team-mark .game-icon {
     width: 1.15rem;
     height: 1.15rem;
 }
@@ -1073,7 +1073,7 @@ body.is-world-side-collapsed .world-map-controls {
         0 0 14px rgba(111, 214, 189, 0.08);
 }
 
-.world-travel-summary-modal .world-travel-summary-mark .ad-icon {
+.world-travel-summary-modal .world-travel-summary-mark .game-icon {
     width: 1.35rem;
     height: 1.35rem;
     filter: drop-shadow(0 0 5px rgba(111, 214, 189, 0.36));
@@ -1149,13 +1149,13 @@ body.is-world-side-collapsed .world-map-controls {
     box-shadow: 0 0 12px rgba(218, 184, 103, 0.08);
 }
 
-.world-travel-summary-modal .world-travel-summary-reward-icon .ad-icon,
+.world-travel-summary-modal .world-travel-summary-reward-icon .game-icon,
 .world-travel-summary-modal .world-travel-summary-reward-icon img {
     width: 1rem;
     height: 1rem;
 }
 
-.world-travel-summary-modal .world-travel-summary-reward-icon .ad-icon {
+.world-travel-summary-modal .world-travel-summary-reward-icon .game-icon {
     color: #d9b867;
     filter: drop-shadow(0 0 6px rgba(232, 190, 92, 0.58));
 }
@@ -1223,8 +1223,8 @@ body.is-world-side-collapsed .world-map-controls {
     box-shadow: inset 0 0 10px rgba(176, 103, 95, 0.04);
 }
 
-.world-travel-summary-modal.is-defeated .world-travel-summary-mark .ad-icon,
-.world-travel-summary-modal.is-defeated .world-travel-summary-reward-icon .ad-icon,
+.world-travel-summary-modal.is-defeated .world-travel-summary-mark .game-icon,
+.world-travel-summary-modal.is-defeated .world-travel-summary-reward-icon .game-icon,
 .world-travel-summary-modal.is-defeated .world-travel-summary-reward-icon img {
     filter: none;
 }
@@ -1348,7 +1348,7 @@ body.is-world-side-collapsed .world-map-controls {
     box-shadow: inset 0 0 18px rgba(232,176,74,0.08), 0 0 18px rgba(232,176,74,0.09);
 }
 
-.world-merchant-emblem .ad-icon {
+.world-merchant-emblem .game-icon {
     width: 1.25rem;
     height: 1.25rem;
 }
@@ -1408,7 +1408,7 @@ body.is-world-side-collapsed .world-map-controls {
     color: #fff;
 }
 
-.world-merchant-balance .soul-amount .ad-icon {
+.world-merchant-balance .soul-amount .game-icon {
     width: 1.15rem;
     height: 1.15rem;
 }
@@ -1671,7 +1671,7 @@ body.is-world-side-collapsed .world-map-controls {
     text-transform: uppercase;
 }
 
-.world-merchant-sold-mark .ad-icon {
+.world-merchant-sold-mark .game-icon {
     width: 1.5rem;
     height: 1.5rem;
 }
@@ -1791,8 +1791,8 @@ body.is-world-side-collapsed .world-map-controls {
     display: none;
 }
 
-.world-merchant-reroll .ad-icon,
-.world-merchant-foot .ad-icon {
+.world-merchant-reroll .game-icon,
+.world-merchant-foot .game-icon {
     width: 1rem;
     height: 1rem;
     color: #e8b04a;
@@ -1870,7 +1870,7 @@ body.is-world-side-collapsed .world-map-controls {
     line-height: 1;
 }
 
-.world-team-editor-save .ad-icon {
+.world-team-editor-save .game-icon {
     width: 0.9rem;
     height: 0.9rem;
     margin: 0;
@@ -1911,7 +1911,7 @@ body.is-world-side-collapsed .world-map-controls {
     outline: 0;
 }
 
-.world-team-editor-close .ad-icon {
+.world-team-editor-close .game-icon {
     width: 1rem;
     height: 1rem;
     margin: 0;
@@ -2050,7 +2050,7 @@ body.is-world-side-collapsed .world-map-controls {
     outline: 0;
 }
 
-.world-team-editor-scroll .ad-icon {
+.world-team-editor-scroll .game-icon {
     width: 1.15rem;
     height: 1.15rem;
     margin: 0;
@@ -2126,7 +2126,7 @@ body.is-world-side-collapsed .world-map-controls {
     box-shadow: 0 0 12px rgba(232,199,106,0.28);
 }
 
-.world-team-editor-in-team-mark .ad-icon {
+.world-team-editor-in-team-mark .game-icon {
     width: 0.78rem;
     height: 0.78rem;
     margin: 0;
@@ -2191,7 +2191,7 @@ body.is-world-side-collapsed .world-map-controls {
     color: #93c5fd;
 }
 
-.world-team-extract-icon .ad-icon {
+.world-team-extract-icon .game-icon {
     width: 1.5rem;
     height: 1.5rem;
 }
@@ -2436,7 +2436,7 @@ body.is-world-side-collapsed .world-map-controls {
     gap: 0.28rem;
 }
 
-.world-merchant-card .world-card-action .ad-icon {
+.world-merchant-card .world-card-action .game-icon {
     width: 0.9rem;
     height: 0.9rem;
 }
@@ -2753,7 +2753,7 @@ body.is-world-side-collapsed .world-map-controls {
     padding: 0;
 }
 
-.world-boss-buff .ad-icon {
+.world-boss-buff .game-icon {
     width: 0.72rem;
     height: 0.72rem;
     flex: 0 0 auto;
@@ -2825,7 +2825,7 @@ body.is-world-side-collapsed .world-map-controls {
     padding: 0;
 }
 
-.world-scout-action .ad-icon {
+.world-scout-action .game-icon {
     width: 0.92rem;
     height: 0.92rem;
 }
@@ -3219,7 +3219,7 @@ body.is-world-side-collapsed .world-map-controls {
     text-transform: uppercase;
 }
 
-.world-travel-replay-btn .ad-icon {
+.world-travel-replay-btn .game-icon {
     width: 0.78rem;
     height: 0.78rem;
 }
@@ -3417,7 +3417,7 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     padding: 0;
 }
 
-.world-dungeon-result-icon-btn .ad-icon {
+.world-dungeon-result-icon-btn .game-icon {
     width: 0.9rem;
     height: 0.9rem;
 }
@@ -3468,7 +3468,7 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     font-size: 0.68rem;
 }
 
-.world-action-row .btn .ad-icon {
+.world-action-row .btn .game-icon {
     width: 0.88rem;
     height: 0.88rem;
     margin: 0;
@@ -3678,7 +3678,7 @@ body.is-world-side-collapsed .world-map-controls {
         outline: 0;
     }
 
-.world-side-toggle .ad-icon {
+.world-side-toggle .game-icon {
         width: 0.92rem;
         height: 0.92rem;
         margin: 0;
@@ -3718,7 +3718,7 @@ body.is-world-side-collapsed .world-map-controls {
         bottom: calc(var(--world-side-panel-height, 3rem) + 1.15rem);
     }
 
-.world-side-panel:not(.is-collapsed) .world-side-toggle .ad-icon {
+.world-side-panel:not(.is-collapsed) .world-side-toggle .game-icon {
         transform: rotate(180deg);
     }
 }

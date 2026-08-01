@@ -162,7 +162,7 @@ async function getWorldStateLocation(playerId) {
 router.get('/world/merchant', requireAuth, async (req, res) => {
   const [position, merchant] = await Promise.all([
     getOrCreatePosition(req.player.id),
-    getWorldMerchantForPlayer(req.player.id)
+    getWorldMerchantForPlayer(req.player.id, { playerLevel: req.player.level })
   ]);
 
   res.json({
@@ -178,7 +178,7 @@ router.post('/world/merchant/purchase', requireAuth, async (req, res) => {
     req.body?.slot
   );
   const [merchant, position] = await Promise.all([
-    getWorldMerchantForPlayer(req.player.id),
+    getWorldMerchantForPlayer(req.player.id, { playerLevel: purchase.player.level }),
     getOrCreatePosition(req.player.id)
   ]);
 
@@ -198,7 +198,7 @@ router.post('/world/merchant/bribe', requireAuth, async (req, res) => {
     req.body?.stockId
   );
   const [merchant, position] = await Promise.all([
-    getWorldMerchantForPlayer(req.player.id),
+    getWorldMerchantForPlayer(req.player.id, { playerLevel: bribe.player.level }),
     getOrCreatePosition(req.player.id)
   ]);
 

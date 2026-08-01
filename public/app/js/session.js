@@ -1158,7 +1158,7 @@
 
     return rewardText.replace(
       ALERT_DEMON_RARITY_PATTERN,
-      (match, rarity, demonLabel) => `<span class="game-alert-demon-identity"><span class="game-alert-demon-rarity ad-${String(rarity).toLowerCase()}">${rarity}</span> <span class="game-alert-demon-name">${demonLabel.trimStart()}</span></span>`
+      (match, rarity, demonLabel) => `<span class="game-alert-demon-identity"><span class="game-alert-demon-rarity rarity-${String(rarity).toLowerCase()}">${rarity}</span> <span class="game-alert-demon-name">${demonLabel.trimStart()}</span></span>`
     );
   }
 

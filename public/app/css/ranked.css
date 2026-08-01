@@ -97,7 +97,7 @@
   pointer-events: auto;
 }
 
-.ranked-rsoul-balance .ad-icon {
+.ranked-rsoul-balance .game-icon {
   width: .88rem;
   height: .88rem;
   color: var(--ad-soul, #55ffff);
@@ -143,7 +143,7 @@
   color: #f4f8f7;
 }
 
-.ranked-rsoul-tooltip-main .ad-icon {
+.ranked-rsoul-tooltip-main .game-icon {
   width: .8rem;
   height: .8rem;
   color: var(--ad-soul, #55ffff);
@@ -527,9 +527,9 @@
   line-height: 1;
 }
 
-.ranked-offer .ranked-preparation-demon-card .combat-stat-strip .ad-icon,
+.ranked-offer .ranked-preparation-demon-card .combat-stat-strip .game-icon,
 .ranked-offer .ranked-preparation-demon-card .combat-stat-icon,
-.ranked-offer .ranked-preparation-demon-card .combat-hp-meta .ad-icon {
+.ranked-offer .ranked-preparation-demon-card .combat-hp-meta .game-icon {
   grid-column: 2;
   grid-row: 1;
   align-self: center;
@@ -612,13 +612,13 @@
   pointer-events: none;
 }
 
-.ranked-offer-cost .ad-icon,
-.ranked-action-cost .ad-icon {
+.ranked-offer-cost .game-icon,
+.ranked-action-cost .game-icon {
   width: .78rem;
   height: .78rem;
 }
 
-.ranked-offer-cost .ad-icon {
+.ranked-offer-cost .game-icon {
   width: clamp(.58rem, 10cqw, .86rem);
   height: clamp(.58rem, 10cqw, .86rem);
   color: var(--ad-soul, #55ffff);
@@ -872,7 +872,7 @@
   text-align: center;
 }
 
-.ranked-action-dock .ranked-lock-action .ad-icon {
+.ranked-action-dock .ranked-lock-action .game-icon {
   width: clamp(1.05rem, 1.35vw, 1.3rem);
   height: clamp(1.05rem, 1.35vw, 1.3rem);
   flex: 0 0 auto;
@@ -893,7 +893,7 @@
   line-height: 1;
 }
 
-.ranked-action-dock .ranked-end-run-control .ad-icon {
+.ranked-action-dock .ranked-end-run-control .game-icon {
   width: clamp(1.05rem, 1.35vw, 1.3rem);
   height: clamp(1.05rem, 1.35vw, 1.3rem);
   flex: 0 0 auto;
@@ -1034,7 +1034,7 @@
   line-height: 1.08;
 }
 
-.ranked-reroll-action .ranked-reroll-main .ad-icon {
+.ranked-reroll-action .ranked-reroll-main .game-icon {
   width: clamp(1.45rem, 2.2vw, 2.05rem);
   height: clamp(1.45rem, 2.2vw, 2.05rem);
   flex: none;
@@ -1044,7 +1044,7 @@
     drop-shadow(0 0 7px rgba(232, 199, 106, .24));
 }
 
-.ranked-reroll-action .ranked-reroll-cost .ad-icon {
+.ranked-reroll-action .ranked-reroll-cost .game-icon {
   width: clamp(.82rem, 1vw, 1rem);
   height: clamp(.82rem, 1vw, 1rem);
   flex: none;
@@ -1134,7 +1134,7 @@
   display: none;
 }
 
-.ranked-hand-status .ad-icon {
+.ranked-hand-status .game-icon {
   width: .92rem;
   height: .92rem;
   color: var(--ad-soul, #55ffff);
@@ -1184,7 +1184,7 @@
   line-height: 1;
 }
 
-.ranked-side-action.ranked-fight-action .ad-icon {
+.ranked-side-action.ranked-fight-action .game-icon {
   width: clamp(1.65rem, 1.8vw, 1.9rem);
   height: clamp(1.65rem, 1.8vw, 1.9rem);
 }
@@ -1206,7 +1206,7 @@
   padding: 0;
 }
 
-.ranked-review-actions .dungeon-replaylog-btn .ad-icon {
+.ranked-review-actions .dungeon-replaylog-btn .game-icon {
   width: clamp(1.25rem, 1.65vw, 1.65rem);
   height: clamp(1.25rem, 1.65vw, 1.65rem);
 }
@@ -1238,7 +1238,7 @@
   animation: ranked-soul-spend-float 1100ms ease-out forwards;
 }
 
-.ranked-soul-spend-float .ad-icon {
+.ranked-soul-spend-float .game-icon {
   width: 1.25em;
   height: 1.25em;
 }
@@ -1265,7 +1265,7 @@
   }
 }
 
-.ranked-side-action .ad-icon {
+.ranked-side-action .game-icon {
   width: 1.35rem;
   height: 1.35rem;
 }
@@ -1288,7 +1288,7 @@
   min-width: 6.5rem !important;
 }
 
-.ranked-detail-sell-action .ad-icon {
+.ranked-detail-sell-action .game-icon {
   order: 2;
   color: var(--ad-soul, #55ffff);
 }
@@ -1519,7 +1519,7 @@
   min-height: 0;
 }
 
-.ranked-reserve-buffs .active-pact-chip-icon .ad-icon {
+.ranked-reserve-buffs .active-pact-chip-icon .game-icon {
   width: var(--active-pact-icon-size);
   height: var(--active-pact-icon-size);
   max-width: 72%;
@@ -1743,7 +1743,7 @@
   font-weight: 750;
 }
 
-.ranked-start-rules .ad-icon {
+.ranked-start-rules .game-icon {
   width: .8rem;
   height: .8rem;
   color: #7fe1c4;
@@ -1758,7 +1758,7 @@
   margin-top: 1.15rem;
 }
 
-.ranked-start-action .ad-icon {
+.ranked-start-action .game-icon {
   width: 1.15rem;
   height: 1.15rem;
 }
@@ -1793,7 +1793,7 @@
     0 0 24px var(--rank-glow, rgba(250, 197, 28, .32));
 }
 
-.ranked-results-sigil .ad-icon {
+.ranked-results-sigil .game-icon {
   width: 1.65rem;
   height: 1.65rem;
 }
@@ -1936,7 +1936,7 @@
   margin-top: 1rem;
 }
 
-.ranked-results-action .ad-icon {
+.ranked-results-action .game-icon {
   width: 1.1rem;
   height: 1.1rem;
 }
@@ -2071,7 +2071,7 @@
     0 0 24px rgba(232, 199, 106, .16);
 }
 
-.ranked-end-run-icon .ad-icon,
+.ranked-end-run-icon .game-icon,
 .ranked-end-run-icon svg {
   width: 1.65rem;
   height: 1.65rem;
@@ -2148,7 +2148,7 @@
   gap: .42rem;
 }
 
-.ranked-end-run-confirm .ad-icon,
+.ranked-end-run-confirm .game-icon,
 .ranked-end-run-confirm svg {
   width: 1rem;
   height: 1rem;
@@ -2261,7 +2261,7 @@
     display: none;
   }
 
-  .ranked-pact-scroll-btn .ad-icon {
+  .ranked-pact-scroll-btn .game-icon {
     width: .92rem;
     height: .92rem;
   }
@@ -2429,7 +2429,7 @@
     font-size: clamp(.46rem, 8.2cqw, .6rem);
   }
 
-  .ranked-offer-cost .ad-icon {
+  .ranked-offer-cost .game-icon {
     width: clamp(.48rem, 9cqw, .62rem);
     height: clamp(.48rem, 9cqw, .62rem);
   }
@@ -2526,20 +2526,20 @@
     pointer-events: none;
   }
 
-  .ranked-mobile-reroll-btn .ranked-mobile-reroll-cost .ad-icon {
+  .ranked-mobile-reroll-btn .ranked-mobile-reroll-cost .game-icon {
     width: .64rem;
     height: .64rem;
     color: #d9bd66;
   }
 
-  .ranked-mobile-reroll-btn .ranked-mobile-reroll-icon .ad-icon {
+  .ranked-mobile-reroll-btn .ranked-mobile-reroll-icon .game-icon {
     width: clamp(1.2rem, 5.6vw, 1.55rem);
     height: clamp(1.2rem, 5.6vw, 1.55rem);
     color: #e4c86f;
     filter: drop-shadow(0 0 6px rgba(232, 199, 106, .2));
   }
 
-  .ranked-mobile-nav-btn .ad-icon {
+  .ranked-mobile-nav-btn .game-icon {
     width: 1.05rem;
     height: 1.05rem;
     margin: 0;
@@ -2614,7 +2614,7 @@
     white-space: nowrap;
   }
 
-  .ranked-mobile-review-action .ad-icon {
+  .ranked-mobile-review-action .game-icon {
     width: .95rem;
     height: .95rem;
     flex: 0 0 auto;
@@ -2792,7 +2792,7 @@
   }
 
   .ranked-page .dungeon-fight-mark .button-melee-icon,
-  .ranked-page .dungeon-fight-mark .ad-icon {
+  .ranked-page .dungeon-fight-mark .game-icon {
     width: 1.15rem;
     height: 1.15rem;
   }

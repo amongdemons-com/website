@@ -71,7 +71,7 @@ function renderDemonicPactCard(buff) {
   return `
     <button class="demonic-pact-card is-${escapeHtml(rarity)}" type="button" data-demonic-pact-id="${escapeHtml(buff.id)}">
       <span class="demonic-pact-icon" aria-hidden="true">${renderIcon(icon, { size: 42, strokeWidth: 1.85 })}</span>
-      <span class="demonic-pact-rarity ad-${escapeHtml(rarity)}">${escapeHtml(capitalize(rarity))}</span>
+      <span class="demonic-pact-rarity rarity-${escapeHtml(rarity)}">${escapeHtml(capitalize(rarity))}</span>
       <strong>${escapeHtml(buff.name || buff.id)}</strong>
       <span class="demonic-pact-description">${renderDemonicPactDescription(buff.description)}</span>
       <span class="demonic-pact-tags">
@@ -89,7 +89,7 @@ function renderDemonicPactDescription(description = '') {
       if (!match) return escapeHtml(part);
 
       const rarity = match[1].toLowerCase();
-      return `<span class="demonic-pact-rarity-token ad-${escapeHtml(rarity)}">${escapeHtml(part)}</span>`;
+      return `<span class="demonic-pact-rarity-token rarity-${escapeHtml(rarity)}">${escapeHtml(part)}</span>`;
     })
     .join('');
 }
