@@ -299,7 +299,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       return;
     }
     result.rSoulInterest = awardRankedSoulInterest(run);
-    await advanceRankedFloor(run, { offerPact: false });
+    await advanceRankedFloor(run, { offerPact: true });
   })
 ));
 
@@ -311,7 +311,7 @@ router.post('/ranked/runs/:id/continue', requireAuth, (req, res) => (
     if (run.lives <= 0) throwRankedError('The Ranked run has ended.', 409);
 
     await advanceRankedFloor(run, {
-      offerPact: run.state.lastBattle.winner === 'player'
+      offerPact: true
     });
   })
 ));
