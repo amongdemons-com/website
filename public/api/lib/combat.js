@@ -636,7 +636,7 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
       actor.attackMeter += actor.speed;
       if (actor.attackMeter < 100) continue;
 
-      actor.attackMeter = 0;
+      actor.attackMeter -= 100;
       const ability = getAbility(actor, demonTypes);
 
       if (ability.kind === 'heal') {
