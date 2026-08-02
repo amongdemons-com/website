@@ -6,16 +6,18 @@ const { getDailyQuestStateForPlayer } = require('./lib/daily-quests');
 const { getPlayerBag } = require('./lib/echo-bag');
 const { getAccountProgressionPayload } = require('./lib/progression');
 const { getOrCreateCurrentSeason, getRankedRating } = require('./lib/ranked-runs');
+const { getActiveWorldBossRewardBuffs } = require('./lib/world-bosses');
 
 const router = express.Router();
 
 router.get('/camp/bootstrap', requireAuth, async (req, res) => {
   const season = await getOrCreateCurrentSeason();
-  const [questData, statPoints, demons, ranked] = await Promise.all([
+  const [questData, statPoints, demons, ranked, worldBuffs] = await Promise.all([
     getDailyQuestStateForPlayer(req.player),
     getPlayerStatPointSummary(req.player),
     getPlayerCollection(req.player.id),
-    getRankedRating(req.player.id, season.id)
+    getRankedRating(req.player.id, season.id),
+    getActiveWorldBossRewardBuffs(req.player.id)
   ]);
 
   res.json({
@@ -24,7 +26,8 @@ router.get('/camp/bootstrap', requireAuth, async (req, res) => {
     ranked,
     questData,
     statPoints,
-    demons
+    demons,
+    worldBuffs
   });
 });
 

@@ -19,6 +19,9 @@
   const getDemonRoleLabel = window.AmongDemons.ui.getDemonRoleLabel
     || ((demon) => capitalize(demon?.role || 'Demon'));
   const RARITY_RANK = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5, mythic: 6 };
+  const BAG_SORT_STORAGE_PREFIX = 'amongdemons-bag-sort';
+  const BAG_SORT_OPTIONS = new Set(['type', 'ready', 'rarity', 'name', 'quantity']);
+  const DEFAULT_BAG_SORT = 'type';
   const SUMMON_REVEAL_DELAY_MS = 3000;
   const state = {
     items: [],
@@ -27,7 +30,7 @@
     pending: false,
     pendingAction: null,
     filter: 'all',
-    sort: 'type',
+    sort: DEFAULT_BAG_SORT,
     inspectedKey: null,
     lastPointerType: 'mouse',
     slotCapacity: 24,
@@ -54,6 +57,7 @@
       }
     }
 
+    restoreSortPreference();
     await refreshBag();
   }
 
@@ -68,7 +72,10 @@
       renderBag();
     });
     elements.bagSort.addEventListener('change', () => {
-      state.sort = elements.bagSort.value;
+      state.sort = BAG_SORT_OPTIONS.has(elements.bagSort.value)
+        ? elements.bagSort.value
+        : DEFAULT_BAG_SORT;
+      saveSortPreference();
       renderBag();
     });
     elements.bagGrid.addEventListener('pointerdown', (event) => {
@@ -548,6 +555,33 @@
 
   function compareName(a, b) {
     return String(a.species || '').localeCompare(String(b.species || ''));
+  }
+
+  function restoreSortPreference() {
+    let storedSort = '';
+    try {
+      storedSort = localStorage.getItem(getSortStorageKey()) || '';
+    } catch (error) {
+      // Storage can be unavailable in restricted browsing modes; use the default.
+    }
+
+    state.sort = BAG_SORT_OPTIONS.has(storedSort) ? storedSort : DEFAULT_BAG_SORT;
+    elements.bagSort.value = state.sort;
+  }
+
+  function saveSortPreference() {
+    if (!BAG_SORT_OPTIONS.has(state.sort)) return;
+    try {
+      localStorage.setItem(getSortStorageKey(), state.sort);
+    } catch (error) {
+      // Sorting still works for this visit even when persistence is unavailable.
+    }
+  }
+
+  function getSortStorageKey() {
+    const player = window.AmongDemons.getPlayer?.();
+    const playerKey = player?.id || player?.username || 'browser';
+    return `${BAG_SORT_STORAGE_PREFIX}:${playerKey}`;
   }
 
   function getItemStatus(item) {

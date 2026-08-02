@@ -215,6 +215,43 @@ test('a Thorns card displays the complete retaliation damage as one number', () 
   }
 });
 
+test('a healer card represents its healing amount with a cross icon', () => {
+  const previousWindow = global.window;
+  const renderedIcons = [];
+  global.window = {
+    AmongDemons: {
+      ui: {
+        renderIcon: (name) => {
+          renderedIcons.push(name);
+          return `<svg data-icon="${name}"></svg>`;
+        }
+      }
+    }
+  };
+
+  const cardModulePath = require.resolve('../public/app/js/demon-cards.js');
+  try {
+    delete require.cache[cardModulePath];
+    require(cardModulePath);
+
+    const html = global.window.AmongDemons.ui.renderCombatStats({
+      typeId: 10,
+      atk: 24,
+      hp: 80,
+      maxHp: 100,
+      effectiveAtk: 31
+    });
+
+    assert.match(html, /title="Healing: 31"/);
+    assert.match(html, /data-icon="cross"/);
+    assert.ok(renderedIcons.includes('cross'));
+    assert.ok(!renderedIcons.includes('attack'));
+  } finally {
+    delete require.cache[cardModulePath];
+    global.window = previousWindow;
+  }
+});
+
 test('a non-thorns attacker cannot reflect a thorns demon retaliation', () => {
   const fight = simulateFight(
     () => 0.5,

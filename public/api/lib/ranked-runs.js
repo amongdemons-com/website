@@ -31,6 +31,7 @@ const {
   ENDLESS_SKILL_CAP,
   FORMATION_CAPACITY,
   OFFER_SIZE,
+  RANKED_LIFE_LOSS_RSOUL_REWARD,
   RANKED_STARTING_RSOULS,
   RANKED_RULES_VERSION,
   RANKED_VICTORY_FLOOR,
@@ -647,6 +648,17 @@ function awardRankedSoulInterest(run) {
   const balanceBefore = getRankedSoulBalance(run);
   const earned = Math.max(1, Math.floor(Number(run?.floor) || 1))
     + Math.floor(balanceBefore / 10);
+
+  return awardRankedSouls(run, earned);
+}
+
+function awardRankedSoulLifeLoss(run) {
+  return awardRankedSouls(run, RANKED_LIFE_LOSS_RSOUL_REWARD);
+}
+
+function awardRankedSouls(run, amount) {
+  const balanceBefore = getRankedSoulBalance(run);
+  const earned = Math.max(0, Math.floor(Number(amount) || 0));
   run.state.rSouls = balanceBefore + earned;
   return {
     earned,
@@ -1531,6 +1543,7 @@ module.exports = {
   advanceRankedFloor,
   applyRankedWorkspace,
   awardRankedSoulInterest,
+  awardRankedSoulLifeLoss,
   createInitialRankedState,
   createLockedRankedBonuses,
   createStandardRankedDemon,

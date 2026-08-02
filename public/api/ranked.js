@@ -27,6 +27,7 @@ const {
   advanceRankedFloor,
   applyRankedWorkspace,
   awardRankedSoulInterest,
+  awardRankedSoulLifeLoss,
   canSelectRankedPact,
   createInitialRankedState,
   createLockedRankedBonuses,
@@ -298,7 +299,7 @@ router.post('/ranked/runs/:id/battle', requireAuth, (req, res) => (
       await finalizeRankedRun(run, rating, connection, { defeated: true });
       return;
     }
-    result.rSoulInterest = awardRankedSoulInterest(run);
+    result.rSoulInterest = awardRankedSoulLifeLoss(run);
     await advanceRankedFloor(run, { offerPact: true });
   })
 ));

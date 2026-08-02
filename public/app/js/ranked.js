@@ -3,6 +3,7 @@ import { state } from './dungeon/state.js';
 import * as combat from './dungeon/combat.js';
 import {
   renderDemonCards,
+  renderDemonStatus,
   renderFormationSlot,
   renderTeamUpgradeIndicator
 } from './dungeon/cards.js';
@@ -85,8 +86,13 @@ onReady(init);
 
 async function init() {
   if (!window.AmongDemons.getToken()) {
-    window.location.href = window.AmongDemons.appUrl('/login?next=/ranked');
-    return;
+    // First-time visitors play instantly as a guest instead of hitting a gate.
+    try {
+      await window.AmongDemons.ensurePlayableSession();
+    } catch (error) {
+      window.location.href = window.AmongDemons.appUrl('/login?next=/ranked');
+      return;
+    }
   }
   cacheElements();
   bindEvents();
@@ -2282,10 +2288,6 @@ function cleanupPointerDrag(options = {}) {
 
 function getDemonPosition(demon) {
   return demon?.position === 'back' ? 'back' : 'front';
-}
-
-function renderDemonStatus() {
-  return '';
 }
 
 function renderDungeonCenterActions() {

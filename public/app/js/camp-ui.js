@@ -21,6 +21,7 @@
     ranked: null,
     questData: null,
     statPoints: null,
+    worldBuffs: [],
     collection: [],
     collectionLoaded: false,
     profilePickerOpen: false,
@@ -77,7 +78,8 @@
       'profileDemonPickerStatus',
       'profileDemonGrid',
       'campSkillTreeLink',
-      'campSkillTreeStats'
+      'campSkillTreeStats',
+      'campWorldBuffs'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -344,6 +346,7 @@
       state.ranked = payload.ranked || null;
       state.questData = payload.questData;
       state.statPoints = payload.statPoints;
+      state.worldBuffs = Array.isArray(payload.worldBuffs) ? payload.worldBuffs : [];
       state.collection = payload.demons || [];
       state.collectionLoaded = true;
 
@@ -351,6 +354,7 @@
       renderObjectives();
       renderDailyReward();
       renderSkillTreeLink();
+      renderWorldBuffs();
       if (state.profilePickerOpen) renderProfilePicker();
     } catch (error) {
       handleAuthError(error);
@@ -501,6 +505,58 @@
     ];
 
     return values.length ? { label, value: values.join(' / ') } : null;
+  }
+
+  function renderWorldBuffs() {
+    const buffs = state.worldBuffs.filter((buff) => {
+      const expiresAt = Date.parse(buff?.expiresAt || '');
+      return !Number.isFinite(expiresAt) || expiresAt > Date.now();
+    });
+
+    if (!elements.campWorldBuffs) return;
+    elements.campWorldBuffs.hidden = !buffs.length;
+
+    if (!buffs.length) {
+      setHtml(elements.campWorldBuffs, '');
+      return;
+    }
+
+    setHtml(elements.campWorldBuffs, buffs.map(renderWorldBuff).join(''));
+  }
+
+  function renderWorldBuff(buff) {
+    const name = buff?.name || 'World Buff';
+    const description = buff?.description || 'A world reward is empowering your demons.';
+    const expiry = formatWorldBuffExpiry(buff?.expiresAt);
+    const compactExpiry = expiry.split(' ')[0] || '';
+    const tooltip = [name, description, expiry].filter(Boolean).join('\n');
+    const expiryMarkup = expiry
+      ? `<time datetime="${escapeAttribute(buff.expiresAt)}">${escapeHtml(compactExpiry)}</time>`
+      : '';
+
+    return `
+      <article class="camp-world-buff" tabindex="0" data-tooltip="${formatTooltipAttribute(tooltip)}" aria-label="${formatTooltipAttribute(tooltip)}">
+        <span class="camp-world-buff-icon" aria-hidden="true">${renderIcon(buff?.icon || 'sparkles')}</span>
+        <small>${escapeHtml(name)}</small>
+        ${expiryMarkup}
+      </article>
+    `;
+  }
+
+  function formatWorldBuffExpiry(value) {
+    const remainingMs = Date.parse(value || '') - Date.now();
+    if (!Number.isFinite(remainingMs) || remainingMs <= 0) return '';
+
+    const minutes = Math.max(1, Math.ceil(remainingMs / 60000));
+    if (minutes < 60) return `${minutes}m left`;
+
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}h${remainingMinutes ? ` ${remainingMinutes}m` : ''} left`;
+  }
+
+  function formatTooltipAttribute(value) {
+    return escapeAttribute(value).replace(/\n/g, '&#10;');
   }
 
   function getLevelProgress(progression, level, xp) {

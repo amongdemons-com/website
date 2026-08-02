@@ -35,9 +35,12 @@ test('rendered UI classes avoid ad-blocker-sensitive ad prefixes', () => {
 
 test('icon renderer emits neutral game icon classes', () => {
   const source = fs.readFileSync(path.join(APP_ROOT, 'js', 'icons.js'), 'utf8');
+  const lucideSubset = fs.readFileSync(path.join(APP_ROOT, 'js', 'lucide-subset.js'), 'utf8');
 
   assert.match(source, /'game-icon'/);
   assert.match(source, /'game-icon-poison'/);
   assert.match(source, /'game-icon-fill'/);
+  assert.match(source, /cross:\s*'Cross'/);
+  assert.match(lucideSubset, /"Cross":/);
   assert.doesNotMatch(source, /'ad-icon/);
 });

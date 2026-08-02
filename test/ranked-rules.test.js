@@ -11,6 +11,7 @@ const {
   advanceRankedFloor,
   applyRankedWorkspace,
   awardRankedSoulInterest,
+  awardRankedSoulLifeLoss,
   selectOpponent
 } = require('../public/api/lib/ranked-runs');
 const {
@@ -116,7 +117,7 @@ test('Ranked player snapshots are selected from the exact current floor', async 
   assert.equal(opponent.generated, false);
 });
 
-test('surviving a Ranked loss earns interest and advances to the next floor', async () => {
+test('surviving a Ranked loss earns 10 rSouls and advances to the next floor', async () => {
   const run = {
     floor: 4,
     state: {
@@ -129,13 +130,22 @@ test('surviving a Ranked loss earns interest and advances to the next floor', as
     }
   };
 
-  const interest = awardRankedSoulInterest(run);
+  const reward = awardRankedSoulLifeLoss(run);
   await advanceRankedFloor(run, { offerPact: false });
 
-  assert.deepEqual(interest, { earned: 6, balanceBefore: 23, balance: 29 });
+  assert.deepEqual(reward, { earned: 10, balanceBefore: 23, balance: 33 });
   assert.equal(run.floor, 5);
   assert.equal(run.state.phase, 'selection');
   assert.equal(run.state.floorRetryCount, 0);
+});
+
+test('Ranked victory interest keeps its floor and balance scaling', () => {
+  const run = { floor: 4, state: { rSouls: 23 } };
+
+  assert.deepEqual(
+    awardRankedSoulInterest(run),
+    { earned: 6, balanceBefore: 23, balance: 29 }
+  );
 });
 
 test('Fight auto-sells purchased Hand demons even when Reserve is full', async () => {

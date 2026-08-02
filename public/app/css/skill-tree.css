@@ -522,13 +522,16 @@ body.skill-tree-page {
 }
 
 .ascension-reset-cost.is-projected {
-    display: grid;
-    grid-template-rows: auto auto;
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    gap: 0.1rem;
 }
 
 .ascension-reset-cost-preview-label {
+    position: absolute;
+    top: calc(100% + 0.1rem);
+    left: 50%;
+    transform: translateX(-50%);
     color: rgba(225, 214, 182, 0.58);
     font-size: 0.44rem;
     font-weight: 900;
@@ -536,6 +539,7 @@ body.skill-tree-page {
     letter-spacing: 0.06em;
     text-align: center;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .ascension-reset-cost-chip {

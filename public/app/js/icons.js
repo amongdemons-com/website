@@ -9,6 +9,7 @@
     battle: 'Zap',
     back: 'ChevronLeft',
     collection: 'Grid3X3',
+    cross: 'Cross',
     crosshair: 'Crosshair',
     flag: 'Flag',
     hp: 'Droplet',

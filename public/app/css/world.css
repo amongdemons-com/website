@@ -269,7 +269,8 @@ body.is-world-side-collapsed .world-map-controls {
     pointer-events: none;
 }
 
-.world-target-tooltip.has-actions {
+.world-target-tooltip.has-actions,
+.world-encounter-tooltip.has-actions {
     pointer-events: auto;
 }
 
@@ -468,6 +469,25 @@ body.is-world-side-collapsed .world-map-controls {
     line-height: 1;
     text-align: center;
     letter-spacing: 0.02em;
+}
+
+.world-tooltip-travel-action {
+    appearance: none;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.world-tooltip-travel-action:focus-visible {
+    color: rgba(245,231,197,0.92);
+    border-top-color: rgba(232,199,106,0.48);
+    outline: none;
 }
 
 .world-target-coords {

@@ -96,7 +96,7 @@
     return `
       ${hasAtk || hasSpeed ? `
         <div class="combat-stat-strip" aria-label="Combat stats">
-          ${hasAtk ? `<span title="${escapeHtml(attackStat.description)}" aria-label="${escapeHtml(attackStat.description)}">${renderAttackIcon()}${escapeHtml(attackStat.value)}</span>` : ''}
+          ${hasAtk ? `<span title="${escapeHtml(attackStat.description)}" aria-label="${escapeHtml(attackStat.description)}">${renderAttackIcon(demon)}${escapeHtml(attackStat.value)}</span>` : ''}
           ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(demon.speed)}</span>` : ''}
         </div>
       ` : ''}
@@ -139,7 +139,7 @@
           </div>
 
           <div class="demon-detail-stats" aria-label="Combat stats">
-            ${hasNumber(demon.atk) ? renderDetailStat(renderAttackIcon(), attackStat.label, attackStat.value, attackStat.description) : ''}
+            ${hasNumber(demon.atk) ? renderDetailStat(renderAttackIcon(demon), attackStat.label, attackStat.value, attackStat.description) : ''}
             ${hasNumber(demon.speed) && !isRetaliateDemon(demon) ? renderDetailStat(renderSpeedIcon(), 'Speed', demon.speed) : ''}
             ${hasNumber(demon.hp) || hasNumber(demon.maxHp) ? renderDetailStat(renderIcon('hp'), 'HP', `${currentHp} / ${maxHp}`) : ''}
           </div>
@@ -199,14 +199,18 @@
 
   function getDetailStatKey(label) {
     const normalized = String(label || '').toLowerCase();
-    if (normalized === 'attack' || normalized === 'retaliation') return 'atk';
+    if (normalized === 'attack' || normalized === 'healing' || normalized === 'retaliation') return 'atk';
     if (normalized === 'hp') return 'hp';
     return normalized;
   }
 
   function getAttackStat(demon = {}) {
     const value = hasNumber(demon.effectiveAtk) ? demon.effectiveAtk : demon.atk;
-    const label = isRetaliateDemon(demon) ? 'Retaliation' : 'Attack';
+    const label = isHealingDemon(demon)
+      ? 'Healing'
+      : isRetaliateDemon(demon)
+        ? 'Retaliation'
+        : 'Attack';
 
     return {
       value,
@@ -304,8 +308,8 @@
       .replace(/^-+|-+$/g, '');
   }
 
-  function renderAttackIcon() {
-    return renderIcon('attack', { className: 'combat-stat-icon' });
+  function renderAttackIcon(demon = {}) {
+    return renderIcon(isHealingDemon(demon) ? 'cross' : 'attack', { className: 'combat-stat-icon' });
   }
 
   function renderSpeedIcon() {
@@ -346,6 +350,13 @@
 
   function isRetaliateDemon(demon = {}) {
     return Number(demon.typeId) === 8 || demon.role === 'counter_tank' || demon.targeting === 'none';
+  }
+
+  function isHealingDemon(demon = {}) {
+    const typeId = Number(demon.typeId || demon.type_id || demon.type);
+    const role = String(demon.role || '').toLowerCase();
+    const abilityKind = String(demon.abilityKind || demon.ability_kind || demon.ability?.kind || '').toLowerCase();
+    return typeId === 10 || role === 'healer' || abilityKind === 'heal';
   }
 
   function capitalize(value) {

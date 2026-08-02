@@ -322,19 +322,32 @@ function findWeakerTeamDemon(candidate, team = []) {
 }
 
 function isBetterDemon(candidate, current) {
-  const ratios = [
+  const getVisibleAttack = (demon) => {
+    const effectiveAtk = demon?.effectiveAtk;
+    return effectiveAtk !== null && effectiveAtk !== undefined && effectiveAtk !== '' && Number.isFinite(Number(effectiveAtk))
+      ? Number(effectiveAtk)
+      : demon?.atk;
+  };
+  const isRetaliate = (demon) => (
+    Number(demon?.typeId || demon?.type_id || demon?.type) === 8 ||
+    String(demon?.role || '').toLowerCase() === 'counter_tank' ||
+    String(demon?.targeting || '').toLowerCase() === 'none'
+  );
+  const visibleStats = [
     [candidate?.maxHp || candidate?.hp, current?.maxHp || current?.hp],
-    [candidate?.atk, current?.atk],
-    [candidate?.speed, current?.speed]
-  ]
+    [getVisibleAttack(candidate), getVisibleAttack(current)]
+  ];
+  if (!isRetaliate(candidate) && !isRetaliate(current)) {
+    visibleStats.push([candidate?.speed, current?.speed]);
+  }
+
+  const comparisons = visibleStats
     .map(([next, previous]) => [Number(next), Number(previous)])
     .filter(([, previous]) => Number.isFinite(previous) && previous > 0);
-  if (!ratios.length) return false;
+  if (!comparisons.length) return false;
 
-  const relativePower = ratios.reduce((sum, [next, previous]) => (
-    sum + (Number.isFinite(next) ? next / previous : 0)
-  ), 0) / ratios.length;
-  return relativePower > 1.000001;
+  return comparisons.every(([next, previous]) => Number.isFinite(next) && next >= previous) &&
+    comparisons.some(([next, previous]) => next > previous);
 }
 
 function renderEmptyHand(mode = 'recruit') {

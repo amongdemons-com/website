@@ -10861,15 +10861,17 @@ body.hunter-page {
 }
 
 .hunter-title-block h1 {
+    max-width: 100%;
+    min-width: 0;
     margin: 0.08rem 0 0.2rem;
     color: #fff8dc;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 3.4rem;
     font-weight: 900;
     line-height: 1;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
     text-wrap: balance;
-    word-break: normal;
+    word-break: break-word;
 }
 
 .hunter-title-block h1.is-compact-name {
@@ -10894,6 +10896,13 @@ body.hunter-page {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.65rem;
+}
+
+@media (min-width: 992px) {
+    .hunter-stat-grid {
+        grid-template-columns: repeat(2, max-content);
+        justify-content: end;
+    }
 }
 
 /* Ranked remains directly accessible while its navigation entry is hidden during setup. */
@@ -11189,6 +11198,12 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
 .hunter-name-line {
         justify-content: center;
         flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 575.98px) and (orientation: portrait) {
+    .hunter-coordinate-area-prefix {
+        display: none;
     }
 }
 

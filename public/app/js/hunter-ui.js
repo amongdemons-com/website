@@ -105,7 +105,7 @@
       <span aria-hidden="true">&middot;</span> Level ${formatNumber(level)}
       <span aria-hidden="true">&middot;</span> ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`;
     setText(elements.stats.floor, formatNumber(hunter.highestFloor || 0));
-    setText(elements.stats.coordinates, formatCoordinates(coordinates));
+    renderCoordinates(elements.stats.coordinates, coordinates);
 
     if (elements.avatar) {
       elements.avatar.src = profileImage;
@@ -563,7 +563,16 @@
   function formatCoordinates(coordinates = {}) {
     const x = Number(coordinates.x) || 0;
     const y = Number(coordinates.y) || 0;
-    return `Area ${formatNumber(x)}, ${formatNumber(y)}`;
+    return `${formatNumber(x)}, ${formatNumber(y)}`;
+  }
+
+  function renderCoordinates(element, coordinates = {}) {
+    if (!element) return;
+
+    const prefix = document.createElement('span');
+    prefix.className = 'hunter-coordinate-area-prefix';
+    prefix.textContent = 'Area ';
+    element.replaceChildren(prefix, formatCoordinates(coordinates));
   }
 
   function getDemonPageHref(demon = {}) {
@@ -638,7 +647,7 @@
 
     const username = String(value || 'Hunter').trim() || 'Hunter';
     const length = Array.from(username).length;
-    const isCompact = length > 18;
+    const isCompact = length >= 18;
     const isClamped = length > 34;
 
     elements.name.textContent = username;

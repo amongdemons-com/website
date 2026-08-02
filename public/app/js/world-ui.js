@@ -350,15 +350,8 @@ import './bag-item-visuals.js';
       if (!document.hidden) reconcileHuntStatus();
     });
     elements.worldPositionButton?.addEventListener('click', () => resetCameraOnHunter());
-    elements.worldTargetTooltip?.addEventListener('click', (event) => {
-      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
-      const summonButton = target?.closest('[data-summon-portal]');
-      if (!summonButton) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      summonDarknessPortal(summonButton);
-    });
+    elements.worldTargetTooltip?.addEventListener('click', onWorldActivityTooltipClick);
+    elements.worldEncounterTooltip?.addEventListener('click', onWorldActivityTooltipClick);
     elements.worldEditTeamButton?.addEventListener('click', openWorldTeamEditor);
     elements.worldTravelTeamConfirmButton?.addEventListener('click', openWorldTeamEditorFromTravelWarning);
     elements.worldMerchantModal?.addEventListener('click', onWorldMerchantModalClick);
@@ -453,6 +446,25 @@ import './bag-item-visuals.js';
       event.stopPropagation();
       closeWorldBattleModal();
     });
+  }
+
+  function onWorldActivityTooltipClick(event) {
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const travelButton = target?.closest('[data-world-tooltip-travel]');
+    if (travelButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      hideWorldActivityTooltip();
+      travelSelectedPath();
+      return;
+    }
+
+    const summonButton = target?.closest('[data-summon-portal]');
+    if (!summonButton) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    summonDarknessPortal(summonButton);
   }
 
   function bindWorldSidePanel() {
@@ -8402,7 +8414,7 @@ import './bag-item-visuals.js';
     }
 
     tooltip.innerHTML = renderTargetTooltipContent(target, path);
-    tooltip.classList.toggle('has-actions', isPortalTarget);
+    tooltip.classList.toggle('has-actions', Boolean(tooltip.querySelector('[data-world-tooltip-travel], [data-summon-portal]')));
     positionMapTargetTooltip(tooltip, target);
     tooltip.classList.remove('d-none');
   }
@@ -8417,13 +8429,13 @@ import './bag-item-visuals.js';
       ? getTileDistance(state.position, target)
       : getPathStepCount(path);
     const meta = escapeHtml(formatTravelMeta(target, stepCount));
-    // Shared trailer: area + step count, then a "(Click again to travel)" hint.
+    // Shared trailer: area + step count, then a "(Click again to travel)" action.
     // Delimiter lines above the meta and the hint keep every activity tooltip
     // (shrine, portal, sign, merchant) reading the same way.
     const metaSection = `<span class="world-tooltip-meta world-tooltip-travel-meta">${meta}</span>`;
     const travelHint = isPortalTarget || isCurrent
       ? ''
-      : '<span class="world-tooltip-hint">(Click again to travel)</span>';
+      : renderWorldTooltipTravelAction();
 
     if (merchant) {
       return `
@@ -8466,6 +8478,10 @@ import './bag-item-visuals.js';
       ${metaSection}
       ${isDarknessPortalEvent(event) ? renderDarknessPortalSummonAction(event) : travelHint}
     `;
+  }
+
+  function renderWorldTooltipTravelAction() {
+    return '<button class="world-tooltip-hint world-tooltip-travel-action" type="button" data-world-tooltip-travel>(Click again to travel)</button>';
   }
 
   function renderDarknessPortalSummonAction(event) {
@@ -8561,8 +8577,9 @@ import './bag-item-visuals.js';
       ${demons ? `<div class="world-enc-demons">${demons}</div>` : ''}
       ${defeated ? '<span class="world-tooltip-meta" aria-label="Defeated demon spot">✓ Defeated</span>' : ''}
       <span class="world-tooltip-meta world-tooltip-travel-meta">${escapeHtml(formatTravelMeta(encounter, stepCount))}</span>
-      <span class="world-tooltip-hint">(Click again to travel)</span>
+      ${renderWorldTooltipTravelAction()}
     `;
+    tooltip.classList.add('has-actions');
   }
 
   function renderBossTooltip() {
@@ -8578,7 +8595,7 @@ import './bag-item-visuals.js';
     const reward = renderBossRewardLine(boss.rewardBuff, { compact: true });
     const travelHint = positionsEqual(boss, state.position)
       ? '<span class="world-tooltip-hint">Challenge from the sidebar.</span>'
-      : '<span class="world-tooltip-hint">(Click again to travel)</span>';
+      : renderWorldTooltipTravelAction();
 
     tooltip.innerHTML = `
       ${renderBossTitle(boss, 'world-tooltip-title')}
@@ -8587,6 +8604,7 @@ import './bag-item-visuals.js';
       <span class="world-tooltip-meta world-tooltip-travel-meta">${escapeHtml(formatTravelMeta(boss, stepCount))}</span>
       ${travelHint}
     `;
+    tooltip.classList.toggle('has-actions', Boolean(tooltip.querySelector('[data-world-tooltip-travel]')));
   }
 
   function renderBossFormationPreview(team = []) {
