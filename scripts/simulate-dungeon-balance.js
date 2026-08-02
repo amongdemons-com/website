@@ -88,8 +88,8 @@ async function main() {
   const floor30 = rows.find((row) => row.floor === 30);
   const legacyMythicHpBudget = 1.7 * (1 + (30 - 18) * 0.045);
   const redesignedRatio = Number(floor30.hpBudget) / legacyMythicHpBudget;
-  if (redesignedRatio <= 1 || redesignedRatio > 1.2) {
-    throw new Error(`Floor 30 exponential HP budget escaped its intended range: ${redesignedRatio.toFixed(3)}.`);
+  if (Math.abs(redesignedRatio - 1) > 0.01) {
+    throw new Error(`Floor 30 hybrid HP budget escaped its legacy target: ${redesignedRatio.toFixed(3)}.`);
   }
 
   console.log(`Reference roster: 6 demons (${REFERENCE_RARITIES.join(', ')}), ${SAMPLE_COUNT} seeded fights per floor.`);
@@ -109,7 +109,7 @@ async function main() {
       hpBudget: (rarityPower * pressure.hp).toFixed(3)
     };
   }));
-  console.log(`Floor 30 exponential/legacy-Mythic HP budget ratio: ${redesignedRatio.toFixed(3)}.`);
+  console.log(`Floor 30 hybrid/legacy-Mythic HP budget ratio: ${redesignedRatio.toFixed(3)}.`);
 }
 
 async function createReferenceTeam() {

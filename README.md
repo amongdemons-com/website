@@ -251,7 +251,7 @@ All routes are mounted under `/api`.
 - After every win, defeated enemies become recruit options; between fights the player can recruit, swap, skip, or stage one eligible demon for Echo extraction. Extraction unlocks after the first win.
 - Enemy rarity uses explicit floor-band distributions. Deep normal floors keep Common, Uncommon, and Rare at non-zero rates, while Mythic remains an exceptional `0.5%` roll rather than becoming the whole late-game roster.
 - From floor 10 onward, a seeded 25% roll may create a Rarity Convergence: every enemy is Common, Uncommon, Rare, Epic, or Legendary. Its temporary Host pressure is shown in a separate rarity-colored pill beside Terror and is removed from recruits.
-- Floor depth, enemy-team growth (up to nine), rarity compensation, and active Pact count drive hostile Terror. The redesigned floor-30 HP budget is calibrated to the former Mythic-heavy curve without requiring nine Mythics.
+- Dungeon Terror is independent of account level. Floor and active-Pact pressure stay additive through floor 30; deeper floors compound HP by 4.5% and Attack by 3% per floor while Speed keeps its capped linear curve. Rarity compensation preserves the former floor-30 Mythic HP budget, and enemy teams continue growing up to nine.
 - Extraction grants accumulated XP/Souls and exactly one Echo of the selected type and rarity. Carrying farther never increases that count; skipping the Echo remains valid. Losing grants 0 XP, 0 Souls, and no Echoes regardless of staged rewards.
 - Account levels use total-XP thresholds of `250 * (level - 1)^1.65`; payouts never reduce a stored level.
 
@@ -284,7 +284,7 @@ Crowley, the traveling merchant, moves to a deterministic open road tile every 3
 
 Players earn one stat point per account level (level − 1 total). Nodes are defined in `public/api/lib/account-stat-points.js`:
 
-- Branches for Health, Healing, Thorns, Speed, Attack, AOE, Poison, and Soul Vessel: a flat node (cap 5) unlocks a percent node (cap 5), which unlocks an uncapped "Endless" mastery node.
+- Branches cover Health, Healing, Thorns, Speed, Attack, AOE, Poison, and Soul Vessel. Speed ends at its capped flat and percentage nodes; the other combat and capacity paths can continue into uncapped "Endless" masteries.
 - Allocations translate into pre-battle combat buffs applied server-side (`player-combat-buffs.js`).
 - A full reset refunds all points for 10 Souls per spent point.
 

@@ -47,23 +47,38 @@ test('Demonic Pact recast cost increases by player level', () => {
   assert.equal(serializeCombatBuffState({}, { playerLevel: 10 }).rerollCost, 28);
 });
 
-test('Dungeon Terror pressure grows exponentially with floor depth', () => {
+test('Dungeon Terror preserves the linear curve through floor 30 and compounds afterward', () => {
   const floor20 = getEnemyPressureMultipliers(20);
   const floor30 = getEnemyPressureMultipliers(30);
   const floor40 = getEnemyPressureMultipliers(40);
 
-  assert.ok(floor30.hp - floor20.hp > 0);
+  assert.equal(floor20.hp, 1.09);
+  assert.equal(floor30.hp, 1.54);
+  assert.equal(floor30.atk, 1.48);
+  assert.equal(floor30.speed, 1 + 12 * 0.012);
   assert.ok(floor40.hp - floor30.hp > floor30.hp - floor20.hp);
   assert.ok(floor40.atk - floor30.atk > floor30.atk - floor20.atk);
+  assert.equal(floor40.hp, 1.54 * Math.pow(1.045, 10));
+  assert.equal(floor40.atk, 1.48 * Math.pow(1.03, 10));
+  assert.equal(floor40.speed, 1 + 22 * 0.012);
 });
 
-test('Dungeon Terror pressure factors in player level', () => {
+test('Dungeon Terror pressure is independent of player level', () => {
   const newHunter = getEnemyPressureMultipliers(18, { playerLevel: 1 });
   const experiencedHunter = getEnemyPressureMultipliers(18, { playerLevel: 26 });
 
-  assert.ok(experiencedHunter.hp > newHunter.hp);
-  assert.ok(experiencedHunter.atk > newHunter.atk);
-  assert.ok(experiencedHunter.speed > newHunter.speed);
+  assert.deepEqual(experiencedHunter, newHunter);
+});
+
+test('Dungeon Pact pressure stays additive before the deep-floor tail compounds it', () => {
+  const buffs = { active: ['blood_pact', 'thick_hide'] };
+  const floor30 = getEnemyPressureMultipliers(30, { buffs });
+  const floor31 = getEnemyPressureMultipliers(31, { buffs });
+
+  assert.equal(floor30.hp, 1 + 12 * 0.045 + 2 * 0.07);
+  assert.equal(floor30.atk, 1 + 12 * 0.04 + 2 * 0.055);
+  assert.equal(floor31.hp, floor30.hp * 1.045);
+  assert.equal(floor31.atk, floor30.atk * 1.03);
 });
 
 test('World Terror can retain its existing linear pressure curve', () => {

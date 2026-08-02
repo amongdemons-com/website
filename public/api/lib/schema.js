@@ -205,7 +205,6 @@ async function applyBaselineSchema() {
       thorns_mastery INT UNSIGNED NOT NULL DEFAULT 0,
       speed_flat INT UNSIGNED NOT NULL DEFAULT 0,
       speed_percent INT UNSIGNED NOT NULL DEFAULT 0,
-      speed_mastery INT UNSIGNED NOT NULL DEFAULT 0,
       attack_percent INT UNSIGNED NOT NULL DEFAULT 0,
       attack_mastery INT UNSIGNED NOT NULL DEFAULT 0,
       aoe_percent INT UNSIGNED NOT NULL DEFAULT 0,
@@ -230,7 +229,6 @@ async function applyBaselineSchema() {
     'thorns_mastery',
     'speed_flat',
     'speed_percent',
-    'speed_mastery',
     'attack_percent',
     'attack_mastery',
     'aoe_percent',
@@ -245,7 +243,7 @@ async function applyBaselineSchema() {
   for (const column of skillTreeColumns) {
     await addColumnIfMissing('player_stat_points', column, `\`${column}\` INT UNSIGNED NOT NULL DEFAULT 0`);
   }
-  for (const legacyColumn of ['vitality', 'power', 'haste', 'fortitude', 'recovery']) {
+  for (const legacyColumn of ['vitality', 'power', 'haste', 'fortitude', 'recovery', 'speed_mastery']) {
     await dropColumnIfPresent('player_stat_points', legacyColumn);
   }
   await normalizeUtf8Column('player_stat_points', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');

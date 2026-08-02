@@ -25,9 +25,9 @@ async function serializeRun(run, options = {}) {
     hp: run.state.hp,
     team: run.state.team,
     enemies: run.state.enemies,
-    nextEnemies: await getNextEnemiesPreview(run, { playerLevel }),
-    enemyPressure: getEnemyPressurePreview(run, run.floor, { playerLevel }),
-    nextEnemyPressure: getEnemyPressurePreview(run, Number(run.floor) + 1, { playerLevel }),
+    nextEnemies: await getNextEnemiesPreview(run),
+    enemyPressure: getEnemyPressurePreview(run, run.floor),
+    nextEnemyPressure: getEnemyPressurePreview(run, Number(run.floor) + 1),
     enemyBuffs: serializeEncounterBuffs(encounterProfile),
     nextEnemyBuffs: serializeEncounterBuffs(nextEncounterProfile),
     rewards: run.rewards,
@@ -52,11 +52,10 @@ async function getSerializedWorldBuffs(run, options = {}) {
   return normalizeRunBuffState({ activeBuffs }).activeBuffs;
 }
 
-function getEnemyPressurePreview(run, floor, options = {}) {
+function getEnemyPressurePreview(run, floor) {
   const floorNumber = Math.max(1, Number(floor) || 1);
   const pressure = getEnemyPressureMultipliers(floorNumber, {
     buffs: run.state.buffs,
-    playerLevel: options.playerLevel,
     rarityRebalanced: true
   });
   const activePactCount = normalizeRunBuffState(run.state.buffs || {}).active.length;
@@ -73,7 +72,7 @@ function getEnemyPressurePreview(run, floor, options = {}) {
     atkBonusPct: getBonusPercent(pressure.atk),
     speedBonusPct: getBonusPercent(pressure.speed),
     active: level > 0,
-    description: 'Floor depth, hunter level, rarity balance, and sealed Pacts strengthen this formation.'
+    description: 'Floor depth, rarity balance, and sealed Pacts strengthen this formation.'
   };
 }
 
@@ -97,13 +96,12 @@ function getEnemyPressureLevel(pressure = {}) {
   return Math.max(0, Math.round(((Number(pressure.hp) || 1) - 1) / 0.045));
 }
 
-async function getNextEnemiesPreview(run, options = {}) {
+async function getNextEnemiesPreview(run) {
   if (!run.state.awaitingRecruit || run.status !== 'active') return [];
 
   const nextFloor = Number(run.floor) + 1;
   return createDungeonEnemies(createRng(run.seed + nextFloor), nextFloor, (run.state.team || []).length, {
-    buffs: run.state.buffs,
-    playerLevel: options.playerLevel
+    buffs: run.state.buffs
   });
 }
 

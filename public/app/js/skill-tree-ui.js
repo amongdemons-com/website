@@ -14,7 +14,6 @@
     thorns_mastery: { label: 'Endless Thorns', help: 'Adds 1 damage to the Thorns retaliation stat per point with no rank limit. This fixed bonus is scaled by Thorns.', cap: Infinity, requires: [['thorns_percent', 5]] },
     speed_flat: { label: 'Speed', help: 'Adds 1 Speed to every demon on your team per point.', cap: 5, requires: [] },
     speed_percent: { label: 'Momentum', help: 'Increases every demon\'s total Speed, including fixed Speed bonuses, by 2% per point.', cap: 5, requires: [['speed_flat', 5]] },
-    speed_mastery: { label: 'Endless Speed', help: 'Adds 1 Speed per point with no rank limit. This fixed bonus is scaled by Momentum.', cap: Infinity, requires: [['speed_percent', 5]] },
     attack_percent: { label: 'Brutal Force', help: 'Increases single-target attack damage by 3% per point. Does not affect healing, Thorns, poison, or multi-target attacks.', cap: 5, requires: [['speed_flat', 5]] },
     attack_mastery: { label: 'Endless Force', help: 'Adds 1 damage to single-target attacks per point with no rank limit. Does not affect healing, Thorns, poison, or multi-target attacks.', cap: Infinity, requires: [['attack_percent', 5]] },
     aoe_percent: { label: 'Wide Ruin', help: 'Increases all multi-target attack damage, including fixed AoE bonuses, by 2% per point.', cap: 5, requires: [['speed_flat', 5]] },

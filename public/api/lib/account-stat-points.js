@@ -12,7 +12,6 @@ const NODE_DEFINITIONS = Object.freeze({
   thorns_mastery: Object.freeze({ label: 'Endless Thorns', cap: Infinity, requires: [['thorns_percent', 5]] }),
   speed_flat: Object.freeze({ label: 'Speed', cap: 5, requires: [] }),
   speed_percent: Object.freeze({ label: 'Speed %', cap: 5, requires: [['speed_flat', 5]] }),
-  speed_mastery: Object.freeze({ label: 'Endless Speed', cap: Infinity, requires: [['speed_percent', 5]] }),
   attack_percent: Object.freeze({ label: 'Attack Damage %', cap: 5, requires: [['speed_flat', 5]] }),
   attack_mastery: Object.freeze({ label: 'Endless Attack', cap: Infinity, requires: [['attack_percent', 5]] }),
   aoe_percent: Object.freeze({ label: 'AOE Damage %', cap: 5, requires: [['speed_flat', 5]] }),
@@ -116,7 +115,7 @@ function calculateStatBonuses(source = {}) {
     healingPercent: roundPercent(allocations.healing_percent * 3),
     thornsFlat: allocations.thorns_mastery,
     thornsPercent: roundPercent(allocations.thorns_percent * 5),
-    speedFlat: allocations.speed_flat + allocations.speed_mastery,
+    speedFlat: allocations.speed_flat,
     speedPercent: roundPercent(allocations.speed_percent * 2),
     attackFlat: allocations.attack_mastery,
     attackPercent: roundPercent(allocations.attack_percent * 3),
@@ -158,7 +157,7 @@ function calculatePathProgress(source = {}) {
     offense: {
       root: allocations.speed_flat,
       branches: {
-        speed: { node: allocations.speed_percent, mastery: allocations.speed_mastery },
+        speed: { node: allocations.speed_percent },
         attack: { node: allocations.attack_percent, mastery: allocations.attack_mastery },
         aoe: { node: allocations.aoe_percent, mastery: allocations.aoe_mastery }
       }

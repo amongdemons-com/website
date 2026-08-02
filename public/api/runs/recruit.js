@@ -166,8 +166,7 @@ async function advanceFloor(run, playerLevel) {
   run.state.playerLevel = Math.max(1, Math.floor(Number(playerLevel ?? run.state.playerLevel) || 1));
   applyRunBuffStatModifiers(run);
   run.state.enemies = await createDungeonEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length, {
-    buffs: run.state.buffs,
-    playerLevel: run.state.playerLevel
+    buffs: run.state.buffs
   });
   run.state.awaitingRecruit = false;
   run.state.awaitingCollectionReinforcement = false;

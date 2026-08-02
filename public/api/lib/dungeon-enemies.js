@@ -18,7 +18,8 @@ const ENEMY_PRESSURE_FLOOR_SPEED = 0.012;
 const ENEMY_PRESSURE_PACT_HP = 0.07;
 const ENEMY_PRESSURE_PACT_ATK = 0.055;
 const ENEMY_PRESSURE_PACT_SPEED = 0.02;
-const ENEMY_PRESSURE_PLAYER_LEVELS_PER_STAGE = 5;
+const ENEMY_PRESSURE_LINEAR_END_FLOOR = 30;
+const ENEMY_PRESSURE_DEEP_ATK = 0.03;
 const ENEMY_PRESSURE_MAX_SPEED_MULT = 1.85;
 const RARITY_CONVERGENCE_START_FLOOR = 10;
 const RARITY_CONVERGENCE_CHANCE = 0.25;
@@ -132,24 +133,25 @@ function getEnemyPressureMultipliers(floor, options = {}) {
   const floorNumber = Math.max(1, Number(floor) || 1);
   const activePactCount = normalizeRunBuffState(options.buffs || options.runBuffs || {}).active.length;
   const endlessFloors = Math.max(0, floorNumber - ENEMY_PRESSURE_START_FLOOR);
-  const playerLevel = Math.max(1, Math.floor(Number(options.playerLevel) || 1));
-  const playerTerrorStages = (playerLevel - 1) / ENEMY_PRESSURE_PLAYER_LEVELS_PER_STAGE;
+  const linearFloors = Math.min(
+    endlessFloors,
+    ENEMY_PRESSURE_LINEAR_END_FLOOR - ENEMY_PRESSURE_START_FLOOR
+  );
+  const deepFloors = Math.max(0, floorNumber - ENEMY_PRESSURE_LINEAR_END_FLOOR);
 
   const rarityCompensation = options.rarityRebalanced ? getDungeonRarityCompensation(floorNumber) : 1;
   const convergenceCompensation = Number(options.convergence?.powerMultiplier) || 1;
   const useLinearTerror = options.terrorScaling === 'linear';
   const hpPressure = useLinearTerror
     ? 1 + endlessFloors * ENEMY_PRESSURE_FLOOR_HP + activePactCount * ENEMY_PRESSURE_PACT_HP
-    : Math.pow(1 + ENEMY_PRESSURE_FLOOR_HP, endlessFloors + playerTerrorStages)
-      * Math.pow(1 + ENEMY_PRESSURE_PACT_HP, activePactCount);
+    : (1 + linearFloors * ENEMY_PRESSURE_FLOOR_HP + activePactCount * ENEMY_PRESSURE_PACT_HP)
+      * Math.pow(1 + ENEMY_PRESSURE_FLOOR_HP, deepFloors);
   const attackPressure = useLinearTerror
     ? 1 + endlessFloors * ENEMY_PRESSURE_FLOOR_ATK + activePactCount * ENEMY_PRESSURE_PACT_ATK
-    : Math.pow(1 + ENEMY_PRESSURE_FLOOR_ATK, endlessFloors + playerTerrorStages)
-      * Math.pow(1 + ENEMY_PRESSURE_PACT_ATK, activePactCount);
-  const speedPressure = useLinearTerror
-    ? 1 + endlessFloors * ENEMY_PRESSURE_FLOOR_SPEED + activePactCount * ENEMY_PRESSURE_PACT_SPEED
-    : Math.pow(1 + ENEMY_PRESSURE_FLOOR_SPEED, endlessFloors + playerTerrorStages)
-      * Math.pow(1 + ENEMY_PRESSURE_PACT_SPEED, activePactCount);
+    : (1 + linearFloors * ENEMY_PRESSURE_FLOOR_ATK + activePactCount * ENEMY_PRESSURE_PACT_ATK)
+      * Math.pow(1 + ENEMY_PRESSURE_DEEP_ATK, deepFloors);
+  const speedPressure = 1 + endlessFloors * ENEMY_PRESSURE_FLOOR_SPEED
+    + activePactCount * ENEMY_PRESSURE_PACT_SPEED;
 
   return {
     hp: hpPressure * rarityCompensation * convergenceCompensation,
