@@ -8,7 +8,7 @@ const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { serializeRun } = require('../lib/run-serialization');
 const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, getTemporaryTeamSizeBonus, hasPendingBuffChoices, serializeRunBuffState, shouldOfferRunBuffChoices } = require('../lib/run-buffs');
 const { normalizeCombatBuffState, serializeCombatBuffState } = require('../lib/combat-buffs');
-const { resolvePlayerCombatBuffState } = require('../lib/player-combat-buffs');
+const { getActivePlayerWorldRewardBuffs, resolvePlayerCombatBuffState } = require('../lib/player-combat-buffs');
 const { assignFormationSlots, mergeBattleTeamForRun, resetRunDemon } = require('../lib/run-demons');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { getDungeonEncounterProfile } = require('../lib/dungeon-enemies');
@@ -118,8 +118,10 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     undermanned: isUndermannedAttempt
   });
 
-  const worldBuffs = (skillBuffs.activeBuffs || [])
-    .filter((buff) => buff?.source === 'world_boss_reward');
+  // Reuse every world reward already resolved for combat. Dropping one here
+  // makes the following preparation preview disagree with the battle that the
+  // server will simulate (most visibly for type 10 healing rewards).
+  const worldBuffs = getActivePlayerWorldRewardBuffs(skillBuffs);
   const serializedRun = await serializeRun(run, { worldBuffs, playerLevel: req.player.level });
 
   res.json({

@@ -14,6 +14,12 @@ async function resolveActivePlayerCombatBuffs(player) {
   return serializeCombatBuffState(await resolvePlayerCombatBuffState(player)).activeBuffs;
 }
 
+function getActivePlayerWorldRewardBuffs(source = {}) {
+  return serializeCombatBuffState(source).activeBuffs.filter((buff) => (
+    buff?.source === 'world_boss_reward' || buff?.source === 'soul_font'
+  ));
+}
+
 function createPlayerCombatBuffState(summary = {}, options = {}) {
   return normalizeCombatBuffState({
     activeBuffs: [
@@ -149,6 +155,7 @@ function percentEffect(type, percent, options = {}) {
 module.exports = {
   createPlayerCombatBuffs,
   createPlayerCombatBuffState,
+  getActivePlayerWorldRewardBuffs,
   resolveActivePlayerCombatBuffs,
   resolvePlayerCombatBuffState
 };

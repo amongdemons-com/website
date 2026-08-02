@@ -136,6 +136,13 @@ function calculateHuntSoulCapacity(allocations = {}) {
 }
 
 function getHuntSoulCapacity(summary = {}) {
+  // Allocations are the source of truth. Resolve the complete skill-tree
+  // capacity here before temporary world modifiers (such as Harvester) are
+  // applied by the hunt layer.
+  if (summary?.allocations && typeof summary.allocations === 'object') {
+    return calculateHuntSoulCapacity(summary.allocations);
+  }
+
   const capacity = Number(summary?.bonuses?.huntSoulCapacity);
   return Number.isFinite(capacity) && capacity > 0
     ? Math.floor(capacity)
