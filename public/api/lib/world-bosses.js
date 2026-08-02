@@ -136,13 +136,13 @@ async function grantWorldBossRewardBuff(playerId, boss, now = new Date()) {
   };
 }
 
-async function getActiveWorldBossRewardBuffs(playerOrId) {
+async function getActiveWorldBossRewardBuffs(playerOrId, queryable = db) {
   const playerId = typeof playerOrId === 'object' ? playerOrId?.id : playerOrId;
   if (!playerId) return [];
 
-  const [rows] = await db.query(
+  const [rows] = await queryable.query(
     `SELECT boss_id AS bossId,
-            expires_at AS expiresAt
+            UNIX_TIMESTAMP(expires_at) AS expiresAtSeconds
      FROM player_world_boss_buffs
      WHERE player_id = ?
        AND expires_at > CURRENT_TIMESTAMP
@@ -160,11 +160,15 @@ async function getActiveWorldBossRewardBuffs(playerOrId) {
     return {
       ...rewardBuff,
       bossId: boss.id,
-      expiresAt: row.expiresAt instanceof Date
-        ? row.expiresAt.toISOString()
-        : new Date(row.expiresAt).toISOString()
+      expiresAt: unixSecondsToIsoString(row.expiresAtSeconds)
     };
   }).filter(Boolean);
+}
+
+function unixSecondsToIsoString(value) {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds)) return null;
+  return new Date(Math.floor(seconds) * 1000).toISOString();
 }
 
 function normalizeBossDefinition(source = {}, index, defaults) {

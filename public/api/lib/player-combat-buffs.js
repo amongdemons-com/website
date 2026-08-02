@@ -1,11 +1,11 @@
 const { getPlayerStatPointSummary } = require('./account-stat-points');
 const { normalizeCombatBuffState, serializeCombatBuffState } = require('./combat-buffs');
-const { getActiveWorldBossRewardBuffs } = require('./world-bosses');
+const { getActiveWorldRewardBuffs } = require('./world-buffs');
 
 async function resolvePlayerCombatBuffState(player) {
   const [summary, activeBossBuffs] = await Promise.all([
     getPlayerStatPointSummary(player),
-    getActiveWorldBossRewardBuffs(player)
+    getActiveWorldRewardBuffs(player)
   ]);
   return createPlayerCombatBuffState(summary, { activeBuffs: activeBossBuffs });
 }

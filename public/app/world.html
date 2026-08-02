@@ -22,7 +22,7 @@
     <link href="/app/css/base.css?v=6fa3b26f022a" rel="stylesheet">
     <link href="/app/css/battle.css?v=08cd2f1a0ce8" rel="stylesheet">
     <link href="/app/css/bag-item-visuals.css?v=b69f7004ad1a" rel="stylesheet">
-    <link href="/app/css/world.css?v=603aa4a23edf" rel="stylesheet">
+    <link href="/app/css/world.css?v=8d571a6958b5" rel="stylesheet">
   </head>
   <body class="world-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -285,6 +285,60 @@
       </div>
     </div>
 
+    <div class="modal fade world-merchant-modal world-soul-font-modal" id="worldSoulFontModal" tabindex="-1" aria-labelledby="worldSoulFontTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+          <header class="world-merchant-head world-soul-font-head">
+            <div class="world-merchant-title-wrap">
+              <span class="world-merchant-emblem world-soul-font-emblem" aria-hidden="true">
+                <img src="/app/images/assets/soul.svg" class="game-icon soul-icon" alt="" width="24" height="24">
+              </span>
+              <div>
+                <span class="world-merchant-kicker">Soul Offering</span>
+                <h2 class="modal-title" id="worldSoulFontTitle">The Whispering Well</h2>
+                <span class="world-merchant-countdown world-soul-font-duration">Blessings endure for 4 hours</span>
+              </div>
+            </div>
+            <div class="world-merchant-head-side">
+              <div class="world-merchant-head-meta">
+                <span class="world-merchant-balance-group">
+                  <span class="world-merchant-balance-label">Your Souls</span>
+                  <span class="world-merchant-balance" id="worldSoulFontBalance" aria-label="Soul balance"></span>
+                </span>
+              </div>
+            </div>
+          </header>
+          <div class="modal-body world-merchant-body">
+            <div class="world-merchant-layout world-soul-font-layout">
+              <figure class="world-merchant-portrait world-soul-font-portrait">
+                <img
+                  src="/app/images/events/soul-font.webp?v=93bca6f999e6"
+                  alt="The Whispering Well overflowing with ivory spectral flame"
+                  width="768"
+                  height="768"
+                >
+                <figcaption>
+                  <span>Area 14, -8</span>
+                  <p>&ldquo;Offer a Soul. Hear what whispers back.&rdquo;</p>
+                </figcaption>
+              </figure>
+              <section class="world-merchant-shop world-soul-font-shop" aria-label="Whispering Well ritual">
+                <div class="world-merchant-status d-none" id="worldSoulFontStatus" role="status" aria-live="polite"></div>
+                <div class="world-soul-font-active d-none" id="worldSoulFontActive" aria-live="polite"></div>
+                <div class="world-soul-font-ritual-host" id="worldSoulFontRitual" aria-label="Unknown Whispering Well blessing"></div>
+              </section>
+            </div>
+          </div>
+          <footer class="world-merchant-foot world-soul-font-foot">
+            <span class="world-merchant-foot-note"><i data-lucide="sparkles"></i> The Well chooses your blessing. A new whisper replaces the old.</span>
+            <span class="world-merchant-foot-actions">
+              <button type="button" class="btn btn-glass-muted btn-sm" data-bs-dismiss="modal">Leave</button>
+            </span>
+          </footer>
+        </div>
+      </div>
+    </div>
+
     <div class="modal fade dungeon-modal world-battle-modal" id="worldBattleModal" tabindex="-1" aria-label="World battle" aria-hidden="true">
       <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
@@ -387,6 +441,6 @@
     </section>
     <script src="/app/dist/runtime.bundle.js?v=6c53e062f924"></script>
     <script src="/vendor/pixi/pixi.min.js"></script>
-    <script src="/app/dist/world.bundle.js?v=11967a7da3b0"></script>
+    <script src="/app/dist/world.bundle.js?v=448945898d29"></script>
   </body>
 </html>

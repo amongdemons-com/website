@@ -34,7 +34,6 @@ const {
 const {
   getActiveWorldBossById,
   getActiveWorldBosses,
-  getActiveWorldBossRewardBuffs,
   getWorldBossAtFromList,
   grantWorldBossRewardBuff,
   serializeWorldBossForClient
@@ -45,6 +44,11 @@ const {
   getWorldMerchantForPlayer,
   purchaseWorldMerchantItem
 } = require('./lib/world-merchant');
+const { getActiveWorldRewardBuffs } = require('./lib/world-buffs');
+const {
+  getWorldSoulFontForPlayer,
+  purchaseSoulFontBuff
+} = require('./lib/world-soul-font');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const { getPlayerStatPointSummary } = require('./lib/account-stat-points');
 const achievements = require('./lib/achievements');
@@ -206,6 +210,34 @@ router.post('/world/merchant/bribe', requireAuth, async (req, res) => {
     ok: true,
     player: getWorldPlayer(bribe.player),
     merchant: serializeWorldMerchantForClient(merchant, position)
+  });
+});
+
+router.get('/world/soul-font', requireAuth, async (req, res) => {
+  const position = await getOrCreatePosition(req.player.id);
+  res.json({
+    soulFont: await getWorldSoulFontForPlayer(req.player.id, {
+      playerLevel: req.player.level,
+      position
+    })
+  });
+});
+
+router.post('/world/soul-font/purchase', requireAuth, async (req, res) => {
+  const purchase = await purchaseSoulFontBuff(
+    req.player.id,
+    req.body?.ritualId
+  );
+  const position = await getOrCreatePosition(req.player.id);
+
+  res.json({
+    ok: true,
+    player: getWorldPlayer(purchase.player),
+    purchasedBuff: purchase.buff,
+    soulFont: await getWorldSoulFontForPlayer(req.player.id, {
+      playerLevel: purchase.player.level,
+      position
+    })
   });
 });
 
@@ -1136,7 +1168,7 @@ async function getHuntState(playerId, options = {}) {
 async function getLiveHuntCapacityState(player) {
   const [statSummary, activeBossBuffs] = await Promise.all([
     getPlayerStatPointSummary(player),
-    getActiveWorldBossRewardBuffs(player)
+    getActiveWorldRewardBuffs(player)
   ]);
   const capacityBuffExpirations = activeBossBuffs
     .filter((buff) => (buff.effects || []).some((effect) => effect.type === 'soul_capacity_mult'))

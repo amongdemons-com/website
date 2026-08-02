@@ -44,3 +44,12 @@ test('icon renderer emits neutral game icon classes', () => {
   assert.match(lucideSubset, /"Cross":/);
   assert.doesNotMatch(source, /'ad-icon/);
 });
+
+test('navbar logo has no decorative shadow or glow', () => {
+  const source = fs.readFileSync(path.join(APP_ROOT, 'css', 'base.css'), 'utf8');
+  const logoRule = source.match(/\.game-shell-brand \.logo-nav\s*\{([^}]*)\}/)?.[1] || '';
+
+  assert.match(logoRule, /box-shadow:\s*none;/);
+  assert.match(logoRule, /filter:\s*none;/);
+  assert.doesNotMatch(logoRule, /drop-shadow/);
+});

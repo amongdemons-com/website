@@ -23,3 +23,8 @@ test('World tooltips accept pointer input only when they contain actions', () =>
   assert.match(worldCss, /\.world-tooltip-travel-action\s*{[\s\S]*?cursor: pointer;/);
   assert.doesNotMatch(worldCss, /\.world-tooltip-travel-action:hover/);
 });
+
+test('World activity tooltips anchor to the north or south edge of the target tile', () => {
+  assert.match(worldSource, /const tileEdgeOffset = showAbove \? -TILE_SIZE \/ 2 : TILE_SIZE \/ 2;/);
+  assert.doesNotMatch(worldSource, /anchorAtTileEdge/);
+});

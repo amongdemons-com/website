@@ -7494,9 +7494,7 @@ body .game-shell-nav .container-fluid {
     background: transparent !important;
     object-fit: contain;
     box-shadow: none;
-    filter:
-        drop-shadow(0 0 11px rgba(231,138,85,0.28))
-        drop-shadow(0 0 15px rgba(111,214,189,0.09));
+    filter: none;
 }
 
 .game-shell-brand-copy {

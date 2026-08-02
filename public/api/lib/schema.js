@@ -7,6 +7,7 @@ const BASELINE_SCHEMA_MIGRATION = '20260722_baseline_schema_v1';
 const PERFORMANCE_INDEXES_MIGRATION = '20260722_performance_indexes_v3';
 const WORLD_MERCHANT_SCHEMA_MIGRATION = '20260723_world_merchant_schema_v1';
 const WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION = '20260723_world_merchant_bribe_schema_v1';
+const WORLD_SOUL_FONT_SCHEMA_MIGRATION = '20260802_world_soul_font_schema_v1';
 const RANKED_SCHEMA_MIGRATION = '20260728_ranked_schema_v2';
 const ACCOUNT_SECURITY_SCHEMA_MIGRATION = '20260728_account_security_schema_v1';
 const ACCOUNT_PASSWORD_BACKFILL_MIGRATION = '20260728_account_password_backfill_v1';
@@ -765,6 +766,41 @@ async function addRankedSchema() {
   }
 }
 
+async function addWorldSoulFontSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_world_soul_font_buffs (
+      player_id VARCHAR(255) NOT NULL,
+      buff_id VARCHAR(96) NOT NULL,
+      offer_set_id VARCHAR(96) NOT NULL,
+      price INT UNSIGNED NOT NULL,
+      awarded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP NOT NULL,
+      PRIMARY KEY (player_id),
+      INDEX idx_world_soul_font_buffs_expires (expires_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column(
+    'player_world_soul_font_buffs',
+    'player_id',
+    'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+  );
+  await normalizeUtf8Column(
+    'player_world_soul_font_buffs',
+    'buff_id',
+    'VARCHAR(96) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+  );
+  await normalizeUtf8Column(
+    'player_world_soul_font_buffs',
+    'offer_set_id',
+    'VARCHAR(96) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+  );
+  await addIndexIfMissing(
+    'player_world_soul_font_buffs',
+    'idx_world_soul_font_buffs_expires',
+    'INDEX idx_world_soul_font_buffs_expires (expires_at)'
+  );
+}
+
 async function addPlayerBadgesSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_badges (
@@ -854,6 +890,7 @@ async function initializeSchema() {
   await runMigrationOnce(PERFORMANCE_INDEXES_MIGRATION, addPerformanceIndexes);
   await runMigrationOnce(WORLD_MERCHANT_SCHEMA_MIGRATION, addWorldMerchantSchema);
   await runMigrationOnce(WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION, addWorldMerchantBribeSchema);
+  await runMigrationOnce(WORLD_SOUL_FONT_SCHEMA_MIGRATION, addWorldSoulFontSchema);
   await runMigrationOnce(RANKED_SCHEMA_MIGRATION, addRankedSchema);
   await runMigrationOnce(ACCOUNT_SECURITY_SCHEMA_MIGRATION, addAccountSecuritySchema);
   await runMigrationOnce(ACCOUNT_PASSWORD_BACKFILL_MIGRATION, backfillOAuthOnlyPasswordState);

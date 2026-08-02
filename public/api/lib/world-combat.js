@@ -16,10 +16,10 @@ const { createPlayerCombatBuffState, resolvePlayerCombatBuffState } = require('.
 const { getHuntSoulCapacity, getPlayerStatPointSummary } = require('./account-stat-points');
 const {
   createWorldBossEnemyBuffs,
-  getActiveWorldBossRewardBuffs,
   getWorldBossRewardBuff,
   serializeWorldBossForClient
 } = require('./world-bosses');
+const { getActiveWorldRewardBuffs } = require('./world-buffs');
 
 const DEFAULT_ENEMY_RESPAWN_SECONDS = 300;
 // Keep this in sync with WORLD_BATTLE_REPLAY_STEP_MS in public/app/js/world-ui.js.
@@ -365,7 +365,7 @@ async function createHuntSnapshot(player, encounter, options = {}) {
     options.demonTypes || getDemonTypes(),
     Array.isArray(options.activeBossBuffs)
       ? options.activeBossBuffs
-      : getActiveWorldBossRewardBuffs(player)
+      : getActiveWorldRewardBuffs(player)
   ]);
   const playerBuffs = createPlayerCombatBuffState(statSummary, { activeBuffs: activeBossBuffs });
   const soulCapacity = getBuffedHuntSoulCapacity(statSummary, activeBossBuffs);

@@ -6,7 +6,7 @@ const {
   isDungeonExtractionUnlocked
 } = require('./dungeon-rules');
 const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, normalizeRunBuffState, serializeRunBuffState } = require('./run-buffs');
-const { getActiveWorldBossRewardBuffs } = require('./world-bosses');
+const { getActiveWorldRewardBuffs } = require('./world-buffs');
 
 async function serializeRun(run, options = {}) {
   applyRunBuffStatModifiers(run);
@@ -47,7 +47,7 @@ async function serializeRun(run, options = {}) {
 async function getSerializedWorldBuffs(run, options = {}) {
   const activeBuffs = Array.isArray(options.worldBuffs)
     ? options.worldBuffs
-    : await getActiveWorldBossRewardBuffs(run?.playerId);
+    : await getActiveWorldRewardBuffs(run?.playerId);
 
   return normalizeRunBuffState({ activeBuffs }).activeBuffs;
 }

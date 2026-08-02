@@ -24,7 +24,8 @@ const { getGameCatalog } = require('./game-data');
 const { createPlayerCombatBuffState } = require('./player-combat-buffs');
 const { createRng } = require('./rng');
 const { getFormationSlotPosition } = require('./run-demons');
-const { getActiveWorldBossRewardBuffs, loadWorldBosses, getWorldBossRewardBuff } = require('./world-bosses');
+const { loadWorldBosses, getWorldBossRewardBuff } = require('./world-bosses');
+const { getActiveWorldRewardBuffs } = require('./world-buffs');
 const {
   ACTIVE_CAPACITY,
   COMBAT_DATA_VERSION,
@@ -189,7 +190,7 @@ function serializeRating(row = {}) {
 async function createLockedRankedBonuses(player) {
   const [summary, worldBuffs] = await Promise.all([
     getPlayerStatPointSummary(player),
-    getActiveWorldBossRewardBuffs(player)
+    getActiveWorldRewardBuffs(player)
   ]);
   const allocations = Object.fromEntries(
     Object.entries(summary.allocations || {}).map(([key, value]) => [

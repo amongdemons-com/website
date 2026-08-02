@@ -4638,6 +4638,13 @@
       "description": "A weathered altar where hunters can anchor their souls."
     },
     {
+      "x": 14,
+      "y": -8,
+      "type": "soul-font",
+      "title": "The Whispering Well",
+      "description": "Sacrifice Souls and accept a random blessing lasting 4 hours."
+    },
+    {
       "x": -4,
       "y": 7,
       "type": "darkness-portal",

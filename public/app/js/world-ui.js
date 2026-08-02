@@ -67,6 +67,8 @@ import './bag-item-visuals.js';
   const MERCHANT_OFFER_LIMIT = 4;
   const MERCHANT_ARROW_EDGE_INSET = 30;
   const MERCHANT_ARROW_FLOAT_DISTANCE = 4;
+  const SOUL_FONT_FALLBACK_DURATION_HOURS = 4;
+  const SOUL_FONT_MARKER_SCALE = 0.8;
   // Marker-local offsets shared by drawWorldMerchantMarker and its animated
   // glow (updateMerchantGlow): where the soul lantern hangs inside the wagon
   // and the center of the curtained opening its light spills out of.
@@ -127,7 +129,8 @@ import './bag-item-visuals.js';
   ];
   const EVENT_COLORS = {
     forsaken_shrine: BOARD_COLORS.shrineGlow,
-    'darkness-portal': BOARD_COLORS.portalGlow
+    'darkness-portal': BOARD_COLORS.portalGlow,
+    'soul-font': 0xf5efd7
   };
   const RARITY_COLORS = {
     common: '#D1D5D8',
@@ -168,6 +171,7 @@ import './bag-item-visuals.js';
     hunterAvatarTexture: null,
     effectLayer: null,
     merchantArrowLayer: null,
+    soulFontArrowLayer: null,
     merchantArrowOcclusionRect: null,
     merchantArrowViewportBounds: null,
     resizeObserver: null,
@@ -215,6 +219,12 @@ import './bag-item-visuals.js';
     merchantStatus: '',
     merchantStatusType: 'info',
     merchantAutoOpenedSpawnId: null,
+    soulFont: null,
+    soulFontLoading: false,
+    soulFontBusy: false,
+    soulFontStatus: '',
+    soulFontStatusType: 'info',
+    soulFontAutoOpened: false,
     boundShrine: null,
     bindingShrine: false,
     summoningPortal: false,
@@ -316,6 +326,11 @@ import './bag-item-visuals.js';
       'worldMerchantBribeCost',
       'worldMerchantStatus',
       'worldMerchantStock',
+      'worldSoulFontModal',
+      'worldSoulFontBalance',
+      'worldSoulFontStatus',
+      'worldSoulFontActive',
+      'worldSoulFontRitual',
       'worldTeamEditorStatus',
       'worldTeamEditorCount',
       'worldTeamEditorGrid',
@@ -355,6 +370,7 @@ import './bag-item-visuals.js';
     elements.worldEditTeamButton?.addEventListener('click', openWorldTeamEditor);
     elements.worldTravelTeamConfirmButton?.addEventListener('click', openWorldTeamEditorFromTravelWarning);
     elements.worldMerchantModal?.addEventListener('click', onWorldMerchantModalClick);
+    elements.worldSoulFontModal?.addEventListener('click', onWorldSoulFontModalClick);
     elements.worldTeamSaveButton?.addEventListener('click', saveWorldTeamEditor);
     elements.worldTeamModal?.addEventListener('pointerdown', onWorldTeamEditorPointerDown);
     elements.worldTeamModal?.addEventListener('click', onWorldTeamEditorCardClick);
@@ -401,6 +417,11 @@ import './bag-item-visuals.js';
       const merchantButton = target?.closest('[data-open-merchant]');
       if (merchantButton) {
         openWorldMerchantShop();
+        return;
+      }
+      const soulFontButton = target?.closest('[data-open-soul-font]');
+      if (soulFontButton) {
+        openWorldSoulFont();
         return;
       }
       const replayButton = target?.closest('[data-view-world-battle]');
@@ -600,6 +621,7 @@ import './bag-item-visuals.js';
     state.pathPulse = new Pixi.Graphics();     // animated destination ring
     state.shrineGlow = new Pixi.Graphics();    // animated soul smoke around forsaken shrines
     state.portalGlow = new Pixi.Graphics();    // animated breathing aura around darkness portals
+    state.soulFontGlow = new Pixi.Graphics();  // restrained breathing halo behind the Whispering Well
     state.merchantGlow = new Pixi.Graphics();  // animated lantern flicker on the traveling merchant
     state.bossAura = new Pixi.Graphics();      // animated pulsating aura beneath boss markers
     state.puddleFx = new Pixi.Graphics();      // animated bubbles / embers over puddles
@@ -613,6 +635,9 @@ import './bag-item-visuals.js';
     state.merchantArrowLayer = new Pixi.Graphics();
     state.merchantArrowLayer.eventMode = 'none';
     state.merchantArrowLayer.label = 'merchant-direction-arrow';
+    state.soulFontArrowLayer = new Pixi.Graphics();
+    state.soulFontArrowLayer.eventMode = 'none';
+    state.soulFontArrowLayer.label = 'soul-font-direction-arrow';
 
     state.hunterAvatar.anchor.set(0.5);
     state.hunterLayer.addChild(state.hunterFrame);
@@ -632,6 +657,7 @@ import './bag-item-visuals.js';
     state.viewport.addChild(state.pathPulse);
     state.viewport.addChild(state.shrineGlow);
     state.viewport.addChild(state.portalGlow);
+    state.viewport.addChild(state.soulFontGlow);
     state.viewport.addChild(state.markerLayer);
     // Above the markers so the lantern light spills over the wagon curtains.
     state.viewport.addChild(state.merchantGlow);
@@ -642,14 +668,17 @@ import './bag-item-visuals.js';
     state.viewport.addChild(state.effectLayer);
     app.stage.addChild(state.viewport);
     app.stage.addChild(state.merchantArrowLayer);
+    app.stage.addChild(state.soulFontArrowLayer);
 
     app.ticker.add(updatePathPulse);
     app.ticker.add(updateShrineGlow);
     app.ticker.add(updatePortalGlow);
+    app.ticker.add(updateSoulFontGlow);
     app.ticker.add(updateMerchantGlow);
     app.ticker.add(updateBossAura);
     app.ticker.add(updatePuddleFx);
     app.ticker.add(updateMerchantDirectionArrow);
+    app.ticker.add(updateSoulFontDirectionArrow);
 
     bindCanvasInput(canvas);
     bindResize();
@@ -734,7 +763,7 @@ import './bag-item-visuals.js';
     // Portrait art is not worth blocking the map for: markers render with
     // rarity-tinted fallbacks and get their portraits swapped in on arrival.
     void loadWorldArt({ hunterAvatarLoaded: true });
-    window.setTimeout(() => maybeOpenWorldMerchantShop(), 0);
+    window.setTimeout(() => maybeOpenWorldArrivalEvent(), 0);
   }
 
   async function loadWorldMapData(version) {
@@ -913,6 +942,7 @@ import './bag-item-visuals.js';
 
     const sign = getSignAt(target);
     const merchant = getMerchantAt(target);
+    const soulFont = getSoulFontAt(target);
 
     if (merchant && positionsEqual(target, state.position)) {
       state.selectedTarget = null;
@@ -923,6 +953,18 @@ import './bag-item-visuals.js';
       renderWorld();
       renderTravelPanel();
       openWorldMerchantShop();
+      return;
+    }
+
+    if (soulFont && positionsEqual(target, state.position)) {
+      state.selectedTarget = null;
+      state.selectedPath = [];
+      state.travelStatus = 'idle';
+      state.recentStepEvent = null;
+      hideWorldActivityTooltip();
+      renderWorld();
+      renderTravelPanel();
+      openWorldSoulFont();
       return;
     }
 
@@ -1117,7 +1159,7 @@ import './bag-item-visuals.js';
       }
       if (completedTravel) {
         showTravelSummaryModal(travelSummary, {
-          onHidden: maybeOpenWorldMerchantShop
+          onHidden: maybeOpenWorldArrivalEvent
         });
       }
     }
@@ -3452,6 +3494,9 @@ import './bag-item-visuals.js';
         const bound = isBoundShrine(event);
         const soul = BOARD_COLORS.shrineSoul;
         drawShrineMarker(marker, soul, bound, rng);
+      } else if (event.type === 'soul-font') {
+        drawSoulFontMarker(marker, rng);
+        marker.scale.set(SOUL_FONT_MARKER_SCALE);
       } else {
         return;
       }
@@ -3474,6 +3519,105 @@ import './bag-item-visuals.js';
       });
 
     drawWorldMerchantMarker(layer);
+  }
+
+  // A quiet ivory pulse beneath the Whispering Well. Keeping this on its own
+  // layer lets the light breathe without moving or fading the marker itself.
+  function updateSoulFontGlow() {
+    const layer = state.soulFontGlow;
+    if (!layer) return;
+    layer.clear();
+
+    const wells = (state.events || []).filter((event) => event.type === 'soul-font');
+    if (!wells.length) return;
+
+    const now = performance.now();
+    wells.forEach((event) => {
+      const c = tileCenter(event);
+      const phase = event.x * 17 + event.y * 31;
+      const breath = (Math.sin(now / 1050 + phase) + 1) / 2;
+
+      const glowY = c.y - 3 * SOUL_FONT_MARKER_SCALE;
+      layer.circle(c.x, glowY, TILE_SIZE * (0.48 + breath * 0.07))
+        .fill({ color: 0xf5efd7, alpha: 0.035 + breath * 0.025 });
+      layer.circle(c.x, glowY, TILE_SIZE * (0.34 + breath * 0.05))
+        .fill({ color: 0xfffdf0, alpha: 0.035 + breath * 0.02 });
+    });
+  }
+
+  // A flat, front-facing black stone well holding an ivory soul-flame. The
+  // straight rim and single silhouette keep it in the map's illustrated plane.
+  function drawSoulFontMarker(marker, rng) {
+    const ivory = 0xf5efd7;
+    const hotIvory = 0xfffdf0;
+    const oldGold = 0xa99252;
+    const stone = 0x1a1c19;
+    const stoneEdge = 0x080a09;
+
+    // Draw the flame first so the well face and rim mask its lower edge.
+    marker.moveTo(-10, -7)
+      .bezierCurveTo(-11, -15, -4, -15, -5, -23)
+      .bezierCurveTo(1, -19, 0, -12, 2, -8)
+      .closePath().fill({ color: ivory, alpha: 0.82 });
+    marker.moveTo(-2, -7)
+      .bezierCurveTo(-4, -16, 5, -18, 3, -29)
+      .bezierCurveTo(12, -20, 7, -12, 8, -7)
+      .closePath().fill({ color: hotIvory, alpha: 0.92 });
+    marker.moveTo(5, -7)
+      .bezierCurveTo(7, -14, 12, -12, 11, -20)
+      .bezierCurveTo(17, -14, 14, -8, 13, -5)
+      .closePath().fill({ color: ivory, alpha: 0.72 });
+
+    for (let index = 0; index < 4; index += 1) {
+      const angle = rng() * Math.PI * 2;
+      const radius = 14 + rng() * 7;
+      marker.circle(
+        Math.cos(angle) * radius,
+        -8 + Math.sin(angle) * radius * 0.72,
+        0.7 + rng() * 0.65
+      ).fill({ color: ivory, alpha: 0.48 + rng() * 0.35 });
+    }
+
+    // One worn front elevation: small chips and uneven edges keep the old stone
+    // from reading as a perfectly machined UI shape.
+    marker.poly([
+      -15, -5, -10, -5.5, -4, -4.8, 2, -5.4, 8, -4.9, 15, -5.3,
+      14, 0, 13.2, 4.5, 12, 11, 6, 11.7, 0, 11.2, -6, 11.8,
+      -12, 11, -13.4, 6, -14, 1
+    ])
+      .fill({ color: stone, alpha: 0.99 })
+      .stroke({ color: stoneEdge, width: 1.7, alpha: 0.98 });
+    marker.poly([
+      -17, -7.8, -11, -8.7, -5, -7.9, 1, -8.5, 7, -7.8, 13, -8.6,
+      17, -7.5, 16.3, -3.2, 10, -3.5, 4, -3, -2, -3.6, -8, -3.1, -16.5, -3.5
+    ])
+      .fill({ color: 0x141613, alpha: 0.99 })
+      .stroke({ color: stoneEdge, width: 1.3, alpha: 0.98 });
+    marker.moveTo(-12.5, -5.5).lineTo(-7, -5.9).lineTo(-1, -5.25)
+      .lineTo(5, -5.75).lineTo(12.5, -5.3)
+      .stroke({ color: 0x32342f, width: 1, alpha: 0.4 });
+    marker.poly([
+      -14, 10.2, -8, 9.6, -2, 10.3, 5, 9.8, 13.5, 10.3,
+      14, 13.4, 7, 14.1, 0, 13.7, -7, 14.3, -14, 13.5
+    ])
+      .fill({ color: 0x23241f, alpha: 0.99 })
+      .stroke({ color: stoneEdge, width: 1.4, alpha: 0.96 });
+
+    // A single time-worn stone has slumped against the lower-left wall.
+    marker.poly([
+      -21, 4, -18, 1.2, -13, 0.8, -10, 3.2, -9.2, 8.2,
+      -10.4, 13.2, -9.4, 16.3, -13.8, 17.9, -20.4, 17.5,
+      -23, 15, -22, 11.5, -22.4, 6.5
+    ])
+      .fill({ color: 0x20221e, alpha: 0.99 })
+      .stroke({ color: stoneEdge, width: 1.5, alpha: 0.98 });
+    marker.moveTo(-19, 4.2).lineTo(-15.7, 2.8).lineTo(-12.4, 3.8)
+      .stroke({ color: 0x3a3c35, width: 0.9, alpha: 0.42 });
+
+    marker.moveTo(0, -2).lineTo(0, 8)
+      .stroke({ color: oldGold, width: 1.1, alpha: 0.72 });
+    marker.circle(0, 3.5, 2.5)
+      .stroke({ color: oldGold, width: 1, alpha: 0.72 });
   }
 
   // A traveling vardo seen from the front: big side wheels, a dark timber
@@ -3636,23 +3780,37 @@ import './bag-item-visuals.js';
   }
 
   function updateMerchantDirectionArrow() {
-    const layer = state.merchantArrowLayer;
+    updateWorldDirectionArrow(state.merchantArrowLayer, state.merchant, {
+      fill: 0xff6e2f,
+      stroke: 0x2a1008,
+      phase: 0
+    });
+  }
+
+  function updateSoulFontDirectionArrow() {
+    updateWorldDirectionArrow(state.soulFontArrowLayer, getSoulFontEvent(), {
+      fill: 0xf5efd7,
+      stroke: 0x39372f,
+      phase: Math.PI
+    });
+  }
+
+  function updateWorldDirectionArrow(layer, target, colors = {}) {
     const app = state.app;
     const viewport = state.viewport;
-    const merchant = state.merchant;
     if (!layer) return;
 
     layer.clear();
-    if (!app || !viewport || !merchant) return;
+    if (!app || !viewport || !target) return;
 
     const width = app.screen?.width || app.renderer?.width || 0;
     const height = app.screen?.height || app.renderer?.height || 0;
     if (width <= 0 || height <= 0) return;
 
     const scale = viewport.scale.x || 1;
-    const merchantWorld = tileCenter(merchant);
-    const targetX = viewport.x + merchantWorld.x * scale;
-    const targetY = viewport.y + merchantWorld.y * scale;
+    const targetWorld = tileCenter(target);
+    const targetX = viewport.x + targetWorld.x * scale;
+    const targetY = viewport.y + targetWorld.y * scale;
     const centerX = width / 2;
     const centerY = height / 2;
     const deltaX = targetX - centerX;
@@ -3674,14 +3832,14 @@ import './bag-item-visuals.js';
       bottom: targetY + tileHalfSize
     };
     const occlusionRect = state.merchantArrowOcclusionRect;
-    const merchantTileOccluded = Boolean(
+    const targetTileOccluded = Boolean(
       occlusionRect
       && tileBounds.left >= occlusionRect.left
       && tileBounds.top >= occlusionRect.top
       && tileBounds.right <= occlusionRect.right
       && tileBounds.bottom <= occlusionRect.bottom
     );
-    const merchantTileVisible = !merchantTileOccluded && (
+    const targetTileVisible = !targetTileOccluded && (
       targetX + tileHalfSize >= viewportBounds.left
       && targetX - tileHalfSize <= viewportBounds.right
       && targetY + tileHalfSize >= viewportBounds.top
@@ -3692,8 +3850,8 @@ import './bag-item-visuals.js';
     let arrowY;
     let arrowDirectionX = directionX;
     let arrowDirectionY = directionY;
-    if (merchantTileVisible) {
-      // Once the cart is visible, use one stable north-facing pointer beneath it.
+    if (targetTileVisible) {
+      // Once the target is visible, use one stable north-facing pointer beneath it.
       const markerOffset = clamp(26 * scale + 12, 30, 66);
       arrowDirectionX = 0;
       arrowDirectionY = -1;
@@ -3708,7 +3866,7 @@ import './bag-item-visuals.js';
         viewportBounds.bottom - MERCHANT_ARROW_EDGE_INSET
       );
     } else {
-      // Intersect the center-to-merchant ray with an inset screen rectangle.
+      // Intersect the center-to-target ray with an inset screen rectangle.
       let edgeDistance = Number.POSITIVE_INFINITY;
       if (directionX > 0) {
         edgeDistance = Math.min(
@@ -3753,21 +3911,22 @@ import './bag-item-visuals.js';
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const floatOffset = reducedMotion
       ? 0
-      : Math.sin(performance.now() / 360) * MERCHANT_ARROW_FLOAT_DISTANCE;
+      : Math.sin(performance.now() / 360 + (colors.phase || 0)) * MERCHANT_ARROW_FLOAT_DISTANCE;
     arrowX += arrowDirectionX * floatOffset;
     arrowY += arrowDirectionY * floatOffset;
 
-    drawMerchantDirectionArrow(
+    drawWorldDirectionArrow(
       layer,
       arrowX,
       arrowY,
       Math.atan2(arrowDirectionY, arrowDirectionX),
-      merchantTileVisible
+      targetTileVisible,
+      colors
     );
   }
 
-  function drawMerchantDirectionArrow(layer, x, y, angle, merchantTileVisible) {
-    const size = merchantTileVisible ? 0.92 : 1;
+  function drawWorldDirectionArrow(layer, x, y, angle, targetTileVisible, colors = {}) {
+    const size = targetTileVisible ? 0.92 : 1;
     const points = [
       [16, 0],
       [1, -12],
@@ -3791,8 +3950,8 @@ import './bag-item-visuals.js';
     layer.poly(transformPoints(2))
       .fill({ color: 0x000000, alpha: 0.48 });
     layer.poly(transformPoints())
-      .fill({ color: 0xff6e2f, alpha: 0.99 })
-      .stroke({ color: 0x2a1008, width: 2.5, alpha: 0.98, join: 'round' });
+      .fill({ color: colors.fill || 0xff6e2f, alpha: 0.99 })
+      .stroke({ color: colors.stroke || 0x2a1008, width: 2.5, alpha: 0.98, join: 'round' });
   }
 
   function getRayRectangleEntryDistance(originX, originY, directionX, directionY, rectangle) {
@@ -4875,7 +5034,8 @@ import './bag-item-visuals.js';
     const currentShrine = state.moving ? null : getShrineAt(state.position);
     const currentSign = state.moving ? null : getSignAt(state.position);
     const merchant = state.moving ? null : getMerchantAt(state.position);
-    const pveParts = renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant });
+    const soulFont = state.moving ? null : getSoulFontAt(state.position);
+    const pveParts = renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant, soulFont });
     const pvpParts = players.map(renderPvpPlayerCard);
 
     const activeTab = state.worldEncounterTab === 'pvp' ? 'pvp' : 'pve';
@@ -4895,7 +5055,7 @@ import './bag-item-visuals.js';
     queueWorldSidePanelMeasure();
   }
 
-  function renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant }) {
+  function renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant, soulFont }) {
     if (state.moving || state.travelStatus === 'moving') {
       return [renderTravelStatusCard()];
     }
@@ -4907,6 +5067,7 @@ import './bag-item-visuals.js';
     return [
       currentSign ? renderCurrentSign(currentSign) : '',
       currentShrine ? renderShrineAnchorAction(currentShrine) : '',
+      soulFont ? renderCurrentSoulFont(soulFont) : '',
       merchant ? renderCurrentWorldMerchant(merchant) : '',
       boss ? renderCurrentBoss(boss) : '',
       encounter ? renderCurrentEncounter(encounter) : ''
@@ -5449,6 +5610,307 @@ import './bag-item-visuals.js';
   function isTravelTeamRequiredError(error) {
     return Number(error?.status) === 409 &&
       String(error?.message || '').toLowerCase().includes('dangerous to travel alone');
+  }
+
+  function maybeOpenWorldArrivalEvent() {
+    const soulFont = getSoulFontAt(state.position);
+    if (!soulFont) state.soulFontAutoOpened = false;
+    if (soulFont) {
+      maybeOpenWorldSoulFont();
+      return;
+    }
+    maybeOpenWorldMerchantShop();
+  }
+
+  function maybeOpenWorldSoulFont() {
+    if (!getSoulFontAt(state.position) || state.moving || state.soulFontAutoOpened) return;
+    state.soulFontAutoOpened = true;
+    openWorldSoulFont({ automatic: true });
+  }
+
+  async function openWorldSoulFont(options = {}) {
+    const modalElement = elements.worldSoulFontModal;
+    const modalApi = window.bootstrap?.Modal;
+
+    if (!getSoulFontAt(state.position) || state.moving) {
+      if (!options.automatic) setMessage('Stand before the Whispering Well to offer it Souls.', 'warning');
+      return;
+    }
+    if (!modalElement || !modalApi) {
+      setMessage('The Whispering Well is silent.', 'danger');
+      return;
+    }
+
+    state.soulFontLoading = true;
+    state.soulFontStatus = '';
+    renderWorldSoulFontModal();
+    modalApi.getOrCreateInstance(modalElement).show();
+    audio?.play('sfx.dungeon.pactReveal', { volume: 0.88 });
+
+    try {
+      const payload = await api('/api/world/soul-font', { dedupe: false });
+      state.soulFont = normalizeWorldSoulFont(payload.soulFont);
+      if (!state.soulFont?.canOffer || !getSoulFontAt(state.position)) {
+        modalApi.getOrCreateInstance(modalElement).hide();
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setWorldSoulFontStatus(error.message || 'The Whispering Well refuses to answer.', 'danger');
+    } finally {
+      state.soulFontLoading = false;
+      renderWorld();
+      renderPanels();
+      renderWorldSoulFontModal();
+    }
+  }
+
+  function normalizeWorldSoulFont(soulFont) {
+    if (!soulFont || typeof soulFont !== 'object') return null;
+    return {
+      ...soulFont,
+      ...normalizePosition(soulFont),
+      id: String(soulFont.id || 'hollow-soul-font'),
+      name: String(soulFont.name || 'The Whispering Well'),
+      ritualId: String(soulFont.ritualId || ''),
+      durationHours: Math.max(1, Number(soulFont.durationHours) || SOUL_FONT_FALLBACK_DURATION_HOURS),
+      price: Math.max(0, Math.floor(Number(soulFont.price) || 0)),
+      canOffer: Boolean(soulFont.canOffer),
+      activeBuff: soulFont.activeBuff || null
+    };
+  }
+
+  function onWorldSoulFontModalClick(event) {
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const sacrificeButton = target?.closest('[data-sacrifice-souls]');
+    if (!sacrificeButton) return;
+    purchaseWorldSoulFontBuff(sacrificeButton);
+  }
+
+  async function purchaseWorldSoulFontBuff(sacrificeButton) {
+    const soulFont = state.soulFont;
+    if (
+      !soulFont?.canOffer
+      || !soulFont.ritualId
+      || state.soulFontBusy
+      || getPlayerSoulBalance() < soulFont.price
+    ) return;
+
+    const sourceRect = sacrificeButton?.getBoundingClientRect?.() || null;
+    state.soulFontBusy = true;
+    setWorldSoulFontStatus('');
+    renderWorldSoulFontModal();
+    audio?.play('sfx.progression.trainingAttempt', { volume: 0.75 });
+    const animationPromise = playSoulFontSacrificeAnimation(sourceRect);
+    let revealedBuff = null;
+
+    try {
+      const payload = await api('/api/world/soul-font/purchase', {
+        method: 'POST',
+        body: {
+          ritualId: soulFont.ritualId
+        }
+      });
+      await animationPromise;
+      applyWorldPlayerUpdate(payload.player);
+      state.soulFont = normalizeWorldSoulFont(payload.soulFont);
+      revealedBuff = payload.purchasedBuff || state.soulFont?.activeBuff || null;
+      setWorldSoulFontStatus('');
+      audio?.play('sfx.progression.trainingSuccess', { volume: 0.88 });
+      if (isHuntActive()) {
+        await refreshHuntStatus({ force: true }).catch(() => {});
+      }
+    } catch (error) {
+      await animationPromise.catch(() => {});
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setWorldSoulFontStatus(error.message || 'The offering was rejected.', 'danger');
+      if (Number(error.status) === 409) {
+        const payload = await api('/api/world/soul-font', { dedupe: false }).catch(() => null);
+        if (payload?.soulFont) state.soulFont = normalizeWorldSoulFont(payload.soulFont);
+      }
+    } finally {
+      state.soulFontBusy = false;
+      renderWorld();
+      renderPanels();
+      renderWorldSoulFontModal();
+      if (revealedBuff) animateSoulFontBlessingReveal();
+    }
+  }
+
+  function playSoulFontSacrificeAnimation(sourceRect) {
+    const modalElement = elements.worldSoulFontModal;
+    const content = modalElement?.querySelector('.modal-content');
+    const portrait = modalElement?.querySelector('.world-soul-font-portrait');
+    if (!content || !portrait || !sourceRect) return Promise.resolve();
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    portrait.classList.add('is-receiving-souls');
+    if (reducedMotion || typeof Element.prototype.animate !== 'function') {
+      return new Promise((resolve) => {
+        window.setTimeout(() => {
+          portrait.classList.remove('is-receiving-souls');
+          resolve();
+        }, reducedMotion ? 180 : 720);
+      });
+    }
+
+    const contentRect = content.getBoundingClientRect();
+    const portraitRect = portrait.getBoundingClientRect();
+    const startX = sourceRect.left - contentRect.left + (sourceRect.width / 2);
+    const startY = sourceRect.top - contentRect.top + (sourceRect.height / 2);
+    const endX = portraitRect.left - contentRect.left + (portraitRect.width * 0.52);
+    const endY = portraitRect.top - contentRect.top + (portraitRect.height * 0.42);
+    const travelX = endX - startX;
+    const travelY = endY - startY;
+    const layer = document.createElement('span');
+    layer.className = 'world-soul-font-soul-train';
+    layer.setAttribute('aria-hidden', 'true');
+    content.appendChild(layer);
+
+    const animations = Array.from({ length: 10 }, (_, index) => {
+      const soul = document.createElement('span');
+      soul.className = 'world-soul-font-soul';
+      soul.style.left = `${startX}px`;
+      soul.style.top = `${startY}px`;
+      layer.appendChild(soul);
+
+      const spread = (index - 4.5) * 3.5;
+      const arc = 54 + ((index % 3) * 13);
+      const animation = soul.animate([
+        { transform: `translate(0, 0) scale(0.35)`, opacity: 0 },
+        { transform: `translate(${travelX * 0.18}px, ${(travelY * 0.24) + spread - arc}px) scale(0.82)`, opacity: 0.95, offset: 0.22 },
+        { transform: `translate(${travelX * 0.56}px, ${(travelY * 0.58) + spread - (arc * 0.72)}px) scale(1)`, opacity: 1, offset: 0.58 },
+        { transform: `translate(${travelX * 0.84}px, ${(travelY * 0.84) + spread - (arc * 0.28)}px) scale(0.72)`, opacity: 0.84, offset: 0.84 },
+        { transform: `translate(${travelX}px, ${travelY}px) scale(0.15)`, opacity: 0 }
+      ], {
+        duration: 820 + ((index % 4) * 55),
+        delay: index * 64,
+        easing: 'cubic-bezier(0.35, 0.02, 0.18, 1)',
+        fill: 'both'
+      });
+      return animation.finished.catch(() => {});
+    });
+
+    return Promise.all(animations).finally(() => {
+      layer.remove();
+      portrait.classList.remove('is-receiving-souls');
+    });
+  }
+
+  function animateSoulFontBlessingReveal() {
+    const active = elements.worldSoulFontActive;
+    if (!active) return;
+    active.classList.remove('is-revealing');
+    void active.offsetWidth;
+    active.classList.add('is-revealing');
+    window.setTimeout(() => active.classList.remove('is-revealing'), 1050);
+  }
+
+  function setWorldSoulFontStatus(value, type = 'info') {
+    state.soulFontStatus = value instanceof Error ? value.message : String(value || '');
+    state.soulFontStatusType = type;
+    renderWorldSoulFontStatus();
+  }
+
+  function renderWorldSoulFontModal() {
+    const soulFont = state.soulFont;
+    if (elements.worldSoulFontBalance) {
+      elements.worldSoulFontBalance.innerHTML = renderSoulAmount(getPlayerSoulBalance() || 0);
+    }
+    renderWorldSoulFontStatus();
+    renderWorldSoulFontActive(soulFont?.activeBuff);
+    if (!elements.worldSoulFontRitual) return;
+
+    if (state.soulFontLoading) {
+      elements.worldSoulFontRitual.innerHTML = `
+        <div class="world-merchant-loading" role="status">
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span>The Whispering Well is waking...</span>
+        </div>
+      `;
+      return;
+    }
+
+    elements.worldSoulFontRitual.innerHTML = soulFont
+      ? renderWorldSoulFontRitual(soulFont)
+      : '<p class="world-empty-text">The Well gives no answer.</p>';
+    replaceStaticIcons(elements.worldSoulFontModal);
+  }
+
+  function renderWorldSoulFontStatus() {
+    if (!elements.worldSoulFontStatus) return;
+    elements.worldSoulFontStatus.className = `world-merchant-status${state.soulFontStatus ? ` is-${state.soulFontStatusType}` : ' d-none'}`;
+    elements.worldSoulFontStatus.textContent = state.soulFontStatus;
+  }
+
+  function renderWorldSoulFontActive(buff) {
+    const element = elements.worldSoulFontActive;
+    if (!element) return;
+    if (!buff) {
+      element.classList.remove('d-none');
+      element.classList.add('is-placeholder');
+      element.innerHTML = `
+        ${renderIcon('sparkles')}
+        <span class="world-soul-font-active-copy">
+          <small>Active whisper</small>
+          <strong>No whisper bound</strong>
+          <span>Make a sacrifice to hear the Well.</span>
+        </span>
+        <time>Awaiting sacrifice</time>
+      `;
+      return;
+    }
+
+    element.classList.remove('d-none', 'is-placeholder');
+    element.innerHTML = `
+      ${renderIcon(buff.icon || 'sparkles')}
+      <span class="world-soul-font-active-copy">
+        <small>Active whisper</small>
+        <strong>${escapeHtml(buff.name || 'Whispering Well Blessing')}</strong>
+        <span>${escapeHtml(buff.description || '')}</span>
+      </span>
+      <time datetime="${escapeAttribute(buff.expiresAt || '')}">${escapeHtml(formatSoulFontExpiry(buff.expiresAt))}</time>
+    `;
+  }
+
+  function renderWorldSoulFontRitual(soulFont) {
+    const price = Math.max(0, Number(soulFont?.price) || 0);
+    const canAfford = getPlayerSoulBalance() >= price;
+    const busy = state.soulFontBusy;
+    const disabled = !soulFont?.canOffer || !soulFont?.ritualId || !canAfford || busy;
+    const buttonLabel = busy ? 'Sacrificing...' : canAfford ? 'Sacrifice Souls' : 'Not enough Souls';
+    const replacementCopy = soulFont.activeBuff
+      ? 'The answer will replace your current blessing.'
+      : 'The blessing is chosen only after the sacrifice.';
+
+    return `
+      <article class="world-soul-font-ritual${busy ? ' is-sacrificing' : ''}" aria-busy="${busy ? 'true' : 'false'}">
+        <span class="world-soul-font-mystery-seal" aria-hidden="true">
+          <span class="world-soul-font-mystery-mark">?</span>
+        </span>
+        <span class="world-soul-font-ritual-kicker">Unseen blessing</span>
+        <strong>The Well decides</strong>
+        <p>Make your offering and accept whichever power whispers back.</p>
+        <small>${escapeHtml(replacementCopy)}</small>
+        <span class="world-soul-font-ritual-price">${renderSoulAmount(price)}</span>
+        <button class="btn btn-primary world-soul-font-sacrifice" type="button" data-sacrifice-souls ${disabled ? 'disabled' : ''} aria-label="${escapeAttribute(canAfford ? `Sacrifice ${formatSoulCount(price)} for a random four-hour blessing` : `You need ${formatSoulCount(price)} to sacrifice`)}">
+          ${busy ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : ''}
+          <span>${escapeHtml(buttonLabel)}</span>
+        </button>
+      </article>
+    `;
+  }
+
+  function formatSoulFontExpiry(value) {
+    const expiresAt = Date.parse(value || '');
+    if (!Number.isFinite(expiresAt)) return '4h remaining';
+    const seconds = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+    return seconds > 0 ? `${formatDuration(seconds)} remaining` : 'Expiring now';
   }
 
   function normalizeWorldMerchant(merchant) {
@@ -7773,6 +8235,38 @@ import './bag-item-visuals.js';
     return event?.type === 'darkness-portal';
   }
 
+  function renderCurrentSoulFont(soulFont) {
+    return `
+      <article class="world-sidebar-card world-merchant-card world-soul-font-card">
+        <span class="world-merchant-card-portrait" aria-hidden="true">
+          <img src="/app/images/events/soul-font.webp?v=93bca6f999e6" alt="" width="768" height="768" loading="lazy" decoding="async">
+        </span>
+        <span class="world-card-copy">
+          <span class="world-card-kicker">Soul Offering</span>
+          <strong class="world-card-title">${escapeHtml(soulFont.title || 'The Whispering Well')}</strong>
+          <span class="world-card-meta world-merchant-description">An unseen blessing lasting 4 hours.</span>
+        </span>
+        <button class="btn btn-primary btn-sm world-card-action" type="button" data-open-soul-font>
+          ${renderIcon('flame')}
+          <span>Offer Souls</span>
+        </button>
+      </article>
+    `;
+  }
+
+  function isSoulFontEvent(event) {
+    return event?.type === 'soul-font';
+  }
+
+  function getSoulFontEvent() {
+    return state.events.find(isSoulFontEvent) || null;
+  }
+
+  function getSoulFontAt(position) {
+    const event = getEventAt(position);
+    return isSoulFontEvent(event) ? event : null;
+  }
+
   function getDarknessPortalSummonCost(event = {}) {
     return getTileDistance(state.position, event) * getDarknessPortalSummonCostPerDistance(event);
   }
@@ -8281,6 +8775,7 @@ import './bag-item-visuals.js';
   function getEventLabel(type) {
     if (type === 'forsaken_shrine') return 'Respawn Point';
     if (type === 'darkness-portal') return 'Darkness Portal';
+    if (type === 'soul-font') return 'Soul Offering';
     return 'Event';
   }
 
@@ -8641,7 +9136,7 @@ import './bag-item-visuals.js';
       return;
     }
 
-    positionMapTargetTooltip(tooltip, encounter, { anchorAtTileEdge: true });
+    positionMapTargetTooltip(tooltip, encounter);
     tooltip.classList.remove('d-none');
   }
 
@@ -8655,17 +9150,15 @@ import './bag-item-visuals.js';
       return;
     }
 
-    positionMapTargetTooltip(tooltip, boss, { anchorAtTileEdge: true });
+    positionMapTargetTooltip(tooltip, boss);
     tooltip.classList.remove('d-none');
   }
 
-  function positionMapTargetTooltip(tooltip, target, options = {}) {
+  function positionMapTargetTooltip(tooltip, target) {
     const center = tileCenter(target);
     const scale = state.viewport.scale.x || 1;
     const showAbove = Number(target.y) < Number(state.position.y);
-    const tileEdgeOffset = options.anchorAtTileEdge
-      ? (showAbove ? -TILE_SIZE / 2 : TILE_SIZE / 2)
-      : 0;
+    const tileEdgeOffset = showAbove ? -TILE_SIZE / 2 : TILE_SIZE / 2;
     const x = state.viewport.x + center.x * scale;
     const y = state.viewport.y + (center.y + tileEdgeOffset) * scale;
 
@@ -9065,9 +9558,11 @@ import './bag-item-visuals.js';
     state.app?.ticker?.remove(updatePathPulse);
     state.app?.ticker?.remove(updateShrineGlow);
     state.app?.ticker?.remove(updatePortalGlow);
+    state.app?.ticker?.remove(updateSoulFontGlow);
     state.app?.ticker?.remove(updateBossAura);
     state.app?.ticker?.remove(updatePuddleFx);
     state.app?.ticker?.remove(updateMerchantDirectionArrow);
+    state.app?.ticker?.remove(updateSoulFontDirectionArrow);
     state.tileTextures.forEach((texture) => texture?.destroy?.(true));
     state.tileTextures.clear();
     state.encounterMarkerNodes.clear();

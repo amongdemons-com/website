@@ -1818,6 +1818,283 @@ body.is-world-side-collapsed .world-map-controls {
     color: #e8b04a;
 }
 
+.world-soul-font-modal {
+    --soul-font-cyan: #a9e5df;
+    --soul-font-ivory: #f8f5eb;
+    --soul-font-gold: #e8b04a;
+    --soul-font-art-size: min(25rem, calc(100vh - 15.5rem));
+    --soul-font-art-size: min(25rem, calc(100dvh - 15.5rem));
+}
+
+.world-soul-font-modal .modal-dialog {
+    width: min(calc(var(--soul-font-art-size) + 29.55rem), calc(100vw - 1.5rem));
+    max-width: calc(100vw - 1.5rem);
+}
+
+.world-soul-font-modal .modal-content {
+    position: relative;
+    isolation: isolate;
+}
+
+.world-soul-font-modal .world-merchant-body {
+    overflow: hidden;
+}
+
+.world-soul-font-emblem .soul-icon {
+    width: 1.55rem;
+    height: 1.55rem;
+    filter: drop-shadow(0 0 0.35rem rgba(141, 231, 255, 0.3));
+}
+
+.world-soul-font-layout {
+    grid-template-columns: minmax(0, var(--soul-font-art-size)) minmax(21rem, 27rem);
+    align-items: stretch;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.world-soul-font-portrait {
+    width: 100%;
+    height: 100%;
+    justify-self: center;
+    align-self: stretch;
+}
+
+.world-soul-font-portrait.is-receiving-souls {
+    animation: soul-font-receive 760ms ease-in-out infinite alternate;
+}
+
+.world-soul-font-shop {
+    grid-template-rows: auto auto auto;
+    align-self: stretch;
+    padding: 0.75rem;
+}
+
+.world-soul-font-active {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.85rem;
+    border: 1px solid rgba(232, 176, 74, 0.18);
+    border-radius: 10px;
+    background: linear-gradient(100deg, rgba(232, 176, 74, 0.07), rgba(141, 231, 255, 0.035));
+    padding: 0.78rem 0.82rem;
+}
+
+.world-soul-font-active.is-revealing {
+    position: relative;
+    z-index: 1;
+    animation: soul-font-reveal 1s ease-in-out 1;
+}
+
+.world-soul-font-active > .game-icon {
+    width: 1.3rem;
+    height: 1.3rem;
+    color: var(--soul-font-cyan);
+}
+
+.world-soul-font-active-copy {
+    display: grid;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.world-soul-font-active-copy small,
+.world-soul-font-ritual-kicker {
+    color: rgba(232, 176, 74, 0.78);
+    font-size: 0.6rem;
+    font-weight: 950;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.world-soul-font-active-copy strong {
+    color: var(--soul-font-ivory);
+    font-family: "Lora", serif;
+    font-size: 0.86rem;
+}
+
+.world-soul-font-active-copy span,
+.world-soul-font-active time {
+    color: rgba(220, 232, 229, 0.66);
+    font-size: 0.66rem;
+    font-weight: 750;
+}
+
+.world-soul-font-active time {
+    white-space: nowrap;
+}
+
+.world-soul-font-active.is-placeholder {
+    border-color: rgba(239, 232, 207, 0.11);
+    background: rgba(239, 232, 207, 0.025);
+}
+
+.world-soul-font-active.is-placeholder > .game-icon,
+.world-soul-font-active.is-placeholder .world-soul-font-active-copy strong,
+.world-soul-font-active.is-placeholder time {
+    color: rgba(239, 232, 207, 0.46);
+}
+
+.world-soul-font-active.is-placeholder .world-soul-font-active-copy span {
+    color: rgba(220, 232, 229, 0.42);
+}
+
+.world-soul-font-ritual-host {
+    display: grid;
+    min-height: 0;
+}
+
+.world-soul-font-ritual {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 0.62rem;
+    min-height: min(23rem, var(--soul-font-art-size));
+    border: 1px solid rgba(232, 176, 74, 0.17);
+    border-radius: 12px;
+    background:
+        radial-gradient(circle at 50% 20%, rgba(141, 231, 255, 0.07), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(0, 0, 0, 0.13));
+    padding: 1.25rem;
+    text-align: center;
+    box-shadow: inset 0 1px 0 rgba(243, 237, 217, 0.035), 0 16px 36px rgba(7, 9, 22, 0.3);
+}
+
+.world-soul-font-ritual.is-sacrificing {
+    border-color: rgba(141, 231, 255, 0.34);
+}
+
+.world-soul-font-mystery-seal {
+    display: grid;
+    width: 5.4rem;
+    height: 5.4rem;
+    place-items: center;
+    margin-bottom: 0.2rem;
+    border: 1px solid rgba(232, 176, 74, 0.3);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(141, 231, 255, 0.1), rgba(232, 176, 74, 0.07));
+    color: var(--soul-font-ivory);
+    box-shadow: 0 0 0 0.5rem rgba(232, 176, 74, 0.04);
+}
+
+.world-soul-font-mystery-seal .game-icon {
+    width: 2.2rem;
+    height: 2.2rem;
+}
+
+.world-soul-font-mystery-mark {
+    display: block;
+    color: var(--soul-font-ivory);
+    font-family: "Lora", serif;
+    font-size: 2.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.world-soul-font-ritual.is-sacrificing .world-soul-font-mystery-seal {
+    animation: soul-font-seal-pulse 700ms ease-in-out infinite alternate;
+}
+
+.world-soul-font-ritual strong {
+    color: var(--soul-font-ivory);
+    font-family: "Lora", serif;
+    font-size: 1.25rem;
+    line-height: 1.15;
+}
+
+.world-soul-font-ritual p {
+    max-width: 22rem;
+    margin: 0;
+    color: rgba(220, 232, 229, 0.7);
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.world-soul-font-ritual small {
+    color: rgba(220, 232, 229, 0.5);
+    font-size: 0.65rem;
+    font-weight: 750;
+}
+
+.world-soul-font-ritual-price {
+    margin-top: 0.45rem;
+}
+
+.world-soul-font-ritual-price .soul-amount {
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 950;
+}
+
+.world-soul-font-ritual-price .soul-amount-value {
+    color: #fff;
+}
+
+.world-soul-font-ritual-price .soul-amount-label {
+    display: none;
+}
+
+.world-soul-font-sacrifice.btn {
+    width: min(100%, 18rem);
+    margin-top: 0.25rem;
+}
+
+.world-soul-font-soul-train {
+    position: absolute;
+    z-index: 30;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.world-soul-font-soul {
+    position: absolute;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin: -0.45rem 0 0 -0.45rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, #fffbe8 0 17%, #b9eee8 34%, rgba(169, 229, 223, 0.12) 72%);
+    box-shadow: 0 0 0.7rem rgba(169, 229, 223, 0.72), 0 0 1.35rem rgba(141, 231, 255, 0.22);
+    will-change: transform, opacity;
+}
+
+.world-soul-font-soul::after {
+    position: absolute;
+    top: 50%;
+    right: 62%;
+    width: 1.5rem;
+    height: 0.3rem;
+    border-radius: 50%;
+    background: linear-gradient(90deg, transparent, rgba(169, 229, 223, 0.5));
+    content: "";
+    transform: translateY(-50%);
+    filter: blur(1px);
+}
+
+@keyframes soul-font-receive {
+    from { box-shadow: 0 18px 46px rgba(6, 8, 21, 0.46), 0 0 0 rgba(169, 229, 223, 0); }
+    to { box-shadow: 0 18px 46px rgba(6, 8, 21, 0.46), 0 0 2.2rem rgba(169, 229, 223, 0.24); }
+}
+
+@keyframes soul-font-seal-pulse {
+    from { transform: scale(0.96); opacity: 0.72; }
+    to { transform: scale(1.04); opacity: 1; }
+}
+
+@keyframes soul-font-reveal {
+    0%, 100% {
+        border-color: rgba(232, 176, 74, 0.18);
+        box-shadow: 0 0 0 rgba(239, 232, 207, 0), inset 0 0 0 rgba(239, 232, 207, 0);
+    }
+    50% {
+        border-color: #efe8cf;
+        box-shadow: 0 0 1.8rem rgba(239, 232, 207, 0.68), inset 0 0 1rem rgba(239, 232, 207, 0.12);
+    }
+}
+
 .world-team-editor-shell {
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr);
@@ -4181,6 +4458,10 @@ body.is-world-side-collapsed .world-map-controls {
 }
 
 @media (max-width: 991.98px) {
+    .world-soul-font-modal .world-merchant-body {
+        overflow: auto;
+    }
+
     .world-merchant-layout {
         grid-template-columns: 1fr;
     }
@@ -4206,6 +4487,21 @@ body.is-world-side-collapsed .world-map-controls {
 
     .world-merchant-stock {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .world-soul-font-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .world-soul-font-portrait,
+    .world-soul-font-portrait img {
+        width: 100%;
+        min-height: min(64vw, 34rem);
+        max-height: min(64vw, 34rem);
+    }
+
+    .world-soul-font-ritual {
+        min-height: 18rem;
     }
 }
 
@@ -4292,6 +4588,35 @@ body.is-world-side-collapsed .world-map-controls {
     .world-merchant-stock {
         grid-template-columns: 1fr;
         gap: 0.55rem;
+    }
+
+    .world-soul-font-modal .modal-dialog {
+        width: calc(100vw - 0.75rem);
+        max-width: calc(100vw - 0.75rem);
+    }
+
+    .world-soul-font-portrait,
+    .world-soul-font-portrait img {
+        min-height: min(72vw, 18rem);
+        max-height: min(72vw, 18rem);
+    }
+
+    .world-soul-font-ritual {
+        min-height: 17rem;
+        padding: 1rem 0.8rem;
+    }
+
+    .world-soul-font-mystery-seal {
+        width: 4.2rem;
+        height: 4.2rem;
+    }
+
+    .world-soul-font-active {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .world-soul-font-active time {
+        grid-column: 2;
     }
 
     .world-merchant-item {
