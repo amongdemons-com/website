@@ -2,7 +2,11 @@
   'use strict';
 
   const KEY = 'amongdemons-session';
+  const CLIENT_REFRESH_KEY = 'amongdemons-client-refresh-v1';
+  const CLIENT_REFRESH_COOLDOWN_MS = 5 * 60 * 1000;
+  const CLIENT_VERSION_HEADER = 'X-Among-Demons-Client';
   const inFlightReads = new Map();
+  let clientRefreshStarted = false;
   const GAME_ALERT_HOST_ID = 'gameAlertToastHost';
   const ALERT_TYPE_MAP = {
     danger: 'error',
@@ -211,6 +215,13 @@
       payload = text ? parsePayload(text) : null;
     }
 
+    if (refreshOutdatedBrowserClient(response)) {
+      // Navigation tears this page down. Keeping the request pending prevents
+      // the stale caller from rendering an error or repeating a mutation while
+      // the fresh client is loading.
+      return new Promise(() => {});
+    }
+
     return handleApiResponse(
       response.ok,
       response.status,
@@ -229,6 +240,48 @@
     } catch (error) {
       throw createNetworkError(error, path);
     }
+  }
+
+  function refreshOutdatedBrowserClient(response) {
+    if (clientRefreshStarted || window.AmongDemons?.isPackagedRuntime?.()) return clientRefreshStarted;
+
+    const serverVersion = String(response?.headers?.get?.(CLIENT_VERSION_HEADER) || '').trim();
+    const clientVersion = getLoadedClientVersion();
+    if (!isSafeRuntimeVersion(serverVersion) || !clientVersion || serverVersion === clientVersion) return false;
+
+    try {
+      const previousRefresh = JSON.parse(sessionStorage.getItem(CLIENT_REFRESH_KEY) || 'null');
+      if (Date.now() - Number(previousRefresh?.refreshedAt) < CLIENT_REFRESH_COOLDOWN_MS) return false;
+      sessionStorage.setItem(CLIENT_REFRESH_KEY, JSON.stringify({
+        from: clientVersion,
+        to: serverVersion,
+        refreshedAt: Date.now()
+      }));
+    } catch (error) {
+      // Storage can be unavailable in hardened browsers; the versioned URL
+      // below still prevents the browser from reusing stale HTML.
+    }
+
+    try {
+      const refreshUrl = new URL(window.location.href);
+      refreshUrl.searchParams.set('_client', serverVersion);
+      clientRefreshStarted = true;
+      window.location.replace(refreshUrl.href);
+      return true;
+    } catch (error) {
+      clientRefreshStarted = false;
+      return false;
+    }
+  }
+
+  function getLoadedClientVersion() {
+    return String(
+      document.querySelector('meta[name="among-demons-client-version"]')?.content || ''
+    ).trim();
+  }
+
+  function isSafeRuntimeVersion(value) {
+    return /^[a-z0-9._-]{6,128}$/i.test(String(value || ''));
   }
 
   function isMutationMethod(method) {

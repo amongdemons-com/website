@@ -29,6 +29,8 @@ const { purgeDueAccounts } = require('./public/api/lib/account-deletion');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const appDir = path.join(__dirname, 'public', 'app');
+const browserManifest = require('./public/app/dist/manifest.json');
+const BROWSER_CLIENT_VERSION = browserManifest.clientVersion || getAssetVersion(browserManifest.runtime);
 let catalogPromise;
 let bossCatalogPromise;
 const noindexPaths = new Set([
@@ -57,6 +59,7 @@ app.set('trust proxy', true);
 app.use(compression());
 app.use(enforceCanonicalHost);
 app.use(applyRobotsHeaders);
+app.use('/api', advertiseBrowserRuntimeVersion);
 app.use(express.json());
 app.use(handleJsonParseError);
 app.use('/api', apiRoutes);
@@ -326,6 +329,24 @@ function handleJsonParseError(error, req, res, next) {
     error: 'The request body was not valid JSON.',
     code: 'INVALID_JSON'
   });
+}
+
+function advertiseBrowserRuntimeVersion(req, res, next) {
+  // Cached catalog/map responses can outlive a deployment, so they must not
+  // participate in the live client/server version handshake.
+  const cacheableApiPath = /^\/(?:game\/|world\/map(?:\/|$)|og\/)/.test(req.path);
+  if (BROWSER_CLIENT_VERSION && !cacheableApiPath) {
+    res.set('X-Among-Demons-Client', BROWSER_CLIENT_VERSION);
+  }
+  next();
+}
+
+function getAssetVersion(assetUrl) {
+  try {
+    return new URL(String(assetUrl || ''), 'https://amongdemons.com').searchParams.get('v') || '';
+  } catch (error) {
+    return '';
+  }
 }
 
 function normalizePath(value) {

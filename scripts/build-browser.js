@@ -22,19 +22,21 @@ async function main() {
   const dungeonHash = contentHash(dungeon);
   const rankedHash = contentHash(ranked);
   const worldHash = contentHash(world);
+  const clientVersion = createClientVersion({ runtimeHash, dungeonHash, rankedHash, worldHash });
 
   fs.writeFileSync(path.join(OUT_DIR, 'runtime.bundle.js'), runtime);
   fs.writeFileSync(path.join(OUT_DIR, 'dungeon.bundle.js'), dungeon);
   fs.writeFileSync(path.join(OUT_DIR, 'ranked.bundle.js'), ranked);
   fs.writeFileSync(path.join(OUT_DIR, 'world.bundle.js'), world);
   fs.writeFileSync(path.join(OUT_DIR, 'manifest.json'), `${JSON.stringify({
+    clientVersion,
     runtime: `/app/dist/runtime.bundle.js?v=${runtimeHash}`,
     dungeon: `/app/dist/dungeon.bundle.js?v=${dungeonHash}`,
     ranked: `/app/dist/ranked.bundle.js?v=${rankedHash}`,
     world: `/app/dist/world.bundle.js?v=${worldHash}`
   }, null, 2)}\n`);
 
-  updateHtmlFiles(runtimeHash, dungeonHash, rankedHash, worldHash);
+  updateHtmlFiles(clientVersion, runtimeHash, dungeonHash, rankedHash, worldHash);
   console.log(`Browser bundles: runtime ${formatBytes(runtime.length)}, dungeon ${formatBytes(dungeon.length)}, ranked ${formatBytes(ranked.length)}, world ${formatBytes(world.length)}.`);
 }
 
@@ -51,7 +53,8 @@ async function bundle(entryPoint) {
   return result.outputFiles[0].contents;
 }
 
-function updateHtmlFiles(runtimeHash, dungeonHash, rankedHash, worldHash) {
+function updateHtmlFiles(clientVersion, runtimeHash, dungeonHash, rankedHash, worldHash) {
+  const clientVersionMeta = `<meta name="among-demons-client-version" content="${clientVersion}">`;
   const runtimeTag = `<script src="/app/dist/runtime.bundle.js?v=${runtimeHash}"></script>`;
   const dungeonTag = `<script src="/app/dist/dungeon.bundle.js?v=${dungeonHash}"></script>`;
   const rankedTag = `<script src="/app/dist/ranked.bundle.js?v=${rankedHash}"></script>`;
@@ -61,7 +64,7 @@ function updateHtmlFiles(runtimeHash, dungeonHash, rankedHash, worldHash) {
     const filePath = path.join(APP_DIR, name);
     const source = fs.readFileSync(filePath, 'utf8');
     let insertedRuntime = false;
-    let html = source
+    let html = updateClientVersionMeta(source, clientVersionMeta)
       .replace('https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css', '/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2')
       .replace(/\/vendor\/bootstrap\/css\/bootstrap\.min\.css(?:\?v=[^"']+)?/g, '/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2')
       .replace(COMMON_SCRIPT_PATTERN, (match) => {
@@ -80,6 +83,31 @@ function updateHtmlFiles(runtimeHash, dungeonHash, rankedHash, worldHash) {
   }
 }
 
+function updateClientVersionMeta(html, metaTag) {
+  const metaPattern = /<meta name="among-demons-client-version" content="[^"]*">/;
+  if (metaPattern.test(html)) return html.replace(metaPattern, metaTag);
+  return html.replace(/(<meta charset="[^"]+">)/, `$1\n    ${metaTag}`);
+}
+
+function createClientVersion(bundleVersions) {
+  const sourceVersions = listFiles(path.join(APP_DIR, 'js'))
+    .filter((filePath) => filePath.endsWith('.js'))
+    .sort()
+    .map((filePath) => {
+      const relativePath = path.relative(APP_DIR, filePath).replace(/\\/g, '/');
+      return `${relativePath}:${contentHash(fs.readFileSync(filePath))}`;
+    });
+  const versionParts = [...Object.values(bundleVersions), ...sourceVersions];
+  return contentHash(versionParts.join('|'));
+}
+
+function listFiles(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(directory, entry.name);
+    return entry.isDirectory() ? listFiles(entryPath) : [entryPath];
+  });
+}
+
 function versionAppAsset(assetPath) {
   const filePath = path.join(APP_DIR, assetPath.replace(/^\/app\//, ''));
   try {
@@ -90,7 +118,11 @@ function versionAppAsset(assetPath) {
 }
 
 function contentHash(content) {
-  return crypto.createHash('sha256').update(content).digest('hex').slice(0, 12);
+  // Git may check text assets out with CRLF on Windows and LF in production.
+  // Hash their logical content so a build does not create platform-specific
+  // cache keys for otherwise identical JS/CSS.
+  const normalizedContent = Buffer.from(content).toString('utf8').replace(/\r\n/g, '\n');
+  return crypto.createHash('sha256').update(normalizedContent).digest('hex').slice(0, 12);
 }
 
 function formatBytes(bytes) {
