@@ -12,7 +12,11 @@ const PLAYER_BADGES = Object.freeze({
     name: 'The Night Remembers',
     description: 'Supported Among Demons by purchasing the game.',
     icon: 'bookmark',
-    color: '#6fd6a7'
+    color: '#6fd6a7',
+    action: Object.freeze({
+      label: 'Buy Game',
+      href: 'https://store.steampowered.com/app/4973450/Among_Demons/'
+    })
   })
 });
 

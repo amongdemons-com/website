@@ -152,6 +152,10 @@ async function purchaseSoulFontBuff(playerId, requestedRitualId, options = {}) {
     const existing = existingRows[0];
     const existingExpiresAt = unixSecondsToIsoString(existing?.expiresAtSeconds);
     const existingBuff = SOUL_FONT_BUFFS_BY_ID.get(String(existing?.buffId || ''));
+    const existingBuffIsActive = Boolean(
+      existingBuff
+      && Number(existing?.expiresAtSeconds) > Math.floor(now.getTime() / 1000)
+    );
     if (String(existing?.ritualId || '') === ritualId && existingBuff) {
       await connection.commit();
       committed = true;
@@ -172,7 +176,10 @@ async function purchaseSoulFontBuff(playerId, requestedRitualId, options = {}) {
       throw createHttpError(`You need ${formatSoulCount(price)} to make an offering at the Whispering Well.`, 409);
     }
 
-    const offeredBuff = selectRandomSoulFontBuff(options.randomInt || randomInt);
+    const offeredBuff = selectRandomSoulFontBuff(
+      options.randomInt || randomInt,
+      existingBuffIsActive ? existingBuff.id : null
+    );
     const awardedAtSeconds = Math.floor(now.getTime() / 1000);
     const expiresAtSeconds = awardedAtSeconds + SOUL_FONT_DURATION_SECONDS;
     await connection.query('UPDATE players SET souls = souls - ? WHERE id = ?', [price, playerId]);
@@ -249,12 +256,16 @@ function normalizeSoulFontRitualId(value) {
   return /^ritual:[a-z0-9_-]{16,64}$/i.test(ritualId) ? ritualId : '';
 }
 
-function selectRandomSoulFontBuff(randomSource = randomInt) {
-  const index = Math.floor(Number(randomSource(SOUL_FONT_BUFFS.length)));
-  if (!Number.isInteger(index) || index < 0 || index >= SOUL_FONT_BUFFS.length) {
+function selectRandomSoulFontBuff(randomSource = randomInt, excludedBuffId = null) {
+  const normalizedExcludedBuffId = String(excludedBuffId || '');
+  const availableBuffs = normalizedExcludedBuffId
+    ? SOUL_FONT_BUFFS.filter((buff) => buff.id !== normalizedExcludedBuffId)
+    : SOUL_FONT_BUFFS;
+  const index = Math.floor(Number(randomSource(availableBuffs.length)));
+  if (!Number.isInteger(index) || index < 0 || index >= availableBuffs.length) {
     throw new Error('Whispering Well random source returned an invalid blessing index.');
   }
-  return SOUL_FONT_BUFFS[index];
+  return availableBuffs[index];
 }
 
 function unixSecondsToIsoString(value) {

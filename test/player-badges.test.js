@@ -28,6 +28,10 @@ test('The Night Remembers has the Steam purchase definition and spectral green c
   assert.equal(badge.description, 'Supported Among Demons by purchasing the game.');
   assert.equal(badge.icon, 'bookmark');
   assert.equal(badge.color, '#6fd6a7');
+  assert.deepEqual(badge.action, {
+    label: 'Buy Game',
+    href: 'https://store.steampowered.com/app/4973450/Among_Demons/'
+  });
 });
 
 test('player badges resolve in stable award order', async () => {
@@ -70,6 +74,11 @@ test('server-rendered hunter badges keep both accessible tooltips in order', () 
   assert.match(html, /data-lucide="bookmark"/);
   assert.equal((html.match(/tabindex="0"/g) || []).length, 2);
   assert.ok(html.indexOf('Chosen Before Dawn') < html.indexOf('The Night Remembers'));
+  assert.match(html, /role="group" aria-label="The Night Remembers badge details"/);
+  assert.match(html, /href="https:\/\/store\.steampowered\.com\/app\/4973450\/Among_Demons\/"/);
+  assert.match(html, /<span>Buy Game<\/span><i data-lucide="arrow-right"><\/i><\/a>/);
+  assert.match(html, /aria-label="Buy Game for The Night Remembers \(opens in a new tab\)"/);
+  assert.match(html, /target="_blank" rel="noopener noreferrer"/);
 });
 
 test('shared browser rendering keeps both badges together on leaderboard rows', () => {
@@ -96,6 +105,9 @@ test('shared browser rendering keeps both badges together on leaderboard rows', 
   assert.equal((html.match(/class="player-badge /g) || []).length, 2);
   assert.ok(html.indexOf('player-badge--chosen_before_dawn') < html.indexOf('player-badge--the_night_remembers'));
   assert.match(html, /data-icon="bookmark"/);
+  assert.match(html, /player-badge-tooltip--action" role="group"/);
+  assert.match(html, /<span>Buy Game<\/span><svg data-icon="arrow-right"><\/svg><\/a>/);
+  assert.match(html, /aria-label="Buy Game for The Night Remembers \(opens in a new tab\)"/);
 });
 
 test('hunter badge group stays centered while the new badge alone uses spectral green', () => {
@@ -108,6 +120,15 @@ test('hunter badge group stays centered while the new badge alone uses spectral 
   assert.match(css, /\.player-badge--the_night_remembers \{\s*color: #6fd6a7;/);
   assert.match(css, /\.hunter-avatar-frame > \.player-badges--hunter \{[\s\S]*?left: 50%;[\s\S]*?transform: translateX\(-50%\);/);
   assert.match(css, /\.player-badges \{[\s\S]*?justify-content: center;[\s\S]*?flex-wrap: nowrap;/);
+  assert.match(css, /\.player-badge:focus-within \.player-badge-tooltip/);
+  assert.match(css, /\.player-badge--has-action:focus-within \.player-badge-tooltip--action \{\s*pointer-events: auto;/);
+  assert.match(css, /\.player-badge-tooltip-action \{[\s\S]*?justify-self: end;[\s\S]*?color: #fff;[\s\S]*?text-align: right;/);
+  assert.match(css, /\.player-badge-tooltip-action:visited,[\s\S]*?color: #fff;/);
+  const actionRule = css.match(/\.player-badge-tooltip-action \{[\s\S]*?\n\}/)?.[0] || '';
+  assert.doesNotMatch(actionRule, /\b(?:background|border|min-height|padding):/);
+  assert.match(css, /\.player-badge-tooltip-action:focus-visible \{[\s\S]*?outline:/);
+  assert.match(css, /@media \(min-width: 576px\) \{[\s\S]*?\.hunter-avatar-frame \.player-badge-tooltip \{\s*left: calc\(50% \+ 2rem\);/);
+  assert.match(css, /\.hunter-avatar-frame \.player-badge-tooltip::before \{\s*left: calc\(50% - 2rem\);/);
 });
 
 test('badge awarding is duplicate-safe', async () => {

@@ -1,5 +1,5 @@
 {
-  "clientVersion": "36010661539b",
+  "clientVersion": "ac36bca98ac8",
   "runtime": "/app/dist/runtime.bundle.js?v=b2d3fdaa714e",
   "dungeon": "/app/dist/dungeon.bundle.js?v=05d8facfed76",
   "ranked": "/app/dist/ranked.bundle.js?v=ffa32bfc8dc6",

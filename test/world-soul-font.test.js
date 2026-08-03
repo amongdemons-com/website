@@ -12,6 +12,7 @@ const {
   getSoulFontCost,
   getWorldSoulFontForPlayer,
   isAtSoulFont,
+  purchaseSoulFontBuff,
   selectRandomSoulFontBuff
 } = require('../public/api/lib/world-soul-font');
 
@@ -50,6 +51,66 @@ test('Whispering Well selects the blessing server-side from the complete buff po
   assert.equal(first.id, SOUL_FONT_BUFFS[0].id);
   assert.equal(last.id, SOUL_FONT_BUFFS.at(-1).id);
   assert.equal(first.effects.length, 1);
+});
+
+test('Whispering Well replacement rolls exclude the active blessing', () => {
+  const activeBuff = SOUL_FONT_BUFFS[0];
+  const selected = selectRandomSoulFontBuff((maximum) => {
+    assert.equal(maximum, SOUL_FONT_BUFFS.length - 1);
+    return 0;
+  }, activeBuff.id);
+
+  assert.equal(selected.id, SOUL_FONT_BUFFS[1].id);
+  assert.notEqual(selected.id, activeBuff.id);
+});
+
+test('paid Whispering Well replacements cannot award the active blessing again', async () => {
+  const now = new Date('2026-08-03T08:00:00.000Z');
+  const activeBuff = SOUL_FONT_BUFFS.at(-1);
+  let storedBuffId = '';
+  const connection = {
+    async beginTransaction() {},
+    async commit() {},
+    async rollback() {},
+    async query(sql, params) {
+      if (/SELECT p\.\*/.test(sql)) {
+        return [[{ id: 'hunter-one', username: 'HunterOne', level: 10, souls: 1_000 }]];
+      }
+      if (/FROM player_world_positions/.test(sql)) {
+        return [[{ x: SOUL_FONT_X, y: SOUL_FONT_Y }]];
+      }
+      if (/FROM player_world_soul_font_buffs/.test(sql)) {
+        return [[{
+          buffId: activeBuff.id,
+          ritualId: 'ritual:previous-offering',
+          expiresAtSeconds: (now.getTime() / 1000) + 3_600
+        }]];
+      }
+      if (/INSERT INTO player_world_soul_font_buffs/.test(sql)) {
+        storedBuffId = params[1];
+        return [{ affectedRows: 2 }];
+      }
+      if (/UPDATE players SET souls/.test(sql)) return [{ affectedRows: 1 }];
+      throw new Error(`Unexpected query: ${sql}`);
+    }
+  };
+
+  const result = await purchaseSoulFontBuff(
+    'hunter-one',
+    'ritual:new-paid-offering',
+    {
+      connection,
+      now,
+      randomInt(maximum) {
+        assert.equal(maximum, SOUL_FONT_BUFFS.length - 1);
+        return maximum - 1;
+      }
+    }
+  );
+
+  assert.notEqual(result.buff.id, activeBuff.id);
+  assert.equal(storedBuffId, result.buff.id);
+  assert.equal(result.charged, true);
 });
 
 test('Whispering Well state hides every possible outcome before sacrifice', async () => {
