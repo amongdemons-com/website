@@ -4,69 +4,97 @@ const { cleanPlayer, createSession } = require('../lib/auth');
 const { findOrCreateOAuthPlayer } = require('../lib/oauth');
 const { authenticateUserTicket, getPlayerSummary, isSteamConfigured } = require('../lib/steam');
 const { checkRetroactive, pushUnsyncedToSteam } = require('../lib/achievements');
+const { awardPlayerBadge } = require('../lib/player-badges');
 
 const router = express.Router();
+const STEAM_PURCHASE_BADGE_KEY = 'the_night_remembers';
 
 // Silent sign-in for the Steam wrapper. The Electron shell obtains a session
 // ticket from the running Steam client and the page posts it here; Valve
 // verifies the ticket, so the SteamID is trusted with no password involved.
-router.post('/auth/steam', async (req, res) => {
-  if (!isSteamConfigured()) {
-    return res.status(503).json({ error: 'Steam sign-in is not configured.' });
-  }
+router.post('/auth/steam', createSteamAuthHandler());
 
-  let verified;
-  try {
-    verified = await authenticateUserTicket(req.body?.ticket);
-  } catch (error) {
-    const status = error.status && error.status >= 400 && error.status < 600 ? error.status : 502;
-    return res.status(status).json({ error: error.message || 'Steam sign-in failed.' });
-  }
+function createSteamAuthHandler(overrides = {}) {
+  const dependencies = {
+    authenticateUserTicket,
+    awardPlayerBadge,
+    checkRetroactive,
+    cleanPlayer,
+    createSession,
+    db,
+    findOrCreateOAuthPlayer,
+    getBearerPlayer,
+    getPlayerLinkedToSteam,
+    getPlayerSummary,
+    isSteamConfigured,
+    pushUnsyncedToSteam,
+    ...overrides
+  };
 
-  // The ticket only proves the SteamID; the persona name needs a separate
-  // profile lookup. Best-effort: sign-in proceeds unnamed if the lookup fails.
-  let personaName = '';
-  try {
-    personaName = (await getPlayerSummary(verified.steamId))?.personaName || '';
-  } catch (error) {
-    personaName = '';
-  }
+  return async (req, res) => {
+    if (!dependencies.isSteamConfigured()) {
+      return res.status(503).json({ error: 'Steam sign-in is not configured.' });
+    }
 
-  const currentPlayer = await getBearerPlayer(req);
-  let player = await getPlayerLinkedToSteam(verified.steamId);
+    let verified;
+    try {
+      verified = await dependencies.authenticateUserTicket(req.body?.ticket);
+    } catch (error) {
+      const status = error.status && error.status >= 400 && error.status < 600 ? error.status : 502;
+      return res.status(status).json({ error: error.message || 'Steam sign-in failed.' });
+    }
 
-  if (!player && currentPlayer && !currentPlayer.is_guest) {
-    // A signed-in (non-guest) account with no Steam link yet: link it in place
-    // so existing web players keep their progress inside the wrapper.
-    await db.query(
-      `INSERT INTO player_oauth_accounts (player_id, provider, provider_user_id, email, display_name)
-       VALUES (?, 'steam', ?, NULL, ?)`,
-      [currentPlayer.id, verified.steamId, personaName || null]
-    );
-    player = currentPlayer;
-  }
+    // The ticket only proves the SteamID; the persona name needs a separate
+    // profile lookup. Best-effort: sign-in proceeds unnamed if the lookup fails.
+    let personaName = '';
+    try {
+      personaName = (await dependencies.getPlayerSummary(verified.steamId))?.personaName || '';
+    } catch (error) {
+      personaName = '';
+    }
 
-  if (!player) {
-    // New Steam identity: adopt the current guest hunter if there is one,
-    // otherwise create a fresh account keyed to the SteamID.
-    player = await findOrCreateOAuthPlayer('steam', { id: verified.steamId, displayName: personaName }, {
-      claimPlayerId: currentPlayer?.is_guest ? currentPlayer.id : null
+    const currentPlayer = await dependencies.getBearerPlayer(req, dependencies.db);
+    let player = await dependencies.getPlayerLinkedToSteam(verified.steamId, dependencies.db);
+
+    if (!player && currentPlayer && !currentPlayer.is_guest) {
+      // A signed-in (non-guest) account with no Steam link yet: link it in place
+      // so existing web players keep their progress inside the wrapper.
+      await dependencies.db.query(
+        `INSERT INTO player_oauth_accounts (player_id, provider, provider_user_id, email, display_name)
+         VALUES (?, 'steam', ?, NULL, ?)`,
+        [currentPlayer.id, verified.steamId, personaName || null]
+      );
+      player = currentPlayer;
+    }
+
+    if (!player) {
+      // New Steam identity: adopt the current guest hunter if there is one,
+      // otherwise create a fresh account keyed to the SteamID.
+      player = await dependencies.findOrCreateOAuthPlayer(
+        'steam',
+        { id: verified.steamId, displayName: personaName },
+        { claimPlayerId: currentPlayer?.is_guest ? currentPlayer.id : null }
+      );
+    }
+
+    // Every verified Steam owner receives the purchase badge before the
+    // successful response. The shared award operation is safe on every login.
+    await dependencies.awardPlayerBadge(player.id, STEAM_PURCHASE_BADGE_KEY, dependencies.db);
+
+    const token = await dependencies.createSession(player.id);
+
+    // Credit history on first link and flush any unlocks Steam has not seen yet.
+    // Best-effort by design: sign-in must succeed even if Steam sync fails.
+    await dependencies.checkRetroactive(player);
+    await dependencies.pushUnsyncedToSteam(player.id);
+
+    res.json({
+      token,
+      player: dependencies.cleanPlayer(player),
+      steamId: verified.steamId
     });
-  }
-
-  const token = await createSession(player.id);
-
-  // Credit history on first link and flush any unlocks Steam has not seen yet.
-  // Best-effort by design: sign-in must succeed even if Steam sync fails.
-  await checkRetroactive(player);
-  await pushUnsyncedToSteam(player.id);
-
-  res.json({
-    token,
-    player: cleanPlayer(player),
-    steamId: verified.steamId
-  });
-});
+  };
+}
 
 async function getBearerPlayer(req) {
   const header = req.get('authorization') || '';
@@ -101,3 +129,7 @@ async function getPlayerLinkedToSteam(steamId) {
 }
 
 module.exports = router;
+module.exports._test = {
+  STEAM_PURCHASE_BADGE_KEY,
+  createSteamAuthHandler
+};

@@ -1,6 +1,9 @@
 const db = require('../public/api/lib/db');
 const { initializeSchema } = require('../public/api/lib/schema');
-const { getPlayerBadgeDefinition } = require('../public/api/lib/player-badges');
+const {
+  awardPlayerBadge,
+  getPlayerBadgeDefinition
+} = require('../public/api/lib/player-badges');
 
 function parseOptions(argv = process.argv.slice(2)) {
   const apply = argv.includes('--apply');
@@ -40,12 +43,7 @@ async function awardBadge(options) {
   try {
     await connection.beginTransaction();
     for (const player of players) {
-      await connection.query(
-        `INSERT INTO player_badges (player_id, badge_key)
-         VALUES (?, ?)
-         ON DUPLICATE KEY UPDATE badge_key = VALUES(badge_key)`,
-        [player.id, options.badge.key]
-      );
+      await awardPlayerBadge(player.id, options.badge.key, connection);
     }
     await connection.commit();
     return players;

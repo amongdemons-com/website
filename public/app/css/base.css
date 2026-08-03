@@ -7328,8 +7328,10 @@ body.dungeon-page:not(.ranked-page) .demonic-pact-reroll-cost {
 .player-badges {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.3rem;
     flex: 0 0 auto;
+    flex-wrap: nowrap;
 }
 
 .player-badge {
@@ -7362,6 +7364,23 @@ body.dungeon-page:not(.ranked-page) .demonic-pact-reroll-cost {
     display: grid;
     place-items: center;
     filter: drop-shadow(0 0 6px rgba(111, 73, 147, 0.58));
+}
+
+.player-badge--the_night_remembers {
+    color: #6fd6a7;
+}
+
+.player-badge--the_night_remembers:hover,
+.player-badge--the_night_remembers:focus-visible {
+    color: #9ae5bf;
+}
+
+.player-badge--the_night_remembers:focus-visible {
+    outline-color: rgba(111, 214, 167, 0.76);
+}
+
+.player-badge--the_night_remembers .player-badge-mark {
+    filter: drop-shadow(0 0 6px rgba(74, 157, 119, 0.58));
 }
 
 .player-badge-mark .game-icon {

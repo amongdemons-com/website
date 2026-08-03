@@ -441,6 +441,7 @@ Preview a player badge award, then explicitly apply it:
 ```bash
 npm run badge:award -- chosen_before_dawn HunterName
 npm run badge:award -- chosen_before_dawn HunterName --apply
+npm run badge:award -- the_night_remembers WebsiteBuyer --apply
 ```
 
 Syntax-check the server and all backend/frontend scripts (PowerShell):
