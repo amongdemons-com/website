@@ -11446,3 +11446,7 @@ body .game-shell-nav .game-nav-link[data-game-route="ranked"] {
     width: 1.05rem;
     height: 1.05rem;
 }
+
+.rankings-page .rank-sort-link[data-sort="ranked"] {
+    display: none;
+}

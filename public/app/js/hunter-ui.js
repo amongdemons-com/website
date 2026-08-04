@@ -102,7 +102,7 @@
     setHunterName(username);
     renderHunterBadges(payload.badges);
     elements.subline.innerHTML = `${renderRankDivisionText(rankedDivision)}
-      <span aria-hidden="true">&middot;</span> Level ${formatNumber(level)}
+      Level ${formatNumber(level)}
       <span aria-hidden="true">&middot;</span> ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`;
     setText(elements.stats.floor, formatNumber(hunter.highestFloor || 0));
     renderCoordinates(elements.stats.coordinates, coordinates);
@@ -620,7 +620,8 @@
     const slug = label.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
-    return `<span class="rank-division-text rank-division-text--${escapeHtml(slug)}">${escapeHtml(label)}</span>`;
+    return ``;
+    return `<span class="rank-division-text rank-division-text--${escapeHtml(slug)}">${escapeHtml(label)}</span> <span aria-hidden="true">&middot;</span> `;
   }
 
   function formatNumber(value) {

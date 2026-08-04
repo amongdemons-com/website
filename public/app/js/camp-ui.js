@@ -401,7 +401,7 @@
 
   function renderPlayerTitle(ranked) {
     const division = String(ranked?.division || '').trim();
-    if (!division) {
+    if (!division || true) {
       setText(elements.playerTitle, 'Demon Hunter');
       setClassName(elements.playerTitle, 'camp-player-title');
       return;
