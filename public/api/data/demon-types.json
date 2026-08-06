@@ -105,7 +105,7 @@
       "hits": 1,
       "maxStacksPerTarget": null,
       "durationTicks": 140,
-      "tickInterval": 20,
+      "tickInterval": 10,
       "damagePerTickScale": 1.15,
       "spreadMode": "highest_hp_then_cycle",
       "triggersRetaliate": false
@@ -120,8 +120,8 @@
         6
       ],
       "speed": [
-        12,
-        20
+        10,
+        15
       ]
     },
     "rarityMultiplier": {
