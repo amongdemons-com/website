@@ -112,16 +112,16 @@
     },
     "baseStats": {
       "hp": [
-        68,
-        88
+        88,
+        108
       ],
       "atk": [
         4,
         6
       ],
       "speed": [
-        8,
-        10
+        12,
+        20
       ]
     },
     "rarityMultiplier": {
