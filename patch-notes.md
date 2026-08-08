@@ -4,14 +4,15 @@
 
 ## Patch 2 (Current)
 
-- Ranked encounters now appear after Dungeon floors 30, 35, 40, 45, and every
-  five floors after that.
+- Ranked encounters now replace the normal fight on Dungeon floors 30, 35, 40,
+  45, and every five floors after that when a rival is available.
 - Rival teams preserve the hunter's exact build from that floor and are chosen
-  from hunters within five levels. If no rival is available, the run continues.
+  from hunters within five levels and 200 Ranked Points. If no close rival is
+  available, the run continues.
 - Fight or extract when a ranked rival appears. Wins continue the run, while
   losses end it, and both update your Ranked Points.
-- Rival fights now show the hunter's name and rank, a glowing enemy grid, and a
-  quick Ranked Points result before continuing.
+- Rival fights now show the hunter's name and rank, a red-glowing enemy
+  formation, and a quick Ranked Points result before continuing.
 - The standalone Ranked mode has been retired, while ranks, points, and the
   Ranked leaderboard remain.
 - Added Iron III, Iron II, and Iron I below Bronze for hunters who fall under

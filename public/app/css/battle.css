@@ -5902,40 +5902,34 @@ body.is-world-battle-result-animating .battle-result-burst.is-defeat {
     color: rgba(255, 255, 255, 0.42);
 }
 
-.battle-side-enemy.is-ranked-encounter-planning #enemyGrid {
+.battle-side-enemy.is-ranked-encounter-planning #enemyGrid .battle-formation-grid {
     position: relative;
     isolation: isolate;
-    border-radius: 12px;
 }
 
-.battle-side-enemy.is-ranked-encounter-planning #enemyGrid::before {
+.battle-side-enemy.is-ranked-encounter-planning #enemyGrid .battle-formation-grid::before {
     --dungeon-ranked-glimmer-angle: 0deg;
     content: "";
     position: absolute;
     inset: -4px;
-    z-index: 0;
-    border-radius: 14px;
+    z-index: 2;
+    border-radius: 12px;
     padding: 1px;
     background: conic-gradient(
         from var(--dungeon-ranked-glimmer-angle),
         transparent 0deg,
-        rgba(106, 221, 202, 0.08) 42deg,
-        rgba(216, 255, 246, 0.72) 62deg,
-        rgba(106, 221, 202, 0.14) 82deg,
+        rgba(226, 80, 65, 0.1) 42deg,
+        rgba(255, 171, 145, 0.84) 62deg,
+        rgba(226, 80, 65, 0.24) 82deg,
         transparent 120deg,
         transparent 360deg
     );
-    filter: drop-shadow(0 0 5px rgba(106, 221, 202, 0.2));
+    filter: drop-shadow(0 0 6px rgba(226, 80, 65, 0.42));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
     animation: dungeon-ranked-grid-glimmer 5.5s linear infinite;
-}
-
-.battle-side-enemy.is-ranked-encounter-planning #enemyGrid > .battle-formation {
-    position: relative;
-    z-index: 1;
 }
 
 @keyframes dungeon-ranked-grid-glimmer {
@@ -6014,7 +6008,7 @@ body.is-world-battle-result-animating .battle-result-burst.is-defeat {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .battle-side-enemy.is-ranked-encounter-planning #enemyGrid::before {
+    .battle-side-enemy.is-ranked-encounter-planning #enemyGrid .battle-formation-grid::before {
         animation: none;
     }
 }

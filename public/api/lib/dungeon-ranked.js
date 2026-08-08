@@ -16,8 +16,9 @@ const { COMBAT_DATA_VERSION, getDivision } = require('./ranked-rules');
 const DUNGEON_RANKED_FIRST_FLOOR = 30;
 const DUNGEON_RANKED_FLOOR_INTERVAL = 5;
 const DUNGEON_RANKED_LEVEL_RANGE = 5;
+const DUNGEON_RANKED_RATING_RANGE = 200;
 const DUNGEON_RANKED_ELO_K = 32;
-const DUNGEON_RANKED_SNAPSHOT_VERSION = 'dungeon-ranked-v1';
+const DUNGEON_RANKED_SNAPSHOT_VERSION = 'dungeon-ranked-v2';
 const DEFAULT_RATING = 1000;
 
 function isDungeonRankedFloor(floor) {
@@ -97,6 +98,7 @@ async function prepareDungeonRankedEncounter(run, player, queryable = db, option
     seasonId: season.id,
     floor: run.floor,
     playerLevel,
+    playerRating: currentRating?.rating ?? DEFAULT_RATING,
     lastOpponentPlayerId: run.state.lastRankedOpponentPlayerId || null
   }, queryable, options);
 
@@ -132,6 +134,9 @@ async function prepareDungeonRankedEncounter(run, player, queryable = db, option
 async function selectDungeonRankedOpponent(criteria, queryable = db, options = {}) {
   const minLevel = Math.max(1, criteria.playerLevel - DUNGEON_RANKED_LEVEL_RANGE);
   const maxLevel = criteria.playerLevel + DUNGEON_RANKED_LEVEL_RANGE;
+  const playerRating = Math.max(0, Math.floor(Number(criteria.playerRating) || DEFAULT_RATING));
+  const minRating = Math.max(0, playerRating - DUNGEON_RANKED_RATING_RANGE);
+  const maxRating = playerRating + DUNGEON_RANKED_RATING_RANGE;
   const [rows] = await queryable.query(
     `SELECT snapshots.*,
             ratings.rating AS current_rating,
@@ -149,6 +154,7 @@ async function selectDungeonRankedOpponent(criteria, queryable = db, options = {
        AND snapshots.floor = ?
        AND snapshots.player_id <> ?
        AND snapshots.player_level BETWEEN ? AND ?
+       AND COALESCE(ratings.rating, snapshots.rating) BETWEEN ? AND ?
        AND snapshots.combat_version = ?
        AND NOT EXISTS (
          SELECT 1
@@ -173,6 +179,8 @@ async function selectDungeonRankedOpponent(criteria, queryable = db, options = {
       criteria.playerId,
       minLevel,
       maxLevel,
+      minRating,
+      maxRating,
       COMBAT_DATA_VERSION
     ]
   );
@@ -343,6 +351,7 @@ module.exports = {
   DUNGEON_RANKED_FIRST_FLOOR,
   DUNGEON_RANKED_FLOOR_INTERVAL,
   DUNGEON_RANKED_LEVEL_RANGE,
+  DUNGEON_RANKED_RATING_RANGE,
   DUNGEON_RANKED_SNAPSHOT_VERSION,
   applyDungeonRankedRatingResult,
   createDungeonRankedSnapshotPayload,

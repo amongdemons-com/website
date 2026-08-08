@@ -6,20 +6,55 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 
 const {
+  DUNGEON_RANKED_SNAPSHOT_VERSION,
+  DUNGEON_RANKED_RATING_RANGE,
   createDungeonRankedSnapshotPayload,
   getDungeonRankedRatingDelta,
   isDungeonRankedFloor,
   namespaceDungeonRankedOpponentTeam,
   selectDungeonRankedOpponent
 } = require('../public/api/lib/dungeon-ranked');
+const { advanceDungeonFloor } = require('../public/api/lib/dungeon-progression');
 
-test('Ranked dungeon checkpoints begin when floor 30 is cleared and repeat every five floors', () => {
+test('Ranked dungeon checkpoints replace the normal encounter on floor 30 and every five floors', () => {
   assert.equal(isDungeonRankedFloor(29), false);
   assert.equal(isDungeonRankedFloor(30), true);
   assert.equal(isDungeonRankedFloor(34), false);
   assert.equal(isDungeonRankedFloor(35), true);
   assert.equal(isDungeonRankedFloor(40), true);
   assert.equal(isDungeonRankedFloor(41), false);
+});
+
+test('Dungeon progression offers a Ranked rival immediately on the destination checkpoint floor', async () => {
+  const encounter = { status: 'choice', floor: 30 };
+  const run = {
+    id: 'run-a',
+    playerId: 'player-a',
+    seed: 17,
+    status: 'active',
+    floor: 29,
+    state: {
+      currentFloor: 29,
+      team: [{ instanceId: 'demon-a', maxHp: 100, hp: 40, atk: 20, speed: 10 }],
+      buffs: { active: [], pendingChoices: [], temporary: [] }
+    }
+  };
+  let preparedFloor = null;
+
+  const result = await advanceDungeonFloor(run, { level: 12 }, {
+    async prepareRankedEncounter(candidateRun) {
+      preparedFloor = candidateRun.floor;
+      candidateRun.state.enemies = [{ instanceId: 'ranked-enemy-a' }];
+      candidateRun.state.rankedEncounter = encounter;
+      return encounter;
+    }
+  });
+
+  assert.equal(preparedFloor, 30);
+  assert.equal(run.floor, 30);
+  assert.equal(run.state.currentFloor, 30);
+  assert.deepEqual(result.rankedEncounter, encounter);
+  assert.equal(run.state.enemies[0].instanceId, 'ranked-enemy-a');
 });
 
 test('Ranked dungeon snapshots preserve the exact team and active build buffs', () => {
@@ -71,11 +106,12 @@ test('equal-RP Ranked encounters use a 32-point Elo result', () => {
   assert.ok(getDungeonRankedRatingDelta('enemy', 1000, 1400) > -16);
 });
 
-test('snapshot matchmaking uses the same floor and a plus-or-minus-five level window', async () => {
+test('snapshot matchmaking uses the same floor with close level and Ranked Point windows', async () => {
   let receivedParams;
   const queryable = {
     async query(sql, params) {
       assert.match(sql, /player_level BETWEEN \? AND \?/);
+      assert.match(sql, /COALESCE\(ratings\.rating, snapshots\.rating\) BETWEEN \? AND \?/);
       receivedParams = params;
       return [[{
         id: 'snapshot-b',
@@ -85,7 +121,7 @@ test('snapshot matchmaking uses the same floor and a plus-or-minus-five level wi
         current_rating: 1250,
         previously_served: null,
         snapshot: JSON.stringify({
-          snapshotVersion: 'dungeon-ranked-v1',
+          snapshotVersion: DUNGEON_RANKED_SNAPSHOT_VERSION,
           team: [{ instanceId: 'rival-demon', formationSlot: 2 }],
           buffs: { active: ['shared_pain'] }
         })
@@ -97,11 +133,14 @@ test('snapshot matchmaking uses the same floor and a plus-or-minus-five level wi
     playerId: 'player-a',
     seasonId: 'season-a',
     floor: 35,
-    playerLevel: 12
+    playerLevel: 12,
+    playerRating: 1100
   }, queryable, { random: () => 0 });
 
   assert.equal(receivedParams[6], 7);
   assert.equal(receivedParams[7], 17);
+  assert.equal(receivedParams[8], 1100 - DUNGEON_RANKED_RATING_RANGE);
+  assert.equal(receivedParams[9], 1100 + DUNGEON_RANKED_RATING_RANGE);
   assert.equal(opponent.hunterName, 'Rival');
   assert.equal(opponent.division, 'Silver III');
   assert.deepEqual(opponent.buffs.active, ['shared_pain']);
@@ -126,7 +165,8 @@ test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result fl
   assert.match(html, /id="dungeonRankedResultModal"/);
   assert.match(html, /rank-divisions\.css/);
   assert.match(styles, /dungeon-ranked-grid-glimmer/);
-  assert.match(styles, /is-ranked-encounter-planning #enemyGrid::before/);
+  assert.match(styles, /is-ranked-encounter-planning #enemyGrid \.battle-formation-grid::before/);
+  assert.match(styles, /rgba\(226, 80, 65, 0\.42\)/);
   assert.match(rankedUi, /dungeon-ranked-opponent-name/);
   assert.match(rankedUi, /rank-division-text--/);
   assert.match(rankedUi, /ranked\/continue/);

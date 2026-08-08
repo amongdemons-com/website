@@ -14,16 +14,17 @@ async function advanceDungeonFloor(run, player, options = {}) {
   run.state.awaitingCollectionReinforcement = false;
   delete run.state.collectionReinforcementLimit;
 
+  run.floor += 1;
+  run.state.currentFloor = run.floor;
+  applyRunBuffStatModifiers(run);
+
   if (!options.skipRankedEncounter) {
-    applyRunBuffStatModifiers(run);
-    const encounter = await prepareDungeonRankedEncounter(run, player, options.queryable, options);
+    const prepareRankedEncounter = options.prepareRankedEncounter || prepareDungeonRankedEncounter;
+    const encounter = await prepareRankedEncounter(run, player, options.queryable, options);
     if (encounter) return { run, rankedEncounter: encounter };
   }
 
   delete run.state.rankedEncounter;
-  run.floor += 1;
-  run.state.currentFloor = run.floor;
-  applyRunBuffStatModifiers(run);
   run.state.enemies = await createDungeonEnemies(
     createRng(run.seed + run.floor),
     run.floor,
