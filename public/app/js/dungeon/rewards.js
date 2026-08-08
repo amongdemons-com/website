@@ -549,11 +549,12 @@ function isExtractionUnlocked(run = state.run) {
 }
 
 function canExtractRun() {
+  const atRankedCheckpoint = state.run?.rankedEncounter?.status === 'choice';
   return Boolean(
     state.run?.status === 'active' &&
-    state.run?.awaitingRecruit &&
+    (state.run?.awaitingRecruit || atRankedCheckpoint) &&
     isExtractionUnlocked(state.run) &&
-    state.isRecruiting &&
+    (state.isRecruiting || atRankedCheckpoint) &&
     !hasPendingBuffChoices(state.run)
   );
 }

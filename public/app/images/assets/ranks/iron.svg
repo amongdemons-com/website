@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 80" role="img" aria-labelledby="title">
+  <title id="title">Iron rank crest</title>
+  <defs>
+    <linearGradient id="metal" x1="12" y1="6" x2="58" y2="72" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c4cdd1"/>
+      <stop offset=".48" stop-color="#74828a"/>
+      <stop offset="1" stop-color="#353f45"/>
+    </linearGradient>
+  </defs>
+  <path fill="#0b1013" stroke="#87959d" stroke-width="3" d="M36 3 65 14v24c0 19-12 31-29 39C19 69 7 57 7 38V14L36 3Z"/>
+  <path fill="url(#metal)" d="M36 9 59 18v19c0 15-9 25-23 33-14-8-23-18-23-33V18l23-9Z"/>
+  <path fill="#20292e" d="m22 39 14-17 14 17-6 18H28l-6-18Z"/>
+  <path fill="#b7c2c7" d="m36 28 8 11-3 10H31l-3-10 8-11Z"/>
+  <path fill="#f0f4f5" opacity=".58" d="m18 21 18-7 7 3-22 9-3 14h-4V22l4-1Z"/>
+</svg>

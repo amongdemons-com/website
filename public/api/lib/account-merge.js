@@ -438,9 +438,18 @@ async function mergeSimpleCollections(targetPlayerId, sourcePlayerId, connection
     await connection.query(sql, [targetPlayerId, sourcePlayerId]);
   }
 
-  for (const table of ['ranked_opponent_history', 'ranked_opponent_snapshots']) {
+  for (const table of [
+    'dungeon_ranked_history',
+    'dungeon_ranked_snapshots',
+    'ranked_opponent_history',
+    'ranked_opponent_snapshots'
+  ]) {
     await connection.query(`UPDATE ${table} SET player_id = ? WHERE player_id = ?`, [targetPlayerId, sourcePlayerId]);
   }
+  await connection.query(
+    'UPDATE dungeon_ranked_history SET opponent_player_id = ? WHERE opponent_player_id = ?',
+    [targetPlayerId, sourcePlayerId]
+  );
   await connection.query(
     "UPDATE ranked_runs SET player_id = ? WHERE player_id = ? AND status <> 'active'",
     [targetPlayerId, sourcePlayerId]

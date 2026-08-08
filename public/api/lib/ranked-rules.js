@@ -32,7 +32,10 @@ const ENDLESS_SKILL_CAP = 10;
 const EARLY_RUN_RATING_LOSS = 20;
 
 const DIVISIONS = Object.freeze([
-  { minimum: 0, name: 'Bronze III' },
+  { minimum: 0, name: 'Iron III' },
+  { minimum: 300, name: 'Iron II' },
+  { minimum: 600, name: 'Iron I' },
+  { minimum: 800, name: 'Bronze III' },
   { minimum: 900, name: 'Bronze II' },
   { minimum: 1100, name: 'Bronze I' },
   { minimum: 1250, name: 'Silver III' },

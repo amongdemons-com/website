@@ -5,6 +5,7 @@ import * as lifecycle from './dungeon/lifecycle.js?v=20260722-request-optimizati
 import * as render from './dungeon/render.js?v=20260721-victory-gold-v1';
 import * as combat from './dungeon/combat.js?v=20260717-paused-skip-result-v1';
 import * as rewards from './dungeon/rewards.js?v=20260720-dungeon-defeat-v1';
+import * as ranked from './dungeon/ranked.js?v=20260808-dungeon-ranked-v1';
 import * as pacts from './dungeon/pacts.js?v=20260716-primary-replay-controls-v1';
 import * as hand from './dungeon/hand.js?v=20260719-extraction-unlock-v1';
 import * as recruit from './dungeon/recruit.js?v=20260719-rarity-pacts-v1';
@@ -19,6 +20,7 @@ registerDungeonActions({
   ...render,
   ...combat,
   ...rewards,
+  ...ranked,
   ...pacts,
   ...hand,
   ...recruit,

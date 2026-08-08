@@ -2,10 +2,9 @@ const express = require('express');
 const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { normalizeCollectionDemonStats } = require('../lib/collection-demons');
-const { createRng } = require('../lib/rng');
-const { createDungeonEnemies } = require('../lib/dungeon-enemies');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { serializeRun } = require('../lib/run-serialization');
+const { advanceDungeonFloor } = require('../lib/dungeon-progression');
 const {
   assignFormationSlots,
   createRunDemonFromCollection,
@@ -14,7 +13,7 @@ const {
   normalizePosition,
   resetRunDemon
 } = require('../lib/run-demons');
-const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, hasPendingBuffChoices } = require('../lib/run-buffs');
+const { getTemporaryTeamSizeBonus, hasPendingBuffChoices } = require('../lib/run-buffs');
 const { canUseCollectionReinforcement, getDungeonTeamLimit, markCollectionReinforcementUsed } = require('../lib/dungeon-rules');
 const { clearPendingRewardSoul, settleDiscardedSoulRewards } = require('../lib/run-rewards');
 const achievements = require('../lib/achievements');
@@ -52,7 +51,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     }
     run.state.awaitingCollectionReinforcement = false;
     settleDiscardedSoulRewards(run);
-    await advanceFloor(run, req.player.level);
+    await advanceDungeonFloor(run, req.player);
     await saveRun(run);
     return res.json({
       team: run.state.team,
@@ -90,7 +89,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     settleDiscardedSoulRewards(run);
 
     if (run.status === 'active') {
-      await advanceFloor(run, req.player.level);
+      await advanceDungeonFloor(run, req.player);
     }
 
     await saveRun(run);
@@ -144,7 +143,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
   if (run.status === 'active') {
     run.state.awaitingCollectionReinforcement = false;
     settleDiscardedSoulRewards(run);
-    await advanceFloor(run, req.player.level);
+    await advanceDungeonFloor(run, req.player);
   }
 
   await saveRun(run);
@@ -155,23 +154,6 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     run: await serializeRun(run, { playerLevel: req.player.level })
   });
 });
-
-async function advanceFloor(run, playerLevel) {
-  run.state.team = assignFormationSlots(
-    run.state.team.map((demon) => resetRunDemon(demon, demon.instanceId)),
-    'player'
-  );
-  run.floor += 1;
-  run.state.currentFloor = run.floor;
-  run.state.playerLevel = Math.max(1, Math.floor(Number(playerLevel ?? run.state.playerLevel) || 1));
-  applyRunBuffStatModifiers(run);
-  run.state.enemies = await createDungeonEnemies(createRng(run.seed + run.floor), run.floor, run.state.team.length, {
-    buffs: run.state.buffs
-  });
-  run.state.awaitingRecruit = false;
-  run.state.awaitingCollectionReinforcement = false;
-  delete run.state.collectionReinforcementLimit;
-}
 
 async function buildStagedTeam(run, stagedTeam) {
   const teamLimit = getRecruitTeamLimitForRun(run);

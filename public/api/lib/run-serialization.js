@@ -6,6 +6,11 @@ const {
   isDungeonExtractionUnlocked
 } = require('./dungeon-rules');
 const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, normalizeRunBuffState, serializeRunBuffState } = require('./run-buffs');
+const { applyPreBattleBuffs, serializeCombatBuffState } = require('./combat-buffs');
+const {
+  getDungeonRankedEnemyBuffs,
+  serializeDungeonRankedEncounter
+} = require('./dungeon-ranked');
 const { getActiveWorldRewardBuffs } = require('./world-buffs');
 const { getCurrentRunRewards } = require('./run-rewards');
 
@@ -17,6 +22,12 @@ async function serializeRun(run, options = {}) {
   const worldBuffs = await getSerializedWorldBuffs(run, options);
   const encounterProfile = getEncounterProfile(run, run.floor);
   const nextEncounterProfile = getEncounterProfile(run, Number(run.floor) + 1);
+  const rankedEncounter = serializeDungeonRankedEncounter(run.state.rankedEncounter);
+  const rankedPlanning = rankedEncounter?.status === 'choice';
+  const rankedEnemyBuffs = rankedEncounter ? getDungeonRankedEnemyBuffs(run) : null;
+  const enemies = rankedPlanning
+    ? applyPreBattleBuffs(cloneJson(run.state.enemies || []), rankedEnemyBuffs)
+    : run.state.enemies;
 
   return {
     runId: run.id,
@@ -25,12 +36,15 @@ async function serializeRun(run, options = {}) {
     currentFloor: run.state.currentFloor,
     hp: run.state.hp,
     team: run.state.team,
-    enemies: run.state.enemies,
+    enemies,
     nextEnemies: await getNextEnemiesPreview(run),
-    enemyPressure: getEnemyPressurePreview(run, run.floor),
+    enemyPressure: rankedEncounter ? null : getEnemyPressurePreview(run, run.floor),
     nextEnemyPressure: getEnemyPressurePreview(run, Number(run.floor) + 1),
-    enemyBuffs: serializeEncounterBuffs(encounterProfile),
+    enemyBuffs: rankedEncounter ? [] : serializeEncounterBuffs(encounterProfile),
     nextEnemyBuffs: serializeEncounterBuffs(nextEncounterProfile),
+    enemyTeamBuffs: rankedEnemyBuffs
+      ? serializeCombatBuffState(rankedEnemyBuffs).activeBuffs
+      : [],
     rewards: getCurrentRunRewards(run),
     awaitingRecruit: Boolean(run.state.awaitingRecruit),
     extractionUnlocked: isDungeonExtractionUnlocked(run.floor),
@@ -40,9 +54,14 @@ async function serializeRun(run, options = {}) {
     buffs: serializeRunBuffState(run.state.buffs || {}, { playerLevel }),
     worldBuffs,
     extractChoice: run.state.extractChoice || null,
+    rankedEncounter,
     lastBattle: run.state.lastBattle || null,
     earned: run.state.earned || { xp: 0, souls: 0 }
   };
+}
+
+function cloneJson(value) {
+  return JSON.parse(JSON.stringify(value));
 }
 
 async function getSerializedWorldBuffs(run, options = {}) {

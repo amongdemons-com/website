@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
   getFloorRatingGain,
+  getDivision,
   getRankedCardCost,
   getRunEndRatingDelta,
   resolveDefeat
@@ -20,6 +21,18 @@ const {
   getSnapshotSkillTreeSummary,
   isImmediatePlayerRepeat
 } = require('../public/api/lib/ranked-runs')._test;
+
+test('Iron divisions fill the progression below Bronze', () => {
+  assert.equal(getDivision(0).name, 'Iron III');
+  assert.equal(getDivision(299).name, 'Iron III');
+  assert.equal(getDivision(300).name, 'Iron II');
+  assert.equal(getDivision(599).name, 'Iron II');
+  assert.equal(getDivision(600).name, 'Iron I');
+  assert.equal(getDivision(799).name, 'Iron I');
+  assert.equal(getDivision(800).name, 'Bronze III');
+  assert.equal(getDivision(899).name, 'Bronze III');
+  assert.equal(getDivision(1000).name, 'Bronze II');
+});
 
 test('Endless floors track prestige without awarding additional rating', () => {
   assert.equal(getFloorRatingGain(9), 0);

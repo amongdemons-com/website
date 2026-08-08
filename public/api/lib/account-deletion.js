@@ -2,6 +2,8 @@ const db = require('./db');
 
 const ACCOUNT_DELETION_GRACE_DAYS = 7;
 const PLAYER_DATA_TABLES = [
+  'dungeon_ranked_history',
+  'dungeon_ranked_snapshots',
   'ranked_action_receipts',
   'ranked_opponent_history',
   'ranked_opponent_snapshots',

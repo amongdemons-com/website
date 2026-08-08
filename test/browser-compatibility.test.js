@@ -36,7 +36,7 @@ test('Chrome and other iOS browsers do not receive the Safari notice', () => {
 });
 
 test('the compatibility notice is limited to gameplay routes', () => {
-  ['/camp', '/world', '/dungeon/run', '/ranked', '/bag', '/collection', '/skill-tree']
+  ['/camp', '/world', '/dungeon/run', '/bag', '/collection', '/skill-tree']
     .forEach((path) => assert.equal(isGamePath(path), true, path));
   ['/leaderboard', '/hunter/TestHunter', '/', '/settings']
     .forEach((path) => assert.equal(isGamePath(path), false, path));

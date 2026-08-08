@@ -7,11 +7,16 @@ const { createRng } = require('../lib/rng');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { serializeRun } = require('../lib/run-serialization');
 const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuffChoices, getTemporaryTeamSizeBonus, hasPendingBuffChoices, serializeRunBuffState, shouldOfferRunBuffChoices } = require('../lib/run-buffs');
-const { normalizeCombatBuffState, serializeCombatBuffState } = require('../lib/combat-buffs');
+const { serializeCombatBuffState } = require('../lib/combat-buffs');
 const { getActivePlayerWorldRewardBuffs, resolvePlayerCombatBuffState } = require('../lib/player-combat-buffs');
 const { assignFormationSlots, mergeBattleTeamForRun, resetRunDemon } = require('../lib/run-demons');
 const { canUseCollectionReinforcement, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { getDungeonEncounterProfile } = require('../lib/dungeon-enemies');
+const {
+  applyDungeonRankedRatingResult,
+  getDungeonPlayerCombatBuffs,
+  getDungeonRankedEnemyBuffs
+} = require('../lib/dungeon-ranked');
 const { allocateRunRewardIds, createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
 const achievements = require('../lib/achievements');
@@ -27,6 +32,14 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 
   if (run.status !== 'active') {
     return res.status(409).json({ error: 'Run is not active.' });
+  }
+
+  if (run.state.rankedEncounter?.status === 'choice') {
+    return resolveDungeonRankedBattle(req, res);
+  }
+
+  if (run.state.rankedEncounter) {
+    return res.status(409).json({ error: 'Resolve the Ranked result before continuing.' });
   }
 
   if (run.state.awaitingRecruit) {
@@ -134,15 +147,90 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   });
 });
 
-function getDungeonPlayerCombatBuffs(runBuffs, skillBuffs) {
-  const normalizedRunBuffs = normalizeCombatBuffState(runBuffs || {});
-  const normalizedSkillBuffs = normalizeCombatBuffState(skillBuffs || {});
+async function resolveDungeonRankedBattle(req, res) {
+  const skillBuffs = await resolvePlayerCombatBuffState(req.player);
+  const connection = await db.getConnection();
+  let committed = false;
 
-  return normalizeCombatBuffState({
-    active: normalizedRunBuffs.active,
-    temporary: normalizedRunBuffs.temporary,
-    activeBuffs: normalizedSkillBuffs.activeBuffs
-  });
+  try {
+    await connection.beginTransaction();
+    const run = await getRunForPlayer(req.params.id, req.player.id, connection, { forUpdate: true });
+    if (!run) throw createBattleError('Run not found.', 404);
+    if (run.status !== 'active') throw createBattleError('Run is not active.', 409);
+    if (run.state.rankedEncounter?.status !== 'choice') {
+      throw createBattleError('No Ranked dungeon encounter is waiting.', 409);
+    }
+
+    const demonTypes = await getDemonTypes();
+    const playerBuffs = getDungeonPlayerCombatBuffs(run.state.buffs, skillBuffs);
+    const enemyBuffs = getDungeonRankedEnemyBuffs(run);
+    applyRunBuffStatModifiers(run);
+    run.state.team = assignFormationSlots(run.state.team || [], 'player');
+    run.state.enemies = assignFormationSlots(run.state.enemies || [], 'enemy');
+
+    const result = simulateFight(
+      createRng((Number(run.seed) + Number(run.floor) * 2654435761 + 17041) >>> 0),
+      run.state.team,
+      run.state.enemies,
+      {
+        demonTypes,
+        combatType: 'ranked',
+        playerBuffs,
+        enemyBuffs
+      }
+    );
+
+    run.state.team = mergeBattleTeamForRun(run.state.team, result.playerTeam);
+    run.state.enemies = result.enemyTeam;
+    run.state.hp = result.playerTeam.reduce((sum, demon) => sum + Math.max(0, demon.hp), 0);
+    consumeNextBattleTemporaryBuffs(run);
+    const opponent = run.state.rankedEncounter.opponent;
+    run.state.lastBattle = {
+      floor: run.floor,
+      ranked: true,
+      opponent: { ...opponent },
+      winner: result.winner,
+      endReason: result.endReason,
+      ticks: result.ticks,
+      combatLog: result.combatLog,
+      playerTeamBefore: cloneForBattleReplay(result.playerTeamBefore),
+      enemyTeamBefore: cloneForBattleReplay(result.enemyTeamBefore),
+      playerTeamAfter: cloneForBattleReplay(result.playerTeam),
+      enemyTeamAfter: cloneForBattleReplay(result.enemyTeam),
+      playerBuffs: serializeCombatBuffState(playerBuffs).activeBuffs,
+      enemyBuffs: serializeCombatBuffState(enemyBuffs).activeBuffs
+    };
+
+    const rankedResult = await applyDungeonRankedRatingResult(run, result.winner, connection);
+    if (result.winner !== 'player') {
+      run.status = 'defeated';
+      delete run.state.extractChoice;
+    }
+
+    await saveRun(run, connection);
+    await connection.commit();
+    committed = true;
+
+    const worldBuffs = getActivePlayerWorldRewardBuffs(skillBuffs);
+    res.json({
+      winner: result.winner,
+      endReason: result.endReason,
+      ticks: result.ticks,
+      rankedResult,
+      run: await serializeRun(run, { worldBuffs, playerLevel: req.player.level })
+    });
+  } catch (error) {
+    if (!committed) await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+function createBattleError(message, status) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
 }
 
 function cloneForBattleReplay(team) {

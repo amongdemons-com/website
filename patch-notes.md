@@ -4,7 +4,19 @@
 
 ## Patch 2 (Current)
 
-- Ranked standings and run histories have been reset for a fresh start.
+- Ranked encounters now appear after Dungeon floors 30, 35, 40, 45, and every
+  five floors after that.
+- Rival teams preserve the hunter's exact build from that floor and are chosen
+  from hunters within five levels. If no rival is available, the run continues.
+- Fight or extract when a ranked rival appears. Wins continue the run, while
+  losses end it, and both update your Ranked Points.
+- Rival fights now show the hunter's name and rank, a glowing enemy grid, and a
+  quick Ranked Points result before continuing.
+- The standalone Ranked mode has been retired, while ranks, points, and the
+  Ranked leaderboard remain.
+- Added Iron III, Iron II, and Iron I below Bronze for hunters who fall under
+  800 Ranked Points.
+- Ranked standings and run histories have been reset for this fresh start.
 - Rematches against the same hunter now require a five-minute wait.
 
 ## Patch 1

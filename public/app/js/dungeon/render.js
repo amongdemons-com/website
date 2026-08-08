@@ -28,6 +28,9 @@ const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(
 const init = (...args) => dungeonActions.init(...args);
 const isExtractionUnlocked = (...args) => dungeonActions.isExtractionUnlocked(...args);
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
+const isDungeonRankedEncounter = (...args) => dungeonActions.isDungeonRankedEncounter(...args);
+const isDungeonRankedPlanning = (...args) => dungeonActions.isDungeonRankedPlanning(...args);
+const renderDungeonRankedEnemyIdentity = (...args) => dungeonActions.renderDungeonRankedEnemyIdentity(...args);
 const pauseCombatPlayback = (...args) => dungeonActions.pauseCombatPlayback(...args);
 const playEnemyRevealEffect = (...args) => dungeonActions.playEnemyRevealEffect(...args);
 const playPendingHandFlowAnimation = (...args) => dungeonActions.playPendingHandFlowAnimation(...args);
@@ -89,6 +92,7 @@ function renderRun() {
   if (!run) {
     if (laneResizeObserver) laneResizeObserver.disconnect();
     elements.runPanel?.querySelector('.dungeon-arena')?.classList.remove('is-hand-strategy');
+    elements.enemyGrid?.closest('.battle-side-enemy')?.classList.remove('is-ranked-encounter', 'is-ranked-encounter-planning');
     elements.dungeonBottomPanel?.classList.add('d-none');
     state.isMobileRewardBoxOpen = false;
     elements.dungeonBottomPanel?.classList.remove('is-battle-active', 'is-mobile-reward-open');
@@ -114,6 +118,8 @@ function renderRun() {
   const isReplayOnly = Boolean(run.replayOnly);
   const isBattleLayoutActive = Boolean(state.isBattleAnimating || isReplayOnly);
   const isPactTeamPreview = Boolean(state.isPactTeamPreview && hasPendingPacts);
+  const rankedEncounter = isDungeonRankedEncounter(run);
+  const rankedPlanning = isDungeonRankedPlanning(run);
   const isBattleHandPlaceholder = Boolean(!isHandStrategy && isBattleLayoutActive);
   const hand = (isHandStrategy ? getRecruitPreviewHand() : []).map(applyDungeonCombatStatPreviewToDemon);
   const handMode = isBattleHandPlaceholder ? 'battle' : 'recruit';
@@ -140,6 +146,11 @@ function renderRun() {
   elements.dungeonBottomPanel?.classList.toggle('is-battle-active', isBattleLayoutActive || isPactTeamPreview);
   elements.dungeonBottomPanel?.classList.toggle('is-mobile-reward-open', Boolean(state.isMobileRewardBoxOpen && canExtract && !state.isBattleAnimating));
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
+  elements.enemyGrid?.closest('.battle-side-enemy')?.classList.toggle('is-ranked-encounter', rankedEncounter);
+  elements.enemyGrid?.closest('.battle-side-enemy')?.classList.toggle(
+    'is-ranked-encounter-planning',
+    rankedPlanning && !state.isBattleAnimating && !state.isResultAnimating
+  );
   setElementHtml(elements.teamGrid, renderDemonCards(team, {
     side: 'player',
     allowFormationDrag: run.status === 'active' && !pactChoiceBlocksDrag && (!run.awaitingRecruit || state.isRecruiting),
@@ -429,9 +440,10 @@ function renderDungeonDefeatScreen(summary = {}) {
 function renderEnemySideTitle(pressure = null, buffs = [], teamBuffs = []) {
   if (!elements.enemySideTitle) return;
 
+  const rankedIdentity = renderDungeonRankedEnemyIdentity(state.run?.rankedEncounter);
   const label = state.run?.enemyLabel || 'Enemies';
   elements.enemySideTitle.innerHTML = `
-    <span>${escapeHtml(label)}</span>
+    ${rankedIdentity || `<span>${escapeHtml(label)}</span>`}
     ${renderEnemyPressureChip(pressure)}
     ${renderEnemyBuffChips(buffs)}
     ${renderBattleBuffSummaryChip(teamBuffs, { side: 'enemy' })}
@@ -794,6 +806,7 @@ function renderFightLogActions() {
   const canReplay = Boolean(!state.isBattleAnimating && !state.isResultAnimating && !hasPendingPacts && hasCurrentFightLog);
   const canViewLog = canReplay;
   const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
+  const canChooseRankedFight = Boolean(!hasPendingPacts && !state.isResultAnimating && isDungeonRankedPlanning(state.run));
   const canExtract = Boolean(!state.isBattleAnimating && !state.isResultAnimating && !hasPendingPacts && canExtractRun());
   const continuePending = Boolean(state.isRecruitContinuePending);
   const isFighting = Boolean(state.isBattleAnimating);
@@ -802,7 +815,7 @@ function renderFightLogActions() {
   // exists but is over (e.g. right after a defeat). The no-run start prompt is
   // handled by the empty state (see renderDungeonStartPrompt).
   const actionOptions = {
-    canFight: canChooseRecruit || continuePending || isFighting,
+    canFight: canChooseRecruit || canChooseRankedFight || continuePending || isFighting,
     isPending: continuePending,
     isFighting,
     canStart: canStart && Boolean(state.run),

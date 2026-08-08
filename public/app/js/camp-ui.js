@@ -401,7 +401,7 @@
 
   function renderPlayerTitle(ranked) {
     const division = String(ranked?.division || '').trim();
-    if (!division || true) {
+    if (!division) {
       setText(elements.playerTitle, 'Demon Hunter');
       setClassName(elements.playerTitle, 'camp-player-title');
       return;
@@ -410,7 +410,7 @@
     const slug = division.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
-    const tier = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'demonic']
+    const tier = ['iron', 'bronze', 'silver', 'gold', 'platinum', 'diamond', 'demonic']
       .find((candidate) => division.toLowerCase().startsWith(candidate)) || 'bronze';
     setClassName(elements.playerTitle, 'camp-player-title');
     setHtml(elements.playerTitle, `

@@ -22,7 +22,8 @@ router.post('/runs/:id/cashout', requireAuth, async (req, res) => {
     const run = await getRunForPlayer(req.params.id, req.player.id, connection, { forUpdate: true });
     if (!run) throw createHttpError('Run not found.', 404);
 
-    const canCashOut = run.status === 'active' && run.state.awaitingRecruit;
+    const atRankedCheckpoint = run.state.rankedEncounter?.status === 'choice';
+    const canCashOut = run.status === 'active' && (run.state.awaitingRecruit || atRankedCheckpoint);
     if (!canCashOut) throw createHttpError('Rewards can only be claimed between dungeon fights.', 409);
     if (!isDungeonExtractionUnlocked(run.floor)) {
       throw createHttpError('Extraction unlocks after winning your first fight.', 409);

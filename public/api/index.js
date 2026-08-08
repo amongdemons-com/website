@@ -45,13 +45,13 @@ router.use(require('./runs/start'));
 router.use(require('./runs/show'));
 router.use(require('./runs/formation'));
 router.use(require('./runs/battle'));
+router.use(require('./runs/ranked'));
 router.use(require('./runs/buff'));
 router.use(require('./runs/reward'));
 router.use(require('./runs/recruit'));
 router.use(require('./runs/cashout'));
 router.use(require('./runs/end'));
 router.use(require('./world'));
-router.use(require('./ranked'));
 router.use(require('./leaderboard'));
 router.use(require('./hunters'));
 

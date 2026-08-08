@@ -22,6 +22,8 @@ const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(
 const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
 const getRewardExtractionChoicePayload = (...args) => dungeonActions.getRewardExtractionChoicePayload(...args);
 const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
+const isDungeonRankedEncounter = (...args) => dungeonActions.isDungeonRankedEncounter(...args);
+const isDungeonRankedPlanning = (...args) => dungeonActions.isDungeonRankedPlanning(...args);
 const playCombatLog = (...args) => dungeonActions.playCombatLog(...args);
 const prepareRecruitStrategyState = (...args) => dungeonActions.prepareRecruitStrategyState(...args);
 const renderFightLog = (...args) => dungeonActions.renderFightLog(...args);
@@ -31,6 +33,7 @@ const setDungeonLoading = (...args) => dungeonActions.setDungeonLoading(...args)
 const showBattleResultOverlay = (...args) => dungeonActions.showBattleResultOverlay(...args);
 const showCombatPanel = (...args) => dungeonActions.showCombatPanel(...args);
 const syncRewardSelectionFromRun = (...args) => dungeonActions.syncRewardSelectionFromRun(...args);
+const showPendingDungeonRankedResult = (...args) => dungeonActions.showPendingDungeonRankedResult(...args);
 
   async function init() {
     if (!window.AmongDemons.getToken()) {
@@ -192,6 +195,7 @@ async function applyRunPayload(run) {
   storeCurrentRun(state.run.runId);
   renderRun();
   announceConvergence(state.run);
+  showPendingDungeonRankedResult(state.run);
 }
 
 function announceConvergence(run) {
@@ -232,6 +236,20 @@ async function battle() {
       elements.fightLog.innerHTML = '';
       elements.fightLog.classList.remove('text-muted');
       await playCombatLog(playbackResult);
+      if (result.rankedResult) {
+        state.battleHandPreview = null;
+        const won = result.winner === 'player';
+        const resultOverlay = showBattleResultOverlay(won ? 'victory' : 'defeat');
+        if (!won) window.setTimeout(() => audio?.play('sfx.dungeon.runLost', { volume: 0.88 }), 1050);
+        await resultOverlay;
+        if (result.run) {
+          await applyRunPayload(result.run);
+        } else {
+          await loadRun(state.run.runId);
+        }
+        setMessage(won ? 'Ranked encounter won.' : 'A rival hunter ended your descent.', won ? 'success' : 'warning');
+        return;
+      }
       if (result.winner === 'enemy') {
         state.run.status = 'defeated';
         state.run.lastBattle = lastBattle || state.run.lastBattle;
@@ -272,7 +290,12 @@ function getDefeatMessage(result = {}) {
 }
 
 function canStartCurrentBattle() {
-  return Boolean(state.run?.status === 'active' && !state.run.awaitingRecruit && !hasPendingBuffChoices(state.run));
+  return Boolean(
+    state.run?.status === 'active'
+    && !state.run.awaitingRecruit
+    && !hasPendingBuffChoices(state.run)
+    && !isDungeonRankedEncounter(state.run)
+  );
 }
 
 function getWinMessage() {
@@ -307,6 +330,11 @@ function requestRecruitContinue() {
 
   if (hasPendingBuffChoices(state.run)) {
     setMessage('Choose a Demonic Pact before continuing.', 'warning');
+    return;
+  }
+
+  if (isDungeonRankedPlanning(state.run)) {
+    battle();
     return;
   }
 
@@ -397,7 +425,12 @@ async function confirmRecruitReward() {
       return;
     }
     state.battleHandPreview = null;
-    setMessage(body.skipRecruit ? 'Continuing to the next floor.' : 'Team updated.', 'success');
+    setMessage(
+      isDungeonRankedPlanning(state.run)
+        ? 'A rival hunter blocks the way. Fight or extract.'
+        : (body.skipRecruit ? 'Continuing to the next floor.' : 'Team updated.'),
+      isDungeonRankedPlanning(state.run) ? 'warning' : 'success'
+    );
   } catch (error) {
     state.battleHandPreview = null;
     showError(error);
@@ -564,6 +597,7 @@ export {
   startRun,
   createRunFromStartOptions,
   loadRun,
+  applyRunPayload,
   battle,
   canStartCurrentBattle,
   getWinMessage,

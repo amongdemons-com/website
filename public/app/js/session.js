@@ -106,7 +106,7 @@
   }
 
   // Guarantee a playable session for pages that should never bounce a first-time
-  // visitor to the login gate (/world, /collection, /dungeon, /ranked): reuse the current
+  // visitor to the login gate (/world, /collection, /dungeon): reuse the current
   // session if any, otherwise open a guest hunter.
   async function ensurePlayableSession() {
     if (getToken()) return getSession();

@@ -9,6 +9,7 @@ const battle = (...args) => dungeonActions.battle(...args);
 const cashOut = (...args) => dungeonActions.cashOut(...args);
 const cashOutDungeon = (...args) => dungeonActions.cashOutDungeon(...args);
 const continueShortTeam = (...args) => dungeonActions.continueShortTeam(...args);
+const continueDungeonRankedResult = (...args) => dungeonActions.continueDungeonRankedResult(...args);
 const syncCompressedFormationLanes = (...args) => dungeonActions.syncCompressedFormationLanes(...args);
 const toggleDemonicPactView = (...args) => dungeonActions.toggleDemonicPactView(...args);
 
@@ -46,6 +47,14 @@ function cacheElements() {
     'cashoutModal',
     'cashoutModalBody',
     'cashoutConfirmBtn',
+    'dungeonRankedResultModal',
+    'dungeonRankedResultTitle',
+    'dungeonRankedResultRank',
+    'dungeonRankedResultRankImage',
+    'dungeonRankedResultDivision',
+    'dungeonRankedResultDelta',
+    'dungeonRankedResultSummary',
+    'dungeonRankedResultContinueBtn',
     'shortTeamModal',
     'confirmShortTeamBtn'
   ].forEach((id) => {
@@ -58,6 +67,7 @@ function cacheElements() {
 function bindActions() {
   bindClick(elements.cashoutConfirmBtn, cashOutDungeon);
   bindClick(elements.confirmShortTeamBtn, continueShortTeam);
+  bindClick(elements.dungeonRankedResultContinueBtn, continueDungeonRankedResult);
   bindClick(elements.demonicPactViewToggle, toggleDemonicPactView);
   window.addEventListener('resize', syncCompressedFormationLanes);
 }

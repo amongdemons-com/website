@@ -38,7 +38,6 @@ const noindexPaths = new Set([
   '/register',
   '/settings',
   '/skill-tree',
-  '/ranked',
   '/world',
   '/camp',
   '/bag',
@@ -46,7 +45,6 @@ const noindexPaths = new Set([
   '/app/register.html',
   '/app/settings.html',
   '/app/skill-tree.html',
-  '/app/ranked.html',
   '/app/world.html',
   '/app/camp.html',
   '/app/collection.html',
@@ -174,7 +172,7 @@ app.get(['/dungeon', '/dungeon/'], (req, res) => {
 });
 
 app.get(['/ranked', '/ranked/'], (req, res) => {
-  sendAppPage(res, 'ranked.html');
+  res.redirect(301, '/dungeon');
 });
 
 app.get(['/register', '/register/'], (req, res) => {

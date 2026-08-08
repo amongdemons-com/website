@@ -5867,3 +5867,154 @@ body.is-world-battle-result-animating .battle-result-burst.is-defeat {
         --dungeon-formation-gap: 0.38rem;
     }
 }
+
+@property --dungeon-ranked-glimmer-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+
+.dungeon-ranked-opponent-identity {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.38rem;
+    min-width: 0;
+}
+
+.dungeon-ranked-opponent-name {
+    overflow: hidden;
+    color: #f5f8f9;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.18);
+    white-space: nowrap;
+}
+
+.dungeon-ranked-opponent-name:hover,
+.dungeon-ranked-opponent-name:focus-visible {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.dungeon-ranked-opponent-separator {
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.battle-side-enemy.is-ranked-encounter-planning #enemyGrid {
+    position: relative;
+    isolation: isolate;
+    border-radius: 12px;
+}
+
+.battle-side-enemy.is-ranked-encounter-planning #enemyGrid::before {
+    --dungeon-ranked-glimmer-angle: 0deg;
+    content: "";
+    position: absolute;
+    inset: -4px;
+    z-index: 0;
+    border-radius: 14px;
+    padding: 1px;
+    background: conic-gradient(
+        from var(--dungeon-ranked-glimmer-angle),
+        transparent 0deg,
+        rgba(106, 221, 202, 0.08) 42deg,
+        rgba(216, 255, 246, 0.72) 62deg,
+        rgba(106, 221, 202, 0.14) 82deg,
+        transparent 120deg,
+        transparent 360deg
+    );
+    filter: drop-shadow(0 0 5px rgba(106, 221, 202, 0.2));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: dungeon-ranked-grid-glimmer 5.5s linear infinite;
+}
+
+.battle-side-enemy.is-ranked-encounter-planning #enemyGrid > .battle-formation {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes dungeon-ranked-grid-glimmer {
+    to { --dungeon-ranked-glimmer-angle: 360deg; }
+}
+
+.dungeon-ranked-result-modal .modal-dialog {
+    max-width: min(27rem, calc(100vw - 1.5rem));
+}
+
+.dungeon-ranked-result-modal .modal-content {
+    overflow: hidden;
+    border-color: rgba(232, 199, 106, 0.42);
+    background:
+        radial-gradient(circle at 50% 13%, rgba(232, 199, 106, 0.16), transparent 42%),
+        linear-gradient(180deg, rgba(12, 20, 22, 0.99), rgba(4, 9, 11, 0.99));
+    box-shadow: 0 0 38px rgba(232, 199, 106, 0.14), 0 24px 72px rgba(0, 0, 0, 0.58);
+}
+
+.dungeon-ranked-result-modal .modal-body {
+    display: grid;
+    justify-items: center;
+    gap: 0.62rem;
+    padding: 1.65rem 1.5rem 1.1rem;
+    text-align: center;
+}
+
+.dungeon-ranked-result-modal .modal-title {
+    margin: 0;
+    color: #fff0b2;
+    font-family: var(--font-heading, Cinzel, serif);
+    font-size: clamp(1.55rem, 5vw, 2.25rem);
+    text-shadow: 0 0 18px rgba(250, 197, 28, 0.3);
+}
+
+.dungeon-ranked-result-rank {
+    display: grid;
+    justify-items: center;
+    gap: 0.2rem;
+    color: var(--rank-color, #fac51c);
+    font-size: 0.96rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dungeon-ranked-result-rank-image {
+    width: clamp(4.8rem, 18vw, 6.7rem);
+    height: auto;
+    filter: drop-shadow(0 0 17px var(--rank-glow, rgba(250, 197, 28, 0.45)));
+}
+
+.dungeon-ranked-result-delta {
+    margin: 0;
+    color: #8ff0c4;
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
+    font-weight: 900;
+}
+
+.dungeon-ranked-result-delta.is-loss {
+    color: #ff9188;
+}
+
+.dungeon-ranked-result-summary {
+    max-width: 23rem;
+    margin: 0;
+    color: rgba(228, 238, 239, 0.72);
+}
+
+.dungeon-ranked-result-modal .modal-footer {
+    padding: 0.85rem 1.25rem 1.25rem;
+}
+
+.dungeon-ranked-result-modal .modal-footer .btn {
+    width: 100%;
+    min-height: 2.7rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .battle-side-enemy.is-ranked-encounter-planning #enemyGrid::before {
+        animation: none;
+    }
+}

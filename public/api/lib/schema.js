@@ -10,6 +10,8 @@ const WORLD_MERCHANT_SCHEMA_MIGRATION = '20260723_world_merchant_schema_v1';
 const WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION = '20260723_world_merchant_bribe_schema_v1';
 const WORLD_SOUL_FONT_SCHEMA_MIGRATION = '20260802_world_soul_font_schema_v1';
 const RANKED_SCHEMA_MIGRATION = '20260728_ranked_schema_v2';
+const DUNGEON_RANKED_SCHEMA_MIGRATION = '20260808_dungeon_ranked_schema_v1';
+const RANKED_FRESH_START_MIGRATION = '20260808_ranked_fresh_start_v1';
 const ACCOUNT_SECURITY_SCHEMA_MIGRATION = '20260728_account_security_schema_v1';
 const ACCOUNT_PASSWORD_BACKFILL_MIGRATION = '20260728_account_password_backfill_v1';
 const PLAYER_BADGES_SCHEMA_MIGRATION = '20260801_player_badges_schema_v1';
@@ -768,6 +770,71 @@ async function addRankedSchema() {
   }
 }
 
+async function addDungeonRankedSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS dungeon_ranked_snapshots (
+      id VARCHAR(36) NOT NULL PRIMARY KEY,
+      player_id VARCHAR(255) NOT NULL,
+      season_id VARCHAR(48) NOT NULL,
+      source_run_id VARCHAR(48) NOT NULL,
+      floor INT UNSIGNED NOT NULL,
+      player_level INT UNSIGNED NOT NULL,
+      rating INT NOT NULL DEFAULT 1000,
+      hunter_name VARCHAR(64) NOT NULL,
+      snapshot LONGTEXT NOT NULL,
+      combat_version VARCHAR(48) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_dungeon_ranked_match (season_id, floor, player_level, created_at),
+      INDEX idx_dungeon_ranked_player (player_id, floor, created_at),
+      INDEX idx_dungeon_ranked_run (source_run_id, floor)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS dungeon_ranked_history (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      player_id VARCHAR(255) NOT NULL,
+      season_id VARCHAR(48) NOT NULL,
+      snapshot_id VARCHAR(36) NOT NULL,
+      opponent_player_id VARCHAR(255) NOT NULL,
+      floor INT UNSIGNED NOT NULL,
+      served_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_dungeon_ranked_history_player (player_id, season_id, floor, served_at),
+      INDEX idx_dungeon_ranked_history_snapshot (snapshot_id),
+      INDEX idx_dungeon_ranked_history_opponent (opponent_player_id, served_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  for (const [table, columns] of Object.entries({
+    dungeon_ranked_snapshots: ['player_id', 'season_id', 'source_run_id'],
+    dungeon_ranked_history: ['player_id', 'season_id', 'opponent_player_id']
+  })) {
+    for (const column of columns) {
+      const length = column === 'player_id' || column === 'opponent_player_id' ? 255 : 48;
+      await normalizeUtf8Column(
+        table,
+        column,
+        `VARCHAR(${length}) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL`
+      );
+    }
+  }
+}
+
+async function resetRankedForDungeonFreshStart() {
+  for (const table of [
+    'dungeon_ranked_history',
+    'dungeon_ranked_snapshots',
+    'ranked_action_receipts',
+    'ranked_opponent_history',
+    'ranked_opponent_snapshots',
+    'ranked_generated_opponents',
+    'ranked_runs',
+    'ranked_ratings'
+  ]) {
+    await db.query(`DELETE FROM ${table}`);
+  }
+}
+
 async function addWorldSoulFontSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_world_soul_font_buffs (
@@ -967,6 +1034,8 @@ async function initializeSchema() {
   await runMigrationOnce(WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION, addWorldMerchantBribeSchema);
   await runMigrationOnce(WORLD_SOUL_FONT_SCHEMA_MIGRATION, addWorldSoulFontSchema);
   await runMigrationOnce(RANKED_SCHEMA_MIGRATION, addRankedSchema);
+  await runMigrationOnce(DUNGEON_RANKED_SCHEMA_MIGRATION, addDungeonRankedSchema);
+  await runMigrationOnce(RANKED_FRESH_START_MIGRATION, resetRankedForDungeonFreshStart);
   await runMigrationOnce(ACCOUNT_SECURITY_SCHEMA_MIGRATION, addAccountSecuritySchema);
   await runMigrationOnce(ACCOUNT_PASSWORD_BACKFILL_MIGRATION, backfillOAuthOnlyPasswordState);
   await runMigrationOnce(PLAYER_BADGES_SCHEMA_MIGRATION, addPlayerBadgesSchema);

@@ -6,7 +6,7 @@ Among Demons is a server-authoritative demon-collection game built with Node.js/
 
 The game has two connected play spaces plus permanent progression:
 
-- **Dungeon runs** (`/dungeon`) - roguelite runs through unlimited floors. Draft two starting demons, auto-battle server-simulated fights, recruit defeated enemies, seal run-long Demonic Pacts, and extract with XP/Souls and one exact Demon Echo - or lose everything on defeat.
+- **Dungeon runs** (`/dungeon`) - roguelite runs through unlimited floors. Draft two starting demons, auto-battle server-simulated fights, recruit defeated enemies, seal run-long Demonic Pacts, meet ranked player snapshots deep underground, and extract with XP/Souls and one exact Demon Echo - or lose everything on defeat.
 - **World map** (`/world`) - a 101×101 tile overworld with roads, unpassable terrain, demon encounters, Forsaken Shrines, and Darkness Portals. Travel tile-by-tile (roads are far safer from ambushes), fight fixed encounter teams, leave a team passively hunting for Souls, and challenge other hunters standing on your tile to PvP.
 - **Permanent progression** - an Echo bag and summoning flow (`/bag`), a permanent demon collection with Soul-based training (`/collection`), an account skill tree fed by level-up stat points (`/skill-tree`), daily quests and a daily reward (`/camp`), public hunter profiles (`/hunter/:username`), and leaderboards (`/rankings`).
 
@@ -73,7 +73,6 @@ The database schema is created automatically on first API use - `public/api/lib/
 | `npm start` | `node server.js` | Start the Express server |
 | `npm run dev` | `nodemon server.js` | Start with automatic restarts |
 | `npm test` | `node --test test/*.test.js` | Run the unit test suite |
-| `npm run seed:ranked` | `node scripts/generate-ranked-population.js` | Dry-run the deterministic RankedBot optimizer; pass `-- --apply` to persist it |
 | `npm run badge:award` | `node scripts/award-player-badge.js` | Preview a public player badge award; add `--apply` to persist it |
 
 ## Project Structure
@@ -208,6 +207,7 @@ All routes are mounted under `/api`.
 | `POST` | `/runs/:id/buff/reroll` | Recast the pact choices for 10 Souls |
 | `POST` | `/runs/:id/reward` | Mark a reward as claimed |
 | `POST` | `/runs/:id/recruit` | Stage or commit recruitment, advance, and return the canonical updated run |
+| `POST` | `/runs/:id/ranked/continue` | Continue after winning a ranked Dungeon checkpoint |
 | `POST` | `/runs/:id/cashout` | Extract one eligible demon as an exact Echo and claim earned XP/Souls |
 | `POST` | `/runs/:id/end` | Finalize a defeated run with zero payout |
 
@@ -229,7 +229,7 @@ All routes are mounted under `/api`.
 | `GET` | `/world/hunting/status` | Current passive hunt progress |
 | `POST` | `/world/ambush-defeat` | Return to the Anchored Shrine (or spawn) after a separately resolved defeat |
 | `GET` | `/world/players-at` | Other hunters standing on a tile |
-| `POST` | `/world/challenge` | Challenge another hunter on your tile to PvP (30 s cooldown) |
+| `POST` | `/world/challenge` | Challenge another hunter on your tile to PvP (5 min same-opponent cooldown) |
 
 ### Public Data and Rankings
 
@@ -252,6 +252,8 @@ All routes are mounted under `/api`.
 - Enemy rarity uses explicit floor-band distributions. Deep normal floors keep Common, Uncommon, and Rare at non-zero rates, while Mythic remains an exceptional `0.5%` roll rather than becoming the whole late-game roster.
 - From floor 10 onward, a seeded 25% roll may create a Rarity Convergence: every enemy is Common, Uncommon, Rare, Epic, or Legendary. Its temporary Host pressure is shown in a separate rarity-colored pill beside Terror and is removed from recruits.
 - Dungeon Terror is independent of account level. Floor and active-Pact pressure stay additive through floor 30; deeper floors compound HP by 4.5% and Attack by 3% per floor while Speed keeps its capped linear curve. Rarity compensation preserves the former floor-30 Mythic HP budget, and enemy teams continue growing up to nine.
+- After clearing floors 30, 35, 40, 45, and every fifth floor thereafter, the run snapshots its exact team, formation, Pacts, and combat buffs. It then randomly offers an eligible snapshot from another hunter within five account levels at the same checkpoint; if none exists, the next normal floor starts immediately.
+- Ranked checkpoints let the player fight or extract. A fight changes the challenger's RP with 32-K Elo scoring, using the existing rank divisions and leaderboard. Winning continues the run; losing ends it with the normal zero-payout defeat rules.
 - Extraction grants accumulated XP/Souls and exactly one Echo of the selected type and rarity. Carrying farther never increases that count; skipping the Echo remains valid. Losing grants 0 XP, 0 Souls, and no Echoes regardless of staged rewards.
 - Account levels use total-XP thresholds of `250 * (level - 1)^1.65`; payouts never reduce a stored level.
 
@@ -278,7 +280,7 @@ Crowley, the traveling merchant, moves to a deterministic open road tile every 3
 - **Forsaken Shrines** - bind your soul at a shrine to respawn there after combat defeats instead of at world spawn.
 - **Darkness Portals** - paid teleports; the Soul cost scales with distance.
 - **Passive hunting** - after defeating a tile's encounter you may leave your world team hunting there. Souls accumulate while away but are capped by your Soul Vessel (base 50, expanded through skill-tree nodes), so AFK income is bounded by investment, not time.
-- **PvP** - hunters on the same tile can challenge each other (server-simulated battle, 30-second cooldown); wins and losses feed the `pvp` leaderboard and hunter profiles.
+- **PvP** - hunters on the same tile can challenge each other (server-simulated battle, with a five-minute delay before rematching the same hunter); wins and losses feed the `pvp` leaderboard and hunter profiles.
 
 ### Skill Tree
 
@@ -347,6 +349,8 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `player_world_teams` | Saved world battle teams |
 | `player_daily_quests` | Per-day quest progress and claims |
 | `runs` | Dungeon state, rewards, combat history, status (state stored as JSON text) |
+| `dungeon_ranked_snapshots` | Exact player builds captured at deep Dungeon checkpoints |
+| `dungeon_ranked_history` | Offered checkpoint opponents and resolved results |
 
 ## Frontend Modules
 
@@ -409,7 +413,6 @@ CSS is split per page - `base.css` loads everywhere; `battle.css`, `camp.css`, `
 | `scripts/generate-demon-map-variants.js` | Generates small WebP demon variants for map tokens and avatars |
 | `scripts/split-main-css.js` | Re-runnable splitter that produced the per-page CSS files |
 | `scripts/simulate-dungeon-balance.js` | Checks milestone pressure, deep rarity availability, all Convergences, and the old floor-30 baseline |
-| `scripts/generate-ranked-population.js` | Builds legal RankedBot rosters, combat-tests candidate lineups, and optionally seeds labeled player runs and exact-floor opponent snapshots |
 
 ## Caching
 
@@ -427,13 +430,6 @@ Run the deterministic dungeon balance report (optional argument: samples per mil
 
 ```bash
 npm run simulate:dungeon -- 30
-```
-
-Preview the deterministic RankedBot population without writing to the database, then explicitly apply the reviewed population:
-
-```bash
-npm run seed:ranked
-npm run seed:ranked -- --apply
 ```
 
 Preview a player badge award, then explicitly apply it:

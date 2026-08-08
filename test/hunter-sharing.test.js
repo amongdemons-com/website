@@ -42,6 +42,9 @@ test('leaderboard compacts Soul values without compacting ranks', () => {
 });
 
 test('hunter sharing image uses the matching color for each Ranked division', async () => {
+  assert.equal(hunterOg.getRankDivisionColor('Iron III'), '#66727a');
+  assert.equal(hunterOg.getRankDivisionColor('Iron II'), '#82919a');
+  assert.equal(hunterOg.getRankDivisionColor('Iron I'), '#a4b0b7');
   assert.equal(hunterOg.getRankDivisionColor('Bronze III'), '#bd7048');
   assert.equal(hunterOg.getRankDivisionColor('Gold I'), '#ffd866');
   assert.equal(hunterOg.getRankDivisionColor('Diamond II'), '#76c5ff');

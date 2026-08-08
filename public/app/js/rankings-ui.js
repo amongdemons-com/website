@@ -145,7 +145,7 @@
               ${renderPlayerBadges(player.badges, { context: 'leaderboard' })}
             </span>
             <small class="rank-hunter-meta">${hasRankedRating
-              ? `${renderRankDivisionText(rankedDivision)} Level`
+              ? `${renderRankDivisionText(rankedDivision)} &middot; Level`
               : 'Level'} ${formatNumber(level)}
               &middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}</small>
           </span>
@@ -236,8 +236,7 @@
     const slug = label.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
-    return ``;
-    return `<span class="rank-division-text rank-division-text--${escapeHtml(slug)}">${escapeHtml(label)}</span> &middot; `;
+    return `<span class="rank-division-text rank-division-text--${escapeHtml(slug)}">${escapeHtml(label)}</span>`;
   }
 
   function setStatText(element, value, options = {}) {
