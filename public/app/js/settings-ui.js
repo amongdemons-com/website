@@ -10,10 +10,17 @@
   const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
   // Keep in sync with the world ambush preference in world-ui.js.
   const HIDE_WINNING_AMBUSHES_KEY = 'amongdemons-hide-winning-ambushes';
+  const DESKTOP_OAUTH_PENDING_KEY = 'amongdemons-desktop-oauth-pending-v1';
+  const DESKTOP_OAUTH_POLL_INTERVAL_MS = 2000;
+  const DESKTOP_OAUTH_TIMEOUT_MS = 15 * 60 * 1000;
   const elements = {};
   const providerElements = new Map();
   let currentUsername = '';
   let currentMergeToken = '';
+  let currentMergeProvider = '';
+  let desktopOAuthPollTimer = null;
+  let desktopOAuthPollBusy = false;
+  let desktopOAuthPending = null;
   let isGuestAccount = false;
   let securityState = {
     hasPassword: true,
@@ -53,6 +60,7 @@
       }
 
       await showOAuthResult();
+      resumeDesktopOAuthPolling();
     } catch (error) {
       handleAuthError(error, elements.usernameMessage);
     }
@@ -128,6 +136,10 @@
       if (event.key === 'Escape' && !elements.mergeModal.classList.contains('d-none')) {
         cancelAccountMerge();
       }
+    });
+    window.addEventListener('focus', checkDesktopOAuthCompletion);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) checkDesktopOAuthCompletion();
     });
 
     providerElements.forEach(({ button }, provider) => {
@@ -269,6 +281,7 @@
           `${label} sign-in opened in your browser. Complete it there, then return to the game.`,
           'info'
         );
+        beginDesktopOAuthPolling(provider);
         window.location.href = payload.authorizationUrl;
         return;
       }
@@ -283,6 +296,115 @@
         action: 'Refresh Settings and try again.'
       }, 'danger');
       syncProviderRows();
+    }
+  }
+
+  function beginDesktopOAuthPolling(provider) {
+    const pending = {
+      provider: String(provider || '').toLowerCase(),
+      startedAt: Date.now()
+    };
+    desktopOAuthPending = pending;
+    try {
+      sessionStorage.setItem(DESKTOP_OAUTH_PENDING_KEY, JSON.stringify(pending));
+    } catch (error) {
+      // Polling still works for this page even if storage is unavailable.
+    }
+    scheduleDesktopOAuthPoll(DESKTOP_OAUTH_POLL_INTERVAL_MS);
+  }
+
+  function resumeDesktopOAuthPolling() {
+    if (document.documentElement.dataset.desktopWrapper !== '1') return;
+    const pending = getPendingDesktopOAuth();
+    if (!pending) return;
+
+    const controls = providerElements.get(pending.provider);
+    if (controls) controls.status.textContent = 'Continue in your browser';
+    showMessage(
+      elements.providerMessage,
+      `${providerLabel(pending.provider)} sign-in is waiting in your browser. Complete it there; this app will update automatically.`,
+      'info'
+    );
+    scheduleDesktopOAuthPoll(0);
+  }
+
+  function scheduleDesktopOAuthPoll(delay = DESKTOP_OAUTH_POLL_INTERVAL_MS) {
+    if (desktopOAuthPollTimer) window.clearTimeout(desktopOAuthPollTimer);
+    desktopOAuthPollTimer = window.setTimeout(checkDesktopOAuthCompletion, Math.max(0, delay));
+  }
+
+  async function checkDesktopOAuthCompletion() {
+    if (document.documentElement.dataset.desktopWrapper !== '1' || desktopOAuthPollBusy) return;
+    const pending = getPendingDesktopOAuth();
+    if (!pending) return;
+
+    if (Date.now() - pending.startedAt >= DESKTOP_OAUTH_TIMEOUT_MS) {
+      clearPendingDesktopOAuth();
+      await loadSecurity().catch(() => {});
+      showMessage(
+        elements.providerMessage,
+        `${providerLabel(pending.provider)} sign-in expired. Start the connection again when you are ready.`,
+        'warning'
+      );
+      return;
+    }
+
+    desktopOAuthPollBusy = true;
+    try {
+      const security = await api('/api/account/security', { dedupe: false });
+      applySecurityState(security);
+      const connected = (security.providers || []).some(
+        (provider) => provider.id === pending.provider && provider.connected
+      );
+      if (!connected) {
+        const controls = providerElements.get(pending.provider);
+        if (controls) controls.status.textContent = 'Continue in your browser';
+        return;
+      }
+
+      const payload = await api('/api/auth/me', { dedupe: false });
+      syncPlayer(payload.player);
+      clearPendingDesktopOAuth();
+      showMessage(
+        elements.providerMessage,
+        `${providerLabel(pending.provider)} is connected. Your Steam hunter is up to date.`,
+        'success'
+      );
+    } catch (error) {
+      // A closed browser or a temporary request failure is not terminal. The
+      // player can resume the provider flow until its short-lived intent ends.
+    } finally {
+      desktopOAuthPollBusy = false;
+      if (getPendingDesktopOAuth()) scheduleDesktopOAuthPoll();
+    }
+  }
+
+  function getPendingDesktopOAuth() {
+    try {
+      const pending = desktopOAuthPending
+        || JSON.parse(sessionStorage.getItem(DESKTOP_OAUTH_PENDING_KEY) || 'null');
+      const provider = String(pending?.provider || '').toLowerCase();
+      const startedAt = Number(pending?.startedAt);
+      if (!providerElements.has(provider) || !Number.isFinite(startedAt) || startedAt <= 0) {
+        clearPendingDesktopOAuth();
+        return null;
+      }
+      desktopOAuthPending = { provider, startedAt };
+      return desktopOAuthPending;
+    } catch (error) {
+      clearPendingDesktopOAuth();
+      return null;
+    }
+  }
+
+  function clearPendingDesktopOAuth() {
+    if (desktopOAuthPollTimer) window.clearTimeout(desktopOAuthPollTimer);
+    desktopOAuthPollTimer = null;
+    desktopOAuthPending = null;
+    try {
+      sessionStorage.removeItem(DESKTOP_OAUTH_PENDING_KEY);
+    } catch (error) {
+      // Nothing else is required when browser storage is unavailable.
     }
   }
 
@@ -589,6 +711,7 @@
   }
 
   function renderAccountMerge(preview = {}) {
+    currentMergeProvider = String(preview.provider || '').toLowerCase();
     elements.mergeAccounts.replaceChildren(
       createAccountMergeCard(preview.steamAccount, 'Steam hunter', 'steam'),
       createMergeDivider(),
@@ -670,6 +793,8 @@
 
   async function confirmAccountMerge() {
     if (!currentMergeToken || elements.mergeSubmit.disabled) return;
+    const mergeToken = currentMergeToken;
+    const mergeProvider = currentMergeProvider;
     elements.mergeSubmit.disabled = true;
     elements.mergeCancel.disabled = true;
     elements.mergeSubmit.querySelector('span').textContent = 'Merging…';
@@ -680,16 +805,9 @@
         method: 'POST',
         body: {}
       });
-      syncPlayer(payload.player);
-      currentMergeToken = '';
-      closeAccountMerge();
-      await loadSecurity();
-      showMessage(
-        elements.providerMessage,
-        'Accounts merged. Your achievements and progress are now connected to Steam.',
-        'success'
-      );
+      await completeAccountMerge(payload.player);
     } catch (error) {
+      if (await recoverCompletedAccountMerge(mergeToken, mergeProvider)) return;
       elements.mergeError.textContent = error?.message || 'The accounts could not be merged.';
       elements.mergeError.classList.remove('d-none');
       elements.mergeSubmit.disabled = false;
@@ -699,9 +817,49 @@
     }
   }
 
+  async function recoverCompletedAccountMerge(mergeToken, provider) {
+    try {
+      // A committed merge deletes its one-time intent. If the intent still
+      // exists, the transaction rolled back and the original error is real.
+      await api(`/api/account/merge/${encodeURIComponent(mergeToken)}`, { dedupe: false });
+      return false;
+    } catch (error) {
+      if (error?.status !== 404) return false;
+    }
+
+    try {
+      const security = await api('/api/account/security', { dedupe: false });
+      const connected = (security.providers || []).some(
+        (item) => item.id === provider && item.connected
+      );
+      if (!connected) return false;
+      const payload = await api('/api/auth/me', { dedupe: false });
+      await completeAccountMerge(payload.player, security);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async function completeAccountMerge(player, security = null) {
+    syncPlayer(player);
+    currentMergeToken = '';
+    currentMergeProvider = '';
+    closeAccountMerge();
+    if (security) applySecurityState(security);
+    else await loadSecurity();
+    showMessage(elements.providerMessage, {
+      type: 'success',
+      title: 'Accounts merged.',
+      message: 'Your achievements and progress are now connected to Steam.',
+      action: 'Return to Steam; the app will update automatically.'
+    }, 'success');
+  }
+
   async function cancelAccountMerge() {
     const token = currentMergeToken;
     currentMergeToken = '';
+    currentMergeProvider = '';
     closeAccountMerge();
     if (token) {
       try {

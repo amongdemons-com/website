@@ -115,6 +115,11 @@ test('settings contains a full-screen two-account merge review', () => {
   assert.match(client, /Merge accounts/);
   assert.match(client, /sign-in opened in your browser\. Complete it there, then return to the game\./);
   assert.match(client, /dataset\.desktopWrapper === '1'/);
+  assert.match(client, /beginDesktopOAuthPolling\(provider\)/);
+  assert.match(client, /api\('\/api\/account\/security', \{ dedupe: false \}\)/);
+  assert.match(client, /Your Steam hunter is up to date/);
+  assert.match(client, /recoverCompletedAccountMerge\(mergeToken, mergeProvider\)/);
+  assert.match(client, /Return to Steam; the app will update automatically\./);
 });
 
 function player(overrides = {}) {
