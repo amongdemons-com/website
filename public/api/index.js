@@ -31,6 +31,7 @@ router.use(require('./auth/steam'));
 router.use(require('./auth/me'));
 router.use(require('./account/profile'));
 router.use(require('./account/security'));
+router.use(require('./account/merge'));
 router.use(require('./account/progression'));
 router.use(require('./account/stat-points'));
 router.use(require('./account/quests'));

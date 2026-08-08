@@ -16,10 +16,19 @@ function createToken() {
   return crypto.randomBytes(36).toString('base64url');
 }
 
-async function createSession(playerId) {
+async function createSession(playerId, options = {}) {
   const token = createToken();
-  await db.query('INSERT INTO player_sessions (token, player_id) VALUES (?, ?)', [token, playerId]);
+  const authProvider = normalizeSessionAuthProvider(options.authProvider);
+  await db.query(
+    'INSERT INTO player_sessions (token, player_id, auth_provider) VALUES (?, ?, ?)',
+    [token, playerId, authProvider]
+  );
   return token;
+}
+
+function normalizeSessionAuthProvider(value) {
+  const provider = String(value || '').trim().toLowerCase();
+  return ['steam', 'google', 'discord'].includes(provider) ? provider : 'web';
 }
 
 function cleanPlayer(row) {
@@ -65,7 +74,8 @@ async function requireAuth(req, res, next) {
   }
 
   const [rows] = await db.query(
-    `SELECT p.*, pd.image_url AS profile_demon_image_url
+    `SELECT p.*, pd.image_url AS profile_demon_image_url,
+            s.auth_provider AS session_auth_provider
      FROM player_sessions s
      INNER JOIN players p ON p.id = s.player_id
      LEFT JOIN player_demons pd
@@ -88,6 +98,7 @@ async function requireAuth(req, res, next) {
 
   req.player = cleanPlayer(rows[0]);
   req.token = token;
+  req.authProvider = normalizeSessionAuthProvider(rows[0].session_auth_provider);
   next();
 }
 
@@ -97,6 +108,7 @@ module.exports = {
   createSession,
   createToken,
   hashPassword,
+  normalizeSessionAuthProvider,
   requireAuth,
   verifyPassword
 };

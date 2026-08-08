@@ -13,6 +13,7 @@
   const elements = {};
   const providerElements = new Map();
   let currentUsername = '';
+  let currentMergeToken = '';
   let isGuestAccount = false;
   let securityState = {
     hasPassword: true,
@@ -51,7 +52,7 @@
         await loadSecurity();
       }
 
-      showOAuthResult();
+      await showOAuthResult();
     } catch (error) {
       handleAuthError(error, elements.usernameMessage);
     }
@@ -76,6 +77,11 @@
     elements.sfxVolumeValue = document.getElementById('settingsSfxVolumeValue');
 
     elements.providerMessage = document.getElementById('providerMessage');
+    elements.mergeModal = document.getElementById('accountMergeModal');
+    elements.mergeAccounts = document.getElementById('accountMergeAccounts');
+    elements.mergeError = document.getElementById('accountMergeError');
+    elements.mergeSubmit = document.getElementById('accountMergeSubmit');
+    elements.mergeCancel = document.getElementById('accountMergeCancel');
     document.querySelectorAll('[data-provider-action]').forEach((button) => {
       const provider = button.dataset.providerAction;
       providerElements.set(provider, {
@@ -116,6 +122,13 @@
     elements.confirmPassword.addEventListener('input', handlePasswordInput);
     elements.deletionForm.addEventListener('submit', scheduleDeletion);
     elements.cancelDeletion.addEventListener('click', cancelDeletion);
+    elements.mergeSubmit.addEventListener('click', confirmAccountMerge);
+    elements.mergeCancel.addEventListener('click', cancelAccountMerge);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !elements.mergeModal.classList.contains('d-none')) {
+        cancelAccountMerge();
+      }
+    });
 
     providerElements.forEach(({ button }, provider) => {
       button.addEventListener('click', () => handleProviderAction(provider));
@@ -521,10 +534,28 @@
     elements.usernameSubmit.disabled = elements.username.disabled || !usernameChanged;
   }
 
-  function showOAuthResult() {
+  async function showOAuthResult() {
     const url = new URL(window.location.href);
     const result = url.searchParams.get('oauth');
     if (!result) return;
+
+    if (result === 'merge') {
+      const mergeToken = url.searchParams.get('mergeToken') || '';
+      clearOAuthResultFromUrl(url);
+      if (!mergeToken) {
+        showMessage(elements.providerMessage, 'That account merge request is incomplete. Connect the account again.', 'warning');
+        return;
+      }
+
+      try {
+        const payload = await api(`/api/account/merge/${encodeURIComponent(mergeToken)}`);
+        currentMergeToken = mergeToken;
+        renderAccountMerge(payload.preview);
+      } catch (error) {
+        showMessage(elements.providerMessage, error, error.status === 403 ? 'warning' : 'danger');
+      }
+      return;
+    }
 
     const messages = {
       connected: { message: 'Account connected.', type: 'success' },
@@ -536,8 +567,154 @@
     };
     const feedback = messages[result] || messages.oauth_failed;
     showMessage(elements.providerMessage, feedback.message, feedback.type);
+    clearOAuthResultFromUrl(url);
+  }
+
+  function clearOAuthResultFromUrl(url) {
     url.searchParams.delete('oauth');
+    url.searchParams.delete('mergeToken');
     window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function renderAccountMerge(preview = {}) {
+    elements.mergeAccounts.replaceChildren(
+      createAccountMergeCard(preview.steamAccount, 'Steam hunter', 'steam'),
+      createMergeDivider(),
+      createAccountMergeCard(
+        preview.connectedAccount,
+        `${providerLabel(preview.provider)} hunter`,
+        preview.provider
+      )
+    );
+    elements.mergeError.classList.add('d-none');
+    elements.mergeError.textContent = '';
+    elements.mergeModal.classList.remove('d-none');
+    document.body.classList.add('account-merge-open');
+    elements.mergeSubmit.disabled = false;
+    elements.mergeSubmit.querySelector('span').textContent = 'Merge accounts';
+    elements.mergeSubmit.focus();
+  }
+
+  function createAccountMergeCard(account = {}, heading, provider) {
+    const card = document.createElement('article');
+    card.className = 'account-merge-card';
+
+    const providerRow = document.createElement('div');
+    providerRow.className = 'account-merge-provider';
+    const logo = document.createElement('span');
+    logo.className = `account-merge-provider-mark is-${provider}`;
+    if (provider === 'google' || provider === 'discord') {
+      const image = document.createElement('img');
+      image.src = `/app/images/assets/oauth-${provider}.svg`;
+      image.alt = '';
+      image.width = 26;
+      image.height = 26;
+      logo.appendChild(image);
+    } else {
+      logo.textContent = 'S';
+    }
+    const providerCopy = document.createElement('div');
+    const eyebrow = document.createElement('span');
+    eyebrow.textContent = heading;
+    const username = document.createElement('strong');
+    username.textContent = account.username || 'Unknown hunter';
+    providerCopy.append(eyebrow, username);
+    providerRow.append(logo, providerCopy);
+
+    const stats = document.createElement('dl');
+    stats.className = 'account-merge-stats';
+    [
+      ['Level', account.level],
+      ['XP', account.xp],
+      ['Souls', account.souls],
+      ['Summoned demons', account.demonCount],
+      ['Bag items', account.bagItems],
+      ['Highest floor', account.highestFloor],
+      ['Achievements', account.achievementCount]
+    ].forEach(([label, value]) => {
+      const row = document.createElement('div');
+      const term = document.createElement('dt');
+      const detail = document.createElement('dd');
+      term.textContent = label;
+      detail.textContent = formatNumber(value);
+      row.append(term, detail);
+      stats.appendChild(row);
+    });
+
+    const identities = document.createElement('p');
+    identities.className = 'account-merge-identities';
+    identities.textContent = `Connected: ${(account.providers || []).map((item) => providerLabel(item.id)).join(', ') || 'None'}`;
+    card.append(providerRow, stats, identities);
+    return card;
+  }
+
+  function createMergeDivider() {
+    const divider = document.createElement('div');
+    divider.className = 'account-merge-divider';
+    divider.setAttribute('aria-hidden', 'true');
+    divider.textContent = '+';
+    return divider;
+  }
+
+  async function confirmAccountMerge() {
+    if (!currentMergeToken || elements.mergeSubmit.disabled) return;
+    elements.mergeSubmit.disabled = true;
+    elements.mergeCancel.disabled = true;
+    elements.mergeSubmit.querySelector('span').textContent = 'Merging…';
+    elements.mergeError.classList.add('d-none');
+
+    try {
+      const payload = await api(`/api/account/merge/${encodeURIComponent(currentMergeToken)}`, {
+        method: 'POST',
+        body: {}
+      });
+      syncPlayer(payload.player);
+      currentMergeToken = '';
+      closeAccountMerge();
+      await loadSecurity();
+      showMessage(
+        elements.providerMessage,
+        'Accounts merged. Your achievements and progress are now connected to Steam.',
+        'success'
+      );
+    } catch (error) {
+      elements.mergeError.textContent = error?.message || 'The accounts could not be merged.';
+      elements.mergeError.classList.remove('d-none');
+      elements.mergeSubmit.disabled = false;
+      elements.mergeSubmit.querySelector('span').textContent = 'Merge accounts';
+    } finally {
+      elements.mergeCancel.disabled = false;
+    }
+  }
+
+  async function cancelAccountMerge() {
+    const token = currentMergeToken;
+    currentMergeToken = '';
+    closeAccountMerge();
+    if (token) {
+      try {
+        await api(`/api/account/merge/${encodeURIComponent(token)}`, { method: 'DELETE' });
+      } catch (error) {
+        // The intent is short-lived and harmless if it already expired.
+      }
+    }
+    showMessage(elements.providerMessage, 'Account merge cancelled. No progress was changed.', 'info');
+  }
+
+  function closeAccountMerge() {
+    elements.mergeModal.classList.add('d-none');
+    document.body.classList.remove('account-merge-open');
+    elements.mergeError.classList.add('d-none');
+    elements.mergeError.textContent = '';
+  }
+
+  function providerLabel(provider) {
+    const labels = { steam: 'Steam', google: 'Google', discord: 'Discord' };
+    return labels[String(provider || '').toLowerCase()] || 'Account';
+  }
+
+  function formatNumber(value) {
+    return Math.max(0, Number(value) || 0).toLocaleString();
   }
 
   function handleAuthError(error, messageElement) {

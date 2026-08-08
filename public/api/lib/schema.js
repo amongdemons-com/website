@@ -15,6 +15,7 @@ const ACCOUNT_PASSWORD_BACKFILL_MIGRATION = '20260728_account_password_backfill_
 const PLAYER_BADGES_SCHEMA_MIGRATION = '20260801_player_badges_schema_v1';
 const STEAM_PURCHASE_BADGE_BACKFILL_MIGRATION = '20260803_the_night_remembers_steam_backfill_v1';
 const ENDED_RUN_REWARDS_CLEANUP_MIGRATION = '20260808_ended_run_rewards_cleanup_v1';
+const ACCOUNT_MERGE_SCHEMA_MIGRATION = '20260808_account_merge_schema_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -824,6 +825,71 @@ async function addPlayerBadgesSchema() {
   );
 }
 
+async function addAccountMergeSchema() {
+  await addColumnIfMissing(
+    'player_sessions',
+    'auth_provider',
+    '`auth_provider` VARCHAR(32) NOT NULL DEFAULT "web"'
+  );
+  await normalizeUtf8Column(
+    'player_sessions',
+    'auth_provider',
+    'VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT "web"'
+  );
+  await addColumnIfMissing(
+    'oauth_states',
+    'auth_provider',
+    '`auth_provider` VARCHAR(32) NOT NULL DEFAULT "web"'
+  );
+  await normalizeUtf8Column(
+    'oauth_states',
+    'auth_provider',
+    'VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT "web"'
+  );
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS pending_account_merges (
+      token VARCHAR(96) NOT NULL PRIMARY KEY,
+      target_player_id VARCHAR(255) NOT NULL,
+      source_player_id VARCHAR(255) NOT NULL,
+      provider VARCHAR(32) NOT NULL,
+      provider_user_id VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP NOT NULL,
+      completed_at TIMESTAMP NULL,
+      INDEX idx_pending_account_merges_target (target_player_id, expires_at),
+      INDEX idx_pending_account_merges_source (source_player_id, expires_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  for (const column of ['target_player_id', 'source_player_id', 'provider_user_id']) {
+    await normalizeUtf8Column(
+      'pending_account_merges',
+      column,
+      'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+    );
+  }
+  await normalizeUtf8Column(
+    'pending_account_merges',
+    'provider',
+    'VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
+  );
+
+  // A merge can temporarily carry different active Whispering Well buffs.
+  // Store them independently so distinct buffs survive and duplicate buffs
+  // can be resolved by their later expiry time.
+  const [primaryRows] = await db.query(
+    "SHOW INDEX FROM player_world_soul_font_buffs WHERE Key_name = 'PRIMARY'"
+  );
+  const primaryColumns = primaryRows
+    .sort((left, right) => Number(left.Seq_in_index) - Number(right.Seq_in_index))
+    .map((row) => row.Column_name);
+  if (primaryColumns.length === 1 && primaryColumns[0] === 'player_id') {
+    await db.query(
+      'ALTER TABLE player_world_soul_font_buffs DROP PRIMARY KEY, ADD PRIMARY KEY (player_id, buff_id)'
+    );
+  }
+}
+
 async function clearEndedRunRewardHistory() {
   await db.query("UPDATE runs SET rewards = '[]' WHERE status = 'ended' AND rewards <> '[]'");
 }
@@ -906,6 +972,7 @@ async function initializeSchema() {
   await runMigrationOnce(PLAYER_BADGES_SCHEMA_MIGRATION, addPlayerBadgesSchema);
   await runMigrationOnce(STEAM_PURCHASE_BADGE_BACKFILL_MIGRATION, backfillSteamPurchaseBadge);
   await runMigrationOnce(ENDED_RUN_REWARDS_CLEANUP_MIGRATION, clearEndedRunRewardHistory);
+  await runMigrationOnce(ACCOUNT_MERGE_SCHEMA_MIGRATION, addAccountMergeSchema);
 }
 
 function ensureSchemaReady() {

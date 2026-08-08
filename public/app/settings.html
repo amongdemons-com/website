@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="1a93754d2cd7">
+    <meta name="among-demons-client-version" content="c14f3f181bb5">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Settings | Among Demons</title>
@@ -22,7 +22,7 @@
       })();
     </script>
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=ea0e7f42956c" rel="stylesheet">
+    <link href="/app/css/base.css?v=f5d2d325392f" rel="stylesheet">
     <link href="/app/css/battle.css?v=d3d4f6ceae66" rel="stylesheet">
   </head>
   <body class="settings-page">
@@ -278,8 +278,40 @@
         </div>
       </section>
     </main>
+
+    <div class="account-merge-modal d-none" id="accountMergeModal" role="dialog" aria-modal="true" aria-labelledby="accountMergeTitle" aria-describedby="accountMergeDescription">
+      <div class="account-merge-dialog">
+        <header class="account-merge-header">
+          <span class="account-merge-kicker"><i data-lucide="combine"></i> Steam account merge</span>
+          <h2 id="accountMergeTitle">Choose one hunter. Keep both journeys.</h2>
+          <p id="accountMergeDescription">This sign-in belongs to another hunter. Review both accounts before combining them permanently.</p>
+        </header>
+
+        <div class="account-merge-accounts" id="accountMergeAccounts" aria-live="polite"></div>
+
+        <section class="account-merge-rules" aria-labelledby="accountMergeRulesTitle">
+          <h3 id="accountMergeRulesTitle">What the merged hunter keeps</h3>
+          <ul>
+            <li>The highest level, XP, dungeon record, and the username from the higher-level hunter.</li>
+            <li>Combined Souls and bag contents, plus every summoned demon with the best stats from duplicates.</li>
+            <li>All achievements, sign-in methods, and active buffs; matching buffs keep the later expiry.</li>
+            <li>Skill points are refunded for the final level. The current dungeon ends and world position resets to area 0,0.</li>
+          </ul>
+          <p><strong>This cannot be undone.</strong> The other account is removed after its data is merged into the Steam hunter.</p>
+        </section>
+
+        <div class="account-merge-error d-none" id="accountMergeError" role="alert"></div>
+        <div class="account-merge-actions">
+          <button class="btn btn-primary account-merge-submit" id="accountMergeSubmit" type="button">
+            <i data-lucide="combine"></i>
+            <span>Merge accounts</span>
+          </button>
+          <button class="btn btn-link account-merge-cancel" id="accountMergeCancel" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
     <script src="/app/dist/runtime.bundle.js?v=dec133f7141f"></script>
     <script src="/app/js/usernames.js?v=8ab3cb68367d"></script>
-    <script src="/app/js/settings-ui.js?v=93cfd2127ef3"></script>
+    <script src="/app/js/settings-ui.js?v=575394c5d536"></script>
   </body>
 </html>

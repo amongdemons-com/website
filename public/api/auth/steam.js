@@ -81,7 +81,7 @@ function createSteamAuthHandler(overrides = {}) {
     // successful response. The shared award operation is safe on every login.
     await dependencies.awardPlayerBadge(player.id, STEAM_PURCHASE_BADGE_KEY, dependencies.db);
 
-    const token = await dependencies.createSession(player.id);
+    const token = await dependencies.createSession(player.id, { authProvider: 'steam' });
 
     // Credit history on first link and flush any unlocks Steam has not seen yet.
     // Best-effort by design: sign-in must succeed even if Steam sync fails.

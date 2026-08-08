@@ -10,6 +10,7 @@ const {
   isSupportedProvider,
   linkOAuthPlayer
 } = require('../lib/oauth');
+const { createPendingAccountMerge } = require('../lib/account-merge');
 
 const router = express.Router();
 const OAUTH_STATE_TTL_MINUTES = 10;
@@ -34,9 +35,9 @@ router.post('/account/oauth/:provider/connect', requireAuth, blockGuests, async 
 
   await db.query(
     `INSERT INTO oauth_states
-      (state, provider, mode, redirect_path, link_player_id, expires_at)
-     VALUES (?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ${OAUTH_STATE_TTL_MINUTES} MINUTE))`,
-    [state, provider, 'link', redirectPath, req.player.id]
+      (state, provider, mode, redirect_path, link_player_id, auth_provider, expires_at)
+     VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ${OAUTH_STATE_TTL_MINUTES} MINUTE))`,
+    [state, provider, 'link', redirectPath, req.player.id, req.authProvider]
   );
 
   cleanupOAuthStates().catch((error) => {
@@ -67,9 +68,10 @@ router.get('/auth/oauth/:provider', async (req, res) => {
 
   await cleanupOAuthStates();
   await db.query(
-    `INSERT INTO oauth_states (state, provider, mode, redirect_path, claim_player_id, expires_at)
-     VALUES (?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ${OAUTH_STATE_TTL_MINUTES} MINUTE))`,
-    [state, provider, mode, redirectPath, claimPlayerId]
+    `INSERT INTO oauth_states
+      (state, provider, mode, redirect_path, claim_player_id, auth_provider, expires_at)
+     VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL ${OAUTH_STATE_TTL_MINUTES} MINUTE))`,
+    [state, provider, mode, redirectPath, claimPlayerId, provider]
   );
 
   const authUrl = buildAuthorizationUrl(provider, {
@@ -112,17 +114,45 @@ async function handleOAuthCallback(req, res) {
       redirectUri,
       user: req.body?.user
     });
-    const player = mode === 'link'
-      ? await linkOAuthPlayer(oauthState.link_player_id, provider, profile)
-      : await findOrCreateOAuthPlayer(provider, profile, {
-          claimPlayerId: oauthState.claim_player_id || null
+    let player;
+    let redirectPath = oauthState.redirect_path;
+    if (mode === 'link') {
+      try {
+        player = await linkOAuthPlayer(oauthState.link_player_id, provider, profile);
+      } catch (error) {
+        const canOfferMerge = oauthState.auth_provider === 'steam'
+          && error.status === 409
+          && error.conflictingPlayerId
+          && error.providerUserId;
+        if (!canOfferMerge) throw error;
+
+        const mergeToken = await createPendingAccountMerge({
+          targetPlayerId: oauthState.link_player_id,
+          sourcePlayerId: error.conflictingPlayerId,
+          provider,
+          providerUserId: error.providerUserId
         });
-    const token = await createSession(player.id);
+        const [targetRows] = await db.query(
+          'SELECT * FROM players WHERE id = ? LIMIT 1',
+          [oauthState.link_player_id]
+        );
+        player = targetRows[0];
+        if (!player) throw error;
+        redirectPath = `/settings?oauth=merge&mergeToken=${encodeURIComponent(mergeToken)}`;
+      }
+    } else {
+      player = await findOrCreateOAuthPlayer(provider, profile, {
+        claimPlayerId: oauthState.claim_player_id || null
+      });
+    }
+    const token = await createSession(player.id, {
+      authProvider: oauthState.auth_provider === 'steam' ? 'steam' : provider
+    });
 
     res.set('Cache-Control', 'no-store');
     return res.type('html').send(renderOAuthCompletePage({
       player: cleanPlayer(player),
-      redirectPath: oauthState.redirect_path,
+      redirectPath,
       token
     }));
   } catch (error) {
@@ -148,7 +178,7 @@ async function consumeOAuthState(state, provider) {
   if (!result.affectedRows) return null;
 
   const [rows] = await db.query(
-    `SELECT mode, redirect_path, claim_player_id, link_player_id
+    `SELECT mode, redirect_path, claim_player_id, link_player_id, auth_provider
      FROM oauth_states
      WHERE state = ? AND provider = ?
      LIMIT 1`,

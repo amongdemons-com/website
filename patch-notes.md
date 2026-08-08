@@ -12,3 +12,6 @@
 - Long dungeon sessions are less likely to crash from battle sounds piling up.
 - Dungeon runs now forget old reward choices after each floor, helping long
   runs stay fast and stable.
+- Steam players can now merge an existing Google or Discord hunter from
+  Settings. Progress, demons, bags, buffs, and achievements are combined into
+  one account, and unlocked achievements sync to Steam.

@@ -18,6 +18,7 @@ const PLAYER_DATA_TABLES = [
   'player_bag',
   'player_demons',
   'player_world_boss_buffs',
+  'player_world_soul_font_buffs',
   'player_active_hunts',
   'player_hunt_unlocks',
   'player_bound_world_shrines',
@@ -64,6 +65,10 @@ async function purgePlayerAccount(playerId, connection = db) {
 
     await activeConnection.query(
       'DELETE FROM oauth_states WHERE claim_player_id = ? OR link_player_id = ?',
+      [playerId, playerId]
+    );
+    await activeConnection.query(
+      'DELETE FROM pending_account_merges WHERE target_player_id = ? OR source_player_id = ?',
       [playerId, playerId]
     );
 

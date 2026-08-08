@@ -143,13 +143,14 @@ async function purchaseSoulFontBuff(playerId, requestedRitualId, options = {}) {
       `SELECT buff_id AS buffId,
               offer_set_id AS ritualId,
               UNIX_TIMESTAMP(expires_at) AS expiresAtSeconds
-       FROM player_world_soul_font_buffs
-       WHERE player_id = ?
-       LIMIT 1
+     FROM player_world_soul_font_buffs
+     WHERE player_id = ?
+       ORDER BY expires_at DESC
        FOR UPDATE`,
       [playerId]
     );
-    const existing = existingRows[0];
+    const existing = existingRows.find((row) => String(row.ritualId || '') === ritualId)
+      || existingRows[0];
     const existingExpiresAt = unixSecondsToIsoString(existing?.expiresAtSeconds);
     const existingBuff = SOUL_FONT_BUFFS_BY_ID.get(String(existing?.buffId || ''));
     const existingBuffIsActive = Boolean(
@@ -183,6 +184,9 @@ async function purchaseSoulFontBuff(playerId, requestedRitualId, options = {}) {
     const awardedAtSeconds = Math.floor(now.getTime() / 1000);
     const expiresAtSeconds = awardedAtSeconds + SOUL_FONT_DURATION_SECONDS;
     await connection.query('UPDATE players SET souls = souls - ? WHERE id = ?', [price, playerId]);
+    // Normal offerings still replace the current blessing. Multiple distinct
+    // rows only arise when account merging preserves both hunters' live buffs.
+    await connection.query('DELETE FROM player_world_soul_font_buffs WHERE player_id = ?', [playerId]);
     await connection.query(
       `INSERT INTO player_world_soul_font_buffs
          (player_id, buff_id, offer_set_id, price, awarded_at, expires_at)
@@ -229,7 +233,7 @@ async function getActiveSoulFontBuffs(playerOrId, queryable = db) {
      FROM player_world_soul_font_buffs
      WHERE player_id = ?
        AND expires_at > CURRENT_TIMESTAMP
-     LIMIT 1`,
+      ORDER BY expires_at DESC`,
     [playerId]
   );
 

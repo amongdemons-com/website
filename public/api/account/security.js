@@ -31,6 +31,7 @@ router.get('/account/security', requireAuth, blockGuests, async (req, res) => {
 
   res.json({
     hasPassword: req.player.hasPassword,
+    canMergeAccounts: req.authProvider === 'steam',
     deletionRequestedAt: req.player.deletionRequestedAt,
     deletionScheduledFor: req.player.deletionScheduledFor,
     providers: getProviderStatuses().map((provider) => {

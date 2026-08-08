@@ -192,7 +192,13 @@ async function linkOAuthPlayer(playerId, provider, profile) {
       [provider, providerUserId]
     );
     if (identityRows.length && identityRows[0].player_id !== playerId) {
-      throw createOAuthError(`This ${PROVIDERS[provider].label} account is already connected to another hunter.`, 409);
+      const error = createOAuthError(
+        `This ${PROVIDERS[provider].label} account is already connected to another hunter.`,
+        409
+      );
+      error.conflictingPlayerId = identityRows[0].player_id;
+      error.providerUserId = providerUserId;
+      throw error;
     }
 
     const [providerRows] = await connection.query(

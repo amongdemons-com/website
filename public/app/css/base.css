@@ -9342,6 +9342,271 @@ html[data-desktop-wrapper="1"] [data-hide-in-desktop-wrapper] {
     font-size: 0.76rem;
 }
 
+body.account-merge-open {
+    overflow: hidden;
+}
+
+.account-merge-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    overflow-y: auto;
+    padding: clamp(1rem, 4vw, 3rem);
+    background:
+        radial-gradient(circle at 18% 18%, rgba(111,214,189,0.16), transparent 30rem),
+        radial-gradient(circle at 82% 12%, rgba(156,122,200,0.16), transparent 28rem),
+        rgba(2,7,9,0.97);
+}
+
+.account-merge-dialog {
+    display: grid;
+    gap: clamp(1rem, 2.5vw, 1.7rem);
+    width: min(100%, 76rem);
+    min-height: calc(100vh - clamp(2rem, 8vw, 6rem));
+    margin: 0 auto;
+    align-content: center;
+}
+
+.account-merge-header {
+    max-width: 54rem;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.account-merge-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--ad-teal);
+    font-size: 0.74rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.account-merge-kicker .game-icon {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.account-merge-header h2 {
+    margin: 0.45rem 0 0;
+    color: var(--ad-text);
+    font-size: clamp(1.65rem, 4vw, 3rem);
+    font-weight: 900;
+    line-height: 1.05;
+}
+
+.account-merge-header p {
+    margin: 0.65rem auto 0;
+    color: var(--ad-muted);
+    font-size: clamp(0.88rem, 2vw, 1rem);
+}
+
+.account-merge-accounts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: clamp(0.7rem, 2vw, 1.25rem);
+}
+
+.account-merge-card {
+    overflow: hidden;
+    border: 1px solid rgba(161,212,201,0.24);
+    border-radius: 12px;
+    background:
+        linear-gradient(145deg, rgba(111,214,189,0.075), transparent 42%),
+        rgba(7,16,19,0.94);
+    box-shadow: 0 24px 70px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.account-merge-provider {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    border-bottom: 1px solid rgba(161,212,201,0.14);
+    padding: 0.9rem 1rem;
+}
+
+.account-merge-provider-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 2.65rem;
+    width: 2.65rem;
+    height: 2.65rem;
+    border: 1px solid rgba(161,212,201,0.24);
+    border-radius: 50%;
+    background: rgba(3,9,11,0.8);
+    color: #c7d5e0;
+    font-family: var(--ad-font-display);
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+.account-merge-provider-mark.is-steam {
+    border-color: rgba(199,213,224,0.38);
+    background: linear-gradient(145deg, #1b2838, #10212d);
+}
+
+.account-merge-provider-mark img {
+    width: 1.6rem;
+    height: 1.6rem;
+}
+
+.account-merge-provider > div {
+    display: grid;
+    min-width: 0;
+}
+
+.account-merge-provider span {
+    color: var(--ad-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.account-merge-provider strong {
+    overflow: hidden;
+    color: var(--ad-text);
+    font-size: clamp(1rem, 2.4vw, 1.35rem);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-merge-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+    padding: 0.45rem 1rem;
+}
+
+.account-merge-stats > div {
+    display: grid;
+    gap: 0.08rem;
+    border-bottom: 1px solid rgba(161,212,201,0.1);
+    padding: 0.55rem 0;
+}
+
+.account-merge-stats > div:nth-child(odd) {
+    padding-right: 0.8rem;
+}
+
+.account-merge-stats > div:nth-child(even) {
+    border-left: 1px solid rgba(161,212,201,0.1);
+    padding-left: 0.8rem;
+}
+
+.account-merge-stats dt {
+    color: var(--ad-faint);
+    font-size: 0.7rem;
+    font-weight: 750;
+}
+
+.account-merge-stats dd {
+    margin: 0;
+    color: var(--ad-text);
+    font-size: 0.95rem;
+    font-weight: 900;
+}
+
+.account-merge-identities {
+    margin: 0;
+    padding: 0.2rem 1rem 0.9rem;
+    color: var(--ad-muted);
+    font-size: 0.72rem;
+}
+
+.account-merge-divider {
+    align-self: center;
+    display: grid;
+    place-items: center;
+    width: 2.7rem;
+    height: 2.7rem;
+    border: 1px solid rgba(111,214,189,0.45);
+    border-radius: 50%;
+    background: #0a1719;
+    color: var(--ad-teal);
+    font-size: 1.55rem;
+    font-weight: 500;
+    box-shadow: 0 0 24px rgba(111,214,189,0.18);
+}
+
+.account-merge-rules {
+    box-sizing: border-box;
+    width: min(100%, 60rem);
+    margin: 0 auto;
+    border: 1px solid rgba(161,212,201,0.16);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    background: rgba(3,9,11,0.56);
+}
+
+.account-merge-rules h3 {
+    margin: 0;
+    color: var(--ad-text);
+    font-size: 0.86rem;
+    font-weight: 900;
+}
+
+.account-merge-rules ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.3rem 1.4rem;
+    margin: 0.55rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--ad-muted);
+    font-size: 0.76rem;
+}
+
+.account-merge-rules p {
+    margin: 0.65rem 0 0;
+    color: #efb2ab;
+    font-size: 0.76rem;
+}
+
+.account-merge-error {
+    width: min(100%, 46rem);
+    margin: 0 auto;
+    border: 1px solid rgba(241,145,135,0.38);
+    border-radius: 8px;
+    padding: 0.65rem 0.8rem;
+    background: rgba(104,31,31,0.2);
+    color: #f3aaa2;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.account-merge-actions {
+    display: grid;
+    justify-items: center;
+    gap: 0.3rem;
+}
+
+.account-merge-submit {
+    min-width: min(100%, 22rem);
+    min-height: 3.25rem;
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.account-merge-submit .game-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.account-merge-cancel {
+    color: var(--ad-muted);
+    font-size: 0.76rem;
+    text-decoration: none;
+}
+
+.account-merge-cancel:hover,
+.account-merge-cancel:focus-visible {
+    color: var(--ad-text);
+}
+
 @media (max-width: 767.98px) {
 .settings-shell {
         width: min(100% - 1rem, 58rem);
@@ -9374,6 +9639,27 @@ html[data-desktop-wrapper="1"] [data-hide-in-desktop-wrapper] {
 .settings-form-actions .settings-submit,
 .settings-deletion-pending .btn {
         width: 100%;
+    }
+
+.account-merge-modal {
+        padding: 0.75rem;
+    }
+
+.account-merge-dialog {
+        min-height: calc(100vh - 1.5rem);
+    }
+
+.account-merge-accounts {
+        grid-template-columns: 1fr;
+    }
+
+.account-merge-divider {
+        justify-self: center;
+        margin: -0.25rem 0;
+    }
+
+.account-merge-rules ul {
+        grid-template-columns: 1fr;
     }
 
 }
