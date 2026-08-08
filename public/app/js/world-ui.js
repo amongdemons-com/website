@@ -6,6 +6,7 @@ import * as dungeonLifecycle from './dungeon/lifecycle.js?v=20260720-music-unifi
 import * as dungeonRender from './dungeon/render.js?v=20260721-victory-gold-v1';
 import * as dungeonCombat from './dungeon/combat.js?v=20260716-replay-only-controls-v1';
 import * as dungeonRewards from './dungeon/rewards.js?v=20260720-dungeon-defeat-v1';
+import * as dungeonRanked from './dungeon/ranked.js?v=20260808-dungeon-ranked-v1';
 import * as dungeonPacts from './dungeon/pacts.js?v=20260716-primary-replay-controls-v1';
 import * as dungeonHand from './dungeon/hand.js?v=20260706-stat-preview-v4';
 import * as dungeonRecruit from './dungeon/recruit.js?v=20260706-stat-preview-v4';
@@ -7462,6 +7463,7 @@ import './bag-item-visuals.js';
       ...dungeonRender,
       ...dungeonCombat,
       ...dungeonRewards,
+      ...dungeonRanked,
       ...dungeonPacts,
       ...dungeonHand,
       ...dungeonRecruit,
