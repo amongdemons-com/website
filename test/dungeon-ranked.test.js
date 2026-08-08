@@ -22,13 +22,14 @@ const {
 const { advanceDungeonFloor } = require('../public/api/lib/dungeon-progression');
 const { serializeRun } = require('../public/api/lib/run-serialization');
 
-test('Ranked dungeon checkpoints replace the normal encounter on floor 30 and every five floors', () => {
+test('Ranked dungeon checkpoints replace the normal encounter on floor 30 and every ten floors', () => {
   assert.equal(isDungeonRankedFloor(29), false);
   assert.equal(isDungeonRankedFloor(30), true);
-  assert.equal(isDungeonRankedFloor(34), false);
-  assert.equal(isDungeonRankedFloor(35), true);
+  assert.equal(isDungeonRankedFloor(35), false);
+  assert.equal(isDungeonRankedFloor(39), false);
   assert.equal(isDungeonRankedFloor(40), true);
   assert.equal(isDungeonRankedFloor(41), false);
+  assert.equal(isDungeonRankedFloor(50), true);
 });
 
 test('Dungeon progression offers a Ranked rival immediately on the destination checkpoint floor', async () => {

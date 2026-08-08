@@ -9,8 +9,8 @@
   failed escape starts the fight.
 - The Ranked choice window now uses the Dungeon's dark teal and gold colors,
   with escape odds shown directly inside the Run button.
-- Ranked encounters now replace the normal fight on Dungeon floors 30, 35, 40,
-  45, and every five floors after that when a rival is available.
+- Ranked encounters now replace the normal fight on Dungeon floors 30, 40, 50,
+  and every ten floors after that when a rival is available.
 - Rival teams preserve the hunter's exact build from that floor and are chosen
   from hunters within five levels and 200 Ranked Points. If no close rival is
   available, the run continues.
