@@ -71,7 +71,7 @@ router.post('/runs/:id/buff/reroll', requireAuth, async (req, res) => {
       'UPDATE players SET souls = souls - ? WHERE id = ?',
       [rerollCost, req.player.id]
     );
-    await saveRunWithConnection(connection, run);
+    await saveRun(run, connection);
     await connection.commit();
 
     player.souls = playerSouls - rerollCost;
@@ -135,23 +135,6 @@ function validatePendingRunBuffChoice(run) {
   }
 
   return null;
-}
-
-async function saveRunWithConnection(connection, run) {
-  await connection.query(
-    `UPDATE runs
-     SET status = ?, floor = ?, state = ?, rewards = ?, ended_at = ?
-     WHERE id = ? AND player_id = ?`,
-    [
-      run.status,
-      run.floor,
-      JSON.stringify(run.state),
-      JSON.stringify(run.rewards),
-      run.endedAt || null,
-      run.id,
-      run.playerId
-    ]
-  );
 }
 
 function createBuffChoiceRng(run, rerollIndex = 0) {

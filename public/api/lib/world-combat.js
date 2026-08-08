@@ -1,3 +1,4 @@
+const crypto = require('node:crypto');
 const db = require('./db');
 const { simulateFight } = require('./combat');
 const { getDemonTypes } = require('./game-data');
@@ -264,17 +265,18 @@ async function simulateWorldAmbush(player, position, encounters = [], options = 
     player,
     encounter: ambushEncounter,
     combatType: 'ambush',
-    seed: hashSeed(`ambush:${player.id}:${position.x}:${position.y}:${targetEncounter.id}`),
+    seed: getEngagementSeed(options.seed),
     context: options.context
   });
 }
 
-async function simulateTryHunt(player, encounter) {
+async function simulateTryHunt(player, encounter, options = {}) {
   return simulateWorldCombat({
     player,
     encounter,
     combatType: 'hunt_test',
-    seed: hashSeed(`hunt-test:${player.id}:${encounter.id}`)
+    seed: getEngagementSeed(options.seed),
+    context: options.context
   });
 }
 
@@ -299,7 +301,7 @@ async function simulateWorldPvpChallenge(player, targetPlayer, options = {}) {
     throw error;
   }
 
-  const seed = options.seed || hashSeed(`pvp:${player.id}:${targetPlayer.id}:${Date.now()}`);
+  const seed = getEngagementSeed(options.seed);
   const enemyTeam = mirrorWorldTeamForEnemySide(targetTeam);
   const result = simulateFight(createRng(seed), playerTeam, enemyTeam, {
     demonTypes,
@@ -334,7 +336,7 @@ async function simulateWorldBossChallenge(player, boss, options = {}) {
     throw error;
   }
 
-  const seed = options.seed || hashSeed(`world-boss:${player.id}:${boss.id}:${Date.now()}`);
+  const seed = getEngagementSeed(options.seed);
   const enemyTeam = materializeEncounterTeam(boss, demonTypes);
   const enemyBuffs = normalizeCombatBuffState({
     activeBuffs: [
@@ -381,7 +383,9 @@ async function createHuntSnapshot(player, encounter, options = {}) {
     throw error;
   }
 
-  const seed = hashSeed(`hunt-test:${player.id}:${encounter.id}`);
+  // Keep this seed with the snapshot so its sample battle remains reproducible,
+  // while a newly started hunt gets a fresh set of chaotic damage rolls.
+  const seed = getEngagementSeed(options.seed);
   const result = simulateFight(
     createRng(seed),
     playerTeam,
@@ -868,6 +872,14 @@ function hashSeed(value) {
     hash = Math.imul(hash, 16777619);
   }
   return hash >>> 0 || 1;
+}
+
+function getEngagementSeed(seed) {
+  if (seed !== undefined && seed !== null) {
+    return (Number(seed) >>> 0) || 1;
+  }
+
+  return crypto.randomInt(1, 0x100000000);
 }
 
 module.exports = {

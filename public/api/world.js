@@ -994,6 +994,7 @@ async function settleActiveHunt(player, options = {}) {
   let settledLevel = null;
   let settledPreviousLevel = null;
   let liveHuntCapacityState = null;
+  let restartFailureReason = null;
   // `player` is req.player, which requireAuth already passed through cleanPlayer.
   // The DB row fetched below is the raw shape that still needs cleaning.
   let playerPayload = player;
@@ -1017,9 +1018,7 @@ async function settleActiveHunt(player, options = {}) {
       const encounterId = huntRows[0].encounter_id || huntRows[0].encounterId;
       const encounter = restartHunt ? getEncounterById(encounterId) : null;
       if (restartHunt && !encounter) {
-        const error = new Error('The hunted demon spot no longer exists.');
-        error.status = 409;
-        throw error;
+        restartFailureReason = 'The hunted demon spot no longer exists.';
       }
       // Live capacity so vessel points spent mid-hunt apply to the payout.
       liveHuntCapacityState = await getLiveHuntCapacityState(player);
@@ -1031,12 +1030,15 @@ async function settleActiveHunt(player, options = {}) {
         error.status = 409;
         throw error;
       }
-      const restartedSnapshot = restartHunt
-        ? await createHuntSnapshot(player, encounter, {
+      let restartedSnapshot = null;
+      if (restartHunt && encounter) {
+        const restartResult = await attemptHuntRestart(() => createHuntSnapshot(player, encounter, {
           statSummary: liveHuntCapacityState.statSummary,
           activeBossBuffs: liveHuntCapacityState.activeBossBuffs
-        })
-        : null;
+        }));
+        restartedSnapshot = restartResult.snapshot;
+        restartFailureReason = restartResult.failureReason;
+      }
 
       const [lockedRows] = await connection.query(
         'SELECT level, xp FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
@@ -1118,6 +1120,7 @@ async function settleActiveHunt(player, options = {}) {
     alreadyStopped: !stoppedHunt,
     stoppedHunt,
     restartedHunt,
+    restartFailureReason,
     rewards,
     player: playerPayload,
     progression: stoppedHunt ? {
@@ -1131,6 +1134,22 @@ async function settleActiveHunt(player, options = {}) {
       liveCapacityState: restartedHunt ? liveHuntCapacityState : null
     })
   };
+}
+
+async function attemptHuntRestart(createSnapshot) {
+  try {
+    return {
+      snapshot: await createSnapshot(),
+      failureReason: null
+    };
+  } catch (error) {
+    if (Number(error?.status) !== 409) throw error;
+
+    return {
+      snapshot: null,
+      failureReason: 'Your current team and active buffs could not win another fight.'
+    };
+  }
 }
 
 async function getHuntState(playerId, options = {}) {
@@ -1576,6 +1595,7 @@ function throwWorldError(message, status = 400) {
 }
 
 router._test = {
+  attemptHuntRestart,
   getAmbushVictoryRewards,
   getDarknessPortalAt,
   getDarknessPortalSummonCost,

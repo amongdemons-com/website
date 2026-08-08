@@ -14,6 +14,7 @@ const ACCOUNT_SECURITY_SCHEMA_MIGRATION = '20260728_account_security_schema_v1';
 const ACCOUNT_PASSWORD_BACKFILL_MIGRATION = '20260728_account_password_backfill_v1';
 const PLAYER_BADGES_SCHEMA_MIGRATION = '20260801_player_badges_schema_v1';
 const STEAM_PURCHASE_BADGE_BACKFILL_MIGRATION = '20260803_the_night_remembers_steam_backfill_v1';
+const ENDED_RUN_REWARDS_CLEANUP_MIGRATION = '20260808_ended_run_rewards_cleanup_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -823,6 +824,10 @@ async function addPlayerBadgesSchema() {
   );
 }
 
+async function clearEndedRunRewardHistory() {
+  await db.query("UPDATE runs SET rewards = '[]' WHERE status = 'ended' AND rewards <> '[]'");
+}
+
 async function backfillSteamPurchaseBadge() {
   await backfillPlayerBadgeForOAuthProvider('the_night_remembers', 'steam');
 }
@@ -900,6 +905,7 @@ async function initializeSchema() {
   await runMigrationOnce(ACCOUNT_PASSWORD_BACKFILL_MIGRATION, backfillOAuthOnlyPasswordState);
   await runMigrationOnce(PLAYER_BADGES_SCHEMA_MIGRATION, addPlayerBadgesSchema);
   await runMigrationOnce(STEAM_PURCHASE_BADGE_BACKFILL_MIGRATION, backfillSteamPurchaseBadge);
+  await runMigrationOnce(ENDED_RUN_REWARDS_CLEANUP_MIGRATION, clearEndedRunRewardHistory);
 }
 
 function ensureSchemaReady() {

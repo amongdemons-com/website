@@ -1533,7 +1533,13 @@ import './bag-item-visuals.js';
       const rewards = payload.rewards || {};
       const leveledUp = showHuntClaimProgression(payload.progression);
       if (!leveledUp) playQuestCompleteSound();
-      setMessage(formatHuntRewardSummary(rewards), 'success');
+      const restartNotice = payload.restartFailureReason
+        ? ` Hunting stopped: ${payload.restartFailureReason}`
+        : '';
+      setMessage(
+        `${formatHuntRewardSummary(rewards)}${restartNotice}`,
+        payload.restartFailureReason ? 'warning' : 'success'
+      );
       return true;
     } catch (error) {
       handleAuthError(error);

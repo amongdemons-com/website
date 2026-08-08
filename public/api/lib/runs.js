@@ -1,12 +1,13 @@
 const db = require('./db');
 const { normalizeRunBuffState } = require('./run-buffs');
 const { enrichRunPreferredPositions } = require('./run-demons');
+const { compactRunRewards } = require('./run-rewards');
 
 function parseRun(row) {
   const state = JSON.parse(row.state);
   state.buffs = normalizeRunBuffState(state.buffs || {});
 
-  return {
+  return compactRunRewards({
     id: row.id,
     playerId: row.player_id,
     seed: row.seed,
@@ -14,7 +15,7 @@ function parseRun(row) {
     floor: row.floor,
     state,
     rewards: JSON.parse(row.rewards)
-  };
+  });
 }
 
 async function getRunForPlayer(runId, playerId, queryable = db, options = {}) {
@@ -53,6 +54,7 @@ async function closeOpenRunsForPlayer(playerId, exceptRunId = null) {
   await db.query(
     `UPDATE runs
      SET status = 'ended',
+         rewards = '[]',
          ended_at = COALESCE(ended_at, CURRENT_TIMESTAMP)
      WHERE player_id = ?
        AND status <> 'ended'
@@ -62,6 +64,7 @@ async function closeOpenRunsForPlayer(playerId, exceptRunId = null) {
 }
 
 async function saveRun(run, queryable = db) {
+  compactRunRewards(run);
   await queryable.query(
     `UPDATE runs
      SET status = ?, floor = ?, state = ?, rewards = ?, ended_at = ?

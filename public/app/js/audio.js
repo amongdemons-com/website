@@ -29,6 +29,7 @@
   const lastSoundUrlByKey = new Map();
   const pendingUnlockSounds = new Map();
   const activeSfx = new Set();
+  const sfxCleanupByPlayer = new Map();
   let volumes = readVolumes();
   let muted = readMuted();
   let audioUnlocked = Boolean(window.navigator?.userActivation?.hasBeenActive);
@@ -107,12 +108,18 @@
 
     if (muted) {
       pendingUnlockSounds.clear();
-      activeSfx.forEach((player) => {
+      Array.from(activeSfx).forEach((player) => {
+        const cleanupPlayer = sfxCleanupByPlayer.get(player);
+        if (cleanupPlayer) {
+          cleanupPlayer();
+          return;
+        }
         player.pause();
         player.removeAttribute('src');
         player.load();
       });
       activeSfx.clear();
+      sfxCleanupByPlayer.clear();
       Object.values(scenePlayers).forEach((player) => player?.pause());
     }
     updateSceneVolumes();
@@ -343,10 +350,29 @@
     const player = new Audio(url);
     player.preload = 'auto';
     player.volume = getEffectiveVolume('sfx', options.volume ?? 1, mix.gain);
+    let cleanupTimer = null;
+    let isCleanedUp = false;
+    const cleanupPlayer = () => {
+      if (isCleanedUp) return;
+      isCleanedUp = true;
+      if (cleanupTimer !== null) {
+        window.clearTimeout(cleanupTimer);
+        cleanupTimer = null;
+      }
+      activeSfx.delete(player);
+      sfxCleanupByPlayer.delete(player);
+      ['ended', 'error', 'abort', 'emptied'].forEach((eventName) => {
+        player.removeEventListener(eventName, cleanupPlayer);
+      });
+      player.pause();
+      player.removeAttribute('src');
+      player.load();
+    };
     activeSfx.add(player);
-    const releasePlayer = () => activeSfx.delete(player);
-    player.addEventListener('ended', releasePlayer, { once: true });
-    player.addEventListener('error', releasePlayer, { once: true });
+    sfxCleanupByPlayer.set(player, cleanupPlayer);
+    ['ended', 'error', 'abort', 'emptied'].forEach((eventName) => {
+      player.addEventListener(eventName, cleanupPlayer, { once: true });
+    });
     if (Number.isFinite(Number(options.playbackRate))) {
       player.playbackRate = clamp(Number(options.playbackRate), 0.5, 2);
     }
@@ -354,20 +380,15 @@
     if (Number(mix.musicDuck) < 1) duckMusic(mix.musicDuck, mix.musicDuckMs);
     const playbackPromise = safePlay(player);
     if (Number(options.durationMs) > 0) {
-      window.setTimeout(() => {
-        releasePlayer();
-        player.pause();
-        player.removeAttribute('src');
-        player.load();
-      }, Number(options.durationMs));
+      cleanupTimer = window.setTimeout(cleanupPlayer, Number(options.durationMs));
     } else if (!options.loop) {
-      window.setTimeout(releasePlayer, 30000);
+      cleanupTimer = window.setTimeout(cleanupPlayer, 30000);
     }
     if (options.waitForEnd && !options.loop) {
       try {
         if (playbackPromise?.then) await playbackPromise;
       } catch (error) {
-        releasePlayer();
+        cleanupPlayer();
         return null;
       }
       await waitForPlaybackEnd(player, options.maxWaitMs);

@@ -70,6 +70,7 @@ router.post('/runs/start', requireAuth, async (req, res) => {
     awaitingRecruit: true,
     awaitingCollectionReinforcement: true,
     collectionReinforcementLimit: 2,
+    nextRewardId: startingHand.length + 1,
     playerLevel: Math.max(1, Number(req.player.level) || 1),
     buffs: {
       active: [],

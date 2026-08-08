@@ -12,7 +12,7 @@ const { getActivePlayerWorldRewardBuffs, resolvePlayerCombatBuffState } = requir
 const { assignFormationSlots, mergeBattleTeamForRun, resetRunDemon } = require('../lib/run-demons');
 const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { getDungeonEncounterProfile } = require('../lib/dungeon-enemies');
-const { createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
+const { allocateRunRewardIds, createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
 const achievements = require('../lib/achievements');
 
@@ -164,9 +164,10 @@ function clearPoisonEffects(team) {
 
 function createDefeatedDemonRewards(run) {
   const enemies = run.state.enemies || [];
+  const rewardIds = allocateRunRewardIds(run, enemies.length);
 
   return enemies.map((enemy, index) => ({
-    rewardId: run.rewards.length + index + 1,
+    rewardId: rewardIds[index],
     type: 'recruit',
     floor: run.floor,
     demon: resetRunDemon(enemy, `recruit-${run.floor}-${index + 1}`),

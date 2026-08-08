@@ -1,5 +1,48 @@
 const DISCARD_SOUL_VALUE = 1;
 
+function ensureNextRewardId(run) {
+  run.state = run.state || {};
+  run.rewards = Array.isArray(run.rewards) ? run.rewards : [];
+
+  const highestExistingId = run.rewards.reduce((highest, reward) => {
+    const rewardId = Math.floor(Number(reward?.rewardId));
+    return Number.isFinite(rewardId) ? Math.max(highest, rewardId) : highest;
+  }, 0);
+  const storedNextId = Math.floor(Number(run.state.nextRewardId));
+  const nextRewardId = Math.max(
+    1,
+    highestExistingId + 1,
+    Number.isFinite(storedNextId) ? storedNextId : 1
+  );
+
+  run.state.nextRewardId = nextRewardId;
+  return nextRewardId;
+}
+
+function allocateRunRewardIds(run, count) {
+  const rewardCount = Math.max(0, Math.floor(Number(count) || 0));
+  const firstRewardId = ensureNextRewardId(run);
+  run.state.nextRewardId = firstRewardId + rewardCount;
+  return Array.from({ length: rewardCount }, (_, index) => firstRewardId + index);
+}
+
+function getCurrentRunRewards(run) {
+  if (!run || run.status === 'ended') return [];
+  const currentFloor = Number(run.floor);
+  return (Array.isArray(run.rewards) ? run.rewards : []).filter((reward) => (
+    Number(reward?.floor) === currentFloor
+  ));
+}
+
+function compactRunRewards(run, options = {}) {
+  if (!run) return run;
+  ensureNextRewardId(run);
+  run.rewards = options.clear === true || run.status === 'ended'
+    ? []
+    : getCurrentRunRewards(run);
+  return run;
+}
+
 function getBattleXpReward(floor, winner = 'player') {
   const normalizedFloor = Math.max(1, Math.floor(Number(floor) || 1));
   const victoryXp = 10 + normalizedFloor * 5;
@@ -111,10 +154,14 @@ function getRewardSoulValue(reward) {
 }
 
 module.exports = {
+  allocateRunRewardIds,
+  compactRunRewards,
   createDiscardSoulRewardFields,
   clearPendingRewardSoul,
   ensureRunEarned,
+  ensureNextRewardId,
   getBattleXpReward,
+  getCurrentRunRewards,
   getDefeatPayout,
   getEarnedWithPendingDiscardedSouls,
   getPendingDiscardSoulValue,
