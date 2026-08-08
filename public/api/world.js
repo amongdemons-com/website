@@ -60,7 +60,7 @@ const WORLD_MIN = worldMap.bounds?.min ?? -50;
 const WORLD_MAX = worldMap.bounds?.max ?? 50;
 const WORLD_SPAWN = worldMap.spawn || { x: 0, y: 0 };
 const MAX_TRAVEL_STEPS = 256;
-const CHALLENGE_COOLDOWN_MS = 30 * 1000;
+const CHALLENGE_COOLDOWN_MS = 5 * 60 * 1000;
 const challengeCooldowns = new Map();
 const DARKNESS_PORTAL_TYPE = 'darkness-portal';
 const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
@@ -1597,6 +1597,7 @@ function throwWorldError(message, status = 400) {
 }
 
 router._test = {
+  CHALLENGE_COOLDOWN_MS,
   attemptHuntRestart,
   getAmbushVictoryRewards,
   getDarknessPortalAt,

@@ -2,7 +2,12 @@
 
 <!-- Keep notes short, simple, and player-friendly. Skip tests and technical details. -->
 
-## Patch 1 (Current)
+## Patch 2 (Current)
+
+- Ranked standings and run histories have been reset for a fresh start.
+- Rematches against the same hunter now require a five-minute wait.
+
+## Patch 1
 
 - Added simple patch notes so you can quickly see what changed.
 - Type 11 demons now roll new random damage each time you start a fight.
