@@ -926,6 +926,7 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-team-modal {
     overflow: hidden;
+    overscroll-behavior: none;
 }
 
 .world-team-modal .modal-dialog,
@@ -2104,10 +2105,45 @@ body.is-world-side-collapsed .world-map-controls {
     min-width: 0;
     min-height: 0;
     overflow: hidden;
+    overscroll-behavior: none;
     color: rgba(220,232,229,0.9);
     background:
         radial-gradient(circle at 28% 18%, rgba(111,214,189,0.09), transparent 34rem),
         linear-gradient(135deg, rgba(4,10,13,0.98), rgba(8,15,18,0.96));
+}
+
+.world-team-editor-options {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.42rem 0.5rem 0;
+    text-align: center;
+}
+
+.world-team-editor-buff-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(220,232,229,0.82);
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.world-team-editor-buff-toggle input {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    accent-color: #6fd6bd;
+    cursor: pointer;
+}
+
+.world-team-editor-buff-toggle input:disabled,
+.world-team-editor-buff-toggle:has(input:disabled) {
+    cursor: wait;
+    opacity: 0.58;
 }
 
 .world-team-editor-head {
@@ -2286,7 +2322,7 @@ body.is-world-side-collapsed .world-map-controls {
 @media (min-width: 900px) {
     .world-team-editor-board,
     .world-team-editor-board.battle-side-player {
-        grid-template-rows: auto auto;
+        grid-template-rows: auto auto auto;
         align-content: center;
         gap: 0.5rem;
     }
@@ -2373,6 +2409,7 @@ body.is-world-side-collapsed .world-map-controls {
     min-width: 0;
     min-height: 0;
     overflow: hidden auto;
+    overscroll-behavior: none;
     border: 1px solid rgba(161,212,201,0.08);
     border-radius: 8px;
     background: rgba(0,0,0,0.16);
@@ -2397,6 +2434,16 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-team-editor-card.is-dragging {
     opacity: 0.42;
+}
+
+.world-team-editor-card.is-touch-scrolling {
+    cursor: grabbing;
+}
+
+.world-team-editor-card.is-showing-buff-stats .combat-stat-strip,
+.world-team-editor-card.is-showing-buff-stats .combat-hp-meta,
+.world-team-editor-card.is-showing-buff-stats .combat-hp-meta .game-icon {
+    color: #9ff3df;
 }
 
 .world-team-editor-collection-card.is-in-team {
@@ -3793,7 +3840,7 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
 .world-team-editor-board,
     .world-team-editor-board.battle-side-player {
         order: 2;
-        grid-template-rows: auto minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr) auto;
         gap: 0.28rem;
         padding: 0;
     }
@@ -3839,6 +3886,8 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
         justify-content: start;
         gap: 0.42rem;
         overflow: auto hidden;
+        overscroll-behavior: none;
+        touch-action: pan-x;
         overscroll-behavior-x: contain;
         padding: 0.42rem;
         scroll-padding-inline: 0.42rem;
@@ -3854,7 +3903,7 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     }
 
 .world-team-editor-collection-card {
-        touch-action: pan-x;
+        touch-action: none;
     }
 }
 

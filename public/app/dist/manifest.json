@@ -1,7 +1,7 @@
 {
-  "clientVersion": "c14f3f181bb5",
-  "runtime": "/app/dist/runtime.bundle.js?v=dec133f7141f",
-  "dungeon": "/app/dist/dungeon.bundle.js?v=05d8facfed76",
-  "ranked": "/app/dist/ranked.bundle.js?v=ffa32bfc8dc6",
-  "world": "/app/dist/world.bundle.js?v=f37f5fd0ace2"
+  "clientVersion": "ba11dfb5e467",
+  "runtime": "/app/dist/runtime.bundle.js?v=07891b5e3a3f",
+  "dungeon": "/app/dist/dungeon.bundle.js?v=7547f31c30bd",
+  "ranked": "/app/dist/ranked.bundle.js?v=c2cdf78f211a",
+  "world": "/app/dist/world.bundle.js?v=ed7663e3c244"
 }

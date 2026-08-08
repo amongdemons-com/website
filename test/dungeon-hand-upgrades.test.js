@@ -35,12 +35,13 @@ test('dungeon hand upgrade comparison ignores rarity', () => {
   assert.equal(isBetterDemon({ ...current, rarity: 'mythic', maxHp: 99 }, current), false);
 });
 
-test('dungeon hand only highlights an unambiguous visible-stat upgrade', () => {
+test('dungeon hand highlights when at least two visible stats are equal or better', () => {
   const current = { typeId: 1, maxHp: 100, atk: 20, effectiveAtk: 30, speed: 10 };
 
   assert.equal(isBetterDemon({ typeId: 1, maxHp: 101, atk: 21, effectiveAtk: 31, speed: 10 }, current), true);
-  assert.equal(isBetterDemon({ typeId: 1, maxHp: 101, atk: 21, effectiveAtk: null, speed: 10 }, current), false);
-  assert.equal(isBetterDemon({ typeId: 1, maxHp: 120, atk: 19, effectiveAtk: 29, speed: 11 }, current), false);
+  assert.equal(isBetterDemon({ typeId: 1, maxHp: 101, atk: 21, effectiveAtk: null, speed: 10 }, current), true);
+  assert.equal(isBetterDemon({ typeId: 1, maxHp: 120, atk: 19, effectiveAtk: 29, speed: 11 }, current), true);
+  assert.equal(isBetterDemon({ typeId: 1, maxHp: 99, atk: 21, effectiveAtk: 31, speed: 10 }, current), true);
   assert.equal(isBetterDemon({ typeId: 1, maxHp: 99, atk: 40, effectiveAtk: 29, speed: 9 }, current), false);
 });
 

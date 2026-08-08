@@ -42,3 +42,13 @@ test('the world client reports claimed rewards when an automatic restart is unav
   assert.match(source, /Hunting stopped:/);
   assert.match(source, /payload\.restartFailureReason \? 'warning' : 'success'/);
 });
+
+test('claiming hunt XP forces confirmed level-up celebrations to play', () => {
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'app', 'js', 'world-ui.js'),
+    'utf8'
+  );
+
+  assert.match(source, /forceLevelUpAnimation:\s*leveledUp/);
+  assert.match(source, /if \(!leveledUp\) playQuestCompleteSound\(\)/);
+});

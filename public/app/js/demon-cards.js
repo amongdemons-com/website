@@ -96,7 +96,7 @@
     return `
       ${hasAtk || hasSpeed ? `
         <div class="combat-stat-strip" aria-label="Combat stats">
-          ${hasAtk ? `<span title="${escapeHtml(attackStat.description)}" aria-label="${escapeHtml(attackStat.description)}">${renderAttackIcon(demon)}${escapeHtml(attackStat.value)}</span>` : ''}
+          ${hasAtk ? `<span title="${escapeHtml(attackStat.description)}" aria-label="${escapeHtml(attackStat.description)}">${renderAttackIcon(demon)}<span class="js-demon-atk">${escapeHtml(attackStat.value)}</span></span>` : ''}
           ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(demon.speed)}</span>` : ''}
         </div>
       ` : ''}

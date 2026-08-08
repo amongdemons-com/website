@@ -15,7 +15,7 @@ const {
   resetRunDemon
 } = require('../lib/run-demons');
 const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, hasPendingBuffChoices } = require('../lib/run-buffs');
-const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
+const { canUseCollectionReinforcement, getDungeonTeamLimit, markCollectionReinforcementUsed } = require('../lib/dungeon-rules');
 const { clearPendingRewardSoul, settleDiscardedSoulRewards } = require('../lib/run-rewards');
 const achievements = require('../lib/achievements');
 
@@ -84,7 +84,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
       && stagedTeam.some((item) => item && item.source === 'collection');
     const recruitedDefeatedEnemy = recruitedRewardIds.size > 0;
     if (stagedTeam.some((item) => item && item.source === 'collection')) {
-      run.state.collectionReinforcementUsed = Number(run.floor) !== 0;
+      if (Number(run.floor) !== 0) markCollectionReinforcementUsed(run.state, run.floor);
     }
     run.state.awaitingCollectionReinforcement = false;
     settleDiscardedSoulRewards(run);
@@ -398,9 +398,8 @@ function getCollectionReinforcementLimit(run) {
   return Boolean(
     run.state.awaitingCollectionReinforcement ||
     (
-      !run.state.collectionReinforcementUsed &&
       run.state.awaitingRecruit &&
-      Number(run.floor) === COLLECTION_REINFORCEMENT_FLOOR
+      canUseCollectionReinforcement(run.state, run.floor)
     )
   ) ? 1 : 0;
 }

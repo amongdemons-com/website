@@ -10,7 +10,7 @@ const { applyRunBuffStatModifiers, consumeNextBattleTemporaryBuffs, generateBuff
 const { normalizeCombatBuffState, serializeCombatBuffState } = require('../lib/combat-buffs');
 const { getActivePlayerWorldRewardBuffs, resolvePlayerCombatBuffState } = require('../lib/player-combat-buffs');
 const { assignFormationSlots, mergeBattleTeamForRun, resetRunDemon } = require('../lib/run-demons');
-const { COLLECTION_REINFORCEMENT_FLOOR, getDungeonTeamLimit } = require('../lib/dungeon-rules');
+const { canUseCollectionReinforcement, getDungeonTeamLimit } = require('../lib/dungeon-rules');
 const { getDungeonEncounterProfile } = require('../lib/dungeon-enemies');
 const { allocateRunRewardIds, createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
@@ -88,7 +88,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
       generateBuffChoices(run, createBuffChoiceRng(run), 3, { uniqueRarityPacts: true });
     }
     run.state.awaitingRecruit = true;
-    if (run.floor === COLLECTION_REINFORCEMENT_FLOOR && !run.state.collectionReinforcementUsed) {
+    if (canUseCollectionReinforcement(run.state, run.floor)) {
       run.state.awaitingCollectionReinforcement = true;
     }
     await db.query(

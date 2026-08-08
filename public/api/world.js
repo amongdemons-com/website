@@ -21,6 +21,7 @@ const {
   getActiveWorldTeam,
   getActiveWorldTeamSummary,
   getBuffedHuntSoulCapacity,
+  getWorldTeamStatPreviews,
   getWorldSoulReward,
   getWorldTerrorPreview,
   getWorldXpReward,
@@ -250,7 +251,8 @@ router.get('/world/team', requireAuth, async (req, res) => {
   res.json({
     team,
     activeTeam: serializeTeamSummaryForClient(getActiveWorldTeamSummary(team)),
-    collection
+    collection,
+    statPreviews: await getWorldTeamStatPreviews(req.player, collection)
   });
 });
 

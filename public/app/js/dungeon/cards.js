@@ -233,6 +233,7 @@ function renderDemonCard(demon, options) {
     demon.recruitSource === 'collection' && !state.collectionReinforcementStagedInteracted ? 'is-collection-reinforcement-attention' : '',
     canDropRecruit ? 'is-recruit-drop-target' : '',
     hasPoisonStatus(demon) ? 'is-poisoned' : '',
+    Number(demon.battleBuffs?.directDamageMult) > 1 ? 'is-shared-pain-empowered' : '',
   ].filter(Boolean).join(' ');
 
   return renderDungeonDemonCard(demon, {

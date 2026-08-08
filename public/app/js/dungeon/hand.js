@@ -346,8 +346,12 @@ function isBetterDemon(candidate, current) {
     .filter(([, previous]) => Number.isFinite(previous) && previous > 0);
   if (!comparisons.length) return false;
 
-  return comparisons.every(([next, previous]) => Number.isFinite(next) && next >= previous) &&
-    comparisons.some(([next, previous]) => next > previous);
+  const equalOrBetterCount = comparisons.filter(([next, previous]) => (
+    Number.isFinite(next) && next >= previous
+  )).length;
+
+  return equalOrBetterCount >= 2 &&
+    comparisons.some(([next, previous]) => Number.isFinite(next) && next > previous);
 }
 
 function renderEmptyHand(mode = 'recruit') {

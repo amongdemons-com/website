@@ -9,6 +9,7 @@ const {
   resetRunDemon
 } = require('./run-demons');
 const {
+  applyPreBattleBuffs,
   normalizeCombatBuffState,
   serializeCombatBuffState
 } = require('./combat-buffs');
@@ -41,6 +42,38 @@ async function getActiveWorldTeam(playerId) {
   const savedRows = await getSavedWorldTeamRows(playerId);
 
   return materializeWorldTeamRows(savedRows);
+}
+
+async function getWorldTeamStatPreviews(player, collection = []) {
+  const playerBuffs = await resolvePlayerCombatBuffState(player);
+  return createWorldTeamStatPreviews(collection, playerBuffs);
+}
+
+function createWorldTeamStatPreviews(collection = [], playerBuffs = {}) {
+  const previewTeam = (Array.isArray(collection) ? collection : []).map((demon) => {
+    const maxHp = Math.max(1, Number(demon?.maxHp) || Number(demon?.hp) || 1);
+    return {
+      ...demon,
+      maxHp,
+      hp: maxHp
+    };
+  });
+
+  return applyPreBattleBuffs(previewTeam, playerBuffs).reduce((previews, demon) => {
+    const demonId = Number(demon?.collectionDemonId ?? demon?.id);
+    if (!Number.isInteger(demonId) || demonId <= 0) return previews;
+
+    const effectiveAtk = Number(demon.effectiveAtk);
+    previews[demonId] = {
+      maxHp: Math.max(1, Number(demon.maxHp) || Number(demon.hp) || 1),
+      atk: Math.max(1, Number(demon.atk) || 1),
+      speed: Math.max(1, Number(demon.speed) || 1),
+      ...(Number.isFinite(effectiveAtk) && effectiveAtk > 0
+        ? { effectiveAtk: Math.max(1, effectiveAtk) }
+        : {})
+    };
+    return previews;
+  }, {});
 }
 
 async function getSavedWorldTeamRows(playerId) {
@@ -885,11 +918,13 @@ function getEngagementSeed(seed) {
 module.exports = {
   PASSIVE_HUNT_XP_MULTIPLIER,
   calculateHuntRewards,
+  createWorldTeamStatPreviews,
   createHuntSnapshot,
   getActiveWorldTeam,
   getActiveWorldTeamSummary,
   getBuffedHuntSoulCapacity,
   getEnemyRespawnSeconds,
+  getWorldTeamStatPreviews,
   getWorldSoulReward,
   getWorldTerrorPreview,
   getWorldXpReward,

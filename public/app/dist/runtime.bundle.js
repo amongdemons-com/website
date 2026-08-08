@@ -91,7 +91,7 @@
     `}function l(c={},M={}){let K=U(c.hp)||U(c.maxHp),X=U(c.atk),oe=U(c.speed)&&!M.hideSpeed&&!p(c),ie=P(c),se=Math.max(0,Number(c.hp)||0),O=Math.max(se,Number(c.maxHp)||se||1),ee=Math.max(0,Math.min(100,Math.round(se/O*100))),pe=K&&!M.hideHpBar;return!K&&!X&&!oe?"":`
       ${X||oe?`
         <div class="combat-stat-strip" aria-label="Combat stats">
-          ${X?`<span title="${Z(ie.description)}" aria-label="${Z(ie.description)}">${B(c)}${Z(ie.value)}</span>`:""}
+          ${X?`<span title="${Z(ie.description)}" aria-label="${Z(ie.description)}">${B(c)}<span class="js-demon-atk">${Z(ie.value)}</span></span>`:""}
           ${oe?`<span>${h()}${Z(c.speed)}</span>`:""}
         </div>
       `:""}

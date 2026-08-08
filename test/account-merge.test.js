@@ -113,6 +113,8 @@ test('settings contains a full-screen two-account merge review', () => {
   assert.match(client, /steamAccount/);
   assert.match(client, /connectedAccount/);
   assert.match(client, /Merge accounts/);
+  assert.match(client, /sign-in opened in your browser\. Complete it there, then return to the game\./);
+  assert.match(client, /dataset\.desktopWrapper === '1'/);
 });
 
 function player(overrides = {}) {

@@ -676,6 +676,11 @@ body:not(.dungeon-page) {
     color: #167246;
 }
 
+.dungeon-demon-card.is-shared-pain-empowered .js-demon-atk {
+    color: #fff3bd;
+    text-shadow: 0 0 0.55rem rgba(232, 199, 106, 0.72);
+}
+
 .dungeon-end-screen {
     box-sizing: border-box;
     display: flex;
@@ -5354,6 +5359,20 @@ body .battle-speed-option.game-primary-action:disabled {
  * data-formation-* attributes.
  */
 @media (max-width: 600px) and (orientation: portrait) {
+body.dungeon-page:not(.ranked-page) .dungeon-demon-card .dungeon-demon-card-image img {
+        transform: scale(1.48);
+    }
+
+body.dungeon-page:not(.ranked-page) .dungeon-hand-cards .combat-hp-bar {
+        display: none;
+    }
+
+body.dungeon-page:not(.ranked-page) .dungeon-hand-cards .combat-hp-meta {
+        margin-top: 0.1rem;
+        padding-top: 0.1rem;
+        border-top: 1px solid rgba(161,212,201,0.2);
+    }
+
 /* Stack the arena into a single column: enemy / VS / player (top -> bottom). */
 .dungeon-arena {
         grid-template-columns: minmax(0, 1fr);

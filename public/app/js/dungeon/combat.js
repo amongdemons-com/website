@@ -116,6 +116,9 @@ function applyCombatStep(step, index = -1, options = {}) {
         target.statusEffects.poison = Array.from({ length: Math.max(0, Number(entry.poisonStacks) || 0) }, () => ({}));
       }
     }
+    if (entry.effect === 'shared_pain') {
+      applySharedPainStatPreview(allDemonsById, entry);
+    }
   });
 
   updateTeamHp();
@@ -269,6 +272,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
 
   if (entry.effect === 'shared_pain') {
     updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+    (entry.affectedAllies || []).forEach(syncDemonAttackCard);
     return;
   }
 
@@ -1037,6 +1041,62 @@ function updateTargetCard(instanceId, hp, attackerSide = 'unknown', options = {}
   card.classList.toggle('is-defeated', Number(hp) <= 0);
 }
 
+function applySharedPainStatPreview(demonsById, entry = {}) {
+  const multiplier = Number(entry.directDamageMult);
+  if (typeof demonsById?.get !== 'function' || !Number.isFinite(multiplier) || multiplier <= 0) return [];
+
+  return (Array.isArray(entry.affectedAllies) ? entry.affectedAllies : []).reduce((affected, instanceId) => {
+    const demon = demonsById.get(instanceId);
+    if (!demon) return affected;
+
+    demon.battleBuffs = demon.battleBuffs || {};
+    demon.battleBuffs.directDamageMult = Math.max(0, Number(demon.battleBuffs.directDamageMult) || 1) * multiplier;
+    if (isSingleTargetCombatDemon(demon)) {
+      const currentAttack = Number.isFinite(Number(demon.effectiveAtk)) && Number(demon.effectiveAtk) > 0
+        ? Number(demon.effectiveAtk)
+        : Number(demon.atk);
+      const previewBase = Math.max(1, Number(demon.battleBuffs.sharedPainPreviewBase) || currentAttack || 1);
+      const previewMultiplier = Math.max(1, Number(demon.battleBuffs.sharedPainPreviewMult) || 1) * multiplier;
+      demon.battleBuffs.sharedPainPreviewBase = previewBase;
+      demon.battleBuffs.sharedPainPreviewMult = previewMultiplier;
+      demon.effectiveAtk = Math.max(1, Math.round(previewBase * previewMultiplier));
+    }
+    affected.push(demon);
+    return affected;
+  }, []);
+}
+
+function isSingleTargetCombatDemon(demon = {}) {
+  const typeId = Number(demon.typeId || demon.type_id || demon.type);
+  const role = String(demon.role || '').toLowerCase();
+  const targeting = String(demon.targeting || '').toLowerCase();
+  const abilityKind = String(demon.abilityKind || demon.ability?.kind || '').toLowerCase();
+  const isAoe = typeId === 4 ||
+    typeId === 7 ||
+    role === 'aoe' ||
+    targeting === 'all' ||
+    targeting === 'cleave' ||
+    abilityKind === 'aoe_attack' ||
+    abilityKind === 'cleave_attack';
+  return !isAoe && ![3, 8, 10].includes(typeId) && !['heal', 'poison', 'retaliate'].includes(abilityKind);
+}
+
+function syncDemonAttackCard(instanceId) {
+  const card = findDemonCard(instanceId);
+  const demon = getCombatDemon(instanceId);
+  const attackElement = card?.querySelector('.js-demon-atk');
+  if (!card || !demon || !attackElement || !isSingleTargetCombatDemon(demon)) return;
+
+  const attack = Number.isFinite(Number(demon.effectiveAtk)) && Number(demon.effectiveAtk) > 0
+    ? Number(demon.effectiveAtk)
+    : Number(demon.atk);
+  attackElement.textContent = String(Math.max(1, Math.round(attack || 1)));
+  const statElement = attackElement.parentElement;
+  statElement?.setAttribute('title', `Attack: ${attackElement.textContent}`);
+  statElement?.setAttribute('aria-label', `Attack: ${attackElement.textContent}`);
+  card.classList.add('is-shared-pain-empowered');
+}
+
 function syncPoisonStatus(instanceId, stackCount) {
   const card = findDemonCard(instanceId);
   if (!card) return;
@@ -1536,6 +1596,7 @@ function renderFightLogDemonName(instanceId) {
 }
 
 export {
+  applySharedPainStatPreview,
   prepareCombatPlayback,
   playCombatLog,
   pauseCombatPlayback,

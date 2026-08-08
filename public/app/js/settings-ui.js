@@ -260,6 +260,18 @@
       if (!payload?.authorizationUrl) {
         throw new Error('The server did not return a provider authorization URL.');
       }
+
+      if (document.documentElement.dataset.desktopWrapper === '1') {
+        const label = providerLabel(provider);
+        controls.status.textContent = 'Continue in your browser';
+        showMessage(
+          elements.providerMessage,
+          `${label} sign-in opened in your browser. Complete it there, then return to the game.`,
+          'info'
+        );
+        window.location.href = payload.authorizationUrl;
+        return;
+      }
       window.location.href = payload.authorizationUrl;
     } catch (error) {
       console.error(error);

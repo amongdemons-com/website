@@ -1,7 +1,7 @@
 const { createDungeonEnemies, getDungeonEncounterProfile, getEnemyPressureMultipliers } = require('./dungeon-enemies');
 const { createRng } = require('./rng');
 const {
-  COLLECTION_REINFORCEMENT_FLOOR,
+  canUseCollectionReinforcement,
   getDungeonTeamLimit,
   isDungeonExtractionUnlocked
 } = require('./dungeon-rules');
@@ -124,9 +124,8 @@ function getCollectionReinforcementLimit(run) {
   return Boolean(
     run.state.awaitingCollectionReinforcement ||
     (
-      !run.state.collectionReinforcementUsed &&
       run.state.awaitingRecruit &&
-      Number(run.floor) === COLLECTION_REINFORCEMENT_FLOOR
+      canUseCollectionReinforcement(run.state, run.floor)
     )
   ) ? 1 : 0;
 }

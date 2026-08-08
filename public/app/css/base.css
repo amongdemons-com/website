@@ -1086,6 +1086,10 @@ main {
     white-space: nowrap;
 }
 
+.combat-stat-strip .js-demon-atk {
+    display: inline;
+}
+
 .combat-stat-strip .game-icon {
     color: #7d858d;
     width: 0.78rem;
