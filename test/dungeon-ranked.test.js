@@ -9,10 +9,12 @@ const {
   DUNGEON_RANKED_SNAPSHOT_VERSION,
   DUNGEON_RANKED_RATING_RANGE,
   createDungeonRankedSnapshotPayload,
+  getDungeonRankedLiveOpponentRank,
   getDungeonRankedRatingDelta,
   isDungeonRankedFloor,
   namespaceDungeonRankedOpponentTeam,
-  selectDungeonRankedOpponent
+  selectDungeonRankedOpponent,
+  serializeDungeonRankedEncounter
 } = require('../public/api/lib/dungeon-ranked');
 const { advanceDungeonFloor } = require('../public/api/lib/dungeon-progression');
 
@@ -106,19 +108,21 @@ test('equal-RP Ranked encounters use a 32-point Elo result', () => {
   assert.ok(getDungeonRankedRatingDelta('enemy', 1000, 1400) > -16);
 });
 
-test('snapshot matchmaking uses the same floor with close level and Ranked Point windows', async () => {
+test('snapshot matchmaking uses capture-time RP instead of the opponent current RP', async () => {
   let receivedParams;
   const queryable = {
     async query(sql, params) {
       assert.match(sql, /player_level BETWEEN \? AND \?/);
-      assert.match(sql, /COALESCE\(ratings\.rating, snapshots\.rating\) BETWEEN \? AND \?/);
+      assert.match(sql, /snapshots\.rating BETWEEN \? AND \?/);
+      assert.doesNotMatch(sql, /JOIN ranked_ratings/);
       receivedParams = params;
       return [[{
         id: 'snapshot-b',
         player_id: 'player-b',
         hunter_name: 'Rival',
         player_level: 15,
-        current_rating: 1250,
+        rating: 1250,
+        current_rating: 3500,
         previously_served: null,
         snapshot: JSON.stringify({
           snapshotVersion: DUNGEON_RANKED_SNAPSHOT_VERSION,
@@ -157,6 +161,54 @@ test('missing eligible snapshots return no Ranked encounter', async () => {
   assert.equal(opponent, null);
 });
 
+test('ranked encounter identity exposes live rank without changing snapshot RP', async () => {
+  const encounter = {
+    status: 'choice',
+    floor: 35,
+    seasonId: 'season-a',
+    opponent: {
+      playerId: 'player-b',
+      hunterName: 'Rival',
+      rating: 1250,
+      division: 'Silver III'
+    }
+  };
+  const liveOpponentRank = await getDungeonRankedLiveOpponentRank(encounter, {
+    async query() {
+      return [[{
+        rating: 3500,
+        highest_floor: 50,
+        victories: 10,
+        runs_played: 12
+      }]];
+    }
+  });
+  const serialized = serializeDungeonRankedEncounter(encounter, { liveOpponentRank });
+
+  assert.equal(serialized.opponent.rating, 1250);
+  assert.equal(serialized.opponent.division, 'Silver III');
+  assert.equal(serialized.opponent.liveRating, 3500);
+  assert.equal(serialized.opponent.liveDivision, 'Diamond I');
+});
+
+test('ranked encounter identity shows Unranked when the opponent has no live rating', async () => {
+  const encounter = {
+    status: 'choice',
+    floor: 30,
+    seasonId: 'season-a',
+    opponent: { playerId: 'player-b', rating: 1000, division: 'Bronze II' }
+  };
+  const liveOpponentRank = await getDungeonRankedLiveOpponentRank(
+    encounter,
+    { async query() { return [[]]; } }
+  );
+  const serialized = serializeDungeonRankedEncounter(encounter, { liveOpponentRank });
+
+  assert.equal(serialized.opponent.rating, 1000);
+  assert.equal(serialized.opponent.liveRating, null);
+  assert.equal(serialized.opponent.liveDivision, 'Unranked');
+});
+
 test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result flow', () => {
   const html = fs.readFileSync(path.join(ROOT, 'public', 'app', 'dungeon.html'), 'utf8');
   const styles = fs.readFileSync(path.join(ROOT, 'public', 'app', 'css', 'battle.css'), 'utf8');
@@ -168,6 +220,7 @@ test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result fl
   assert.match(styles, /is-ranked-encounter-planning #enemyGrid \.battle-formation-grid::before/);
   assert.match(styles, /rgba\(226, 80, 65, 0\.42\)/);
   assert.match(rankedUi, /dungeon-ranked-opponent-name/);
+  assert.match(rankedUi, /opponent\.liveDivision \|\| opponent\.division/);
   assert.match(rankedUi, /rank-division-text--/);
   assert.match(rankedUi, /ranked\/continue/);
 });

@@ -23,7 +23,7 @@ function renderDungeonRankedEnemyIdentity(encounter = state.run?.rankedEncounter
   if (!encounter?.opponent) return '';
   const opponent = encounter.opponent;
   const name = String(opponent.hunterName || 'Hunter');
-  const division = String(opponent.division || 'Unranked');
+  const division = String(opponent.liveDivision || opponent.division || 'Unranked');
   const slug = getRankSlug(division);
   const hunterUrl = window.AmongDemons.appUrl(`/hunter/${encodeURIComponent(name)}`);
 
@@ -47,8 +47,21 @@ function showPendingDungeonRankedResult(run = state.run) {
   resultChoiceBusy = false;
 
   const won = result.winner === 'player';
-  const rank = getRankPresentation(result.division);
   const opponentName = encounter.opponent?.hunterName || 'the rival hunter';
+  return showRankedResultModal({
+    result,
+    title: won ? 'Ranked Victory' : 'Ranked Defeat',
+    summary: won
+      ? `${formatNumber(result.rating)} total RP. Continue to resume your dungeon.`
+      : `${formatNumber(result.rating)} total RP. ${opponentName} ended this descent.`
+  });
+}
+
+function showRankedResultModal({ result, title, summary, continueLabel = 'Continue' } = {}) {
+  if (!result || !elements.dungeonRankedResultModal) return false;
+
+  const won = result.winner === 'player';
+  const rank = getRankPresentation(result.division);
   const rankShell = elements.dungeonRankedResultRank;
   rankShell?.classList.forEach((className) => {
     if (className.startsWith('ranked-rank--')) rankShell.classList.remove(className);
@@ -56,7 +69,7 @@ function showPendingDungeonRankedResult(run = state.run) {
   rankShell?.classList.add(`ranked-rank--${rank.slug}`);
 
   if (elements.dungeonRankedResultTitle) {
-    elements.dungeonRankedResultTitle.textContent = won ? 'Ranked Victory' : 'Ranked Defeat';
+    elements.dungeonRankedResultTitle.textContent = title || (won ? 'Ranked Victory' : 'Ranked Defeat');
   }
   if (elements.dungeonRankedResultRankImage) {
     elements.dungeonRankedResultRankImage.src = rank.imageUrl;
@@ -70,13 +83,11 @@ function showPendingDungeonRankedResult(run = state.run) {
     elements.dungeonRankedResultDelta.classList.toggle('is-loss', Number(result.delta) < 0);
   }
   if (elements.dungeonRankedResultSummary) {
-    elements.dungeonRankedResultSummary.textContent = won
-      ? `${formatNumber(result.rating)} total RP. Continue to resume your dungeon.`
-      : `${formatNumber(result.rating)} total RP. ${opponentName} ended this descent.`;
+    elements.dungeonRankedResultSummary.textContent = summary || `${formatNumber(result.rating)} total RP.`;
   }
   if (elements.dungeonRankedResultContinueBtn) {
     elements.dungeonRankedResultContinueBtn.disabled = false;
-    elements.dungeonRankedResultContinueBtn.textContent = 'Continue';
+    elements.dungeonRankedResultContinueBtn.textContent = continueLabel;
   }
 
   getModal(elements.dungeonRankedResultModal, {
@@ -160,5 +171,6 @@ export {
   isDungeonRankedEncounter,
   isDungeonRankedPlanning,
   renderDungeonRankedEnemyIdentity,
+  showRankedResultModal,
   showPendingDungeonRankedResult
 };

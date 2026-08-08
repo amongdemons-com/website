@@ -252,8 +252,8 @@ All routes are mounted under `/api`.
 - Enemy rarity uses explicit floor-band distributions. Deep normal floors keep Common, Uncommon, and Rare at non-zero rates, while Mythic remains an exceptional `0.5%` roll rather than becoming the whole late-game roster.
 - From floor 10 onward, a seeded 25% roll may create a Rarity Convergence: every enemy is Common, Uncommon, Rare, Epic, or Legendary. Its temporary Host pressure is shown in a separate rarity-colored pill beside Terror and is removed from recruits.
 - Dungeon Terror is independent of account level. Floor and active-Pact pressure stay additive through floor 30; deeper floors compound HP by 4.5% and Attack by 3% per floor while Speed keeps its capped linear curve. Rarity compensation preserves the former floor-30 Mythic HP budget, and enemy teams continue growing up to nine.
-- After clearing floors 30, 35, 40, 45, and every fifth floor thereafter, the run snapshots its exact team, formation, Pacts, and combat buffs. It then randomly offers an eligible snapshot from another hunter within five account levels at the same checkpoint; if none exists, the next normal floor starts immediately.
-- Ranked checkpoints let the player fight or extract. A fight changes the challenger's RP with 32-K Elo scoring, using the existing rank divisions and leaderboard. Winning continues the run; losing ends it with the normal zero-payout defeat rules.
+- After clearing floors 30, 35, 40, 45, and every fifth floor thereafter, the run snapshots its exact team, formation, Pacts, combat buffs, and current RP. It then randomly offers an eligible snapshot from another hunter within five account levels and 200 capture-time RP at the same checkpoint; if none exists, the next normal floor starts immediately.
+- Ranked checkpoints let the player fight or extract. A fight changes the challenger's RP with 32-K Elo scoring against the opponent's capture-time RP, using the existing rank divisions and leaderboard. The identity above the enemy grid displays the opponent's live division without changing matchmaking or scoring. Winning continues the run; losing ends it with the normal zero-payout defeat rules.
 - Extraction grants accumulated XP/Souls and exactly one Echo of the selected type and rarity. Carrying farther never increases that count; skipping the Echo remains valid. Losing grants 0 XP, 0 Souls, and no Echoes regardless of staged rewards.
 - Account levels use total-XP thresholds of `250 * (level - 1)^1.65`; payouts never reduce a stored level.
 
@@ -280,7 +280,7 @@ Crowley, the traveling merchant, moves to a deterministic open road tile every 3
 - **Forsaken Shrines** - bind your soul at a shrine to respawn there after combat defeats instead of at world spawn.
 - **Darkness Portals** - paid teleports; the Soul cost scales with distance.
 - **Passive hunting** - after defeating a tile's encounter you may leave your world team hunting there. Souls accumulate while away but are capped by your Soul Vessel (base 50, expanded through skill-tree nodes), so AFK income is bounded by investment, not time.
-- **PvP** - hunters on the same tile can challenge each other (server-simulated battle, with a five-minute delay before rematching the same hunter); wins and losses feed the `pvp` leaderboard and hunter profiles.
+- **PvP** - hunters on the same tile can challenge each other (server-simulated battle, with a five-minute delay before rematching the same hunter); wins and losses feed the `pvp` leaderboard and hunter profiles. A duel also changes the challenger's seasonal RP with the same 32-K Elo rules and rank-result modal as Dungeon Ranked checkpoints. The asynchronous defender's RP does not change, and a win awards no RP when the defender began at least 200 RP below the challenger.
 
 ### Skill Tree
 

@@ -1373,6 +1373,9 @@ import './bag-item-visuals.js';
       rememberCooldown(targetPlayerId, payload.cooldownUntil);
       const battle = payload.battle || null;
       const targetPlayer = payload.targetPlayer || battle?.targetPlayer || getPvpPlayerById(targetPlayerId);
+      if (battle && !battle.rankedResult && payload.rankedResult) {
+        battle.rankedResult = payload.rankedResult;
+      }
       applyPvpChallengeRecords(payload);
       const battleMeta = getWorldBattleMeta('pvp_challenge', battle, { targetPlayer });
       if (shouldShowWorldBattleReplay(battle)) {
@@ -1382,12 +1385,16 @@ import './bag-item-visuals.js';
         await resolveAmbushDefeat({
           message: 'You lost the challenge and returned to your Anchored Shrine.'
         });
+        if (state.ambushDefeatBlackoutActive) {
+          await fadeWorldAmbushDefeatFromBlack();
+        }
       } else {
         setMessage(
           payload.message || getWorldBattleFallbackMessage(battle, battleMeta),
           battle?.winner === 'enemy' ? 'warning' : 'success'
         );
       }
+      await showWorldDuelRankedResult(battle?.rankedResult, targetPlayer);
     } catch (error) {
       if (error.status === 429 && error.payload?.cooldownUntil) {
         rememberCooldown(targetPlayerId, error.payload.cooldownUntil);
@@ -1400,6 +1407,49 @@ import './bag-item-visuals.js';
         await fadeWorldAmbushDefeatFromBlack();
       }
     }
+  }
+
+  async function showWorldDuelRankedResult(result, targetPlayer = {}) {
+    if (!result) return;
+
+    registerWorldDungeonBattleActions();
+    dungeonDom.cacheElements();
+    const modalElement = dungeonElements.dungeonRankedResultModal;
+    const button = dungeonElements.dungeonRankedResultContinueBtn;
+    const modalApi = window.bootstrap?.Modal;
+    const opponentName = targetPlayer.username || 'the rival hunter';
+
+    if (!modalElement || !button || !modalApi) {
+      const delta = Math.trunc(Number(result.delta) || 0);
+      setMessage(
+        `${delta >= 0 ? '+' : ''}${formatNumber(delta)} RP · ${formatNumber(result.rating)} total RP.`,
+        delta < 0 ? 'warning' : 'success'
+      );
+      return;
+    }
+
+    const modal = modalApi.getOrCreateInstance(modalElement, {
+      backdrop: 'static',
+      keyboard: false
+    });
+    const hiddenPromise = new Promise((resolve) => {
+      modalElement.addEventListener('hidden.bs.modal', resolve, { once: true });
+    });
+    button.addEventListener('click', () => {
+      button.disabled = true;
+      modal.hide();
+    }, { once: true });
+
+    const shown = dungeonRanked.showRankedResultModal({
+      result,
+      title: result.winner === 'player' ? 'Ranked Victory' : 'Ranked Defeat',
+      summary: result.rewardBlocked
+        ? `${formatNumber(result.rating)} total RP. No RP awarded because ${opponentName} was too far below your rank.`
+        : result.winner === 'player'
+          ? `${formatNumber(result.rating)} total RP. You defeated ${opponentName} in a world duel.`
+          : `${formatNumber(result.rating)} total RP. ${opponentName} won the world duel.`
+    });
+    if (shown) await hiddenPromise;
   }
 
   async function challengeBoss(bossId, button) {

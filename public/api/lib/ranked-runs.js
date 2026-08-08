@@ -177,7 +177,8 @@ async function getRankedRating(playerId, seasonId, queryable = db, options = {})
 }
 
 function serializeRating(row = {}) {
-  const rating = Math.max(0, Number(row.rating) || DEFAULT_RATING);
+  const rawRating = Number(row.rating);
+  const rating = Number.isFinite(rawRating) ? Math.max(0, rawRating) : DEFAULT_RATING;
   return {
     rating,
     division: getDivision(rating).name,

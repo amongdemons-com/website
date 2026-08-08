@@ -11,15 +11,21 @@ const {
   getOrCreateRankedRating,
   getRankedRating
 } = require('./ranked-runs');
-const { COMBAT_DATA_VERSION, getDivision } = require('./ranked-rules');
+const {
+  COMBAT_DATA_VERSION,
+  RANKED_DEFAULT_RATING,
+  RANKED_ELO_K,
+  getDivision,
+  getRankedEloDelta
+} = require('./ranked-rules');
 
 const DUNGEON_RANKED_FIRST_FLOOR = 30;
 const DUNGEON_RANKED_FLOOR_INTERVAL = 5;
 const DUNGEON_RANKED_LEVEL_RANGE = 5;
 const DUNGEON_RANKED_RATING_RANGE = 200;
-const DUNGEON_RANKED_ELO_K = 32;
+const DUNGEON_RANKED_ELO_K = RANKED_ELO_K;
 const DUNGEON_RANKED_SNAPSHOT_VERSION = 'dungeon-ranked-v2';
-const DEFAULT_RATING = 1000;
+const DEFAULT_RATING = RANKED_DEFAULT_RATING;
 
 function isDungeonRankedFloor(floor) {
   const value = Math.max(0, Math.floor(Number(floor) || 0));
@@ -139,12 +145,8 @@ async function selectDungeonRankedOpponent(criteria, queryable = db, options = {
   const maxRating = playerRating + DUNGEON_RANKED_RATING_RANGE;
   const [rows] = await queryable.query(
     `SELECT snapshots.*,
-            ratings.rating AS current_rating,
             history.snapshot_id AS previously_served
      FROM dungeon_ranked_snapshots snapshots
-     LEFT JOIN ranked_ratings ratings
-       ON ratings.player_id = snapshots.player_id
-      AND ratings.season_id = snapshots.season_id
      LEFT JOIN (
        SELECT DISTINCT snapshot_id
        FROM dungeon_ranked_history
@@ -154,7 +156,7 @@ async function selectDungeonRankedOpponent(criteria, queryable = db, options = {
        AND snapshots.floor = ?
        AND snapshots.player_id <> ?
        AND snapshots.player_level BETWEEN ? AND ?
-       AND COALESCE(ratings.rating, snapshots.rating) BETWEEN ? AND ?
+       AND snapshots.rating BETWEEN ? AND ?
        AND snapshots.combat_version = ?
        AND NOT EXISTS (
          SELECT 1
@@ -212,11 +214,10 @@ async function selectDungeonRankedOpponent(criteria, queryable = db, options = {
   const random = typeof options.random === 'function' ? options.random : Math.random;
   const index = Math.min(pool.length - 1, Math.max(0, Math.floor(random() * pool.length)));
   const { row, snapshot } = pool[index];
-  const rawCurrentRating = Number(row.current_rating);
-  const hasCurrentRating = row.current_rating !== null
-    && row.current_rating !== undefined
-    && Number.isFinite(rawCurrentRating);
-  const rating = hasCurrentRating ? Math.max(0, Math.floor(rawCurrentRating)) : null;
+  const rawSnapshotRating = Number(row.rating);
+  const rating = Number.isFinite(rawSnapshotRating)
+    ? Math.max(0, Math.floor(rawSnapshotRating))
+    : DEFAULT_RATING;
 
   return {
     snapshotId: row.id,
@@ -224,7 +225,7 @@ async function selectDungeonRankedOpponent(criteria, queryable = db, options = {
     hunterName: row.hunter_name,
     playerLevel: Math.max(1, Number(row.player_level) || 1),
     rating,
-    division: rating === null ? 'Unranked' : getDivision(rating).name,
+    division: getDivision(rating).name,
     team: snapshot.team,
     buffs: normalizeCombatBuffState(snapshot.buffs || {})
   };
@@ -260,12 +261,7 @@ function normalizeFormationSlot(value) {
 }
 
 function getDungeonRankedRatingDelta(winner, playerRating, opponentRating) {
-  const player = Math.max(0, Math.floor(Number(playerRating) || DEFAULT_RATING));
-  const opponent = Math.max(0, Math.floor(Number(opponentRating) || DEFAULT_RATING));
-  const expected = 1 / (1 + (10 ** ((opponent - player) / 400)));
-  const score = winner === 'player' ? 1 : 0;
-  const delta = Math.round(DUNGEON_RANKED_ELO_K * (score - expected));
-  return winner === 'player' ? Math.max(1, delta) : Math.min(-1, delta);
+  return getRankedEloDelta(winner === 'player', playerRating, opponentRating);
 }
 
 async function applyDungeonRankedRatingResult(run, winner, connection) {
@@ -316,12 +312,28 @@ function getDungeonRankedEnemyBuffs(run) {
   return normalizeCombatBuffState(run?.state?.rankedEncounter?.enemyBuffs || {});
 }
 
-function serializeDungeonRankedEncounter(encounter) {
+async function getDungeonRankedLiveOpponentRank(encounter, queryable = db) {
+  const playerId = encounter?.opponent?.playerId;
+  const seasonId = encounter?.seasonId;
+  if (!playerId || !seasonId) return null;
+
+  const rating = await getRankedRating(playerId, seasonId, queryable);
+  return rating
+    ? { rating: rating.rating, division: rating.division }
+    : { rating: null, division: 'Unranked' };
+}
+
+function serializeDungeonRankedEncounter(encounter, options = {}) {
   if (!encounter || !['choice', 'result'].includes(encounter.status)) return null;
+  const liveOpponentRank = options.liveOpponentRank || null;
   return {
     status: encounter.status,
     floor: encounter.floor,
-    opponent: encounter.opponent ? { ...encounter.opponent } : null,
+    opponent: encounter.opponent ? {
+      ...encounter.opponent,
+      liveRating: liveOpponentRank?.rating ?? null,
+      liveDivision: liveOpponentRank?.division || encounter.opponent.division || 'Unranked'
+    } : null,
     result: encounter.result ? { ...encounter.result } : null
   };
 }
@@ -357,6 +369,7 @@ module.exports = {
   createDungeonRankedSnapshotPayload,
   getDungeonPlayerCombatBuffs,
   getDungeonRankedEnemyBuffs,
+  getDungeonRankedLiveOpponentRank,
   getDungeonRankedRatingDelta,
   isDungeonRankedFloor,
   namespaceDungeonRankedOpponentTeam,

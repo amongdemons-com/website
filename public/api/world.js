@@ -52,6 +52,16 @@ const {
 } = require('./lib/world-soul-font');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const { getPlayerStatPointSummary } = require('./lib/account-stat-points');
+const {
+  getOrCreateCurrentSeason,
+  getOrCreateRankedRating,
+  getRankedRating
+} = require('./lib/ranked-runs');
+const {
+  RANKED_DEFAULT_RATING,
+  getDivision,
+  getRankedEloDelta
+} = require('./lib/ranked-rules');
 const achievements = require('./lib/achievements');
 const worldMap = require('./data/map.json');
 
@@ -61,7 +71,9 @@ const WORLD_MAX = worldMap.bounds?.max ?? 50;
 const WORLD_SPAWN = worldMap.spawn || { x: 0, y: 0 };
 const MAX_TRAVEL_STEPS = 256;
 const CHALLENGE_COOLDOWN_MS = 5 * 60 * 1000;
+const WORLD_DUEL_NO_REWARD_RATING_GAP = 200;
 const challengeCooldowns = new Map();
+const challengesInFlight = new Set();
 const DARKNESS_PORTAL_TYPE = 'darkness-portal';
 const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
 
@@ -581,43 +593,55 @@ router.post('/world/challenge', requireAuth, blockGuests, async (req, res) => {
     });
   }
 
-  const battle = await simulateWorldPvpChallenge(req.player, targetPlayer);
-  const pvpResult = await recordPvpChallengeResult(req.player.id, targetPlayer.id, battle.winner);
-  if (battle.winner === 'player') {
-    await recordDailyQuestProgress(req.player.id, { pvpWins: 1 });
+  if (challengesInFlight.has(cooldownKey)) {
+    return res.status(409).json({ error: 'That challenge is already resolving.' });
   }
-  const nextCooldownUntil = Date.now() + CHALLENGE_COOLDOWN_MS;
-  challengeCooldowns.set(cooldownKey, nextCooldownUntil);
-  const updatedPlayer = pvpResult.players.get(String(req.player.id)) || req.player;
-  const updatedTargetPlayer = pvpResult.players.get(String(targetPlayer.id)) || targetPlayer;
-  if (battle.winner === 'player') {
-    await achievements.checkPvpWins(req.player.id, updatedPlayer.pvpWins);
-    const flawless = Array.isArray(battle.playerTeamAfter)
-      && battle.playerTeamAfter.every((demon) => Number(demon.hp) > 0);
-    if (flawless) {
-      await achievements.grantAchievements(req.player.id, ['untouchable']);
-    }
-  } else {
-    // The defender's win counter also moved; their threshold achievements
-    // unlock the next time either side is checked.
-    await achievements.checkPvpWins(targetPlayer.id, updatedTargetPlayer.pvpWins);
-  }
-  battle.targetPlayer = {
-    ...battle.targetPlayer,
-    ...getWorldPvpPlayerRecord(updatedTargetPlayer)
-  };
 
-  res.json({
-    ok: true,
-    status: 'resolved',
-    player: getWorldPlayer(updatedPlayer),
-    targetPlayer: battle.targetPlayer,
-    battle,
-    message: battle.winner === 'player'
-      ? `You defeated ${targetPlayer.username || 'that hunter'}.`
-      : `${targetPlayer.username || 'That hunter'} won the challenge.`,
-    cooldownUntil: new Date(nextCooldownUntil).toISOString()
-  });
+  challengesInFlight.add(cooldownKey);
+  try {
+    const battle = await simulateWorldPvpChallenge(req.player, targetPlayer);
+    const pvpResult = await recordPvpChallengeResult(req.player.id, targetPlayer.id, battle.winner);
+    battle.rankedResult = pvpResult.rankedResult;
+    const nextCooldownUntil = Date.now() + CHALLENGE_COOLDOWN_MS;
+    challengeCooldowns.set(cooldownKey, nextCooldownUntil);
+
+    if (battle.winner === 'player') {
+      await recordDailyQuestProgress(req.player.id, { pvpWins: 1 });
+    }
+    const updatedPlayer = pvpResult.players.get(String(req.player.id)) || req.player;
+    const updatedTargetPlayer = pvpResult.players.get(String(targetPlayer.id)) || targetPlayer;
+    if (battle.winner === 'player') {
+      await achievements.checkPvpWins(req.player.id, updatedPlayer.pvpWins);
+      const flawless = Array.isArray(battle.playerTeamAfter)
+        && battle.playerTeamAfter.every((demon) => Number(demon.hp) > 0);
+      if (flawless) {
+        await achievements.grantAchievements(req.player.id, ['untouchable']);
+      }
+    } else {
+      // The defender's win counter also moved; their threshold achievements
+      // unlock the next time either side is checked.
+      await achievements.checkPvpWins(targetPlayer.id, updatedTargetPlayer.pvpWins);
+    }
+    battle.targetPlayer = {
+      ...battle.targetPlayer,
+      ...getWorldPvpPlayerRecord(updatedTargetPlayer)
+    };
+
+    res.json({
+      ok: true,
+      status: 'resolved',
+      player: getWorldPlayer(updatedPlayer),
+      targetPlayer: battle.targetPlayer,
+      rankedResult: pvpResult.rankedResult,
+      battle,
+      message: battle.winner === 'player'
+        ? `You defeated ${targetPlayer.username || 'that hunter'}.`
+        : `${targetPlayer.username || 'That hunter'} won the challenge.`,
+      cooldownUntil: new Date(nextCooldownUntil).toISOString()
+    });
+  } finally {
+    challengesInFlight.delete(cooldownKey);
+  }
 });
 
 async function recordPvpChallengeResult(attackerPlayerId, targetPlayerId, winner) {
@@ -629,6 +653,20 @@ async function recordPvpChallengeResult(attackerPlayerId, targetPlayerId, winner
 
   try {
     await connection.beginTransaction();
+    const season = await getOrCreateCurrentSeason(connection);
+    const attackerRating = await getOrCreateRankedRating(
+      attackerPlayerId,
+      season.id,
+      connection,
+      { forUpdate: true }
+    );
+    const targetRating = await getRankedRating(targetPlayerId, season.id, connection);
+    const rankedResult = getWorldDuelRankedResult(
+      winner,
+      attackerRating.rating,
+      targetRating?.rating ?? RANKED_DEFAULT_RATING
+    );
+
     await connection.query(
       'UPDATE players SET pvp_wins = pvp_wins + 1 WHERE id = ?',
       [winnerId]
@@ -636,6 +674,12 @@ async function recordPvpChallengeResult(attackerPlayerId, targetPlayerId, winner
     await connection.query(
       'UPDATE players SET pvp_losses = pvp_losses + 1 WHERE id = ?',
       [loserId]
+    );
+    await connection.query(
+      `UPDATE ranked_ratings
+       SET rating = ?
+       WHERE player_id = ? AND season_id = ?`,
+      [rankedResult.rating, attackerPlayerId, season.id]
     );
 
     const [rows] = await connection.query(
@@ -652,7 +696,11 @@ async function recordPvpChallengeResult(attackerPlayerId, targetPlayerId, winner
     committed = true;
 
     return {
-      players: new Map(rows.map((row) => [String(row.id), cleanPlayer(row)]))
+      players: new Map(rows.map((row) => [String(row.id), cleanPlayer(row)])),
+      rankedResult: {
+        ...rankedResult,
+        seasonId: season.id
+      }
     };
   } catch (error) {
     if (!committed) {
@@ -662,6 +710,38 @@ async function recordPvpChallengeResult(attackerPlayerId, targetPlayerId, winner
   } finally {
     connection.release();
   }
+}
+
+function getWorldDuelRankedResult(winner, previousRating, opponentRating) {
+  const normalizedPreviousRating = normalizeRankedRating(previousRating);
+  const normalizedOpponentRating = normalizeRankedRating(opponentRating);
+  const won = winner === 'player';
+  const ratingGap = normalizedPreviousRating - normalizedOpponentRating;
+  const rewardBlocked = won && ratingGap >= WORLD_DUEL_NO_REWARD_RATING_GAP;
+  const requestedDelta = rewardBlocked
+    ? 0
+    : getRankedEloDelta(won, normalizedPreviousRating, normalizedOpponentRating);
+  const delta = Math.max(-normalizedPreviousRating, requestedDelta);
+  const rating = Math.max(0, normalizedPreviousRating + delta);
+
+  return {
+    winner,
+    delta,
+    previousRating: normalizedPreviousRating,
+    rating,
+    opponentRating: normalizedOpponentRating,
+    ratingGap,
+    rewardBlocked,
+    previousDivision: getDivision(normalizedPreviousRating).name,
+    division: getDivision(rating).name
+  };
+}
+
+function normalizeRankedRating(value) {
+  const rating = Number(value);
+  return Number.isFinite(rating)
+    ? Math.max(0, Math.floor(rating))
+    : RANKED_DEFAULT_RATING;
 }
 
 async function getOrCreatePosition(playerId) {
@@ -1598,15 +1678,18 @@ function throwWorldError(message, status = 400) {
 
 router._test = {
   CHALLENGE_COOLDOWN_MS,
+  WORLD_DUEL_NO_REWARD_RATING_GAP,
   attemptHuntRestart,
   getAmbushVictoryRewards,
   getDarknessPortalAt,
   getDarknessPortalSummonCost,
+  getWorldDuelRankedResult,
   getSignAt,
   getAmbushChanceForTile,
   hasClaimableHuntRewards,
   isBlocked,
   isAmbushEligibleTile,
+  recordPvpChallengeResult,
   resolveTravelStepEvent
 };
 

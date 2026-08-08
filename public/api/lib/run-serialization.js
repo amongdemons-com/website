@@ -9,6 +9,7 @@ const { applyRunBuffStatModifiers, getTemporaryTeamSizeBonus, normalizeRunBuffSt
 const { applyPreBattleBuffs, serializeCombatBuffState } = require('./combat-buffs');
 const {
   getDungeonRankedEnemyBuffs,
+  getDungeonRankedLiveOpponentRank,
   serializeDungeonRankedEncounter
 } = require('./dungeon-ranked');
 const { getActiveWorldRewardBuffs } = require('./world-buffs');
@@ -19,10 +20,13 @@ async function serializeRun(run, options = {}) {
   const playerLevel = getRunPlayerLevel(run, options);
   const collectionReinforcementLimit = getCollectionReinforcementLimit(run);
   const collectionReinforcementAvailable = collectionReinforcementLimit > 0;
-  const worldBuffs = await getSerializedWorldBuffs(run, options);
+  const [worldBuffs, liveOpponentRank] = await Promise.all([
+    getSerializedWorldBuffs(run, options),
+    getDungeonRankedLiveOpponentRank(run.state.rankedEncounter)
+  ]);
   const encounterProfile = getEncounterProfile(run, run.floor);
   const nextEncounterProfile = getEncounterProfile(run, Number(run.floor) + 1);
-  const rankedEncounter = serializeDungeonRankedEncounter(run.state.rankedEncounter);
+  const rankedEncounter = serializeDungeonRankedEncounter(run.state.rankedEncounter, { liveOpponentRank });
   const rankedPlanning = rankedEncounter?.status === 'choice';
   const rankedEnemyBuffs = rankedEncounter ? getDungeonRankedEnemyBuffs(run) : null;
   const enemies = rankedPlanning

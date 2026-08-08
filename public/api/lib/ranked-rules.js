@@ -28,6 +28,8 @@ const RANKED_CARD_RARITY_COSTS = Object.freeze({
 });
 const RANKED_VICTORY_FLOOR = 20;
 const RANKED_VICTORY_SOUL_REWARD = 25;
+const RANKED_DEFAULT_RATING = 1000;
+const RANKED_ELO_K = 32;
 const ENDLESS_SKILL_CAP = 10;
 const EARLY_RUN_RATING_LOSS = 20;
 
@@ -343,6 +345,22 @@ function getDivision(rating) {
   return [...DIVISIONS].reverse().find((division) => value >= division.minimum) || DIVISIONS[0];
 }
 
+function getRankedEloDelta(won, playerRating, opponentRating) {
+  const player = normalizeRankedRating(playerRating);
+  const opponent = normalizeRankedRating(opponentRating);
+  const expected = 1 / (1 + (10 ** ((opponent - player) / 400)));
+  const score = won ? 1 : 0;
+  const delta = Math.round(RANKED_ELO_K * (score - expected));
+  return won ? Math.max(1, delta) : Math.min(-1, delta);
+}
+
+function normalizeRankedRating(value) {
+  const rating = Number(value);
+  return Number.isFinite(rating)
+    ? Math.max(0, Math.floor(rating))
+    : RANKED_DEFAULT_RATING;
+}
+
 function getRankedVictoryReward(state = {}) {
   const eligible = Math.max(0, Number(state.highestClearedFloor) || 0) >= RANKED_VICTORY_FLOOR;
   const claimed = Boolean(state.victoryRewardClaimed);
@@ -439,6 +457,8 @@ module.exports = {
   FORMATION_CAPACITY,
   OFFER_SIZE,
   RANKED_CARD_RARITY_COSTS,
+  RANKED_DEFAULT_RATING,
+  RANKED_ELO_K,
   RANKED_LIFE_LOSS_RSOUL_REWARD,
   RANKED_REROLL_RSOUL_COST,
   RANKED_STARTING_RSOULS,
@@ -464,6 +484,7 @@ module.exports = {
   getRankedActiveCapacity,
   getRarityOdds,
   getRankedCardCost,
+  getRankedEloDelta,
   getRunEndRatingDelta,
   getRosterValidation,
   moveRosterDemon,
