@@ -4,13 +4,18 @@
 
 ## Patch 2 (Current)
 
+- Ranked rivals now show Continue immediately, then let you fight or try to run
+  with a 70% chance to reach the next floor at the cost of Ranked Points. A
+  failed escape starts the fight.
+- The Ranked choice window now uses the Dungeon's dark teal and gold colors,
+  with escape odds shown directly inside the Run button.
 - Ranked encounters now replace the normal fight on Dungeon floors 30, 35, 40,
   45, and every five floors after that when a rival is available.
 - Rival teams preserve the hunter's exact build from that floor and are chosen
   from hunters within five levels and 200 Ranked Points. If no close rival is
   available, the run continues.
-- Fight or extract when a ranked rival appears. Wins continue the run, while
-  losses end it, and both update your Ranked Points.
+- You can still extract when a ranked rival appears. Fight wins continue the
+  run, fight losses end it, and both update your Ranked Points.
 - Rival fights now show the hunter's name and rank, a red-glowing enemy
   formation, and a quick Ranked Points result before continuing.
 - The standalone Ranked mode has been retired, while ranks, points, and the

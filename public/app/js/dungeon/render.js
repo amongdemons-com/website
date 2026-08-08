@@ -808,6 +808,10 @@ function renderFightLogActions() {
   const canViewLog = canReplay;
   const canChooseRecruit = Boolean(!hasPendingPacts && !state.isResultAnimating && state.run?.awaitingRecruit && state.isRecruiting);
   const canChooseRankedFight = Boolean(!hasPendingPacts && !state.isResultAnimating && isDungeonRankedPlanning(state.run));
+  const canContinueIntoRankedChoice = Boolean(
+    canChooseRankedFight
+    || (canChooseRecruit && state.run?.nextRankedEncounter?.status === 'choice')
+  );
   const canExtract = Boolean(!state.isBattleAnimating && !state.isResultAnimating && !hasPendingPacts && canExtractRun());
   const continuePending = Boolean(state.isRecruitContinuePending);
   const isFighting = Boolean(state.isBattleAnimating);
@@ -817,6 +821,7 @@ function renderFightLogActions() {
   // handled by the empty state (see renderDungeonStartPrompt).
   const actionOptions = {
     canFight: canChooseRecruit || canChooseRankedFight || continuePending || isFighting,
+    isRankedChoice: canContinueIntoRankedChoice,
     isPending: continuePending,
     isFighting,
     canStart: canStart && Boolean(state.run),
@@ -855,7 +860,7 @@ function renderFightLogActions() {
 }
 
 function renderDungeonCenterActions(options = {}) {
-  const { canFight = false, isPending = false, isFighting = false, canStart = false, isDefeated = false } = options;
+  const { canFight = false, isPending = false, isFighting = false, isRankedChoice = false, canStart = false, isDefeated = false } = options;
 
   if (canStart) {
     const startChanged = setElementHtml(elements.dungeonCenterActions, `
@@ -874,16 +879,16 @@ function renderDungeonCenterActions(options = {}) {
 
   const mode = isFighting ? 'fighting' : isPending ? 'preparing' : 'ready';
   const isDisabled = mode !== 'ready';
-  const label = mode === 'fighting' ? 'Fighting' : mode === 'preparing' ? 'Preparing' : 'Fight';
+  const label = mode === 'fighting' ? 'Fighting' : mode === 'preparing' ? 'Preparing' : isRankedChoice ? 'Continue' : 'Fight';
   const title = mode === 'fighting'
     ? 'Fight in progress'
     : mode === 'preparing'
       ? 'Preparing the next fight'
-      : 'Start the next fight';
+      : isRankedChoice ? 'Choose your response to the rival hunter' : 'Start the next fight';
 
   const changed = setElementHtml(elements.dungeonCenterActions, canFight ? `
     <div class="dungeon-center-action-stack">
-      <span class="dungeon-fight-mark" aria-hidden="true">${renderButtonMeleeIcon()}</span>
+      <span class="dungeon-fight-mark" aria-hidden="true">${isRankedChoice ? renderIcon('arrow-right') : renderButtonMeleeIcon()}</span>
       <button
         class="btn btn-primary dungeon-fight-btn ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
         id="dungeonFightBtn"
@@ -909,18 +914,19 @@ function renderDungeonMobileFightBox(options = {}) {
     canFight = false,
     isPending = false,
     isFighting = false,
+    isRankedChoice = false,
     canReplay = false,
     canViewLog = false,
     canExtract = false
   } = options;
   const mode = isFighting ? 'fighting' : isPending ? 'preparing' : 'ready';
   const isDisabled = mode !== 'ready';
-  const label = mode === 'fighting' ? 'Fighting' : mode === 'preparing' ? 'Preparing' : 'Fight';
+  const label = mode === 'fighting' ? 'Fighting' : mode === 'preparing' ? 'Preparing' : isRankedChoice ? 'Continue' : 'Fight';
   const title = mode === 'fighting'
     ? 'Fight in progress'
     : mode === 'preparing'
       ? 'Preparing the next fight'
-      : 'Start the next fight';
+      : isRankedChoice ? 'Choose your response to the rival hunter' : 'Start the next fight';
   const hasRun = Boolean(state.run);
   const activeTab = state.activeHandTab === 'pacts' ? 'pacts' : 'hand';
   const rewardOpen = Boolean(state.isMobileRewardBoxOpen && canExtract);
@@ -997,7 +1003,7 @@ function renderDungeonMobileFightBox(options = {}) {
       ${!canFight || isDisabled ? 'disabled' : ''}
       ${isDisabled ? 'aria-busy="true"' : ''}
     >
-      ${mode === 'preparing' ? '<span class="dungeon-action-spinner" aria-hidden="true"></span>' : renderButtonMeleeIcon()}
+      ${mode === 'preparing' ? '<span class="dungeon-action-spinner" aria-hidden="true"></span>' : isRankedChoice ? renderIcon('arrow-right') : renderButtonMeleeIcon()}
       <span class="visually-hidden">${label}</span>
     </button>
   `);

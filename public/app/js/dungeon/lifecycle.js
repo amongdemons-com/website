@@ -24,6 +24,7 @@ const getRewardExtractionChoicePayload = (...args) => dungeonActions.getRewardEx
 const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(...args);
 const isDungeonRankedEncounter = (...args) => dungeonActions.isDungeonRankedEncounter(...args);
 const isDungeonRankedPlanning = (...args) => dungeonActions.isDungeonRankedPlanning(...args);
+const openDungeonRankedChoice = (...args) => dungeonActions.openDungeonRankedChoice(...args);
 const playCombatLog = (...args) => dungeonActions.playCombatLog(...args);
 const prepareRecruitStrategyState = (...args) => dungeonActions.prepareRecruitStrategyState(...args);
 const renderFightLog = (...args) => dungeonActions.renderFightLog(...args);
@@ -334,7 +335,7 @@ function requestRecruitContinue() {
   }
 
   if (isDungeonRankedPlanning(state.run)) {
-    battle();
+    openDungeonRankedChoice();
     return;
   }
 
@@ -420,16 +421,20 @@ async function confirmRecruitReward() {
     } else {
       await loadRun(runId);
     }
-    if (canStartCurrentBattle() || isDungeonRankedPlanning(state.run)) {
+    if (isDungeonRankedPlanning(state.run)) {
+      state.battleHandPreview = null;
+      setMessage('A rival hunter wants to fight. Choose your next move.', 'warning');
+      openDungeonRankedChoice();
+      return;
+    }
+    if (canStartCurrentBattle()) {
       await battle();
       return;
     }
     state.battleHandPreview = null;
     setMessage(
-      isDungeonRankedPlanning(state.run)
-        ? 'A rival hunter blocks the way. Fight or extract.'
-        : (body.skipRecruit ? 'Continuing to the next floor.' : 'Team updated.'),
-      isDungeonRankedPlanning(state.run) ? 'warning' : 'success'
+      body.skipRecruit ? 'Continuing to the next floor.' : 'Team updated.',
+      'success'
     );
   } catch (error) {
     state.battleHandPreview = null;

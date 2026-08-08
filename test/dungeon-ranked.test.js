@@ -8,7 +8,9 @@ const ROOT = path.join(__dirname, '..');
 const {
   DUNGEON_RANKED_SNAPSHOT_VERSION,
   DUNGEON_RANKED_RATING_RANGE,
+  DUNGEON_RANKED_ESCAPE_CHANCE,
   createDungeonRankedSnapshotPayload,
+  didDungeonRankedEscape,
   getDungeonRankedLiveOpponentRank,
   getDungeonRankedRatingDelta,
   isDungeonRankedFloor,
@@ -190,6 +192,14 @@ test('equal-RP Ranked encounters use a 32-point Elo result', () => {
   assert.ok(getDungeonRankedRatingDelta('enemy', 1000, 1400) > -16);
 });
 
+test('Ranked dungeon escape attempts have a 70% server-side success chance', () => {
+  assert.equal(DUNGEON_RANKED_ESCAPE_CHANCE, 0.7);
+  assert.equal(didDungeonRankedEscape(() => 0), true);
+  assert.equal(didDungeonRankedEscape(() => 0.699999), true);
+  assert.equal(didDungeonRankedEscape(() => 0.7), false);
+  assert.equal(didDungeonRankedEscape(() => 0.999999), false);
+});
+
 test('snapshot matchmaking uses capture-time RP instead of the opponent current RP', async () => {
   let receivedParams;
   const queryable = {
@@ -296,20 +306,37 @@ test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result fl
   const styles = fs.readFileSync(path.join(ROOT, 'public', 'app', 'css', 'battle.css'), 'utf8');
   const rankedUi = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'ranked.js'), 'utf8');
   const lifecycle = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'lifecycle.js'), 'utf8');
+  const dungeonRender = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'render.js'), 'utf8');
   const battleApi = fs.readFileSync(path.join(ROOT, 'public', 'api', 'runs', 'battle.js'), 'utf8');
+  const rankedApi = fs.readFileSync(path.join(ROOT, 'public', 'api', 'runs', 'ranked.js'), 'utf8');
 
   assert.match(html, /id="dungeonRankedResultModal"/);
+  assert.match(html, /id="dungeonRankedChoiceModal"/);
+  assert.match(html, /id="dungeonRankedChoiceFightBtn"/);
+  assert.match(html, /id="dungeonRankedChoiceEscapeBtn"/);
+  assert.match(html, /id="dungeonRankedChoiceEscapeBtn"[\s\S]*id="dungeonRankedChoiceChance"/);
+  assert.match(html, /70% chance/);
   assert.match(html, /rank-divisions\.css/);
   assert.match(styles, /dungeon-ranked-grid-glimmer/);
+  assert.match(styles, /dungeon-ranked-choice-modal/);
+  assert.match(styles, /dungeon-ranked-choice-escape-btn small/);
   assert.match(styles, /is-ranked-encounter-planning #enemyGrid \.battle-formation-grid::before/);
   assert.match(styles, /rgba\(226, 80, 65, 0\.42\)/);
   assert.match(rankedUi, /dungeon-ranked-opponent-name/);
   assert.match(rankedUi, /opponent\.liveDivision \|\| opponent\.division/);
   assert.match(rankedUi, /rank-division-text--/);
   assert.match(rankedUi, /ranked\/continue/);
+  assert.match(rankedUi, /ranked\/escape/);
+  assert.match(rankedUi, /openDungeonRankedChoice/);
   assert.match(rankedUi, /nextRankedEncounter/);
-  assert.match(lifecycle, /canStartCurrentBattle\(\) \|\| isDungeonRankedPlanning\(state\.run\)/);
+  assert.match(lifecycle, /isDungeonRankedPlanning\(state\.run\)[\s\S]*?openDungeonRankedChoice\(\)/);
+  assert.match(lifecycle, /Choose your next move\.[\s\S]*?openDungeonRankedChoice\(\)/);
+  assert.match(dungeonRender, /state\.run\?\.nextRankedEncounter\?\.status === 'choice'/);
+  assert.match(dungeonRender, /isRankedChoice: canContinueIntoRankedChoice/);
   assert.match(battleApi, /prepareNextDungeonRankedEncounter\(run, req\.player\)/);
+  assert.match(rankedApi, /ranked\/escape/);
+  assert.match(rankedApi, /applyDungeonRankedRatingResult\(run, 'enemy', connection\)/);
+  assert.match(rankedApi, /skipRankedEncounter: true/);
 });
 
 function createFloorTwentyNineRun() {

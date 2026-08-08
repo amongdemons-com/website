@@ -24,6 +24,7 @@ const DUNGEON_RANKED_FLOOR_INTERVAL = 5;
 const DUNGEON_RANKED_LEVEL_RANGE = 5;
 const DUNGEON_RANKED_RATING_RANGE = 200;
 const DUNGEON_RANKED_ELO_K = RANKED_ELO_K;
+const DUNGEON_RANKED_ESCAPE_CHANCE = 0.7;
 const DUNGEON_RANKED_SNAPSHOT_VERSION = 'dungeon-ranked-v2';
 const DEFAULT_RATING = RANKED_DEFAULT_RATING;
 
@@ -361,6 +362,10 @@ function getDungeonRankedRatingDelta(winner, playerRating, opponentRating) {
   return getRankedEloDelta(winner === 'player', playerRating, opponentRating);
 }
 
+function didDungeonRankedEscape(random = Math.random) {
+  return random() < DUNGEON_RANKED_ESCAPE_CHANCE;
+}
+
 async function applyDungeonRankedRatingResult(run, winner, connection) {
   const encounter = run?.state?.rankedEncounter;
   if (!encounter || encounter.status !== 'choice') {
@@ -426,6 +431,7 @@ function serializeDungeonRankedEncounter(encounter, options = {}) {
   return {
     status: encounter.status,
     floor: encounter.floor,
+    escapeAttempted: Boolean(encounter.escapeAttempted),
     opponent: encounter.opponent ? {
       ...encounter.opponent,
       liveRating: liveOpponentRank?.rating ?? null,
@@ -461,10 +467,12 @@ module.exports = {
   DUNGEON_RANKED_FLOOR_INTERVAL,
   DUNGEON_RANKED_LEVEL_RANGE,
   DUNGEON_RANKED_RATING_RANGE,
+  DUNGEON_RANKED_ESCAPE_CHANCE,
   DUNGEON_RANKED_SNAPSHOT_VERSION,
   activatePreparedDungeonRankedEncounter,
   applyDungeonRankedRatingResult,
   createDungeonRankedSnapshotPayload,
+  didDungeonRankedEscape,
   getDungeonPlayerCombatBuffs,
   getDungeonRankedEnemyBuffs,
   getDungeonRankedLiveOpponentRank,

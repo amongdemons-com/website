@@ -5936,6 +5936,119 @@ body.is-world-battle-result-animating .battle-result-burst.is-defeat {
     to { --dungeon-ranked-glimmer-angle: 360deg; }
 }
 
+.dungeon-ranked-choice-modal .modal-dialog {
+    max-width: min(32rem, calc(100vw - 1.5rem));
+}
+
+.dungeon-ranked-choice-modal .modal-content {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(232, 199, 106, 0.36);
+    background:
+        radial-gradient(circle at 50% 0%, rgba(232, 199, 106, 0.13), transparent 43%),
+        radial-gradient(circle at 50% 100%, rgba(111, 214, 189, 0.07), transparent 46%),
+        linear-gradient(180deg, rgba(13, 20, 22, 0.99), rgba(4, 9, 11, 0.99));
+    box-shadow:
+        0 0 36px rgba(232, 199, 106, 0.1),
+        0 26px 78px rgba(0, 0, 0, 0.64);
+}
+
+.dungeon-ranked-choice-modal .modal-content::before {
+    content: "";
+    position: absolute;
+    inset: 0.34rem;
+    border: 1px solid rgba(255, 255, 255, 0.045);
+    border-radius: calc(var(--bs-modal-border-radius, 0.5rem) - 0.2rem);
+    pointer-events: none;
+}
+
+.dungeon-ranked-choice-modal .modal-body {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 0.72rem;
+    padding: clamp(1.55rem, 5vw, 2.25rem);
+    text-align: center;
+}
+
+.dungeon-ranked-choice-sigil {
+    display: inline-grid;
+    width: 4.1rem;
+    height: 4.1rem;
+    place-items: center;
+    margin: 0.08rem 0 0.2rem;
+    border: 1px solid rgba(232, 199, 106, 0.38);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, rgba(232, 199, 106, 0.16), rgba(111, 214, 189, 0.035) 64%, transparent 66%);
+    color: #f3dc93;
+    box-shadow:
+        inset 0 0 18px rgba(232, 199, 106, 0.1),
+        0 0 22px rgba(232, 199, 106, 0.12);
+}
+
+.dungeon-ranked-choice-sigil .lucide {
+    width: 2rem;
+    height: 2rem;
+    filter: drop-shadow(0 0 7px rgba(232, 199, 106, 0.36));
+}
+
+.dungeon-ranked-choice-modal .modal-title {
+    max-width: 27rem;
+    margin: 0;
+    color: #f3f8f7;
+    font-family: var(--font-heading, Cinzel, serif);
+    font-size: clamp(1.45rem, 5vw, 2rem);
+    line-height: 1.22;
+    text-wrap: balance;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.74);
+}
+
+#dungeonRankedChoiceUsername {
+    color: #ffd985;
+    text-shadow: 0 0 16px rgba(232, 199, 106, 0.3);
+}
+
+#dungeonRankedChoicePrompt {
+    margin: 0 0 0.35rem;
+    color: rgba(228, 238, 239, 0.7);
+    font-size: 1rem;
+}
+
+.dungeon-ranked-choice-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 0.8rem;
+    width: 100%;
+    margin-top: 0.35rem;
+}
+
+.dungeon-ranked-choice-actions .btn {
+    display: grid;
+    place-content: center;
+    gap: 0.12rem;
+    width: 100%;
+    min-height: 3.35rem;
+    padding-inline: 1rem;
+    line-height: 1.08;
+}
+
+.dungeon-ranked-choice-escape-btn small {
+    color: rgba(185, 222, 213, 0.72);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    line-height: 1;
+    text-transform: none;
+}
+
+@media (max-width: 420px) {
+    .dungeon-ranked-choice-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
 .dungeon-ranked-result-modal .modal-dialog {
     max-width: min(27rem, calc(100vw - 1.5rem));
 }

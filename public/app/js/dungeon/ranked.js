@@ -10,6 +10,8 @@ const finishRun = (...args) => dungeonActions.finishRun(...args);
 
 let shownResultKey = null;
 let resultChoiceBusy = false;
+let rankedChoiceBusy = false;
+let pendingEscapeContinuation = null;
 
 function isDungeonRankedEncounter(run = state.run) {
   return Boolean(run?.rankedEncounter && ['choice', 'result'].includes(run.rankedEncounter.status));
@@ -41,6 +43,101 @@ function renderDungeonRankedEnemyIdentity(encounter = state.run?.rankedEncounter
       <span class="rank-division-text rank-division-text--${escapeHtml(slug)}">${escapeHtml(division)}</span>
     </span>
   `;
+}
+
+function openDungeonRankedChoice() {
+  const encounter = state.run?.rankedEncounter;
+  if (encounter?.status !== 'choice' || !elements.dungeonRankedChoiceModal) return false;
+
+  rankedChoiceBusy = false;
+  const opponentName = String(encounter.opponent?.hunterName || 'A rival hunter');
+  if (elements.dungeonRankedChoiceUsername) {
+    elements.dungeonRankedChoiceUsername.textContent = opponentName;
+  }
+  setRankedChoiceButtons(false);
+  if (encounter.escapeAttempted) {
+    if (elements.dungeonRankedChoiceEscapeBtn) elements.dungeonRankedChoiceEscapeBtn.disabled = true;
+    if (elements.dungeonRankedChoiceChance) {
+      elements.dungeonRankedChoiceChance.textContent = 'Escape failed';
+    }
+  } else if (elements.dungeonRankedChoiceChance) {
+    elements.dungeonRankedChoiceChance.textContent = '70% chance';
+  }
+
+  getModal(elements.dungeonRankedChoiceModal, {
+    backdrop: 'static',
+    keyboard: false
+  }).show();
+  return true;
+}
+
+async function fightDungeonRankedEncounter() {
+  if (rankedChoiceBusy || !isDungeonRankedPlanning()) return;
+  rankedChoiceBusy = true;
+  setRankedChoiceButtons(true, 'Fighting...');
+  getModal(elements.dungeonRankedChoiceModal).hide();
+  try {
+    await battle();
+  } finally {
+    rankedChoiceBusy = false;
+    setRankedChoiceButtons(false);
+  }
+}
+
+async function tryDungeonRankedEscape() {
+  const encounter = state.run?.rankedEncounter;
+  if (rankedChoiceBusy || encounter?.status !== 'choice') return;
+  if (encounter.escapeAttempted) {
+    await fightDungeonRankedEncounter();
+    return;
+  }
+
+  rankedChoiceBusy = true;
+  setRankedChoiceButtons(true, 'Running...');
+
+  try {
+    const opponentName = String(encounter.opponent?.hunterName || 'the rival hunter');
+    const payload = await api(activeRunPath('ranked/escape'), { method: 'POST' });
+    getModal(elements.dungeonRankedChoiceModal).hide();
+
+    if (!payload.escaped) {
+      if (payload.run) await applyRunPayload(payload.run);
+      setMessage(`${opponentName} cut off your escape. Fight!`, 'warning');
+      rankedChoiceBusy = false;
+      await battle();
+      return;
+    }
+
+    if (payload.run) await applyRunPayload(payload.run);
+    pendingEscapeContinuation = {
+      opponentName,
+      floor: Math.max(1, Number(payload.run?.currentFloor) || Number(state.run?.currentFloor) || 1)
+    };
+    showRankedResultModal({
+      result: payload.rankedResult,
+      title: 'Escape Successful',
+      summary: `You slipped away from ${opponentName} and reached Floor ${pendingEscapeContinuation.floor}.`
+    });
+  } catch (error) {
+    rankedChoiceBusy = false;
+    setRankedChoiceButtons(false);
+    showError(error);
+  }
+}
+
+function setRankedChoiceButtons(disabled, primaryLabel = 'Fight') {
+  if (elements.dungeonRankedChoiceFightBtn) {
+    elements.dungeonRankedChoiceFightBtn.disabled = disabled;
+    elements.dungeonRankedChoiceFightBtn.textContent = primaryLabel;
+  }
+  if (elements.dungeonRankedChoiceEscapeBtn) {
+    elements.dungeonRankedChoiceEscapeBtn.disabled = disabled;
+  }
+  if (elements.dungeonRankedChoiceEscapeLabel) {
+    elements.dungeonRankedChoiceEscapeLabel.textContent = disabled && primaryLabel === 'Running...'
+      ? 'Running...'
+      : 'Try to Run';
+  }
 }
 
 function showPendingDungeonRankedResult(run = state.run) {
@@ -106,6 +203,16 @@ function showRankedResultModal({ result, title, summary, continueLabel = 'Contin
 
 async function continueDungeonRankedResult() {
   if (resultChoiceBusy) return;
+  if (pendingEscapeContinuation) {
+    resultChoiceBusy = true;
+    const escape = pendingEscapeContinuation;
+    pendingEscapeContinuation = null;
+    getModal(elements.dungeonRankedResultModal).hide();
+    setMessage(`Escaped ${escape.opponentName}. Your descent continues on Floor ${escape.floor}.`, 'success');
+    resultChoiceBusy = false;
+    if (canStartCurrentBattle()) await battle();
+    return;
+  }
   const encounter = state.run?.rankedEncounter;
   const result = encounter?.result;
   if (encounter?.status !== 'result' || !result) return;
@@ -173,12 +280,15 @@ function formatNumber(value) {
 
 export {
   continueDungeonRankedResult,
+  fightDungeonRankedEncounter,
   getVisibleDungeonRankedEncounter,
   getRankPresentation,
   getRankSlug,
   isDungeonRankedEncounter,
   isDungeonRankedPlanning,
+  openDungeonRankedChoice,
   renderDungeonRankedEnemyIdentity,
   showRankedResultModal,
-  showPendingDungeonRankedResult
+  showPendingDungeonRankedResult,
+  tryDungeonRankedEscape
 };
