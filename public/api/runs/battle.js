@@ -15,7 +15,8 @@ const { getDungeonEncounterProfile } = require('../lib/dungeon-enemies');
 const {
   applyDungeonRankedRatingResult,
   getDungeonPlayerCombatBuffs,
-  getDungeonRankedEnemyBuffs
+  getDungeonRankedEnemyBuffs,
+  prepareNextDungeonRankedEncounter
 } = require('../lib/dungeon-ranked');
 const { allocateRunRewardIds, createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
@@ -108,6 +109,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
       'UPDATE players SET highest_floor = GREATEST(highest_floor, ?) WHERE id = ?',
       [run.floor, req.player.id]
     );
+    await prepareNextDungeonRankedEncounter(run, req.player);
   } else {
     run.status = 'defeated';
     const earned = ensureRunEarned(run);

@@ -2,7 +2,10 @@ const { applyRunBuffStatModifiers } = require('./run-buffs');
 const { createRng } = require('./rng');
 const { createDungeonEnemies } = require('./dungeon-enemies');
 const { assignFormationSlots, resetRunDemon } = require('./run-demons');
-const { prepareDungeonRankedEncounter } = require('./dungeon-ranked');
+const {
+  activatePreparedDungeonRankedEncounter,
+  prepareDungeonRankedEncounter
+} = require('./dungeon-ranked');
 
 async function advanceDungeonFloor(run, player, options = {}) {
   run.state.team = assignFormationSlots(
@@ -19,13 +22,21 @@ async function advanceDungeonFloor(run, player, options = {}) {
   applyRunBuffStatModifiers(run);
 
   if (!options.skipRankedEncounter) {
+    const activatePreparedEncounter = options.activatePreparedEncounter || activatePreparedDungeonRankedEncounter;
+    const prepared = await activatePreparedEncounter(run, player, options.queryable, options);
+    if (prepared?.encounter) return { run, rankedEncounter: prepared.encounter };
+
     const prepareRankedEncounter = options.prepareRankedEncounter || prepareDungeonRankedEncounter;
-    const encounter = await prepareRankedEncounter(run, player, options.queryable, options);
-    if (encounter) return { run, rankedEncounter: encounter };
+    if (!prepared?.prepared) {
+      const encounter = await prepareRankedEncounter(run, player, options.queryable, options);
+      if (encounter) return { run, rankedEncounter: encounter };
+    }
   }
 
+  delete run.state.nextRankedEncounter;
   delete run.state.rankedEncounter;
-  run.state.enemies = await createDungeonEnemies(
+  const createEnemies = options.createEnemies || createDungeonEnemies;
+  run.state.enemies = await createEnemies(
     createRng(run.seed + run.floor),
     run.floor,
     run.state.team.length,

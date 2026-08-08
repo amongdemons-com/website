@@ -420,7 +420,7 @@ async function confirmRecruitReward() {
     } else {
       await loadRun(runId);
     }
-    if (canStartCurrentBattle()) {
+    if (canStartCurrentBattle() || isDungeonRankedPlanning(state.run)) {
       await battle();
       return;
     }

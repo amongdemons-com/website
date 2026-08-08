@@ -21,6 +21,7 @@ const formatBattleSpeed = (...args) => dungeonActions.formatBattleSpeed(...args)
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
+const getVisibleDungeonRankedEncounter = (...args) => dungeonActions.getVisibleDungeonRankedEncounter(...args);
 const applyDungeonCombatStatPreviewToDemon = (...args) => dungeonActions.applyDungeonCombatStatPreviewToDemon(...args);
 const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
 const groupCombatLog = (...args) => dungeonActions.groupCombatLog(...args);
@@ -28,7 +29,6 @@ const hasPendingBuffChoices = (...args) => dungeonActions.hasPendingBuffChoices(
 const init = (...args) => dungeonActions.init(...args);
 const isExtractionUnlocked = (...args) => dungeonActions.isExtractionUnlocked(...args);
 const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(...args);
-const isDungeonRankedEncounter = (...args) => dungeonActions.isDungeonRankedEncounter(...args);
 const isDungeonRankedPlanning = (...args) => dungeonActions.isDungeonRankedPlanning(...args);
 const renderDungeonRankedEnemyIdentity = (...args) => dungeonActions.renderDungeonRankedEnemyIdentity(...args);
 const pauseCombatPlayback = (...args) => dungeonActions.pauseCombatPlayback(...args);
@@ -118,8 +118,9 @@ function renderRun() {
   const isReplayOnly = Boolean(run.replayOnly);
   const isBattleLayoutActive = Boolean(state.isBattleAnimating || isReplayOnly);
   const isPactTeamPreview = Boolean(state.isPactTeamPreview && hasPendingPacts);
-  const rankedEncounter = isDungeonRankedEncounter(run);
-  const rankedPlanning = isDungeonRankedPlanning(run);
+  const visibleRankedEncounter = getVisibleDungeonRankedEncounter(run);
+  const rankedEncounter = Boolean(visibleRankedEncounter);
+  const rankedPlanning = visibleRankedEncounter?.status === 'choice';
   const isBattleHandPlaceholder = Boolean(!isHandStrategy && isBattleLayoutActive);
   const hand = (isHandStrategy ? getRecruitPreviewHand() : []).map(applyDungeonCombatStatPreviewToDemon);
   const handMode = isBattleHandPlaceholder ? 'battle' : 'recruit';
@@ -440,7 +441,7 @@ function renderDungeonDefeatScreen(summary = {}) {
 function renderEnemySideTitle(pressure = null, buffs = [], teamBuffs = []) {
   if (!elements.enemySideTitle) return;
 
-  const rankedIdentity = renderDungeonRankedEnemyIdentity(state.run?.rankedEncounter);
+  const rankedIdentity = renderDungeonRankedEnemyIdentity(getVisibleDungeonRankedEncounter(state.run));
   const label = state.run?.enemyLabel || 'Enemies';
   elements.enemySideTitle.innerHTML = `
     ${rankedIdentity || `<span>${escapeHtml(label)}</span>`}

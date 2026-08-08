@@ -69,15 +69,119 @@ async function prepareDungeonRankedEncounter(run, player, queryable = db, option
   if (!run || run.status !== 'active' || !isDungeonRankedFloor(run.floor)) return null;
   if (!Array.isArray(run.state?.team) || !run.state.team.length) return null;
 
+  const context = await getDungeonRankedMatchContext(run, player, run.floor, queryable);
+  await saveDungeonRankedSnapshot(run, player, context, queryable, options);
+
+  const opponent = await selectDungeonRankedOpponent({
+    playerId: run.playerId,
+    seasonId: context.seasonId,
+    floor: run.floor,
+    playerLevel: context.playerLevel,
+    playerRating: context.playerRating,
+    lastOpponentPlayerId: run.state.lastRankedOpponentPlayerId || null
+  }, queryable, options);
+
+  if (!opponent) return null;
+
+  await recordDungeonRankedOpponent(run, opponent, context, queryable);
+  const encounter = createDungeonRankedEncounter(opponent, context);
+  run.state.enemies = encounter.enemyTeam;
+  delete encounter.enemyTeam;
+  run.state.rankedEncounter = encounter;
+
+  return run.state.rankedEncounter;
+}
+
+async function prepareNextDungeonRankedEncounter(run, player, queryable = db, options = {}) {
+  if (!run || run.status !== 'active' || !Array.isArray(run.state?.team) || !run.state.team.length) return null;
+
+  const floor = Math.max(1, Math.floor(Number(run.floor) || 0) + 1);
+  if (!isDungeonRankedFloor(floor)) return null;
+
+  const existing = run.state.nextRankedEncounter;
+  if (Number(existing?.floor) === floor && ['choice', 'none'].includes(existing.status)) {
+    return existing.status === 'choice' ? existing : null;
+  }
+
+  const context = await getDungeonRankedMatchContext(run, player, floor, queryable);
+  const opponent = await selectDungeonRankedOpponent({
+    playerId: run.playerId,
+    seasonId: context.seasonId,
+    floor,
+    playerLevel: context.playerLevel,
+    playerRating: context.playerRating,
+    lastOpponentPlayerId: run.state.lastRankedOpponentPlayerId || null
+  }, queryable, options);
+
+  if (!opponent) {
+    // A negative result is a reservation too: once the normal preview is shown,
+    // continuing must not discover a newly-created snapshot and swap opponents.
+    run.state.nextRankedEncounter = {
+      status: 'none',
+      floor,
+      seasonId: context.seasonId,
+      playerLevel: context.playerLevel,
+      playerRating: context.playerRating
+    };
+    return null;
+  }
+
+  await recordDungeonRankedOpponent(run, opponent, context, queryable);
+  run.state.nextRankedEncounter = createDungeonRankedEncounter(opponent, context);
+  return run.state.nextRankedEncounter;
+}
+
+async function activatePreparedDungeonRankedEncounter(run, player, queryable = db, options = {}) {
+  const pending = run?.state?.nextRankedEncounter;
+  if (!pending || Number(pending.floor) !== Number(run.floor) || !['choice', 'none'].includes(pending.status)) {
+    return { prepared: false, encounter: null };
+  }
+
+  const hasStoredMatchContext = Number.isFinite(Number(pending.playerLevel))
+    && Number.isFinite(Number(pending.playerRating));
+  const context = hasStoredMatchContext
+    ? {
+        floor: run.floor,
+        seasonId: pending.seasonId,
+        playerLevel: Math.max(1, Math.floor(Number(pending.playerLevel))),
+        playerRating: Math.max(0, Math.floor(Number(pending.playerRating)))
+      }
+    : {
+        ...await getDungeonRankedMatchContext(run, player, run.floor, queryable),
+        ...(pending.seasonId ? { seasonId: pending.seasonId } : {})
+      };
+  await saveDungeonRankedSnapshot(run, player, context, queryable, options);
+  delete run.state.nextRankedEncounter;
+
+  if (pending.status === 'none') {
+    delete run.state.rankedEncounter;
+    return { prepared: true, encounter: null };
+  }
+
+  run.state.enemies = cloneJson(pending.enemyTeam || []);
+  delete pending.enemyTeam;
+  run.state.rankedEncounter = pending;
+  return { prepared: true, encounter: pending };
+}
+
+async function getDungeonRankedMatchContext(run, player, floor, queryable = db) {
   const season = await getOrCreateCurrentSeason(queryable);
   const currentRating = await getRankedRating(run.playerId, season.id, queryable);
-  const playerLevel = Math.max(1, Math.floor(Number(player?.level ?? run.state.playerLevel) || 1));
-  const playerBuffs = await resolvePlayerCombatBuffState(player);
+  return {
+    floor: Math.max(1, Math.floor(Number(floor) || 1)),
+    seasonId: season.id,
+    playerLevel: Math.max(1, Math.floor(Number(player?.level ?? run.state.playerLevel) || 1)),
+    playerRating: currentRating?.rating ?? DEFAULT_RATING
+  };
+}
+
+async function saveDungeonRankedSnapshot(run, player, context, queryable = db, options = {}) {
+  const playerBuffs = options.playerCombatBuffs || await resolvePlayerCombatBuffState(player);
   const combatBuffs = getDungeonPlayerCombatBuffs(run.state.buffs, playerBuffs);
   const snapshotId = crypto.randomUUID();
   const snapshot = createDungeonRankedSnapshotPayload(run, {
-    playerLevel,
-    rating: currentRating?.rating,
+    playerLevel: context.playerLevel,
+    rating: context.playerRating,
     buffs: combatBuffs
   });
 
@@ -88,41 +192,35 @@ async function prepareDungeonRankedEncounter(run, player, queryable = db, option
     [
       snapshotId,
       run.playerId,
-      season.id,
+      context.seasonId,
       run.id,
-      run.floor,
-      playerLevel,
-      currentRating?.rating ?? DEFAULT_RATING,
+      context.floor,
+      context.playerLevel,
+      context.playerRating,
       player?.username || 'Hunter',
       JSON.stringify(snapshot),
       COMBAT_DATA_VERSION
     ]
   );
+}
 
-  const opponent = await selectDungeonRankedOpponent({
-    playerId: run.playerId,
-    seasonId: season.id,
-    floor: run.floor,
-    playerLevel,
-    playerRating: currentRating?.rating ?? DEFAULT_RATING,
-    lastOpponentPlayerId: run.state.lastRankedOpponentPlayerId || null
-  }, queryable, options);
-
-  if (!opponent) return null;
-
+async function recordDungeonRankedOpponent(run, opponent, context, queryable = db) {
   await queryable.query(
     `INSERT INTO dungeon_ranked_history
        (player_id, season_id, snapshot_id, opponent_player_id, floor)
      VALUES (?, ?, ?, ?, ?)`,
-    [run.playerId, season.id, opponent.snapshotId, opponent.playerId, run.floor]
+    [run.playerId, context.seasonId, opponent.snapshotId, opponent.playerId, context.floor]
   );
-
   run.state.lastRankedOpponentPlayerId = opponent.playerId;
-  run.state.enemies = namespaceDungeonRankedOpponentTeam(opponent.team, opponent.snapshotId);
-  run.state.rankedEncounter = {
+}
+
+function createDungeonRankedEncounter(opponent, context) {
+  return {
     status: 'choice',
-    floor: run.floor,
-    seasonId: season.id,
+    floor: context.floor,
+    seasonId: context.seasonId,
+    playerLevel: context.playerLevel,
+    playerRating: context.playerRating,
     snapshotId: opponent.snapshotId,
     opponent: {
       playerId: opponent.playerId,
@@ -131,10 +229,9 @@ async function prepareDungeonRankedEncounter(run, player, queryable = db, option
       division: opponent.division,
       playerLevel: opponent.playerLevel
     },
-    enemyBuffs: opponent.buffs
+    enemyBuffs: opponent.buffs,
+    enemyTeam: namespaceDungeonRankedOpponentTeam(opponent.team, opponent.snapshotId)
   };
-
-  return run.state.rankedEncounter;
 }
 
 async function selectDungeonRankedOpponent(criteria, queryable = db, options = {}) {
@@ -365,6 +462,7 @@ module.exports = {
   DUNGEON_RANKED_LEVEL_RANGE,
   DUNGEON_RANKED_RATING_RANGE,
   DUNGEON_RANKED_SNAPSHOT_VERSION,
+  activatePreparedDungeonRankedEncounter,
   applyDungeonRankedRatingResult,
   createDungeonRankedSnapshotPayload,
   getDungeonPlayerCombatBuffs,
@@ -374,6 +472,7 @@ module.exports = {
   isDungeonRankedFloor,
   namespaceDungeonRankedOpponentTeam,
   prepareDungeonRankedEncounter,
+  prepareNextDungeonRankedEncounter,
   selectDungeonRankedOpponent,
   serializeDungeonRankedEncounter
 };

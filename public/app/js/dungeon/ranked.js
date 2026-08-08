@@ -19,6 +19,13 @@ function isDungeonRankedPlanning(run = state.run) {
   return run?.rankedEncounter?.status === 'choice';
 }
 
+function getVisibleDungeonRankedEncounter(run = state.run) {
+  if (run?.awaitingRecruit && run.nextRankedEncounter?.status === 'choice') {
+    return run.nextRankedEncounter;
+  }
+  return run?.rankedEncounter || null;
+}
+
 function renderDungeonRankedEnemyIdentity(encounter = state.run?.rankedEncounter) {
   if (!encounter?.opponent) return '';
   const opponent = encounter.opponent;
@@ -166,6 +173,7 @@ function formatNumber(value) {
 
 export {
   continueDungeonRankedResult,
+  getVisibleDungeonRankedEncounter,
   getRankPresentation,
   getRankSlug,
   isDungeonRankedEncounter,

@@ -13,10 +13,12 @@ const {
   getDungeonRankedRatingDelta,
   isDungeonRankedFloor,
   namespaceDungeonRankedOpponentTeam,
+  prepareNextDungeonRankedEncounter,
   selectDungeonRankedOpponent,
   serializeDungeonRankedEncounter
 } = require('../public/api/lib/dungeon-ranked');
 const { advanceDungeonFloor } = require('../public/api/lib/dungeon-progression');
+const { serializeRun } = require('../public/api/lib/run-serialization');
 
 test('Ranked dungeon checkpoints replace the normal encounter on floor 30 and every five floors', () => {
   assert.equal(isDungeonRankedFloor(29), false);
@@ -57,6 +59,86 @@ test('Dungeon progression offers a Ranked rival immediately on the destination c
   assert.equal(run.state.currentFloor, 30);
   assert.deepEqual(result.rankedEncounter, encounter);
   assert.equal(run.state.enemies[0].instanceId, 'ranked-enemy-a');
+});
+
+test('floor 30 snapshot discovery is reserved while floor 29 preparation is still visible', async () => {
+  const run = createFloorTwentyNineRun();
+  run.state.enemies = [{ instanceId: 'defeated-floor-29-enemy' }];
+  const queries = [];
+  const queryable = createRankedPreparationQueryable({ queries });
+
+  const pending = await prepareNextDungeonRankedEncounter(
+    run,
+    { level: 12, username: 'Player' },
+    queryable,
+    { random: () => 0 }
+  );
+
+  assert.equal(run.floor, 29);
+  assert.equal(run.state.currentFloor, 29);
+  assert.equal(pending.floor, 30);
+  assert.equal(pending.opponent.hunterName, 'Rival');
+  assert.equal(pending.playerLevel, 12);
+  assert.equal(pending.playerRating, 1100);
+  assert.match(pending.enemyTeam[0].instanceId, /^ranked-enemy-/);
+  const reservedEnemyId = pending.enemyTeam[0].instanceId;
+  assert.equal(run.state.enemies[0].instanceId, 'defeated-floor-29-enemy');
+  assert.equal(queries.some(({ sql }) => sql.includes('INSERT INTO dungeon_ranked_snapshots')), false);
+
+  const serialized = await serializeRun(run, {
+    playerLevel: 12,
+    worldBuffs: [],
+    queryable
+  });
+  assert.equal(serialized.nextRankedEncounter.opponent.hunterName, 'Rival');
+  assert.equal(serialized.nextEnemyPressure, null);
+  assert.equal(serialized.nextEnemies[0].instanceId, reservedEnemyId);
+
+  // Reservations created by the first preview implementation omitted these
+  // internal fields. Promotion must recover them so already-saved runs work.
+  delete run.state.nextRankedEncounter.playerLevel;
+  delete run.state.nextRankedEncounter.playerRating;
+
+  const result = await advanceDungeonFloor(run, { level: 12, username: 'Player' }, {
+    queryable,
+    playerCombatBuffs: { activeBuffs: [] }
+  });
+
+  assert.equal(run.floor, 30);
+  assert.equal(result.rankedEncounter.opponent.hunterName, 'Rival');
+  assert.equal(run.state.enemies[0].instanceId, reservedEnemyId);
+  assert.equal(run.state.nextRankedEncounter, undefined);
+  assert.equal(queries.filter(({ sql }) => sql.includes('FROM dungeon_ranked_snapshots snapshots')).length, 1);
+  assert.equal(queries.filter(({ sql }) => sql.includes('INSERT INTO dungeon_ranked_snapshots')).length, 1);
+});
+
+test('a no-snapshot preview remains a normal floor after the player continues', async () => {
+  const run = createFloorTwentyNineRun();
+  const queries = [];
+  const queryable = createRankedPreparationQueryable({ queries, opponent: null });
+
+  const pending = await prepareNextDungeonRankedEncounter(run, { level: 12 }, queryable);
+  assert.equal(pending, null);
+  assert.equal(run.state.nextRankedEncounter.status, 'none');
+
+  let lateDiscoveryAttempted = false;
+  const result = await advanceDungeonFloor(run, { level: 12 }, {
+    queryable,
+    playerCombatBuffs: { activeBuffs: [] },
+    async prepareRankedEncounter() {
+      lateDiscoveryAttempted = true;
+      return { status: 'choice', floor: 30 };
+    },
+    async createEnemies() {
+      return [{ instanceId: 'normal-floor-30-enemy' }];
+    }
+  });
+
+  assert.equal(lateDiscoveryAttempted, false);
+  assert.equal(result.rankedEncounter, null);
+  assert.equal(run.state.enemies[0].instanceId, 'normal-floor-30-enemy');
+  assert.equal(run.state.rankedEncounter, undefined);
+  assert.equal(run.state.nextRankedEncounter, undefined);
 });
 
 test('Ranked dungeon snapshots preserve the exact team and active build buffs', () => {
@@ -213,6 +295,8 @@ test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result fl
   const html = fs.readFileSync(path.join(ROOT, 'public', 'app', 'dungeon.html'), 'utf8');
   const styles = fs.readFileSync(path.join(ROOT, 'public', 'app', 'css', 'battle.css'), 'utf8');
   const rankedUi = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'ranked.js'), 'utf8');
+  const lifecycle = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'lifecycle.js'), 'utf8');
+  const battleApi = fs.readFileSync(path.join(ROOT, 'public', 'api', 'runs', 'battle.js'), 'utf8');
 
   assert.match(html, /id="dungeonRankedResultModal"/);
   assert.match(html, /rank-divisions\.css/);
@@ -223,7 +307,60 @@ test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result fl
   assert.match(rankedUi, /opponent\.liveDivision \|\| opponent\.division/);
   assert.match(rankedUi, /rank-division-text--/);
   assert.match(rankedUi, /ranked\/continue/);
+  assert.match(rankedUi, /nextRankedEncounter/);
+  assert.match(lifecycle, /canStartCurrentBattle\(\) \|\| isDungeonRankedPlanning\(state\.run\)/);
+  assert.match(battleApi, /prepareNextDungeonRankedEncounter\(run, req\.player\)/);
 });
+
+function createFloorTwentyNineRun() {
+  return {
+    id: 'run-a',
+    playerId: 'player-a',
+    seed: 17,
+    status: 'active',
+    floor: 29,
+    rewards: [],
+    state: {
+      currentFloor: 29,
+      team: [{ instanceId: 'demon-a', maxHp: 100, hp: 40, atk: 20, speed: 10 }],
+      enemies: [],
+      awaitingRecruit: true,
+      buffs: { active: [], pendingChoices: [], temporary: [] }
+    }
+  };
+}
+
+function createRankedPreparationQueryable({ queries = [], opponent } = {}) {
+  const snapshot = opponent === null ? null : {
+    id: 'snapshot-b',
+    player_id: 'player-b',
+    hunter_name: 'Rival',
+    player_level: 12,
+    rating: 1100,
+    previously_served: null,
+    snapshot: JSON.stringify({
+      snapshotVersion: DUNGEON_RANKED_SNAPSHOT_VERSION,
+      team: [{ instanceId: 'rival-demon', formationSlot: 2, maxHp: 100, hp: 100, atk: 20, speed: 10 }],
+      buffs: { active: [] }
+    })
+  };
+
+  return {
+    async query(sql, params) {
+      if ((params || []).some((value) => value === undefined)) {
+        throw new Error('Bind parameters must not contain undefined');
+      }
+      queries.push({ sql, params });
+      if (sql.includes('SELECT *') && sql.includes('FROM ranked_ratings')) {
+        return [[{ rating: 1100, highest_floor: 30, victories: 1, runs_played: 1 }]];
+      }
+      if (sql.includes('FROM dungeon_ranked_snapshots snapshots')) {
+        return [snapshot ? [snapshot] : []];
+      }
+      return [{ affectedRows: 1 }];
+    }
+  };
+}
 
 test('the standalone Ranked mode is retired while its old page redirects to Dungeon', () => {
   const server = fs.readFileSync(path.join(ROOT, 'server.js'), 'utf8');

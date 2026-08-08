@@ -20,15 +20,25 @@ async function serializeRun(run, options = {}) {
   const playerLevel = getRunPlayerLevel(run, options);
   const collectionReinforcementLimit = getCollectionReinforcementLimit(run);
   const collectionReinforcementAvailable = collectionReinforcementLimit > 0;
-  const [worldBuffs, liveOpponentRank] = await Promise.all([
+  const pendingRankedEncounter = run.state.nextRankedEncounter?.status === 'choice'
+    ? run.state.nextRankedEncounter
+    : null;
+  const [worldBuffs, liveOpponentRank, nextLiveOpponentRank] = await Promise.all([
     getSerializedWorldBuffs(run, options),
-    getDungeonRankedLiveOpponentRank(run.state.rankedEncounter)
+    getDungeonRankedLiveOpponentRank(run.state.rankedEncounter, options.queryable),
+    getDungeonRankedLiveOpponentRank(pendingRankedEncounter, options.queryable)
   ]);
   const encounterProfile = getEncounterProfile(run, run.floor);
   const nextEncounterProfile = getEncounterProfile(run, Number(run.floor) + 1);
   const rankedEncounter = serializeDungeonRankedEncounter(run.state.rankedEncounter, { liveOpponentRank });
+  const nextRankedEncounter = serializeDungeonRankedEncounter(pendingRankedEncounter, {
+    liveOpponentRank: nextLiveOpponentRank
+  });
   const rankedPlanning = rankedEncounter?.status === 'choice';
   const rankedEnemyBuffs = rankedEncounter ? getDungeonRankedEnemyBuffs(run) : null;
+  const nextRankedEnemyBuffs = pendingRankedEncounter
+    ? pendingRankedEncounter.enemyBuffs || {}
+    : null;
   const enemies = rankedPlanning
     ? applyPreBattleBuffs(cloneJson(run.state.enemies || []), rankedEnemyBuffs)
     : run.state.enemies;
@@ -43,11 +53,14 @@ async function serializeRun(run, options = {}) {
     enemies,
     nextEnemies: await getNextEnemiesPreview(run),
     enemyPressure: rankedEncounter ? null : getEnemyPressurePreview(run, run.floor),
-    nextEnemyPressure: getEnemyPressurePreview(run, Number(run.floor) + 1),
+    nextEnemyPressure: nextRankedEncounter ? null : getEnemyPressurePreview(run, Number(run.floor) + 1),
     enemyBuffs: rankedEncounter ? [] : serializeEncounterBuffs(encounterProfile),
-    nextEnemyBuffs: serializeEncounterBuffs(nextEncounterProfile),
+    nextEnemyBuffs: nextRankedEncounter ? [] : serializeEncounterBuffs(nextEncounterProfile),
     enemyTeamBuffs: rankedEnemyBuffs
       ? serializeCombatBuffState(rankedEnemyBuffs).activeBuffs
+      : [],
+    nextEnemyTeamBuffs: nextRankedEnemyBuffs
+      ? serializeCombatBuffState(nextRankedEnemyBuffs).activeBuffs
       : [],
     rewards: getCurrentRunRewards(run),
     awaitingRecruit: Boolean(run.state.awaitingRecruit),
@@ -59,6 +72,7 @@ async function serializeRun(run, options = {}) {
     worldBuffs,
     extractChoice: run.state.extractChoice || null,
     rankedEncounter,
+    nextRankedEncounter,
     lastBattle: run.state.lastBattle || null,
     earned: run.state.earned || { xp: 0, souls: 0 }
   };
@@ -122,6 +136,14 @@ function getEnemyPressureLevel(pressure = {}) {
 
 async function getNextEnemiesPreview(run) {
   if (!run.state.awaitingRecruit || run.status !== 'active') return [];
+
+  const pendingRankedEncounter = run.state.nextRankedEncounter;
+  if (pendingRankedEncounter?.status === 'choice') {
+    return applyPreBattleBuffs(
+      cloneJson(pendingRankedEncounter.enemyTeam || []),
+      pendingRankedEncounter.enemyBuffs || {}
+    );
+  }
 
   const nextFloor = Number(run.floor) + 1;
   return createDungeonEnemies(createRng(run.seed + nextFloor), nextFloor, (run.state.team || []).length, {
