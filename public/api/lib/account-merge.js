@@ -331,39 +331,80 @@ async function mergeDemons(targetPlayerId, sourcePlayerId, connection) {
 }
 
 async function mergeBag(targetPlayerId, sourcePlayerId, connection) {
-  await connection.query(
-    `INSERT INTO player_bag (player_id, item_key, item_type, quantity, created_at, updated_at)
-     SELECT ?, item_key, item_type, quantity, created_at, updated_at
-     FROM player_bag WHERE player_id = ?
-     ON DUPLICATE KEY UPDATE
-       quantity = LEAST(${MAX_UNSIGNED_INT}, player_bag.quantity + VALUES(quantity)),
-       updated_at = GREATEST(player_bag.updated_at, VALUES(updated_at))`,
-    [targetPlayerId, sourcePlayerId]
+  const [rows] = await connection.query(
+    `SELECT item_key, item_type, quantity, created_at, updated_at
+     FROM player_bag
+     WHERE player_id = ?
+     FOR UPDATE`,
+    [sourcePlayerId]
   );
+  for (const row of rows) {
+    await connection.query(
+      `INSERT INTO player_bag
+         (player_id, item_key, item_type, quantity, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         quantity = LEAST(${MAX_UNSIGNED_INT}, quantity + VALUES(quantity)),
+         updated_at = GREATEST(updated_at, VALUES(updated_at))`,
+      [
+        targetPlayerId,
+        row.item_key,
+        row.item_type,
+        row.quantity,
+        row.created_at,
+        row.updated_at
+      ]
+    );
+  }
 }
 
 async function mergeWorldBuffs(targetPlayerId, sourcePlayerId, connection) {
-  await connection.query(
-    `INSERT INTO player_world_boss_buffs (player_id, boss_id, awarded_at, expires_at)
-     SELECT ?, boss_id, awarded_at, expires_at
-     FROM player_world_boss_buffs WHERE player_id = ?
-     ON DUPLICATE KEY UPDATE
-       awarded_at = IF(VALUES(expires_at) > expires_at, VALUES(awarded_at), awarded_at),
-       expires_at = GREATEST(expires_at, VALUES(expires_at))`,
-    [targetPlayerId, sourcePlayerId]
+  const [bossRows] = await connection.query(
+    `SELECT boss_id, awarded_at, expires_at
+     FROM player_world_boss_buffs
+     WHERE player_id = ?
+     FOR UPDATE`,
+    [sourcePlayerId]
   );
-  await connection.query(
-    `INSERT INTO player_world_soul_font_buffs
-       (player_id, buff_id, offer_set_id, price, awarded_at, expires_at)
-     SELECT ?, buff_id, offer_set_id, price, awarded_at, expires_at
-     FROM player_world_soul_font_buffs WHERE player_id = ?
-     ON DUPLICATE KEY UPDATE
-       offer_set_id = IF(VALUES(expires_at) > expires_at, VALUES(offer_set_id), offer_set_id),
-       price = IF(VALUES(expires_at) > expires_at, VALUES(price), price),
-       awarded_at = IF(VALUES(expires_at) > expires_at, VALUES(awarded_at), awarded_at),
-       expires_at = GREATEST(expires_at, VALUES(expires_at))`,
-    [targetPlayerId, sourcePlayerId]
+  for (const row of bossRows) {
+    await connection.query(
+      `INSERT INTO player_world_boss_buffs
+         (player_id, boss_id, awarded_at, expires_at)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         awarded_at = IF(VALUES(expires_at) > expires_at, VALUES(awarded_at), awarded_at),
+         expires_at = GREATEST(expires_at, VALUES(expires_at))`,
+      [targetPlayerId, row.boss_id, row.awarded_at, row.expires_at]
+    );
+  }
+
+  const [soulFontRows] = await connection.query(
+    `SELECT buff_id, offer_set_id, price, awarded_at, expires_at
+     FROM player_world_soul_font_buffs
+     WHERE player_id = ?
+     FOR UPDATE`,
+    [sourcePlayerId]
   );
+  for (const row of soulFontRows) {
+    await connection.query(
+      `INSERT INTO player_world_soul_font_buffs
+         (player_id, buff_id, offer_set_id, price, awarded_at, expires_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         offer_set_id = IF(VALUES(expires_at) > expires_at, VALUES(offer_set_id), offer_set_id),
+         price = IF(VALUES(expires_at) > expires_at, VALUES(price), price),
+         awarded_at = IF(VALUES(expires_at) > expires_at, VALUES(awarded_at), awarded_at),
+         expires_at = GREATEST(expires_at, VALUES(expires_at))`,
+      [
+        targetPlayerId,
+        row.buff_id,
+        row.offer_set_id,
+        row.price,
+        row.awarded_at,
+        row.expires_at
+      ]
+    );
+  }
 }
 
 async function mergeAchievements(targetPlayerId, sourcePlayerId, connection) {
@@ -447,19 +488,35 @@ async function mergeDailyQuests(targetPlayerId, sourcePlayerId, connection) {
 }
 
 async function mergeRankedRatings(targetPlayerId, sourcePlayerId, connection) {
-  await connection.query(
-    `INSERT INTO ranked_ratings
-       (player_id, season_id, rating, highest_floor, victories, runs_played, updated_at)
-     SELECT ?, season_id, rating, highest_floor, victories, runs_played, updated_at
-     FROM ranked_ratings WHERE player_id = ?
-     ON DUPLICATE KEY UPDATE
-       rating = GREATEST(rating, VALUES(rating)),
-       highest_floor = GREATEST(highest_floor, VALUES(highest_floor)),
-       victories = LEAST(${MAX_UNSIGNED_INT}, victories + VALUES(victories)),
-       runs_played = LEAST(${MAX_UNSIGNED_INT}, runs_played + VALUES(runs_played)),
-       updated_at = GREATEST(updated_at, VALUES(updated_at))`,
-    [targetPlayerId, sourcePlayerId]
+  const [rows] = await connection.query(
+    `SELECT season_id, rating, highest_floor, victories, runs_played, updated_at
+     FROM ranked_ratings
+     WHERE player_id = ?
+     FOR UPDATE`,
+    [sourcePlayerId]
   );
+  for (const row of rows) {
+    await connection.query(
+      `INSERT INTO ranked_ratings
+         (player_id, season_id, rating, highest_floor, victories, runs_played, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         rating = GREATEST(rating, VALUES(rating)),
+         highest_floor = GREATEST(highest_floor, VALUES(highest_floor)),
+         victories = LEAST(${MAX_UNSIGNED_INT}, victories + VALUES(victories)),
+         runs_played = LEAST(${MAX_UNSIGNED_INT}, runs_played + VALUES(runs_played)),
+         updated_at = GREATEST(updated_at, VALUES(updated_at))`,
+      [
+        targetPlayerId,
+        row.season_id,
+        row.rating,
+        row.highest_floor,
+        row.victories,
+        row.runs_played,
+        row.updated_at
+      ]
+    );
+  }
 }
 
 async function loadWorldTeams(playerIds, connection) {

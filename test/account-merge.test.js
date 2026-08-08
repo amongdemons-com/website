@@ -90,6 +90,12 @@ test('merge implementation covers all requested destructive and preservation rul
   assert.match(mergeSource, /Math\.max\(Number\(target\.level/);
   assert.match(mergeSource, /Math\.max\(Number\(target\.xp/);
   assert.match(mergeSource, /quantity = LEAST/);
+  assert.match(mergeSource, /FROM player_bag[\s\S]*?FOR UPDATE/);
+  assert.match(mergeSource, /INSERT INTO player_bag[\s\S]*?VALUES \(\?, \?, \?, \?, \?, \?\)/);
+  assert.doesNotMatch(mergeSource, /SELECT \?, item_key, item_type, quantity[\s\S]*?FROM player_bag/);
+  assert.doesNotMatch(mergeSource, /SELECT \?, boss_id, awarded_at, expires_at[\s\S]*?FROM player_world_boss_buffs/);
+  assert.doesNotMatch(mergeSource, /SELECT \?, buff_id, offer_set_id, price[\s\S]*?FROM player_world_soul_font_buffs/);
+  assert.doesNotMatch(mergeSource, /SELECT \?, season_id, rating, highest_floor[\s\S]*?FROM ranked_ratings/);
   assert.match(mergeSource, /hp = \?, atk = \?, speed = \?/);
   assert.match(mergeSource, /GREATEST\(expires_at, VALUES\(expires_at\)\)/);
   assert.match(mergeSource, /DELETE FROM player_stat_points/);
