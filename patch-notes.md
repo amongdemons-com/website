@@ -2,8 +2,14 @@
 
 <!-- Keep notes short, simple, and player-friendly. Skip tests and technical details. -->
 
-## Patch 2 (Current)
+## Patch 3 (Current)
 
+- 
+
+## Patch 2
+
+- Infinity nodes in the Skill Tree now have color-matched + buttons for adding
+  several points at once. The Add Points window remembers your last amount.
 - Ranked rivals now show Continue immediately, then let you fight or try to run
   with a 70% chance to reach the next floor at the cost of Ranked Points. A
   failed escape starts the fight.

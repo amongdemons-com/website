@@ -27,6 +27,7 @@
   };
   const STAT_KEYS = Object.keys(NODE_DEFINITIONS);
   const RESET_SOULS_PER_POINT = 10;
+  const MULTI_ADD_AMOUNT_STORAGE_KEY = 'amongdemons-skill-tree-multi-add-amount';
   const PAN_CLICK_THRESHOLD = 5;
   const MIN_VIEWPORT_ZOOM = 0.5;
   const MAX_VIEWPORT_ZOOM = 2;
@@ -48,7 +49,10 @@
     viewportOffsetY: 0,
     suppressNextClick: false,
     visibleTooltipTrigger: null,
-    tooltipPinned: false
+    tooltipPinned: false,
+    multiAddKey: '',
+    multiAddTrigger: null,
+    multiAddAmount: loadMultiAddAmount()
   };
   const elements = {};
 
@@ -92,7 +96,14 @@
       'skillTreeResetCost',
       'skillTreeNodeTooltip',
       'skillTreeNodeTooltipTitle',
-      'skillTreeNodeTooltipBody'
+      'skillTreeNodeTooltipBody',
+      'skillTreeMultiAddModal',
+      'skillTreeMultiAddForm',
+      'skillTreeMultiAddTitle',
+      'skillTreeMultiAddInput',
+      'skillTreeMultiAddHelp',
+      'skillTreeMultiAddError',
+      'skillTreeMultiAddButton'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -111,6 +122,17 @@
         return;
       }
 
+      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+      const multiAddTrigger = target?.closest('[data-multi-add-key]');
+      if (multiAddTrigger) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!multiAddTrigger.disabled && !state.busy) {
+          openMultiAddModal(multiAddTrigger.dataset.multiAddKey, multiAddTrigger);
+        }
+        return;
+      }
+
       const tooltipTrigger = getSkillHelpTrigger(event.target);
       if (tooltipTrigger) {
         event.preventDefault();
@@ -123,7 +145,6 @@
         return;
       }
 
-      const target = event.target instanceof Element ? event.target : event.target?.parentElement;
       const node = target?.closest('[data-stat-point-key]');
       if (!node || state.busy) return;
       updateDraft(node.dataset.statPointKey);
@@ -154,6 +175,13 @@
 
     elements.skillTreeSaveButton?.addEventListener('click', save);
     elements.skillTreeResetButton?.addEventListener('click', reset);
+    elements.skillTreeMultiAddForm?.addEventListener('submit', addMultiplePoints);
+    elements.skillTreeMultiAddInput?.addEventListener('input', onMultiAddInput);
+    elements.skillTreeMultiAddModal?.addEventListener('shown.bs.modal', () => {
+      elements.skillTreeMultiAddInput?.focus();
+      elements.skillTreeMultiAddInput?.select();
+    });
+    elements.skillTreeMultiAddModal?.addEventListener('hidden.bs.modal', onMultiAddModalHidden);
 
     elements.skillTreeViewport?.addEventListener('pointerdown', onViewportPointerDown);
     elements.skillTreeViewport?.addEventListener('wheel', onViewportWheel, { passive: false });
@@ -194,6 +222,114 @@
 
     state.draft = next;
     render();
+  }
+
+  function openMultiAddModal(key, trigger) {
+    const definition = NODE_DEFINITIONS[key];
+    const available = getAvailablePointCount(key);
+    const modal = elements.skillTreeMultiAddModal;
+    const modalInstance = getMultiAddModalInstance();
+    if (!definition || available <= 0 || !modal || !modalInstance) return;
+
+    state.multiAddKey = key;
+    state.multiAddTrigger = trigger || null;
+    setText(elements.skillTreeMultiAddTitle, `Add points to ${definition.label}`);
+    setText(elements.skillTreeMultiAddHelp, `${formatNumber(available)} point${available === 1 ? '' : 's'} available.`);
+    setMultiAddError('');
+
+    if (elements.skillTreeMultiAddInput) {
+      elements.skillTreeMultiAddInput.max = String(available);
+      elements.skillTreeMultiAddInput.value = String(state.multiAddAmount);
+    }
+
+    const accent = trigger
+      ? window.getComputedStyle(trigger).getPropertyValue('--path-accent').trim()
+      : '';
+    if (accent) modal.style.setProperty('--multi-add-accent', accent);
+
+    hideSkillTooltip({ force: true });
+    modalInstance.show();
+  }
+
+  function addMultiplePoints(event) {
+    event.preventDefault();
+    const key = state.multiAddKey;
+    const definition = NODE_DEFINITIONS[key];
+    const amount = readMultiAddAmount();
+    const available = getAvailablePointCount(key);
+
+    if (!definition || available <= 0) {
+      setMultiAddError('No points are currently available for this node.');
+      return;
+    }
+    if (!amount || amount > available) {
+      setMultiAddError(`Enter a whole number from 1 to ${formatNumber(available)}.`);
+      elements.skillTreeMultiAddInput?.focus();
+      return;
+    }
+
+    const current = Math.max(0, Number(state.draft[key]) || 0);
+    state.draft = { ...state.draft, [key]: current + amount };
+    rememberMultiAddAmount(amount);
+    audio?.play('sfx.progression.skillAdd', { volume: 0.9 });
+    getMultiAddModalInstance()?.hide();
+    render();
+  }
+
+  function onMultiAddInput() {
+    const amount = readMultiAddAmount();
+    if (amount) rememberMultiAddAmount(amount);
+    if (elements.skillTreeMultiAddError?.textContent) {
+      const available = getAvailablePointCount(state.multiAddKey);
+      setMultiAddError(amount && amount <= available
+        ? ''
+        : `Enter a whole number from 1 to ${formatNumber(available)}.`);
+    }
+  }
+
+  function onMultiAddModalHidden() {
+    const trigger = state.multiAddTrigger;
+    state.multiAddKey = '';
+    state.multiAddTrigger = null;
+    setMultiAddError('');
+    if (trigger && !trigger.disabled) trigger.focus();
+  }
+
+  function readMultiAddAmount() {
+    const amount = Number(elements.skillTreeMultiAddInput?.value);
+    return Number.isSafeInteger(amount) && amount > 0 ? amount : 0;
+  }
+
+  function rememberMultiAddAmount(amount) {
+    if (!Number.isSafeInteger(amount) || amount <= 0) return;
+    state.multiAddAmount = amount;
+    try {
+      window.localStorage.setItem(MULTI_ADD_AMOUNT_STORAGE_KEY, String(amount));
+    } catch {}
+  }
+
+  function loadMultiAddAmount() {
+    try {
+      const amount = Number(window.localStorage.getItem(MULTI_ADD_AMOUNT_STORAGE_KEY));
+      return Number.isSafeInteger(amount) && amount > 0 ? amount : 1;
+    } catch {
+      return 1;
+    }
+  }
+
+  function setMultiAddError(message) {
+    const input = elements.skillTreeMultiAddInput;
+    setText(elements.skillTreeMultiAddError, message);
+    input?.setCustomValidity(message);
+    input?.classList.toggle('is-invalid', Boolean(message));
+    input?.setAttribute('aria-invalid', String(Boolean(message)));
+  }
+
+  function getMultiAddModalInstance() {
+    const Modal = window.bootstrap?.Modal;
+    return Modal && elements.skillTreeMultiAddModal
+      ? Modal.getOrCreateInstance(elements.skillTreeMultiAddModal)
+      : null;
   }
 
   function render() {
@@ -252,6 +388,25 @@
       line.classList.toggle('is-active', rank >= requiredRank);
     });
 
+    elements.skillTreeGrid?.querySelectorAll('[data-multi-add-key]').forEach((button) => {
+      const key = button.dataset.multiAddKey;
+      const definition = NODE_DEFINITIONS[key];
+      if (!definition) return;
+
+      const unlocked = ready && requirementsMet(state.draft, definition.requires);
+      const available = ready ? getAvailablePointCount(key) : 0;
+      const investable = valid && !state.busy && available > 0;
+      button.disabled = !investable;
+      button.classList.toggle('is-locked', ready && !unlocked);
+      button.title = investable
+        ? `Add several points to ${definition.label}.`
+        : !ready
+          ? 'Loading skill points.'
+          : !unlocked
+            ? `${definition.label} is locked.`
+            : `No points available for ${definition.label}.`;
+    });
+
     if (ready && !state.viewportCenterScheduled) {
       state.viewportCenterScheduled = true;
       scheduleConstellationCenter();
@@ -291,12 +446,19 @@
   }
 
   function canInvest(key) {
+    return getAvailablePointCount(key) > 0;
+  }
+
+  function getAvailablePointCount(key) {
     const definition = NODE_DEFINITIONS[key];
-    if (!definition || !state.summary || !state.draft) return false;
+    if (!definition || !state.summary || !state.draft || !requirementsMet(state.draft, definition.requires)) return 0;
 
     const rank = Math.max(0, Number(state.draft[key]) || 0);
     const unspent = Math.max(0, Number(state.summary.totalPoints) || 0) - getSpent(state.draft);
-    return unspent > 0 && rank < definition.cap && requirementsMet(state.draft, definition.requires);
+    const remainingRanks = Number.isFinite(definition.cap)
+      ? Math.max(0, definition.cap - rank)
+      : unspent;
+    return Math.max(0, Math.min(unspent, remainingRanks));
   }
 
   function isDraftValid(allocations) {

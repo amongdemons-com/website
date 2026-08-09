@@ -10,7 +10,7 @@
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
     <link href="/app/css/base.css?v=c6ae0b65390b" rel="stylesheet">
-    <link href="/app/css/skill-tree.css?v=88703381d991" rel="stylesheet">
+    <link href="/app/css/skill-tree.css?v=20260809-multi-add-v3" rel="stylesheet">
   </head>
   <body class="skill-tree-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -74,7 +74,7 @@
               <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 420 L920 420"></path>
               <path class="ascension-connection" data-unlock-key="speed_flat" data-unlock-rank="5" d="M760 420 L980 590"></path>
               <path class="ascension-connection" data-unlock-key="attack_percent" data-unlock-rank="5" d="M920 420 L1100 420"></path>
-              <path class="ascension-connection" data-unlock-key="aoe_percent" data-unlock-rank="5" d="M980 590 L1130 650"></path>
+              <path class="ascension-connection" data-unlock-key="aoe_percent" data-unlock-rank="5" d="M980 590 L1120 650"></path>
 
               <path class="ascension-connection" data-unlock-key="poison_flat" data-unlock-rank="1" d="M600 480 L420 220"></path>
               <path class="ascension-connection" data-unlock-key="poison_flat" data-unlock-rank="5" d="M420 220 L780 130"></path>
@@ -107,6 +107,7 @@
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€¦Ã‚Â¾</span>
             </article>
+            <button class="ascension-multi-add-trigger is-left" type="button" data-multi-add-key="health_mastery" style="--node-x:8.333%;--node-y:34.375%;--path-accent:#df7779" aria-label="Add multiple points to Endless Health" aria-haspopup="dialog" aria-controls="skillTreeMultiAddModal" disabled><span aria-hidden="true">+</span></button>
 
             <article class="ascension-node ascension-branch-node" data-stat-point-key="healing_percent" style="--node-x:23.333%;--node-y:58.333%;--path-accent:#8fefff" role="button" tabindex="0">
               <strong class="ascension-node-label"><span class="ascension-node-help-trigger" data-skill-help>+3% healing <span class="ascension-node-info-mark" aria-hidden="true">?</span></span></strong>
@@ -118,6 +119,7 @@
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€¦Ã‚Â¾</span>
             </article>
+            <button class="ascension-multi-add-trigger is-left" type="button" data-multi-add-key="healing_mastery" style="--node-x:8.333%;--node-y:58.333%;--path-accent:#8fefff" aria-label="Add multiple points to Endless Healing" aria-haspopup="dialog" aria-controls="skillTreeMultiAddModal" disabled><span aria-hidden="true">+</span></button>
 
             <article class="ascension-node ascension-branch-node" data-stat-point-key="thorns_percent" style="--node-x:17.083%;--node-y:71.354%;--path-accent:#a991e8" role="button" tabindex="0">
               <strong class="ascension-node-label"><span class="ascension-node-help-trigger" data-skill-help>+5% thorns <span class="ascension-node-info-mark" aria-hidden="true">?</span></span></strong>
@@ -129,6 +131,7 @@
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€¦Ã‚Â¾</span>
             </article>
+            <button class="ascension-multi-add-trigger is-left" type="button" data-multi-add-key="thorns_mastery" style="--node-x:8.333%;--node-y:82.292%;--path-accent:#a991e8" aria-label="Add multiple points to Endless Thorns" aria-haspopup="dialog" aria-controls="skillTreeMultiAddModal" disabled><span aria-hidden="true">+</span></button>
 
             <article class="ascension-node ascension-root-node" data-stat-point-key="speed_flat" style="--node-x:63.333%;--node-y:43.75%;--path-accent:#e8c76a" role="button" tabindex="0">
               <strong class="ascension-node-label"><span class="ascension-node-help-trigger" data-skill-help>+1 speed <span class="ascension-node-info-mark" aria-hidden="true">?</span></span></strong>
@@ -151,17 +154,19 @@
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€¦Ã‚Â¾</span>
             </article>
+            <button class="ascension-multi-add-trigger is-right" type="button" data-multi-add-key="attack_mastery" style="--node-x:91.667%;--node-y:43.75%;--path-accent:#e78a55" aria-label="Add multiple points to Endless Force" aria-haspopup="dialog" aria-controls="skillTreeMultiAddModal" disabled><span aria-hidden="true">+</span></button>
 
             <article class="ascension-node ascension-branch-node" data-stat-point-key="aoe_percent" style="--node-x:81.667%;--node-y:61.458%;--path-accent:#6fd6bd" role="button" tabindex="0">
               <strong class="ascension-node-label"><span class="ascension-node-help-trigger" data-skill-help>+2% AOE <span class="ascension-node-info-mark" aria-hidden="true">?</span></span></strong>
               <div class="ascension-node-orb"><i data-lucide="scan"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 / 5</span>
             </article>
-            <article class="ascension-node ascension-mastery-node" data-stat-point-key="aoe_mastery" style="--node-x:94.167%;--node-y:67.708%;--path-accent:#6fd6bd" role="button" tabindex="0">
+            <article class="ascension-node ascension-mastery-node" data-stat-point-key="aoe_mastery" style="--node-x:93.333%;--node-y:67.708%;--path-accent:#6fd6bd" role="button" tabindex="0">
               <strong class="ascension-node-label"><span class="ascension-node-help-trigger" data-skill-help>+1 AOE <span class="ascension-node-info-mark" aria-hidden="true">?</span></span></strong>
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€¦Ã‚Â¾</span>
             </article>
+            <button class="ascension-multi-add-trigger is-right" type="button" data-multi-add-key="aoe_mastery" style="--node-x:93.333%;--node-y:67.708%;--path-accent:#6fd6bd" aria-label="Add multiple points to Endless Ruin" aria-haspopup="dialog" aria-controls="skillTreeMultiAddModal" disabled><span aria-hidden="true">+</span></button>
 
             <article class="ascension-node ascension-root-node" data-stat-point-key="poison_flat" style="--node-x:35%;--node-y:22.917%;--path-accent:#7de06a" role="button" tabindex="0">
               <strong class="ascension-node-label"><span class="ascension-node-help-trigger" data-skill-help>+1 poison damage <span class="ascension-node-info-mark" aria-hidden="true">?</span></span></strong>
@@ -178,6 +183,7 @@
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€¦Ã‚Â¾</span>
             </article>
+            <button class="ascension-multi-add-trigger is-left" type="button" data-multi-add-key="poison_mastery" style="--node-x:41.667%;--node-y:5.833%;--path-accent:#7de06a" aria-label="Add multiple points to Endless Poison" aria-haspopup="dialog" aria-controls="skillTreeMultiAddModal" disabled><span aria-hidden="true">+</span></button>
 
             <article class="ascension-node ascension-root-node" data-stat-point-key="soul_capacity" style="--node-x:67.083%;--node-y:66.146%;--path-accent:#8fa7ff" role="button" tabindex="0">
               <strong class="ascension-node-label"><span class="ascension-node-help-trigger" data-skill-help>+20 soul vessel <span class="ascension-node-info-mark" aria-hidden="true">?</span></span></strong>
@@ -194,6 +200,7 @@
               <div class="ascension-node-orb"><i data-lucide="infinity"></i></div>
               <span class="ascension-node-progress" data-node-progress>0 ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€¦Ã‚Â¾</span>
             </article>
+            <button class="ascension-multi-add-trigger is-right" type="button" data-multi-add-key="soul_capacity_mastery" style="--node-x:58.333%;--node-y:94.167%;--path-accent:#8fa7ff" aria-label="Add multiple points to Endless Vessel" aria-haspopup="dialog" aria-controls="skillTreeMultiAddModal" disabled><span aria-hidden="true">+</span></button>
             </div>
           </div>
           </div>
@@ -202,6 +209,27 @@
         <div class="ascension-node-tooltip" id="skillTreeNodeTooltip" role="tooltip">
           <strong id="skillTreeNodeTooltipTitle"></strong>
           <span id="skillTreeNodeTooltipBody"></span>
+        </div>
+
+        <div class="modal fade ascension-multi-add-modal" id="skillTreeMultiAddModal" tabindex="-1" aria-labelledby="skillTreeMultiAddTitle" aria-describedby="skillTreeMultiAddHelp" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" id="skillTreeMultiAddForm" novalidate>
+              <div class="modal-header">
+                <h2 class="modal-title" id="skillTreeMultiAddTitle">Add points</h2>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <label class="form-label" for="skillTreeMultiAddInput">Points to add</label>
+                <input class="form-control" id="skillTreeMultiAddInput" type="number" min="1" step="1" inputmode="numeric" autocomplete="off" required aria-describedby="skillTreeMultiAddHelp skillTreeMultiAddError">
+                <p class="ascension-multi-add-help" id="skillTreeMultiAddHelp"></p>
+                <p class="ascension-multi-add-error" id="skillTreeMultiAddError" role="alert" aria-live="polite"></p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="ascension-multi-add-cancel" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="ascension-multi-add-submit game-primary-action" id="skillTreeMultiAddButton">Add points</button>
+              </div>
+            </form>
+          </div>
         </div>
 
         <footer class="ascension-actions">
@@ -213,6 +241,6 @@
       </section>
     </main>
     <script src="/app/dist/runtime.bundle.js?v=029b22ce8dd5"></script>
-    <script src="/app/js/skill-tree-ui.js?v=d8e721c66c8e"></script>
+    <script src="/app/js/skill-tree-ui.js?v=20260809-multi-add-v2"></script>
   </body>
 </html>

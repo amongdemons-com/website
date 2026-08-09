@@ -114,7 +114,7 @@ body.skill-tree-page {
     --ascension-map-top-clearance: clamp(3rem, 7vh, 5rem);
     position: absolute;
     flex: none;
-    min-width: 75rem;
+    min-width: 70rem;
     min-height: calc(var(--ascension-map-top-clearance) + var(--ascension-map-height) + var(--ascension-action-clearance));
     padding-top: var(--ascension-map-top-clearance);
     padding-bottom: var(--ascension-action-clearance);
@@ -412,6 +412,95 @@ body.skill-tree-page {
     text-shadow: 0 2px 7px #000;
 }
 
+.ascension-multi-add-trigger {
+    --multi-add-offset: 3.55rem;
+    position: absolute;
+    top: var(--node-y);
+    left: var(--node-x);
+    z-index: 7;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid color-mix(in srgb, var(--path-accent) 72%, #f5e7c5);
+    border-radius: 50%;
+    padding: 0;
+    background:
+        radial-gradient(circle, color-mix(in srgb, var(--path-accent) 22%, transparent), transparent 62%),
+        #071012;
+    color: color-mix(in srgb, var(--path-accent) 88%, #fff3d2);
+    box-shadow:
+        0 0 0 0.2rem rgba(4, 10, 11, 0.92),
+        0 0 16px color-mix(in srgb, var(--path-accent) 25%, transparent);
+    font-family: system-ui, sans-serif;
+    font-size: 1.32rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+    transform: translate(calc(-50% + var(--multi-add-offset)), -50%);
+    transition: border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, transform 150ms ease, opacity 150ms ease;
+}
+
+.ascension-multi-add-trigger.is-left {
+    --multi-add-offset: -3.55rem;
+}
+
+.ascension-multi-add-trigger > span {
+    position: relative;
+    display: block;
+    width: 0.78rem;
+    height: 0.78rem;
+    font-size: 0;
+}
+
+.ascension-multi-add-trigger > span::before,
+.ascension-multi-add-trigger > span::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 999px;
+    background: currentColor;
+    transform: translate(-50%, -50%);
+}
+
+.ascension-multi-add-trigger > span::before {
+    width: 0.78rem;
+    height: 1.5px;
+}
+
+.ascension-multi-add-trigger > span::after {
+    width: 1.5px;
+    height: 0.78rem;
+}
+
+.ascension-multi-add-trigger:not(:disabled):hover,
+.ascension-multi-add-trigger:not(:disabled):focus-visible {
+    border-color: color-mix(in srgb, var(--path-accent) 92%, #fff3d2);
+    color: #fff;
+    box-shadow:
+        0 0 0 0.2rem rgba(4, 10, 11, 0.92),
+        0 0 0 0.27rem color-mix(in srgb, var(--path-accent) 34%, transparent),
+        0 0 22px color-mix(in srgb, var(--path-accent) 38%, transparent);
+    outline: none;
+}
+
+.ascension-multi-add-trigger:not(:disabled):hover {
+    transform: translate(calc(-50% + var(--multi-add-offset)), calc(-50% - 2px));
+}
+
+.ascension-multi-add-trigger:disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.55);
+    opacity: 0.42;
+}
+
+.ascension-multi-add-trigger.is-locked:disabled {
+    filter: grayscale(0.85);
+    opacity: 0.3;
+}
+
 .ascension-node-tooltip {
     --ascension-tooltip-accent: #8fa7ff;
     --ascension-tooltip-left: 50vw;
@@ -459,6 +548,105 @@ body.skill-tree-page {
     color: color-mix(in srgb, var(--ascension-tooltip-accent) 72%, #fff4d5);
     font-family: Georgia, "Times New Roman", serif;
     font-size: 0.88rem;
+}
+
+.ascension-multi-add-modal {
+    --multi-add-accent: #8fa7ff;
+}
+
+.ascension-multi-add-modal .modal-dialog {
+    width: min(25rem, calc(100vw - 1rem));
+    margin-inline: auto;
+}
+
+.ascension-multi-add-modal .modal-content {
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--multi-add-accent) 52%, rgba(217, 185, 111, 0.3));
+    border-radius: 6px;
+    background:
+        linear-gradient(145deg, color-mix(in srgb, var(--multi-add-accent) 13%, transparent), transparent 46%),
+        rgba(3, 9, 12, 0.99);
+    color: #edf2ff;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.64), 0 0 30px color-mix(in srgb, var(--multi-add-accent) 16%, transparent);
+}
+
+.ascension-multi-add-modal .modal-header,
+.ascension-multi-add-modal .modal-footer {
+    border-color: color-mix(in srgb, var(--multi-add-accent) 23%, transparent);
+}
+
+.ascension-multi-add-modal .modal-title {
+    color: color-mix(in srgb, var(--multi-add-accent) 78%, #fff3d2);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.08rem;
+}
+
+.ascension-multi-add-modal .form-label {
+    color: rgba(237, 242, 255, 0.82);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.ascension-multi-add-modal .form-control {
+    border-color: color-mix(in srgb, var(--multi-add-accent) 45%, rgba(255, 255, 255, 0.12));
+    background: rgba(1, 6, 8, 0.84);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.ascension-multi-add-modal .form-control:focus {
+    border-color: color-mix(in srgb, var(--multi-add-accent) 80%, #fff0c6);
+    background: rgba(1, 6, 8, 0.96);
+    color: #fff;
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--multi-add-accent) 18%, transparent);
+}
+
+.ascension-multi-add-modal .form-control.is-invalid {
+    border-color: #df7779;
+    box-shadow: 0 0 0 0.18rem rgba(223, 119, 121, 0.13);
+}
+
+.ascension-multi-add-help,
+.ascension-multi-add-error {
+    min-height: 1rem;
+    margin: 0.46rem 0 0;
+    font-size: 0.68rem;
+    line-height: 1.35;
+}
+
+.ascension-multi-add-help {
+    color: rgba(225, 214, 182, 0.68);
+}
+
+.ascension-multi-add-error {
+    margin-top: 0.12rem;
+    color: #ffaaaa;
+}
+
+.ascension-multi-add-modal .modal-footer button {
+    min-height: 2.35rem;
+    border-radius: 2px;
+    padding: 0.46rem 0.8rem;
+    font-size: 0.61rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.ascension-multi-add-cancel {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(8, 15, 16, 0.9);
+    color: rgba(237, 242, 255, 0.74);
+}
+
+.ascension-multi-add-cancel:hover,
+.ascension-multi-add-cancel:focus-visible {
+    border-color: rgba(255, 255, 255, 0.38);
+    color: #fff;
+    outline: none;
 }
 
 .ascension-actions {
