@@ -2417,13 +2417,79 @@ body:not(.dungeon-page) {
     scrollbar-color: rgba(232,199,106,0.48) rgba(255,255,255,0.06);
 }
 
-.dungeon-hand-scroll-shell,
+.dungeon-hand-scroll-shell {
+    --dungeon-hand-scroll-control-width: clamp(1.52rem, 2vw, 2.15rem);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+.dungeon-hand-scroll-shell.has-scroll-overflow {
+    grid-template-columns:
+        var(--dungeon-hand-scroll-control-width)
+        minmax(0, 1fr)
+        var(--dungeon-hand-scroll-control-width);
+    gap: clamp(0.12rem, 0.45vw, 0.24rem);
+}
+
 .dungeon-hand-scroll-viewport {
-    display: contents;
+    display: block;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dungeon-hand-scroll-viewport::-webkit-scrollbar {
+    display: none;
 }
 
 .dungeon-hand-scroll-btn {
     display: none;
+    place-items: center;
+    align-self: stretch;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    border: 1px solid rgba(111,214,189,0.22);
+    border-radius: 6px;
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.1), rgba(3,9,11,0.24)),
+        rgba(3,9,11,0.54);
+    color: rgba(220,244,238,0.84);
+    padding: 0;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+.dungeon-hand-scroll-shell.has-scroll-overflow .dungeon-hand-scroll-btn:not([hidden]) {
+    display: grid;
+}
+
+.dungeon-hand-scroll-btn:active,
+.dungeon-hand-scroll-btn:focus-visible {
+    border-color: rgba(111,214,189,0.56);
+    background:
+        linear-gradient(180deg, rgba(111,214,189,0.18), rgba(3,9,11,0.2)),
+        rgba(8,24,24,0.72);
+    color: #effffc;
+    box-shadow: 0 0 12px rgba(111,214,189,0.14);
+    outline: 0;
+}
+
+.dungeon-hand-scroll-btn .game-icon {
+    width: clamp(0.82rem, 1.2vw, 1.08rem);
+    height: clamp(0.82rem, 1.2vw, 1.08rem);
 }
 
 .dungeon-hand-cards {
@@ -5133,69 +5199,11 @@ body .battle-speed-option.game-primary-action:disabled {
     }
 
 .dungeon-hand-scroll-shell {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        align-items: stretch;
-        gap: 0;
-        width: 100%;
-        height: 100%;
-        min-width: 0;
-        min-height: 0;
+        --dungeon-hand-scroll-control-width: 1.52rem;
     }
 
 .dungeon-hand-scroll-shell.has-scroll-overflow {
-        grid-template-columns: 1.52rem minmax(0, 1fr) 1.52rem;
         gap: 0.16rem;
-    }
-
-.dungeon-hand-scroll-viewport {
-        display: block;
-        height: 100%;
-        min-width: 0;
-        min-height: 0;
-        overflow-x: auto;
-        overflow-y: hidden;
-        overscroll-behavior-x: contain;
-        scrollbar-width: none;
-        touch-action: pan-x;
-        -webkit-overflow-scrolling: touch;
-    }
-
-.dungeon-hand-scroll-viewport::-webkit-scrollbar {
-        display: none;
-    }
-
-.dungeon-hand-scroll-btn {
-        display: none;
-        place-items: center;
-        align-self: stretch;
-        width: 100%;
-        min-width: 0;
-        height: 100%;
-        min-height: 0;
-        border: 1px solid rgba(111,214,189,0.22);
-        border-radius: 6px;
-        background:
-            linear-gradient(180deg, rgba(111,214,189,0.1), rgba(3,9,11,0.24)),
-            rgba(3,9,11,0.54);
-        color: rgba(220,244,238,0.84);
-        padding: 0;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
-    }
-
-.dungeon-hand-scroll-shell.has-scroll-overflow .dungeon-hand-scroll-btn:not([hidden]) {
-        display: grid;
-    }
-
-.dungeon-hand-scroll-btn:active,
-    .dungeon-hand-scroll-btn:focus-visible {
-        border-color: rgba(111,214,189,0.56);
-        background:
-            linear-gradient(180deg, rgba(111,214,189,0.18), rgba(3,9,11,0.2)),
-            rgba(8,24,24,0.72);
-        color: #effffc;
-        box-shadow: 0 0 12px rgba(111,214,189,0.14);
-        outline: 0;
     }
 
 .dungeon-hand-scroll-btn .game-icon {
@@ -5819,7 +5827,7 @@ body.is-world-battle-result-animating .battle-result-burst.is-defeat {
 
 @media (min-width: 576px) {
     #dungeonHandBar:has(.dungeon-demon-card.is-team-upgrade) .dungeon-hand-scroll-shell {
-        display: block;
+        display: grid;
         width: 100%;
         height: 100%;
         overflow: visible;
