@@ -86,10 +86,10 @@
     const hasAtk = hasNumber(demon.atk);
     const hasSpeed = hasNumber(demon.speed) && !options.hideSpeed && !isRetaliateDemon(demon);
     const attackStat = getAttackStat(demon);
-    const currentHp = Math.max(0, Number(demon.hp) || 0);
-    const maxHp = Math.max(currentHp, Number(demon.maxHp) || currentHp || 1);
-    const hpPercent = Math.max(0, Math.min(100, Math.round((currentHp / maxHp) * 100)));
+    const hpBar = getCombatHpBarLayout(demon.hp, demon.maxHp, demon.shield);
+    const { currentHp, maxHp, shield, hpPercent, shieldPercent } = hpBar;
     const showHpBar = hasHp && !options.hideHpBar;
+    const hpBarLabel = `HP ${currentHp} of ${maxHp}${shield > 0 ? `, overflow shield ${shield}` : ''}`;
 
     if (!hasHp && !hasAtk && !hasSpeed) return '';
 
@@ -101,14 +101,38 @@
         </div>
       ` : ''}
       ${showHpBar ? `
-        <div class="combat-hp-bar" aria-label="HP ${currentHp} of ${maxHp}">
-          <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${hpPercent}%"></div>
+        <div class="combat-hp-bar${shield > 0 ? ' has-overflow-shield' : ''}" data-current-shield="${shield}" aria-label="${escapeHtml(hpBarLabel)}" title="${escapeHtml(hpBarLabel)}">
+          <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${formatCombatBarPercent(hpPercent)}%"></div>
+          <div class="combat-overflow-shield-fill js-demon-shield-fill" style="width: ${formatCombatBarPercent(shieldPercent)}%" aria-hidden="true"></div>
         </div>
       ` : ''}
       ${hasHp ? `
         <div class="combat-hp-meta${showHpBar ? '' : ' is-separated'}"><span class="combat-current-hp js-demon-hp">${currentHp}</span>${renderIcon('hp')}</div>
       ` : ''}
     `;
+  }
+
+  function getCombatHpBarLayout(hp, maxHp, shield) {
+    const rawHp = Number(hp);
+    const currentHp = Math.max(0, Number.isFinite(rawHp) ? rawHp : 0);
+    const normalizedMaxHp = Math.max(currentHp, Number(maxHp) || currentHp || 1);
+    const normalizedShield = Math.max(0, Number(shield) || 0);
+    const totalCapacity = normalizedShield > 0
+      ? Math.max(1, currentHp + normalizedShield)
+      : normalizedMaxHp;
+
+    return {
+      currentHp,
+      maxHp: normalizedMaxHp,
+      shield: normalizedShield,
+      totalCapacity,
+      hpPercent: Math.max(0, Math.min(100, (currentHp / totalCapacity) * 100)),
+      shieldPercent: Math.max(0, Math.min(100, (normalizedShield / totalCapacity) * 100))
+    };
+  }
+
+  function formatCombatBarPercent(value) {
+    return String(Number((Number(value) || 0).toFixed(4)));
   }
 
   function openDemonDetailsModal(demon = {}, options = {}) {
@@ -457,6 +481,7 @@
 
   ui.renderDemonCard = renderDemonCard;
   ui.renderCombatStats = renderCombatStats;
+  ui.getCombatHpBarLayout = getCombatHpBarLayout;
   ui.openDemonDetailsModal = openDemonDetailsModal;
   ui.formatRoleLabel = formatTraitLabel;
   ui.formatTraitLabel = formatTraitLabel;

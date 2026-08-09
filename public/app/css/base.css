@@ -1105,6 +1105,7 @@ main {
 }
 
 .combat-hp-bar {
+    position: relative;
     height: 0.3rem;
     margin-top: 0.2rem;
     border-radius: 4px;
@@ -1113,9 +1114,31 @@ main {
 }
 
 .combat-hp-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
     height: 100%;
     background: #1f9657;
     transition: width 220ms ease;
+}
+
+.combat-overflow-shield-fill {
+    position: absolute;
+    box-sizing: border-box;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 0;
+    border-left: 1px solid rgba(255,255,255,0.72);
+    background: linear-gradient(90deg, #dce9e8, #ffffff);
+    box-shadow: inset 0 0 0.18rem rgba(255,255,255,0.86), 0 0 0.3rem rgba(225,246,244,0.46);
+    opacity: 0;
+    transition: width 220ms ease, opacity 140ms ease;
+}
+
+.combat-hp-bar.has-overflow-shield .combat-overflow-shield-fill {
+    opacity: 1;
 }
 
 .combat-hp-meta {

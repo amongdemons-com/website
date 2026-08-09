@@ -73,6 +73,17 @@ function getBossRewardBuffs() {
     .filter(Boolean);
 }
 
+test('Siegeborn grants 25% AOE damage and 25% health', () => {
+  const siegeborn = getBossRewardBuffs().find((buff) => buff.name === 'Siegeborn');
+
+  assert.ok(siegeborn);
+  assert.equal(siegeborn.description, '+25% AOE Damage · +25% Health');
+  assert.deepEqual(siegeborn.effects, [
+    { type: 'aoe_damage_mult', value: 1.25 },
+    { type: 'max_hp_mult', value: 1.25 }
+  ]);
+});
+
 test('Harvester doubles the complete skill-tree Soul Vessel capacity', () => {
   const allocations = {
     soul_capacity: 5,

@@ -4,7 +4,7 @@ const {
   normalizeCombatBuffState,
   serializeCombatBuffState
 } = require('./combat-buffs');
-const { assignFormationSlots, getFormationSlotPosition } = require('./run-demons');
+const { assignFormationSlots, getFormationSlotPosition, resetRunDemon } = require('./run-demons');
 const { resolvePlayerCombatBuffState } = require('./player-combat-buffs');
 const {
   getOrCreateCurrentSeason,
@@ -58,7 +58,7 @@ function createDungeonRankedSnapshotPayload(run, options = {}) {
     rating,
     division: rating === null ? 'Unranked' : getDivision(rating).name,
     team: cloneJson(run?.state?.team || []),
-    buffs: serializeCombatBuffState(options.buffs || {}),
+    buffs: serializeCombatBuffState(stripTerrorCombatBuffs(options.buffs || {})),
     deterministic: {
       runSeed: Number(run?.seed) || 0,
       sourceRunId: run?.id || null
@@ -325,7 +325,7 @@ async function selectDungeonRankedOpponent(criteria, queryable = db, options = {
     rating,
     division: getDivision(rating).name,
     team: snapshot.team,
-    buffs: normalizeCombatBuffState(snapshot.buffs || {})
+    buffs: stripTerrorCombatBuffs(snapshot.buffs || {})
   };
 }
 
@@ -411,7 +411,45 @@ async function applyDungeonRankedRatingResult(run, winner, connection) {
 }
 
 function getDungeonRankedEnemyBuffs(run) {
-  return normalizeCombatBuffState(run?.state?.rankedEncounter?.enemyBuffs || {});
+  return stripTerrorCombatBuffs(run?.state?.rankedEncounter?.enemyBuffs || {});
+}
+
+function stripTerrorCombatBuffs(buffs) {
+  const normalized = normalizeCombatBuffState(buffs || {});
+  return normalizeCombatBuffState({
+    active: normalized.active.filter((id) => !isTerrorBuffId(id)),
+    temporary: normalized.temporary.filter((entry) => !isTerrorBuffId(entry?.buffId || entry?.id || entry)),
+    activeBuffs: normalized.activeBuffs.filter((buff) => !isTerrorCombatBuff(buff))
+  });
+}
+
+function isTerrorBuffId(value) {
+  return /(?:^|_)terror(?:_|$)/i.test(String(value || ''));
+}
+
+function isTerrorCombatBuff(buff = {}) {
+  const tags = Array.isArray(buff.tags) ? buff.tags : [];
+  return isTerrorBuffId(buff.id)
+    || tags.some((tag) => String(tag || '').toLowerCase() === 'terror')
+    || /^terror(?:\s|$)/i.test(String(buff.name || ''));
+}
+
+function resumeDungeonPreparationAfterRankedEncounter(run) {
+  if (!run?.state) return null;
+
+  run.state.team = assignFormationSlots(
+    (run.state.team || []).map((demon) => resetRunDemon(demon, demon.instanceId)),
+    'player'
+  );
+  run.state.hp = run.state.team.reduce((sum, demon) => sum + Math.max(0, Number(demon.hp) || 0), 0);
+  run.state.enemies = [];
+  run.state.awaitingRecruit = true;
+  run.state.awaitingCollectionReinforcement = false;
+  delete run.state.collectionReinforcementLimit;
+  delete run.state.nextRankedEncounter;
+  delete run.state.rankedEncounter;
+
+  return Math.max(1, Math.floor(Number(run.floor) || 0) + 1);
 }
 
 async function getDungeonRankedLiveOpponentRank(encounter, queryable = db) {
@@ -481,6 +519,7 @@ module.exports = {
   namespaceDungeonRankedOpponentTeam,
   prepareDungeonRankedEncounter,
   prepareNextDungeonRankedEncounter,
+  resumeDungeonPreparationAfterRankedEncounter,
   selectDungeonRankedOpponent,
   serializeDungeonRankedEncounter
 };

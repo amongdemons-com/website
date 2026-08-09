@@ -5,8 +5,10 @@ const path = require('node:path');
 
 const {
   allocateRunRewardIds,
+  carryPendingRecruitRewardsToFloor,
   compactRunRewards,
-  getCurrentRunRewards
+  getCurrentRunRewards,
+  settleDiscardedSoulRewards
 } = require('../public/api/lib/run-rewards');
 const { parseRun } = require('../public/api/lib/runs');
 
@@ -62,6 +64,38 @@ test('ended runs drop reward history without changing replay or payout state', (
   assert.deepEqual(run.state.lastBattle, lastBattle);
   assert.deepEqual(run.state.extractChoice, extractChoice);
   assert.deepEqual(run.state.earned, { xp: 500, souls: 40 });
+});
+
+test('available hand cards carry through a prepared Ranked checkpoint', () => {
+  const run = {
+    status: 'active',
+    floor: 30,
+    state: { earned: { xp: 0, souls: 0 } },
+    rewards: [
+      createReward(1, 29, { soulPending: true }),
+      createReward(2, 29, { soulPending: true, claimed: true, recruited: true }),
+      createReward(3, 28, { soulPending: true })
+    ]
+  };
+
+  assert.equal(carryPendingRecruitRewardsToFloor(run, 29, 30), 1);
+  assert.equal(run.rewards[0].floor, 30);
+  assert.equal(run.rewards[1].floor, 29);
+  assert.equal(run.rewards[2].floor, 28);
+  assert.deepEqual(getCurrentRunRewards(run).map((reward) => reward.rewardId), [1]);
+});
+
+test('discard souls can settle a preparation hand after its floor advances', () => {
+  const run = {
+    status: 'active',
+    floor: 30,
+    state: { earned: { xp: 0, souls: 0 } },
+    rewards: [createReward(1, 29, { soulPending: true, souls: 1 })]
+  };
+
+  assert.equal(settleDiscardedSoulRewards(run, { floor: 29 }), 1);
+  assert.equal(run.state.earned.souls, 1);
+  assert.equal(run.rewards[0].discarded, true);
 });
 
 test('run parsing compacts old JSON before it reaches the client', () => {

@@ -6,6 +6,10 @@ const path = require('node:path');
 const { renderHunterOgSvg, _test: hunterOg } = require('../lib/hunter-og-image');
 const { _test: hunterPage } = require('../lib/hunter-page');
 
+function read(...segments) {
+  return fs.readFileSync(path.join(__dirname, '..', ...segments), 'utf8');
+}
+
 const rankedProfile = {
   hunter: {
     username: 'RankedHunter',
@@ -42,9 +46,9 @@ test('leaderboard compacts Soul values without compacting ranks', () => {
 });
 
 test('hunter sharing image uses the matching color for each Ranked division', async () => {
-  assert.equal(hunterOg.getRankDivisionColor('Iron III'), '#66727a');
-  assert.equal(hunterOg.getRankDivisionColor('Iron II'), '#82919a');
-  assert.equal(hunterOg.getRankDivisionColor('Iron I'), '#a4b0b7');
+  assert.equal(hunterOg.getRankDivisionColor('Iron III'), '#9b6c62');
+  assert.equal(hunterOg.getRankDivisionColor('Iron II'), '#9b6c62');
+  assert.equal(hunterOg.getRankDivisionColor('Iron I'), '#9b6c62');
   assert.equal(hunterOg.getRankDivisionColor('Bronze III'), '#bd7048');
   assert.equal(hunterOg.getRankDivisionColor('Gold I'), '#ffd866');
   assert.equal(hunterOg.getRankDivisionColor('Diamond II'), '#76c5ff');
@@ -62,6 +66,16 @@ test('hunter sharing image uses the matching color for each Ranked division', as
 
   const png = await hunterOg.renderHunterOgPng(rankedProfile, rankedProfile.hunter.username);
   assert.equal(png.subarray(1, 4).toString('ascii'), 'PNG');
+});
+
+test('Iron rank presentation uses the dark brown palette everywhere', () => {
+  const rankCss = read('public', 'app', 'css', 'rank-divisions.css');
+  const ironCrest = read('public', 'app', 'images', 'assets', 'ranks', 'iron.svg');
+
+  assert.equal((rankCss.match(/--rank-color: #9b6c62/g) || []).length, 3);
+  assert.match(ironCrest, /stop-color="#9b6c62"/);
+  assert.match(ironCrest, /stroke="#9b6c62"/);
+  assert.doesNotMatch(ironCrest, /#c4cdd1|#74828a|#353f45|#87959d|#b7c2c7|#f0f4f5/i);
 });
 
 test('hunter hero contains long unbroken names before the stats column', () => {

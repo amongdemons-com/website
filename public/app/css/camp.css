@@ -2561,6 +2561,37 @@ body.camp-page {
     padding-bottom: 0.48rem;
 }
 
+@media (min-width: 1200px) {
+.camp-profile-shortcuts {
+        min-height: 0;
+    }
+
+.camp-world-buffs {
+        align-content: start;
+        max-block-size: clamp(4.6rem, 18dvh, 10rem);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        padding-right: 0.18rem;
+        scrollbar-color: rgba(232,199,106,0.42) rgba(255,255,255,0.045);
+        scrollbar-gutter: stable;
+        scrollbar-width: thin;
+    }
+
+.camp-world-buffs::-webkit-scrollbar {
+        width: 0.38rem;
+    }
+
+.camp-world-buffs::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.045);
+    }
+
+.camp-world-buffs::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(232,199,106,0.42);
+    }
+}
+
 .camp-world-buffs[hidden] {
     display: none;
 }

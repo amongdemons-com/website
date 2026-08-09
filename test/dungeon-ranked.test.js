@@ -11,14 +11,17 @@ const {
   DUNGEON_RANKED_ESCAPE_CHANCE,
   createDungeonRankedSnapshotPayload,
   didDungeonRankedEscape,
+  getDungeonRankedEnemyBuffs,
   getDungeonRankedLiveOpponentRank,
   getDungeonRankedRatingDelta,
   isDungeonRankedFloor,
   namespaceDungeonRankedOpponentTeam,
   prepareNextDungeonRankedEncounter,
+  resumeDungeonPreparationAfterRankedEncounter,
   selectDungeonRankedOpponent,
   serializeDungeonRankedEncounter
 } = require('../public/api/lib/dungeon-ranked');
+const { applyPreBattleBuffs } = require('../public/api/lib/combat-buffs');
 const { advanceDungeonFloor } = require('../public/api/lib/dungeon-progression');
 const { serializeRun } = require('../public/api/lib/run-serialization');
 
@@ -62,6 +65,47 @@ test('Dungeon progression offers a Ranked rival immediately on the destination c
   assert.equal(run.state.currentFloor, 30);
   assert.deepEqual(result.rankedEncounter, encounter);
   assert.equal(run.state.enemies[0].instanceId, 'ranked-enemy-a');
+});
+
+test('resolving a Ranked rival returns to next-floor preparation without advancing immediately', () => {
+  const run = {
+    status: 'active',
+    floor: 30,
+    state: {
+      currentFloor: 30,
+      team: [{
+        instanceId: 'player-a',
+        maxHp: 100,
+        hp: 12,
+        atk: 20,
+        speed: 10,
+        attackMeter: 80,
+        statusEffects: { poison: [{ damage: 5 }] }
+      }],
+      enemies: [{ instanceId: 'ranked-enemy-a' }],
+      awaitingRecruit: false,
+      awaitingCollectionReinforcement: true,
+      collectionReinforcementLimit: 1,
+      nextRankedEncounter: { status: 'choice', floor: 40 },
+      rankedEncounter: { status: 'result', floor: 30 }
+    }
+  };
+
+  const nextFloor = resumeDungeonPreparationAfterRankedEncounter(run);
+
+  assert.equal(nextFloor, 31);
+  assert.equal(run.floor, 30);
+  assert.equal(run.state.currentFloor, 30);
+  assert.equal(run.state.awaitingRecruit, true);
+  assert.equal(run.state.awaitingCollectionReinforcement, false);
+  assert.equal(run.state.collectionReinforcementLimit, undefined);
+  assert.equal(run.state.rankedEncounter, undefined);
+  assert.equal(run.state.nextRankedEncounter, undefined);
+  assert.deepEqual(run.state.enemies, []);
+  assert.equal(run.state.team[0].hp, 100);
+  assert.equal(run.state.team[0].attackMeter, 0);
+  assert.deepEqual(run.state.team[0].statusEffects, { poison: [] });
+  assert.equal(run.state.hp, 100);
 });
 
 test('floor 30 snapshot discovery is reserved while floor 29 preparation is still visible', async () => {
@@ -113,6 +157,14 @@ test('floor 30 snapshot discovery is reserved while floor 29 preparation is stil
   assert.equal(run.state.nextRankedEncounter, undefined);
   assert.equal(queries.filter(({ sql }) => sql.includes('FROM dungeon_ranked_snapshots snapshots')).length, 1);
   assert.equal(queries.filter(({ sql }) => sql.includes('INSERT INTO dungeon_ranked_snapshots')).length, 1);
+
+  const activeSerialized = await serializeRun(run, {
+    playerLevel: 12,
+    worldBuffs: [],
+    queryable
+  });
+  assert.equal(activeSerialized.enemyPressure, null);
+  assert.deepEqual(activeSerialized.enemyBuffs, []);
 });
 
 test('a no-snapshot preview remains a normal floor after the player continues', async () => {
@@ -171,6 +223,50 @@ test('Ranked dungeon snapshots preserve the exact team and active build buffs', 
   assert.equal(snapshot.division, 'Bronze I');
   assert.deepEqual(snapshot.buffs.active, ['blood_pact']);
   assert.equal(snapshot.buffs.activeBuffs.some((buff) => buff.id === 'skill_force'), true);
+});
+
+test('Ranked dungeon snapshots reject Terror while preserving captured player buffs', () => {
+  const terrorBuff = {
+    id: 'world_terror_12',
+    name: 'Terror 12',
+    tags: ['World', 'Terror'],
+    effects: [
+      { type: 'max_hp_mult', value: 2 },
+      { type: 'attack_mult', value: 2 },
+      { type: 'speed_mult', value: 2 }
+    ]
+  };
+  const skillBuff = {
+    id: 'skill_force',
+    name: 'Force',
+    effects: [{ type: 'attack_flat', value: 5 }]
+  };
+  const run = {
+    id: 'run-terror-exempt',
+    seed: 17,
+    floor: 40,
+    state: {
+      team: [{ instanceId: 'demon-a', maxHp: 100, hp: 100, atk: 20, speed: 10 }],
+      rankedEncounter: {
+        status: 'choice',
+        enemyBuffs: { activeBuffs: [terrorBuff, skillBuff] }
+      }
+    }
+  };
+
+  const snapshot = createDungeonRankedSnapshotPayload(run, {
+    playerLevel: 12,
+    rating: 1100,
+    buffs: { activeBuffs: [terrorBuff, skillBuff] }
+  });
+  const enemyBuffs = getDungeonRankedEnemyBuffs(run);
+  const preview = applyPreBattleBuffs(run.state.team, enemyBuffs);
+
+  assert.deepEqual(snapshot.buffs.activeBuffs.map((buff) => buff.id), ['skill_force']);
+  assert.deepEqual(enemyBuffs.activeBuffs.map((buff) => buff.id), ['skill_force']);
+  assert.equal(preview[0].maxHp, 100);
+  assert.equal(preview[0].atk, 25);
+  assert.equal(preview[0].speed, 10);
 });
 
 test('opponent formations mirror their exact player-side slots', () => {
@@ -310,6 +406,7 @@ test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result fl
   const dungeonRender = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'render.js'), 'utf8');
   const battleApi = fs.readFileSync(path.join(ROOT, 'public', 'api', 'runs', 'battle.js'), 'utf8');
   const rankedApi = fs.readFileSync(path.join(ROOT, 'public', 'api', 'runs', 'ranked.js'), 'utf8');
+  const recruitApi = fs.readFileSync(path.join(ROOT, 'public', 'api', 'runs', 'recruit.js'), 'utf8');
 
   assert.match(html, /id="dungeonRankedResultModal"/);
   assert.match(html, /id="dungeonRankedChoiceModal"/);
@@ -337,7 +434,10 @@ test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result fl
   assert.match(battleApi, /prepareNextDungeonRankedEncounter\(run, req\.player\)/);
   assert.match(rankedApi, /ranked\/escape/);
   assert.match(rankedApi, /applyDungeonRankedRatingResult\(run, 'enemy', connection\)/);
-  assert.match(rankedApi, /skipRankedEncounter: true/);
+  assert.match(rankedApi, /resumeDungeonPreparationAfterRankedEncounter\(run\)/);
+  assert.doesNotMatch(rankedApi, /advanceDungeonFloor/);
+  assert.doesNotMatch(rankedUi, /canStartCurrentBattle/);
+  assert.match(recruitApi, /carryPendingRecruitRewardsToFloor\(run, sourceFloor, run\.floor\)/);
 });
 
 function createFloorTwentyNineRun() {

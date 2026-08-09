@@ -15,7 +15,11 @@ const {
 } = require('../lib/run-demons');
 const { getTemporaryTeamSizeBonus, hasPendingBuffChoices } = require('../lib/run-buffs');
 const { canUseCollectionReinforcement, getDungeonTeamLimit, markCollectionReinforcementUsed } = require('../lib/dungeon-rules');
-const { clearPendingRewardSoul, settleDiscardedSoulRewards } = require('../lib/run-rewards');
+const {
+  carryPendingRecruitRewardsToFloor,
+  clearPendingRewardSoul,
+  settleDiscardedSoulRewards
+} = require('../lib/run-rewards');
 const achievements = require('../lib/achievements');
 
 const router = express.Router();
@@ -50,8 +54,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
       stageExtractChoice(run, extractChoice);
     }
     run.state.awaitingCollectionReinforcement = false;
-    settleDiscardedSoulRewards(run);
-    await advanceDungeonFloor(run, req.player);
+    await advanceAfterRecruit(run, req.player);
     await saveRun(run);
     return res.json({
       team: run.state.team,
@@ -86,10 +89,9 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
       if (Number(run.floor) !== 0) markCollectionReinforcementUsed(run.state, run.floor);
     }
     run.state.awaitingCollectionReinforcement = false;
-    settleDiscardedSoulRewards(run);
 
     if (run.status === 'active') {
-      await advanceDungeonFloor(run, req.player);
+      await advanceAfterRecruit(run, req.player);
     }
 
     await saveRun(run);
@@ -142,8 +144,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
 
   if (run.status === 'active') {
     run.state.awaitingCollectionReinforcement = false;
-    settleDiscardedSoulRewards(run);
-    await advanceDungeonFloor(run, req.player);
+    await advanceAfterRecruit(run, req.player);
   }
 
   await saveRun(run);
@@ -154,6 +155,26 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     run: await serializeRun(run, { playerLevel: req.player.level })
   });
 });
+
+async function advanceAfterRecruit(run, player) {
+  const sourceFloor = Number(run.floor);
+  const pendingRankedEncounter = run.state.nextRankedEncounter;
+  const shouldCarryHand = pendingRankedEncounter?.status === 'choice'
+    && Number(pendingRankedEncounter.floor) === sourceFloor + 1;
+
+  if (!shouldCarryHand) {
+    settleDiscardedSoulRewards(run);
+  }
+
+  const progression = await advanceDungeonFloor(run, player);
+  if (shouldCarryHand && progression.rankedEncounter) {
+    carryPendingRecruitRewardsToFloor(run, sourceFloor, run.floor);
+  } else if (shouldCarryHand) {
+    settleDiscardedSoulRewards(run, { floor: sourceFloor });
+  }
+
+  return progression;
+}
 
 async function buildStagedTeam(run, stagedTeam) {
   const teamLimit = getRecruitTeamLimitForRun(run);

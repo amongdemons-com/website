@@ -4,7 +4,18 @@
 
 ## Patch 3 (Current)
 
-- 
+- Overfull Dungeon hands now show scroll buttons on any screen where the cards
+  do not fit.
+- Escaping or defeating a Ranked rival now returns you to preparation for the
+  next floor instead of starting the next fight immediately. Your previous
+  hand stays available.
+- The Camp profile panel now scrolls its active buffs when they do not fit.
+- Siegeborn now grants +25% AOE Damage and +25% Health.
+- Iron ranks now use their dark brown rank color instead of grey.
+- Overflow Healing shields now appear as a white section on the right side of
+  health bars, sized in proportion to health and shield strength.
+- Ranked player snapshots are exempt from Dungeon Terror and fight with only
+  the stats and buffs captured from that player.
 
 ## Patch 2
 

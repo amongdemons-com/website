@@ -48,11 +48,11 @@
 }
 
 .rank-division-text--iron-iii,
-.ranked-rank--iron-iii { --rank-color: #66727a; --rank-glow: rgba(102, 114, 122, .34); }
+.ranked-rank--iron-iii { --rank-color: #9b6c62; --rank-glow: rgba(155, 108, 98, .34); }
 .rank-division-text--iron-ii,
-.ranked-rank--iron-ii  { --rank-color: #82919a; --rank-glow: rgba(130, 145, 154, .4); }
+.ranked-rank--iron-ii  { --rank-color: #9b6c62; --rank-glow: rgba(155, 108, 98, .4); }
 .rank-division-text--iron-i,
-.ranked-rank--iron-i   { --rank-color: #a4b0b7; --rank-glow: rgba(164, 176, 183, .46); }
+.ranked-rank--iron-i   { --rank-color: #9b6c62; --rank-glow: rgba(155, 108, 98, .46); }
 .rank-division-text--bronze-iii,
 .ranked-rank--bronze-iii { --rank-color: #bd7048; --rank-glow: rgba(189, 112, 72, .36); }
 .rank-division-text--bronze-ii,

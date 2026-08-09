@@ -516,13 +516,17 @@
       "rewardBuff": {
         "id": "boss_reward_breaker_surge",
         "name": "Siegeborn",
-        "description": "+30% Single-target Damage · All demons",
+        "description": "+25% AOE Damage · +25% Health",
         "rarity": "rare",
         "icon": "swords",
         "effects": [
           {
-            "type": "direct_damage_mult",
-            "value": 1.3
+            "type": "aoe_damage_mult",
+            "value": 1.25
+          },
+          {
+            "type": "max_hp_mult",
+            "value": 1.25
           }
         ]
       },

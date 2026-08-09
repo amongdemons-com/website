@@ -87,6 +87,27 @@ function settleDiscardedSoulRewards(run, options = {}) {
   return souls;
 }
 
+function carryPendingRecruitRewardsToFloor(run, fromFloor, toFloor) {
+  const sourceFloor = Number(fromFloor);
+  const destinationFloor = Number(toFloor);
+  if (!run || !Number.isFinite(sourceFloor) || !Number.isFinite(destinationFloor)) return 0;
+
+  let carried = 0;
+  (run.rewards || []).forEach((reward) => {
+    if (
+      reward?.type !== 'recruit' ||
+      Number(reward.floor) !== sourceFloor ||
+      isRewardUnavailableForDiscard(reward)
+    ) {
+      return;
+    }
+
+    reward.floor = destinationFloor;
+    carried += 1;
+  });
+  return carried;
+}
+
 function getEarnedWithPendingDiscardedSouls(run, options = {}) {
   const earned = ensureRunEarned(run);
   return {
@@ -116,7 +137,8 @@ function clearPendingRewardSoul(reward) {
 
 function isPendingDiscardSoulReward(run, reward, options = {}) {
   if (!reward || reward.type !== 'recruit') return false;
-  if (Number(reward.floor) !== Number(run.floor)) return false;
+  const rewardFloor = Number(options.floor ?? run.floor);
+  if (Number(reward.floor) !== rewardFloor) return false;
   if (Number(reward.floor) <= 0) return false;
   if (!hasPendingSoulValue(reward)) return false;
   if (isRewardUnavailableForDiscard(reward)) return false;
@@ -155,6 +177,7 @@ function getRewardSoulValue(reward) {
 
 module.exports = {
   allocateRunRewardIds,
+  carryPendingRecruitRewardsToFloor,
   compactRunRewards,
   createDiscardSoulRewardFields,
   clearPendingRewardSoul,

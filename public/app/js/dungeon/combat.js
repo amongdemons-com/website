@@ -2,7 +2,7 @@ import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, BATTLE_SCREEN_SHAKE_KEY, BATTLE_CARD_SHAKE_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
+import { renderSharedDemonCard, renderSharedCombatStats, getCombatHpBarLayout, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const audio = window.AmongDemons.audio;
@@ -107,6 +107,9 @@ function applyCombatStep(step, index = -1, options = {}) {
     const target = allDemonsById.get(entry.target);
     if (target) {
       target.hp = entry.targetHp;
+      if (Object.prototype.hasOwnProperty.call(entry, 'targetShield')) {
+        target.shield = Math.max(0, Number(entry.targetShield) || 0);
+      }
       if (entry.effect === 'poison_apply') {
         target.statusEffects = target.statusEffects || {};
         target.statusEffects.poison = Array.from({ length: Math.max(1, Number(entry.poisonStacks) || 1) }, () => ({}));
@@ -243,7 +246,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
           burstCount: step.entries.length
         });
       }
-      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, shield: entry.targetShield });
       syncPoisonStatus(entry.target, entry.poisonStacks);
       poisonTickCard(entry.target);
     });
@@ -254,7 +257,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
     if (!reduced) drawHealEffect(entry.attacker, entry.target);
     scheduleImpact(200, () => {
       audio?.play('sfx.battle.abilities.heal', { volume: 0.7, minInterval: 80 });
-      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing });
+      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, healing: entry.healing, shield: entry.targetShield });
       showFloatingDamage(entry.target, entry.healing, 'heal', entry.attacker, entry.effect);
       healTargetCard(entry.target);
     });
@@ -263,7 +266,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
 
   if (entry.effect === 'last_breath') {
     scheduleImpact(160, () => {
-      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+      updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, shield: entry.targetShield });
       showFloatingDamage(entry.target, 1, 'heal', entry.attacker, entry.effect);
       healTargetCard(entry.target);
     });
@@ -271,7 +274,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
   }
 
   if (entry.effect === 'shared_pain') {
-    updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false });
+    updateTargetCard(entry.target, entry.targetHp, attackerSide, { hit: false, shield: entry.targetShield });
     (entry.affectedAllies || []).forEach(syncDemonAttackCard);
     return;
   }
@@ -280,7 +283,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
     if (!reduced) drawAttackZap(step.attacker, entry.target, { effect: entry.effect, poison: true, bubbles: 15, variant: 'poison-flame' });
     scheduleImpact(220, () => {
       syncPoisonStatus(entry.target, entry.poisonStacks || 1);
-      updateTargetCard(entry.target, entry.targetHp, attackerSide);
+      updateTargetCard(entry.target, entry.targetHp, attackerSide, { shield: entry.targetShield });
       spawnImpactBurst(entry.target, { attackerId: entry.attacker, effect: entry.effect, variant: 'poison' });
       poisonTickCard(entry.target);
     });
@@ -299,7 +302,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
     ? fireGroup.travel + fireGroup.lead + entryIndex * 50
     : profile.travel + (isAoe ? entryIndex * 70 : 0);
   scheduleImpact(impactDelay, () => {
-    updateTargetCard(entry.target, entry.targetHp, attackerSide);
+    updateTargetCard(entry.target, entry.targetHp, attackerSide, { shield: entry.targetShield });
     const floatingDamage = getFloatingDamageAmount(entry, step);
     if (floatingDamage > 0) {
       showFloatingDamage(entry.target, floatingDamage, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
@@ -533,7 +536,7 @@ function updateTeamHp() {
 
 function syncCombatHpCards() {
   [...(state.run?.team || []), ...(state.run?.enemies || [])].forEach((demon) => {
-    updateTargetCard(demon.instanceId, demon.hp);
+    updateTargetCard(demon.instanceId, demon.hp, 'unknown', { shield: demon.shield });
   });
 }
 
@@ -1028,17 +1031,33 @@ function updateTargetCard(instanceId, hp, attackerSide = 'unknown', options = {}
   const card = findDemonCard(instanceId);
   if (!card) return;
 
-  const hpElement = card.querySelector('.js-demon-hp');
-  if (hpElement) hpElement.textContent = hp;
-
+  const hpBarElement = card.querySelector('.combat-hp-bar');
   const hpFillElement = card.querySelector('.js-demon-hp-fill');
+  const shieldFillElement = card.querySelector('.js-demon-shield-fill');
+  const maxHp = Number(hpFillElement?.dataset.maxHp) || Number(hp) || 1;
+  const requestedShield = Number(options.shield);
+  const shield = Number.isFinite(requestedShield)
+    ? Math.max(0, requestedShield)
+    : Math.max(0, Number(hpBarElement?.dataset.currentShield) || 0);
+  const layout = getCombatHpBarLayout(hp, maxHp, shield);
+  const hpElement = card.querySelector('.js-demon-hp');
+  if (hpElement) hpElement.textContent = layout.currentHp;
+
   if (hpFillElement) {
-    const maxHp = Number(hpFillElement.dataset.maxHp) || Number(hp) || 1;
-    const hpPercent = Math.max(0, Math.min(100, Math.round((Number(hp) / maxHp) * 100)));
-    hpFillElement.style.width = `${hpPercent}%`;
+    hpFillElement.style.width = `${layout.hpPercent}%`;
+  }
+  if (shieldFillElement) {
+    shieldFillElement.style.width = `${layout.shieldPercent}%`;
+  }
+  if (hpBarElement) {
+    const label = `HP ${layout.currentHp} of ${layout.maxHp}${layout.shield > 0 ? `, overflow shield ${layout.shield}` : ''}`;
+    hpBarElement.dataset.currentShield = String(layout.shield);
+    hpBarElement.classList.toggle('has-overflow-shield', layout.shield > 0);
+    hpBarElement.setAttribute('aria-label', label);
+    hpBarElement.title = label;
   }
 
-  card.classList.toggle('is-defeated', Number(hp) <= 0);
+  card.classList.toggle('is-defeated', layout.currentHp <= 0);
 }
 
 function applySharedPainStatPreview(demonsById, entry = {}) {

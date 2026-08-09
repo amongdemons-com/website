@@ -5,7 +5,6 @@ import { escapeHtml, getModal, setMessage, showError } from './utils.js';
 
 const applyRunPayload = (...args) => dungeonActions.applyRunPayload(...args);
 const battle = (...args) => dungeonActions.battle(...args);
-const canStartCurrentBattle = (...args) => dungeonActions.canStartCurrentBattle(...args);
 const finishRun = (...args) => dungeonActions.finishRun(...args);
 
 let shownResultKey = null;
@@ -111,12 +110,12 @@ async function tryDungeonRankedEscape() {
     if (payload.run) await applyRunPayload(payload.run);
     pendingEscapeContinuation = {
       opponentName,
-      floor: Math.max(1, Number(payload.run?.currentFloor) || Number(state.run?.currentFloor) || 1)
+      floor: Math.max(1, Number(payload.nextFloor) || Number(state.run?.currentFloor) + 1 || 1)
     };
     showRankedResultModal({
       result: payload.rankedResult,
       title: 'Escape Successful',
-      summary: `You slipped away from ${opponentName} and reached Floor ${pendingEscapeContinuation.floor}.`
+      summary: `You slipped away from ${opponentName}. Prepare for Floor ${pendingEscapeContinuation.floor}.`
     });
   } catch (error) {
     rankedChoiceBusy = false;
@@ -152,11 +151,12 @@ function showPendingDungeonRankedResult(run = state.run) {
 
   const won = result.winner === 'player';
   const opponentName = encounter.opponent?.hunterName || 'the rival hunter';
+  const nextFloor = Math.max(1, Number(encounter.floor) + 1 || Number(run.currentFloor) + 1 || 1);
   return showRankedResultModal({
     result,
     title: won ? 'Ranked Victory' : 'Ranked Defeat',
     summary: won
-      ? `${formatNumber(result.rating)} total RP. Continue to resume your dungeon.`
+      ? `${formatNumber(result.rating)} total RP. Continue to prepare for Floor ${nextFloor}.`
       : `${formatNumber(result.rating)} total RP. ${opponentName} ended this descent.`
   });
 }
@@ -208,9 +208,8 @@ async function continueDungeonRankedResult() {
     const escape = pendingEscapeContinuation;
     pendingEscapeContinuation = null;
     getModal(elements.dungeonRankedResultModal).hide();
-    setMessage(`Escaped ${escape.opponentName}. Your descent continues on Floor ${escape.floor}.`, 'success');
+    setMessage(`Escaped ${escape.opponentName}. Prepare your team for Floor ${escape.floor}.`, 'success');
     resultChoiceBusy = false;
-    if (canStartCurrentBattle()) await battle();
     return;
   }
   const encounter = state.run?.rankedEncounter;
@@ -237,8 +236,8 @@ async function continueDungeonRankedResult() {
 
     const payload = await api(activeRunPath('ranked/continue'), { method: 'POST' });
     await applyRunPayload(payload.run);
-    setMessage('Ranked victory. Your descent continues.', 'success');
-    if (canStartCurrentBattle()) await battle();
+    const nextFloor = Math.max(1, Number(payload.nextFloor) || Number(state.run?.currentFloor) + 1 || 1);
+    setMessage(`Ranked victory. Prepare your team for Floor ${nextFloor}.`, 'success');
   } catch (error) {
     resultChoiceBusy = false;
     if (button) {
