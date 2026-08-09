@@ -2,6 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  applyDamageModifiers,
+  applyPoisonModifiers,
   canSelectRunBuff,
   getCombatBuffById,
   getNonRepeatableBuffChoiceExclusions,
@@ -38,6 +40,88 @@ test('Mythic Ascendancy targets only Mythic demons', () => {
   assert.equal(pact.name, 'Mythic Ascendancy');
   assert.ok(pact.tags.includes('rarity'));
   pact.effects.forEach((effect) => assert.deepEqual(effect.targetRarities, ['mythic']));
+});
+
+test('every rarity-targeted Pact boosts each damage archetype for its rarities', () => {
+  const cases = [
+    { id: 'many_below', rarity: 'common', multiplier: 1.3 },
+    { id: 'many_below', rarity: 'uncommon', multiplier: 1.3 },
+    { id: 'crimson_standard', rarity: 'rare', multiplier: 1.35 },
+    { id: 'fallen_nobility', rarity: 'epic', multiplier: 1.2 },
+    { id: 'fallen_nobility', rarity: 'legendary', multiplier: 1.2 },
+    { id: 'mythic_ascendancy', rarity: 'mythic', multiplier: 1.25 }
+  ];
+  const expectedDamageEffectTypes = [
+    'aoe_damage_mult',
+    'direct_damage_mult',
+    'poison_tick_damage_mult',
+    'retaliation_damage_mult'
+  ];
+
+  cases.forEach(({ id, rarity, multiplier }) => {
+    const pact = getCombatBuffById(id);
+    const damageEffectTypes = pact.effects
+      .filter((effect) => expectedDamageEffectTypes.includes(effect.type))
+      .map((effect) => effect.type)
+      .sort();
+    const playerBuffs = { active: [id] };
+
+    assert.deepEqual(damageEffectTypes, expectedDamageEffectTypes, `${id} should cover every damage archetype`);
+    assert.equal(applyDamageModifiers({
+      damage: 100,
+      damageKind: 'direct',
+      isAoe: false,
+      attacker: { typeId: 1, rarity },
+      target: { hp: 100, maxHp: 100 },
+      attackerSide: 'player',
+      playerBuffs
+    }), Math.round(100 * multiplier), `${id} should boost single-target damage`);
+    assert.equal(applyDamageModifiers({
+      damage: 100,
+      damageKind: 'direct',
+      isAoe: true,
+      attacker: { typeId: 4, rarity },
+      target: { hp: 100, maxHp: 100 },
+      attackerSide: 'player',
+      playerBuffs
+    }), Math.round(100 * multiplier), `${id} should boost AOE damage`);
+    assert.equal(applyPoisonModifiers({
+      damage: 100,
+      durationTicks: 10,
+      attacker: { typeId: 3, rarity },
+      attackerSide: 'player',
+      playerBuffs
+    }).damage, Math.round(100 * multiplier), `${id} should boost poison damage`);
+    assert.equal(applyDamageModifiers({
+      damage: 100,
+      damageKind: 'retaliation',
+      attacker: { typeId: 8, rarity },
+      target: { hp: 100, maxHp: 100 },
+      attackerSide: 'player',
+      playerBuffs
+    }), Math.round(100 * multiplier), `${id} should boost retaliation damage`);
+  });
+});
+
+test('rarity-targeted damage bonuses do not affect other rarities', () => {
+  const playerBuffs = { active: ['mythic_ascendancy'] };
+
+  assert.equal(applyDamageModifiers({
+    damage: 100,
+    damageKind: 'direct',
+    isAoe: true,
+    attacker: { typeId: 4, rarity: 'legendary' },
+    target: { hp: 100, maxHp: 100 },
+    attackerSide: 'player',
+    playerBuffs
+  }), 100);
+  assert.equal(applyPoisonModifiers({
+    damage: 100,
+    durationTicks: 10,
+    attacker: { typeId: 3, rarity: 'legendary' },
+    attackerSide: 'player',
+    playerBuffs
+  }).damage, 100);
 });
 
 test('Demonic Pact recast cost increases by player level', () => {

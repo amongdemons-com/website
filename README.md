@@ -264,7 +264,7 @@ Run-long modifiers defined in `public/api/data/combat-buffs.json` and managed by
 - Every third cleared floor offers three rarity-weighted pact choices; a pending offer blocks battle, recruitment, and extraction until resolved.
 - Recasting an offer costs 10 Souls and excludes the current choices (`409` if no alternates exist).
 - The same pact can appear in later offers and duplicates stack through the same effect pipeline.
-- Effects cover run stats, direct/AOE damage, retaliation, poison, healing, shields, death triggers, and temporary team size. Three contained Pacts target demon rarities: Common/Uncommon, Rare, and Epic/Legendary. Target checks happen per player demon and do not buff enemies.
+- Effects cover run stats, direct/AOE damage, retaliation, poison, healing, shields, death triggers, and temporary team size. Four contained Pacts target demon rarities: Common/Uncommon, Rare, Epic/Legendary, and Mythic. Target checks happen per player demon and do not buff enemies.
 - Original run base stats are preserved so recruits and extracted Echo identities never keep Pact, Terror, or Convergence scaling.
 
 ### World Exploration
@@ -323,7 +323,7 @@ Files in `public/api/data` are source game data - API code reads them at runtime
 | `demon-types.json` | 11 demon types: roles, base stat ranges, targeting, abilities, spawn weights |
 | `demons.json` | 66 demon asset/species mappings |
 | `world-bosses.json` | World boss identities, teams, taunts, battle buffs, and rewards |
-| `combat-buffs.json` | 23 Demonic Pact definitions, including three rarity-targeted Pacts |
+| `combat-buffs.json` | 24 Demonic Pact definitions, including four rarity-targeted Pacts |
 | `map.json` | Generated world map: bounds, spawn, roads, blocks, encounters, events |
 
 Demon art lives in `public/app/images/demons` (full PNGs for battle cards, generated WebP variants for map tokens, thumbnails for lists). Rarity tiers are `common`, `uncommon`, `rare`, `epic`, `legendary`, `mythic`.
