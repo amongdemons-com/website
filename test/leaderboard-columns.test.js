@@ -21,7 +21,7 @@ test('leaderboard columns match Ranked and Duels sorting', () => {
 test('Patch 4 announces World narration and leaderboard column changes', () => {
   const notes = read('patch-notes.md');
 
-  assert.match(notes, /## Patch 4 \(Current\)/);
+  assert.match(notes, /## Patch 5 \(Current\)\s+## Patch 4/);
   assert.match(notes, /World setting[\s\S]*boss narration/);
   assert.match(notes, /Ranked standings[\s\S]*without a Ranked Floor column/);
   assert.match(notes, /Duel standings[\s\S]*Wins and Losses columns/);

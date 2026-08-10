@@ -5917,6 +5917,45 @@ body.is-world-battle-result-animating .battle-result-burst.is-defeat {
     }
 }
 
+@media (max-width: 575.98px) and (orientation: portrait) {
+    .dungeon-demon-rarity-gem::after {
+        inset: 1px;
+    }
+
+    .collection-card-grid .dungeon-demon-rarity-gem,
+    #teamChoiceModal.is-collection-reinforcement-modal .dungeon-demon-rarity-gem {
+        top: 0.3rem;
+        left: 0.3rem;
+        width: 0.9rem;
+        height: 0.9rem;
+    }
+
+    .collection-card-grid .dungeon-demon-rarity-gem--rare,
+    .collection-card-grid .dungeon-demon-rarity-gem--mythic,
+    #teamChoiceModal.is-collection-reinforcement-modal .dungeon-demon-rarity-gem--rare,
+    #teamChoiceModal.is-collection-reinforcement-modal .dungeon-demon-rarity-gem--mythic {
+        top: 0.24rem;
+        left: 0.24rem;
+        width: 1.02rem;
+        height: 1.02rem;
+    }
+
+    .hunter-team-board .dungeon-demon-rarity-gem {
+        top: 0.26rem;
+        left: 0.26rem;
+        width: 0.78rem;
+        height: 0.78rem;
+    }
+
+    .hunter-team-board .dungeon-demon-rarity-gem--rare,
+    .hunter-team-board .dungeon-demon-rarity-gem--mythic {
+        top: 0.2rem;
+        left: 0.2rem;
+        width: 0.9rem;
+        height: 0.9rem;
+    }
+}
+
 @property --dungeon-ranked-glimmer-angle {
     syntax: "<angle>";
     initial-value: 0deg;

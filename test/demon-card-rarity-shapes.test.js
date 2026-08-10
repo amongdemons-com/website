@@ -50,3 +50,14 @@ test('the Rare diamond is optically enlarged to match the other shapes', () => {
     /\.dungeon-demon-rarity-gem--rare\s*\{[^}]*width: 1rem;[^}]*height: 1rem;/s
   );
 });
+
+test('mobile portrait uses thinner outlines and larger Collection and Hunter markers', () => {
+  const mobilePortrait = battleCss.match(
+    /@media \(max-width: 575\.98px\) and \(orientation: portrait\) \{[\s\S]*?\.dungeon-demon-rarity-gem::after[\s\S]*?\.hunter-team-board \.dungeon-demon-rarity-gem--mythic[\s\S]*?\n\}/
+  )?.[0] || '';
+
+  assert.match(mobilePortrait, /\.dungeon-demon-rarity-gem::after\s*\{\s*inset: 1px;/);
+  assert.match(mobilePortrait, /\.collection-card-grid \.dungeon-demon-rarity-gem,[\s\S]*?width: 0\.9rem;/);
+  assert.match(mobilePortrait, /#teamChoiceModal\.is-collection-reinforcement-modal \.dungeon-demon-rarity-gem/);
+  assert.match(mobilePortrait, /\.hunter-team-board \.dungeon-demon-rarity-gem\s*\{[\s\S]*?width: 0\.78rem;/);
+});
