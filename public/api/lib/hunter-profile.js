@@ -171,6 +171,8 @@ function serializeCoordinates(row = {}) {
 }
 
 function serializeTeamMember(demon = {}) {
+  const effectiveAtk = Number(demon.effectiveAtk);
+
   return {
     instanceId: demon.instanceId || null,
     collectionDemonId: demon.collectionDemonId || null,
@@ -182,6 +184,9 @@ function serializeTeamMember(demon = {}) {
     hp: Math.max(0, Number(demon.hp) || 0),
     maxHp: Math.max(0, Number(demon.maxHp) || Number(demon.hp) || 0),
     atk: Math.max(0, Number(demon.atk) || 0),
+    ...(Number.isFinite(effectiveAtk) && effectiveAtk >= 0
+      ? { effectiveAtk: Math.max(0, effectiveAtk) }
+      : {}),
     speed: Math.max(0, Number(demon.speed) || 0),
     position: demon.position || demon.preferredPosition || 'front',
     formationSlot: Number.isInteger(Number(demon.formationSlot)) ? Number(demon.formationSlot) : null

@@ -1031,7 +1031,8 @@ import './bag-item-visuals.js';
         renderEncounterPanel();
         return;
       }
-      window.location.href = appUrl('/camp');
+      audio?.play('sfx.world.moveBlocked', { volume: 0.68 });
+      clearRoutePreview('blocked');
       return;
     }
 

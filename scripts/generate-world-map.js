@@ -72,6 +72,15 @@ const SIGN_BLOCKS = [
     message: 'Darkness Portals cross the world in an instant, but every step they swallow must be paid for in Souls.'
   }
 ];
+const FIXED_ROCK_BLOCKS = [
+  { x: 12, y: -7, type: 'rocks' },
+  { x: 13, y: -7, type: 'rocks' },
+  { x: 12, y: -6, type: 'rocks' },
+  { x: 13, y: -6, type: 'rocks' },
+  { x: 15, y: -10, type: 'rocks' },
+  { x: 15, y: -9, type: 'rocks' },
+  { x: 14, y: -10, type: 'rocks' }
+];
 // Swap adjacent signatures so type 4 owns the visual northeast corner.
 const ZONE_TYPE_REMAP = { 4: 5, 5: 4 };
 const PRIMARY_TYPE_CHANCE = 0.68; // odds a team member is the zone's signature type
@@ -1075,10 +1084,19 @@ function main() {
   validateConnectedRoads(roadSet);
   const events = generateEvents(occupied, roadSet);
   validateZoneShrines(events, roadSet);
+  FIXED_ROCK_BLOCKS.forEach((block) => {
+    const key = tileKey(block.x, block.y);
+    if (occupied.has(key) || roadSet.has(key)) {
+      throw new Error(`Fixed rock block conflicts with another map feature at ${key}.`);
+    }
+    occupied.add(key);
+  });
 
   const blocks = generateStructures(occupied, roadSet);
   generateBlockClusters(blocks, occupied, roadSet);
-  const typedBlocks = blocks.map(({ x, y }) => ({ x, y, type: blockTypeForTile(x, y) }));
+  const typedBlocks = blocks
+    .map(({ x, y }) => ({ x, y, type: blockTypeForTile(x, y) }))
+    .concat(FIXED_ROCK_BLOCKS);
 
   const encounters = generateEncounters(occupied, roadSet);
   const roads = Array.from(roadSet).map((key) => {

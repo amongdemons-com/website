@@ -8,6 +8,7 @@
   const DEMON_IMAGE_WIDTH = 1024;
   const DEMON_IMAGE_HEIGHT = 1024;
   const FALLBACK_IMAGE_URL = '/app/images/amongdemons_logo_250x250.png';
+  const DEMON_RARITIES = new Set(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']);
   const TRAIT_LABELS_BY_TYPE = {
     1: 'Fighter',
     2: 'Sniper',
@@ -46,7 +47,8 @@
       : '';
     const title = options.title || demon.species || demon.name || capitalize(demon.rarity) || 'Demon';
     const hideRarity = Boolean(options.hideRarity || demon.hideRarity);
-    const rarity = hideRarity ? '' : capitalize(demon.rarity || 'common');
+    const rarityKey = getDemonRarityKey(demon.rarity);
+    const rarity = hideRarity ? '' : capitalize(rarityKey);
     const imageAlt = options.imageAlt || getDemonImageAlt(demon, title, rarity);
     const classes = [
       'dungeon-demon-card',
@@ -68,7 +70,7 @@
       <${tag} class="${escapeHtml(classes)}" style="${escapeHtml(style)}" ${renderAttributes(attributes)}>
         <div class="dungeon-demon-card-image"${hideRarity ? '' : ` aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity"`}>
           <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(imageAlt)}" width="${DEMON_IMAGE_WIDTH}" height="${DEMON_IMAGE_HEIGHT}" loading="${escapeHtml(options.imageLoading || 'lazy')}" decoding="async"${imagePriorityAttribute} draggable="false" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE_URL}';">
-          ${hideRarity ? '' : '<span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>'}
+          ${hideRarity ? '' : `<span class="dungeon-demon-rarity-gem dungeon-demon-rarity-gem--${rarityKey}" aria-hidden="true"></span>`}
         </div>
         ${options.overlayHtml || ''}
         <div class="dungeon-demon-card-body">
@@ -336,7 +338,17 @@
   }
 
   function renderAttackIcon(demon = {}) {
-    return renderIcon(isHealingDemon(demon) ? 'cross' : 'attack', { className: 'combat-stat-icon' });
+    const typeId = Number(demon.typeId || demon.type_id || demon.type);
+    const icon = isHealingDemon(demon)
+      ? 'cross'
+      : isPoisonDemon(demon)
+        ? 'poison'
+        : typeId === 4
+          ? 'aoe'
+          : [2, 6, 11].includes(typeId)
+            ? 'ranged'
+            : 'attack';
+    return renderIcon(icon, { className: 'combat-stat-icon' });
   }
 
   function renderSpeedIcon() {
@@ -353,6 +365,11 @@
       mythic: '#E25041'
     };
     return colors[rarity] || colors.common;
+  }
+
+  function getDemonRarityKey(rarity) {
+    const normalized = String(rarity || 'common').toLowerCase();
+    return DEMON_RARITIES.has(normalized) ? normalized : 'common';
   }
 
   function renderAttributes(attributes) {
@@ -384,6 +401,13 @@
     const role = String(demon.role || '').toLowerCase();
     const abilityKind = String(demon.abilityKind || demon.ability_kind || demon.ability?.kind || '').toLowerCase();
     return typeId === 10 || role === 'healer' || abilityKind === 'heal';
+  }
+
+  function isPoisonDemon(demon = {}) {
+    const typeId = Number(demon.typeId || demon.type_id || demon.type);
+    const role = String(demon.role || '').toLowerCase();
+    const abilityKind = String(demon.abilityKind || demon.ability_kind || demon.ability?.kind || '').toLowerCase();
+    return typeId === 3 || role === 'poisoner' || abilityKind === 'poison';
   }
 
   function capitalize(value) {

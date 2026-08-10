@@ -5,6 +5,7 @@
   const ui = AmongDemons.ui = AmongDemons.ui || {};
 
   const ICON_ALIASES = {
+    aoe: 'Flame',
     attack: 'Swords',
     battle: 'Zap',
     back: 'ChevronLeft',

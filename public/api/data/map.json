@@ -13517,6 +13517,41 @@
       "x": 35,
       "y": 44,
       "type": "leaves"
+    },
+    {
+      "x": 12,
+      "y": -7,
+      "type": "rocks"
+    },
+    {
+      "x": 13,
+      "y": -7,
+      "type": "rocks"
+    },
+    {
+      "x": 12,
+      "y": -6,
+      "type": "rocks"
+    },
+    {
+      "x": 13,
+      "y": -6,
+      "type": "rocks"
+    },
+    {
+      "x": 15,
+      "y": -10,
+      "type": "rocks"
+    },
+    {
+      "x": 15,
+      "y": -9,
+      "type": "rocks"
+    },
+    {
+      "x": 14,
+      "y": -10,
+      "type": "rocks"
     }
   ],
   "encounters": [

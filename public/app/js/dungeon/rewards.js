@@ -90,7 +90,8 @@ function renderCashoutModal() {
 
 function renderCashoutDemonPreview(demon, candidate) {
   const imageUrl = demon.imageUrl || demon.image_url || CASHOUT_FALLBACK_IMAGE_URL;
-  const rarity = capitalize(demon.rarity || 'common');
+  const rarityKey = String(demon.rarity || 'common').toLowerCase();
+  const rarity = capitalize(rarityKey);
   const name = demon.species || demon.name || 'Demon';
   const instanceId = demon.instanceId || `extract-${candidate?.key || 'demon'}`;
   return `
@@ -111,7 +112,7 @@ function renderCashoutDemonPreview(demon, candidate) {
         draggable="false"
         onerror="this.onerror=null;this.src='${CASHOUT_FALLBACK_IMAGE_URL}';"
       >
-      <span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>
+      <span class="dungeon-demon-rarity-gem dungeon-demon-rarity-gem--${escapeHtml(rarityKey)}" aria-hidden="true"></span>
     </div>
   `;
 }

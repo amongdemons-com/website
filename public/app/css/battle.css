@@ -588,16 +588,57 @@ body:not(.dungeon-page) {
 }
 
 .dungeon-demon-rarity-gem {
+    --rarity-shape: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
     position: absolute;
     top: 0.34rem;
     left: 0.34rem;
     width: 0.88rem;
     height: 0.88rem;
-    border: 2px solid #fff;
-    border-radius: 2px;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    clip-path: var(--rarity-shape);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rarity-color, #D1D5D8) 82%, transparent));
+}
+
+.dungeon-demon-rarity-gem::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
     background: var(--rarity-color, #D1D5D8);
-    box-shadow: 0 0 10px color-mix(in srgb, var(--rarity-color, #D1D5D8) 70%, transparent);
-    transform: rotate(45deg);
+    clip-path: var(--rarity-shape);
+}
+
+.dungeon-demon-rarity-gem--common {
+    --rarity-shape: polygon(0 8%, 100% 8%, 50% 100%);
+}
+
+.dungeon-demon-rarity-gem--uncommon {
+    --rarity-shape: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.dungeon-demon-rarity-gem--rare {
+    --rarity-shape: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    top: 0.28rem;
+    left: 0.28rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+.dungeon-demon-rarity-gem--epic {
+    --rarity-shape: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%);
+}
+
+.dungeon-demon-rarity-gem--legendary {
+    --rarity-shape: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+
+.dungeon-demon-rarity-gem--mythic {
+    --rarity-shape: polygon(50% 0, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0 50%, 31% 39%, 15% 15%, 39% 31%);
+    top: 0.28rem;
+    left: 0.28rem;
+    width: 1rem;
+    height: 1rem;
 }
 
 .dungeon-demon-card-body {

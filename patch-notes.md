@@ -2,8 +2,18 @@
 
 <!-- Keep notes short, simple, and player-friendly. Skip tests and technical details. -->
 
-## Patch 4 (Current)
+## Patch 5 (Current)
 
+## Patch 4
+
+- Hunter profiles now show the correct buffed combat stat for AOE, Poison,
+  Healing, and Thorns demons.
+- Demon cards now use a flame for type 4 AOE, bows for types 2, 6, and 11,
+  flasks for Poison, and swords for melee attacks.
+- Demon card rarity markers now have distinct shapes, from a Common triangle
+  through a Legendary hexagon and Mythic starburst.
+- Clicking your hunter on the World map now clears the selected route instead
+  of opening Camp, and new rock formations block several nearby areas.
 - Added the Altar of Many Voices at Area 4, 0. Offer 10,000 Souls to face The
   Anomaly, a World boss that channels all eleven demon types and always has
   Thorns. Each victory has a 25% chance to award a random Mythic Echo, with one
