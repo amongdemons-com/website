@@ -5282,6 +5282,25 @@ body.rankings-page {
     white-space: nowrap;
 }
 
+.rank-duel-stat {
+    display: inline-flex;
+    justify-content: center;
+    min-width: 3.2rem;
+    color: var(--ad-text);
+    font-size: 1.08rem;
+    font-weight: 860;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.rank-duel-wins {
+    color: var(--ad-teal);
+}
+
+.rank-duel-losses {
+    color: var(--ad-muted);
+}
+
 .rank-top .rank-metric {
     color: var(--ad-text);
 }
@@ -5308,7 +5327,8 @@ body.rankings-page {
     .rankings-page .rank-table .rank-position,
     .rankings-page .rank-table .rank-hunter,
     .rankings-page .rank-table .rank-floor,
-    .rankings-page .rank-table .rank-metric {
+    .rankings-page .rank-table .rank-metric,
+    .rankings-page .rank-table .rank-duel-stat {
         min-height: 2.4rem;
     }
 
@@ -5458,11 +5478,17 @@ body.rankings-page {
         align-items: flex-end;
     }
 
-.rank-floor-cell {
+.rank-floor-cell,
+    .rank-duel-cell {
         min-width: 0;
     }
 
 .rank-floor {
+        justify-content: flex-end;
+    }
+
+    .rank-duel-stat {
+        align-items: center;
         justify-content: flex-end;
     }
 
@@ -5509,7 +5535,8 @@ body.rankings-page {
         padding: 0.78rem 0.55rem 0.78rem 0.42rem;
     }
 
-    .rankings-page .rank-table .rank-floor-cell {
+    .rankings-page .rank-table .rank-floor-cell,
+    .rankings-page .rank-table .rank-wins-cell {
         grid-column: 3;
         grid-row: 1;
         align-self: end;
@@ -5518,7 +5545,8 @@ body.rankings-page {
         transform: translateY(-0.22rem);
     }
 
-    .rankings-page .rank-table .rank-metric-cell {
+    .rankings-page .rank-table .rank-metric-cell,
+    .rankings-page .rank-table .rank-losses-cell {
         grid-column: 3;
         grid-row: 2;
         align-self: start;
@@ -5527,9 +5555,18 @@ body.rankings-page {
         transform: translateY(-0.22rem);
     }
 
+    .rankings-page .rank-table .rank-row-ranked .rank-metric-cell {
+        grid-column: 3;
+        grid-row: 1 / 3;
+        align-self: center;
+        padding: 0.78rem;
+        transform: none;
+    }
+
     .rankings-page .rank-table .rank-position,
     .rankings-page .rank-table .rank-floor,
-    .rankings-page .rank-table .rank-metric {
+    .rankings-page .rank-table .rank-metric,
+    .rankings-page .rank-table .rank-duel-stat {
         min-width: 0;
     }
 
@@ -9056,11 +9093,13 @@ body.settings-page .game-shell-nav .nav-settings-link {
 }
 
 .settings-battle-form,
+.settings-world-form,
 .settings-audio-form {
     grid-template-columns: 1fr;
 }
 
 .settings-battle-form .settings-field,
+.settings-world-form .settings-field,
 .settings-audio-form .settings-field {
     max-width: none;
 }

@@ -10,6 +10,9 @@
   const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
   // Keep in sync with the world ambush preference in world-ui.js.
   const HIDE_WINNING_AMBUSHES_KEY = 'amongdemons-hide-winning-ambushes';
+  // This explicit preference takes precedence over the dialog's separate 24-hour mute.
+  const WORLD_BOSS_NARRATION_KEY = 'amongdemons-world-boss-narration';
+  const WORLD_BOSS_INTRO_MUTE_KEY = 'amongdemons-world-boss-mute';
   const DESKTOP_OAUTH_PENDING_KEY = 'amongdemons-desktop-oauth-pending-v1';
   const DESKTOP_OAUTH_POLL_INTERVAL_MS = 2000;
   const DESKTOP_OAUTH_TIMEOUT_MS = 15 * 60 * 1000;
@@ -40,6 +43,7 @@
     cacheElements();
     bindEvents();
     initBattleToggles();
+    initWorldToggles();
     initAudioControls();
 
     try {
@@ -76,6 +80,7 @@
     elements.screenShake = document.getElementById('settingsScreenShake');
     elements.cardShake = document.getElementById('settingsCardShake');
     elements.hideWinningAmbushes = document.getElementById('settingsHideWinningAmbushes');
+    elements.bossNarration = document.getElementById('settingsBossNarration');
     elements.audioMuted = document.getElementById('settingsAudioMuted');
     elements.masterVolume = document.getElementById('settingsMasterVolume');
     elements.masterVolumeValue = document.getElementById('settingsMasterVolumeValue');
@@ -549,6 +554,27 @@
     bindPreferenceToggle(elements.hideWinningAmbushes, HIDE_WINNING_AMBUSHES_KEY, false);
   }
 
+  function initWorldToggles() {
+    if (!elements.bossNarration) return;
+
+    const explicitPreference = getStoredPreference(WORLD_BOSS_NARRATION_KEY);
+    elements.bossNarration.checked = explicitPreference === null
+      ? !isTemporaryBossNarrationMuted()
+      : explicitPreference;
+    elements.bossNarration.addEventListener('change', () => {
+      setPreferenceEnabled(WORLD_BOSS_NARRATION_KEY, elements.bossNarration.checked);
+    });
+  }
+
+  function isTemporaryBossNarrationMuted() {
+    try {
+      const mutedUntil = Number(localStorage.getItem(WORLD_BOSS_INTRO_MUTE_KEY));
+      return Number.isFinite(mutedUntil) && Date.now() < mutedUntil;
+    } catch (error) {
+      return false;
+    }
+  }
+
   function initAudioControls() {
     if (!audio) return;
 
@@ -584,11 +610,16 @@
   }
 
   function isPreferenceEnabled(key, defaultEnabled = true) {
+    const stored = getStoredPreference(key);
+    return stored === null ? defaultEnabled : stored;
+  }
+
+  function getStoredPreference(key) {
     try {
       const stored = localStorage.getItem(key);
-      return stored === null ? defaultEnabled : stored !== '0';
+      return stored === null ? null : stored !== '0';
     } catch (error) {
-      return defaultEnabled;
+      return null;
     }
   }
 

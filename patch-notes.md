@@ -2,7 +2,15 @@
 
 <!-- Keep notes short, simple, and player-friendly. Skip tests and technical details. -->
 
-## Patch 3 (Current)
+## Patch 4 (Current)
+
+- Added a World setting that can mute or unmute boss narration, overriding the
+  separate 24-hour mute from the boss dialog.
+- Ranked standings now focus on hunter and rank without a Ranked Floor column.
+- Duel standings now show separate Wins and Losses columns instead of Top Floor
+  and Souls.
+
+## Patch 3
 
 - Overfull Dungeon hands now show scroll buttons on any screen where the cards
   do not fit.

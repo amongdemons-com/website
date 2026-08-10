@@ -86,6 +86,8 @@ import './bag-item-visuals.js';
   // "Mute for 24h" checkbox in the dialog stores an expiry timestamp here.
   const WORLD_BOSS_INTRO_MUTE_KEY = 'amongdemons-world-boss-mute';
   const WORLD_BOSS_INTRO_MUTE_MS = 24 * 60 * 60 * 1000;
+  // An explicit Settings choice overrides the dialog's separate 24-hour mute.
+  const WORLD_BOSS_NARRATION_KEY = 'amongdemons-world-boss-narration';
   // Keep in sync with the matching toggle in settings-ui.js.
   const HIDE_WINNING_AMBUSHES_KEY = 'amongdemons-hide-winning-ambushes';
   const WORLD_TEAM_BUFF_STATS_KEY = 'amongdemons-world-team-show-buff-stats';
@@ -9579,6 +9581,9 @@ import './bag-item-visuals.js';
 
   function isWorldBossIntroMuted() {
     try {
+      const narrationPreference = window.localStorage.getItem(WORLD_BOSS_NARRATION_KEY);
+      if (narrationPreference !== null) return narrationPreference === '0';
+
       const mutedUntil = Number(window.localStorage.getItem(WORLD_BOSS_INTRO_MUTE_KEY));
       if (Number.isFinite(mutedUntil) && Date.now() < mutedUntil) return true;
       if (mutedUntil) window.localStorage.removeItem(WORLD_BOSS_INTRO_MUTE_KEY);

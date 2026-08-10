@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="1618a7ceadd9">
+    <meta name="among-demons-client-version" content="7453984a1bca">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Settings | Among Demons</title>
@@ -22,7 +22,7 @@
       })();
     </script>
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=b77580aad6bc" rel="stylesheet">
+    <link href="/app/css/base.css?v=83ab2df991bd" rel="stylesheet">
     <link href="/app/css/battle.css?v=9e0292258290" rel="stylesheet">
   </head>
   <body class="settings-page">
@@ -137,6 +137,24 @@
             <div class="form-check form-switch settings-toggle">
               <input class="form-check-input" type="checkbox" role="switch" id="settingsHideWinningAmbushes">
               <label class="form-check-label" for="settingsHideWinningAmbushes">Do not show winning ambushes</label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section" aria-labelledby="worldSettingsHeading">
+        <header class="settings-section-header">
+          <span class="settings-section-icon" aria-hidden="true"><i data-lucide="map"></i></span>
+          <div>
+            <h2 id="worldSettingsHeading">World</h2>
+          </div>
+        </header>
+
+        <div class="settings-form settings-world-form">
+          <div class="settings-field settings-toggle-field">
+            <div class="form-check form-switch settings-toggle">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingsBossNarration" checked>
+              <label class="form-check-label" for="settingsBossNarration">Boss narration</label>
             </div>
           </div>
         </div>
@@ -312,6 +330,6 @@
     </div>
     <script src="/app/dist/runtime.bundle.js?v=41826731da53"></script>
     <script src="/app/js/usernames.js?v=8ab3cb68367d"></script>
-    <script src="/app/js/settings-ui.js?v=e293ab743f77"></script>
+    <script src="/app/js/settings-ui.js?v=727459d6e339"></script>
   </body>
 </html>

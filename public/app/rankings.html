@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="1618a7ceadd9">
+    <meta name="among-demons-client-version" content="7453984a1bca">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
     <title>Dungeon Leaderboard | Among Demons Browser RPG</title>
@@ -25,7 +25,7 @@
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_rankings.png">
     <meta name="twitter:image:alt" content="Among Demons dungeon leaderboard artwork">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=b77580aad6bc" rel="stylesheet">
+    <link href="/app/css/base.css?v=83ab2df991bd" rel="stylesheet">
     <link href="/app/css/rank-divisions.css?v=48509f59cf73" rel="stylesheet">
   </head>
   <body class="rankings-page">
@@ -116,13 +116,13 @@
         </div>
         <div>
           <table class="table table-dark table-hover align-middle mb-0 rank-table">
-            <caption class="visually-hidden">Dungeon leaderboard</caption>
+            <caption class="visually-hidden" id="rankCaption">Dungeon leaderboard</caption>
             <thead>
-              <tr>
+              <tr id="rankHeader">
                 <th scope="col">#</th>
                 <th scope="col">Hunter</th>
-                <th scope="col" data-rank-column="floor">Top Floor</th>
-                <th scope="col" data-rank-column="metric">Souls</th>
+                <th scope="col">Top Floor</th>
+                <th scope="col">Souls</th>
               </tr>
             </thead>
             <tbody id="rankBody"></tbody>
@@ -132,6 +132,6 @@
     </main>
     <script src="/app/dist/runtime.bundle.js?v=41826731da53"></script>
     <script src="/app/js/player-badges.js?v=340236e8d99d"></script>
-    <script src="/app/js/rankings-ui.js?v=5370eefee3b9"></script>
+    <script src="/app/js/rankings-ui.js?v=7b97b24b362b"></script>
   </body>
 </html>

@@ -30,13 +30,13 @@
   function cacheElements() {
     elements.body = document.getElementById('rankBody');
     elements.table = elements.body?.closest('table');
+    elements.caption = document.getElementById('rankCaption');
+    elements.header = document.getElementById('rankHeader');
     elements.message = document.getElementById('rankMessage');
     elements.sortLinks = document.querySelectorAll('.rank-sort-link');
     elements.statPlayers = document.querySelector('[data-rank-stat="players"]');
     elements.statSouls = document.querySelector('[data-rank-stat="souls"]');
     elements.statPvpBattles = document.querySelector('[data-rank-stat="pvpBattles"]');
-    elements.floorColumn = document.querySelector('[data-rank-column="floor"]');
-    elements.metricColumn = document.querySelector('[data-rank-column="metric"]');
   }
 
   function bindSortLinks() {
@@ -73,7 +73,8 @@
     setMessage('', '');
     setRankBusy(true);
     if (!preserveRows) {
-      elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">Reading the hunter board...</td></tr>';
+      renderTableHeader();
+      elements.body.innerHTML = `<tr class="rank-empty-row"><td colspan="${getColumnCount()}" class="rank-empty-cell">Reading the hunter board...</td></tr>`;
     }
 
     try {
@@ -84,7 +85,7 @@
       if (loadId !== activeLoadId) return;
       console.error(error);
       if (!preserveRows) {
-        elements.body.innerHTML = '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">The hunter board is veiled. Try again soon.</td></tr>';
+        elements.body.innerHTML = `<tr class="rank-empty-row"><td colspan="${getColumnCount()}" class="rank-empty-cell">The hunter board is veiled. Try again soon.</td></tr>`;
         updateStats([], {});
       }
       setMessage(error, 'danger');
@@ -97,12 +98,34 @@
 
   function renderRows(players, stats = {}) {
     updateStats(players, stats);
-    if (elements.floorColumn) elements.floorColumn.textContent = currentSort === 'ranked' ? 'Ranked Floor' : 'Top Floor';
-    if (elements.metricColumn) elements.metricColumn.textContent = currentSort === 'ranked' ? 'Rank' : 'Souls';
+    renderTableHeader();
 
     elements.body.innerHTML = players.length
       ? players.map((player, index) => renderPlayerRow(player, index)).join('')
-      : '<tr class="rank-empty-row"><td colspan="4" class="rank-empty-cell">No hunters have reached the board yet.</td></tr>';
+      : `<tr class="rank-empty-row"><td colspan="${getColumnCount()}" class="rank-empty-cell">No hunters have reached the board yet.</td></tr>`;
+  }
+
+  function renderTableHeader() {
+    const labels = currentSort === 'ranked'
+      ? ['#', 'Hunter', 'Rank']
+      : currentSort === 'pvp'
+        ? ['#', 'Hunter', 'Wins', 'Losses']
+        : ['#', 'Hunter', 'Top Floor', 'Souls'];
+
+    if (elements.header) {
+      elements.header.innerHTML = labels.map((label) => `<th scope="col">${label}</th>`).join('');
+    }
+    if (elements.caption) {
+      elements.caption.textContent = currentSort === 'ranked'
+        ? 'Ranked leaderboard'
+        : currentSort === 'pvp'
+          ? 'Duels leaderboard'
+          : 'Dungeon leaderboard';
+    }
+  }
+
+  function getColumnCount() {
+    return currentSort === 'ranked' ? 3 : 4;
   }
 
   function renderPlayerRow(player, index) {
@@ -113,8 +136,7 @@
     const pvpWins = Math.max(0, Number(player.pvpWins) || 0);
     const pvpLosses = Math.max(0, Number(player.pvpLosses) || 0);
     const isRanked = currentSort === 'ranked';
-    const rankedFloor = Math.max(0, Number(player.rankedHighestFloor) || 0);
-    const displayedFloor = isRanked ? rankedFloor : floor;
+    const isDuels = currentSort === 'pvp';
     const hasRankedRating = Number(player.hasRankedRating) > 0;
     const rankedRating = hasRankedRating
       ? Math.max(0, Number(player.rankedRating) || 0)
@@ -126,6 +148,8 @@
     const topRankIcon = topRankIcons[index] || '';
     const rowClasses = [
       'rank-row',
+      isRanked ? 'rank-row-ranked' : '',
+      isDuels ? 'rank-row-duels' : '',
       rank <= 5 ? `rank-top rank-top-${rank}` : '',
       player.username === currentUsername ? 'current-player-rank' : ''
     ].filter(Boolean).join(' ');
@@ -147,24 +171,29 @@
             <small class="rank-hunter-meta">${hasRankedRating
               ? `${renderRankDivisionText(rankedDivision)} &middot; Level`
               : 'Level'} ${formatNumber(level)}
-              &middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}</small>
+              ${isDuels ? '' : `&middot; ${formatNumber(pvpWins)}-${formatNumber(pvpLosses)}`}</small>
           </span>
         </td>
-        <td class="rank-floor-cell" data-label="Highest Floor">
-          <span class="rank-floor">
-            <span class="rank-floor-value">${formatNumber(displayedFloor)}</span>
-            <span class="rank-floor-label">${displayedFloor === 1 ? 'floor' : 'floors'}</span>
-          </span>
-        </td>
-        <td class="rank-metric-cell" data-label="${isRanked ? 'Rank' : 'Souls'}">${isRanked
-          ? (hasRankedRating
+        ${isRanked ? `
+          <td class="rank-metric-cell" data-label="Rank">${hasRankedRating
             ? `<span class="rank-metric rank-metric-ranked"><strong>${formatNumber(rankedRating)}</strong></span>`
-            : '')
-          : renderSoulAmount(formatCompactNumber(souls), {
-          showLabel: false,
-          className: 'rank-metric rank-metric-souls',
-          ariaLabel: `${formatNumber(souls)} Souls`
-        })}</td>
+            : ''}</td>
+        ` : isDuels ? `
+          <td class="rank-duel-cell rank-wins-cell" data-label="Wins"><span class="rank-duel-stat rank-duel-wins">${formatNumber(pvpWins)}</span></td>
+          <td class="rank-duel-cell rank-losses-cell" data-label="Losses"><span class="rank-duel-stat rank-duel-losses">${formatNumber(pvpLosses)}</span></td>
+        ` : `
+          <td class="rank-floor-cell" data-label="Highest Floor">
+            <span class="rank-floor">
+              <span class="rank-floor-value">${formatNumber(floor)}</span>
+              <span class="rank-floor-label">${floor === 1 ? 'floor' : 'floors'}</span>
+            </span>
+          </td>
+          <td class="rank-metric-cell" data-label="Souls">${renderSoulAmount(formatCompactNumber(souls), {
+            showLabel: false,
+            className: 'rank-metric rank-metric-souls',
+            ariaLabel: `${formatNumber(souls)} Souls`
+          })}</td>
+        `}
       </tr>
     `;
   }

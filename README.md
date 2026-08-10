@@ -116,7 +116,7 @@ amongdemons.com/
 | `/bag` | Stackable item bag with Echo refinement and summoning |
 | `/collection` | Collection browser with filters, sorting, missing slots, and Soul training |
 | `/skill-tree` | Account stat-point skill tree |
-| `/settings` | Audio, battle, username, sign-in, password, and account deletion settings |
+| `/settings` | Audio, battle, world, username, sign-in, password, and account deletion settings |
 | `/hunter/:username` | Public hunter profile |
 | `/login`, `/register` | Auth pages |
 | `/rankings`, `/rankings/:sort` | Leaderboards; sorts: `floor`, `level`, `souls`, `pvp` (`/rank` and `/hunter` redirect here) |
@@ -365,7 +365,7 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | `public/app/js/bag-ui.js` | Bag grid, sorting, Echo details, refinement, and summoning |
 | `public/app/js/collection-ui.js` | Collection filters, sorting, missing slots, training modal |
 | `public/app/js/skill-tree-ui.js` | Skill-tree allocation UI |
-| `public/app/js/settings-ui.js` | Audio, battle, username, sign-in, password, and deletion settings |
+| `public/app/js/settings-ui.js` | Audio, battle, world, username, sign-in, password, and deletion settings |
 | `public/app/js/hunter-ui.js` | Public hunter profile page |
 | `public/app/js/rankings-ui.js` | Leaderboard UI |
 | `public/app/js/demon-cards.js` | Shared demon card rendering |
