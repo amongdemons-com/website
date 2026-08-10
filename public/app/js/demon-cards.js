@@ -45,12 +45,14 @@
       ? ` fetchpriority="${escapeHtml(options.imageFetchPriority)}"`
       : '';
     const title = options.title || demon.species || demon.name || capitalize(demon.rarity) || 'Demon';
-    const rarity = capitalize(demon.rarity || 'common');
+    const hideRarity = Boolean(options.hideRarity || demon.hideRarity);
+    const rarity = hideRarity ? '' : capitalize(demon.rarity || 'common');
     const imageAlt = options.imageAlt || getDemonImageAlt(demon, title, rarity);
     const classes = [
       'dungeon-demon-card',
       options.className || '',
       options.active ? 'active' : '',
+      hideRarity ? 'is-rarityless' : '',
       shouldShowDefeated(demon, options) ? 'is-defeated' : ''
     ].filter(Boolean).join(' ');
     const attributes = {
@@ -58,20 +60,20 @@
       ...(options.attributes || {})
     };
     const style = [
-      `--rarity-color: ${getRarityColor(demon.rarity)}`,
+      `--rarity-color: ${demon.accentColor || getRarityColor(demon.rarity)}`,
       options.style || ''
     ].filter(Boolean).join('; ');
 
     return `
       <${tag} class="${escapeHtml(classes)}" style="${escapeHtml(style)}" ${renderAttributes(attributes)}>
-        <div class="dungeon-demon-card-image" aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity">
+        <div class="dungeon-demon-card-image"${hideRarity ? '' : ` aria-label="${escapeHtml(capitalize(demon.rarity || 'common'))} rarity"`}>
           <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(imageAlt)}" width="${DEMON_IMAGE_WIDTH}" height="${DEMON_IMAGE_HEIGHT}" loading="${escapeHtml(options.imageLoading || 'lazy')}" decoding="async"${imagePriorityAttribute} draggable="false" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE_URL}';">
-          <span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>
+          ${hideRarity ? '' : '<span class="dungeon-demon-rarity-gem" aria-hidden="true"></span>'}
         </div>
         ${options.overlayHtml || ''}
         <div class="dungeon-demon-card-body">
           <div class="dungeon-demon-card-title">
-            <span class="dungeon-demon-card-rarity">${escapeHtml(rarity)}</span>
+            ${hideRarity ? '' : `<span class="dungeon-demon-card-rarity">${escapeHtml(rarity)}</span>`}
             <span class="text-white">${escapeHtml(title)}</span>
           </div>
           ${options.showStats === false ? '' : renderCombatStats(demon, options.statsOptions || {})}
@@ -142,12 +144,13 @@
     const title = options.title || demon.species || demon.name || capitalize(demon.rarity) || 'Demon';
     const titleHtml = renderDetailTitle(title, demon);
     const imageUrl = demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
-    const rarity = capitalize(demon.rarity || 'common');
+    const hideRarity = Boolean(options.hideRarity || demon.hideRarity);
+    const rarity = hideRarity ? '' : capitalize(demon.rarity || 'common');
     const attackStat = getAttackStat(demon);
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || Number(demon.hp) || 1);
 
-    detailsModalElement.querySelector('.modal-content').style.setProperty('--rarity-color', getRarityColor(demon.rarity));
+    detailsModalElement.querySelector('.modal-content').style.setProperty('--rarity-color', demon.accentColor || getRarityColor(demon.rarity));
     detailsModalElement.querySelector('.modal-body').innerHTML = `
         <div class="demon-detail-layout" data-detail-demon-id="${escapeHtml(demon.id || '')}">
         <div class="demon-detail-art">
@@ -157,7 +160,7 @@
           <div class="demon-detail-heading">
             <div>
               <h2 class="demon-detail-title">${titleHtml}</h2>
-              <p class="demon-detail-rarity">${escapeHtml(rarity)}</p>
+              ${hideRarity ? '' : `<p class="demon-detail-rarity">${escapeHtml(rarity)}</p>`}
             </div>
             <button type="button" class="btn-close demon-detail-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>

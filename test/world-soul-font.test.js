@@ -31,7 +31,7 @@ test('the world events guide includes the Whispering Well', () => {
   assert.match(page, /The Whispering Well/);
   assert.match(page, /Area 14, -8/);
   assert.match(page, /Random 4h buff/);
-  assert.match(page, /8 kinds of world events/);
+  assert.match(page, /9 kinds of world events/);
   assert.match(page, /\/app\/images\/events\/marker-whispering-well\.webp/);
 });
 

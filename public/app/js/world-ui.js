@@ -70,6 +70,11 @@ import './bag-item-visuals.js';
   const MERCHANT_ARROW_FLOAT_DISTANCE = 4;
   const SOUL_FONT_FALLBACK_DURATION_HOURS = 4;
   const SOUL_FONT_MARKER_SCALE = 0.8;
+  const ANOMALY_EVENT_TYPE = 'altar-many-voices';
+  const ANOMALY_ALTAR_SVG_URL = '/app/images/assets/anomaly-altar.svg';
+  const ANOMALY_ALTAR_MARKER_SIZE = 56;
+  const ANOMALY_FALLBACK_COST = 10_000;
+  const ANOMALY_PITY_SHARDS = 4;
   // Marker-local offsets shared by drawWorldMerchantMarker and its animated
   // glow (updateMerchantGlow): where the soul lantern hangs inside the wagon
   // and the center of the curtained opening its light spills out of.
@@ -134,7 +139,8 @@ import './bag-item-visuals.js';
   const EVENT_COLORS = {
     forsaken_shrine: BOARD_COLORS.shrineGlow,
     'darkness-portal': BOARD_COLORS.portalGlow,
-    'soul-font': 0xf5efd7
+    'soul-font': 0xf5efd7,
+    [ANOMALY_EVENT_TYPE]: 0xa74fe0
   };
   const RARITY_COLORS = {
     common: '#D1D5D8',
@@ -165,6 +171,8 @@ import './bag-item-visuals.js';
     hoverTile: null,
     pathLayer: null,
     pathPulse: null,
+    anomalyGlow: null,
+    anomalyAltarTexture: null,
     markerLayer: null,
     encounterLayer: null,
     bossLayer: null,
@@ -229,6 +237,12 @@ import './bag-item-visuals.js';
     soulFontStatus: '',
     soulFontStatusType: 'info',
     soulFontAutoOpened: false,
+    anomaly: null,
+    anomalyLoading: false,
+    anomalyBusy: false,
+    anomalyStatus: '',
+    anomalyStatusType: 'info',
+    anomalyAutoOpened: false,
     boundShrine: null,
     bindingShrine: false,
     summoningPortal: false,
@@ -337,6 +351,12 @@ import './bag-item-visuals.js';
       'worldSoulFontStatus',
       'worldSoulFontActive',
       'worldSoulFontRitual',
+      'worldAnomalyModal',
+      'worldAnomalyTitle',
+      'worldAnomalyRitual',
+      'worldAnomalyStatus',
+      'worldAnomalyBalance',
+      'worldAnomalySummonButton',
       'worldTeamEditorStatus',
       'worldTeamShowBuffStats',
       'worldTeamEditorCount',
@@ -378,6 +398,7 @@ import './bag-item-visuals.js';
     elements.worldTravelTeamConfirmButton?.addEventListener('click', openWorldTeamEditorFromTravelWarning);
     elements.worldMerchantModal?.addEventListener('click', onWorldMerchantModalClick);
     elements.worldSoulFontModal?.addEventListener('click', onWorldSoulFontModalClick);
+    elements.worldAnomalyModal?.addEventListener('click', onWorldAnomalyModalClick);
     elements.worldTeamSaveButton?.addEventListener('click', saveWorldTeamEditor);
     elements.worldTeamShowBuffStats?.addEventListener('change', onWorldTeamBuffStatsChange);
     elements.worldTeamModal?.addEventListener('pointerdown', onWorldTeamEditorPointerDown);
@@ -430,6 +451,11 @@ import './bag-item-visuals.js';
       const soulFontButton = target?.closest('[data-open-soul-font]');
       if (soulFontButton) {
         openWorldSoulFont();
+        return;
+      }
+      const anomalyButton = target?.closest('[data-open-anomaly]');
+      if (anomalyButton) {
+        openWorldAnomaly();
         return;
       }
       const replayButton = target?.closest('[data-view-world-battle]');
@@ -628,6 +654,7 @@ import './bag-item-visuals.js';
     state.pathLayer = new Pixi.Graphics();
     state.pathPulse = new Pixi.Graphics();     // animated destination ring
     state.shrineGlow = new Pixi.Graphics();    // animated soul smoke around forsaken shrines
+    state.anomalyGlow = new Pixi.Graphics();   // dark energy pulled into the Altar of Many Voices
     state.portalGlow = new Pixi.Graphics();    // animated breathing aura around darkness portals
     state.soulFontGlow = new Pixi.Graphics();  // restrained breathing halo behind the Whispering Well
     state.merchantGlow = new Pixi.Graphics();  // animated lantern flicker on the traveling merchant
@@ -664,6 +691,7 @@ import './bag-item-visuals.js';
     state.viewport.addChild(state.pathLayer);
     state.viewport.addChild(state.pathPulse);
     state.viewport.addChild(state.shrineGlow);
+    state.viewport.addChild(state.anomalyGlow);
     state.viewport.addChild(state.portalGlow);
     state.viewport.addChild(state.soulFontGlow);
     state.viewport.addChild(state.markerLayer);
@@ -680,6 +708,7 @@ import './bag-item-visuals.js';
 
     app.ticker.add(updatePathPulse);
     app.ticker.add(updateShrineGlow);
+    app.ticker.add(updateAnomalyAltarGlow);
     app.ticker.add(updatePortalGlow);
     app.ticker.add(updateSoulFontGlow);
     app.ticker.add(updateMerchantGlow);
@@ -730,6 +759,7 @@ import './bag-item-visuals.js';
     // it before the first visible render. The texture comes from the shared
     // demon atlas, so this does not require another player/profile request.
     const hunterAvatarPromise = loadHunterAvatar();
+    const anomalyAltarTexturePromise = loadAnomalyAltarTexture();
     // Static map layout comes from a separate immutable-cached endpoint keyed
     // by mapVersion, so repeat visits skip re-downloading the whole map.
     const map = await loadWorldMapData(payload.mapVersion);
@@ -755,7 +785,7 @@ import './bag-item-visuals.js';
     state.currentEncounter = payload.currentEncounter || getEncounterAt(state.position);
     state.currentBoss = payload.currentBoss || getBossAt(state.position);
 
-    await hunterAvatarPromise;
+    await Promise.all([hunterAvatarPromise, anomalyAltarTexturePromise]);
     buildBoard();
     drawMarkers();
     drawEncounterMarkers();
@@ -951,6 +981,7 @@ import './bag-item-visuals.js';
     const sign = getSignAt(target);
     const merchant = getMerchantAt(target);
     const soulFont = getSoulFontAt(target);
+    const anomalyAltar = getAnomalyAltarAt(target);
 
     if (merchant && positionsEqual(target, state.position)) {
       state.selectedTarget = null;
@@ -1167,7 +1198,7 @@ import './bag-item-visuals.js';
       }
       if (completedTravel) {
         showTravelSummaryModal(travelSummary, {
-          onHidden: maybeOpenWorldArrivalEvent
+          onHidden: openWorldArrivalEventAfterTravel
         });
       }
     }
@@ -1427,6 +1458,18 @@ import './bag-item-visuals.js';
         `${delta >= 0 ? '+' : ''}${formatNumber(delta)} RP · ${formatNumber(result.rating)} total RP.`,
         delta < 0 ? 'warning' : 'success'
       );
+      return;
+    }
+
+    if (anomalyAltar && positionsEqual(target, state.position)) {
+      state.selectedTarget = null;
+      state.selectedPath = [];
+      state.travelStatus = 'idle';
+      state.recentStepEvent = null;
+      hideWorldActivityTooltip();
+      renderWorld();
+      renderTravelPanel();
+      openWorldAnomaly();
       return;
     }
 
@@ -3422,6 +3465,40 @@ import './bag-item-visuals.js';
     });
   }
 
+  function updateAnomalyAltarGlow() {
+    const layer = state.anomalyGlow;
+    if (!layer) return;
+    layer.clear();
+
+    const altars = (state.events || []).filter(isAnomalyAltarEvent);
+    if (!altars.length) return;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    const now = reducedMotion ? 0 : performance.now();
+
+    altars.forEach((event) => {
+      const c = tileCenter(event);
+      const phase = event.x * 29 + event.y * 17;
+      const breath = reducedMotion ? 0.35 : (Math.sin(now / 980 + phase) + 1) / 2;
+      layer.circle(c.x, c.y - 2, TILE_SIZE * (0.44 + breath * 0.08))
+        .fill({ color: 0x401054, alpha: 0.1 + breath * 0.045 });
+      layer.circle(c.x, c.y - 4, TILE_SIZE * (0.28 + breath * 0.05))
+        .fill({ color: 0xa74fe0, alpha: 0.07 + breath * 0.04 });
+
+      if (reducedMotion) return;
+      for (let index = 0; index < 4; index += 1) {
+        const life = ((now / 2800) + index / 4 + phase * 0.009) % 1;
+        const radius = 28 * (1 - life) + 4;
+        const angle = index * Math.PI * 0.5 + life * Math.PI * 1.7 + phase;
+        const alpha = Math.sin(life * Math.PI) * 0.32;
+        layer.circle(
+          c.x + Math.cos(angle) * radius,
+          c.y - 5 + Math.sin(angle) * radius * 0.42,
+          1.2 + life * 1.8
+        ).fill({ color: index === 0 ? 0xdc82ff : 0xa74fe0, alpha });
+      }
+    });
+  }
+
   // Animated aura for darkness portals - a soft violet glow that slowly swells
   // and shrinks in a loop (runs on the ticker).
   function updatePortalGlow() {
@@ -3538,7 +3615,10 @@ import './bag-item-visuals.js';
     layer.removeChildren().forEach((child) => child.destroy());
 
     state.events.forEach((event) => {
-      const marker = new Pixi.Graphics();
+      const marker = event.type === ANOMALY_EVENT_TYPE
+        ? createAnomalyAltarSprite(Pixi)
+        : new Pixi.Graphics();
+      if (!marker) return;
       const color = EVENT_COLORS[event.type] || 0xe8c76a;
       const position = tileCenter(event);
       const rng = seededRng((Math.imul(event.x | 0, 48271) ^ Math.imul(event.y | 0, 16807)) >>> 0);
@@ -3564,6 +3644,8 @@ import './bag-item-visuals.js';
       } else if (event.type === 'soul-font') {
         drawSoulFontMarker(marker, rng);
         marker.scale.set(SOUL_FONT_MARKER_SCALE);
+      } else if (event.type === ANOMALY_EVENT_TYPE) {
+        // The same SVG texture is used by the map, sidebar, and ritual modal.
       } else {
         return;
       }
@@ -3586,6 +3668,15 @@ import './bag-item-visuals.js';
       });
 
     drawWorldMerchantMarker(layer);
+  }
+
+  function createAnomalyAltarSprite(Pixi) {
+    if (!state.anomalyAltarTexture || !Pixi?.Sprite) return null;
+    const marker = new Pixi.Sprite(state.anomalyAltarTexture);
+    marker.anchor.set(0.5);
+    marker.width = ANOMALY_ALTAR_MARKER_SIZE;
+    marker.height = ANOMALY_ALTAR_MARKER_SIZE;
+    return marker;
   }
 
   // A quiet ivory pulse beneath the Whispering Well. Keeping this on its own
@@ -5269,7 +5360,8 @@ import './bag-item-visuals.js';
     const currentSign = state.moving ? null : getSignAt(state.position);
     const merchant = state.moving ? null : getMerchantAt(state.position);
     const soulFont = state.moving ? null : getSoulFontAt(state.position);
-    const pveParts = renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant, soulFont });
+    const anomalyAltar = state.moving ? null : getAnomalyAltarAt(state.position);
+    const pveParts = renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant, soulFont, anomalyAltar });
     const pvpParts = players.map(renderPvpPlayerCard);
 
     const activeTab = state.worldEncounterTab === 'pvp' ? 'pvp' : 'pve';
@@ -5289,7 +5381,7 @@ import './bag-item-visuals.js';
     queueWorldSidePanelMeasure();
   }
 
-  function renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant, soulFont }) {
+  function renderPveSidebarParts({ encounter, boss, currentShrine, currentSign, merchant, soulFont, anomalyAltar }) {
     if (state.moving || state.travelStatus === 'moving') {
       return [renderTravelStatusCard()];
     }
@@ -5301,6 +5393,7 @@ import './bag-item-visuals.js';
     return [
       currentSign ? renderCurrentSign(currentSign) : '',
       currentShrine ? renderShrineAnchorAction(currentShrine) : '',
+      anomalyAltar ? renderCurrentAnomalyAltar(anomalyAltar) : '',
       soulFont ? renderCurrentSoulFont(soulFont) : '',
       merchant ? renderCurrentWorldMerchant(merchant) : '',
       boss ? renderCurrentBoss(boss) : '',
@@ -5847,6 +5940,12 @@ import './bag-item-visuals.js';
   }
 
   function maybeOpenWorldArrivalEvent() {
+    const anomalyAltar = getAnomalyAltarAt(state.position);
+    if (!anomalyAltar) state.anomalyAutoOpened = false;
+    if (anomalyAltar) {
+      maybeOpenWorldAnomaly();
+      return;
+    }
     const soulFont = getSoulFontAt(state.position);
     if (!soulFont) state.soulFontAutoOpened = false;
     if (soulFont) {
@@ -5854,6 +5953,244 @@ import './bag-item-visuals.js';
       return;
     }
     maybeOpenWorldMerchantShop();
+  }
+
+  function openWorldArrivalEventAfterTravel() {
+    // A completed trip is a new arrival even if the altar modal was opened on
+    // a previous visit during this page session.
+    if (getAnomalyAltarAt(state.position)) state.anomalyAutoOpened = false;
+    maybeOpenWorldArrivalEvent();
+  }
+
+  function renderCurrentAnomalyAltar(altar) {
+    return `
+      <article class="world-sidebar-card world-merchant-card world-anomaly-card">
+        <span class="world-merchant-card-portrait world-anomaly-card-portrait" aria-hidden="true">
+          <img src="${ANOMALY_ALTAR_SVG_URL}" alt="" width="64" height="64" loading="lazy" decoding="async">
+        </span>
+        <span class="world-card-copy">
+          <span class="world-card-kicker">World Event</span>
+          <strong class="world-card-title">${escapeHtml(altar.title || 'Altar of Many Voices')}</strong>
+          <span class="world-card-meta world-merchant-description">The stone asks for an irreversible offering.</span>
+        </span>
+        <button class="btn btn-primary btn-sm world-card-action" type="button" data-open-anomaly>
+          ${renderIcon('audio-lines')}
+          <span>Approach</span>
+        </button>
+      </article>
+    `;
+  }
+
+  function maybeOpenWorldAnomaly() {
+    if (!getAnomalyAltarAt(state.position) || state.moving || state.anomalyAutoOpened) return;
+    state.anomalyAutoOpened = true;
+    openWorldAnomaly({ automatic: true });
+  }
+
+  async function openWorldAnomaly(options = {}) {
+    const modalElement = elements.worldAnomalyModal;
+    const modalApi = window.bootstrap?.Modal;
+    if (!getAnomalyAltarAt(state.position) || state.moving) {
+      if (!options.automatic) setMessage('Stand before the Altar of Many Voices to make the offering.', 'warning');
+      return;
+    }
+    if (!modalElement || !modalApi) {
+      setMessage('The voices fall silent.', 'danger');
+      return;
+    }
+
+    state.anomalyLoading = true;
+    state.anomalyStatus = '';
+    renderWorldAnomalyModal();
+    modalApi.getOrCreateInstance(modalElement).show();
+    audio?.play('sfx.dungeon.pactReveal', { volume: 0.82 });
+
+    try {
+      const payload = await api('/api/world/anomaly', { dedupe: false });
+      state.anomaly = normalizeWorldAnomaly(payload.anomaly);
+      if (!state.anomaly?.canSummon || !getAnomalyAltarAt(state.position)) {
+        modalApi.getOrCreateInstance(modalElement).hide();
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setWorldAnomalyStatus(error.message || 'The voices refuse to answer.', 'danger');
+    } finally {
+      state.anomalyLoading = false;
+      renderWorldAnomalyModal();
+    }
+  }
+
+  function normalizeWorldAnomaly(anomaly) {
+    if (!anomaly || typeof anomaly !== 'object') return null;
+    return {
+      ...anomaly,
+      ...normalizePosition(anomaly),
+      id: String(anomaly.id || 'altar-of-many-voices'),
+      eventName: String(anomaly.eventName || 'Altar of Many Voices'),
+      price: Math.max(0, Math.floor(Number(anomaly.price) || ANOMALY_FALLBACK_COST)),
+      ritualId: String(anomaly.ritualId || ''),
+      canSummon: Boolean(anomaly.canSummon),
+      revealed: Boolean(anomaly.revealed),
+      voiceShards: Math.max(0, Number(anomaly.voiceShards) || 0),
+      pityRequired: Math.max(1, Number(anomaly.pityRequired) || ANOMALY_PITY_SHARDS),
+      echoChancePercent: Math.max(0, Number(anomaly.echoChancePercent) || 0)
+    };
+  }
+
+  function onWorldAnomalyModalClick(event) {
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    const summonButton = target?.closest('[data-summon-anomaly]');
+    if (summonButton) summonWorldAnomaly(summonButton);
+  }
+
+  async function summonWorldAnomaly(button) {
+    const anomaly = state.anomaly;
+    if (
+      !anomaly?.canSummon ||
+      !anomaly.ritualId ||
+      state.anomalyBusy ||
+      getPlayerSoulBalance() < anomaly.price
+    ) return;
+
+    state.anomalyBusy = true;
+    setWorldAnomalyStatus('The voices are gathering…');
+    renderWorldAnomalyModal();
+    setButtonBusy(button, true, 'Summoning…');
+    audio?.play('sfx.progression.trainingAttempt', { volume: 0.78 });
+    const startBossMusic = () => audio?.setScene({ music: 'music.worldBoss' });
+    window.addEventListener('amongdemons:battle-intro-complete', startBossMusic, { once: true });
+
+    try {
+      const payload = await api('/api/world/anomaly/summon', {
+        method: 'POST',
+        body: { ritualId: anomaly.ritualId }
+      });
+      applyWorldPlayerUpdate(payload.player);
+      state.anomaly = normalizeWorldAnomaly(payload.anomaly);
+      await hideWorldAnomalyModal();
+
+      const battle = payload.battle || null;
+      const battleMeta = getWorldBattleMeta('world_boss', battle, {
+        boss: battle?.boss || { title: 'The Anomaly' },
+        eyebrow: 'Altar of Many Voices',
+        winText: getAnomalyVictoryText(payload.reward),
+        lossText: 'The Anomaly endured'
+      });
+      if (shouldShowWorldBattleReplay(battle)) {
+        await showWorldBattleReplay(battle, battleMeta);
+      }
+
+      const won = battle?.winner === 'player';
+      if (won) {
+        audio?.play('sfx.bosses.defeated', { volume: 0.96 });
+        setMessage(payload.message || getAnomalyVictoryText(payload.reward), 'success');
+      } else if (payload.respawn) {
+        await resolveAmbushDefeat({ recovery: payload.respawn, message: payload.message });
+      } else {
+        setMessage(payload.message || 'The Anomaly endured.', 'warning');
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setWorldAnomalyStatus(error.message || 'The offering was rejected.', 'danger');
+      if (Number(error.status) === 409) {
+        const payload = await api('/api/world/anomaly', { dedupe: false }).catch(() => null);
+        if (payload?.anomaly) state.anomaly = normalizeWorldAnomaly(payload.anomaly);
+      }
+    } finally {
+      window.removeEventListener('amongdemons:battle-intro-complete', startBossMusic);
+      audio?.setScene({ music: 'music.default' });
+      state.anomalyBusy = false;
+      setButtonBusy(button, false);
+      renderWorld();
+      renderPanels();
+      renderWorldAnomalyModal();
+      if (state.ambushDefeatBlackoutActive) await fadeWorldAmbushDefeatFromBlack();
+    }
+  }
+
+  function hideWorldAnomalyModal() {
+    const modalElement = elements.worldAnomalyModal;
+    const modalApi = window.bootstrap?.Modal;
+    if (!modalElement || !modalApi || !modalElement.classList.contains('show')) return Promise.resolve();
+    return new Promise((resolve) => {
+      modalElement.addEventListener('hidden.bs.modal', resolve, { once: true });
+      modalApi.getOrCreateInstance(modalElement).hide();
+    });
+  }
+
+  function getAnomalyVictoryText(reward = {}) {
+    if (reward?.echoAwarded) {
+      return `Mythic ${reward.echo?.species || 'Demon'} Echo recovered`;
+    }
+    return `Victory recorded (${reward?.voiceShards || 0}/${reward?.pityRequired || ANOMALY_PITY_SHARDS})`;
+  }
+
+  function renderWorldAnomalyModal() {
+    const anomaly = state.anomaly;
+    const loading = state.anomalyLoading;
+    const busy = state.anomalyBusy;
+    const price = anomaly?.price || ANOMALY_FALLBACK_COST;
+    const balance = getPlayerSoulBalance();
+    const canAfford = balance !== null && balance >= price;
+    const hasTeam = hasAssignedWorldTeam();
+    const canSummon = Boolean(anomaly?.canSummon && anomaly?.ritualId && canAfford && hasTeam && !loading && !busy);
+    const priceLabel = formatSoulCount(price);
+    const priceAmount = `<span class="world-anomaly-soul-value" aria-label="${escapeAttribute(priceLabel)}">${renderSoulAmount(price)}</span>`;
+
+    elements.worldAnomalyModal?.classList.toggle('is-summoning', busy || loading);
+
+    if (elements.worldAnomalyTitle) {
+      elements.worldAnomalyTitle.textContent = anomaly?.eventName || 'Altar of Many Voices';
+    }
+    if (elements.worldAnomalyBalance) {
+      elements.worldAnomalyBalance.setAttribute('aria-label', `Soul balance: ${formatSoulCount(balance || 0)}`);
+      elements.worldAnomalyBalance.innerHTML = renderSoulAmount(balance || 0, { compact: true });
+    }
+    if (elements.worldAnomalyRitual) {
+      elements.worldAnomalyRitual.innerHTML = loading
+        ? '<p class="world-anomaly-listening">Listening to the stone…</p>'
+        : anomaly?.revealed
+          ? `
+            <dl class="world-anomaly-known">
+              <div><dt>Offering</dt><dd>${priceAmount}</dd></div>
+              <div><dt>Mythic Echo</dt><dd class="world-anomaly-chance">${formatNumber(anomaly.echoChancePercent || 25)}%</dd></div>
+              <div><dt>Learnings</dt><dd>${formatNumber(anomaly.voiceShards)}/${formatNumber(anomaly.pityRequired)}</dd></div>
+            </dl>
+            <small>Experience: 4 victories guarantee one random Mythic Echo.</small>
+          `
+          : `
+            <p>The stone speaks in voices that do not belong together.</p>
+            <p>It asks for <strong>${priceAmount}</strong>. Whatever answers will keep them.</p>
+          `;
+    }
+    if (elements.worldAnomalySummonButton) {
+      elements.worldAnomalySummonButton.disabled = !canSummon;
+      elements.worldAnomalySummonButton.textContent = busy
+        ? 'Summoning…'
+        : !hasTeam
+          ? 'Choose a Team'
+          : canAfford
+            ? 'Make the Offering'
+            : `Need ${priceLabel}`;
+    }
+    setWorldAnomalyStatus(state.anomalyStatus, state.anomalyStatusType, { render: false });
+  }
+
+  function setWorldAnomalyStatus(message = '', type = 'info', options = {}) {
+    state.anomalyStatus = String(message || '');
+    state.anomalyStatusType = type;
+    const status = elements.worldAnomalyStatus;
+    if (status) {
+      status.textContent = state.anomalyStatus;
+      status.className = `world-anomaly-status${state.anomalyStatus ? '' : ' d-none'} is-${escapeAttribute(type)}`;
+    }
+    if (options.render !== false) renderWorldAnomalyModal();
   }
 
   function maybeOpenWorldSoulFont() {
@@ -6447,11 +6784,14 @@ import './bag-item-visuals.js';
     `;
   }
 
-  function renderSoulAmount(value) {
+  function renderSoulAmount(value, options = {}) {
+    const amount = Math.max(0, Number(value) || 0);
+    const formattedAmount = options.compact ? formatCompactNumber(amount) : formatNumber(amount);
+
     return `
       <span class="soul-amount">
         <img src="/app/images/assets/soul.svg" class="game-icon soul-icon" alt="" width="16" height="16" aria-hidden="true">
-        <span class="soul-amount-value">${escapeHtml(formatNumber(Math.max(0, Number(value) || 0)))}</span>
+        <span class="soul-amount-value">${escapeHtml(formattedAmount)}</span>
         <span class="soul-amount-label">Souls</span>
       </span>
     `;
@@ -7824,11 +8164,13 @@ import './bag-item-visuals.js';
     const tone = won ? 'is-victory' : lost ? 'is-defeat' : 'is-neutral';
     const canReplay = shouldShowWorldBattleReplay(battle);
     const canHideWinningAmbushes = isWinningAmbushBattle(battle, state.activeWorldBattleMeta);
+    const anomalyReward = won ? renderAnomalyBattleReward(battle.anomalyReward) : '';
 
     setWorldDungeonBattleResultMode(true);
     resultLayer.innerHTML = `
       <div class="world-dungeon-result ${tone}" role="status" aria-live="polite">
         <strong>${escapeHtml(label)}</strong>
+        ${anomalyReward}
         <span class="world-dungeon-result-actions">
           <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-replay title="Replay Fight" aria-label="Replay Fight" ${canReplay ? '' : 'disabled'}>
             ${renderIcon('list-restart')}
@@ -7860,6 +8202,38 @@ import './bag-item-visuals.js';
     });
     positionWorldDungeonBattleResultLayer();
     window.requestAnimationFrame?.(positionWorldDungeonBattleResultLayer);
+  }
+
+  function renderAnomalyBattleReward(reward = null) {
+    if (!reward) return '';
+    if (reward.echoAwarded && reward.echo) {
+      const echo = reward.echo;
+      return `
+        <article class="world-anomaly-reward is-echo" style="--item-rarity: ${rarityCss('mythic')}">
+          <span class="world-anomaly-reward-art">
+            <img src="${escapeAttribute(toDemonImageUrl(echo, 'portrait') || echo.imageUrl || '')}" alt="" width="96" height="96">
+          </span>
+          <span class="world-anomaly-reward-copy">
+            <small>${reward.source === 'pity' ? 'Fourth victory guarantee' : 'The altar answered'}</small>
+            <b>Mythic ${escapeHtml(echo.species || 'Demon')} Echo</b>
+            <span>Added to your bag</span>
+          </span>
+        </article>
+      `;
+    }
+
+    return `
+      <article class="world-anomaly-reward is-victory">
+        <span class="world-anomaly-reward-victory" aria-hidden="true">
+          <img src="${ANOMALY_ALTAR_SVG_URL}" alt="" width="52" height="52">
+        </span>
+        <span class="world-anomaly-reward-copy">
+          <small>Victory recorded</small>
+          <b>${formatNumber(reward.voiceShards || 0)}/${formatNumber(reward.pityRequired || ANOMALY_PITY_SHARDS)} Learnings</b>
+          <span>Experience: 4 victories guarantee one random Mythic Echo.</span>
+        </span>
+      </article>
+    `;
   }
 
   async function replayWorldDungeonBattleFromResult(button) {
@@ -8502,6 +8876,15 @@ import './bag-item-visuals.js';
     return isSoulFontEvent(event) ? event : null;
   }
 
+  function isAnomalyAltarEvent(event) {
+    return event?.type === ANOMALY_EVENT_TYPE;
+  }
+
+  function getAnomalyAltarAt(position) {
+    const event = getEventAt(position);
+    return isAnomalyAltarEvent(event) ? event : null;
+  }
+
   function getDarknessPortalSummonCost(event = {}) {
     return getTileDistance(state.position, event) * getDarknessPortalSummonCostPerDistance(event);
   }
@@ -9011,6 +9394,7 @@ import './bag-item-visuals.js';
     if (type === 'forsaken_shrine') return 'Respawn Point';
     if (type === 'darkness-portal') return 'Darkness Portal';
     if (type === 'soul-font') return 'Soul Offering';
+    if (type === ANOMALY_EVENT_TYPE) return 'World Event';
     return 'Event';
   }
 
@@ -9035,6 +9419,20 @@ import './bag-item-visuals.js';
     updateHoverCoordinates();
     updateTargetTooltip();
     updateHuntTooltip();
+  }
+
+  async function loadAnomalyAltarTexture() {
+    const Pixi = window.PIXI;
+    if (!Pixi || state.anomalyAltarTexture) return;
+
+    try {
+      state.anomalyAltarTexture = Pixi.Assets
+        ? await Pixi.Assets.load(ANOMALY_ALTAR_SVG_URL)
+        : Pixi.Texture.from(ANOMALY_ALTAR_SVG_URL);
+    } catch (error) {
+      state.anomalyAltarTexture = null;
+      console.warn('Unable to load the Altar of Many Voices marker.', error);
+    }
   }
 
   async function loadHunterAvatar() {
@@ -9853,6 +10251,24 @@ import './bag-item-visuals.js';
   function formatNumber(value) {
     const number = Number(value);
     return Number.isFinite(number) ? number.toLocaleString() : String(value || '-');
+  }
+
+  function formatCompactNumber(value) {
+    const number = Number(value || 0);
+    const abs = Math.abs(number);
+
+    if (abs < 1000) return formatNumber(number);
+
+    const units = [
+      { value: 1000000000, suffix: 'b' },
+      { value: 1000000, suffix: 'm' },
+      { value: 1000, suffix: 'k' }
+    ];
+    const unit = units.find((entry) => abs >= entry.value);
+    const scaled = number / unit.value;
+    const rounded = scaled >= 100 ? Math.round(scaled) : Math.round(scaled * 10) / 10;
+
+    return `${String(rounded).replace(/\.0$/, '')}${unit.suffix}`;
   }
 
   function setText(element, value) {

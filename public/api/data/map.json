@@ -4547,6 +4547,13 @@
   ],
   "events": [
     {
+      "x": 4,
+      "y": 0,
+      "type": "altar-many-voices",
+      "title": "Altar of Many Voices",
+      "description": "An altar humming with voices that do not belong together."
+    },
+    {
       "x": 0,
       "y": 0,
       "type": "forsaken_shrine",

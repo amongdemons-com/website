@@ -4,6 +4,10 @@
 
 ## Patch 4 (Current)
 
+- Added the Altar of Many Voices at Area 4, 0. Offer 10,000 Souls to face The
+  Anomaly, a World boss that channels all eleven demon types and always has
+  Thorns. Each victory has a 25% chance to award a random Mythic Echo, with one
+  guaranteed every fourth victory without an Echo.
 - Added a World setting that can mute or unmute boss narration, overriding the
   separate 24-hour mute from the boss dialog.
 - Ranked standings now focus on hunter and rank without a Ranked Floor column.

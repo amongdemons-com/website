@@ -50,6 +50,10 @@ const {
   getWorldSoulFontForPlayer,
   purchaseSoulFontBuff
 } = require('./lib/world-soul-font');
+const {
+  getWorldAnomalyForPlayer,
+  summonWorldAnomaly
+} = require('./lib/world-anomaly');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const { getPlayerStatPointSummary } = require('./lib/account-stat-points');
 const {
@@ -74,6 +78,7 @@ const CHALLENGE_COOLDOWN_MS = 5 * 60 * 1000;
 const WORLD_DUEL_NO_REWARD_RATING_GAP = 200;
 const challengeCooldowns = new Map();
 const challengesInFlight = new Set();
+const anomalyChallengesInFlight = new Set();
 const DARKNESS_PORTAL_TYPE = 'darkness-portal';
 const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
 
@@ -641,6 +646,42 @@ router.post('/world/challenge', requireAuth, blockGuests, async (req, res) => {
     });
   } finally {
     challengesInFlight.delete(cooldownKey);
+  }
+});
+
+router.get('/world/anomaly', requireAuth, async (req, res) => {
+  const position = await getOrCreatePosition(req.player.id);
+  res.json({
+    anomaly: await getWorldAnomalyForPlayer(req.player.id, { position })
+  });
+});
+
+router.post('/world/anomaly/summon', requireAuth, async (req, res) => {
+  const playerId = String(req.player.id);
+  if (anomalyChallengesInFlight.has(playerId)) {
+    return res.status(409).json({ error: 'The altar is already answering your offering.' });
+  }
+
+  anomalyChallengesInFlight.add(playerId);
+  try {
+    const result = await summonWorldAnomaly(req.player, req.body?.ritualId);
+    const won = result.battle?.winner === 'player';
+    const respawn = won ? null : await respawnPlayerAfterDefeat(req.player.id);
+    if (respawn) result.anomaly.canSummon = false;
+
+    res.json({
+      ok: true,
+      status: 'resolved',
+      player: getWorldPlayer(result.player),
+      anomaly: result.anomaly,
+      reward: result.reward,
+      battle: result.battle,
+      respawn,
+      chargedSouls: result.chargedSouls,
+      message: getAnomalyResultMessage(result)
+    });
+  } finally {
+    anomalyChallengesInFlight.delete(playerId);
   }
 });
 
@@ -1478,6 +1519,21 @@ function getWorldPlayer(player) {
     profileDemonImageUrl: player.profileDemonImageUrl || null,
     isGuest: Boolean(player.isGuest)
   };
+}
+
+function getAnomalyResultMessage(result = {}) {
+  if (result.battle?.winner !== 'player') {
+    return 'The Anomaly defeated you. The offering is gone, and you returned to your Anchored Shrine.';
+  }
+
+  const reward = result.reward || {};
+  if (reward.echoAwarded) {
+    const species = reward.echo?.species || 'Demon';
+    const source = reward.source === 'pity' ? ' Your fourth victory guaranteed it.' : '';
+    return `You defeated The Anomaly. A Mythic ${species} Echo answered.${source}`;
+  }
+
+  return `You defeated The Anomaly. Victory progress: ${reward.voiceShards || 0}/${reward.pityRequired || 4}.`;
 }
 
 function getWorldPvpPlayerRecord(player = {}) {

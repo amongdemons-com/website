@@ -21,6 +21,7 @@ const PLAYER_DATA_TABLES = [
   'player_demons',
   'player_world_boss_buffs',
   'player_world_soul_font_buffs',
+  'player_anomaly_rituals',
   'player_active_hunts',
   'player_hunt_unlocks',
   'player_bound_world_shrines',

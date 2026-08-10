@@ -113,6 +113,7 @@ async function mergePlayerAccounts(token, targetPlayerId, queryable = db) {
 
     await mergeBag(target.id, source.id, connection);
     await mergeWorldBuffs(target.id, source.id, connection);
+    await mergeAnomalyProgress(target.id, source.id, connection);
     await mergeAchievements(target.id, source.id, connection);
     await mergeSimpleCollections(target.id, source.id, connection);
     await mergeDailyQuests(target.id, source.id, connection);
@@ -526,6 +527,39 @@ async function mergeRankedRatings(targetPlayerId, sourcePlayerId, connection) {
       ]
     );
   }
+}
+
+async function mergeAnomalyProgress(targetPlayerId, sourcePlayerId, connection) {
+  const [rows] = await connection.query(
+    `SELECT voice_shards, attempts, victories, created_at, updated_at
+     FROM player_anomaly_rituals
+     WHERE player_id = ?
+     LIMIT 1
+     FOR UPDATE`,
+    [sourcePlayerId]
+  );
+  if (!rows.length) return;
+
+  const row = rows[0];
+  await connection.query(
+    `INSERT INTO player_anomaly_rituals
+       (player_id, voice_shards, attempts, victories, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       voice_shards = GREATEST(voice_shards, VALUES(voice_shards)),
+       attempts = LEAST(${MAX_UNSIGNED_INT}, attempts + VALUES(attempts)),
+       victories = LEAST(${MAX_UNSIGNED_INT}, victories + VALUES(victories)),
+       created_at = LEAST(created_at, VALUES(created_at)),
+       updated_at = GREATEST(updated_at, VALUES(updated_at))`,
+    [
+      targetPlayerId,
+      row.voice_shards,
+      row.attempts,
+      row.victories,
+      row.created_at,
+      row.updated_at
+    ]
+  );
 }
 
 async function loadWorldTeams(playerIds, connection) {

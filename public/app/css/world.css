@@ -3671,6 +3671,244 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     min-height: 0;
 }
 
+.world-anomaly-modal .modal-dialog {
+    width: min(30rem, calc(100% - 1.5rem));
+    margin-inline: auto;
+}
+
+.world-anomaly-modal .modal-content {
+    background: linear-gradient(155deg, #17191a, #0c1113 58%, #080d0f);
+}
+
+.world-anomaly-heading {
+    justify-content: flex-start;
+    gap: 0.75rem;
+}
+
+.world-anomaly-modal .modal-body {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.world-anomaly-emblem {
+    flex: 0 0 auto;
+    width: 3.5rem;
+    height: 3.5rem;
+    object-fit: contain;
+    filter: drop-shadow(0 0 0.55rem rgba(64, 16, 84, 0.48));
+}
+
+.world-anomaly-kicker {
+    display: block;
+    margin-bottom: 0.12rem;
+    color: var(--ad-muted);
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.world-anomaly-modal .modal-title {
+    color: var(--ad-text);
+    font-size: 1.1rem;
+}
+
+.world-anomaly-ritual {
+    display: grid;
+    gap: 0.55rem;
+    width: 100%;
+    color: var(--ad-muted);
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+.world-anomaly-ritual p,
+.world-anomaly-ritual small {
+    margin: 0;
+}
+
+.world-anomaly-ritual strong,
+.world-anomaly-known dd {
+    color: var(--ad-text);
+}
+
+.world-anomaly-soul-value,
+.world-anomaly-soul-value .soul-amount {
+    display: inline-flex;
+    align-items: center;
+}
+
+.world-anomaly-soul-value {
+    vertical-align: middle;
+}
+
+.world-anomaly-soul-value .soul-amount {
+    color: #fff;
+    font-size: 0.95em;
+}
+
+.world-anomaly-soul-value .soul-amount-label,
+.world-anomaly-balance .soul-amount-label {
+    display: none;
+}
+
+.world-anomaly-known {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.2rem 0;
+}
+
+.world-anomaly-known > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--ad-border);
+    padding: 0.35rem 0.2rem;
+}
+
+.world-anomaly-known dt {
+    color: var(--ad-muted);
+    font-weight: 800;
+}
+
+.world-anomaly-known dd {
+    margin: 0;
+    font-weight: 850;
+}
+
+.world-anomaly-known .world-anomaly-chance {
+    color: #fac51c;
+}
+
+.world-anomaly-status {
+    width: 100%;
+    border: 1px solid var(--ad-border);
+    border-radius: 7px;
+    background: rgba(6, 13, 16, 0.28);
+    padding: 0.5rem 0.65rem;
+    color: var(--ad-text);
+    font-size: 0.74rem;
+    font-weight: 800;
+}
+
+.world-anomaly-status.is-danger {
+    border-color: rgba(255, 104, 104, 0.34);
+    color: #ffaaaa;
+}
+
+.world-anomaly-balance {
+    margin-right: auto;
+    color: var(--ad-muted);
+    font-size: 0.75rem;
+    font-weight: 850;
+}
+
+.world-anomaly-card-portrait {
+    display: grid;
+    place-items: center;
+}
+
+.world-anomaly-card .world-anomaly-card-portrait img {
+    width: 110%;
+    height: 110%;
+    padding: 0;
+    object-fit: contain;
+    object-position: center;
+    filter: drop-shadow(0 0 0.55rem rgba(64, 16, 84, 0.48));
+}
+
+.world-battle-modal .dungeon-demon-card[data-instance-id="the-anomaly"] {
+    --rarity-color: #a74fe0;
+    border-color: rgba(167, 79, 224, 0.58);
+    box-shadow: 0 0 1.5rem rgba(64, 16, 84, 0.46);
+}
+
+.fight-log-anomaly-voice {
+    color: rgba(220, 130, 255, 0.72);
+    font-size: 0.78em;
+    font-style: italic;
+    white-space: nowrap;
+}
+
+.world-anomaly-reward {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.65rem;
+    width: min(25rem, 100%);
+    border: 1px solid rgba(167, 79, 224, 0.32);
+    border-radius: 10px;
+    background: linear-gradient(120deg, rgba(64, 16, 84, 0.42), rgba(7, 12, 13, 0.9));
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    box-shadow: 0 0 1.6rem rgba(64, 16, 84, 0.26);
+}
+
+.world-anomaly-reward-art {
+    display: block;
+    width: 3.2rem;
+    height: 3.2rem;
+    overflow: hidden;
+    border: 1px solid var(--item-rarity, #e25041);
+    border-radius: 7px;
+    box-shadow: 0 0 0.8rem color-mix(in srgb, var(--item-rarity, #e25041) 42%, transparent);
+}
+
+.world-anomaly-reward-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.world-anomaly-reward-victory {
+    display: grid;
+    width: 3.2rem;
+    height: 3.2rem;
+    place-items: center;
+}
+
+.world-anomaly-reward-victory img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 0.55rem rgba(167, 79, 224, 0.42));
+}
+
+.world-anomaly-reward-copy {
+    display: grid;
+    gap: 0.08rem;
+    min-width: 0;
+}
+
+.world-anomaly-reward-copy small {
+    color: rgba(220, 130, 255, 0.68);
+    font-size: 0.56rem;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.world-anomaly-reward-copy b {
+    color: #f3eafa;
+    font-size: 0.84rem;
+}
+
+.world-anomaly-reward-copy span {
+    color: rgba(224, 232, 230, 0.65);
+    font-size: 0.64rem;
+    font-weight: 700;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .world-anomaly-modal.is-summoning .world-anomaly-emblem {
+        animation: anomaly-seal-breathe 900ms ease-in-out infinite alternate;
+    }
+}
+
+@keyframes anomaly-seal-breathe {
+    to { filter: brightness(1.3); transform: scale(1.04); }
+}
+
 .world-dungeon-result-layer {
     position: absolute;
     top: var(--world-dungeon-result-top, 70%);

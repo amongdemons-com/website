@@ -114,7 +114,39 @@ function getFormationSlotPosition(slot, side = 'enemy') {
 }
 
 function getTypeData(demon, demonTypes = {}) {
-  return demonTypes[String(demon.typeId)] || {};
+  return demonTypes[String(getActiveAbilityTypeId(demon) || demon.typeId)] || {};
+}
+
+function getActiveAbilityTypeId(demon = {}) {
+  const typeId = Number(demon.activeAbilityTypeId);
+  return Number.isInteger(typeId) && typeId > 0 ? typeId : null;
+}
+
+function getActionAbilityTypeIds(demon = {}, demonTypes = {}) {
+  return (Array.isArray(demon.abilityTypeIds) ? demon.abilityTypeIds : [])
+    .map(Number)
+    .filter((typeId, index, values) => (
+      Number.isInteger(typeId) &&
+      typeId > 0 &&
+      Boolean(demonTypes[String(typeId)]) &&
+      values.indexOf(typeId) === index
+    ));
+}
+
+function selectActionAbilityType(rng, demon, demonTypes = {}) {
+  const configured = getActionAbilityTypeIds(demon, demonTypes);
+  if (!configured.length) return getActiveAbilityTypeId(demon) || Number(demon.typeId) || null;
+
+  // A solo shapeshifter cannot spend its turn healing at full health. Keep the
+  // roll random among every other configured voice instead.
+  const available = configured.filter((typeId) => {
+    const ability = demonTypes[String(typeId)]?.ability || {};
+    return ability.kind !== 'heal' || Number(demon.hp) < Number(demon.maxHp);
+  });
+  const candidates = available.length ? available : configured;
+  const selected = pick(rng, candidates);
+  demon.activeAbilityTypeId = selected;
+  return selected;
 }
 
 function getTargeting(demon, demonTypes = {}) {
@@ -152,6 +184,23 @@ function getRetaliationDamage(target, ability = {}) {
   return Math.max(1, Math.round(
     (baseDamage + thornsFlat) * (1 + (thornsPercent / 100))
   ));
+}
+
+function getRetaliationAbility(target, demonTypes = {}) {
+  const innateTypeId = Number(target.retaliationAbilityTypeId);
+  if (Number.isInteger(innateTypeId) && innateTypeId > 0) {
+    const innateAbility = demonTypes[String(innateTypeId)]?.ability || {};
+    if (innateAbility.kind === 'retaliate') {
+      return { ability: innateAbility, abilityTypeId: innateTypeId };
+    }
+  }
+
+  const activeAbility = getAbility(target, demonTypes);
+  if (activeAbility.kind !== 'retaliate') return null;
+  return {
+    ability: activeAbility,
+    abilityTypeId: getActiveAbilityTypeId(target) || Number(target.typeId) || null
+  };
 }
 
 function getSyncedPoisonNextTick(poisonStacks, fallback) {
@@ -372,6 +421,7 @@ function applyPoisonTick(team, tick, context, targetSide) {
       context.combatLog.push({
         tick,
         attacker: poison.source,
+        ...(poison.abilityTypeId ? { abilityTypeId: poison.abilityTypeId } : {}),
         target: target.instanceId,
         targetPosition: normalizePosition(target.position),
         targeting: 'poison',
@@ -431,6 +481,7 @@ function applyDamage({
   const logEntry = {
     tick,
     attacker: attacker.instanceId,
+    ...(getActiveAbilityTypeId(attacker) ? { abilityTypeId: getActiveAbilityTypeId(attacker) } : {}),
     attackerPosition: normalizePosition(attacker.position),
     target: target.instanceId,
     targetPosition: normalizePosition(target.position),
@@ -464,14 +515,15 @@ function applyDamage({
     cause: damageKind
   });
 
-  const targetAbility = getAbility(target, demonTypes);
-  if (target.hp > 0 && targetAbility.kind === 'retaliate' && attacker.hp > 0) {
-    const retaliationDamage = getRetaliationDamage(target, targetAbility);
+  const retaliation = getRetaliationAbility(target, demonTypes);
+  if (target.hp > 0 && retaliation && attacker.hp > 0) {
+    const retaliationDamage = getRetaliationDamage(target, retaliation.ability);
     const retaliationResult = dealDamage(attacker, retaliationDamage);
 
     combatLog.push({
       tick,
       attacker: target.instanceId,
+      ...(retaliation.abilityTypeId ? { abilityTypeId: retaliation.abilityTypeId } : {}),
       attackerPosition: normalizePosition(target.position),
       target: attacker.instanceId,
       targetPosition: normalizePosition(attacker.position),
@@ -502,7 +554,7 @@ function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {
     healer,
     healerSide,
     target,
-    healing: Math.max(1, Number(healer.atk) || 1),
+    healing: getBaseHealingAmount(healer),
     buffs: context.buffs,
     playerBuffs: context.playerBuffs,
     enemyBuffs: context.enemyBuffs
@@ -520,6 +572,7 @@ function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {
   combatLog.push({
     tick,
     attacker: healer.instanceId,
+    ...(getActiveAbilityTypeId(healer) ? { abilityTypeId: getActiveAbilityTypeId(healer) } : {}),
     attackerPosition: normalizePosition(healer.position),
     target: target.instanceId,
     targetPosition: normalizePosition(target.position),
@@ -532,6 +585,14 @@ function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {
   });
 
   return true;
+}
+
+function getBaseHealingAmount(healer = {}) {
+  const maxHpPercent = Number(healer.healMaxHpPercent);
+  if (Number.isFinite(maxHpPercent) && maxHpPercent > 0) {
+    return Math.max(1, Math.round((Number(healer.maxHp) || 1) * (maxHpPercent / 100)));
+  }
+  return Math.max(1, Number(healer.atk) || 1);
 }
 
 function applyPoison({ tick, attacker, attackerSide, enemies, demonTypes, combatLog, context }) {
@@ -556,6 +617,7 @@ function applyPoison({ tick, attacker, attackerSide, enemies, demonTypes, combat
   const poison = {
     source: attacker.instanceId,
     sourceSide: attackerSide,
+    ...(getActiveAbilityTypeId(attacker) ? { abilityTypeId: getActiveAbilityTypeId(attacker) } : {}),
     damage: poisonModifiers.damage,
     remainingTicks: poisonModifiers.durationTicks,
     tickInterval,
@@ -575,6 +637,7 @@ function applyPoison({ tick, attacker, attackerSide, enemies, demonTypes, combat
   combatLog.push({
     tick,
     attacker: attacker.instanceId,
+    ...(getActiveAbilityTypeId(attacker) ? { abilityTypeId: getActiveAbilityTypeId(attacker) } : {}),
     attackerPosition: normalizePosition(attacker.position),
     target: target.instanceId,
     targetPosition: normalizePosition(target.position),
@@ -637,6 +700,7 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
       if (actor.attackMeter < 100) continue;
 
       actor.attackMeter -= 100;
+      selectActionAbilityType(rng, actor, demonTypes);
       const ability = getAbility(actor, demonTypes);
 
       if (ability.kind === 'heal') {
@@ -790,7 +854,9 @@ function cloneBattleTeamForReplay(team) {
 }
 
 module.exports = {
+  getBaseHealingAmount,
   getStalemateTeamScore,
   resolveStalemateWinner,
+  selectActionAbilityType,
   simulateFight
 };

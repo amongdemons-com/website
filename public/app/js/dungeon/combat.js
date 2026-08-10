@@ -7,6 +7,20 @@ import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatS
 
 const audio = window.AmongDemons.audio;
 const BATTLE_INTRO_COMPLETE_EVENT = 'amongdemons:battle-intro-complete';
+const combatAbilityTypes = new Map();
+const ANOMALY_VOICE_NAMES = Object.freeze({
+  1: 'Boof Nitza',
+  2: "Gon G'ah",
+  3: "Ma'Zga",
+  4: 'Tor Tza',
+  5: "Vi'Zel",
+  6: 'Goh Loomb',
+  7: 'Baobaw',
+  8: 'Ko Pak',
+  9: 'Chu Perk',
+  10: "Ba Be'aga",
+  11: 'Vee Scol'
+});
 
 const battle = (...args) => dungeonActions.battle(...args);
 const getDemonPosition = (...args) => dungeonActions.getDemonPosition(...args);
@@ -19,6 +33,7 @@ const renderRun = (...args) => dungeonActions.renderRun(...args);
 function prepareCombatPlayback(options = {}) {
   if (!state.run) return null;
 
+  combatAbilityTypes.clear();
   const steps = groupCombatLog(state.combatLog, { combineCounters: true });
   const combatPlayback = {
     currentIndex: 0,
@@ -104,6 +119,10 @@ function applyCombatStep(step, index = -1, options = {}) {
   const animate = options.animate !== false;
 
   step.entries.forEach((entry) => {
+    const abilityTypeId = Number(entry.abilityTypeId);
+    if (entry.attacker && Number.isInteger(abilityTypeId) && abilityTypeId > 0) {
+      combatAbilityTypes.set(String(entry.attacker), abilityTypeId);
+    }
     const target = allDemonsById.get(entry.target);
     if (target) {
       target.hp = entry.targetHp;
@@ -167,7 +186,7 @@ function playCombatStepSound(step) {
   } else if (effect === 'retaliate' || effect === 'thorns') {
     key = 'sfx.battle.abilities.thornsRetaliate';
   } else {
-    const typeId = Number(getCombatDemon(step.attacker)?.typeId);
+    const typeId = getCombatEntryTypeId(primaryEntry);
     key = ({
       1: 'sfx.battle.abilities.meleeSwing',
       2: 'sfx.battle.abilities.rangedProjectile',
@@ -210,9 +229,9 @@ function isPrimaryDamageEntry(entry) {
 function getFireGroupPlan(step) {
   if (prefersReducedMotion()) return null;
   if (step.targeting === 'chaotic') return null;
-  if (Number(getCombatDemon(step.attacker)?.typeId) !== 4) return null;
   const damageEntries = (step.entries || []).filter(isPrimaryDamageEntry);
   if (!damageEntries.length) return null;
+  if (getCombatEntryTypeId(damageEntries[0]) !== 4) return null;
   return {
     targetIds: damageEntries.map((entry) => entry.target),
     travel: getAttackProfile(damageEntries[0]).travel,
@@ -224,9 +243,9 @@ function getFireGroupPlan(step) {
 // shared slash; every target still receives its own synchronized impact reaction.
 function getCleaveGroupPlan(step) {
   if (prefersReducedMotion()) return null;
-  if (Number(getCombatDemon(step.attacker)?.typeId) !== 7) return null;
   const damageEntries = (step.entries || []).filter(isPrimaryDamageEntry);
   if (!damageEntries.length) return null;
+  if (getCombatEntryTypeId(damageEntries[0]) !== 7) return null;
   return {
     targetId: damageEntries[Math.floor((damageEntries.length - 1) / 2)].target
   };
@@ -305,7 +324,7 @@ function animateCombatEntry(entry, step, attackerSide, entryIndex, isAoe, fireGr
     updateTargetCard(entry.target, entry.targetHp, attackerSide, { shield: entry.targetShield });
     const floatingDamage = getFloatingDamageAmount(entry, step);
     if (floatingDamage > 0) {
-      showFloatingDamage(entry.target, floatingDamage, isTypeTwoAttack(entry.attacker) ? 'dark' : 'damage', entry.attacker, entry.effect);
+      showFloatingDamage(entry.target, floatingDamage, getCombatEntryTypeId(entry) === 2 ? 'dark' : 'damage', entry.attacker, entry.effect);
     }
     spawnImpactBurst(entry.target, {
       attackerId: entry.attacker,
@@ -610,7 +629,7 @@ function getAttackProfile(entry) {
     };
   }
 
-  const typeId = Number(getCombatDemon(attacker)?.typeId);
+  const typeId = getCombatEntryTypeId(entry);
   const profiles = {
     2: {
       key: 'dark',
@@ -1279,8 +1298,14 @@ function getCombatTheme(attackerId, effect) {
   if (effect === 'poison' || effect === 'poison_apply') return COMBAT_THEMES.poison;
   if (effect === 'heal') return COMBAT_THEMES.heal;
 
-  const typeId = Number(getCombatDemon(attackerId)?.typeId);
+  const typeId = combatAbilityTypes.get(String(attackerId)) || Number(getCombatDemon(attackerId)?.typeId);
   return COMBAT_THEMES[typeId] || COMBAT_THEMES.default;
+}
+
+function getCombatEntryTypeId(entry = {}) {
+  const abilityTypeId = Number(entry.abilityTypeId);
+  if (Number.isInteger(abilityTypeId) && abilityTypeId > 0) return abilityTypeId;
+  return Number(getCombatDemon(entry.attacker)?.typeId);
 }
 
 function applyCombatTheme(element, theme) {
@@ -1386,7 +1411,7 @@ function syncBattleSpeedButtons() {
 }
 
 function isTypeTwoAttack(instanceId) {
-  return Number(getCombatDemon(instanceId)?.typeId) === 2;
+  return (combatAbilityTypes.get(String(instanceId)) || Number(getCombatDemon(instanceId)?.typeId)) === 2;
 }
 
 function findDemonCard(instanceId) {
@@ -1504,7 +1529,8 @@ function renderLogPosition(position) {
 function getFightLogActionText(step) {
   const entry = step.entries[0];
   const primaryEntryCount = getPrimaryActionEntries(step).length;
-  const attacker = renderFightLogDemonName(entry.attacker);
+  const voiceName = ANOMALY_VOICE_NAMES[Number(entry.abilityTypeId)];
+  const attacker = `${renderFightLogDemonName(entry.attacker)}${voiceName ? ` <span class="fight-log-anomaly-voice">echoing ${escapeHtml(voiceName)}</span>` : ''}`;
   const target = `${renderFightLogDemonName(entry.target)} ${renderLogPosition(entry.targetPosition)}`;
 
   if (entry.effect === 'poison_apply') return `${attacker} applied poison to ${target}`;
