@@ -13,6 +13,8 @@
   // This explicit preference takes precedence over the dialog's separate 24-hour mute.
   const WORLD_BOSS_NARRATION_KEY = 'amongdemons-world-boss-narration';
   const WORLD_BOSS_INTRO_MUTE_KEY = 'amongdemons-world-boss-mute';
+  // Keep in sync with the Pixi renderer preference in world-ui.js.
+  const WORLD_LOW_POWER_KEY = 'amongdemons-world-low-power';
   const DESKTOP_OAUTH_PENDING_KEY = 'amongdemons-desktop-oauth-pending-v1';
   const DESKTOP_OAUTH_POLL_INTERVAL_MS = 2000;
   const DESKTOP_OAUTH_TIMEOUT_MS = 15 * 60 * 1000;
@@ -81,6 +83,7 @@
     elements.cardShake = document.getElementById('settingsCardShake');
     elements.hideWinningAmbushes = document.getElementById('settingsHideWinningAmbushes');
     elements.bossNarration = document.getElementById('settingsBossNarration');
+    elements.worldLowPower = document.getElementById('settingsWorldLowPower');
     elements.audioMuted = document.getElementById('settingsAudioMuted');
     elements.masterVolume = document.getElementById('settingsMasterVolume');
     elements.masterVolumeValue = document.getElementById('settingsMasterVolumeValue');
@@ -555,6 +558,7 @@
   }
 
   function initWorldToggles() {
+    bindPreferenceToggle(elements.worldLowPower, WORLD_LOW_POWER_KEY, false);
     if (!elements.bossNarration) return;
 
     const explicitPreference = getStoredPreference(WORLD_BOSS_NARRATION_KEY);

@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="edc8f1b8ffbb">
+    <meta name="among-demons-client-version" content="cecafe3e00ac">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Settings | Among Demons</title>
@@ -151,6 +151,13 @@
         </header>
 
         <div class="settings-form settings-world-form">
+          <div class="settings-field settings-toggle-field">
+            <div class="form-check form-switch settings-toggle">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingsWorldLowPower">
+              <label class="form-check-label" for="settingsWorldLowPower">Low-power world map</label>
+            </div>
+            <small class="form-text">Uses a lower frame rate and static ambient effects. Travel, encounters, and map controls stay unchanged.</small>
+          </div>
           <div class="settings-field settings-toggle-field">
             <div class="form-check form-switch settings-toggle">
               <input class="form-check-input" type="checkbox" role="switch" id="settingsBossNarration" checked>
@@ -330,6 +337,6 @@
     </div>
     <script src="/app/dist/runtime.bundle.js?v=9ce41f142910"></script>
     <script src="/app/js/usernames.js?v=8ab3cb68367d"></script>
-    <script src="/app/js/settings-ui.js?v=727459d6e339"></script>
+    <script src="/app/js/settings-ui.js?v=82bdb9bb95cd"></script>
   </body>
 </html>

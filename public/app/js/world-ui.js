@@ -80,6 +80,8 @@ import './bag-item-visuals.js';
   // and the center of the curtained opening its light spills out of.
   const MERCHANT_LANTERN_OFFSET = { x: -9, y: -4.3 };
   const MERCHANT_INTERIOR_GLOW = { x: 0, y: 1 };
+  const WORLD_LOW_POWER_KEY = 'amongdemons-world-low-power';
+  const WORLD_LOW_POWER_FPS = 20;
   let demonMapAtlasPromise = null;
   let pixiCullerRegistered = false;
   // World boss intro dialog: a random boss taunts the hunter after their first
@@ -205,6 +207,8 @@ import './bag-item-visuals.js';
     puddleFxTiles: [],
     puddleFxStyles: null,
     puddleFxLast: 0,
+    lowPowerMode: readWorldLowPowerPreference(),
+    worldEffectsDirty: true,
     selectedEncounter: null,
     selectedBoss: null,
     bossIntro: null,
@@ -565,6 +569,7 @@ import './bag-item-visuals.js';
   }
 
   function syncWorldSidePanelMetrics() {
+    invalidateWorldEffects();
     const panel = elements.worldSidePanel;
     const host = elements.worldCanvasHost;
     if (!host) {
@@ -635,10 +640,11 @@ import './bag-item-visuals.js';
       width: size.width,
       height: size.height,
       background: '#040a0d',
-      antialias: true,
+      antialias: !state.lowPowerMode,
       autoDensity: true,
-      resolution: Math.min(window.devicePixelRatio || 1, 2)
+      resolution: state.lowPowerMode ? 1 : Math.min(window.devicePixelRatio || 1, 2)
     });
+    if (state.lowPowerMode) app.ticker.maxFPS = WORLD_LOW_POWER_FPS;
 
     const canvas = app.canvas || app.view;
     canvas.classList.add('world-canvas');
@@ -706,16 +712,7 @@ import './bag-item-visuals.js';
     app.stage.addChild(state.merchantArrowLayer);
     app.stage.addChild(state.soulFontArrowLayer);
 
-    app.ticker.add(updatePathPulse);
-    app.ticker.add(updateShrineGlow);
-    app.ticker.add(updateAnomalyAltarGlow);
-    app.ticker.add(updatePortalGlow);
-    app.ticker.add(updateSoulFontGlow);
-    app.ticker.add(updateMerchantGlow);
-    app.ticker.add(updateBossAura);
-    app.ticker.add(updatePuddleFx);
-    app.ticker.add(updateMerchantDirectionArrow);
-    app.ticker.add(updateSoulFontDirectionArrow);
+    app.ticker.add(updateWorldEffects);
 
     bindCanvasInput(canvas);
     bindResize();
@@ -1835,6 +1832,7 @@ import './bag-item-visuals.js';
   }
 
   function renderWorld() {
+    invalidateWorldEffects();
     drawFog();
     drawHover();
     drawPath();
@@ -2665,9 +2663,9 @@ import './bag-item-visuals.js';
     const tiles = state.puddleFxTiles;
     if (!tiles || !tiles.length) return;
 
-    const now = performance.now();
+    const now = getWorldEffectTime();
     // Embers drift slowly - ~30fps is plenty and halves the redraw cost.
-    if (now - (state.puddleFxLast || 0) < 33) return;
+    if (!state.lowPowerMode && now - (state.puddleFxLast || 0) < 33) return;
     state.puddleFxLast = now;
 
     layer.clear();
@@ -3413,6 +3411,30 @@ import './bag-item-visuals.js';
     layer.stroke({ ...style, cap: 'round', join: 'round' });
   }
 
+  function updateWorldEffects() {
+    if (state.lowPowerMode && !state.worldEffectsDirty) return;
+
+    updatePathPulse();
+    updateShrineGlow();
+    updateAnomalyAltarGlow();
+    updatePortalGlow();
+    updateSoulFontGlow();
+    updateMerchantGlow();
+    updateBossAura();
+    updatePuddleFx();
+    updateMerchantDirectionArrow();
+    updateSoulFontDirectionArrow();
+    state.worldEffectsDirty = false;
+  }
+
+  function invalidateWorldEffects() {
+    state.worldEffectsDirty = true;
+  }
+
+  function getWorldEffectTime() {
+    return state.lowPowerMode ? 0 : performance.now();
+  }
+
   // Animated destination marker - stays visible throughout preview and travel.
   function updatePathPulse() {
     const layer = state.pathPulse;
@@ -3423,7 +3445,7 @@ import './bag-item-visuals.js';
     if (path.length < 2) return;
 
     const c = tileCenter(path[path.length - 1]);
-    const phase = (performance.now() % 1600) / 1600;
+    const phase = (getWorldEffectTime() % 1600) / 1600;
     layer.circle(c.x, c.y, 8 + phase * 10).stroke({ color: PATH_GLOW, width: 1.5, alpha: 0.32 * (1 - phase) });
     layer.circle(c.x, c.y, 6).fill({ color: PATH_GLOW, alpha: 0.14 });
     layer.circle(c.x, c.y, 2.6).fill({ color: PATH_CORE, alpha: 0.9 });
@@ -3439,7 +3461,7 @@ import './bag-item-visuals.js';
     const shrines = (state.events || []).filter((event) => event.type === 'forsaken_shrine');
     if (!shrines.length) return;
 
-    const now = performance.now();
+    const now = getWorldEffectTime();
     const soul = BOARD_COLORS.shrineSoul;
     const WISPS = 3;
 
@@ -3473,8 +3495,8 @@ import './bag-item-visuals.js';
 
     const altars = (state.events || []).filter(isAnomalyAltarEvent);
     if (!altars.length) return;
-    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-    const now = reducedMotion ? 0 : performance.now();
+    const reducedMotion = state.lowPowerMode || window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    const now = reducedMotion ? 0 : getWorldEffectTime();
 
     altars.forEach((event) => {
       const c = tileCenter(event);
@@ -3510,7 +3532,7 @@ import './bag-item-visuals.js';
     const portals = (state.events || []).filter((event) => isDarknessPortalEvent(event));
     if (!portals.length) return;
 
-    const now = performance.now();
+    const now = getWorldEffectTime();
     portals.forEach((event) => {
       const c = tileCenter(event);
       // Per-portal phase offset so the portals don't all pulse in sync.
@@ -3537,7 +3559,7 @@ import './bag-item-visuals.js';
     if (!merchant) return;
 
     const c = tileCenter(merchant);
-    const now = performance.now();
+    const now = getWorldEffectTime();
     const gold = 0xe8b04a;
     const phase = merchant.x * 23 + merchant.y * 41;
 
@@ -3580,7 +3602,7 @@ import './bag-item-visuals.js';
     const bosses = state.bosses || [];
     if (!bosses.length) return;
 
-    const now = performance.now();
+    const now = getWorldEffectTime();
     const gold = 0xf2c35e;
 
     bosses.forEach((boss) => {
@@ -3606,6 +3628,7 @@ import './bag-item-visuals.js';
 
   function drawMarkers() {
     drawEventMarkers();
+    invalidateWorldEffects();
   }
 
   function drawEventMarkers() {
@@ -3690,7 +3713,7 @@ import './bag-item-visuals.js';
     const wells = (state.events || []).filter((event) => event.type === 'soul-font');
     if (!wells.length) return;
 
-    const now = performance.now();
+    const now = getWorldEffectTime();
     wells.forEach((event) => {
       const c = tileCenter(event);
       const phase = event.x * 17 + event.y * 31;
@@ -4067,10 +4090,10 @@ import './bag-item-visuals.js';
       arrowY = centerY + directionY * edgeDistance;
     }
 
-    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const reducedMotion = state.lowPowerMode || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     const floatOffset = reducedMotion
       ? 0
-      : Math.sin(performance.now() / 360 + (colors.phase || 0)) * MERCHANT_ARROW_FLOAT_DISTANCE;
+      : Math.sin(getWorldEffectTime() / 360 + (colors.phase || 0)) * MERCHANT_ARROW_FLOAT_DISTANCE;
     arrowX += arrowDirectionX * floatOffset;
     arrowY += arrowDirectionY * floatOffset;
 
@@ -4328,6 +4351,7 @@ import './bag-item-visuals.js';
   }
 
   function drawBossMarkers() {
+    invalidateWorldEffects();
     const layer = state.bossLayer;
     const Pixi = window.PIXI;
     if (!layer || !Pixi?.Graphics) return;
@@ -9415,6 +9439,7 @@ import './bag-item-visuals.js';
   }
 
   function updateCameraStatus() {
+    invalidateWorldEffects();
     const scale = state.viewport?.scale.x || 1;
     setText(elements.worldZoomChip, `${Math.round(scale * 100)}%`);
     updateHoverCoordinates();
@@ -10192,14 +10217,7 @@ import './bag-item-visuals.js';
     state.sidePanelResizeObserver?.disconnect();
     state.sidePanelResizeObserver = null;
 
-    state.app?.ticker?.remove(updatePathPulse);
-    state.app?.ticker?.remove(updateShrineGlow);
-    state.app?.ticker?.remove(updatePortalGlow);
-    state.app?.ticker?.remove(updateSoulFontGlow);
-    state.app?.ticker?.remove(updateBossAura);
-    state.app?.ticker?.remove(updatePuddleFx);
-    state.app?.ticker?.remove(updateMerchantDirectionArrow);
-    state.app?.ticker?.remove(updateSoulFontDirectionArrow);
+    state.app?.ticker?.remove(updateWorldEffects);
     state.tileTextures.forEach((texture) => texture?.destroy?.(true));
     state.tileTextures.clear();
     state.encounterMarkerNodes.clear();
@@ -10234,6 +10252,14 @@ import './bag-item-visuals.js';
   function formatStepCount(stepCount) {
     const count = Math.max(0, Math.trunc(Number(stepCount) || 0));
     return `${formatNumber(count)} ${count === 1 ? 'step' : 'steps'}`;
+  }
+
+  function readWorldLowPowerPreference() {
+    try {
+      return window.localStorage.getItem(WORLD_LOW_POWER_KEY) === '1';
+    } catch (error) {
+      return false;
+    }
   }
 
   function getStoredWorldBattleSpeed() {
