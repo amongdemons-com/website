@@ -9,6 +9,7 @@ const { getOrCreateCurrentSeason } = require('./ranked-runs');
 const { getDivision } = require('./ranked-rules');
 const { getPlayerBadges } = require('./player-badges');
 const { RANKED_BOT_ID_PATTERN } = require('./system-players');
+const { normalizeAccountLevel } = require('./progression');
 
 const WORLD_SPAWN = worldMap.spawn || { x: 0, y: 0 };
 
@@ -48,7 +49,7 @@ async function getPublicHunterProfile(rawUsername) {
   const player = {
     id: row.id,
     username: row.username,
-    level: Math.max(1, Number(row.level) || 1),
+    level: normalizeAccountLevel(row.level),
     xp: Math.max(0, Number(row.xp) || 0)
   };
   const [worldTeam, buffs, ranked, badges] = await Promise.all([

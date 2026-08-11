@@ -1,18 +1,31 @@
 const ACCOUNT_LEVEL_BASE_XP = 250;
 const ACCOUNT_LEVEL_EXPONENT = 1.65;
+const MAX_ACCOUNT_LEVEL = 666;
+
+function normalizeAccountLevel(level) {
+  return Math.min(
+    MAX_ACCOUNT_LEVEL,
+    Math.max(1, Math.floor(Number(level) || 1))
+  );
+}
 
 function getAccountLevelForXp(xp) {
   const totalXp = Math.max(0, Math.floor(Number(xp) || 0));
-  let level = Math.floor(Math.pow(totalXp / ACCOUNT_LEVEL_BASE_XP, 1 / ACCOUNT_LEVEL_EXPONENT)) + 1;
+  let level = normalizeAccountLevel(
+    Math.floor(Math.pow(totalXp / ACCOUNT_LEVEL_BASE_XP, 1 / ACCOUNT_LEVEL_EXPONENT)) + 1
+  );
 
-  while (getXpForAccountLevel(level + 1) <= totalXp) level += 1;
+  while (level < MAX_ACCOUNT_LEVEL && getXpForAccountLevel(level + 1) <= totalXp) level += 1;
   while (level > 1 && getXpForAccountLevel(level) > totalXp) level -= 1;
 
   return level;
 }
 
 function getNextAccountLevel(currentLevel, xp) {
-  return Math.max(Number(currentLevel) || 1, getAccountLevelForXp(xp));
+  return normalizeAccountLevel(Math.max(
+    normalizeAccountLevel(currentLevel),
+    getAccountLevelForXp(xp)
+  ));
 }
 
 function getXpForAccountLevel(level) {
@@ -28,18 +41,22 @@ function getXpForAccountLevel(level) {
 function getAccountProgressionSummary(level, xp, options = {}) {
   const resolvedLevel = getNextAccountLevel(level, xp);
   const totalXp = Math.max(0, Math.floor(Number(xp) || 0));
+  const isMaxLevel = resolvedLevel >= MAX_ACCOUNT_LEVEL;
   const currentLevelXp = getXpForAccountLevel(resolvedLevel);
-  const nextLevelXp = getXpForAccountLevel(resolvedLevel + 1);
-  const xpForNextLevel = Math.max(1, nextLevelXp - currentLevelXp);
-  const xpIntoLevel = Math.min(xpForNextLevel, Math.max(0, totalXp - currentLevelXp));
+  const nextLevelXp = isMaxLevel ? currentLevelXp : getXpForAccountLevel(resolvedLevel + 1);
+  const xpForNextLevel = isMaxLevel ? 0 : Math.max(1, nextLevelXp - currentLevelXp);
+  const xpIntoLevel = isMaxLevel
+    ? 0
+    : Math.min(xpForNextLevel, Math.max(0, totalXp - currentLevelXp));
   const hasPreviousLevel = Object.prototype.hasOwnProperty.call(options, 'previousLevel');
   const previousLevel = hasPreviousLevel
-    ? Math.max(1, Math.floor(Number(options.previousLevel) || 1))
+    ? normalizeAccountLevel(options.previousLevel)
     : null;
 
   return {
     level: resolvedLevel,
     xp: totalXp,
+    isMaxLevel,
     ...(hasPreviousLevel ? {
       previousLevel,
       leveledUp: resolvedLevel > previousLevel
@@ -49,8 +66,9 @@ function getAccountProgressionSummary(level, xp, options = {}) {
       nextLevelXp,
       xpIntoLevel,
       xpForNextLevel,
-      xpToNextLevel: Math.max(0, nextLevelXp - totalXp),
-      percent: xpIntoLevel / xpForNextLevel
+      xpToNextLevel: isMaxLevel ? 0 : Math.max(0, nextLevelXp - totalXp),
+      percent: isMaxLevel ? 1 : xpIntoLevel / xpForNextLevel,
+      isMaxLevel
     }
   };
 }
@@ -74,10 +92,12 @@ function getNormalizedAccountXp(xp) {
 module.exports = {
   ACCOUNT_LEVEL_BASE_XP,
   ACCOUNT_LEVEL_EXPONENT,
+  MAX_ACCOUNT_LEVEL,
   getAccountLevelForXp,
   getAccountProgressionPayload,
   getAccountProgressionSummary,
   getNextAccountLevel,
   getNormalizedAccountXp,
-  getXpForAccountLevel
+  getXpForAccountLevel,
+  normalizeAccountLevel
 };

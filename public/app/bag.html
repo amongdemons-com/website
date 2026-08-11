@@ -2,15 +2,15 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="8a7f9cb453f8">
+    <meta name="among-demons-client-version" content="1941c1adb279">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Bag | Among Demons</title>
     <meta name="description" content="Manage extracted Demon Echoes, refine rarities, and summon permanent demons.">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=83ab2df991bd" rel="stylesheet">
-    <link href="/app/css/bag.css?v=dffe7e2dc705" rel="stylesheet">
+    <link href="/app/css/base.css?v=4e9ee83d4769" rel="stylesheet">
+    <link href="/app/css/bag.css?v=fefa3cecdf04" rel="stylesheet">
     <link href="/app/css/bag-item-visuals.css?v=eb4584c38950" rel="stylesheet">
   </head>
   <body class="bag-page">
@@ -62,7 +62,10 @@
       <section class="card bag-vault-card" aria-labelledby="bagVaultTitle">
         <div class="card-header bag-toolbar">
           <div class="bag-toolbar-title">
-            <div>
+            <a class="bag-back-link" id="bagBackLink" href="/" aria-label="Back to previous page" title="Back">
+              <i data-lucide="chevron-left"></i>
+            </a>
+            <div class="bag-toolbar-copy">
               <h1 class="h4 mb-0" id="bagVaultTitle">Bag</h1>
               <small id="bagCount">0 stacks</small>
             </div>
@@ -114,8 +117,8 @@
         <div class="modal-content" id="bagRefineContent"></div>
       </div>
     </div>
-    <script src="/app/dist/runtime.bundle.js?v=9ce41f142910"></script>
+    <script src="/app/dist/runtime.bundle.js?v=f33c85ee12d4"></script>
     <script src="/app/js/bag-item-visuals.js?v=004be680c695"></script>
-    <script src="/app/js/bag-ui.js?v=5425d1669274"></script>
+    <script src="/app/js/bag-ui.js?v=4c10bfb68a1b"></script>
   </body>
 </html>

@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 const db = require('./db');
 const { purgePlayerAccount } = require('./account-deletion');
+const { normalizeAccountLevel } = require('./progression');
 
 const ACCOUNT_MERGE_TTL_MINUTES = 15;
 const MAX_UNSIGNED_INT = 4294967295;
@@ -597,7 +598,7 @@ function buildMergedPlayer(target, source, preferred, preferredProfileId) {
     password_hash: preferred.password_hash,
     password_salt: preferred.password_salt,
     password_login_enabled: Number(preferred.password_login_enabled) ? 1 : 0,
-    level: Math.max(Number(target.level) || 1, Number(source.level) || 1),
+    level: normalizeAccountLevel(Math.max(Number(target.level) || 1, Number(source.level) || 1)),
     xp: Math.max(Number(target.xp) || 0, Number(source.xp) || 0),
     souls: sumUnsigned(target.souls, source.souls),
     highest_floor: Math.max(Number(target.highest_floor) || 0, Number(source.highest_floor) || 0),
@@ -609,8 +610,8 @@ function buildMergedPlayer(target, source, preferred, preferredProfileId) {
 }
 
 function choosePreferredAccount(target, source) {
-  const targetLevel = Math.max(1, Number(target?.level) || 1);
-  const sourceLevel = Math.max(1, Number(source?.level) || 1);
+  const targetLevel = normalizeAccountLevel(target?.level);
+  const sourceLevel = normalizeAccountLevel(source?.level);
   if (sourceLevel !== targetLevel) return sourceLevel > targetLevel ? source : target;
   const targetXp = Math.max(0, Number(target?.xp) || 0);
   const sourceXp = Math.max(0, Number(source?.xp) || 0);

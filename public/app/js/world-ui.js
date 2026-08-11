@@ -733,7 +733,28 @@ import './bag-item-visuals.js';
       if (event.target !== canvas) clearHover();
     }, { passive: true });
     addListener(canvas, 'wheel', onWheel, { passive: false });
-    addListener(window, 'pagehide', destroyWorld);
+    addListener(window, 'pagehide', onWorldPageHide);
+    addListener(window, 'pageshow', onWorldPageShow);
+  }
+
+  function onWorldPageHide(event) {
+    // The Back/Forward Cache keeps this document alive. Preserve Pixi so a
+    // return from Bag can resume the existing map instead of restoring a
+    // document whose canvas application has already been destroyed.
+    if (event.persisted) return;
+    destroyWorld();
+  }
+
+  function onWorldPageShow(event) {
+    if (!event.persisted) return;
+    if (!state.app) {
+      window.location.reload();
+      return;
+    }
+
+    resizeCanvas();
+    invalidateWorldEffects();
+    reconcileHuntStatus();
   }
 
   function bindResize() {

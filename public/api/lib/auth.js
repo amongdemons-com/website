@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const db = require('./db');
 const { isDeletionDue, purgePlayerAccount } = require('./account-deletion');
+const { normalizeAccountLevel } = require('./progression');
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
   const hash = crypto.pbkdf2Sync(password, salt, 120000, 64, 'sha512').toString('hex');
@@ -35,7 +36,7 @@ function cleanPlayer(row) {
   return {
     id: row.id,
     username: row.username,
-    level: row.level,
+    level: normalizeAccountLevel(row.level),
     xp: row.xp,
     souls: row.souls,
     highestFloor: row.highest_floor || 0,

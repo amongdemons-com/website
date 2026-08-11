@@ -193,6 +193,13 @@ body.camp-page {
     transition: width 260ms ease;
 }
 
+.camp-xp-progress.is-max-level .camp-xp-progress-bar,
+.camp-page .camp-xp-progress.is-max-level .camp-xp-progress-bar {
+    width: 100% !important;
+    background: linear-gradient(90deg, #d49b19 0%, #f3d45d 50%, #e8b42e 100%);
+    box-shadow: 0 0 14px rgba(243,212,93,0.42);
+}
+
 @media (max-width: 991.98px) {
 .camp-hero {
         grid-template-rows: auto auto;

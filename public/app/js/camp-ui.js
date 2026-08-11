@@ -30,6 +30,7 @@
   };
   const ACCOUNT_LEVEL_BASE_XP = 250;
   const ACCOUNT_LEVEL_EXPONENT = 1.65;
+  const MAX_ACCOUNT_LEVEL = 666;
   const elements = {};
 
   onReady(init);
@@ -422,12 +423,17 @@
   }
 
   function renderLevelProgress(progression, player) {
-    const level = Number(progression.level ?? player.level ?? 1) || 1;
+    const level = clamp(
+      Math.floor(Number(progression.level ?? player.level ?? 1) || 1),
+      1,
+      MAX_ACCOUNT_LEVEL
+    );
     const xp = Number(progression.xp ?? player.xp ?? 0) || 0;
     const progress = getLevelProgress(progression, level, xp);
     const percent = Math.round(progress.percent * 100);
-    const nextLevel = level + 1;
-    const progressText = `${formatNumber(progress.xpToNextLevel)} XP to level ${formatNumber(nextLevel)}`;
+    const progressText = progress.isMaxLevel
+      ? 'Max level'
+      : `${formatNumber(progress.xpToNextLevel)} XP to level ${formatNumber(level + 1)}`;
 
     setText(elements.levelStat, formatNumber(level));
     setText(elements.xpStat, progressText);
@@ -443,6 +449,8 @@
         progressTrack.setAttribute('aria-valuenow', String(percent));
         progressTrack.style.setProperty('--level-up-progress', `${percent}%`);
         progressTrack.setAttribute('aria-label', progressText);
+        progressTrack.title = progressText;
+        progressTrack.classList.toggle('is-max-level', progress.isMaxLevel);
       }
     }
   }
@@ -561,6 +569,18 @@
 
   function getLevelProgress(progression, level, xp) {
     const serverProgress = progression.levelProgress || {};
+    const isMaxLevel = progression.isMaxLevel === true ||
+      serverProgress.isMaxLevel === true ||
+      level >= MAX_ACCOUNT_LEVEL;
+    if (isMaxLevel) {
+      return {
+        isMaxLevel: true,
+        percent: 1,
+        xpForNextLevel: 0,
+        xpIntoLevel: 0,
+        xpToNextLevel: 0
+      };
+    }
     const currentLevelXp = toFiniteNumber(serverProgress.currentLevelXp, getXpForAccountLevel(level));
     const nextLevelXp = toFiniteNumber(serverProgress.nextLevelXp, getXpForAccountLevel(level + 1));
     const xpForNextLevel = Math.max(1, toFiniteNumber(serverProgress.xpForNextLevel, nextLevelXp - currentLevelXp));
@@ -569,6 +589,7 @@
     const percent = clamp(toFiniteNumber(serverProgress.percent, xpIntoLevel / xpForNextLevel), 0, 1);
 
     return {
+      isMaxLevel: false,
       percent,
       xpForNextLevel,
       xpIntoLevel,

@@ -62,11 +62,16 @@
   }
 
   function cacheElements() {
-    ['bagCount', 'bagFilter', 'bagSort', 'bagLoading', 'bagGridViewport', 'bagGrid', 'bagItemTooltip', 'bagDetailModal', 'bagDetailContent', 'bagSummonModal', 'bagSummonContent', 'bagRefineModal', 'bagRefineContent']
+    ['bagBackLink', 'bagCount', 'bagFilter', 'bagSort', 'bagLoading', 'bagGridViewport', 'bagGrid', 'bagItemTooltip', 'bagDetailModal', 'bagDetailContent', 'bagSummonModal', 'bagSummonContent', 'bagRefineModal', 'bagRefineContent']
       .forEach((id) => { elements[id] = document.getElementById(id); });
   }
 
   function bindActions() {
+    elements.bagBackLink?.addEventListener('click', (event) => {
+      if (window.history.length <= 1) return;
+      event.preventDefault();
+      window.history.back();
+    });
     elements.bagFilter.addEventListener('change', () => {
       state.filter = elements.bagFilter.value;
       renderBag();

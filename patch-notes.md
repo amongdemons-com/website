@@ -4,6 +4,12 @@
 
 ## Patch 5 (Current)
 
+- The maximum hunter level is now 666. At max level, the XP bar stays full
+  and shows Max level.
+- Added a back button beside the Bag title so you can return to the previous
+  page.
+- Returning to the World map from Bag now restores the map correctly.
+- Wins and Losses are now centered correctly in Duel standings.
 - Added a Dungeon setting to resolve fights automatically. It skips combat
   playback but still shows Victory or Defeat, and the fight log and full replay
   remain available afterward.

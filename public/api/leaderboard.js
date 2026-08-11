@@ -4,6 +4,7 @@ const { getOrCreateCurrentSeason } = require('./lib/ranked-runs');
 const { getDivision } = require('./lib/ranked-rules');
 const { getPlayerBadgesByPlayerIds } = require('./lib/player-badges');
 const { RANKED_BOT_ID_PATTERN } = require('./lib/system-players');
+const { normalizeAccountLevel } = require('./lib/progression');
 
 const router = express.Router();
 const STATS_CACHE_MS = 15000;
@@ -55,6 +56,7 @@ router.get('/leaderboard', async (req, res) => {
   );
   const rows = rowsResult[0].map(({ playerId, ...row }) => ({
     ...row,
+    level: normalizeAccountLevel(row.level),
     rankedDivision: getDivision(row.rankedRating).name,
     badges: badgesByPlayer.get(String(playerId)) || []
   }));

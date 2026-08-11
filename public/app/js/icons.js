@@ -39,6 +39,7 @@
   const SOUL_ICON_PATH = '/app/images/assets/soul.svg';
   const ACCOUNT_LEVEL_BASE_XP = 250;
   const ACCOUNT_LEVEL_EXPONENT = 1.65;
+  const MAX_ACCOUNT_LEVEL = 666;
   const XP_MINOR_MARKERS = [10, 20, 30, 40, 60, 70, 80, 90];
   const XP_MAJOR_MARKERS = [25, 50, 75];
   const LEVEL_UP_PARTICLE_COUNT = 88;
@@ -218,7 +219,8 @@
     const soulElement = options.soulElement || root.querySelector('[data-nav-souls]') || root.getElementById('navSoulBalance');
 
     if (levelElement && Number.isFinite(Number(progression.level))) {
-      levelElement.textContent = `Level ${formatNumber(Math.max(1, Number(progression.level) || 1))}`;
+      const level = clamp(Math.floor(Number(progression.level) || 1), 1, MAX_ACCOUNT_LEVEL);
+      levelElement.textContent = `Level ${formatNumber(level)}`;
     }
 
     if (soulElement && progression.souls !== undefined) {
@@ -318,19 +320,31 @@
     navXpState = nextState;
 
     const percentValue = Math.round(nextState.percent * 1000) / 10;
-    const percentLabel = formatPercent(nextState.percent);
-    const xpIntoLevel = formatNumber(nextState.xpIntoLevel);
-    const xpForNextLevel = formatNumber(nextState.xpForNextLevel);
-    const nextLevel = formatNumber(nextState.level + 1);
     const level = formatNumber(nextState.level);
-    const tooltipHtml = `
-      <strong>Level ${escapeHtml(level)}</strong>
-      <span>${escapeHtml(xpIntoLevel)} / ${escapeHtml(xpForNextLevel)} XP</span>
-      <small>${escapeHtml(percentLabel)} to level ${escapeHtml(nextLevel)}</small>
-    `;
-    const ariaText = `Level ${level}. ${xpIntoLevel} of ${xpForNextLevel} XP. ${percentLabel} to level ${nextLevel}.`;
+    let tooltipHtml;
+    let ariaText;
+
+    if (nextState.isMaxLevel) {
+      tooltipHtml = `
+        <strong>Max level</strong>
+        <span>Level ${escapeHtml(level)}</span>
+      `;
+      ariaText = `Level ${level}. Max level.`;
+    } else {
+      const percentLabel = formatPercent(nextState.percent);
+      const xpIntoLevel = formatNumber(nextState.xpIntoLevel);
+      const xpForNextLevel = formatNumber(nextState.xpForNextLevel);
+      const nextLevel = formatNumber(nextState.level + 1);
+      tooltipHtml = `
+        <strong>Level ${escapeHtml(level)}</strong>
+        <span>${escapeHtml(xpIntoLevel)} / ${escapeHtml(xpForNextLevel)} XP</span>
+        <small>${escapeHtml(percentLabel)} to level ${escapeHtml(nextLevel)}</small>
+      `;
+      ariaText = `Level ${level}. ${xpIntoLevel} of ${xpForNextLevel} XP. ${percentLabel} to level ${nextLevel}.`;
+    }
 
     progress.classList.remove('d-none');
+    progress.classList.toggle('is-max-level', nextState.isMaxLevel);
     progress.style.setProperty('--nav-xp-progress', `${nextState.percent * 100}%`);
     progress.style.setProperty('--nav-xp-tooltip-left', `${nextState.percent * 100}%`);
     progress.setAttribute('aria-valuenow', String(percentValue));
@@ -592,7 +606,7 @@
     const progress = root.querySelector('[data-nav-xp-progress]');
     if (progress) {
       progress.classList.add('d-none');
-      progress.classList.remove('is-tooltip-visible');
+      progress.classList.remove('is-tooltip-visible', 'is-max-level');
     }
     root.body?.classList.remove('has-nav-xp-progress');
     navXpState = null;
@@ -608,21 +622,39 @@
     const fallback = navXpState || {};
     const xp = Math.max(0, Math.floor(toFiniteNumber(source.xp, fallback.xp || 0)));
     const levelFromXp = getAccountLevelForXp(xp);
-    const level = Math.max(1, Math.floor(toFiniteNumber(source.level, fallback.level || levelFromXp)), levelFromXp);
-    const serverProgress = source.levelProgress || {};
-    const currentLevelXp = toFiniteNumber(serverProgress.currentLevelXp, getXpForAccountLevel(level));
-    const nextLevelXp = toFiniteNumber(serverProgress.nextLevelXp, getXpForAccountLevel(level + 1));
-    const xpForNextLevel = Math.max(1, toFiniteNumber(serverProgress.xpForNextLevel, nextLevelXp - currentLevelXp));
-    const xpIntoLevel = clamp(
-      toFiniteNumber(serverProgress.xpIntoLevel, xp - currentLevelXp),
-      0,
-      xpForNextLevel
+    const level = clamp(
+      Math.max(1, Math.floor(toFiniteNumber(source.level, fallback.level || levelFromXp)), levelFromXp),
+      1,
+      MAX_ACCOUNT_LEVEL
     );
-    const xpToNextLevel = Math.max(0, toFiniteNumber(serverProgress.xpToNextLevel, nextLevelXp - xp));
-    const percent = clamp(toFiniteNumber(serverProgress.percent, xpIntoLevel / xpForNextLevel), 0, 1);
+    const serverProgress = source.levelProgress || {};
+    const isMaxLevel = source.isMaxLevel === true ||
+      serverProgress.isMaxLevel === true ||
+      level >= MAX_ACCOUNT_LEVEL;
+    const currentLevelXp = toFiniteNumber(serverProgress.currentLevelXp, getXpForAccountLevel(level));
+    const nextLevelXp = isMaxLevel
+      ? currentLevelXp
+      : toFiniteNumber(serverProgress.nextLevelXp, getXpForAccountLevel(level + 1));
+    const xpForNextLevel = isMaxLevel
+      ? 0
+      : Math.max(1, toFiniteNumber(serverProgress.xpForNextLevel, nextLevelXp - currentLevelXp));
+    const xpIntoLevel = isMaxLevel
+      ? 0
+      : clamp(
+        toFiniteNumber(serverProgress.xpIntoLevel, xp - currentLevelXp),
+        0,
+        xpForNextLevel
+      );
+    const xpToNextLevel = isMaxLevel
+      ? 0
+      : Math.max(0, toFiniteNumber(serverProgress.xpToNextLevel, nextLevelXp - xp));
+    const percent = isMaxLevel
+      ? 1
+      : clamp(toFiniteNumber(serverProgress.percent, xpIntoLevel / xpForNextLevel), 0, 1);
 
     return {
       currentLevelXp,
+      isMaxLevel,
       level,
       nextLevelXp,
       percent,
@@ -649,7 +681,7 @@
     while (getXpForAccountLevel(level + 1) <= totalXp) level += 1;
     while (level > 1 && getXpForAccountLevel(level) > totalXp) level -= 1;
 
-    return level;
+    return Math.min(MAX_ACCOUNT_LEVEL, level);
   }
 
   function getXpForAccountLevel(level) {

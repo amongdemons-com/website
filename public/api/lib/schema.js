@@ -2,6 +2,7 @@ const db = require('./db');
 const { getMinimumStats } = require('./demon-factory');
 const { getDemonTypes } = require('./game-data');
 const { backfillPlayerBadgeForOAuthProvider } = require('./player-badges');
+const { MAX_ACCOUNT_LEVEL } = require('./progression');
 
 const MINIMUM_PLAYER_DEMON_STATS_MIGRATION = '20260711_minimum_player_demon_stats_v1';
 const BASELINE_SCHEMA_MIGRATION = '20260722_baseline_schema_v1';
@@ -19,6 +20,7 @@ const PLAYER_BADGES_SCHEMA_MIGRATION = '20260801_player_badges_schema_v1';
 const STEAM_PURCHASE_BADGE_BACKFILL_MIGRATION = '20260803_the_night_remembers_steam_backfill_v1';
 const ENDED_RUN_REWARDS_CLEANUP_MIGRATION = '20260808_ended_run_rewards_cleanup_v1';
 const ACCOUNT_MERGE_SCHEMA_MIGRATION = '20260808_account_merge_schema_v1';
+const PLAYER_LEVEL_CAP_MIGRATION = '20260811_player_level_cap_666_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -1037,6 +1039,13 @@ async function backfillOAuthOnlyPasswordState() {
   `);
 }
 
+async function enforcePlayerLevelCap() {
+  await db.query(
+    'UPDATE players SET level = ? WHERE level > ?',
+    [MAX_ACCOUNT_LEVEL, MAX_ACCOUNT_LEVEL]
+  );
+}
+
 async function initializeSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -1060,6 +1069,7 @@ async function initializeSchema() {
   await runMigrationOnce(STEAM_PURCHASE_BADGE_BACKFILL_MIGRATION, backfillSteamPurchaseBadge);
   await runMigrationOnce(ENDED_RUN_REWARDS_CLEANUP_MIGRATION, clearEndedRunRewardHistory);
   await runMigrationOnce(ACCOUNT_MERGE_SCHEMA_MIGRATION, addAccountMergeSchema);
+  await runMigrationOnce(PLAYER_LEVEL_CAP_MIGRATION, enforcePlayerLevelCap);
 }
 
 function ensureSchemaReady() {
