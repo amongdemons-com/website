@@ -8,6 +8,9 @@
   // Keep in sync with the battle-feel keys in js/dungeon/config.js.
   const BATTLE_SCREEN_SHAKE_KEY = 'amongdemons-battle-screen-shake';
   const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
+  // Keep in sync with the Dungeon flow keys in js/dungeon/config.js.
+  const DUNGEON_AUTO_RESOLVE_KEY = 'amongdemons-dungeon-auto-resolve';
+  const DUNGEON_HIDE_RECRUIT_FIRST_MODAL_KEY = 'amongdemons-dungeon-hide-recruit-first-modal';
   // Keep in sync with the world ambush preference in world-ui.js.
   const HIDE_WINNING_AMBUSHES_KEY = 'amongdemons-hide-winning-ambushes';
   // This explicit preference takes precedence over the dialog's separate 24-hour mute.
@@ -82,6 +85,8 @@
     elements.screenShake = document.getElementById('settingsScreenShake');
     elements.cardShake = document.getElementById('settingsCardShake');
     elements.hideWinningAmbushes = document.getElementById('settingsHideWinningAmbushes');
+    elements.autoResolveDungeonFights = document.getElementById('settingsAutoResolveDungeonFights');
+    elements.hideRecruitFirstModal = document.getElementById('settingsHideRecruitFirstModal');
     elements.bossNarration = document.getElementById('settingsBossNarration');
     elements.worldLowPower = document.getElementById('settingsWorldLowPower');
     elements.audioMuted = document.getElementById('settingsAudioMuted');
@@ -555,6 +560,8 @@
     bindPreferenceToggle(elements.screenShake, BATTLE_SCREEN_SHAKE_KEY);
     bindPreferenceToggle(elements.cardShake, BATTLE_CARD_SHAKE_KEY);
     bindPreferenceToggle(elements.hideWinningAmbushes, HIDE_WINNING_AMBUSHES_KEY, false);
+    bindPreferenceToggle(elements.autoResolveDungeonFights, DUNGEON_AUTO_RESOLVE_KEY, false);
+    bindPreferenceToggle(elements.hideRecruitFirstModal, DUNGEON_HIDE_RECRUIT_FIRST_MODAL_KEY, false);
   }
 
   function initWorldToggles() {

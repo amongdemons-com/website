@@ -4,6 +4,10 @@ export const BATTLE_SPEED_KEY = 'amongdemons-battle-speed';
 // disabled. Screen shake is Chu Perk (juggernaut) only; card shake covers all heavy hits.
 export const BATTLE_SCREEN_SHAKE_KEY = 'amongdemons-battle-screen-shake';
 export const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
+// Opt-in Dungeon flow preferences. Settings writes "1" only when the player
+// explicitly enables one of these shortcuts.
+export const DUNGEON_AUTO_RESOLVE_KEY = 'amongdemons-dungeon-auto-resolve';
+export const DUNGEON_HIDE_RECRUIT_FIRST_MODAL_KEY = 'amongdemons-dungeon-hide-recruit-first-modal';
 export const MAX_DUNGEON_TEAM_SIZE = 6;
 export const FORMATION_GRID_COLUMNS = 3;
 export const FORMATION_GRID_SIZE = 9;
@@ -27,3 +31,20 @@ export const COMBAT_THEMES = {
   10: { color: '#8DE7FF', shadow: 'rgba(141,231,255,0.86)', outline: '#0d2530' },
   11: { color: '#52B7FF', shadow: 'rgba(82,183,255,0.9)' }
 };
+
+export function isDungeonPreferenceEnabled(key, defaultEnabled = false) {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored === null ? defaultEnabled : stored !== '0';
+  } catch (error) {
+    return defaultEnabled;
+  }
+}
+
+export function shouldAutoResolveDungeonFights() {
+  return isDungeonPreferenceEnabled(DUNGEON_AUTO_RESOLVE_KEY, false);
+}
+
+export function shouldHideRecruitFirstModal() {
+  return isDungeonPreferenceEnabled(DUNGEON_HIDE_RECRUIT_FIRST_MODAL_KEY, false);
+}

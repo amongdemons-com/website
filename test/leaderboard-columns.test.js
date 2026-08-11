@@ -21,10 +21,21 @@ test('leaderboard columns match Ranked and Duels sorting', () => {
 test('Patch 4 announces World narration and leaderboard column changes', () => {
   const notes = read('patch-notes.md');
 
-  assert.match(notes, /## Patch 5 \(Current\)\s+## Patch 4/);
+  assert.match(notes, /## Patch 5 \(Current\)[\s\S]*## Patch 4/);
   assert.match(notes, /World setting[\s\S]*boss narration/);
   assert.match(notes, /Ranked standings[\s\S]*without a Ranked Floor column/);
   assert.match(notes, /Duel standings[\s\S]*Wins and Losses columns/);
+});
+
+test('Patch 5 announces the Dungeon preferences and World duel fix', () => {
+  const notes = read('patch-notes.md');
+  const patch = notes.slice(notes.indexOf('## Patch 5 (Current)'), notes.indexOf('## Patch 4'));
+
+  assert.match(patch, /resolve fights automatically/);
+  assert.match(patch, /Victory or Defeat/);
+  assert.match(patch, /skip the Recruit First warning/);
+  assert.match(patch, /winning ambushes[\s\S]*Boss narration/);
+  assert.match(patch, /World PvP duels[\s\S]*Ranked Points update/);
 });
 
 function read(relativePath) {

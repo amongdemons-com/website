@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="cecafe3e00ac">
+    <meta name="among-demons-client-version" content="8a7f9cb453f8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Settings | Among Demons</title>
@@ -133,11 +133,31 @@
               <label class="form-check-label" for="settingsCardShake">Card shake</label>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section class="settings-section" aria-labelledby="dungeonSettingsHeading">
+        <header class="settings-section-header">
+          <span class="settings-section-icon" aria-hidden="true"><i data-lucide="skull"></i></span>
+          <div>
+            <h2 id="dungeonSettingsHeading">Dungeon</h2>
+          </div>
+        </header>
+
+        <div class="settings-form settings-dungeon-form">
           <div class="settings-field settings-toggle-field">
             <div class="form-check form-switch settings-toggle">
-              <input class="form-check-input" type="checkbox" role="switch" id="settingsHideWinningAmbushes">
-              <label class="form-check-label" for="settingsHideWinningAmbushes">Do not show winning ambushes</label>
+              <input class="form-check-input" type="checkbox" role="switch" id="settingsAutoResolveDungeonFights">
+              <label class="form-check-label" for="settingsAutoResolveDungeonFights">Resolve dungeon fights automatically</label>
             </div>
+            <small class="form-text">Skips the initial fight animation. You can still view the fight log or replay the battle afterward.</small>
+          </div>
+          <div class="settings-field settings-toggle-field">
+            <div class="form-check form-switch settings-toggle">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingsHideRecruitFirstModal">
+              <label class="form-check-label" for="settingsHideRecruitFirstModal">Do not show “Recruit First?”</label>
+            </div>
+            <small class="form-text">Continues without a warning when your dungeon team has open slots.</small>
           </div>
         </div>
       </section>
@@ -162,6 +182,12 @@
             <div class="form-check form-switch settings-toggle">
               <input class="form-check-input" type="checkbox" role="switch" id="settingsBossNarration" checked>
               <label class="form-check-label" for="settingsBossNarration">Boss narration</label>
+            </div>
+          </div>
+          <div class="settings-field settings-toggle-field">
+            <div class="form-check form-switch settings-toggle">
+              <input class="form-check-input" type="checkbox" role="switch" id="settingsHideWinningAmbushes">
+              <label class="form-check-label" for="settingsHideWinningAmbushes">Do not show winning ambushes</label>
             </div>
           </div>
         </div>
@@ -337,6 +363,6 @@
     </div>
     <script src="/app/dist/runtime.bundle.js?v=9ce41f142910"></script>
     <script src="/app/js/usernames.js?v=8ab3cb68367d"></script>
-    <script src="/app/js/settings-ui.js?v=82bdb9bb95cd"></script>
+    <script src="/app/js/settings-ui.js?v=f92c562a4c20"></script>
   </body>
 </html>

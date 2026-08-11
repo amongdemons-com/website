@@ -1,7 +1,7 @@
 import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
-import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
+import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES, shouldAutoResolveDungeonFights, shouldHideRecruitFirstModal } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, showDungeonResultProgression, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
@@ -220,6 +220,7 @@ function announceConvergence(run) {
 async function battle() {
   if (!state.run || state.isBattleAnimating || state.isResultAnimating) return;
   showCombatPanel();
+  const autoResolve = shouldAutoResolveDungeonFights();
 
   await withBusy(null, async () => {
     try {
@@ -230,13 +231,23 @@ async function battle() {
       state.combatLog = combatLog;
       if (lastBattle) {
         state.run.lastBattle = lastBattle;
-        state.run.team = cloneDemons(lastBattle.playerTeamBefore || state.run.team || []);
-        state.run.enemies = cloneDemons(lastBattle.enemyTeamBefore || state.run.enemies || []);
+        if (autoResolve) {
+          state.run.team = cloneDemons(lastBattle.playerTeamAfter || state.run.team || []);
+          state.run.enemies = cloneDemons(lastBattle.enemyTeamAfter || state.run.enemies || []);
+        } else {
+          state.run.team = cloneDemons(lastBattle.playerTeamBefore || state.run.team || []);
+          state.run.enemies = cloneDemons(lastBattle.enemyTeamBefore || state.run.enemies || []);
+        }
       }
       state.combatDemons = createCombatDemonMap();
       elements.fightLog.innerHTML = '';
       elements.fightLog.classList.remove('text-muted');
-      await playCombatLog(playbackResult);
+      if (autoResolve) {
+        clearSkippedBattleAnimationState();
+        renderRun();
+      } else {
+        await playCombatLog(playbackResult);
+      }
       if (result.rankedResult) {
         state.battleHandPreview = null;
         const won = result.winner === 'player';
@@ -260,11 +271,13 @@ async function battle() {
         await resultOverlay;
         await finishRun(getDefeatMessage(result), { defeated: true });
       } else {
-        const handFlowSources = captureEnemyHandFlowSources();
         const resultOverlay = showBattleResultOverlay('victory');
-        if ((result.buffs?.pendingChoices || []).length) beginDeferredDemonicPactReveal();
-        state.pendingHandFlowSources = handFlowSources;
-        state.isEnemyPreviewDeferred = true;
+        if (!autoResolve) {
+          const handFlowSources = captureEnemyHandFlowSources();
+          if ((result.buffs?.pendingChoices || []).length) beginDeferredDemonicPactReveal();
+          state.pendingHandFlowSources = handFlowSources;
+          state.isEnemyPreviewDeferred = true;
+        }
         await resultOverlay;
         if (result.run) {
           await applyRunPayload(result.run);
@@ -278,6 +291,16 @@ async function battle() {
       showError(error);
     }
   });
+}
+
+function clearSkippedBattleAnimationState() {
+  if (state.pactRevealTimer) window.clearTimeout(state.pactRevealTimer);
+  state.pactRevealTimer = null;
+  state.isPactRevealPending = false;
+  state.pendingHandFlowSources = null;
+  state.isEnemyPreviewDeferred = false;
+  state.enemyRevealEffectIds = [];
+  state.recruitSwapEffectIds = [];
 }
 
 function getDefeatMessage(result = {}) {
@@ -350,6 +373,7 @@ function requestRecruitContinue() {
 function shouldConfirmShortTeamContinue() {
   if (!state.run?.awaitingRecruit || !state.isRecruiting) return false;
   if (!getCurrentRecruitRewards().length) return false;
+  if (shouldHideRecruitFirstModal()) return false;
   return getRecruitPreviewTeam().length < getRecruitTeamLimit();
 }
 

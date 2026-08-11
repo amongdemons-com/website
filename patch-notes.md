@@ -4,6 +4,16 @@
 
 ## Patch 5 (Current)
 
+- Added a Dungeon setting to resolve fights automatically. It skips combat
+  playback but still shows Victory or Defeat, and the fight log and full replay
+  remain available afterward.
+- Added a Dungeon setting to skip the Recruit First warning when continuing
+  with open team slots.
+- Moved Do not show winning ambushes into the World settings, directly below
+  Boss narration.
+- World PvP duels now show the Ranked Points update again after the fight,
+  without an Anomaly Altar error interrupting the result.
+
 ## Patch 4
 
 - Hunter profiles now show the correct buffed combat stat for AOE, Poison,

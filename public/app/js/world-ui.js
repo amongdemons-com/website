@@ -1004,6 +1004,18 @@ import './bag-item-visuals.js';
       return;
     }
 
+    if (anomalyAltar && positionsEqual(target, state.position)) {
+      state.selectedTarget = null;
+      state.selectedPath = [];
+      state.travelStatus = 'idle';
+      state.recentStepEvent = null;
+      hideWorldActivityTooltip();
+      renderWorld();
+      renderTravelPanel();
+      openWorldAnomaly();
+      return;
+    }
+
     const boss = getBossAt(target);
     if (boss && positionsEqual(target, state.position)) {
       state.selectedTarget = target;
@@ -1456,18 +1468,6 @@ import './bag-item-visuals.js';
         `${delta >= 0 ? '+' : ''}${formatNumber(delta)} RP · ${formatNumber(result.rating)} total RP.`,
         delta < 0 ? 'warning' : 'success'
       );
-      return;
-    }
-
-    if (anomalyAltar && positionsEqual(target, state.position)) {
-      state.selectedTarget = null;
-      state.selectedPath = [];
-      state.travelStatus = 'idle';
-      state.recentStepEvent = null;
-      hideWorldActivityTooltip();
-      renderWorld();
-      renderTravelPanel();
-      openWorldAnomaly();
       return;
     }
 

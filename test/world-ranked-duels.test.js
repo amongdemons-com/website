@@ -55,6 +55,24 @@ test('world duels reuse the Dungeon ranked result modal', () => {
   assert.match(rankedUi, /function showRankedResultModal/);
 });
 
+test('world duel Ranked results do not execute map-tile altar handling', () => {
+  const worldUi = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'world-ui.js'), 'utf8');
+  const tileHandler = worldUi.slice(
+    worldUi.indexOf('async function handleMapTileClick(tile)'),
+    worldUi.indexOf('async function travelSelectedPath()')
+  );
+  const rankedResultFlow = worldUi.slice(
+    worldUi.indexOf('async function showWorldDuelRankedResult(result, targetPlayer = {})'),
+    worldUi.indexOf('async function challengeBoss(')
+  );
+
+  assert.match(tileHandler, /if \(anomalyAltar && positionsEqual\(target, state\.position\)\)/);
+  assert.match(tileHandler, /openWorldAnomaly\(\)/);
+  assert.doesNotMatch(rankedResultFlow, /anomalyAltar/);
+  assert.doesNotMatch(rankedResultFlow, /positionsEqual\(target/);
+  assert.match(rankedResultFlow, /dungeonRanked\.showRankedResultModal/);
+});
+
 test('world duel records and challenger RP commit in one transaction', async () => {
   const calls = [];
   let committed = false;
