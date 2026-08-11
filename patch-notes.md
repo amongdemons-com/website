@@ -13,6 +13,8 @@
   Boss narration.
 - World PvP duels now show the Ranked Points update again after the fight,
   without an Anomaly Altar error interrupting the result.
+- Mythic Echoes awarded for defeating The Anomaly now come from species missing
+  from your collection whenever any remain.
 
 ## Patch 4
 

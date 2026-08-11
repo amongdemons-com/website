@@ -120,6 +120,7 @@ function serializeAnomalyState(row = {}, options = {}) {
 
 function resolveAnomalyReward(voiceShards = 0, options = {}) {
   const randomInt = options.randomInt || crypto.randomInt;
+  const candidateTypeIds = normalizeAnomalyRewardTypeIds(options.candidateTypeIds);
   const currentShards = Math.min(ANOMALY_PITY_SHARDS - 1, Math.max(0, Number(voiceShards) || 0));
   const randomDrop = randomInt(100) < ANOMALY_ECHO_CHANCE_PERCENT;
   const earnedShardCount = currentShards + 1;
@@ -129,10 +130,33 @@ function resolveAnomalyReward(voiceShards = 0, options = {}) {
   return {
     echoAwarded,
     source: randomDrop ? 'chance' : pityDrop ? 'pity' : 'shard',
-    typeId: echoAwarded ? randomInt(ANOMALY_ABILITY_TYPE_IDS.length) + 1 : null,
+    typeId: echoAwarded ? candidateTypeIds[randomInt(candidateTypeIds.length)] : null,
     voiceShards: echoAwarded ? 0 : earnedShardCount,
     pityRequired: ANOMALY_PITY_SHARDS
   };
+}
+
+function normalizeAnomalyRewardTypeIds(typeIds) {
+  const validTypeIds = new Set(ANOMALY_ABILITY_TYPE_IDS);
+  const candidates = [...new Set(
+    (Array.isArray(typeIds) ? typeIds : [])
+      .map(Number)
+      .filter((typeId) => validTypeIds.has(typeId))
+  )];
+
+  return candidates.length ? candidates : [...ANOMALY_ABILITY_TYPE_IDS];
+}
+
+async function getUncollectedMythicTypeIds(playerId, queryable = db) {
+  const [rows] = await queryable.query(
+    `SELECT DISTINCT type_id AS typeId
+     FROM player_demons
+     WHERE player_id = ? AND LOWER(rarity) = 'mythic'`,
+    [playerId]
+  );
+  const collectedTypeIds = new Set(rows.map((row) => Number(row.typeId)));
+
+  return ANOMALY_ABILITY_TYPE_IDS.filter((typeId) => !collectedTypeIds.has(typeId));
 }
 
 async function summonWorldAnomaly(player, requestedRitualId, options = {}) {
@@ -223,8 +247,10 @@ async function summonWorldAnomaly(player, requestedRitualId, options = {}) {
     let nextVoiceShards = Math.max(0, Number(ritual.voiceShards) || 0);
     const won = fight.winner === 'player';
     if (won) {
+      const uncollectedMythicTypeIds = await getUncollectedMythicTypeIds(player.id, connection);
       const rewardRoll = resolveAnomalyReward(nextVoiceShards, {
-        randomInt: options.randomInt || crypto.randomInt
+        randomInt: options.randomInt || crypto.randomInt,
+        candidateTypeIds: uncollectedMythicTypeIds
       });
       nextVoiceShards = rewardRoll.voiceShards;
       if (rewardRoll.echoAwarded) {
@@ -314,6 +340,7 @@ module.exports = {
   ANOMALY_Y,
   createAnomalyEnemy,
   createAnomalyRitualId,
+  getUncollectedMythicTypeIds,
   getWorldAnomalyForPlayer,
   isAtAnomalyAltar,
   normalizeAnomalyRitualId,

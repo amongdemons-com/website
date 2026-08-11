@@ -24,6 +24,7 @@ const {
   ANOMALY_X,
   ANOMALY_Y,
   createAnomalyEnemy,
+  getUncollectedMythicTypeIds,
   isAtAnomalyAltar,
   resolveAnomalyReward,
   summonWorldAnomaly
@@ -77,7 +78,7 @@ test('the altar presentation follows shared modal, merchant card, and Soul amoun
   assert.equal(worldUi.includes('<dt>Learnings</dt>'), true);
   assert.equal(worldUi.includes('25)}%</dd>'), true);
   assert.equal(worldUi.includes('25)}% on victory'), false);
-  assert.equal(worldUi.includes('Experience: 4 victories guarantee one random Mythic Echo.'), true);
+  assert.match(worldUi, /4 victories guarantee one Mythic Echo, drawn from species missing from your collection/);
   assert.match(worldCss, /\.world-anomaly-known \.world-anomaly-chance \{\s*color: #fac51c;/);
   assert.equal(worldUi.includes('Voice Shard'), false);
   assert.equal(worldUi.includes('renderSoulAmount(balance || 0, { compact: true })'), true);
@@ -185,6 +186,62 @@ test('four failed reward rolls guarantee a uniformly selected Mythic Echo', () =
   assert.equal(reward.voiceShards, 0);
 });
 
+test('Anomaly Echo rewards select only from the supplied uncollected Mythics', () => {
+  const rolls = [0, 1];
+  const reward = resolveAnomalyReward(0, {
+    randomInt: () => rolls.shift(),
+    candidateTypeIds: [2, 7]
+  });
+
+  assert.equal(reward.echoAwarded, true);
+  assert.equal(reward.typeId, 7);
+});
+
+test('uncollected Mythics exclude species already owned at Mythic rarity', async () => {
+  const queries = [];
+  const queryable = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return [[{ typeId: 1 }, { typeId: 6 }, { typeId: 11 }]];
+    }
+  };
+
+  const typeIds = await getUncollectedMythicTypeIds('hunter-one', queryable);
+
+  assert.deepEqual(typeIds, [2, 3, 4, 5, 7, 8, 9, 10]);
+  assert.deepEqual(queries[0].params, ['hunter-one']);
+  assert.match(queries[0].sql, /LOWER\(rarity\) = 'mythic'/);
+});
+
+test('Anomaly victory awards an Echo from the remaining uncollected Mythics', async () => {
+  const updates = [];
+  const collectedMythicTypeIds = Array.from({ length: 10 }, (_, index) => index + 1);
+  const connection = createAnomalyConnection(updates, { collectedMythicTypeIds });
+  const echoes = [];
+  const result = await summonWorldAnomaly(
+    { id: 'hunter-one', level: 50 },
+    'ritual:00000000-0000-4000-8000-000000000002',
+    {
+      connection,
+      playerTeam: [{ instanceId: 'player', typeId: 1, hp: 10, maxHp: 10, atk: 1, speed: 1 }],
+      playerBuffs: {},
+      demonTypes,
+      simulateFight: () => createFightResult('player'),
+      randomInt: () => 0,
+      addEcho: async (playerId, demon) => {
+        echoes.push({ playerId, demon });
+        return { typeId: demon.typeId, rarity: demon.rarity, species: 'Vee-Scol' };
+      }
+    }
+  );
+
+  assert.equal(result.reward.typeId, 11);
+  assert.deepEqual(echoes, [{
+    playerId: 'hunter-one',
+    demon: { typeId: 11, rarity: 'mythic' }
+  }]);
+});
+
 test('defeat commits the non-refundable Soul cost without advancing pity', async () => {
   const updates = [];
   const connection = createAnomalyConnection(updates, { voiceShards: 2 });
@@ -239,6 +296,9 @@ function createAnomalyConnection(updates, ritual = {}) {
           victories: ritual.victories || 0,
           lastRitualId: ritual.lastRitualId || null
         }]];
+      }
+      if (/SELECT DISTINCT type_id AS typeId/.test(sql)) {
+        return [(ritual.collectedMythicTypeIds || []).map((typeId) => ({ typeId }))];
       }
       if (/INSERT IGNORE INTO player_anomaly_rituals/.test(sql)) return [{ affectedRows: 1 }];
       if (/UPDATE players SET souls/.test(sql)) return [{ affectedRows: 1 }];

@@ -6187,7 +6187,7 @@ import './bag-item-visuals.js';
               <div><dt>Mythic Echo</dt><dd class="world-anomaly-chance">${formatNumber(anomaly.echoChancePercent || 25)}%</dd></div>
               <div><dt>Learnings</dt><dd>${formatNumber(anomaly.voiceShards)}/${formatNumber(anomaly.pityRequired)}</dd></div>
             </dl>
-            <small>Experience: 4 victories guarantee one random Mythic Echo.</small>
+            <small>Experience: 4 victories guarantee one Mythic Echo, drawn from species missing from your collection when possible.</small>
           `
           : `
             <p>The stone speaks in voices that do not belong together.</p>
