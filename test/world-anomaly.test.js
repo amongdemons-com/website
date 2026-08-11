@@ -33,8 +33,8 @@ const {
 test('the Altar of Many Voices occupies Area 4, 0', () => {
   const event = map.events.find((candidate) => candidate.type === 'altar-many-voices');
   assert.deepEqual([ANOMALY_X, ANOMALY_Y], [4, 0]);
-  assert.equal(ANOMALY_SOUL_COST, 10_000);
-  assert.equal(worldUi.includes('const ANOMALY_FALLBACK_COST = 10_000;'), true);
+  assert.equal(ANOMALY_SOUL_COST, 5_000);
+  assert.equal(worldUi.includes('const ANOMALY_FALLBACK_COST = 5_000;'), true);
   assert.equal(event?.title, ANOMALY_EVENT_NAME);
   assert.equal(event?.x, ANOMALY_X);
   assert.equal(event?.y, ANOMALY_Y);
@@ -50,11 +50,20 @@ test('Patch 4 announces The Anomaly ritual and Mythic Echo reward', () => {
   assert.match(patchNotes, /guaranteed every fourth victory without an Echo/);
 });
 
+test('Patch 5 announces the reduced Altar offering', () => {
+  const patch = patchNotes.slice(
+    patchNotes.indexOf('## Patch 5 (Current)'),
+    patchNotes.indexOf('## Patch 4')
+  );
+
+  assert.match(patch, /Altar of Many Voices offering from 10,000 to 5,000 Souls/);
+});
+
 test('the world events guide includes the Altar of Many Voices', () => {
   const page = renderEventsPage();
   assert.match(page, /Altar of Many Voices/);
   assert.match(page, /Area 4, 0/);
-  assert.match(page, /10k Souls/);
+  assert.match(page, /5k Souls/);
   assert.match(page, /25% Mythic Echo/);
   assert.doesNotMatch(page, /Guaranteed by 4 wins/);
   assert.match(page, /9 kinds of world events/);

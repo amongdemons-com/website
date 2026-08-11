@@ -73,7 +73,7 @@ import './bag-item-visuals.js';
   const ANOMALY_EVENT_TYPE = 'altar-many-voices';
   const ANOMALY_ALTAR_SVG_URL = '/app/images/assets/anomaly-altar.svg';
   const ANOMALY_ALTAR_MARKER_SIZE = 56;
-  const ANOMALY_FALLBACK_COST = 10_000;
+  const ANOMALY_FALLBACK_COST = 5_000;
   const ANOMALY_PITY_SHARDS = 4;
   // Marker-local offsets shared by drawWorldMerchantMarker and its animated
   // glow (updateMerchantGlow): where the soul lantern hangs inside the wagon

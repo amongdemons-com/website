@@ -9,6 +9,7 @@
   reaching level 666, and Crowned in Hell for reaching Demonic rank.
 - The maximum hunter level is now 666. At max level, the XP bar stays full
   and shows Max level.
+- Reduced the Altar of Many Voices offering from 10,000 to 5,000 Souls.
 - Added a back button beside the Bag title so you can return to the previous
   page.
 - Returning to the World map from Bag now restores the map correctly.
