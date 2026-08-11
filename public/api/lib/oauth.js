@@ -3,6 +3,7 @@ const db = require('./db');
 const { hashPassword } = require('./auth');
 const { saveDefaultBoundShrine } = require('./world-shrines');
 const { grantStarterDemons } = require('./starter-demon');
+const { grantStarterEcho } = require('./starter-echo');
 const {
   USERNAME_MAX_LENGTH,
   createUsernameCandidate
@@ -327,9 +328,12 @@ async function createOAuthPlayer(connection, options) {
       );
       await saveDefaultBoundShrine(playerId, connection);
       try {
-        await grantStarterDemons(playerId, connection);
+        await Promise.all([
+          grantStarterDemons(playerId, connection),
+          grantStarterEcho(playerId, connection)
+        ]);
       } catch (starterError) {
-        console.error('Failed to grant starter demons on OAuth signup', playerId, starterError);
+        console.error('Failed to grant starter loadout on OAuth signup', playerId, starterError);
       }
 
       const [rows] = await connection.query('SELECT * FROM players WHERE id = ? LIMIT 1', [playerId]);

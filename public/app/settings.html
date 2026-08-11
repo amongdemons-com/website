@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="2feda9af44f6">
+    <meta name="among-demons-client-version" content="b5dd62aaf18a">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Settings | Among Demons</title>
@@ -22,7 +22,7 @@
       })();
     </script>
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=4e9ee83d4769" rel="stylesheet">
+    <link href="/app/css/base.css?v=383e36720f2c" rel="stylesheet">
     <link href="/app/css/battle.css?v=dad6efb99dc5" rel="stylesheet">
   </head>
   <body class="settings-page">
@@ -189,6 +189,26 @@
               <input class="form-check-input" type="checkbox" role="switch" id="settingsHideWinningAmbushes">
               <label class="form-check-label" for="settingsHideWinningAmbushes">Do not show winning ambushes</label>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section" aria-labelledby="tutorialSettingsHeading">
+        <header class="settings-section-header">
+          <span class="settings-section-icon" aria-hidden="true"><i data-lucide="map"></i></span>
+          <div>
+            <h2 id="tutorialSettingsHeading">Tutorial</h2>
+            <p>Replay the short World, Dungeon, extraction, and Echoes guide whenever you like.</p>
+          </div>
+        </header>
+
+        <div class="settings-form settings-tutorial-form">
+          <div class="settings-field">
+            <button class="btn btn-primary" id="settingsRestartTutorial" type="button">
+              <i data-lucide="list-restart" aria-hidden="true"></i>
+              <span>Replay Tutorial</span>
+            </button>
+            <small class="form-text">Restarting only resets the guide. Your World position, Dungeon run, demons, and rewards stay unchanged.</small>
           </div>
         </div>
       </section>
@@ -361,8 +381,8 @@
         </div>
       </div>
     </div>
-    <script src="/app/dist/runtime.bundle.js?v=f33c85ee12d4"></script>
+    <script src="/app/dist/runtime.bundle.js?v=d8d31d102445"></script>
     <script src="/app/js/usernames.js?v=8ab3cb68367d"></script>
-    <script src="/app/js/settings-ui.js?v=f92c562a4c20"></script>
+    <script src="/app/js/settings-ui.js?v=e4a0a623ecc5"></script>
   </body>
 </html>

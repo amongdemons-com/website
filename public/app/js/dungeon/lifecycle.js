@@ -197,6 +197,7 @@ async function applyRunPayload(run) {
   renderRun();
   announceConvergence(state.run);
   showPendingDungeonRankedResult(state.run);
+  emitTutorialDungeonState();
 }
 
 function announceConvergence(run) {
@@ -221,6 +222,9 @@ async function battle() {
   if (!state.run || state.isBattleAnimating || state.isResultAnimating) return;
   showCombatPanel();
   const autoResolve = shouldAutoResolveDungeonFights();
+  window.AmongDemons?.tutorial?.emit?.('dungeon-battle-start', {
+    currentFloor: Number(state.run.currentFloor) || 0
+  });
 
   await withBusy(null, async () => {
     try {
@@ -291,6 +295,7 @@ async function battle() {
       showError(error);
     }
   });
+  emitTutorialDungeonState();
 }
 
 function clearSkippedBattleAnimationState() {
@@ -363,6 +368,12 @@ function requestRecruitContinue() {
   }
 
   if (shouldConfirmShortTeamContinue()) {
+    const teamCount = getRecruitPreviewTeam().length;
+    const teamLimit = getRecruitTeamLimit();
+    const count = document.getElementById('shortTeamCount');
+    const subtitle = document.getElementById('shortTeamModalSubtitle');
+    if (count) count.textContent = `${teamCount}/${teamLimit}`;
+    if (subtitle) subtitle.setAttribute('aria-label', `${teamCount} of ${teamLimit} team slots used. Open team slot available.`);
     getModal(elements.shortTeamModal).show();
     return;
   }
@@ -508,6 +519,7 @@ async function finishRun(message, summary = {}) {
       loadAccountStatPoints()
     ]);
     renderRun();
+    emitTutorialDungeonState();
     showDungeonResultProgression(result.progression);
   } catch (error) {
     showError(error);
@@ -614,6 +626,30 @@ function createReplayRunSnapshot(run) {
 
 function isCurrentFloorBattle(run) {
   return Boolean(run?.lastBattle?.floor === run?.currentFloor);
+}
+
+function emitTutorialDungeonState(overrides = {}) {
+  const run = state.run;
+  const hasPendingPacts = hasPendingBuffChoices(run);
+  window.AmongDemons?.tutorial?.emit?.('dungeon-state', {
+    ready: true,
+    hasRun: Boolean(run),
+    status: run?.status || null,
+    currentFloor: Number(run?.currentFloor) || 0,
+    awaitingRecruit: Boolean(run?.awaitingRecruit),
+    isRecruiting: Boolean(state.isRecruiting),
+    battleActive: Boolean(state.isBattleAnimating || state.isResultAnimating),
+    hasPendingPacts,
+    canExtract: Boolean(
+      run?.status === 'active'
+      && run.awaitingRecruit
+      && state.isRecruiting
+      && Number(run.currentFloor) >= 1
+      && !hasPendingPacts
+    ),
+    endSummary: state.endSummary ? { ...state.endSummary } : null,
+    ...overrides
+  });
 }
 
 export {

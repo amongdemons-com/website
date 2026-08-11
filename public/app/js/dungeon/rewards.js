@@ -663,6 +663,23 @@ async function finishCashout(result, options = {}) {
     loadAccountStatPoints()
   ]);
   renderRun();
+  window.AmongDemons?.tutorial?.emit?.('dungeon-extracted', {
+    echo: skippedEcho ? null : result.echo || null,
+    xp: Number(result.xp) || 0,
+    souls: Number(result.souls) || 0
+  });
+  window.AmongDemons?.tutorial?.emit?.('dungeon-state', {
+    ready: true,
+    hasRun: false,
+    status: null,
+    currentFloor: 0,
+    awaitingRecruit: false,
+    isRecruiting: false,
+    battleActive: false,
+    canExtract: false,
+    extraction: { echo: skippedEcho ? null : result.echo || null },
+    endSummary: { ...state.endSummary }
+  });
   showDungeonResultProgression(result.progression);
 }
 

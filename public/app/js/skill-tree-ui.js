@@ -74,6 +74,7 @@
       applyPlayer(summary.player);
       applySummary(summary);
       render();
+      emitSkillTreeState();
     } catch (error) {
       handleError(error);
     }
@@ -205,6 +206,7 @@
     };
     audio?.play('sfx.progression.skillAdd', { volume: 0.9 });
     render();
+    emitSkillTreeState({ draftDirty: true });
   }
 
   function decrementDraft(key) {
@@ -489,6 +491,7 @@
       }));
       audio?.play('sfx.progression.skillUnlock', { volume: 0.9 });
       setMessage('Constellation sealed. Your skill bonuses are active.', 'success');
+      window.AmongDemons?.tutorial?.emit?.('skill-tree-saved');
     } catch (error) {
       handleError(error);
     } finally {
@@ -533,6 +536,17 @@
       allocations[key] = Math.max(0, Number(summary.allocations?.[key]) || 0);
       return allocations;
     }, {});
+  }
+
+  function emitSkillTreeState(overrides = {}) {
+    if (!state.summary || !state.draft) return;
+    const spent = getSpent(state.draft);
+    const savedSpent = getSpent(state.summary.allocations);
+    window.AmongDemons?.tutorial?.emit?.('skill-tree-ready', {
+      unspent: Math.max(0, Number(state.summary.totalPoints) - spent),
+      draftDirty: spent !== savedSpent,
+      ...overrides
+    });
   }
 
   function applyPlayer(player) {

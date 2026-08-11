@@ -5,6 +5,7 @@ const { cleanPlayer, createSession, hashPassword } = require('../lib/auth');
 const { saveDefaultBoundShrine } = require('../lib/world-shrines');
 const { generateGuestUsername } = require('../lib/guest');
 const { grantStarterDemons } = require('../lib/starter-demon');
+const { grantStarterEcho } = require('../lib/starter-echo');
 
 const router = express.Router();
 const MAX_USERNAME_ATTEMPTS = 12;
@@ -31,7 +32,7 @@ router.post('/auth/guest', async (req, res) => {
         [playerId, username, hash, salt, JSON.stringify([])]
       );
       await saveDefaultBoundShrine(playerId);
-      await grantStarterDemonsSafely(playerId);
+      await grantStarterLoadoutSafely(playerId);
       const token = await createSession(playerId);
 
       const [rows] = await db.query('SELECT * FROM players WHERE id = ? LIMIT 1', [playerId]);
@@ -52,11 +53,14 @@ router.post('/auth/guest', async (req, res) => {
 
 // Missing starter demons must never fail account creation - the player can
 // still recruit demons in the dungeon.
-async function grantStarterDemonsSafely(playerId) {
+async function grantStarterLoadoutSafely(playerId) {
   try {
-    await grantStarterDemons(playerId);
+    await Promise.all([
+      grantStarterDemons(playerId),
+      grantStarterEcho(playerId)
+    ]);
   } catch (error) {
-    console.error('Failed to grant starter demons to guest', playerId, error);
+    console.error('Failed to grant starter loadout to guest', playerId, error);
   }
 }
 

@@ -8,3 +8,4 @@ import '../public/app/js/steam.js';
 import '../public/app/js/audio.js';
 import '../public/app/js/navigation.js';
 import '../public/app/js/demon-cards.js';
+import '../public/app/js/tutorial.js';

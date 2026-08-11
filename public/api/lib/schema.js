@@ -22,6 +22,10 @@ const ENDED_RUN_REWARDS_CLEANUP_MIGRATION = '20260808_ended_run_rewards_cleanup_
 const ACCOUNT_MERGE_SCHEMA_MIGRATION = '20260808_account_merge_schema_v1';
 const PLAYER_LEVEL_CAP_MIGRATION = '20260811_player_level_cap_666_v1';
 const NEW_ACHIEVEMENTS_BACKFILL_MIGRATION = '20260811_world_level_ranked_achievements_v1';
+const PLAYER_TUTORIAL_SCHEMA_MIGRATION = '20260811_player_tutorial_schema_v1';
+const PLAYER_TUTORIAL_GUIDES_SCHEMA_MIGRATION = '20260811_player_tutorial_guides_schema_v1';
+const PLAYER_TUTORIAL_TRAINING_GRANT_SCHEMA_MIGRATION = '20260811_player_tutorial_training_grant_v1';
+const STARTER_TYPE_3_COMMON_ECHO_BACKFILL_MIGRATION = '20260811_starter_type_3_common_echo_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -162,6 +166,63 @@ async function normalizePlayerDemonMinimumStats() {
   }
 }
 
+async function addPlayerTutorialSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_tutorials (
+      player_id VARCHAR(255) NOT NULL,
+      tutorial_key VARCHAR(64) NOT NULL,
+      version SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+      status VARCHAR(24) NOT NULL DEFAULT 'not_started',
+      checkpoint VARCHAR(64) NOT NULL DEFAULT 'world-map',
+      training_souls_granted TINYINT(1) NOT NULL DEFAULT 0,
+      started_at TIMESTAMP NULL,
+      completed_at TIMESTAMP NULL,
+      skipped_at TIMESTAMP NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, tutorial_key),
+      INDEX idx_player_tutorials_status (tutorial_key, status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column('player_tutorials', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_tutorials', 'tutorial_key', 'VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addColumnIfMissing('player_tutorials', 'version', '`version` SMALLINT UNSIGNED NOT NULL DEFAULT 1');
+  await addColumnIfMissing('player_tutorials', 'status', '`status` VARCHAR(24) NOT NULL DEFAULT "not_started"');
+  await addColumnIfMissing('player_tutorials', 'checkpoint', '`checkpoint` VARCHAR(64) NOT NULL DEFAULT "world-map"');
+  await addColumnIfMissing('player_tutorials', 'started_at', '`started_at` TIMESTAMP NULL');
+  await addColumnIfMissing('player_tutorials', 'completed_at', '`completed_at` TIMESTAMP NULL');
+  await addColumnIfMissing('player_tutorials', 'skipped_at', '`skipped_at` TIMESTAMP NULL');
+  await addColumnIfMissing('player_tutorials', 'created_at', '`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+  await addColumnIfMissing('player_tutorials', 'updated_at', '`updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+  await addIndexIfMissing('player_tutorials', 'idx_player_tutorials_status', 'INDEX idx_player_tutorials_status (tutorial_key, status)');
+}
+
+async function addPlayerTutorialGuidesSchema() {
+  await addColumnIfMissing('player_tutorials', 'summon_guide_completed', '`summon_guide_completed` TINYINT(1) NOT NULL DEFAULT 0');
+  await addColumnIfMissing('player_tutorials', 'training_guide_completed', '`training_guide_completed` TINYINT(1) NOT NULL DEFAULT 0');
+  await addColumnIfMissing('player_tutorials', 'skill_tree_guide_pending', '`skill_tree_guide_pending` TINYINT(1) NOT NULL DEFAULT 0');
+  await addColumnIfMissing('player_tutorials', 'skill_tree_guide_completed', '`skill_tree_guide_completed` TINYINT(1) NOT NULL DEFAULT 0');
+}
+
+async function addPlayerTutorialTrainingGrantSchema() {
+  await addColumnIfMissing('player_tutorials', 'training_souls_granted', '`training_souls_granted` TINYINT(1) NOT NULL DEFAULT 0');
+}
+
+async function backfillStarterType3CommonEcho() {
+  await db.query(`
+    INSERT INTO player_bag (player_id, item_key, item_type, quantity)
+    SELECT id, 'echo:3:common', 'echo', 1
+    FROM players
+    ON DUPLICATE KEY UPDATE
+      quantity = GREATEST(player_bag.quantity, 1)
+  `);
+  await db.query(`
+    INSERT IGNORE INTO player_echo_discoveries (player_id, type_id, rarity)
+    SELECT id, 3, 'common'
+    FROM players
+  `);
+}
+
 async function applyBaselineSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -257,6 +318,8 @@ async function applyBaselineSchema() {
     await dropColumnIfPresent('player_stat_points', legacyColumn);
   }
   await normalizeUtf8Column('player_stat_points', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+
+  await addPlayerTutorialSchema();
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_oauth_accounts (
@@ -1099,6 +1162,10 @@ async function initializeSchema() {
   await runMigrationOnce(ACCOUNT_MERGE_SCHEMA_MIGRATION, addAccountMergeSchema);
   await runMigrationOnce(PLAYER_LEVEL_CAP_MIGRATION, enforcePlayerLevelCap);
   await runMigrationOnce(NEW_ACHIEVEMENTS_BACKFILL_MIGRATION, backfillNewAchievements);
+  await runMigrationOnce(PLAYER_TUTORIAL_SCHEMA_MIGRATION, addPlayerTutorialSchema);
+  await runMigrationOnce(PLAYER_TUTORIAL_GUIDES_SCHEMA_MIGRATION, addPlayerTutorialGuidesSchema);
+  await runMigrationOnce(PLAYER_TUTORIAL_TRAINING_GRANT_SCHEMA_MIGRATION, addPlayerTutorialTrainingGrantSchema);
+  await runMigrationOnce(STARTER_TYPE_3_COMMON_ECHO_BACKFILL_MIGRATION, backfillStarterType3CommonEcho);
 }
 
 function ensureSchemaReady() {

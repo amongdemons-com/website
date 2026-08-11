@@ -73,10 +73,16 @@
 
   function setSession(nextSession) {
     localStorage.setItem(KEY, JSON.stringify(nextSession));
+    window.dispatchEvent(new CustomEvent('amongdemons:session-changed', {
+      detail: { authenticated: Boolean(nextSession?.token), player: nextSession?.player || null }
+    }));
   }
 
   function clearSession() {
     localStorage.removeItem(KEY);
+    window.dispatchEvent(new CustomEvent('amongdemons:session-changed', {
+      detail: { authenticated: false, player: null }
+    }));
   }
 
   function getToken() {

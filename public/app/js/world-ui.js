@@ -266,6 +266,8 @@ import './bag-item-visuals.js';
     activePointers: new Map(),
     pinch: null,
     gestureWasPinch: false,
+    tutorialMapExplored: false,
+    tutorialSpot: null,
     sidePanelExpanded: true,
     worldEncounterTab: 'pve',
     activeWorldBattle: null,
@@ -306,6 +308,7 @@ import './bag-item-visuals.js';
     audio?.setScene({ music: 'music.default' });
     cacheElements();
     bindDomControls();
+    addListener(window, 'amongdemons:tutorial-focus-world-spot', onTutorialFocusWorldSpot);
 
     try {
       // Fetch the world state while Pixi boots instead of after it.
@@ -649,6 +652,12 @@ import './bag-item-visuals.js';
     const canvas = app.canvas || app.view;
     canvas.classList.add('world-canvas');
     host.appendChild(canvas);
+    const tutorialSpotAnchor = document.createElement('span');
+    tutorialSpotAnchor.id = 'worldTutorialSpotAnchor';
+    tutorialSpotAnchor.className = 'world-tutorial-spot-anchor';
+    tutorialSpotAnchor.hidden = true;
+    tutorialSpotAnchor.setAttribute('aria-label', 'Tutorial destination: Area -8, 4');
+    host.appendChild(tutorialSpotAnchor);
 
     state.app = app;
     state.viewport = new Pixi.Container();
@@ -810,6 +819,11 @@ import './bag-item-visuals.js';
     drawBossMarkers();
     renderWorld();
     renderPanels();
+    window.AmongDemons?.tutorial?.emit?.('world-ready', {
+      ready: true,
+      hasActiveTeam: getActiveTeamMembers().length > 0,
+      position: { ...state.position }
+    });
 
     if (!state.initialCameraCentered) {
       centerOnHunter();
@@ -1116,6 +1130,10 @@ import './bag-item-visuals.js';
 
     renderWorld();
     renderTravelPanel();
+    window.AmongDemons?.tutorial?.emit?.('world-route-previewed', {
+      target: { ...target },
+      steps: Math.max(0, path.length - 1)
+    });
   }
 
   async function travelSelectedPath() {
@@ -1128,6 +1146,9 @@ import './bag-item-visuals.js';
     if (!(await stopHuntingForTravel())) return;
 
     state.moving = true;
+    window.AmongDemons?.tutorial?.emit?.('world-travel-started', {
+      target: { ...path[path.length - 1] }
+    });
     state.travelStatus = 'moving';
     state.travelLog = [];
     state.recentStepEvent = null;
@@ -1173,6 +1194,13 @@ import './bag-item-visuals.js';
         const successfulAmbush = stepEvent.type === 'ambush' && stepEvent.battle?.winner === 'enemy';
         if (successfulAmbush) {
           audio?.play('sfx.world.ambush', { volume: 0.9 });
+        }
+        if (stepEvent.type === 'ambush') {
+          window.AmongDemons?.tutorial?.emit?.('world-ambush', {
+            position: { ...step },
+            won: stepEvent.battle?.winner === 'player',
+            lost: stepEvent.battle?.winner === 'enemy'
+          });
         }
         if (shouldAutoShowAmbushBattle(stepEvent.battle)) {
           await showWorldBattleReplay(stepEvent.battle, getWorldBattleMeta('ambush', stepEvent.battle));
@@ -1575,6 +1603,7 @@ import './bag-item-visuals.js';
     state.huntBusyAction = 'fight';
     setButtonBusy(button, true, 'Fighting…');
 
+    let fightResult = null;
     try {
       const payload = await api('/api/world/hunt/try', {
         method: 'POST',
@@ -1582,6 +1611,7 @@ import './bag-item-visuals.js';
       });
       setHuntState(payload.hunt);
       const won = payload.battle?.winner === 'player';
+      fightResult = { won, lost: !won, encounterId };
       if (shouldShowWorldBattleReplay(payload.battle)) {
         await showWorldBattleReplay(payload.battle, getWorldBattleMeta('try_hunt', payload.battle));
       }
@@ -1603,6 +1633,7 @@ import './bag-item-visuals.js';
       if (state.ambushDefeatBlackoutActive) {
         await fadeWorldAmbushDefeatFromBlack();
       }
+      if (fightResult) window.AmongDemons?.tutorial?.emit?.('world-hunt-fight', fightResult);
     }
   }
 
@@ -1620,6 +1651,7 @@ import './bag-item-visuals.js';
       setHuntState(payload.hunt);
       audio?.play('sfx.world.huntStart', { volume: 0.84 });
       setMessage(`You started hunting ${getEncounterHuntTargetLabel(getEncounterById(encounterId))}.`, 'success');
+      window.AmongDemons?.tutorial?.emit?.('world-hunt-started', { encounterId });
     } catch (error) {
       handleAuthError(error);
     } finally {
@@ -1652,6 +1684,8 @@ import './bag-item-visuals.js';
       applyWorldPlayerUpdate(payload.player);
       const rewards = payload.rewards || {};
       const leveledUp = showHuntClaimProgression(payload.progression);
+      window.AmongDemons?.tutorial?.emit?.('world-hunt-claimed', { rewards, leveledUp });
+      if (leveledUp) window.AmongDemons?.tutorial?.emit?.('level-up', { source: 'world-hunt' });
       if (!leveledUp) playQuestCompleteSound();
       const restartNotice = payload.restartFailureReason
         ? ` Hunting stopped: ${payload.restartFailureReason}`
@@ -4612,6 +4646,10 @@ import './bag-item-visuals.js';
       renderTeamSummary();
       renderEncounterPanel();
       syncHuntTicker();
+      window.AmongDemons?.tutorial?.emit?.('world-team-saved', {
+        hasActiveTeam: getActiveTeamMembers().length > 0,
+        teamSize: getActiveTeamMembers().length
+      });
       setMessage(getWorldTeamSaveMessage(payload), 'success');
       window.bootstrap?.Modal.getOrCreateInstance(elements.worldTeamModal)?.hide();
     } catch (error) {
@@ -4655,10 +4693,12 @@ import './bag-item-visuals.js';
     }
 
     if (elements.worldTeamSaveButton) {
-      elements.worldTeamSaveButton.disabled = editor.loading || editor.saving || !editor.loaded;
+      const tutorialLocked = window.AmongDemons?.tutorial?.canSaveWorldTeam?.() === false;
+      elements.worldTeamSaveButton.disabled = editor.loading || editor.saving || !editor.loaded || tutorialLocked;
       elements.worldTeamSaveButton.classList.toggle('is-busy', editor.saving);
       elements.worldTeamSaveButton.setAttribute('aria-busy', editor.saving ? 'true' : 'false');
-      elements.worldTeamSaveButton.setAttribute('aria-label', editor.saving ? 'Saving team' : 'Save team');
+      elements.worldTeamSaveButton.setAttribute('aria-label', editor.saving ? 'Saving team' : tutorialLocked ? 'Complete the team tutorial steps before saving' : 'Save team');
+      elements.worldTeamSaveButton.title = tutorialLocked ? 'Complete the highlighted team steps first.' : '';
       elements.worldTeamSaveButton.innerHTML = editor.saving
         ? '<span class="dungeon-action-spinner" aria-hidden="true"></span><span>Saving</span>'
         : `${renderIcon('save')}<span>Save</span>`;
@@ -4817,6 +4857,8 @@ import './bag-item-visuals.js';
       ? `<span class="world-team-editor-in-team-mark has-count" title="${inTeamLabel}" aria-label="${inTeamLabel}">×${teamCopies}</span>`
       : '';
 
+    const preferredPosition = normalizeWorldTeamEditorPosition(displayDemon.preferredPosition || displayDemon.position);
+
     return renderDemonCard(displayDemon, {
       className: classes,
       overlayHtml,
@@ -4827,6 +4869,8 @@ import './bag-item-visuals.js';
         // String, because escapeHtml drops the number 0 (`String(value || '')`).
         'data-world-team-slot': Number.isInteger(slot) ? String(slot) : null,
         'data-world-team-in-team': isInTeam ? 'true' : null,
+        'data-world-team-position': preferredPosition,
+        'data-world-team-species': displayDemon.species || displayDemon.name || 'Demon',
         role: 'button',
         tabindex: '0'
       }
@@ -5163,6 +5207,12 @@ import './bag-item-visuals.js';
       .filter((entry) => normalizeWorldTeamEditorSlot(entry.formationSlot) !== slot)
       .concat(createWorldTeamEditorTeamEntry(demon, slot))
       .sort(compareWorldTeamEditorSlots);
+    window.AmongDemons?.tutorial?.emit?.('world-team-editor-changed', {
+      action: 'place',
+      teamSize: editor.team.length,
+      demonPosition: normalizeWorldTeamEditorPosition(demon.preferredPosition || demon.position),
+      slotPosition: getWorldTeamEditorSlotPosition(slot)
+    });
   }
 
   function moveWorldTeamEditorSlotEntry(sourceSlot, targetSlot) {
@@ -5260,12 +5310,15 @@ import './bag-item-visuals.js';
     }
 
     const teamFull = state.worldTeamEditor.team.length >= WORLD_TEAM_LIMIT;
+    const demon = getWorldTeamEditorCollectionDemon(demonId);
+    const preferredPosition = normalizeWorldTeamEditorPosition(demon?.preferredPosition || demon?.position);
+    const roleLabel = preferredPosition === 'back' ? 'ranged' : 'melee';
     return {
       label: 'Add to team',
       icon: 'user-plus',
       variant: 'primary',
       disabled: teamFull,
-      title: teamFull ? 'Your World team is full.' : 'Add to the next open team slot.',
+      title: teamFull ? 'Your World team is full.' : `Add to the next open ${roleLabel} slot.`,
       onClick: () => {
         addWorldTeamEditorDemonToNextSlot(demonId);
         finishWorldTeamEditorDetailsAction();
@@ -5277,7 +5330,10 @@ import './bag-item-visuals.js';
     const usedSlots = new Set(state.worldTeamEditor.team
       .map((entry) => normalizeWorldTeamEditorSlot(entry.formationSlot))
       .filter((slot) => slot !== null));
-    const slot = getNextWorldTeamEditorOpenSlot(usedSlots);
+    const demon = getWorldTeamEditorCollectionDemon(demonId);
+    const preferredPosition = normalizeWorldTeamEditorPosition(demon?.preferredPosition || demon?.position);
+    const slot = getNextWorldTeamEditorOpenSlotForPosition(usedSlots, preferredPosition)
+      ?? getNextWorldTeamEditorOpenSlot(usedSlots);
     if (slot === null || state.worldTeamEditor.team.length >= WORLD_TEAM_LIMIT) return false;
     placeWorldTeamEditorCollectionDemon(demonId, slot);
     return true;
@@ -5314,6 +5370,14 @@ import './bag-item-visuals.js';
     if (preferred !== null && !usedSlots.has(preferred)) return preferred;
     for (let slot = 0; slot < FORMATION_GRID_SIZE; slot += 1) {
       if (!usedSlots.has(slot)) return slot;
+    }
+    return null;
+  }
+
+  function getNextWorldTeamEditorOpenSlotForPosition(usedSlots, position) {
+    const preferredPosition = normalizeWorldTeamEditorPosition(position);
+    for (let slot = 0; slot < FORMATION_GRID_SIZE; slot += 1) {
+      if (!usedSlots.has(slot) && getWorldTeamEditorSlotPosition(slot) === preferredPosition) return slot;
     }
     return null;
   }
@@ -6006,6 +6070,9 @@ import './bag-item-visuals.js';
     // a previous visit during this page session.
     if (getAnomalyAltarAt(state.position)) state.anomalyAutoOpened = false;
     maybeOpenWorldArrivalEvent();
+    window.AmongDemons?.tutorial?.emit?.('world-arrived', {
+      position: { ...state.position }
+    });
   }
 
   function renderCurrentAnomalyAltar(altar) {
@@ -8605,6 +8672,7 @@ import './bag-item-visuals.js';
       state.viewport.x += dx;
       state.viewport.y += dy;
       updateCameraStatus();
+      markTutorialMapExplored();
     }
 
     pointer.lastX = event.clientX;
@@ -8725,6 +8793,7 @@ import './bag-item-visuals.js';
     state.viewport.x = pinch.center.x - state.pinch.worldCenter.x * nextScale;
     state.viewport.y = pinch.center.y - state.pinch.worldCenter.y * nextScale;
     updateCameraStatus();
+    markTutorialMapExplored();
   }
 
   function getPinchMetrics() {
@@ -8753,6 +8822,7 @@ import './bag-item-visuals.js';
     if (nextScale === oldScale) return;
 
     zoomAtClientPoint(event.clientX, event.clientY, nextScale);
+    markTutorialMapExplored();
   }
 
   function zoomAtClientPoint(clientX, clientY, nextScale) {
@@ -9466,6 +9536,40 @@ import './bag-item-visuals.js';
     updateHoverCoordinates();
     updateTargetTooltip();
     updateHuntTooltip();
+    updateTutorialSpotAnchor();
+  }
+
+  function markTutorialMapExplored() {
+    if (state.tutorialMapExplored) return;
+    const tutorial = window.AmongDemons?.tutorial?.getState?.();
+    if (tutorial?.status !== 'in_progress' || tutorial?.checkpoint !== 'world-map') return;
+    state.tutorialMapExplored = true;
+    window.AmongDemons?.tutorial?.emit?.('world-map-explored');
+  }
+
+  function onTutorialFocusWorldSpot(event) {
+    const detail = event.detail || {};
+    if (detail.clear) {
+      state.tutorialSpot = null;
+      updateTutorialSpotAnchor();
+      return;
+    }
+    state.tutorialSpot = normalizePosition(detail.position || { x: -8, y: 4 });
+    if (detail.center !== false) centerOnWorldPoint(tileCenter(state.tutorialSpot));
+    updateTutorialSpotAnchor();
+  }
+
+  function updateTutorialSpotAnchor() {
+    const anchor = document.getElementById('worldTutorialSpotAnchor');
+    if (!anchor || !state.tutorialSpot || !state.viewport) {
+      if (anchor) anchor.hidden = true;
+      return;
+    }
+    const point = tileCenter(state.tutorialSpot);
+    const scale = state.viewport.scale.x || 1;
+    anchor.hidden = false;
+    anchor.style.left = `${state.viewport.x + point.x * scale}px`;
+    anchor.style.top = `${state.viewport.y + point.y * scale}px`;
   }
 
   async function loadAnomalyAltarTexture() {
@@ -10011,7 +10115,7 @@ import './bag-item-visuals.js';
   }
 
   function armWorldBossIntro() {
-    if (!elements.worldBossDialog || isWorldBossIntroMuted()) return;
+    if (!elements.worldBossDialog || isWorldBossIntroMuted() || isCoreTutorialActive()) return;
     const bosses = state.bosses || [];
     if (!bosses.length) return;
     const boss = bosses[Math.floor(Math.random() * bosses.length)];
@@ -10019,9 +10123,14 @@ import './bag-item-visuals.js';
       const target = event.target instanceof Element ? event.target : event.target?.parentElement;
       if (target?.closest('#worldSidePanel')) return;
       document.removeEventListener('click', showAfterClick, true);
+      if (isCoreTutorialActive()) return;
       window.setTimeout(() => showWorldBossIntro(boss), 0);
     };
     addListener(document, 'click', showAfterClick, true);
+  }
+
+  function isCoreTutorialActive() {
+    return window.AmongDemons?.tutorial?.isCoreActive?.() === true;
   }
 
   function isWorldBossIntroMuted() {
@@ -10051,6 +10160,7 @@ import './bag-item-visuals.js';
   }
 
   function showWorldBossIntro(boss) {
+    if (isCoreTutorialActive()) return;
     const dialog = elements.worldBossDialog;
     if (!dialog) return;
 
@@ -10089,6 +10199,7 @@ import './bag-item-visuals.js';
     setText(elements.worldBossDialogText, '');
     dialog.classList.remove('d-none', 'is-ready');
     dialog.classList.add('is-typing');
+    window.AmongDemons?.tutorial?.emit?.('world-overlay', { open: true, type: 'boss-intro' });
     audio?.play('sfx.bosses.introStinger', { volume: 0.9 });
     document.addEventListener('keydown', onWorldBossIntroKeydown);
 
@@ -10128,6 +10239,7 @@ import './bag-item-visuals.js';
     dialog?.classList.add('d-none');
     dialog?.classList.remove('is-typing', 'is-ready');
     document.removeEventListener('keydown', onWorldBossIntroKeydown);
+    window.AmongDemons?.tutorial?.emit?.('world-overlay', { open: false, type: 'boss-intro' });
   }
 
   // Advance = finish the typewriter if it's still running, dismiss otherwise.

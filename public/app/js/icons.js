@@ -367,6 +367,12 @@
     // unrelated account refresh into a false level-up.
     const confirmedLevelUp = data.leveledUp === true &&
       nextState.level > authoritativePreviousLevel;
+    if (confirmedLevelUp) {
+      (root.defaultView || window).AmongDemons?.tutorial?.emit?.('level-up', {
+        previousLevel: authoritativePreviousLevel,
+        level: nextState.level
+      });
+    }
     const shouldAnimateLevelUp = options.animate !== false &&
       confirmedLevelUp &&
       (

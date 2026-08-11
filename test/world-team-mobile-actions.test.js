@@ -27,4 +27,7 @@ test('World demon details can add collection cards or remove exact team slots', 
   assert.match(worldSource, /removeWorldTeamEditorSlot\(sourceSlot\)/);
   assert.match(worldSource, /getWorldTeamEditorSlotEntry\(sourceSlot\)/);
   assert.match(worldSource, /Your World team is full\./);
+  assert.match(worldSource, /getNextWorldTeamEditorOpenSlotForPosition\(usedSlots, preferredPosition\)/);
+  assert.match(worldSource, /getWorldTeamEditorSlotPosition\(slot\) === preferredPosition/);
+  assert.match(worldSource, /data-world-team-position/);
 });

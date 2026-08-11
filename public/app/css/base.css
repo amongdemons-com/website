@@ -11803,3 +11803,302 @@ body.hunter-page {
     width: 1.05rem;
     height: 1.05rem;
 }
+/* Account tutorial coach marks. They never create a blocking page backdrop, so
+   the highlighted game control remains the real interactive surface. */
+.tutorial-coachmark-host {
+    position: fixed;
+    inset: 0;
+    /* Tutorial guidance must stay above Bootstrap modals, Dungeon overlays,
+       account dialogs, and notification surfaces without blocking the page. */
+    z-index: 2147482000;
+    isolation: isolate;
+    pointer-events: none;
+}
+
+.tutorial-coachmark-host[hidden] {
+    display: none !important;
+}
+
+.tutorial-focus-ring {
+    position: fixed;
+    z-index: 1;
+    border: 2px solid rgba(247, 204, 103, 0.96);
+    border-radius: 0.75rem;
+    box-shadow:
+        0 0 0 4px rgba(242, 195, 94, 0.14),
+        0 0 28px rgba(242, 195, 94, 0.38);
+    pointer-events: none;
+    animation: tutorial-focus-breathe 2.1s ease-in-out infinite;
+}
+
+.tutorial-choice-highlight {
+    position: relative;
+    z-index: 3;
+    outline: 2px solid rgba(247,204,103,0.96) !important;
+    outline-offset: 4px;
+    box-shadow: 0 0 0 5px rgba(242,195,94,0.1), 0 0 28px rgba(242,195,94,0.42) !important;
+    animation: tutorial-focus-breathe 2.1s ease-in-out infinite;
+}
+
+.tutorial-coachmark {
+    position: fixed;
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    z-index: 2;
+    width: min(22rem, calc(100vw - 1.5rem));
+    max-height: min(31rem, calc(100dvh - 1.5rem));
+    overflow: auto;
+    border: 1px solid rgba(232, 199, 106, 0.64);
+    border-radius: 0.95rem;
+    background:
+        radial-gradient(circle at 8% 0%, rgba(90, 202, 177, 0.2), transparent 11rem),
+        radial-gradient(circle at 100% 100%, rgba(232, 199, 106, 0.08), transparent 13rem),
+        linear-gradient(150deg, rgba(8, 28, 30, 0.97), rgba(5, 14, 18, 0.99));
+    box-shadow:
+        0 1.25rem 3.5rem rgba(0, 0, 0, 0.66),
+        0 0 0 1px rgba(7, 12, 12, 0.72),
+        inset 0 1px rgba(255, 255, 255, 0.06);
+    color: #e8f1ef;
+    pointer-events: auto;
+    backdrop-filter: blur(16px) saturate(118%);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(232, 199, 106, 0.44) transparent;
+}
+
+.tutorial-progress-rail {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: block;
+    width: 100%;
+    height: 3px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tutorial-progress-rail > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #5ed8bd, #f2c35e);
+    box-shadow: 0 0 12px rgba(94, 216, 189, 0.58);
+    transition: width 220ms ease;
+}
+
+.tutorial-coachmark-host.is-centered .tutorial-coachmark {
+    left: 50%;
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+}
+
+.tutorial-coachmark-head {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.68rem 0.82rem;
+    border-bottom: 1px solid rgba(167, 204, 194, 0.14);
+}
+
+.tutorial-coachmark-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    border: 1px solid rgba(242, 195, 94, 0.48);
+    border-radius: 50%;
+    background: linear-gradient(145deg, rgba(242, 195, 94, 0.16), rgba(94, 216, 189, 0.06));
+    color: #f2c35e;
+}
+
+.tutorial-coachmark-icon svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.tutorial-coachmark-progress {
+    color: rgba(220, 235, 230, 0.76);
+    font-size: 0.69rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.tutorial-skip-link {
+    justify-self: end;
+    border: 0;
+    padding: 0.22rem 0.1rem;
+    background: transparent;
+    color: rgba(224, 237, 233, 0.76);
+    font-size: 0.72rem;
+    text-decoration: underline;
+    text-underline-offset: 0.18rem;
+}
+
+.tutorial-skip-link:hover,
+.tutorial-skip-link:focus-visible {
+    color: #fff1bc;
+}
+
+.tutorial-coachmark-copy {
+    padding: 0.92rem 0.95rem 0.8rem;
+}
+
+.tutorial-coachmark-copy h2 {
+    margin: 0 0 0.4rem;
+    color: #fff1bc;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.16rem;
+    line-height: 1.15;
+}
+
+.tutorial-coachmark-copy p {
+    margin: 0;
+    color: rgba(229, 241, 238, 0.88);
+    font-size: 0.82rem;
+    line-height: 1.48;
+}
+
+.tutorial-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.46rem;
+    margin-top: 0.72rem;
+}
+
+.tutorial-fact {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    border: 1px solid rgba(111, 214, 189, 0.18);
+    border-radius: 0.55rem;
+    background: linear-gradient(145deg, rgba(111, 214, 189, 0.09), rgba(255, 255, 255, 0.015));
+    padding: 0.48rem 0.52rem;
+}
+
+.tutorial-fact.is-link {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.tutorial-fact.is-link:hover,
+.tutorial-fact.is-link:focus-visible {
+    transform: translateY(-1px);
+    border-color: rgba(242, 195, 94, 0.58);
+    outline: 0;
+    background: linear-gradient(145deg, rgba(111, 214, 189, 0.16), rgba(242, 195, 94, 0.06));
+    box-shadow: 0 0 18px rgba(94, 216, 189, 0.1);
+}
+
+.tutorial-fact > svg {
+    width: 1rem;
+    height: 1rem;
+    color: #f2c35e;
+}
+
+.tutorial-fact .tutorial-fact-arrow {
+    width: 0.8rem;
+    height: 0.8rem;
+    color: rgba(242, 195, 94, 0.72);
+}
+
+.tutorial-fact > span {
+    display: grid;
+    min-width: 0;
+    line-height: 1.1;
+}
+
+.tutorial-fact strong {
+    color: #f5fbf9;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+}
+
+.tutorial-fact small {
+    overflow: hidden;
+    color: rgba(198, 220, 214, 0.68);
+    font-size: 0.6rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tutorial-coachmark-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    padding: 0 0.95rem 0.95rem;
+}
+
+.tutorial-coachmark-actions .btn {
+    min-height: 2.2rem;
+    font-size: 0.76rem;
+}
+
+.tutorial-coachmark.is-confirming {
+    border-color: rgba(232, 199, 106, 0.7);
+}
+
+@keyframes tutorial-focus-breathe {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgba(242, 195, 94, 0.12), 0 0 22px rgba(242, 195, 94, 0.28);
+    }
+    50% {
+        box-shadow: 0 0 0 7px rgba(242, 195, 94, 0.07), 0 0 34px rgba(242, 195, 94, 0.46);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .tutorial-coachmark {
+        left: max(0.5rem, env(safe-area-inset-left, 0px));
+        right: max(0.5rem, env(safe-area-inset-right, 0px));
+        top: auto;
+        bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+        width: auto;
+        max-height: min(18rem, calc(100dvh - 1rem));
+        transform: none;
+        border-radius: 0.82rem;
+    }
+
+    .tutorial-coachmark-head {
+        padding: 0.58rem 0.68rem;
+    }
+
+    .tutorial-coachmark-copy {
+        padding: 0.68rem 0.76rem 0.6rem;
+    }
+
+    .tutorial-coachmark-copy h2 {
+        font-size: 1.02rem;
+    }
+
+    .tutorial-coachmark-copy p {
+        font-size: 0.76rem;
+        line-height: 1.4;
+    }
+
+    .tutorial-facts {
+        margin-top: 0.58rem;
+    }
+
+    .tutorial-fact {
+        padding: 0.42rem 0.46rem;
+    }
+
+    .tutorial-coachmark-actions {
+        padding: 0 0.76rem 0.72rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tutorial-focus-ring,
+    .tutorial-choice-highlight {
+        animation: none;
+    }
+}

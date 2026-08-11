@@ -2,6 +2,7 @@ const crypto = require('node:crypto');
 const db = require('./db');
 const { purgePlayerAccount } = require('./account-deletion');
 const { normalizeAccountLevel } = require('./progression');
+const { mergePlayerTutorialProgress } = require('./tutorial');
 
 const ACCOUNT_MERGE_TTL_MINUTES = 15;
 const MAX_UNSIGNED_INT = 4294967295;
@@ -119,6 +120,7 @@ async function mergePlayerAccounts(token, targetPlayerId, queryable = db) {
     await mergeSimpleCollections(target.id, source.id, connection);
     await mergeDailyQuests(target.id, source.id, connection);
     await mergeRankedRatings(target.id, source.id, connection);
+    await mergePlayerTutorialProgress(target.id, source.id, connection);
 
     // Dungeon state never crosses the merge boundary. Historical completed
     // runs remain available under the surviving Steam hunter.

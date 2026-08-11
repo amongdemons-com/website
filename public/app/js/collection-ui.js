@@ -221,6 +221,27 @@
       : collectedCount
         ? renderNoMatchesState()
         : renderEmptyState();
+    const trainingDemon = ownedDemons.find((demon) => {
+      const cost = Number(demon.training?.cost);
+      return !demon.training?.maxed
+        && Number.isFinite(cost)
+        && cost > 0;
+    });
+    const trainingCost = Number(trainingDemon?.training?.cost) || 0;
+    const canAffordTraining = Boolean(trainingDemon && Number(state.player?.souls) >= trainingCost);
+    const trainable = ownedDemons.find((demon) => {
+      const cost = Number(demon.training?.cost);
+      return !demon.training?.maxed
+        && Number.isFinite(cost)
+        && cost > 0
+        && Number(state.player?.souls) >= cost;
+    });
+    window.AmongDemons?.tutorial?.emit?.('collection-ready', {
+      trainingDemonId: trainingDemon?.id || null,
+      trainingCost,
+      canAffordTraining,
+      trainableDemonId: trainable?.id || null
+    });
   }
 
   function renderDemonCards(demons) {
@@ -653,6 +674,7 @@
         { volume: 0.88 }
       );
       syncAutoTrainBalance(result.player);
+      window.AmongDemons?.tutorial?.emit?.('demon-trained', { demonId: demon.id, mode: 'max' });
     } catch (error) {
       if (error.status === 401) {
         await handleCollectionError(error);
@@ -769,6 +791,7 @@
         body: { mode: mode === 'max' ? 'max' : 'once' }
       });
       revealPending = true;
+      window.AmongDemons?.tutorial?.emit?.('demon-trained', { demonId: normalizedDemonId, mode });
       playTrainingFeedback(normalizedDemonId, result.training || {}, {
         updatedDemon: result.demon,
         player: result.player,

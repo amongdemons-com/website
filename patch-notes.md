@@ -4,6 +4,17 @@
 
 ## Patch 5 (Current)
 
+- Added a skippable account tutorial that shows every hunter how to explore,
+  arrange melee and ranged teams, complete the Fight, Hunt, and Claim loop,
+  enter a Dungeon, and extract Echoes. Its prompts now advance from real game
+  actions, with one-time Summon, Training, and post-level-up Skill Tree tips.
+  World boss narration stays quiet during the guide, its navigation highlights
+  are more precise, and its mobile prompts leave the controls they describe
+  visible. The journey now continues from Bag into Collection and provides a
+  summon-ready starter Echo plus a one-time Soul top-up for the first Training
+  attempt. Hunt rewards are claimed after the Dungeon and Training steps, so
+  there is no early wait, and transition messages remain until you choose to
+  continue. The main tutorial can be replayed from Settings at any time.
 - Added four achievements: One Voice Remains for defeating The Anomaly, The
   Well Whispers Back for receiving a Whispering Well buff, The Number for
   reaching level 666, and Crowned in Hell for reaching Demonic rank.

@@ -36,6 +36,7 @@ router.use(require('./account/progression'));
 router.use(require('./account/stat-points'));
 router.use(require('./account/quests'));
 router.use(require('./account/achievements'));
+router.use(require('./account/tutorial'));
 router.use(require('./bootstrap'));
 router.use(require('./demons/list'));
 router.use(require('./demons/show'));

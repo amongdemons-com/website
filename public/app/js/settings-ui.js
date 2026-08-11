@@ -89,6 +89,7 @@
     elements.hideRecruitFirstModal = document.getElementById('settingsHideRecruitFirstModal');
     elements.bossNarration = document.getElementById('settingsBossNarration');
     elements.worldLowPower = document.getElementById('settingsWorldLowPower');
+    elements.restartTutorial = document.getElementById('settingsRestartTutorial');
     elements.audioMuted = document.getElementById('settingsAudioMuted');
     elements.masterVolume = document.getElementById('settingsMasterVolume');
     elements.masterVolumeValue = document.getElementById('settingsMasterVolumeValue');
@@ -145,6 +146,7 @@
     elements.cancelDeletion.addEventListener('click', cancelDeletion);
     elements.mergeSubmit.addEventListener('click', confirmAccountMerge);
     elements.mergeCancel.addEventListener('click', cancelAccountMerge);
+    elements.restartTutorial?.addEventListener('click', restartTutorial);
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && !elements.mergeModal.classList.contains('d-none')) {
         cancelAccountMerge();
@@ -562,6 +564,18 @@
     bindPreferenceToggle(elements.hideWinningAmbushes, HIDE_WINNING_AMBUSHES_KEY, false);
     bindPreferenceToggle(elements.autoResolveDungeonFights, DUNGEON_AUTO_RESOLVE_KEY, false);
     bindPreferenceToggle(elements.hideRecruitFirstModal, DUNGEON_HIDE_RECRUIT_FIRST_MODAL_KEY, false);
+  }
+
+  async function restartTutorial() {
+    if (!elements.restartTutorial || !window.AmongDemons?.tutorial?.restart) return;
+    elements.restartTutorial.disabled = true;
+    elements.restartTutorial.setAttribute('aria-busy', 'true');
+    try {
+      await window.AmongDemons.tutorial.restart({ navigate: true });
+    } finally {
+      elements.restartTutorial.disabled = false;
+      elements.restartTutorial.removeAttribute('aria-busy');
+    }
   }
 
   function initWorldToggles() {

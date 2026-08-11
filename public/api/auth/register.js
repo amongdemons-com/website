@@ -5,6 +5,7 @@ const { cleanPlayer, createSession, hashPassword } = require('../lib/auth');
 const { saveDefaultBoundShrine } = require('../lib/world-shrines');
 const { assertValidUsername } = require('../lib/usernames');
 const { grantStarterDemons } = require('../lib/starter-demon');
+const { grantStarterEcho } = require('../lib/starter-echo');
 
 const router = express.Router();
 
@@ -27,9 +28,12 @@ router.post('/auth/register', async (req, res) => {
     );
     await saveDefaultBoundShrine(playerId);
     try {
-      await grantStarterDemons(playerId);
+      await Promise.all([
+        grantStarterDemons(playerId),
+        grantStarterEcho(playerId)
+      ]);
     } catch (starterError) {
-      console.error('Failed to grant starter demons on register', playerId, starterError);
+      console.error('Failed to grant starter loadout on register', playerId, starterError);
     }
     const token = await createSession(playerId);
 

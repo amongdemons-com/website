@@ -180,6 +180,11 @@
     state.items = Array.isArray(payload.items) ? payload.items : [];
     state.config = payload.config || state.config || {};
     renderBag();
+    window.AmongDemons?.tutorial?.emit?.('bag-ready', {
+      itemKeys: state.items.map((item) => item.itemKey).filter(Boolean),
+      itemCount: state.items.length,
+      readyUnownedKey: state.items.find((item) => item.summonReady && !item.owned)?.itemKey || ''
+    });
     if (state.selectedKey) {
       const item = getSelectedItem();
       if (item) renderItemDetail(item);
@@ -242,6 +247,7 @@
     state.selectedKey = itemKey;
     renderItemDetail(item);
     bootstrap.Modal.getOrCreateInstance(elements.bagDetailModal).show();
+    window.AmongDemons?.tutorial?.emit?.('bag-item-opened', { itemKey, summonReady: Boolean(item.summonReady), owned: Boolean(item.owned) });
   }
 
   function renderItemDetail(item) {
@@ -364,6 +370,7 @@
         stopSummonRitual();
         applyPayload(payload);
         showSummonResult(payload.demon || item);
+        window.AmongDemons?.tutorial?.emit?.('demon-summoned', { demonId: payload.demon?.id || null });
       } else {
         audio?.play('sfx.progression.refineSuccess', { volume: 0.72 });
         const sourceStillExists = (payload.items || []).some((candidate) => candidate.itemKey === item.itemKey);

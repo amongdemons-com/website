@@ -5,6 +5,7 @@ const { cleanPlayer, createSession, hashPassword, verifyPassword } = require('..
 const { isDeletionDue, purgePlayerAccount } = require('../lib/account-deletion');
 const { saveDefaultBoundShrine } = require('../lib/world-shrines');
 const { grantStarterDemons } = require('../lib/starter-demon');
+const { grantStarterEcho } = require('../lib/starter-echo');
 
 const router = express.Router();
 
@@ -34,9 +35,12 @@ router.post('/auth/login', async (req, res) => {
     );
     await saveDefaultBoundShrine(playerId);
     try {
-      await grantStarterDemons(playerId);
+      await Promise.all([
+        grantStarterDemons(playerId),
+        grantStarterEcho(playerId)
+      ]);
     } catch (starterError) {
-      console.error('Failed to grant starter demons on login signup', playerId, starterError);
+      console.error('Failed to grant starter loadout on login signup', playerId, starterError);
     }
     const [createdRows] = await db.query('SELECT * FROM players WHERE id = ? LIMIT 1', [playerId]);
     player = createdRows[0];
