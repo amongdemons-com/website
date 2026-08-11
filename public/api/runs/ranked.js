@@ -8,6 +8,7 @@ const {
 } = require('../lib/dungeon-ranked');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
 const { serializeRun } = require('../lib/run-serialization');
+const achievements = require('../lib/achievements');
 
 const router = express.Router();
 
@@ -41,6 +42,9 @@ router.post('/runs/:id/ranked/escape', requireAuth, async (req, res) => {
     await saveRun(run, connection);
     await connection.commit();
     committed = true;
+    if (rankedResult) {
+      await achievements.checkRankedRating(req.player.id, rankedResult.rating, connection);
+    }
 
     res.json({
       escaped,

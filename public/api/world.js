@@ -246,6 +246,7 @@ router.post('/world/soul-font/purchase', requireAuth, async (req, res) => {
     req.player.id,
     req.body?.ritualId
   );
+  await achievements.grantAchievements(req.player.id, ['the-well-whispers-back']);
   const position = await getOrCreatePosition(req.player.id);
 
   res.json({
@@ -615,6 +616,7 @@ router.post('/world/challenge', requireAuth, blockGuests, async (req, res) => {
     }
     const updatedPlayer = pvpResult.players.get(String(req.player.id)) || req.player;
     const updatedTargetPlayer = pvpResult.players.get(String(targetPlayer.id)) || targetPlayer;
+    await achievements.checkRankedRating(req.player.id, pvpResult.rankedResult.rating);
     if (battle.winner === 'player') {
       await achievements.checkPvpWins(req.player.id, updatedPlayer.pvpWins);
       const flawless = Array.isArray(battle.playerTeamAfter)
@@ -666,6 +668,9 @@ router.post('/world/anomaly/summon', requireAuth, async (req, res) => {
   try {
     const result = await summonWorldAnomaly(req.player, req.body?.ritualId);
     const won = result.battle?.winner === 'player';
+    if (won) {
+      await achievements.grantAchievements(req.player.id, ['one-voice-remains']);
+    }
     const respawn = won ? null : await respawnPlayerAfterDefeat(req.player.id);
     if (respawn) result.anomaly.canSummon = false;
 

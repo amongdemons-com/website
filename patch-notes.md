@@ -4,6 +4,9 @@
 
 ## Patch 5 (Current)
 
+- Added four achievements: One Voice Remains for defeating The Anomaly, The
+  Well Whispers Back for receiving a Whispering Well buff, The Number for
+  reaching level 666, and Crowned in Hell for reaching Demonic rank.
 - The maximum hunter level is now 666. At max level, the XP bar stays full
   and shows Max level.
 - Added a back button beside the Bag title so you can return to the previous

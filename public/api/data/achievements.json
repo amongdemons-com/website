@@ -3,6 +3,7 @@
   { "id": "blooded-hunter", "steamName": "ACH_BLOODED_HUNTER", "title": "Blooded Hunter", "description": "Reach level 5.", "trigger": "account-level", "threshold": 5 },
   { "id": "veteran-of-ash", "steamName": "ACH_VETERAN_OF_ASH", "title": "Veteran of Ash", "description": "Reach level 10.", "trigger": "account-level", "threshold": 10 },
   { "id": "beyond-mortal", "steamName": "ACH_BEYOND_MORTAL", "title": "Beyond Mortal", "description": "Reach level 25.", "trigger": "account-level", "threshold": 25 },
+  { "id": "the-number", "steamName": "ACH_THE_NUMBER", "title": "The Number", "description": "Reach level 666.", "trigger": "account-level", "threshold": 666 },
   { "id": "endless-hunger", "steamName": "ACH_ENDLESS_HUNGER", "title": "Endless Hunger", "description": "Invest in an Endless mastery node.", "trigger": "event" },
   { "id": "first-blood", "steamName": "ACH_FIRST_BLOOD", "title": "First Blood", "description": "Win your first dungeon battle.", "trigger": "event" },
   { "id": "pactbound", "steamName": "ACH_PACTBOUND", "title": "Pactbound", "description": "Seal your first Demonic Pact.", "trigger": "event" },
@@ -30,8 +31,10 @@
   { "id": "the-long-hunt", "steamName": "ACH_THE_LONG_HUNT", "title": "The Long Hunt", "description": "Start passive hunting.", "trigger": "event" },
   { "id": "vessel-brimming", "steamName": "ACH_VESSEL_BRIMMING", "title": "Vessel Brimming", "description": "Stop a hunt with your Soul Vessel completely full.", "trigger": "event" },
   { "id": "through-darkness", "steamName": "ACH_THROUGH_DARKNESS", "title": "Through Darkness", "description": "Use a Darkness Portal.", "trigger": "event" },
+  { "id": "the-well-whispers-back", "steamName": "ACH_THE_WELL_WHISPERS_BACK", "title": "The Well Whispers Back", "description": "Receive a buff from the Whispering Well.", "trigger": "event" },
   { "id": "far-from-the-fire", "steamName": "ACH_FAR_FROM_THE_FIRE", "title": "Far from the Fire", "description": "Win an encounter at World Terror 20 or higher.", "trigger": "world-terror", "threshold": 20 },
   { "id": "edgewalker", "steamName": "ACH_EDGEWALKER", "title": "Edgewalker", "description": "Reach an edge of the world map.", "trigger": "event" },
+  { "id": "one-voice-remains", "steamName": "ACH_ONE_VOICE_REMAINS", "title": "One Voice Remains", "description": "Defeat The Anomaly.", "trigger": "event" },
   { "id": "ashes-remember", "steamName": "ACH_ASHES_REMEMBER", "title": "Ashes Remember", "description": "Defeat the Ash Sentinel.", "trigger": "world-boss", "boss": "neutral-ash-sentinel" },
   { "id": "hold-the-line", "steamName": "ACH_HOLD_THE_LINE", "title": "Hold the Line", "description": "Defeat the Warden.", "trigger": "world-boss", "boss": "boss-boof-warbinder" },
   { "id": "blind-the-void", "steamName": "ACH_BLIND_THE_VOID", "title": "Blind the Void", "description": "Defeat the Void Ranger.", "trigger": "world-boss", "boss": "boss-gon-shadow-eye" },
@@ -48,5 +51,6 @@
   { "id": "hunter-hunted", "steamName": "ACH_HUNTER_HUNTED", "title": "Hunter Hunted", "description": "Win a PvP challenge.", "trigger": "pvp-wins", "threshold": 1 },
   { "id": "blood-rivalry", "steamName": "ACH_BLOOD_RIVALRY", "title": "Blood Rivalry", "description": "Win 10 PvP challenges.", "trigger": "pvp-wins", "threshold": 10 },
   { "id": "apex-predator", "steamName": "ACH_APEX_PREDATOR", "title": "Apex Predator", "description": "Win 50 PvP challenges.", "trigger": "pvp-wins", "threshold": 50 },
+  { "id": "crowned-in-hell", "steamName": "ACH_CROWNED_IN_HELL", "title": "Crowned in Hell", "description": "Reach Demonic rank.", "trigger": "ranked-rating", "threshold": 3800 },
   { "id": "untouchable", "steamName": "ACH_UNTOUCHABLE", "title": "Untouchable", "description": "Win a PvP challenge without losing a demon.", "trigger": "event" }
 ]

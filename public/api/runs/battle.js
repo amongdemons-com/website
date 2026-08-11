@@ -212,6 +212,7 @@ async function resolveDungeonRankedBattle(req, res) {
     await saveRun(run, connection);
     await connection.commit();
     committed = true;
+    await achievements.checkRankedRating(req.player.id, rankedResult.rating, connection);
 
     const worldBuffs = getActivePlayerWorldRewardBuffs(skillBuffs);
     res.json({

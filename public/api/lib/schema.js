@@ -21,6 +21,7 @@ const STEAM_PURCHASE_BADGE_BACKFILL_MIGRATION = '20260803_the_night_remembers_st
 const ENDED_RUN_REWARDS_CLEANUP_MIGRATION = '20260808_ended_run_rewards_cleanup_v1';
 const ACCOUNT_MERGE_SCHEMA_MIGRATION = '20260808_account_merge_schema_v1';
 const PLAYER_LEVEL_CAP_MIGRATION = '20260811_player_level_cap_666_v1';
+const NEW_ACHIEVEMENTS_BACKFILL_MIGRATION = '20260811_world_level_ranked_achievements_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -1046,6 +1047,33 @@ async function enforcePlayerLevelCap() {
   );
 }
 
+async function backfillNewAchievements() {
+  await db.query(`
+    INSERT IGNORE INTO player_achievements (player_id, achievement_id)
+    SELECT id, 'the-number'
+    FROM players
+    WHERE level >= 666
+  `);
+  await db.query(`
+    INSERT IGNORE INTO player_achievements (player_id, achievement_id)
+    SELECT player_id, 'one-voice-remains'
+    FROM player_anomaly_rituals
+    WHERE victories > 0
+  `);
+  await db.query(`
+    INSERT IGNORE INTO player_achievements (player_id, achievement_id)
+    SELECT DISTINCT player_id, 'the-well-whispers-back'
+    FROM player_world_soul_font_buffs
+  `);
+  await db.query(`
+    INSERT IGNORE INTO player_achievements (player_id, achievement_id)
+    SELECT player_id, 'crowned-in-hell'
+    FROM ranked_ratings
+    GROUP BY player_id
+    HAVING MAX(rating) >= 3800
+  `);
+}
+
 async function initializeSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -1070,6 +1098,7 @@ async function initializeSchema() {
   await runMigrationOnce(ENDED_RUN_REWARDS_CLEANUP_MIGRATION, clearEndedRunRewardHistory);
   await runMigrationOnce(ACCOUNT_MERGE_SCHEMA_MIGRATION, addAccountMergeSchema);
   await runMigrationOnce(PLAYER_LEVEL_CAP_MIGRATION, enforcePlayerLevelCap);
+  await runMigrationOnce(NEW_ACHIEVEMENTS_BACKFILL_MIGRATION, backfillNewAchievements);
 }
 
 function ensureSchemaReady() {

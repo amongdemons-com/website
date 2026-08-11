@@ -6,6 +6,7 @@ const ACHIEVEMENTS_BY_ID = new Map(ACHIEVEMENTS.map((achievement) => [achievemen
 const LEVEL_ACHIEVEMENTS = ACHIEVEMENTS.filter((achievement) => achievement.trigger === 'account-level');
 const FLOOR_ACHIEVEMENTS = ACHIEVEMENTS.filter((achievement) => achievement.trigger === 'dungeon-floor');
 const PVP_ACHIEVEMENTS = ACHIEVEMENTS.filter((achievement) => achievement.trigger === 'pvp-wins');
+const RANKED_RATING_ACHIEVEMENTS = ACHIEVEMENTS.filter((achievement) => achievement.trigger === 'ranked-rating');
 const BOSS_ACHIEVEMENT_BY_BOSS_ID = new Map(
   ACHIEVEMENTS
     .filter((achievement) => achievement.trigger === 'world-boss')
@@ -21,12 +22,12 @@ const queuedSteamSyncs = new Set();
 // skipped) and intentionally swallow-all: achievement bookkeeping must never
 // break the gameplay request that triggered it. Returns the newly unlocked
 // achievement definitions.
-async function grantAchievements(playerId, achievementIds) {
+async function grantAchievements(playerId, achievementIds, queryable = db) {
   try {
     const ids = [...new Set((achievementIds || []).filter((id) => ACHIEVEMENTS_BY_ID.has(id)))];
     if (!playerId || !ids.length) return [];
 
-    const [existingRows] = await db.query(
+    const [existingRows] = await queryable.query(
       'SELECT achievement_id AS achievementId FROM player_achievements WHERE player_id = ? AND achievement_id IN (?)',
       [playerId, ids]
     );
@@ -36,7 +37,7 @@ async function grantAchievements(playerId, achievementIds) {
 
     const placeholders = newIds.map(() => '(?, ?)').join(', ');
     const values = newIds.flatMap((id) => [playerId, id]);
-    await db.query(
+    await queryable.query(
       `INSERT IGNORE INTO player_achievements (player_id, achievement_id) VALUES ${placeholders}`,
       values
     );
@@ -102,6 +103,17 @@ async function checkPvpWins(playerId, wins) {
   return grantAchievements(
     playerId,
     PVP_ACHIEVEMENTS.filter((achievement) => total >= achievement.threshold).map((achievement) => achievement.id)
+  );
+}
+
+async function checkRankedRating(playerId, rating, queryable = db) {
+  const reached = Math.max(0, Number(rating) || 0);
+  return grantAchievements(
+    playerId,
+    RANKED_RATING_ACHIEVEMENTS
+      .filter((achievement) => reached >= achievement.threshold)
+      .map((achievement) => achievement.id),
+    queryable
   );
 }
 
@@ -177,6 +189,38 @@ async function grantBossDefeat(playerId, bossId) {
   return unlocked;
 }
 
+// The Anomaly, Whispering Well, and prior-season ratings all leave durable
+// records, so players who completed them before these achievements existed can
+// still receive credit when Steam next links or signs in.
+async function checkPersistentAchievementHistory(playerId) {
+  try {
+    const [[anomalyRows], [soulFontRows], [rankedRows]] = await Promise.all([
+      db.query(
+        'SELECT victories FROM player_anomaly_rituals WHERE player_id = ? LIMIT 1',
+        [playerId]
+      ),
+      db.query(
+        'SELECT 1 AS received FROM player_world_soul_font_buffs WHERE player_id = ? LIMIT 1',
+        [playerId]
+      ),
+      db.query(
+        'SELECT MAX(rating) AS highestRating FROM ranked_ratings WHERE player_id = ?',
+        [playerId]
+      )
+    ]);
+    const ids = [];
+    if (Number(anomalyRows[0]?.victories) > 0) ids.push('one-voice-remains');
+    if (soulFontRows.length) ids.push('the-well-whispers-back');
+
+    const unlocked = await grantAchievements(playerId, ids);
+    unlocked.push(...await checkRankedRating(playerId, rankedRows[0]?.highestRating));
+    return unlocked;
+  } catch (error) {
+    console.error('Failed to check persistent achievement history:', error);
+    return [];
+  }
+}
+
 // Re-evaluates everything derivable from persistent state. Used when a Steam
 // account first links so long-time players get their history credited.
 async function checkRetroactive(player) {
@@ -187,6 +231,7 @@ async function checkRetroactive(player) {
   unlocked.push(...await checkDungeonFloor(player.id, player.highest_floor ?? player.highestFloor));
   unlocked.push(...await checkPvpWins(player.id, player.pvp_wins ?? player.pvpWins));
   unlocked.push(...await checkCollection(player.id));
+  unlocked.push(...await checkPersistentAchievementHistory(player.id));
   return unlocked;
 }
 
@@ -256,7 +301,9 @@ module.exports = {
   checkAccountLevel,
   checkCollection,
   checkDungeonFloor,
+  checkPersistentAchievementHistory,
   checkPvpWins,
+  checkRankedRating,
   checkRetroactive,
   getPlayerAchievements,
   grantAchievements,
