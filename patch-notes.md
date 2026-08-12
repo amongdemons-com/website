@@ -30,6 +30,8 @@
   remain available afterward.
 - Added a Dungeon setting to skip the Recruit First warning when continuing
   with open team slots.
+- Dungeon Hand upgrade markers now require at least two strictly higher visible
+  stats. Tied stats no longer make a card look better than your current demon.
 - Moved Do not show winning ambushes into the World settings, directly below
   Boss narration.
 - World PvP duels now show the Ranked Points update again after the fight,
