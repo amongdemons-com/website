@@ -56,6 +56,7 @@ const {
 } = require('./lib/world-anomaly');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const { getPlayerStatPointSummary } = require('./lib/account-stat-points');
+const { getTutorialProgress } = require('./lib/tutorial');
 const {
   getOrCreateCurrentSeason,
   getOrCreateRankedRating,
@@ -96,6 +97,29 @@ const BLOCKED_TILES = new Set(
 );
 const AMBUSH_CHANCE_OFF_ROAD = 7; // 1-in-N chance to be ambushed per eligible off-road step
 const AMBUSH_CHANCE_ON_ROAD = 34; // roads are watched but far safer to travel
+const TUTORIAL_WORLD_ENCOUNTER = Object.freeze({
+  id: 'tutorial-baobaw',
+  x: 0,
+  y: -3,
+  zoneType: 0,
+  tutorialOnly: true,
+  keyDemon: {
+    typeId: 7,
+    species: 'Baobaw',
+    rarity: 'common',
+    imageUrl: '/app/images/demons/37.png'
+  },
+  team: [{
+    instanceId: 'tutorial-baobaw-m1',
+    typeId: 7,
+    species: 'Baobaw',
+    role: 'striker',
+    rarity: 'common',
+    position: 'front',
+    imageUrl: '/app/images/demons/37.png',
+    elite: true
+  }]
+});
 
 // The map layout never changes per player, so it is served once from
 // /world/map with an immutable cache keyed by a content hash; /world/state
@@ -123,11 +147,13 @@ router.get('/world/state', requireAuth, async (req, res) => {
   const { position, boundShrine } = await getWorldStateLocation(req.player.id);
   const activeBosses = getActiveWorldBosses();
   const merchant = getActiveWorldMerchant();
-  const [playersAt, activeWorldTeam, hunt] = await Promise.all([
+  const [playersAt, activeWorldTeam, hunt, tutorial] = await Promise.all([
     getPlayersAt(position.x, position.y, req.player.id),
     getActiveWorldTeam(req.player.id),
-    getHuntState(req.player.id)
+    getHuntState(req.player.id),
+    getTutorialProgress(req.player.id)
   ]);
+  const tutorialEncounter = getAvailableTutorialWorldEncounter(tutorial);
 
   res.json({
     account: {
@@ -140,7 +166,10 @@ router.get('/world/state', requireAuth, async (req, res) => {
     shrines: getWorldShrines(),
     boundShrine,
     currentEvent: getEventAt(position.x, position.y),
-    currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
+    currentEncounter: serializeWorldEncounterForClient(
+      getEncounterAt(position.x, position.y) || getTutorialEncounterAt(position, tutorialEncounter)
+    ),
+    tutorialEncounter: serializeWorldEncounterForClient(tutorialEncounter),
     currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
     bosses: activeBosses.map(serializeWorldBossForClient),
     merchant: serializeWorldMerchantForClient(merchant, position, { includeStock: false }),
@@ -384,14 +413,21 @@ router.post('/world/move', requireAuth, async (req, res) => {
 
   const resolvedTravel = await resolveTravelEvents(req.player, travelEvents, { combatContext: travelCombatContext });
   const travelSettlement = await settleTravelAmbushRewards(req.player, resolvedTravel.rewards);
-  const playersAt = await getPlayersAt(position.x, position.y, req.player.id);
+  const [playersAt, tutorial] = await Promise.all([
+    getPlayersAt(position.x, position.y, req.player.id),
+    getTutorialProgress(req.player.id)
+  ]);
+  const tutorialEncounter = getAvailableTutorialWorldEncounter(tutorial);
   const merchant = getActiveWorldMerchant();
   res.json({
     position,
     player: getWorldPlayer(travelSettlement.player),
     progression: travelSettlement.progression,
     currentEvent: getEventAt(position.x, position.y),
-    currentEncounter: serializeWorldEncounterForClient(getEncounterAt(position.x, position.y)),
+    currentEncounter: serializeWorldEncounterForClient(
+      getEncounterAt(position.x, position.y) || getTutorialEncounterAt(position, tutorialEncounter)
+    ),
+    tutorialEncounter: serializeWorldEncounterForClient(tutorialEncounter),
     currentBoss: serializeWorldBossForClient(getWorldBossAtFromList(activeBosses, position.x, position.y)),
     bosses: activeBosses.map(serializeWorldBossForClient),
     merchant: serializeWorldMerchantForClient(merchant, position, { includeStock: false }),
@@ -402,7 +438,7 @@ router.post('/world/move', requireAuth, async (req, res) => {
 });
 
 router.post('/world/hunt/try', requireAuth, async (req, res) => {
-  const encounter = getEncounterById(req.body?.encounterId);
+  const encounter = await getEncounterByIdForPlayer(req.player.id, req.body?.encounterId);
   if (!encounter) {
     return res.status(404).json({ error: 'Demon spot not found.' });
   }
@@ -429,7 +465,7 @@ router.post('/world/hunt/try', requireAuth, async (req, res) => {
 });
 
 router.post('/world/hunting/start', requireAuth, async (req, res) => {
-  const encounter = getEncounterById(req.body?.encounterId);
+  const encounter = await getEncounterByIdForPlayer(req.player.id, req.body?.encounterId);
   if (!encounter) {
     return res.status(404).json({ error: 'Demon spot not found.' });
   }
@@ -1618,7 +1654,26 @@ function getEncounterAt(x, y) {
 function getEncounterById(encounterId) {
   const id = String(encounterId || '').trim();
   if (!id) return null;
+  if (id === TUTORIAL_WORLD_ENCOUNTER.id) return TUTORIAL_WORLD_ENCOUNTER;
   return WORLD_ENCOUNTERS.find((encounter) => String(encounter.id) === id) || null;
+}
+
+async function getEncounterByIdForPlayer(playerId, encounterId) {
+  const encounter = getEncounterById(encounterId);
+  if (!encounter?.tutorialOnly) return encounter;
+  const tutorial = await getTutorialProgress(playerId);
+  return getAvailableTutorialWorldEncounter(tutorial);
+}
+
+function getAvailableTutorialWorldEncounter(tutorial = {}) {
+  return tutorial?.status === 'in_progress' ? TUTORIAL_WORLD_ENCOUNTER : null;
+}
+
+function getTutorialEncounterAt(position = {}, encounter = null) {
+  if (!encounter) return null;
+  return Number(position.x) === encounter.x && Number(position.y) === encounter.y
+    ? encounter
+    : null;
 }
 
 function normalizeTravelPath(value) {
@@ -1739,11 +1794,13 @@ function throwWorldError(message, status = 400) {
 
 router._test = {
   CHALLENGE_COOLDOWN_MS,
+  TUTORIAL_WORLD_ENCOUNTER,
   WORLD_DUEL_NO_REWARD_RATING_GAP,
   attemptHuntRestart,
   getAmbushVictoryRewards,
   getDarknessPortalAt,
   getDarknessPortalSummonCost,
+  getAvailableTutorialWorldEncounter,
   getWorldDuelRankedResult,
   getSignAt,
   getAmbushChanceForTile,

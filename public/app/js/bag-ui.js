@@ -369,8 +369,7 @@
       if (action === 'summon') {
         stopSummonRitual();
         applyPayload(payload);
-        showSummonResult(payload.demon || item);
-        window.AmongDemons?.tutorial?.emit?.('demon-summoned', { demonId: payload.demon?.id || null });
+        showSummonResult(payload.demon || item, payload.demon?.id || null);
       } else {
         audio?.play('sfx.progression.refineSuccess', { volume: 0.72 });
         const sourceStillExists = (payload.items || []).some((candidate) => candidate.itemKey === item.itemKey);
@@ -519,7 +518,7 @@
     return minimum + (Math.random() * (maximum - minimum));
   }
 
-  function showSummonResult(demon) {
+  function showSummonResult(demon, demonId = null) {
     const rarity = normalizeRarity(demon.rarity);
     elements.bagSummonContent.style.setProperty('--item-rarity', getRarityColor(rarity));
     elements.bagSummonContent.innerHTML = `
@@ -539,6 +538,9 @@
       </div>
     `;
 
+    elements.bagSummonModal.addEventListener('shown.bs.modal', () => {
+      window.AmongDemons?.tutorial?.emit?.('demon-summoned', { demonId });
+    }, { once: true });
     transitionBetweenModals(elements.bagDetailModal, elements.bagSummonModal);
     audio?.play('sfx.progression.summonSuccess', { volume: 0.92 });
   }

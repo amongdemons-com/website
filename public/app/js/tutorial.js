@@ -3,6 +3,7 @@
 
   const API_PATH = '/api/account/tutorial';
   const TUTORIAL_ECHO_KEY = 'amongdemons-tutorial-echo-key-v1';
+  const TUTORIAL_WORLD_SPOT = Object.freeze({ x: 0, y: -3 });
   const CHECKPOINTS = [
     'world-map',
     'world-team',
@@ -26,6 +27,7 @@
     localSteps: {
       worldTeam: 0,
       worldTravel: 0,
+      dungeonExtract: 0,
       worldHuntRewards: 0,
       bag: 0
     },
@@ -59,9 +61,11 @@
     ring: null,
     target: null,
     currentView: null,
+    renderKey: '',
     observer: null,
     resizeObserver: null,
     positionSettleTimer: null,
+    pendingAmbushConfirmation: null,
     listenersBound: false
   };
 
@@ -70,6 +74,7 @@
     getState: () => model.tutorial,
     isCoreActive: () => model.loading || ['not_started', 'in_progress'].includes(model.tutorial?.status),
     canSaveWorldTeam: () => !isCurrentCheckpoint('world-team') || model.localSteps.worldTeam >= 3,
+    waitForAmbushConfirmation,
     refresh,
     restart
   };
@@ -81,6 +86,7 @@
   onReady(init);
   window.addEventListener('amongdemons:session-changed', (event) => {
     if (!event.detail?.authenticated) {
+      resolvePendingAmbushConfirmation();
       destroyTutorialUi();
       model.tutorial = null;
       model.initializedForToken = '';
@@ -149,7 +155,7 @@
 
     if (name === 'world-ready') {
       model.eventState.world = detail;
-      model.eventState.worldArrived = positionsEqual(detail.position, { x: -8, y: 4 });
+      model.eventState.worldArrived = positionsEqual(detail.position, TUTORIAL_WORLD_SPOT);
     } else if (name === 'world-map-explored') {
       if (isCurrentCheckpoint('world-map')) {
         void advance('world-team');
@@ -179,10 +185,11 @@
     } else if (name === 'world-ambush') {
       model.eventState.worldAmbush = detail;
     } else if (name === 'world-arrived') {
+      resolvePendingAmbushConfirmation();
       model.eventState.worldTraveling = false;
       model.eventState.worldAmbush = null;
       model.eventState.world = { ...(model.eventState.world || {}), position: detail.position, ready: true };
-      model.eventState.worldArrived = positionsEqual(detail.position, { x: -8, y: 4 });
+      model.eventState.worldArrived = positionsEqual(detail.position, TUTORIAL_WORLD_SPOT);
     } else if (name === 'world-hunt-fight') {
       model.eventState.worldHunt = { ...model.eventState.worldHunt, fought: true, lost: Boolean(detail.lost) };
     } else if (name === 'world-hunt-started') {
@@ -209,6 +216,7 @@
       }
     } else if (name === 'dungeon-battle-start') {
       model.eventState.dungeon = { ...(model.eventState.dungeon || {}), battleActive: true, ready: true };
+      if (isCurrentCheckpoint('dungeon-extract')) model.localSteps.dungeonExtract = 1;
     } else if (name === 'dungeon-extracted') {
       model.eventState.dungeon = {
         ...(model.eventState.dungeon || {}),
@@ -239,7 +247,12 @@
       model.eventState.collection = { ...detail, ready: true };
     } else if (name === 'demon-trained') {
       if (isCurrentCheckpoint('collection-training')) {
-        void advance('world-hunt-rewards', { navigate: '/world' });
+        model.eventState.collection = {
+          ...(model.eventState.collection || {}),
+          trainingComplete: true,
+          ready: true
+        };
+        scheduleRender();
         return;
       }
       void completeContextualGuide('training');
@@ -292,7 +305,40 @@
   async function skipTutorial() {
     const tutorial = await mutate('', { method: 'PATCH', body: { action: 'skip' } });
     model.confirmSkip = false;
+    resolvePendingAmbushConfirmation();
     return tutorial;
+  }
+
+  function waitForAmbushConfirmation(detail = {}) {
+    if (!isCurrentCheckpoint('world-travel')) return Promise.resolve();
+    if (model.pendingAmbushConfirmation) return model.pendingAmbushConfirmation.promise;
+
+    let resolveConfirmation = null;
+    const promise = new Promise((resolve) => {
+      resolveConfirmation = resolve;
+    });
+    model.pendingAmbushConfirmation = { promise, resolve: resolveConfirmation };
+    model.eventState.worldAmbush = {
+      ...detail,
+      awaitingConfirmation: true,
+      confirmed: false
+    };
+    scheduleRender();
+    return promise;
+  }
+
+  function resolvePendingAmbushConfirmation() {
+    const pending = model.pendingAmbushConfirmation;
+    model.pendingAmbushConfirmation = null;
+    if (model.eventState.worldAmbush) {
+      model.eventState.worldAmbush = {
+        ...model.eventState.worldAmbush,
+        awaitingConfirmation: false,
+        confirmed: true
+      };
+    }
+    pending?.resolve?.();
+    scheduleRender();
   }
 
   async function completeContextualGuide(guide) {
@@ -360,7 +406,14 @@
     model.target = target;
     const displayView = model.confirmSkip ? getSkipConfirmationView(view) : view;
     model.currentView = displayView;
-    renderCard(displayView, target);
+    const renderKey = getTutorialViewRenderKey(displayView);
+    if (!model.card || !model.ring || model.renderKey !== renderKey) {
+      renderCard(displayView, target);
+      model.renderKey = renderKey;
+    } else {
+      model.host.hidden = false;
+      model.host.classList.toggle('is-centered', Boolean(displayView.centered && !target));
+    }
     positionTutorial(target);
     scheduleSettledPosition();
   }
@@ -569,31 +622,33 @@
   }
 
   function getActionDrivenWorldTravelView(progress) {
-    const blockingModal = findVisibleElement(['.modal.show .modal-content']);
-    const ambushModal = findVisibleElement(['#worldBattleModal.show .modal-content', '.world-battle-modal.show .modal-content']);
-    if (model.eventState.worldAmbush && ambushModal) {
+    if (model.eventState.worldAmbush?.awaitingConfirmation) {
       return {
-        title: model.eventState.worldAmbush.lost ? 'The ambush stopped you' : 'Ambushed on the road',
-        body: model.eventState.worldAmbush.lost
-          ? 'Ambushes test your Active Team while traveling. A defeat returns you to safety; strengthen or rearrange the team before trying again.'
-          : 'Some routes spring an ambush. Your Active Team fights automatically, so formation and stronger demons matter even between marked spots.',
+        title: 'You have been ambushed',
+        body: 'Some routes spring an ambush. Your Active Team fights automatically, so formation and stronger demons matter even between marked spots.',
         progress,
         icon: 'swords',
-        target: ambushModal
+        centered: true,
+        primaryLabel: 'Got it',
+        onPrimary: resolvePendingAmbushConfirmation
       };
     }
+    const blockingModal = findVisibleElement(['.modal.show .modal-content']);
     if (model.eventState.worldTraveling || blockingModal || model.eventState.worldOverlayOpen) return { hidden: true };
 
-    const atTarget = model.eventState.worldArrived || positionsEqual(model.eventState.world?.position, { x: -8, y: 4 });
+    const atTarget = model.eventState.worldArrived || positionsEqual(model.eventState.world?.position, TUTORIAL_WORLD_SPOT);
     if (!atTarget && !model.eventState.worldHunt.lost) {
       prepareWorldTutorialSpot();
       return {
-        title: 'Travel to Area -8, 4',
+        title: 'Travel to Area 0, -3',
         body: 'Select the glowing demon spot, preview its route, then choose Travel. The guide waits until you arrive before explaining the activity panel.',
         progress,
         icon: 'map-pin',
         target: ['#worldTutorialSpotAnchor', '#worldTargetTooltip:not(.d-none)'],
-        mobilePlacement: 'top'
+        placement: 'top',
+        mobilePlacement: 'top',
+        placementGap: 36,
+        suppressFocusRing: true
       };
     }
 
@@ -606,7 +661,10 @@
         body: 'This panel shows what is waiting in your current area, including fights and unlocked Hunts.',
         progress,
         icon: 'map',
-        target: sideToggle
+        target: sideToggle,
+        mobileDock: 'top',
+        primaryLabel: 'Open Panel',
+        onPrimary: () => sideToggle?.click()
       };
     }
 
@@ -692,13 +750,7 @@
       };
     }
     if (dungeon.battleActive) {
-      return {
-        title: 'Fight in progress',
-        body: 'Watch how your formation performs. The guide will continue as soon as the result is ready.',
-        progress,
-        icon: 'swords',
-        target: '#teamGrid .battle-formation-grid'
-      };
+      return { hidden: true };
     }
     if (dungeon.hasPendingPacts) {
       return {
@@ -751,13 +803,7 @@
     const dungeon = model.eventState.dungeon;
     if (!dungeon?.ready) return { hidden: true };
     if (dungeon.battleActive) {
-      return {
-        title: 'The next fight is underway',
-        body: 'You chose to descend deeper. Once the fight ends, you can recruit again or secure an Echo and leave.',
-        progress,
-        icon: 'swords',
-        target: '#teamGrid .battle-formation-grid'
-      };
+      return { hidden: true };
     }
 
     const detailsOpen = Boolean(document.getElementById('demonDetailModal')?.classList.contains('show'));
@@ -773,7 +819,8 @@
           : 'Review the demon, then close this view and choose one of the defeated demons that can be extracted.',
         progress,
         icon: 'amphora',
-        target: extractAction || '#demonDetailModal.show .modal-content'
+        target: extractAction || '#demonDetailModal.show .modal-content',
+        mobileDock: isCompactTutorialViewport() ? 'top' : null
       };
     }
 
@@ -785,7 +832,8 @@
         body: 'The chosen exact Echo will be secured in your Bag together with the XP and Souls earned during this run. Extraction ends the run.',
         progress,
         icon: 'amphora',
-        target: confirm
+        target: confirm,
+        mobileDock: isCompactTutorialViewport() ? 'top' : null
       };
     }
 
@@ -794,26 +842,61 @@
     const mobileRewardOpen = Boolean(document.getElementById('dungeonBottomPanel')?.classList.contains('is-mobile-reward-open'));
     const selectedReward = findVisibleElement(['#dungeonRewardBox .dungeon-reward-demon-card']);
     const rewardExtractButton = findVisibleElement(['#getRewardBtn:not(:disabled)']);
+    const continueFightButton = findVisibleElement([
+      '#dungeonFightBtn:not(:disabled)',
+      '#dungeonMobileFightBtn:not(:disabled)',
+      '#dungeonFightBtn',
+      '#dungeonMobileFightBtn'
+    ]);
+    const reviewFightOption = () => setLocalStep(
+      'dungeonExtract',
+      0,
+      compact ? '#dungeonMobileFightBtn' : '#dungeonFightBtn'
+    );
 
-    if (selectedReward && rewardExtractButton) {
+    if (model.localSteps.dungeonExtract <= 0) {
       return {
-        title: 'Your Echo is selected',
-        body: 'This exact demon is waiting in the extraction slot. Review the payout, then Extract to confirm and leave safely.',
+        title: 'Option 1 of 2: Fight another floor',
+        body: 'Recruit a defeated demon if you want, then press Fight to continue deeper. More floors can bring more rewards, but you can choose to leave instead.',
         progress,
-        icon: 'amphora',
-        target: rewardExtractButton,
-        mobilePlacement: 'top'
+        icon: 'swords',
+        target: continueFightButton || ['#dungeonHandBar:not(.d-none)', '#teamGrid'],
+        mobileDock: compact ? 'top' : null,
+        primaryLabel: 'Show Extraction Option',
+        onPrimary: () => setLocalStep(
+          'dungeonExtract',
+          1,
+          compact ? '#dungeonMobileExtractBtn' : '#dungeonRewardBox'
+        ),
+        choiceTargets: continueFightButton ? [continueFightButton] : null
       };
     }
 
     if (compact && mobileExtractButton && !mobileRewardOpen) {
       return {
-        title: 'Open the extraction tray',
-        body: 'The flag reveals the Echo slot and your run payout. Open it before choosing which defeated demon to preserve.',
+        title: 'Option 2 of 2: Extract safely',
+        body: 'The flag opens the extraction tray. Choose one eligible demon as an Echo, then Extract to secure it with your XP and Souls and end the run safely. You can close and reopen this tray at any time.',
         progress,
         icon: 'amphora',
         target: mobileExtractButton,
-        mobilePlacement: 'top'
+        mobileDock: 'top',
+        secondaryLabel: 'Review Fight Option',
+        onSecondary: reviewFightOption,
+        primaryLabel: 'Open Extraction',
+        onPrimary: () => mobileExtractButton.click()
+      };
+    }
+
+    if (selectedReward && rewardExtractButton) {
+      return {
+        title: 'Extract this Echo',
+        body: 'This exact demon is in the extraction slot. Review the payout, then choose Extract to confirm the Echo, keep your earned XP and Souls, and leave safely.',
+        progress,
+        icon: 'amphora',
+        target: rewardExtractButton,
+        mobileDock: compact ? 'top' : null,
+        secondaryLabel: 'Review Fight Option',
+        onSecondary: reviewFightOption
       };
     }
 
@@ -828,28 +911,25 @@
       };
     }
 
-    const continueFightButton = findVisibleElement([
-      '#dungeonFightBtn:not(:disabled)',
-      '#dungeonMobileFightBtn:not(:disabled)'
+    const echoCandidate = findVisibleElement([
+      '#dungeonHandBar:not(.d-none) .is-recruit-draggable',
+      '#dungeonHandGrid .dungeon-demon-card[data-instance-id]',
+      '#teamGrid .dungeon-demon-card[data-instance-id]'
     ]);
     return {
-      title: 'Choose: deeper or safer',
+      title: 'Option 2 of 2: Extract safely',
       body: compact
-        ? 'Choose a defeated demon from Hand, then select Extract to preserve its exact Echo. The open tray below shows the extraction slot and payout.'
-        : 'Recruit defeated demons to continue deeper, or click one and choose Extract to preserve its exact Echo. You may also drag it into the extraction slot.',
+        ? 'Tap an eligible demon and choose Extract from its details, or drag it into the open extraction slot. Confirming secures that Echo with your XP and Souls and ends the run.'
+        : 'Click an eligible demon and choose Extract from its details, or drag it into the extraction slot. Confirming secures that Echo with your XP and Souls and ends the run.',
       progress,
       icon: 'amphora',
-      target: compact
-        ? [
-          '#dungeonHandBar:not(.d-none) .is-recruit-draggable',
-          '#dungeonHandBar:not(.d-none)'
-        ]
-        : [
-          '#dungeonRewardBox:not(.d-none)',
-          '#dungeonHandBar:not(.d-none)'
-        ],
-      mobilePlacement: 'top',
-      choiceTargets: continueFightButton ? [continueFightButton] : null
+      target: echoCandidate || [
+        '#dungeonRewardBox:not(.d-none)',
+        '#dungeonHandBar:not(.d-none)'
+      ],
+      mobileDock: compact ? 'top' : null,
+      secondaryLabel: 'Review Fight Option',
+      onSecondary: reviewFightOption
     };
   }
 
@@ -974,13 +1054,17 @@
       const viewCollection = findVisibleElement(['#bagSummonModal.show a[href="/collection"]']);
       return {
         title: 'Your permanent demon is ready',
-        body: 'The Echo has become a permanent demon. Choose View Collection to find it and learn how Training makes it stronger.',
+        body: 'The Echo has finished summoning and become a permanent demon. Take a moment to review the result, then continue to Collection to learn how Training makes it stronger.',
         progress,
         icon: 'sparkles',
         target: viewCollection || summonResult,
-        mobilePlacement: 'top'
+        mobilePlacement: 'top',
+        primaryLabel: 'Next',
+        onPrimary: () => advance('collection-training', { navigate: '/collection' })
       };
     }
+    const summonResultPrepared = Boolean(document.querySelector('#bagSummonModal #bagSummonTitle'));
+    if (summonResultPrepared && !bag.summoned) return { hidden: true };
     if (bag.summoned) {
       return {
         title: 'Your permanent demon is ready',
@@ -1018,20 +1102,11 @@
           mobilePlacement: 'top'
         };
       }
-      return {
-        title: 'Echoes lead to permanent demons',
-        body: 'Matching Echoes fill the Summon meter. Next, open Collection to see how permanent demons grow through Training.',
-        progress,
-        icon: 'book-plus',
-        target: [
-          '#bagDetailModal.show .bag-progress-track',
-          '#bagDetailModal.show [data-bag-action="summon"]',
-          '#bagDetailModal.show .bag-detail-visual'
-        ],
-        mobilePlacement: 'top',
-        primaryLabel: 'Continue to Collection',
-        onPrimary: () => advance('collection-training', { navigate: '/collection' })
-      };
+      const summonInProgress = Boolean(findVisibleElement([
+        'body > .bag-summon-ritual',
+        '#bagDetailModal.show [data-bag-action="summon"]:disabled'
+      ]));
+      if (summonInProgress) return { hidden: true };
     }
     return {
       title: 'Your Echo is in the Bag',
@@ -1047,10 +1122,23 @@
     const collection = model.eventState.collection;
     if (!collection?.ready) return { hidden: true };
 
+    if (collection.trainingComplete) {
+      return {
+        title: 'Training complete',
+        body: 'Now that we\'re done training, let\'s go back to check on our Hunt results.',
+        progress,
+        icon: 'book-plus',
+        centered: true,
+        primaryLabel: 'Check Hunt Results',
+        onPrimary: () => advance('world-hunt-rewards', { navigate: '/world' })
+      };
+    }
+
     const demonId = cssEscape(collection.trainingDemonId || '');
     const modalOpen = Boolean(document.getElementById('demonDetailModal')?.classList.contains('show'));
     const trainOnce = findVisibleElement(['#demonDetailModal.show .collection-train-once-action']);
     if (trainOnce) {
+      if (trainOnce.classList.contains('is-training')) return { hidden: true };
       const cost = Number(collection.trainingCost) || 0;
       const affordable = !trainOnce.disabled;
       return {
@@ -1231,16 +1319,34 @@
     model.card = model.host.querySelector('.tutorial-coachmark');
     model.ring = model.host.querySelector('.tutorial-focus-ring');
     model.host.querySelector('[data-tutorial-skip]')?.addEventListener('click', () => {
-      if (view.contextGuide) {
-        void completeContextualGuide(view.contextGuide);
+      if (model.currentView?.contextGuide) {
+        void completeContextualGuide(model.currentView.contextGuide);
         return;
       }
       model.confirmSkip = true;
       render();
     });
-    model.host.querySelector('[data-tutorial-primary]')?.addEventListener('click', () => view.onPrimary?.());
-    model.host.querySelector('[data-tutorial-secondary]')?.addEventListener('click', () => view.onSecondary?.());
+    model.host.querySelector('[data-tutorial-primary]')?.addEventListener('click', () => model.currentView?.onPrimary?.());
+    model.host.querySelector('[data-tutorial-secondary]')?.addEventListener('click', () => model.currentView?.onSecondary?.());
     window.AmongDemons?.ui?.replaceStaticIcons?.(model.host);
+  }
+
+  function getTutorialViewRenderKey(view) {
+    return JSON.stringify({
+      title: view.title || '',
+      body: view.body || '',
+      progress: view.progress || '',
+      icon: view.icon || '',
+      facts: Array.isArray(view.facts) ? view.facts : [],
+      primaryLabel: view.primaryLabel || '',
+      secondaryLabel: view.secondaryLabel || '',
+      primaryDisabled: Boolean(view.primaryDisabled),
+      secondaryDisabled: Boolean(view.secondaryDisabled),
+      confirming: Boolean(view.confirming),
+      contextGuide: view.contextGuide || '',
+      centered: Boolean(view.centered),
+      busy: Boolean(model.busy)
+    });
   }
 
   function ensureTutorialUi() {
@@ -1290,25 +1396,33 @@
     const rect = getTutorialTargetRect(target);
     const ringLeft = clamp(rect.left - 5, 4, Math.max(4, window.innerWidth - 24));
     const ringTop = clamp(rect.top - 5, 4, Math.max(4, window.innerHeight - 24));
-    model.ring.hidden = false;
-    model.ring.style.left = `${ringLeft}px`;
-    model.ring.style.top = `${ringTop}px`;
-    model.ring.style.width = `${Math.max(20, Math.min(window.innerWidth - ringLeft - 4, rect.width + 10))}px`;
-    model.ring.style.height = `${Math.max(20, Math.min(window.innerHeight - ringTop - 4, rect.height + 10))}px`;
+    const suppressFocusRing = Boolean(model.currentView?.suppressFocusRing);
+    model.ring.hidden = suppressFocusRing;
+    if (!suppressFocusRing) {
+      model.ring.style.left = `${ringLeft}px`;
+      model.ring.style.top = `${ringTop}px`;
+      model.ring.style.width = `${Math.max(20, Math.min(window.innerWidth - ringLeft - 4, rect.width + 10))}px`;
+      model.ring.style.height = `${Math.max(20, Math.min(window.innerHeight - ringTop - 4, rect.height + 10))}px`;
+    }
 
     if (compact) {
       positionCompactTutorial(rect);
       return;
     }
 
-    const gap = 14;
+    const gap = Math.max(0, Number(model.currentView?.placementGap) || 14);
     const margin = 12;
     const cardRect = model.card.getBoundingClientRect();
     const below = rect.bottom + gap;
     const above = rect.top - cardRect.height - gap;
-    const top = below + cardRect.height <= window.innerHeight - margin
-      ? below
-      : Math.max(margin, above);
+    const preferred = model.currentView?.placement;
+    const top = preferred === 'top'
+      ? Math.max(margin, above)
+      : preferred === 'bottom'
+        ? Math.min(below, window.innerHeight - cardRect.height - margin)
+        : below + cardRect.height <= window.innerHeight - margin
+          ? below
+          : Math.max(margin, above);
     const left = clamp(
       rect.left + rect.width / 2 - cardRect.width / 2,
       margin,
@@ -1349,7 +1463,7 @@
   }
 
   function positionCompactTutorial(targetRect) {
-    const gap = 10;
+    const gap = Math.max(0, Number(model.currentView?.placementGap) || 10);
     const margin = 8;
     const cardRect = model.card.getBoundingClientRect();
     const maxTop = Math.max(margin, window.innerHeight - cardRect.height - margin);
@@ -1401,6 +1515,7 @@
     model.ring = null;
     model.target = null;
     model.currentView = null;
+    model.renderKey = '';
   }
 
   function destroyTutorialUi() {
@@ -1416,6 +1531,7 @@
     model.ring = null;
     model.target = null;
     model.currentView = null;
+    model.renderKey = '';
   }
 
   function scheduleRender() {
@@ -1485,6 +1601,7 @@
     model.localStepKey = '';
     model.localSteps.worldTeam = 0;
     model.localSteps.worldTravel = 0;
+    model.localSteps.dungeonExtract = 0;
     model.localSteps.worldHuntRewards = 0;
     model.localSteps.bag = 0;
     model.automaticUi.worldMapPanelPrepared = false;
@@ -1524,13 +1641,12 @@
 
     if (tutorial.checkpoint === 'world-travel' && !model.automaticUi.worldTravelSpotPrepared) {
       model.automaticUi.worldTravelSpotPrepared = true;
-      if (expanded && !positionsEqual(model.eventState.world?.position, { x: -8, y: 4 })) toggle.click();
+      if (expanded && !positionsEqual(model.eventState.world?.position, TUTORIAL_WORLD_SPOT)) toggle.click();
       return;
     }
 
     if (
       tutorial.checkpoint === 'world-hunt-rewards'
-      && model.localSteps.worldHuntRewards > 0
       && !model.automaticUi.worldHuntRewardsPanelPrepared
     ) {
       model.automaticUi.worldHuntRewardsPanelPrepared = true;
@@ -1544,27 +1660,13 @@
     const blockingModal = findVisibleElement(['.modal.show .modal-content']);
     if (blockingModal) return { hidden: true };
 
-    if (model.localSteps.worldHuntRewards <= 0) {
-      return {
-        title: 'Your stronger demon is ready',
-        body: 'You summoned a permanent demon and gave it its first Training attempt. Now let\'s return to the Hunt your Active Team kept running.',
-        progress,
-        icon: 'sparkles',
-        target: '#worldCanvasHost',
-        centered: true,
-        primaryLabel: 'Check Hunt Rewards',
-        onPrimary: () => setLocalStep('worldHuntRewards', 1, '#worldSideToggle')
-      };
-    }
-
     if (model.localSteps.worldHuntRewards >= 2 || model.eventState.worldHunt.claimed) {
       return {
         title: 'Hunt rewards secured',
         body: 'The XP and Souls are yours, and the Hunt can keep running. You now know the full loop: explore, Hunt, collect Echoes, Summon, and Train.',
         progress,
         icon: 'hand-coins',
-        target: ['.world-active-hunt-card', '#worldEncounterList'],
-        mobilePlacement: 'top',
+        centered: true,
         primaryLabel: 'Finish Tutorial',
         onPrimary: completeTutorial
       };
@@ -1578,7 +1680,9 @@
         body: 'Open the World activity panel to see what your Active Team earned while you were in the Dungeon.',
         progress,
         icon: 'timer',
-        target: sideToggle
+        target: sideToggle,
+        primaryLabel: 'Open Panel',
+        onPrimary: () => sideToggle?.click()
       };
     }
 
@@ -1600,8 +1704,7 @@
         body: 'No need to wait here. The Hunt continues banking XP and Souls, and you can claim them later from this panel.',
         progress,
         icon: 'timer',
-        target: claimButton,
-        mobilePlacement: 'top',
+        centered: true,
         primaryLabel: 'Finish Tutorial',
         onPrimary: completeTutorial
       };
@@ -1612,8 +1715,7 @@
       body: 'There is no active Hunt to claim from this run. Defeat a World spot and start Hunt whenever you want passive XP and Souls.',
       progress,
       icon: 'hand-coins',
-      target: ['[data-start-hunting]', '[data-try-hunt]', '#worldEncounterList'],
-      mobilePlacement: 'top',
+      centered: true,
       primaryLabel: 'Finish Tutorial',
       onPrimary: completeTutorial
     };
@@ -1702,7 +1804,7 @@
     if (model.automaticUi.worldTravelSpotPrepared && document.getElementById('worldTutorialSpotAnchor')?.offsetWidth) return;
     model.automaticUi.worldTravelSpotPrepared = true;
     window.dispatchEvent(new CustomEvent('amongdemons:tutorial-focus-world-spot', {
-      detail: { position: { x: -8, y: 4 }, center: true }
+      detail: { position: { ...TUTORIAL_WORLD_SPOT }, center: true }
     }));
   }
 
@@ -1745,6 +1847,10 @@
 
   function onTutorialGameAction(event) {
     const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+    if (target?.closest?.('#dungeonMobileExtractBtn') && isCurrentCheckpoint('dungeon-extract')) {
+      model.localSteps.dungeonExtract = 1;
+      scheduleRender();
+    }
     const summonedCollectionLink = target?.closest?.('#bagSummonModal a[href="/collection"]');
     if (summonedCollectionLink && isCurrentCheckpoint('bag-echo')) {
       event.preventDefault();

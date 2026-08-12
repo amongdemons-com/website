@@ -139,6 +139,7 @@ test('tutorial is account-backed for all accounts and wired across the real game
   const schema = read('public', 'api', 'lib', 'schema.js');
   const serverTutorial = read('public', 'api', 'lib', 'tutorial.js');
   const api = read('public', 'api', 'account', 'tutorial.js');
+  const worldApi = read('public', 'api', 'world.js');
   const deletion = read('public', 'api', 'lib', 'account-deletion.js');
   const merge = read('public', 'api', 'lib', 'account-merge.js');
   const client = read('public', 'app', 'js', 'tutorial.js');
@@ -199,6 +200,13 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /applyWorldTeamRoleHighlights/);
   assert.match(client, /duplicate demons are allowed/);
   assert.match(client, /getActionDrivenWorldTravelView/);
+  assert.match(client, /TUTORIAL_WORLD_SPOT = Object\.freeze\(\{ x: 0, y: -3 \}\)/);
+  assert.match(client, /Travel to Area 0, -3/);
+  assert.match(client, /target: \['#worldTutorialSpotAnchor',[\s\S]*?placement: 'top'/);
+  assert.match(client, /suppressFocusRing: true/);
+  assert.match(client, /waitForAmbushConfirmation/);
+  assert.match(client, /primaryLabel: 'Got it'/);
+  assert.match(client, /primaryLabel: 'Open Panel'/);
   assert.match(client, /Fight to unlock this spot/);
   assert.match(client, /Hunt the defeated spot/);
   assert.match(client, /Claim the Hunt rewards/);
@@ -211,8 +219,21 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /Hunt defeated spots/);
   assert.match(client, /Recruit now or fight as-is/);
   assert.match(client, /You can add more demons from Hand/);
-  assert.match(client, /Open the extraction tray/);
-  assert.match(client, /Your Echo is selected/);
+  assert.match(client, /Option 1 of 2: Fight another floor/);
+  assert.match(client, /Option 2 of 2: Extract safely/);
+  assert.match(client, /primaryLabel: 'Show Extraction Option'/);
+  assert.match(client, /primaryLabel: 'Open Extraction'/);
+  assert.match(client, /secondaryLabel: 'Review Fight Option'/);
+  assert.match(client, /You can close and reopen this tray at any time/);
+  assert.match(client, /isCurrentCheckpoint\('dungeon-extract'\)\) model\.localSteps\.dungeonExtract = 1/);
+  assert.match(client, /target\?\.closest\?\.\('#dungeonMobileExtractBtn'\)[\s\S]*?model\.localSteps\.dungeonExtract = 1/);
+  const dungeonExtractView = /function getDungeonExtractView\(progress\)([\s\S]*?)function getBagEchoView/.exec(client)?.[1] || '';
+  assert.ok(
+    dungeonExtractView.indexOf('if (compact && mobileExtractButton && !mobileRewardOpen)')
+      < dungeonExtractView.indexOf('if (selectedReward && rewardExtractButton)'),
+    'closed mobile extraction state must be handled before its transitioning contents'
+  );
+  assert.doesNotMatch(dungeonExtractView, /Your Echo is selected/);
   assert.match(client, /Watch the summon meter/);
   assert.match(client, /Refine surplus Echoes/);
   assert.match(client, /Train permanent demons/);
@@ -230,6 +251,9 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /getTutorialTargetRect/);
   assert.match(client, /\.game-nav-link, \.game-nav-dropdown-item/);
   assert.match(client, /scheduleSettledPosition/);
+  assert.match(client, /getTutorialViewRenderKey/);
+  assert.match(client, /model\.renderKey !== renderKey/);
+  assert.match(client, /model\.currentView\?\.onPrimary\?\.\(\)/);
   assert.match(client, /isCoreActive/);
   const echoSecuredView = /if \(checkpoint === 'bag-echo'[\s\S]*?\n    \}/.exec(client)?.[0] || '';
   assert.doesNotMatch(echoSecuredView, /choiceTargets/);
@@ -247,6 +271,8 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(world, /tutorial\?\.emit\?\.\('world-route-previewed'/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-map-explored'/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-team-editor-changed'/);
+  assert.match(world, /function moveWorldTeamEditorSlotEntry[\s\S]*?tutorial\?\.emit\?\.\('world-team-editor-changed'/);
+  assert.match(world, /waitForAmbushConfirmation/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-hunt-fight'/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-hunt-started'/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-hunt-claimed'/);
@@ -259,15 +285,30 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(worldCss, /\.tutorial-role-slot/);
   assert.match(worldCss, /tutorial-role-front-guide/);
   assert.match(worldCss, /tutorial-role-back-guide/);
+  assert.match(worldCss, /\.world-tutorial-spot-anchor\s*\{[\s\S]*?border:\s*0;/);
+  assert.match(worldCss, /\.world-tutorial-spot-anchor\s*\{[\s\S]*?animation:\s*worldTutorialSpotGlow/);
+  assert.match(client, /title: 'Travel to Area 0, -3'[\s\S]*?placementGap:\s*36,[\s\S]*?suppressFocusRing:\s*true/);
   assert.match(dungeon, /tutorial\?\.emit\?\.\('dungeon-state'/);
   assert.match(rewards, /tutorial\?\.emit\?\.\('dungeon-extracted'/);
   assert.match(bag, /tutorial\?\.emit\?\.\('bag-ready'/);
   assert.match(bag, /readyUnownedKey/);
   assert.match(bag, /tutorial\?\.emit\?\.\('demon-summoned'/);
+  assert.match(bag, /bagSummonModal\.addEventListener\('shown\.bs\.modal'[\s\S]*?'demon-summoned'/);
   assert.match(collection, /tutorial\?\.emit\?\.\('collection-ready'/);
   assert.match(collection, /trainingDemonId/);
   assert.match(collection, /trainingCost/);
   assert.match(collection, /tutorial\?\.emit\?\.\('demon-trained'/);
+  assert.match(collection, /function revealTrainingOutcome[\s\S]*?showTrainingResult[\s\S]*?tutorial\?\.emit\?\.\('demon-trained'/);
+  assert.match(client, /Now that we\\'re done training, let\\'s go back to check on our Hunt results\./);
+  assert.match(client, /primaryLabel: 'Check Hunt Results'/);
+  const trainingCompleteView = /if \(collection\.trainingComplete\) \{([\s\S]*?)\n    \}/.exec(client)?.[1] || '';
+  assert.match(trainingCompleteView, /centered: true/);
+  assert.doesNotMatch(trainingCompleteView, /target:/);
+  assert.match(client, /if \(trainOnce\.classList\.contains\('is-training'\)\) return \{ hidden: true \}/);
+  assert.doesNotMatch(client, /Echoes lead to permanent demons/);
+  assert.match(client, /if \(summonInProgress\) return \{ hidden: true \}/);
+  assert.match(client, /if \(summonResultPrepared && !bag\.summoned\) return \{ hidden: true \}/);
+  assert.match(client, /The Echo has finished summoning[\s\S]*?primaryLabel: 'Next'/);
   assert.match(skillTree, /tutorial\?\.emit\?\.\('skill-tree-ready'/);
   assert.match(skillTree, /tutorial\?\.emit\?\.\('skill-tree-saved'/);
   assert.match(dungeonPage, /id="shortTeamCount"/);
@@ -281,9 +322,19 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(register, /grantStarterEcho\(playerId\)/);
   assert.match(guest, /grantStarterEcho\(playerId\)/);
   assert.match(client, /\.dungeon-result-actions a\[href="\/bag"\]/);
-  assert.match(client, /title: 'Fight in progress'[\s\S]*?target: '#teamGrid \.battle-formation-grid'/);
-  assert.match(client, /title: 'Your stronger demon is ready'[\s\S]*?primaryLabel: 'Check Hunt Rewards'/);
-  assert.match(client, /title: 'Hunt rewards secured'[\s\S]*?primaryLabel: 'Finish Tutorial'/);
+  assert.doesNotMatch(client, /title: 'Fight in progress'/);
+  assert.doesNotMatch(client, /title: 'The next fight is underway'/);
+  assert.match(client, /if \(dungeon\.battleActive\) \{\s*return \{ hidden: true \};\s*\}/);
+  assert.doesNotMatch(client, /title: 'Your stronger demon is ready'/);
+  assert.match(client, /tutorial\.checkpoint === 'world-hunt-rewards'[\s\S]*?!model\.automaticUi\.worldHuntRewardsPanelPrepared/);
+  assert.match(worldApi, /id: 'tutorial-baobaw'[\s\S]*?x: 0,[\s\S]*?y: -3/);
+  assert.match(worldApi, /species: 'Baobaw'[\s\S]*?rarity: 'common'/);
+  assert.match(worldApi, /team: \[\{[\s\S]*?instanceId: 'tutorial-baobaw-m1'[\s\S]*?\}\]/);
+  assert.match(worldApi, /return tutorial\?\.status === 'in_progress' \? TUTORIAL_WORLD_ENCOUNTER : null/);
+  const tutorialCompleteView = /title: 'Hunt rewards secured'([\s\S]*?)\n      \};/.exec(client)?.[1] || '';
+  assert.match(tutorialCompleteView, /centered: true/);
+  assert.doesNotMatch(tutorialCompleteView, /target:/);
+  assert.match(tutorialCompleteView, /primaryLabel: 'Finish Tutorial'/);
   const huntStartedHandler = /name === 'world-hunt-started'[\s\S]*?\} else if \(name === 'world-hunt-claimed'/.exec(client)?.[0] || '';
   assert.doesNotMatch(huntStartedHandler, /advance\('dungeon-prepare'/);
 });

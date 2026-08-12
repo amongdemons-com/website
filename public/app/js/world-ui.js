@@ -656,7 +656,7 @@ import './bag-item-visuals.js';
     tutorialSpotAnchor.id = 'worldTutorialSpotAnchor';
     tutorialSpotAnchor.className = 'world-tutorial-spot-anchor';
     tutorialSpotAnchor.hidden = true;
-    tutorialSpotAnchor.setAttribute('aria-label', 'Tutorial destination: Area -8, 4');
+    tutorialSpotAnchor.setAttribute('aria-label', 'Tutorial destination: Area 0, -3');
     host.appendChild(tutorialSpotAnchor);
 
     state.app = app;
@@ -798,7 +798,8 @@ import './bag-item-visuals.js';
       .filter((event) => event.type !== 'landmark');
     state.roads = Array.isArray(map.roads) ? map.roads : [];
     state.roadKeys = new Set(state.roads.map((tile) => getTileKey(tile)));
-    state.encounters = Array.isArray(map.encounters) ? map.encounters : [];
+    state.encounters = Array.isArray(map.encounters) ? [...map.encounters] : [];
+    if (payload.tutorialEncounter) state.encounters.push(payload.tutorialEncounter);
     setWorldBossState(payload, { deferArt: true });
     setWorldMerchantState(payload, { deferRender: true });
     const blockedTiles = Array.isArray(map.blockedTiles) ? map.blockedTiles : FALLBACK_BLOCKED_TILES;
@@ -1196,13 +1197,20 @@ import './bag-item-visuals.js';
           audio?.play('sfx.world.ambush', { volume: 0.9 });
         }
         if (stepEvent.type === 'ambush') {
-          window.AmongDemons?.tutorial?.emit?.('world-ambush', {
+          const tutorialAmbush = {
             position: { ...step },
             won: stepEvent.battle?.winner === 'player',
             lost: stepEvent.battle?.winner === 'enemy'
-          });
+          };
+          window.AmongDemons?.tutorial?.emit?.('world-ambush', tutorialAmbush);
+          if (shouldShowWorldBattleReplay(stepEvent.battle) && isCoreTutorialActive()) {
+            await window.AmongDemons?.tutorial?.waitForAmbushConfirmation?.(tutorialAmbush);
+          }
         }
-        if (shouldAutoShowAmbushBattle(stepEvent.battle)) {
+        if (
+          shouldAutoShowAmbushBattle(stepEvent.battle)
+          || (stepEvent.type === 'ambush' && shouldShowWorldBattleReplay(stepEvent.battle) && isCoreTutorialActive())
+        ) {
           await showWorldBattleReplay(stepEvent.battle, getWorldBattleMeta('ambush', stepEvent.battle));
         } else if (stepEvent.type === 'ambush' && stepEvent.battle?.error) {
           setMessage(stepEvent.battle.error, 'warning');
@@ -5232,6 +5240,12 @@ import './bag-item-visuals.js';
     if (targetEntry) nextTeam.push(createWorldTeamEditorTeamEntry(targetEntry, source));
     nextTeam.push(createWorldTeamEditorTeamEntry(sourceEntry, target));
     editor.team = nextTeam.sort(compareWorldTeamEditorSlots);
+    window.AmongDemons?.tutorial?.emit?.('world-team-editor-changed', {
+      action: 'place',
+      teamSize: editor.team.length,
+      demonPosition: normalizeWorldTeamEditorPosition(sourceEntry.preferredPosition || sourceEntry.position),
+      slotPosition: getWorldTeamEditorSlotPosition(target)
+    });
   }
 
   function removeWorldTeamEditorSlot(slot) {
@@ -9554,7 +9568,7 @@ import './bag-item-visuals.js';
       updateTutorialSpotAnchor();
       return;
     }
-    state.tutorialSpot = normalizePosition(detail.position || { x: -8, y: 4 });
+    state.tutorialSpot = normalizePosition(detail.position || { x: 0, y: -3 });
     if (detail.center !== false) centerOnWorldPoint(tileCenter(state.tutorialSpot));
     updateTutorialSpotAnchor();
   }

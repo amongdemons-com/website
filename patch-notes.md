@@ -36,6 +36,17 @@
   without an Anomaly Altar error interrupting the result.
 - Mythic Echoes awarded for defeating The Anomaly now come from species missing
   from your collection whenever any remain.
+- Improved the account tutorial with a nearby Common Baobaw Hunt spot, a clear
+  ambush confirmation before combat, reliable melee and ranged formation
+  guidance, mobile-safe World panel prompts, quieter Dungeon fights, and a
+  post-training confirmation that waits for the full result animation. Travel
+  guidance now stays above its map point, Hunt updates no longer interrupt
+  tutorial buttons, and Summon guidance waits for the completed result. The
+  Dungeon now explains fighting deeper and extracting safely as two clear
+  choices, closed mobile extraction trays can always be reopened, and Training
+  returns directly to the Hunt claim step. Training guidance now stays hidden
+  while its result animation resolves, the World destination glow is brighter
+  and clearer below its prompt, and the final tutorial message is centered.
 
 ## Patch 4
 

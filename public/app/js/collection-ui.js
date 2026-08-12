@@ -791,11 +791,11 @@
         body: { mode: mode === 'max' ? 'max' : 'once' }
       });
       revealPending = true;
-      window.AmongDemons?.tutorial?.emit?.('demon-trained', { demonId: normalizedDemonId, mode });
       playTrainingFeedback(normalizedDemonId, result.training || {}, {
         updatedDemon: result.demon,
         player: result.player,
-        button
+        button,
+        mode
       });
     } catch (error) {
       if (error.status === 401) {
@@ -921,21 +921,27 @@
     }
 
     const modal = document.getElementById('demonDetailModal');
-    if (!modal?.classList.contains('show')) return;
-    if (outcome.updatedDemon && !isModalShowingDemon(modal, outcome.updatedDemon.id)) return;
+    if (
+      modal?.classList.contains('show')
+      && (!outcome.updatedDemon || isModalShowingDemon(modal, outcome.updatedDemon.id))
+    ) {
+      const resultTarget = target && document.body.contains(target)
+        ? target
+        : modal.querySelector('.demon-detail-art');
 
-    const resultTarget = target && document.body.contains(target)
-      ? target
-      : modal.querySelector('.demon-detail-art');
+      if (outcome.updatedDemon) {
+        syncModalTrainingStats(outcome.updatedDemon);
+        syncModalTrainingAction(outcome.updatedDemon);
+      }
 
-    if (outcome.updatedDemon) {
-      syncModalTrainingStats(outcome.updatedDemon);
-      syncModalTrainingAction(outcome.updatedDemon);
+      if (resultTarget && document.body.contains(resultTarget)) {
+        showTrainingResult(resultTarget, training);
+      }
     }
-
-    if (resultTarget && document.body.contains(resultTarget)) {
-      showTrainingResult(resultTarget, training);
-    }
+    window.AmongDemons?.tutorial?.emit?.('demon-trained', {
+      demonId: outcome.updatedDemon?.id || null,
+      mode: outcome.mode || 'once'
+    });
   }
 
   function showTrainingResult(target, training) {
