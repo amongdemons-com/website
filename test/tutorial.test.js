@@ -140,6 +140,7 @@ test('tutorial is account-backed for all accounts and wired across the real game
   const serverTutorial = read('public', 'api', 'lib', 'tutorial.js');
   const api = read('public', 'api', 'account', 'tutorial.js');
   const worldApi = read('public', 'api', 'world.js');
+  const worldMap = JSON.parse(read('public', 'api', 'data', 'map.json'));
   const deletion = read('public', 'api', 'lib', 'account-deletion.js');
   const merge = read('public', 'api', 'lib', 'account-merge.js');
   const client = read('public', 'app', 'js', 'tutorial.js');
@@ -333,10 +334,16 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /if \(dungeon\.battleActive\) \{\s*return \{ hidden: true \};\s*\}/);
   assert.doesNotMatch(client, /title: 'Your stronger demon is ready'/);
   assert.match(client, /tutorial\.checkpoint === 'world-hunt-rewards'[\s\S]*?!model\.automaticUi\.worldHuntRewardsPanelPrepared/);
-  assert.match(worldApi, /id: 'tutorial-baobaw'[\s\S]*?x: 0,[\s\S]*?y: -3/);
-  assert.match(worldApi, /species: 'Baobaw'[\s\S]*?rarity: 'common'/);
-  assert.match(worldApi, /team: \[\{[\s\S]*?instanceId: 'tutorial-baobaw-m1'[\s\S]*?\}\]/);
-  assert.match(worldApi, /return tutorial\?\.status === 'in_progress' \? TUTORIAL_WORLD_ENCOUNTER : null/);
+  const tutorialWorldSpot = worldMap.encounters.find((encounter) => encounter.id === 'tutorial-baobaw');
+  assert.deepEqual(
+    { x: tutorialWorldSpot?.x, y: tutorialWorldSpot?.y },
+    { x: 0, y: -3 }
+  );
+  assert.equal(tutorialWorldSpot?.keyDemon?.species, 'Baobaw');
+  assert.equal(tutorialWorldSpot?.keyDemon?.rarity, 'common');
+  assert.equal(tutorialWorldSpot?.team?.[0]?.instanceId, 'tutorial-baobaw-m1');
+  assert.doesNotMatch(worldApi, /tutorialEncounter|TUTORIAL_WORLD_ENCOUNTER/);
+  assert.doesNotMatch(world, /payload\.tutorialEncounter/);
   const tutorialCompleteView = /title: 'Hunt rewards secured'([\s\S]*?)\n      \};/.exec(client)?.[1] || '';
   assert.match(tutorialCompleteView, /centered: true/);
   assert.doesNotMatch(tutorialCompleteView, /target:/);

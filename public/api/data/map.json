@@ -34374,6 +34374,30 @@
           "imageUrl": "/app/images/demons/18.png"
         }
       ]
+    },
+    {
+      "id": "tutorial-baobaw",
+      "x": 0,
+      "y": -3,
+      "zoneType": 0,
+      "keyDemon": {
+        "typeId": 7,
+        "species": "Baobaw",
+        "rarity": "common",
+        "imageUrl": "/app/images/demons/37.png"
+      },
+      "team": [
+        {
+          "instanceId": "tutorial-baobaw-m1",
+          "typeId": 7,
+          "species": "Baobaw",
+          "role": "striker",
+          "rarity": "common",
+          "position": "front",
+          "imageUrl": "/app/images/demons/37.png",
+          "elite": true
+        }
+      ]
     }
   ]
 }

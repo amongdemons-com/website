@@ -799,7 +799,6 @@ import './bag-item-visuals.js';
     state.roads = Array.isArray(map.roads) ? map.roads : [];
     state.roadKeys = new Set(state.roads.map((tile) => getTileKey(tile)));
     state.encounters = Array.isArray(map.encounters) ? [...map.encounters] : [];
-    if (payload.tutorialEncounter) state.encounters.push(payload.tutorialEncounter);
     setWorldBossState(payload, { deferArt: true });
     setWorldMerchantState(payload, { deferRender: true });
     const blockedTiles = Array.isArray(map.blockedTiles) ? map.blockedTiles : FALLBACK_BLOCKED_TILES;

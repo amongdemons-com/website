@@ -38,7 +38,8 @@
   without an Anomaly Altar error interrupting the result.
 - Mythic Echoes awarded for defeating The Anomaly now come from species missing
   from your collection whenever any remain.
-- Improved the account tutorial with a nearby Common Baobaw Hunt spot, a clear
+- Improved the account tutorial with a permanent nearby Common Baobaw Hunt spot
+  available to every hunter, a clear
   ambush confirmation before combat, reliable melee and ranged formation
   guidance, mobile-safe World panel prompts, quieter Dungeon fights, and a
   post-training confirmation that waits for the full result animation. Travel
