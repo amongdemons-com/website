@@ -11808,6 +11808,10 @@ body.hunter-page {
 .tutorial-coachmark-host {
     position: fixed;
     inset: 0;
+    --tutorial-gold: #f2c35e;
+    --tutorial-gold-light: #ffe6a5;
+    --tutorial-gold-muted: rgba(232, 199, 106, 0.72);
+    --tutorial-ink: rgba(19, 15, 10, 0.985);
     /* Tutorial guidance must stay above Bootstrap modals, Dungeon overlays,
        account dialogs, and notification surfaces without blocking the page. */
     z-index: 2147482000;
@@ -11848,21 +11852,21 @@ body.hunter-page {
     width: min(22rem, calc(100vw - 1.5rem));
     max-height: min(31rem, calc(100dvh - 1.5rem));
     overflow: auto;
-    border: 1px solid rgba(232, 199, 106, 0.64);
+    border: 1px solid rgba(246, 207, 119, 0.84);
     border-radius: 0.95rem;
     background:
-        radial-gradient(circle at 8% 0%, rgba(90, 202, 177, 0.2), transparent 11rem),
-        radial-gradient(circle at 100% 100%, rgba(232, 199, 106, 0.08), transparent 13rem),
-        linear-gradient(150deg, rgba(8, 28, 30, 0.97), rgba(5, 14, 18, 0.99));
+        radial-gradient(circle at 105% 105%, rgba(177, 113, 31, 0.12), transparent 14rem),
+        linear-gradient(150deg, rgba(35, 27, 15, 0.985), var(--tutorial-ink));
     box-shadow:
         0 1.25rem 3.5rem rgba(0, 0, 0, 0.66),
-        0 0 0 1px rgba(7, 12, 12, 0.72),
-        inset 0 1px rgba(255, 255, 255, 0.06);
-    color: #e8f1ef;
+        0 0 0 1px rgba(255, 229, 169, 0.12),
+        0 0 2.4rem rgba(205, 151, 56, 0.07),
+        inset 0 1px rgba(255, 240, 199, 0.1);
+    color: #f5eddb;
     pointer-events: auto;
-    backdrop-filter: blur(16px) saturate(118%);
+    backdrop-filter: blur(16px) saturate(108%);
     scrollbar-width: thin;
-    scrollbar-color: rgba(232, 199, 106, 0.44) transparent;
+    scrollbar-color: rgba(232, 199, 106, 0.58) transparent;
 }
 
 .tutorial-progress-rail {
@@ -11873,15 +11877,15 @@ body.hunter-page {
     width: 100%;
     height: 3px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 229, 169, 0.07);
 }
 
 .tutorial-progress-rail > span {
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #5ed8bd, #f2c35e);
-    box-shadow: 0 0 12px rgba(94, 216, 189, 0.58);
+    background: linear-gradient(90deg, #c88a2c, var(--tutorial-gold-light), var(--tutorial-gold));
+    box-shadow: 0 0 14px rgba(242, 195, 94, 0.72);
     transition: width 220ms ease;
 }
 
@@ -11899,7 +11903,8 @@ body.hunter-page {
     align-items: center;
     gap: 0.5rem;
     padding: 0.68rem 0.82rem;
-    border-bottom: 1px solid rgba(167, 204, 194, 0.14);
+    border-bottom: 1px solid rgba(232, 199, 106, 0.22);
+    background: linear-gradient(90deg, rgba(242, 195, 94, 0.07), transparent 72%);
 }
 
 .tutorial-coachmark-icon {
@@ -11907,10 +11912,11 @@ body.hunter-page {
     place-items: center;
     width: 1.8rem;
     height: 1.8rem;
-    border: 1px solid rgba(242, 195, 94, 0.48);
+    border: 1px solid rgba(255, 222, 143, 0.68);
     border-radius: 50%;
-    background: linear-gradient(145deg, rgba(242, 195, 94, 0.16), rgba(94, 216, 189, 0.06));
-    color: #f2c35e;
+    background: radial-gradient(circle at 35% 30%, rgba(255, 235, 181, 0.2), rgba(169, 104, 24, 0.14));
+    color: var(--tutorial-gold-light);
+    box-shadow: inset 0 0 0 1px rgba(84, 52, 17, 0.62), 0 0 14px rgba(242, 195, 94, 0.12);
 }
 
 .tutorial-coachmark-icon svg {
@@ -11919,11 +11925,25 @@ body.hunter-page {
 }
 
 .tutorial-coachmark-progress {
-    color: rgba(220, 235, 230, 0.76);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    color: rgba(238, 224, 193, 0.7);
     font-size: 0.69rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.tutorial-coachmark-progress strong {
+    border: 1px solid rgba(242, 195, 94, 0.32);
+    border-radius: 999px;
+    padding: 0.17rem 0.38rem;
+    background: rgba(242, 195, 94, 0.09);
+    color: var(--tutorial-gold-light);
+    font-size: 0.58rem;
+    letter-spacing: 0.11em;
 }
 
 .tutorial-skip-link {
@@ -11931,7 +11951,7 @@ body.hunter-page {
     border: 0;
     padding: 0.22rem 0.1rem;
     background: transparent;
-    color: rgba(224, 237, 233, 0.76);
+    color: rgba(235, 218, 181, 0.72);
     font-size: 0.72rem;
     text-decoration: underline;
     text-underline-offset: 0.18rem;
@@ -11939,7 +11959,7 @@ body.hunter-page {
 
 .tutorial-skip-link:hover,
 .tutorial-skip-link:focus-visible {
-    color: #fff1bc;
+    color: var(--tutorial-gold-light);
 }
 
 .tutorial-coachmark-copy {
@@ -11948,7 +11968,7 @@ body.hunter-page {
 
 .tutorial-coachmark-copy h2 {
     margin: 0 0 0.4rem;
-    color: #fff1bc;
+    color: var(--tutorial-gold-light);
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 1.16rem;
     line-height: 1.15;
@@ -11956,7 +11976,7 @@ body.hunter-page {
 
 .tutorial-coachmark-copy p {
     margin: 0;
-    color: rgba(229, 241, 238, 0.88);
+    color: rgba(245, 237, 219, 0.88);
     font-size: 0.82rem;
     line-height: 1.48;
 }
@@ -11974,9 +11994,10 @@ body.hunter-page {
     align-items: center;
     gap: 0.45rem;
     min-width: 0;
-    border: 1px solid rgba(111, 214, 189, 0.18);
+    border: 1px solid rgba(232, 199, 106, 0.24);
     border-radius: 0.55rem;
-    background: linear-gradient(145deg, rgba(111, 214, 189, 0.09), rgba(255, 255, 255, 0.015));
+    background: linear-gradient(145deg, rgba(242, 195, 94, 0.085), rgba(99, 63, 20, 0.045));
+    box-shadow: inset 0 1px rgba(255, 235, 181, 0.035);
     padding: 0.48rem 0.52rem;
 }
 
@@ -11992,14 +12013,14 @@ body.hunter-page {
     transform: translateY(-1px);
     border-color: rgba(242, 195, 94, 0.58);
     outline: 0;
-    background: linear-gradient(145deg, rgba(111, 214, 189, 0.16), rgba(242, 195, 94, 0.06));
-    box-shadow: 0 0 18px rgba(94, 216, 189, 0.1);
+    background: linear-gradient(145deg, rgba(242, 195, 94, 0.16), rgba(121, 77, 25, 0.08));
+    box-shadow: 0 0 18px rgba(242, 195, 94, 0.12);
 }
 
 .tutorial-fact > svg {
     width: 1rem;
     height: 1rem;
-    color: #f2c35e;
+    color: var(--tutorial-gold);
 }
 
 .tutorial-fact .tutorial-fact-arrow {
@@ -12015,14 +12036,14 @@ body.hunter-page {
 }
 
 .tutorial-fact strong {
-    color: #f5fbf9;
+    color: #fff5dc;
     font-size: 0.7rem;
     letter-spacing: 0.02em;
 }
 
 .tutorial-fact small {
     overflow: hidden;
-    color: rgba(198, 220, 214, 0.68);
+    color: rgba(222, 205, 169, 0.68);
     font-size: 0.6rem;
     line-height: 1.2;
     text-overflow: ellipsis;
@@ -12039,6 +12060,50 @@ body.hunter-page {
 .tutorial-coachmark-actions .btn {
     min-height: 2.2rem;
     font-size: 0.76rem;
+}
+
+.tutorial-coachmark-actions .btn-primary {
+    border-color: rgba(255, 226, 157, 0.72);
+    border-image: none !important;
+    border-radius: 0.42rem !important;
+    background: #d8ad55;
+    box-shadow: none;
+    color: #241708;
+    text-shadow: none;
+}
+
+.tutorial-coachmark-actions .btn-primary::before {
+    content: none;
+}
+
+.tutorial-coachmark-actions .btn-primary:hover {
+    border-color: #ffe9b4;
+    background: #e3bb69;
+    color: #1b1107;
+    box-shadow: none;
+}
+
+.tutorial-coachmark-actions .btn-primary:focus-visible {
+    border-color: #ffe9b4;
+    outline: 2px solid rgba(242, 195, 94, 0.38);
+    outline-offset: 2px;
+    background: #e3bb69;
+    color: #1b1107;
+    box-shadow: none;
+}
+
+.tutorial-coachmark-actions .btn-primary:not(:disabled, .disabled):active {
+    border-color: rgba(255, 226, 157, 0.76);
+    background: #c99a42;
+    box-shadow: none;
+}
+
+.tutorial-coachmark-actions .btn-glass-muted {
+    border-color: rgba(232, 199, 106, 0.34);
+    background: rgba(94, 62, 23, 0.18);
+    color: rgba(248, 232, 197, 0.88);
+    box-shadow: none;
+    text-shadow: none;
 }
 
 .tutorial-coachmark.is-confirming {
@@ -12064,6 +12129,10 @@ body.hunter-page {
         max-height: min(18rem, calc(100dvh - 1rem));
         transform: none;
         border-radius: 0.82rem;
+    }
+
+    .tutorial-coachmark-host.is-centered .tutorial-coachmark {
+        width: min(22rem, calc(100vw - 1rem));
     }
 
     .tutorial-coachmark-head {

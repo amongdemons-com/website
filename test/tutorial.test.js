@@ -260,12 +260,18 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /mobilePlacement/);
   assert.match(css, /\.tutorial-coachmark/);
   assert.match(css, /\.tutorial-progress-rail/);
+  assert.match(css, /--tutorial-gold:/);
+  assert.match(css, /\.tutorial-coachmark-actions \.btn-primary\s*\{[\s\S]*?border-image:\s*none !important;[\s\S]*?background:\s*#d8ad55;[\s\S]*?box-shadow:\s*none;[\s\S]*?text-shadow:\s*none;/);
+  assert.match(css, /\.tutorial-coachmark-actions \.btn-primary::before\s*\{\s*content:\s*none;/);
+  assert.doesNotMatch(css, /radial-gradient\(circle at 7% -10%/);
+  assert.match(client, /tutorial-coachmark-progress"><strong>Tutorial<\/strong>/);
   assert.match(css, /\.tutorial-facts/);
   assert.match(css, /\.tutorial-fact\.is-link/);
   assert.match(css, /\.tutorial-coachmark-host\s*\{[\s\S]*?z-index:\s*2147482000/);
   assert.match(css, /\.tutorial-coachmark-host\s*\{[\s\S]*?pointer-events:\s*none/);
   assert.match(css, /\.tutorial-coachmark\s*\{[\s\S]*?pointer-events:\s*auto/);
   assert.match(css, /@media \(max-width: 767\.98px\)/);
+  assert.match(css, /\.tutorial-coachmark-host\.is-centered \.tutorial-coachmark\s*\{[\s\S]*?width:\s*min\(22rem, calc\(100vw - 1rem\)\)/);
   assert.doesNotMatch(css, /\.tutorial-coachmark\s*\{[\s\S]*?top:\s*auto\s*!important/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-team-saved'/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-route-previewed'/);

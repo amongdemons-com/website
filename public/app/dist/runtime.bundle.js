@@ -173,7 +173,7 @@
         <span class="tutorial-progress-rail" aria-hidden="true"><span style="width:${u(a.progress)}%"></span></span>
         <header class="tutorial-coachmark-head">
           <span class="tutorial-coachmark-icon" aria-hidden="true"><i data-lucide="${ke(a.icon||"map")}"></i></span>
-          <span class="tutorial-coachmark-progress">${ke(a.progress||"")}</span>
+          <span class="tutorial-coachmark-progress"><strong>Tutorial</strong><span>${ke(a.progress||"")}</span></span>
           ${a.confirming?"":`<button class="tutorial-skip-link" type="button" data-tutorial-skip>${a.contextGuide?"Dismiss tip":"Skip tutorial"}</button>`}
         </header>
         <div class="tutorial-coachmark-copy">

@@ -47,6 +47,10 @@
   returns directly to the Hunt claim step. Training guidance now stays hidden
   while its result animation resolves, the World destination glow is brighter
   and clearer below its prompt, and the final tutorial message is centered.
+  Tutorial prompts now use their own subtle gold styling so they remain easy to
+  distinguish from normal game panels and actions.
+  The gold treatment stays restrained, with flatter buttons and no bright
+  corner glow.
 
 ## Patch 4
 

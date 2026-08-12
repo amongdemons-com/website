@@ -1299,7 +1299,7 @@
         <span class="tutorial-progress-rail" aria-hidden="true"><span style="width:${getProgressPercent(view.progress)}%"></span></span>
         <header class="tutorial-coachmark-head">
           <span class="tutorial-coachmark-icon" aria-hidden="true"><i data-lucide="${escapeHtml(view.icon || 'map')}"></i></span>
-          <span class="tutorial-coachmark-progress">${escapeHtml(view.progress || '')}</span>
+          <span class="tutorial-coachmark-progress"><strong>Tutorial</strong><span>${escapeHtml(view.progress || '')}</span></span>
           ${view.confirming ? '' : `<button class="tutorial-skip-link" type="button" data-tutorial-skip>${view.contextGuide ? 'Dismiss tip' : 'Skip tutorial'}</button>`}
         </header>
         <div class="tutorial-coachmark-copy">
