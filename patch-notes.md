@@ -4,6 +4,8 @@
 
 ## Patch 5 (Current)
 
+- Ranked Dungeon escape results now always let you continue without reloading
+  the page, including after earlier Ranked victories in the same run.
 - Added a skippable account tutorial that shows every hunter how to explore,
   arrange melee and ranged teams, complete the Fight, Hunt, and Claim loop,
   enter a Dungeon, and extract Echoes. Its prompts now advance from real game

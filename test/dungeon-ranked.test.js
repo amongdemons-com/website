@@ -425,6 +425,14 @@ test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result fl
   assert.match(rankedUi, /rank-division-text--/);
   assert.match(rankedUi, /ranked\/continue/);
   assert.match(rankedUi, /ranked\/escape/);
+  assert.match(
+    rankedUi,
+    /function showRankedResultModal[\s\S]*?resultChoiceBusy = false;[\s\S]*?dungeonRankedResultContinueBtn\.disabled = false/
+  );
+  assert.match(
+    rankedUi,
+    /async function continueDungeonRankedResult[\s\S]*?finally \{\s*resultChoiceBusy = false;/
+  );
   assert.match(rankedUi, /openDungeonRankedChoice/);
   assert.match(rankedUi, /nextRankedEncounter/);
   assert.match(lifecycle, /isDungeonRankedPlanning\(state\.run\)[\s\S]*?openDungeonRankedChoice\(\)/);

@@ -164,6 +164,11 @@ function showPendingDungeonRankedResult(run = state.run) {
 function showRankedResultModal({ result, title, summary, continueLabel = 'Continue' } = {}) {
   if (!result || !elements.dungeonRankedResultModal) return false;
 
+  // Each result modal starts a new interaction. A successful Ranked victory
+  // can leave this guard set after its request completes, so carrying it into
+  // a later successful escape would make that escape's Continue button inert.
+  resultChoiceBusy = false;
+
   const won = result.winner === 'player';
   const rank = getRankPresentation(result.division);
   const rankShell = elements.dungeonRankedResultRank;
@@ -239,12 +244,13 @@ async function continueDungeonRankedResult() {
     const nextFloor = Math.max(1, Number(payload.nextFloor) || Number(state.run?.currentFloor) + 1 || 1);
     setMessage(`Ranked victory. Prepare your team for Floor ${nextFloor}.`, 'success');
   } catch (error) {
-    resultChoiceBusy = false;
     if (button) {
       button.disabled = false;
       button.textContent = 'Continue';
     }
     showError(error);
+  } finally {
+    resultChoiceBusy = false;
   }
 }
 
