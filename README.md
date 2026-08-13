@@ -2,6 +2,8 @@
 
 Among Demons is a server-authoritative demon-collection game built with Node.js/Express and MySQL. The frontend is static HTML/CSS/vanilla JavaScript served from `public/app` (the world map renders with Pixi.js); public marketing/catalog pages are server-rendered for SEO. All gameplay outcomes - combat, RNG, rewards, XP, Souls, movement, and collection writes - are calculated on the server. The browser only displays state and stages player choices.
 
+[Play free in your browser](https://amongdemons.com/) · [Get Among Demons on Steam](https://store.steampowered.com/app/4973450/Among_Demons/?utm_source=github.com&utm_medium=repository&utm_campaign=owned_channels) · [Press kit](https://amongdemons.com/press) · [Patch notes](https://amongdemons.com/updates)
+
 ## Game Overview
 
 The game has two connected play spaces plus permanent progression:

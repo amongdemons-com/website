@@ -1,5 +1,6 @@
 const express = require('express');
 const compression = require('compression');
+const fs = require('fs');
 const path = require('path');
 require('./public/api/lib/async-errors');
 const apiRoutes = require('./public/api');
@@ -19,8 +20,10 @@ const {
   renderDemonsPage,
   renderEventsPage,
   renderHomePage,
+  renderPressPage,
   renderRobotsTxt,
-  renderSitemap
+  renderSitemap,
+  renderUpdatesPage
 } = require('./lib/seo-pages');
 const { renderHunterPage } = require('./lib/hunter-page');
 const { ensureSchemaReady } = require('./public/api/lib/schema');
@@ -29,6 +32,7 @@ const { purgeDueAccounts } = require('./public/api/lib/account-deletion');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const appDir = path.join(__dirname, 'public', 'app');
+const patchNotesPath = path.join(__dirname, 'patch-notes.md');
 const browserManifest = require('./public/app/dist/manifest.json');
 const BROWSER_CLIENT_VERSION = browserManifest.clientVersion || getAssetVersion(browserManifest.runtime);
 let catalogPromise;
@@ -143,6 +147,15 @@ app.get(['/bosses', '/bosses/'], async (req, res) => {
 
 app.get(['/events', '/events/'], (req, res) => {
   res.send(renderEventsPage());
+});
+
+app.get(['/updates', '/updates/'], (req, res) => {
+  const patchNotes = fs.readFileSync(patchNotesPath, 'utf8');
+  res.send(renderUpdatesPage(patchNotes));
+});
+
+app.get(['/press', '/press/'], (req, res) => {
+  res.send(renderPressPage());
 });
 
 app.get(['/bosses/:slug', '/bosses/:slug/'], async (req, res, next) => {
