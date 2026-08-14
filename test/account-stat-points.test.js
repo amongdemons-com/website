@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  FEATURE_TEST_ACCOUNT_STAT_POINTS,
   NODE_DEFINITIONS,
   calculatePathProgress,
   calculateStatBonuses,
@@ -29,4 +30,18 @@ test('legacy Endless Speed ranks are ignored and refunded as unspent points', ()
   assert.deepEqual(paths.offense.branches.speed, { node: 5 });
   assert.equal(summary.spentPoints, 10);
   assert.equal(summary.unspentPoints, 7);
+});
+
+test('feature test accounts receive 666 isolated skill-tree points at level 1', () => {
+  const summary = createStatPointSummary({
+    id: 'ranked-bot:feature-test:anomaly',
+    level: 1,
+    xp: 0
+  });
+
+  assert.equal(FEATURE_TEST_ACCOUNT_STAT_POINTS, 666);
+  assert.equal(summary.level, 1);
+  assert.equal(summary.totalPoints, 666);
+  assert.equal(summary.spentPoints, 0);
+  assert.equal(summary.unspentPoints, 666);
 });

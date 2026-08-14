@@ -11,6 +11,7 @@ const WORLD_MERCHANT_SCHEMA_MIGRATION = '20260723_world_merchant_schema_v1';
 const WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION = '20260723_world_merchant_bribe_schema_v1';
 const WORLD_SOUL_FONT_SCHEMA_MIGRATION = '20260802_world_soul_font_schema_v1';
 const WORLD_ANOMALY_SCHEMA_MIGRATION = '20260810_world_anomaly_schema_v1';
+const WORLD_ANOMALY_RUN_SCHEMA_MIGRATION = '20260814_world_anomaly_run_schema_v1';
 const RANKED_SCHEMA_MIGRATION = '20260728_ranked_schema_v2';
 const DUNGEON_RANKED_SCHEMA_MIGRATION = '20260808_dungeon_ranked_schema_v1';
 const RANKED_FRESH_START_MIGRATION = '20260808_ranked_fresh_start_v1';
@@ -953,6 +954,15 @@ async function addWorldAnomalySchema() {
   await normalizeUtf8Column('player_anomaly_rituals', 'last_ritual_id', 'VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
 }
 
+async function addWorldAnomalyRunSchema() {
+  await addColumnIfMissing('player_anomaly_rituals', 'losses', '`losses` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `victories`');
+  await addColumnIfMissing('player_anomaly_rituals', 'active_run_id', '`active_run_id` VARCHAR(64) NULL AFTER `last_ritual_id`');
+  await addColumnIfMissing('player_anomaly_rituals', 'active_floor', '`active_floor` TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER `active_run_id`');
+  await addColumnIfMissing('player_anomaly_rituals', 'active_team', '`active_team` LONGTEXT NULL AFTER `active_floor`');
+  await addColumnIfMissing('player_anomaly_rituals', 'active_started_at', '`active_started_at` TIMESTAMP NULL AFTER `active_team`');
+  await normalizeUtf8Column('player_anomaly_rituals', 'active_run_id', 'VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL');
+}
+
 async function addPlayerBadgesSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_badges (
@@ -1151,6 +1161,7 @@ async function initializeSchema() {
   await runMigrationOnce(WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION, addWorldMerchantBribeSchema);
   await runMigrationOnce(WORLD_SOUL_FONT_SCHEMA_MIGRATION, addWorldSoulFontSchema);
   await runMigrationOnce(WORLD_ANOMALY_SCHEMA_MIGRATION, addWorldAnomalySchema);
+  await runMigrationOnce(WORLD_ANOMALY_RUN_SCHEMA_MIGRATION, addWorldAnomalyRunSchema);
   await runMigrationOnce(RANKED_SCHEMA_MIGRATION, addRankedSchema);
   await runMigrationOnce(DUNGEON_RANKED_SCHEMA_MIGRATION, addDungeonRankedSchema);
   await runMigrationOnce(RANKED_FRESH_START_MIGRATION, resetRankedForDungeonFreshStart);

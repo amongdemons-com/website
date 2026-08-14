@@ -35,7 +35,9 @@
     lastPointerType: 'mouse',
     slotCapacity: 24,
     slotColumns: 4,
-    detailError: ''
+    detailError: '',
+    progression: null,
+    confirmingUnravelKey: null
   };
   const elements = {};
   let resizeFrame = 0;
@@ -179,6 +181,7 @@
   function applyPayload(payload = {}) {
     state.items = Array.isArray(payload.items) ? payload.items : [];
     state.config = payload.config || state.config || {};
+    state.progression = payload.progression || state.progression;
     renderBag();
     window.AmongDemons?.tutorial?.emit?.('bag-ready', {
       itemKeys: state.items.map((item) => item.itemKey).filter(Boolean),
@@ -243,6 +246,7 @@
     if (!item) return;
     state.inspectedKey = null;
     state.detailError = '';
+    state.confirmingUnravelKey = null;
     hideItemTooltip();
     state.selectedKey = itemKey;
     renderItemDetail(item);
@@ -302,10 +306,42 @@
 
   function renderRefinementPanel(item) {
     if (!item.nextRarity) {
+      const currentLevel = Math.max(1, Number(state.progression?.level) || 1);
+      const maximumLevel = 666;
+      const levelsAvailable = Math.max(0, Math.min(
+        Number(state.config?.mythicUnravelLevels) || 5,
+        maximumLevel - currentLevel
+      ));
+      const confirming = state.confirmingUnravelKey === item.itemKey;
+      const canUnravel = Boolean(item.canUnravel && levelsAvailable > 0 && !state.pending);
       return `
         <section class="bag-detail-panel">
           <h3>Refinement</h3>
-          <p class="small text-muted mb-0">Mythic is the highest Echo rarity. Surplus Mythic Echoes remain safely stored.</p>
+          <p class="small text-muted">Mythic is the highest Echo rarity. ${levelsAvailable > 0
+            ? `Unravel one Mythic Echo to release its power as ${escapeHtml(levelsAvailable)} hunter ${levelsAvailable === 1 ? 'level' : 'levels'}.`
+            : 'Level 666 is the maximum hunter level, so Mythic Echoes can no longer be unraveled.'}</p>
+          ${levelsAvailable > 0 ? `
+            ${confirming ? `
+              <div class="bag-unravel-confirm" role="alert">
+                <strong>Unravel this Echo?</strong>
+                <span>This permanently consumes one Mythic ${escapeHtml(item.species)} Echo and cannot be undone.</span>
+                ${state.detailError ? `<div class="bag-action-error" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
+                <div class="bag-unravel-confirm-actions">
+                  <button class="btn btn-sm btn-glass-muted" type="button" data-bag-action="cancel-unravel">Cancel</button>
+                  <button class="btn btn-sm btn-primary bag-unravel-action" type="button" data-bag-action="unravel" ${canUnravel ? '' : 'disabled'}>
+                    ${state.pendingAction === 'unravel' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
+                    <span>${state.pendingAction === 'unravel' ? 'Unraveling...' : 'Confirm Unravel'}</span>
+                  </button>
+                </div>
+              </div>
+            ` : `
+              ${state.detailError ? `<div class="bag-action-error mb-3" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
+              <button class="btn btn-sm btn-primary bag-unravel-action" type="button" data-bag-action="prepare-unravel" ${canUnravel ? '' : 'disabled'}>
+                ${renderIcon('sparkles')}
+                <span>Unravel Echo</span>
+              </button>
+            `}
+          ` : ''}
         </section>
       `;
     }
@@ -344,8 +380,23 @@
     if (!item) return;
     const action = button.dataset.bagAction;
 
+    if (action === 'prepare-unravel') {
+      state.confirmingUnravelKey = item.itemKey;
+      renderItemDetail(item);
+      return;
+    }
+    if (action === 'cancel-unravel') {
+      state.confirmingUnravelKey = null;
+      renderItemDetail(item);
+      return;
+    }
+    if (action === 'unravel') {
+      await performAction('/api/bag/echoes/unravel', item, 'unravel');
+      return;
+    }
     if (action === 'refine') {
       await performAction('/api/bag/echoes/refine', item, 'refine');
+      return;
     }
     if (action === 'summon') {
       await performAction('/api/bag/echoes/summon', item, 'summon');
@@ -370,7 +421,7 @@
         stopSummonRitual();
         applyPayload(payload);
         showSummonResult(payload.demon || item, payload.demon?.id || null);
-      } else {
+      } else if (action === 'refine') {
         audio?.play('sfx.progression.refineSuccess', { volume: 0.72 });
         const sourceStillExists = (payload.items || []).some((candidate) => candidate.itemKey === item.itemKey);
         if (!sourceStillExists && payload.refinement?.targetRarity) {
@@ -378,11 +429,20 @@
         }
         applyPayload(payload);
         showRefineResult(item, payload);
+      } else {
+        audio?.play('sfx.progression.refineSuccess', { volume: 0.82 });
+        state.confirmingUnravelKey = null;
+        applyPayload(payload);
+        window.AmongDemons.ui?.updateNavProgression?.(payload.progression, {
+          animate: true,
+          forceLevelUpAnimation: true
+        });
+        showUnravelResult(payload);
       }
     } catch (error) {
       stopSummonRitual();
-      if (action === 'refine') {
-        state.detailError = error?.message || 'Refinement failed. Please try again.';
+      if (action === 'refine' || action === 'unravel') {
+        state.detailError = error?.message || `${action === 'unravel' ? 'Unraveling' : 'Refinement'} failed. Please try again.`;
       } else {
         showError(error);
       }
@@ -420,6 +480,31 @@
         <p class="bag-action-description" id="bagRefineDescription">${escapeHtml(refinedQuantity === 1
           ? 'Your refined Echo has been added to Bag.'
           : `${refinedQuantity} refined Echoes have been added to Bag.`)}</p>
+      </div>
+      <div class="modal-footer bag-action-footer-centered">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
+      </div>
+    `;
+    transitionBetweenModals(elements.bagDetailModal, elements.bagRefineModal);
+  }
+
+  function showUnravelResult(payload = {}) {
+    const levelsGranted = Math.max(1, Number(payload.unravel?.levelsGranted) || 1);
+    const targetLevel = Math.max(1, Number(payload.unravel?.targetLevel) || Number(payload.progression?.level) || 1);
+    elements.bagRefineContent.style.setProperty('--item-rarity', getRarityColor('mythic'));
+    elements.bagRefineContent.innerHTML = `
+      <div class="modal-header">
+        <div>
+          <p class="bag-action-kicker mb-1">Echo unraveled</p>
+          <h2 class="modal-title h4" id="bagRefineTitle">Power Released</h2>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body bag-action-result-body">
+        <p class="bag-action-description bag-unravel-description" id="bagRefineDescription">
+          <strong>${escapeHtml(formatNumber(levelsGranted))} hunter ${levelsGranted === 1 ? 'level' : 'levels'} gained</strong>
+          <span>You reached level ${escapeHtml(formatNumber(targetLevel))}.</span>
+        </p>
       </div>
       <div class="modal-footer bag-action-footer-centered">
         <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>

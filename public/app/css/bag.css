@@ -453,7 +453,8 @@
 }
 
 .bag-summon-action,
-.bag-refine-action {
+.bag-refine-action,
+.bag-unravel-action {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -490,6 +491,53 @@
 
 .bag-refine-action {
     margin-top: 0;
+}
+
+.bag-unravel-action {
+    margin-top: 0.25rem;
+}
+
+.bag-unravel-confirm {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.7rem;
+    border: 1px solid color-mix(in srgb, var(--item-rarity) 42%, transparent);
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--item-rarity) 8%, rgba(0, 0, 0, 0.28));
+}
+
+.bag-unravel-confirm > span {
+    color: #a8bbc1;
+    font-size: 0.75rem;
+}
+
+.bag-unravel-confirm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.45rem;
+    margin-top: 0.2rem;
+}
+
+.bag-unravel-description {
+    display: grid;
+    width: min(24rem, 100%);
+    gap: 0.35rem;
+    padding: 1rem 1.15rem;
+    border: 1px solid color-mix(in srgb, var(--item-rarity) 42%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--item-rarity) 9%, rgba(0, 0, 0, 0.32));
+}
+
+.bag-unravel-description strong {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+}
+
+.bag-unravel-description span {
+    color: #c6d4d8;
 }
 
 .bag-detail-actions {

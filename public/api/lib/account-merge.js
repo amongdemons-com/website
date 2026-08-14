@@ -534,7 +534,7 @@ async function mergeRankedRatings(targetPlayerId, sourcePlayerId, connection) {
 
 async function mergeAnomalyProgress(targetPlayerId, sourcePlayerId, connection) {
   const [rows] = await connection.query(
-    `SELECT voice_shards, attempts, victories, created_at, updated_at
+    `SELECT voice_shards, attempts, victories, losses, created_at, updated_at
      FROM player_anomaly_rituals
      WHERE player_id = ?
      LIMIT 1
@@ -546,12 +546,17 @@ async function mergeAnomalyProgress(targetPlayerId, sourcePlayerId, connection) 
   const row = rows[0];
   await connection.query(
     `INSERT INTO player_anomaly_rituals
-       (player_id, voice_shards, attempts, victories, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)
+       (player_id, voice_shards, attempts, victories, losses, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
-       voice_shards = GREATEST(voice_shards, VALUES(voice_shards)),
-       attempts = LEAST(${MAX_UNSIGNED_INT}, attempts + VALUES(attempts)),
-       victories = LEAST(${MAX_UNSIGNED_INT}, victories + VALUES(victories)),
+        voice_shards = GREATEST(voice_shards, VALUES(voice_shards)),
+        attempts = LEAST(${MAX_UNSIGNED_INT}, attempts + VALUES(attempts)),
+        victories = LEAST(${MAX_UNSIGNED_INT}, victories + VALUES(victories)),
+        losses = LEAST(${MAX_UNSIGNED_INT}, losses + VALUES(losses)),
+        active_run_id = NULL,
+        active_floor = 0,
+        active_team = NULL,
+        active_started_at = NULL,
        created_at = LEAST(created_at, VALUES(created_at)),
        updated_at = GREATEST(updated_at, VALUES(updated_at))`,
     [
@@ -559,6 +564,7 @@ async function mergeAnomalyProgress(targetPlayerId, sourcePlayerId, connection) 
       row.voice_shards,
       row.attempts,
       row.victories,
+      row.losses,
       row.created_at,
       row.updated_at
     ]

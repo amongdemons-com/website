@@ -1,6 +1,7 @@
 const db = require('./db');
 const { cleanPlayer } = require('./auth');
 const { getNextAccountLevel } = require('./progression');
+const { isFeatureTestAccountId } = require('./system-players');
 
 const NODE_DEFINITIONS = Object.freeze({
   health_flat: Object.freeze({ label: 'Max Health', cap: 5, requires: [] }),
@@ -31,6 +32,7 @@ const HUNT_SOUL_CAPACITY_PER_RANK = 20;
 const HUNT_SOUL_CAPACITY_PERCENT_PER_RANK = 10;
 const HUNT_SOUL_CAPACITY_PER_MASTERY = 10;
 const SKILL_TREE_RESET_SOULS_PER_POINT = 10;
+const FEATURE_TEST_ACCOUNT_STAT_POINTS = 666;
 
 const STAT_KEYS = Object.freeze(Object.keys(NODE_DEFINITIONS));
 const ZERO_ALLOCATIONS = Object.freeze(STAT_KEYS.reduce((allocations, key) => {
@@ -44,6 +46,11 @@ function getAccountLevel(player = {}) {
 
 function getTotalStatPoints(level) {
   return Math.max(0, Math.floor(Number(level) || 1) - 1);
+}
+
+function getTotalStatPointsForPlayer(player = {}) {
+  return getTotalStatPoints(getAccountLevel(player)) +
+    (isFeatureTestAccountId(player.id) ? FEATURE_TEST_ACCOUNT_STAT_POINTS : 0);
 }
 
 function normalizeStoredAllocations(source = {}) {
@@ -186,7 +193,7 @@ function calculatePathProgress(source = {}) {
 
 function createStatPointSummary(player, source = {}) {
   const level = getAccountLevel(player);
-  const totalPoints = getTotalStatPoints(level);
+  const totalPoints = getTotalStatPointsForPlayer(player);
   const allocations = normalizeStoredAllocations(source);
   const spentPoints = getSpentPoints(allocations);
 
@@ -215,8 +222,7 @@ async function getPlayerStatPointSummary(player) {
 }
 
 async function savePlayerStatAllocations(player, source) {
-  const level = getAccountLevel(player);
-  const allocations = validateAllocationInput(source, getTotalStatPoints(level));
+  const allocations = validateAllocationInput(source, getTotalStatPointsForPlayer(player));
   const columns = STAT_KEYS.join(', ');
   const placeholders = STAT_KEYS.map(() => '?').join(', ');
   const updates = STAT_KEYS.map((key) => `${key} = VALUES(${key})`).join(',\n       ');
@@ -336,6 +342,7 @@ function throwStatPointError(message) {
 }
 
 module.exports = {
+  FEATURE_TEST_ACCOUNT_STAT_POINTS,
   HUNT_SOUL_CAPACITY_BASE,
   NODE_DEFINITIONS,
   SKILL_TREE_RESET_SOULS_PER_POINT,
@@ -348,6 +355,7 @@ module.exports = {
   getSkillTreeResetCost,
   getPlayerStatPointSummary,
   getTotalStatPoints,
+  getTotalStatPointsForPlayer,
   normalizeStoredAllocations,
   resetPlayerStatAllocations,
   savePlayerStatAllocations,

@@ -18,15 +18,20 @@ const {
 const {
   ANOMALY_ECHO_CHANCE_PERCENT,
   ANOMALY_EVENT_NAME,
-  ANOMALY_PITY_SHARDS,
+  ANOMALY_MAX_FLOOR,
   ANOMALY_SOUL_COST,
   ANOMALY_STATS,
   ANOMALY_X,
   ANOMALY_Y,
+  abandonWorldAnomaly,
+  continueWorldAnomaly,
   createAnomalyEnemy,
+  createAnomalyFloorEnemies,
   getUncollectedMythicTypeIds,
   isAtAnomalyAltar,
+  leaveWorldAnomaly,
   resolveAnomalyReward,
+  resolveAnomalyRewardRolls,
   summonWorldAnomaly
 } = require('../public/api/lib/world-anomaly');
 
@@ -46,8 +51,7 @@ test('the Altar of Many Voices occupies Area 4, 0', () => {
 test('Patch 4 announces The Anomaly ritual and Mythic Echo reward', () => {
   assert.match(patchNotes, /Altar of Many Voices at Area 4, 0/);
   assert.match(patchNotes, /Offer 10,000 Souls to face The\s+Anomaly/);
-  assert.match(patchNotes, /25% chance to award a random Mythic Echo/);
-  assert.match(patchNotes, /guaranteed every fourth victory without an Echo/);
+  assert.match(patchNotes, /Defeating each Anomaly gives a 25% chance/);
 });
 
 test('Patch 5 announces the reduced Altar offering', () => {
@@ -64,8 +68,7 @@ test('the world events guide includes the Altar of Many Voices', () => {
   assert.match(page, /Altar of Many Voices/);
   assert.match(page, /Area 4, 0/);
   assert.match(page, /5k Souls/);
-  assert.match(page, /25% Mythic Echo/);
-  assert.doesNotMatch(page, /Guaranteed by 4 wins/);
+  assert.match(page, /25% per Anomaly/);
   assert.match(page, /9 kinds of world events/);
   assert.match(page, /\/app\/images\/events\/marker-anomaly-altar\.webp/);
   assert.match(page, /data-lucide="messages-square"/);
@@ -84,10 +87,13 @@ test('the altar presentation follows shared modal, merchant card, and Soul amoun
   assert.match(modal, /class="btn btn-secondary"[^>]*>Leave<\/button>/);
   assert.equal(modal.includes('>Cancel</button>'), false);
   assert.equal(worldUi.includes('world-sidebar-card world-merchant-card world-anomaly-card'), true);
-  assert.equal(worldUi.includes('<dt>Learnings</dt>'), true);
-  assert.equal(worldUi.includes('25)}%</dd>'), true);
-  assert.equal(worldUi.includes('25)}% on victory'), false);
-  assert.match(worldUi, /4 victories guarantee one Mythic Echo, drawn from species missing from your collection/);
+  assert.equal(worldUi.includes('<dt>Floors</dt>'), true);
+  assert.equal(worldUi.includes('<dt>Learnings</dt>'), false);
+  assert.match(worldUi, /% per Anomaly/);
+  assert.doesNotMatch(worldUi, /Your team stays locked but fully heals between floors/);
+  assert.match(worldUi, /Continue to Floor/);
+  assert.match(worldUi, /Leaving or reloading this page counts as a loss/);
+  assert.doesNotMatch(worldUi, /before choosing Leave counts as a loss/);
   assert.match(worldCss, /\.world-anomaly-known \.world-anomaly-chance \{\s*color: #fac51c;/);
   assert.equal(worldUi.includes('Voice Shard'), false);
   assert.equal(worldUi.includes('renderSoulAmount(balance || 0, { compact: true })'), true);
@@ -100,10 +106,10 @@ test('the altar presentation follows shared modal, merchant card, and Soul amoun
 
 test('The Anomaly is rarityless, enemy-only, and uses the approved fixed stats', () => {
   const anomaly = createAnomalyEnemy();
-  assert.deepEqual(ANOMALY_STATS, { hp: 10_000, atk: 250, speed: 35 });
-  assert.equal(anomaly.maxHp, 10_000);
-  assert.equal(anomaly.atk, 250);
-  assert.equal(anomaly.speed, 35);
+  assert.deepEqual(ANOMALY_STATS, { hp: 5_000, atk: 150, speed: 20 });
+  assert.equal(anomaly.maxHp, 5_000);
+  assert.equal(anomaly.atk, 150);
+  assert.equal(anomaly.speed, 20);
   assert.equal(anomaly.retaliationAbilityTypeId, 8);
   assert.equal(anomaly.hideRarity, true);
   assert.equal(anomaly.rarity, '');
@@ -117,7 +123,7 @@ test('The Anomaly rerolls a healer voice at full health and can select it after 
   assert.notEqual(selectActionAbilityType(healerRoll, anomaly, demonTypes), 10);
   anomaly.hp -= 1;
   assert.equal(selectActionAbilityType(healerRoll, anomaly, demonTypes), 10);
-  assert.equal(getBaseHealingAmount(anomaly), 500);
+  assert.equal(getBaseHealingAmount(anomaly), 250);
 });
 
 test('borrowed attacks retain their type in the combat log for replay VFX and sound', () => {
@@ -170,40 +176,84 @@ test('The Anomaly permanently retaliates with Type 8 regardless of its attack vo
 
   assert.equal(retaliation?.abilityTypeId, 8);
   assert.equal(retaliation?.target, 'hunter-attacker');
-  assert.equal(retaliation?.dmg, 250);
+  assert.equal(retaliation?.dmg, 150);
 });
 
-test('Anomaly victories have a 25% Mythic Echo roll and reset shards on success', () => {
-  const rolls = [ANOMALY_ECHO_CHANCE_PERCENT - 1, 10];
-  const reward = resolveAnomalyReward(3, { randomInt: () => rolls.shift() });
-
-  assert.equal(reward.echoAwarded, true);
-  assert.equal(reward.source, 'chance');
-  assert.equal(reward.typeId, 11);
-  assert.equal(reward.voiceShards, 0);
+test('Anomaly floors spawn one distinct Anomaly per floor through Floor 9', () => {
+  for (let floor = 1; floor <= ANOMALY_MAX_FLOOR; floor += 1) {
+    const enemies = createAnomalyFloorEnemies(floor);
+    assert.equal(enemies.length, floor);
+    assert.equal(new Set(enemies.map((enemy) => enemy.instanceId)).size, floor);
+    assert.equal(new Set(enemies.map((enemy) => enemy.formationSlot)).size, floor);
+    assert.equal(enemies.every((enemy) => enemy.atk === 150), true);
+    assert.equal(enemies.every((enemy) => (
+      enemy.position === (enemy.formationSlot % 3 === 0 ? 'front' : 'back')
+    )), true);
+  }
 });
 
-test('four failed reward rolls guarantee a uniformly selected Mythic Echo', () => {
-  const rolls = [99, 0];
-  const reward = resolveAnomalyReward(ANOMALY_PITY_SHARDS - 1, {
-    randomInt: () => rolls.shift()
-  });
-
-  assert.equal(reward.echoAwarded, true);
-  assert.equal(reward.source, 'pity');
-  assert.equal(reward.typeId, 1);
-  assert.equal(reward.voiceShards, 0);
-});
-
-test('Anomaly Echo rewards select only from the supplied uncollected Mythics', () => {
-  const rolls = [0, 1];
-  const reward = resolveAnomalyReward(0, {
+test('each defeated Anomaly has an independent 25% Mythic Echo chance', () => {
+  const rolls = [ANOMALY_ECHO_CHANCE_PERCENT - 1, 1];
+  const reward = resolveAnomalyReward({
     randomInt: () => rolls.shift(),
     candidateTypeIds: [2, 7]
   });
 
   assert.equal(reward.echoAwarded, true);
+  assert.equal(reward.source, 'chance');
   assert.equal(reward.typeId, 7);
+  assert.equal(reward.chancePercent, 25);
+});
+
+test('Floor 3 makes three Echo rolls and prioritizes different missing species', () => {
+  const randomValues = [0, 1, 99, 0, 0];
+  const rewards = resolveAnomalyRewardRolls(3, {
+    randomInt: () => randomValues.shift(),
+    candidateTypeIds: [2, 7]
+  });
+
+  assert.equal(rewards.length, 3);
+  assert.deepEqual(rewards.map((reward) => reward.echoAwarded), [true, false, true]);
+  assert.deepEqual(rewards.map((reward) => reward.typeId), [7, null, 2]);
+  assert.deepEqual(rewards.map((reward) => reward.roll), [1, 2, 3]);
+});
+
+test('Anomaly floor results handle zero or multiple Echoes in a one-line reward slider', () => {
+  assert.match(worldUi, /function getAnomalyVictoryText\(reward = null,[\s\S]*?reward\?\.echoes/);
+  assert.match(worldUi, /No Mythic Echo/);
+  assert.match(worldUi, /rolls succeeded/);
+  assert.match(worldUi, /hostRect\.height - resultHeight - 8/);
+  assert.match(worldUi, /layer\.classList\.contains\('is-anomaly-result'\)[\s\S]*?removeProperty\('--world-dungeon-result-top'\)/);
+  assert.match(worldUi, /mobileResultLayout \? gridTop : Math\.min\(gridTop, fullyVisibleTop\)/);
+  assert.match(worldUi, /const hasSlider = echoes\.length > 4/);
+  assert.match(worldUi, /data-world-anomaly-reward-scroll="-1"/);
+  assert.match(worldUi, /data-world-anomaly-reward-scroll="1"/);
+  assert.match(worldUi, /class="world-anomaly-reward-echo"[\s\S]*?data-tooltip=/);
+  assert.match(worldUi, /data-tooltip-title="\$\{escapeAttribute\(`Mythic \$\{species\} Echo`\)\}"/);
+  assert.match(worldUi, /data-world-anomaly-tooltip-title/);
+  assert.match(worldUi, /data-world-anomaly-tooltip-status/);
+  assert.match(worldUi, /data-world-anomaly-tooltip-total/);
+  assert.match(worldUi, /data-world-anomaly-reward-tooltip role="tooltip"/);
+  assert.match(worldCss, /\.world-anomaly-reward-list/);
+  assert.match(worldCss, /\.world-anomaly-reward-track \{[\s\S]*?display: flex;/);
+  assert.match(worldCss, /\.world-anomaly-reward-echo \{[\s\S]*?flex: 0 0 calc\(\(100% - 1\.14rem\) \/ 4\);/);
+  assert.match(worldCss, /\.world-anomaly-reward-tooltip \{[\s\S]*?background: rgba\(3, 9, 11, 0\.96\);/);
+  assert.match(worldCss, /\.world-dungeon-result \.world-anomaly-reward-tooltip \.world-anomaly-reward-tooltip-title \{[\s\S]*?color: #e25041;[\s\S]*?font-size: 0\.78rem;/);
+  assert.match(worldCss, /\.world-anomaly-reward-tooltip-status \{[\s\S]*?color: #8ed6a6;/);
+  assert.match(worldCss, /\.world-anomaly-reward-tooltip-total \{[\s\S]*?color: #e8c76a;/);
+  assert.match(worldCss, /\.world-dungeon-result-layer\.is-anomaly-result \{[\s\S]*?top: 0;[\s\S]*?place-items: center;[\s\S]*?pointer-events: auto;/);
+  assert.match(worldCss, /\.world-dungeon-result\.is-anomaly-modal \{[\s\S]*?width: min\(28rem, 100%\);[\s\S]*?border-radius: 12px;/);
+  assert.match(worldCss, /@media \(max-width: 899\.98px\) \{[\s\S]*?\.world-dungeon-result-layer:not\(\.is-anomaly-result\) \{[\s\S]*?align-items: start;[\s\S]*?overflow-y: auto;[\s\S]*?\.world-anomaly-reward-tooltip \{[\s\S]*?position: static;[\s\S]*?display: none;[\s\S]*?\.world-anomaly-reward-tooltip\.is-visible \{[\s\S]*?display: block;/);
+  assert.match(worldUi, /role="dialog" aria-modal="true" aria-labelledby="worldAnomalyResultTitle"/);
+  assert.match(worldUi, /title: 'Anomaly run ended\.'/);
+  assert.match(worldUi, /action: 'A new offering starts again at Floor 1\.'/);
+  const echoHoverRule = /\.world-anomaly-reward-echo:hover,[\s\S]*?\.world-anomaly-reward-echo:focus-visible \{([^}]*)\}/.exec(worldCss)?.[1] || '';
+  assert.doesNotMatch(echoHoverRule, /transform|translateY/);
+  assert.doesNotMatch(worldUi, /Learning gained|Learnings complete/);
+  const rewardRule = /\.world-anomaly-reward\s*\{([\s\S]*?)\n\}/.exec(worldCss)?.[1] || '';
+  assert.match(rewardRule, /rgba\(221, 177, 66, 0\.46\)/);
+  assert.match(rewardRule, /rgba\(82, 58, 13, 0\.5\)/);
+  assert.doesNotMatch(rewardRule, /167, 79, 224|64, 16, 84/);
 });
 
 test('uncollected Mythics exclude species already owned at Mythic rarity', async () => {
@@ -222,7 +272,7 @@ test('uncollected Mythics exclude species already owned at Mythic rarity', async
   assert.match(queries[0].sql, /LOWER\(rarity\) = 'mythic'/);
 });
 
-test('Anomaly victory awards an Echo from the remaining uncollected Mythics', async () => {
+test('Anomaly Floor 1 locks the team, restores health, and can award a Mythic Echo', async () => {
   const updates = [];
   const collectedMythicTypeIds = Array.from({ length: 10 }, (_, index) => index + 1);
   const connection = createAnomalyConnection(updates, { collectedMythicTypeIds });
@@ -235,7 +285,7 @@ test('Anomaly victory awards an Echo from the remaining uncollected Mythics', as
       playerTeam: [{ instanceId: 'player', typeId: 1, hp: 10, maxHp: 10, atk: 1, speed: 1 }],
       playerBuffs: {},
       demonTypes,
-      simulateFight: () => createFightResult('player'),
+      simulateFight: () => createFightResult('player', { playerHp: 4 }),
       randomInt: () => 0,
       addEcho: async (playerId, demon) => {
         echoes.push({ playerId, demon });
@@ -244,16 +294,177 @@ test('Anomaly victory awards an Echo from the remaining uncollected Mythics', as
     }
   );
 
-  assert.equal(result.reward.typeId, 11);
+  assert.equal(result.reward.rolls, 1);
+  assert.equal(result.reward.successfulRolls, 1);
+  assert.equal(result.reward.echoes[0].typeId, 11);
+  assert.equal(result.battle.floor, 1);
+  assert.equal(result.anomalyRun.floor, 1);
+  assert.equal(result.anomalyRun.maxFloor, ANOMALY_MAX_FLOOR);
+  assert.equal(result.anomalyRun.canContinue, true);
+  const ritualUpdate = updates.find((entry) => /UPDATE player_anomaly_rituals/.test(entry.sql));
+  assert.equal(ritualUpdate.params[0], 1);
+  assert.equal(JSON.parse(ritualUpdate.params[5])[0].hp, 10);
   assert.deepEqual(echoes, [{
     playerId: 'hunter-one',
     demon: { typeId: 11, rarity: 'mythic' }
   }]);
 });
 
-test('defeat commits the non-refundable Soul cost without advancing pity', async () => {
+test('continuing fully heals the locked team, starts Floor 2, and does not charge Souls again', async () => {
   const updates = [];
-  const connection = createAnomalyConnection(updates, { voiceShards: 2 });
+  const runId = 'ritual:00000000-0000-4000-8000-000000000003';
+  const connection = createAnomalyConnection(updates, {
+    activeRunId: runId,
+    activeFloor: 1,
+    activeTeam: JSON.stringify([{ instanceId: 'player', typeId: 1, hp: 4, maxHp: 10, atk: 1, speed: 1 }])
+  });
+  let receivedTeam;
+  let receivedEnemies;
+  const result = await continueWorldAnomaly(
+    { id: 'hunter-one', level: 50 },
+    runId,
+    {
+      connection,
+      playerBuffs: {},
+      demonTypes,
+      simulateFight: (rng, team, enemies) => {
+        receivedTeam = team;
+        receivedEnemies = enemies;
+        return createFightResult('player', { playerHp: 2 });
+      },
+      randomInt: () => 0,
+      addEcho: async (playerId, demon) => ({
+        typeId: demon.typeId,
+        rarity: demon.rarity,
+        species: 'Baobaw'
+      })
+    }
+  );
+
+  assert.equal(receivedTeam[0].hp, 10);
+  assert.equal(receivedEnemies.length, 2);
+  assert.equal(result.battle.floor, 2);
+  assert.equal(result.reward.rolls, 2);
+  assert.equal(result.reward.successfulRolls, 2);
+  assert.equal(result.reward.echoes.length, 2);
+  assert.equal(result.anomalyRun.canContinue, true);
+  assert.equal(updates.some((entry) => /souls = souls -/.test(entry.sql)), false);
+});
+
+test('clearing Floor 3 makes three rolls and can award multiple Mythic Echoes', async () => {
+  const updates = [];
+  const runId = 'ritual:00000000-0000-4000-8000-000000000006';
+  const connection = createAnomalyConnection(updates, {
+    activeRunId: runId,
+    activeFloor: 2,
+    collectedMythicTypeIds: [1, 3, 4, 5, 6, 8, 9, 10, 11],
+    activeTeam: JSON.stringify([{ instanceId: 'player', typeId: 1, hp: 2, maxHp: 10, atk: 1, speed: 1 }])
+  });
+  const randomValues = [0, 1, 99, 0, 0];
+  const echoes = [];
+  const result = await continueWorldAnomaly(
+    { id: 'hunter-one', level: 50 },
+    runId,
+    {
+      connection,
+      playerBuffs: {},
+      demonTypes,
+      simulateFight: () => createFightResult('player', { playerHp: 3 }),
+      randomInt: () => randomValues.shift(),
+      addEcho: async (playerId, demon) => {
+        echoes.push({ playerId, demon });
+        return { ...demon, species: demon.typeId === 2 ? 'Baobaw' : 'Plague Ravager' };
+      }
+    }
+  );
+
+  assert.equal(result.reward.rolls, 3);
+  assert.equal(result.reward.successfulRolls, 2);
+  assert.deepEqual(result.reward.echoes.map((echo) => echo.typeId), [7, 2]);
+  assert.deepEqual(result.reward.results.map((reward) => reward.echoAwarded), [true, false, true]);
+  assert.equal(echoes.length, 2);
+  assert.equal('voiceShards' in result.anomaly, false);
+  const update = updates.find((entry) => /UPDATE player_anomaly_rituals/.test(entry.sql));
+  assert.equal(update.sql.includes('voice_shards'), false);
+  assert.equal(JSON.parse(update.params[4])[0].hp, 10);
+});
+
+test('clearing Floor 9 awards its Echo and completes the Anomaly run', async () => {
+  const updates = [];
+  const runId = 'ritual:00000000-0000-4000-8000-000000000009';
+  const connection = createAnomalyConnection(updates, {
+    activeRunId: runId,
+    activeFloor: 8,
+    activeTeam: JSON.stringify([{ instanceId: 'player', typeId: 1, hp: 4, maxHp: 10, atk: 1, speed: 1 }])
+  });
+  const result = await continueWorldAnomaly(
+    { id: 'hunter-one', level: 50 },
+    runId,
+    {
+      connection,
+      playerBuffs: {},
+      demonTypes,
+      simulateFight: () => createFightResult('player', { playerHp: 1 }),
+      randomInt: () => 0,
+      addEcho: async (playerId, demon) => ({
+        typeId: demon.typeId,
+        rarity: demon.rarity,
+        species: 'Baobaw'
+      })
+    }
+  );
+
+  assert.equal(result.battle.floor, ANOMALY_MAX_FLOOR);
+  assert.equal(result.reward.rolls, ANOMALY_MAX_FLOOR);
+  assert.equal(result.reward.successfulRolls, ANOMALY_MAX_FLOOR);
+  assert.equal(result.anomalyRun.status, 'completed');
+  assert.equal(result.anomalyRun.canContinue, false);
+  assert.equal(result.anomalyRun.canLeave, false);
+  const update = updates.find((entry) => /UPDATE player_anomaly_rituals/.test(entry.sql));
+  assert.equal(update.params[2], null);
+  assert.equal(update.params[3], 0);
+  assert.equal(update.params[4], null);
+});
+
+test('leaving after a cleared floor ends the run without recording a loss', async () => {
+  const updates = [];
+  const runId = 'ritual:00000000-0000-4000-8000-000000000005';
+  const connection = createAnomalyConnection(updates, {
+    activeRunId: runId,
+    activeFloor: 5,
+    activeTeam: '[]'
+  });
+  const result = await leaveWorldAnomaly('hunter-one', runId, { connection });
+
+  assert.equal(result.ended, true);
+  assert.equal(result.lost, false);
+  assert.equal(result.floor, 5);
+  const update = updates.find((entry) => /UPDATE player_anomaly_rituals/.test(entry.sql));
+  assert.equal(update.params[0], 0);
+  assert.match(update.sql, /active_run_id = NULL/);
+});
+
+test('abandoning an active Anomaly run clears it and records a loss', async () => {
+  const updates = [];
+  const runId = 'ritual:00000000-0000-4000-8000-000000000004';
+  const connection = createAnomalyConnection(updates, {
+    activeRunId: runId,
+    activeFloor: 3,
+    activeTeam: '[]'
+  });
+  const result = await abandonWorldAnomaly('hunter-one', runId, { connection });
+
+  assert.equal(result.ended, true);
+  assert.equal(result.lost, true);
+  assert.equal(result.floor, 3);
+  const update = updates.find((entry) => /UPDATE player_anomaly_rituals/.test(entry.sql));
+  assert.equal(update.params[0], 1);
+  assert.match(update.sql, /active_run_id = NULL/);
+});
+
+test('defeat commits the non-refundable Soul cost, records a loss, and ends the run', async () => {
+  const updates = [];
+  const connection = createAnomalyConnection(updates);
   const result = await summonWorldAnomaly(
     { id: 'hunter-one', level: 50 },
     'ritual:00000000-0000-4000-8000-000000000001',
@@ -269,8 +480,15 @@ test('defeat commits the non-refundable Soul cost without advancing pity', async
 
   assert.equal(result.player.souls, 50_000 - ANOMALY_SOUL_COST);
   assert.equal(result.anomaly.attempts, 1);
-  assert.equal(result.anomaly.voiceShards, 2);
+  assert.equal(result.anomaly.losses, 1);
+  assert.equal(result.anomalyRun.status, 'defeated');
+  assert.equal(result.anomalyRun.canContinue, false);
   assert.equal(result.reward, null);
+  assert.equal('voiceShards' in result.anomaly, false);
+  const ritualUpdate = updates.find((entry) => /UPDATE player_anomaly_rituals/.test(entry.sql));
+  assert.equal(ritualUpdate.params[0], 0);
+  assert.equal(ritualUpdate.params[1], 1);
+  assert.equal(ritualUpdate.sql.includes('voice_shards'), false);
   assert.equal(updates.some((entry) => entry.sql.includes('souls = souls -') && entry.params[0] === ANOMALY_SOUL_COST), true);
   assert.equal(connection.committed, true);
 });
@@ -298,12 +516,15 @@ function createAnomalyConnection(updates, ritual = {}) {
         }]];
       }
       if (/FROM player_world_positions/.test(sql)) return [[{ x: ANOMALY_X, y: ANOMALY_Y }]];
-      if (/SELECT voice_shards/.test(sql)) {
+      if (/SELECT attempts,/.test(sql)) {
         return [[{
-          voiceShards: ritual.voiceShards || 0,
           attempts: ritual.attempts || 0,
           victories: ritual.victories || 0,
-          lastRitualId: ritual.lastRitualId || null
+          losses: ritual.losses || 0,
+          lastRitualId: ritual.lastRitualId || null,
+          activeRunId: ritual.activeRunId || null,
+          activeFloor: ritual.activeFloor || 0,
+          activeTeam: ritual.activeTeam || null
         }]];
       }
       if (/SELECT DISTINCT type_id AS typeId/.test(sql)) {
@@ -317,15 +538,17 @@ function createAnomalyConnection(updates, ritual = {}) {
   };
 }
 
-function createFightResult(winner) {
+function createFightResult(winner, options = {}) {
+  const playerHp = winner === 'player' ? Math.max(1, Number(options.playerHp) || 4) : 0;
+  const player = [{ instanceId: 'player', typeId: 1, hp: playerHp, maxHp: 10, atk: 1, speed: 1 }];
   return {
     winner,
     endReason: winner === 'player' ? 'victory' : 'defeat',
     ticks: 1,
     combatLog: [],
-    playerTeamBefore: [],
+    playerTeamBefore: [{ ...player[0], hp: 10 }],
     enemyTeamBefore: [],
-    playerTeam: [],
+    playerTeam: player,
     enemyTeam: []
   };
 }

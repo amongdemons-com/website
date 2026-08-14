@@ -51,7 +51,10 @@ const {
   purchaseSoulFontBuff
 } = require('./lib/world-soul-font');
 const {
+  abandonWorldAnomaly,
+  continueWorldAnomaly,
   getWorldAnomalyForPlayer,
+  leaveWorldAnomaly,
   summonWorldAnomaly
 } = require('./lib/world-anomaly');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
@@ -651,9 +654,15 @@ router.post('/world/challenge', requireAuth, blockGuests, async (req, res) => {
 });
 
 router.get('/world/anomaly', requireAuth, async (req, res) => {
-  const position = await getOrCreatePosition(req.player.id);
+  const abandonedRun = await abandonWorldAnomaly(req.player.id);
+  const respawn = abandonedRun.ended
+    ? await respawnPlayerAfterDefeat(req.player.id)
+    : null;
+  const position = respawn?.position || await getOrCreatePosition(req.player.id);
   res.json({
-    anomaly: await getWorldAnomalyForPlayer(req.player.id, { position })
+    anomaly: await getWorldAnomalyForPlayer(req.player.id, { position }),
+    abandoned: abandonedRun.ended,
+    respawn
   });
 });
 
@@ -667,17 +676,16 @@ router.post('/world/anomaly/summon', requireAuth, async (req, res) => {
   try {
     const result = await summonWorldAnomaly(req.player, req.body?.ritualId);
     const won = result.battle?.winner === 'player';
-    if (won) {
-      await achievements.grantAchievements(req.player.id, ['one-voice-remains']);
-    }
+    if (won) await achievements.grantAchievements(req.player.id, ['one-voice-remains']);
     const respawn = won ? null : await respawnPlayerAfterDefeat(req.player.id);
     if (respawn) result.anomaly.canSummon = false;
 
     res.json({
       ok: true,
-      status: 'resolved',
+      status: result.anomalyRun?.status || 'resolved',
       player: getWorldPlayer(result.player),
       anomaly: result.anomaly,
+      anomalyRun: result.anomalyRun,
       reward: result.reward,
       battle: result.battle,
       respawn,
@@ -687,6 +695,65 @@ router.post('/world/anomaly/summon', requireAuth, async (req, res) => {
   } finally {
     anomalyChallengesInFlight.delete(playerId);
   }
+});
+
+router.post('/world/anomaly/continue', requireAuth, async (req, res) => {
+  const playerId = String(req.player.id);
+  if (anomalyChallengesInFlight.has(playerId)) {
+    return res.status(409).json({ error: 'The Anomaly is already answering your team.' });
+  }
+
+  anomalyChallengesInFlight.add(playerId);
+  try {
+    const result = await continueWorldAnomaly(req.player, req.body?.runId);
+    const won = result.battle?.winner === 'player';
+    if (won) await achievements.grantAchievements(req.player.id, ['one-voice-remains']);
+    const respawn = won ? null : await respawnPlayerAfterDefeat(req.player.id);
+    if (respawn) result.anomaly.canSummon = false;
+
+    res.json({
+      ok: true,
+      status: result.anomalyRun?.status || 'resolved',
+      player: getWorldPlayer(result.player),
+      anomaly: result.anomaly,
+      anomalyRun: result.anomalyRun,
+      reward: result.reward,
+      battle: result.battle,
+      respawn,
+      chargedSouls: 0,
+      message: getAnomalyResultMessage(result)
+    });
+  } finally {
+    anomalyChallengesInFlight.delete(playerId);
+  }
+});
+
+router.post('/world/anomaly/leave', requireAuth, async (req, res) => {
+  const result = await leaveWorldAnomaly(req.player.id, req.body?.runId);
+  res.json({
+    ok: true,
+    status: result.ended ? 'left' : 'already_ended',
+    anomaly: result.anomaly,
+    message: result.ended
+      ? `You left The Anomaly after clearing Floor ${result.floor}.`
+      : 'That Anomaly run has already ended.'
+  });
+});
+
+router.post('/world/anomaly/abandon', requireAuth, async (req, res) => {
+  const result = await abandonWorldAnomaly(req.player.id, req.body?.runId);
+  const respawn = result.ended
+    ? await respawnPlayerAfterDefeat(req.player.id)
+    : null;
+  res.json({
+    ok: true,
+    status: result.ended ? 'defeated' : 'already_ended',
+    anomaly: result.anomaly,
+    respawn,
+    message: result.ended
+      ? 'You left an active Anomaly run and were returned to your Anchored Shrine.'
+      : 'That Anomaly run has already ended.'
+  });
 });
 
 async function recordPvpChallengeResult(attackerPlayerId, targetPlayerId, winner) {
@@ -1531,13 +1598,19 @@ function getAnomalyResultMessage(result = {}) {
   }
 
   const reward = result.reward || {};
-  if (reward.echoAwarded) {
-    const species = reward.echo?.species || 'Demon';
-    const source = reward.source === 'pity' ? ' Your fourth victory guaranteed it.' : '';
-    return `You defeated The Anomaly. A Mythic ${species} Echo answered.${source}`;
-  }
-
-  return `You defeated The Anomaly. Victory progress: ${reward.voiceShards || 0}/${reward.pityRequired || 4}.`;
+  const floor = Math.max(1, Number(result.battle?.floor) || 1);
+  const echoes = Array.isArray(reward.echoes)
+    ? reward.echoes
+    : reward.echo ? [reward.echo] : [];
+  const rolls = Math.max(1, Number(reward.rolls) || floor);
+  const rewardMessage = echoes.length === 1
+    ? `A Mythic ${echoes[0].species || 'Demon'} Echo was added to your Bag.`
+    : echoes.length > 1
+      ? `${echoes.length.toLocaleString('en-US')} Mythic Echoes were added to your Bag.`
+      : `None of your ${rolls.toLocaleString('en-US')} Echo rolls succeeded.`;
+  return floor >= 9
+    ? `You cleared Anomaly Floor 9. ${rewardMessage} The run is complete.`
+    : `You cleared Anomaly Floor ${floor}. ${rewardMessage}`;
 }
 
 function getWorldPvpPlayerRecord(player = {}) {

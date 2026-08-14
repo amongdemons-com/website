@@ -2,7 +2,11 @@
 
 <!-- Keep notes short, simple, and player-friendly. Skip tests and technical details. -->
 
-## Patch 5 (Current)
+## Patch 6 (Current)
+
+<!-- Add future player-facing changes for Patch 6 below this line. -->
+
+## Patch 5
 
 - Ranked Dungeon escape results now always let you continue without reloading
   the page, including after earlier Ranked victories in the same run.
@@ -22,6 +26,19 @@
   reaching level 666, and Crowned in Hell for reaching Demonic rank.
 - The maximum hunter level is now 666. At max level, the XP bar stays full
   and shows Max level.
+- Mythic Echoes can now be Unraveled from their Bag details. Unraveling
+  permanently consumes one Echo and grants five hunter levels, stopping at
+  level 666.
+- The Anomaly is now a nine-floor run. Every defeated Anomaly makes its own
+  independent 25% Mythic Echo roll, so deeper floors can award multiple Echoes.
+  Your team stays locked but fully heals between floors; leaving or reloading
+  the page during an active run counts as a loss.
+- Each Anomaly floor now adds another Anomaly to the enemy formation, up to
+  nine on Floor 9. Each Anomaly now has 5,000 health, 150 damage, and 20 speed.
+- Anomaly floor rewards now open in a centered result window with a compact
+  golden row of Echo portraits, colored hover details, and slider controls for
+  larger drops. Leaving clearly ends the run, and losing after continuing
+  correctly shows the floor defeat instead of a ritual error.
 - Reduced the Altar of Many Voices offering from 10,000 to 5,000 Souls.
 - Added a back button beside the Bag title so you can return to the previous
   page.
@@ -69,8 +86,8 @@
   of opening Camp, and new rock formations block several nearby areas.
 - Added the Altar of Many Voices at Area 4, 0. Offer 10,000 Souls to face The
   Anomaly, a World boss that channels all eleven demon types and always has
-  Thorns. Each victory has a 25% chance to award a random Mythic Echo, with one
-  guaranteed every fourth victory without an Echo.
+  Thorns. Defeating each Anomaly gives a 25% chance to award a random Mythic
+  Echo.
 - Added a World setting that can mute or unmute boss narration, overriding the
   separate 24-hour mute from the boss dialog.
 - Ranked standings now focus on hunter and rank without a Ranked Floor column.

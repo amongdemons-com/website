@@ -1,3 +1,12 @@
 const RANKED_BOT_ID_PATTERN = 'ranked-bot:%';
+const FEATURE_TEST_ACCOUNT_ID_PREFIX = 'ranked-bot:feature-test:';
 
-module.exports = { RANKED_BOT_ID_PATTERN };
+function isFeatureTestAccountId(playerId) {
+  return String(playerId || '').startsWith(FEATURE_TEST_ACCOUNT_ID_PREFIX);
+}
+
+module.exports = {
+  FEATURE_TEST_ACCOUNT_ID_PREFIX,
+  RANKED_BOT_ID_PATTERN,
+  isFeatureTestAccountId
+};

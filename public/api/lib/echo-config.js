@@ -17,6 +17,8 @@ const REFINEMENT_COSTS = Object.freeze({
   legendary: 6
 });
 
+const MYTHIC_ECHO_UNRAVEL_LEVELS = 5;
+
 function normalizeEchoRarity(value) {
   const rarity = String(value || '').trim().toLowerCase();
   return RARITIES.includes(rarity) ? rarity : null;
@@ -59,7 +61,8 @@ function getEchoConfig() {
   return {
     rarities: [...RARITIES],
     summonRequirements: { ...SUMMON_REQUIREMENTS },
-    refinementCosts: { ...REFINEMENT_COSTS }
+    refinementCosts: { ...REFINEMENT_COSTS },
+    mythicUnravelLevels: MYTHIC_ECHO_UNRAVEL_LEVELS
   };
 }
 
@@ -67,6 +70,7 @@ module.exports = {
   RARITIES,
   REFINEMENT_COSTS,
   SUMMON_REQUIREMENTS,
+  MYTHIC_ECHO_UNRAVEL_LEVELS,
   getEchoConfig,
   getEchoItemKey,
   getEchoRefinementBatch,

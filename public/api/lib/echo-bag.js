@@ -161,7 +161,8 @@ function serializeEchoItem(definition, state = {}) {
       definition.nextRarity &&
       definition.refinementCost &&
       quantity >= definition.refinementCost
-    )
+    ),
+    canUnravel: definition.rarity === 'mythic' && quantity > 0
   };
 }
 

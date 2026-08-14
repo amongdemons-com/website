@@ -74,7 +74,8 @@ import './bag-item-visuals.js';
   const ANOMALY_ALTAR_SVG_URL = '/app/images/assets/anomaly-altar.svg';
   const ANOMALY_ALTAR_MARKER_SIZE = 56;
   const ANOMALY_FALLBACK_COST = 5_000;
-  const ANOMALY_PITY_SHARDS = 4;
+  const ANOMALY_MAX_FLOOR = 9;
+  const ANOMALY_ECHO_CHANCE_PERCENT = 25;
   // Marker-local offsets shared by drawWorldMerchantMarker and its animated
   // glow (updateMerchantGlow): where the soul lantern hangs inside the wagon
   // and the center of the curtained opening its light spills out of.
@@ -244,6 +245,12 @@ import './bag-item-visuals.js';
     anomaly: null,
     anomalyLoading: false,
     anomalyBusy: false,
+    anomalyFloorBusy: false,
+    anomalyRun: null,
+    anomalyExitAllowed: false,
+    anomalyPendingRespawn: null,
+    anomalyFinalMessage: '',
+    anomalyPageExitSent: false,
     anomalyStatus: '',
     anomalyStatusType: 'info',
     anomalyAutoOpened: false,
@@ -499,7 +506,14 @@ import './bag-item-visuals.js';
       }
     });
 
+    elements.worldBattleModal?.addEventListener('hide.bs.modal', (event) => {
+      if (state.anomalyRun?.canContinue && !state.anomalyExitAllowed) {
+        event.preventDefault();
+      }
+    });
     elements.worldBattleModal?.addEventListener('hidden.bs.modal', () => {
+      state.anomalyExitAllowed = false;
+      setAnomalyBattleLock(false);
       cancelWorldBattleReplay();
     });
     elements.worldBattleModal?.querySelector('.world-battle-close')?.addEventListener('click', (event) => {
@@ -747,6 +761,7 @@ import './bag-item-visuals.js';
   }
 
   function onWorldPageHide(event) {
+    abandonAnomalyRunOnPageExit();
     // The Back/Forward Cache keeps this document alive. Preserve Pixi so a
     // return from Bag can resume the existing map instead of restoring a
     // document whose canvas application has already been destroyed.
@@ -756,6 +771,10 @@ import './bag-item-visuals.js';
 
   function onWorldPageShow(event) {
     if (!event.persisted) return;
+    if (state.anomalyPageExitSent) {
+      window.location.reload();
+      return;
+    }
     if (!state.app) {
       window.location.reload();
       return;
@@ -6134,6 +6153,14 @@ import './bag-item-visuals.js';
     try {
       const payload = await api('/api/world/anomaly', { dedupe: false });
       state.anomaly = normalizeWorldAnomaly(payload.anomaly);
+      if (payload.abandoned && payload.respawn) {
+        modalApi.getOrCreateInstance(modalElement).hide();
+        await resolveAmbushDefeat({
+          recovery: payload.respawn,
+          message: 'Leaving the active Anomaly run counted as a loss.'
+        });
+        return;
+      }
       if (!state.anomaly?.canSummon || !getAnomalyAltarAt(state.position)) {
         modalApi.getOrCreateInstance(modalElement).hide();
       }
@@ -6160,9 +6187,23 @@ import './bag-item-visuals.js';
       ritualId: String(anomaly.ritualId || ''),
       canSummon: Boolean(anomaly.canSummon),
       revealed: Boolean(anomaly.revealed),
-      voiceShards: Math.max(0, Number(anomaly.voiceShards) || 0),
-      pityRequired: Math.max(1, Number(anomaly.pityRequired) || ANOMALY_PITY_SHARDS),
-      echoChancePercent: Math.max(0, Number(anomaly.echoChancePercent) || 0)
+      maxFloor: Math.max(1, Number(anomaly.maxFloor) || ANOMALY_MAX_FLOOR),
+      echoChancePercent: Math.max(0, Number(anomaly.echoChancePercent) || ANOMALY_ECHO_CHANCE_PERCENT)
+    };
+  }
+
+  function normalizeWorldAnomalyRun(run) {
+    if (!run || typeof run !== 'object') return null;
+    const id = String(run.id || '');
+    if (!id) return null;
+    return {
+      ...run,
+      id,
+      floor: Math.max(1, Number(run.floor) || 1),
+      maxFloor: Math.max(1, Number(run.maxFloor) || ANOMALY_MAX_FLOOR),
+      status: String(run.status || ''),
+      canContinue: Boolean(run.canContinue),
+      canLeave: Boolean(run.canLeave)
     };
   }
 
@@ -6182,6 +6223,9 @@ import './bag-item-visuals.js';
     ) return;
 
     state.anomalyBusy = true;
+    state.anomalyPageExitSent = false;
+    state.anomalyFinalMessage = '';
+    state.anomalyPendingRespawn = null;
     setWorldAnomalyStatus('The voices are gathering…');
     renderWorldAnomalyModal();
     setButtonBusy(button, true, 'Summoning…');
@@ -6194,29 +6238,26 @@ import './bag-item-visuals.js';
         method: 'POST',
         body: { ritualId: anomaly.ritualId }
       });
-      applyWorldPlayerUpdate(payload.player);
-      state.anomaly = normalizeWorldAnomaly(payload.anomaly);
+      applyAnomalyFloorPayload(payload);
       await hideWorldAnomalyModal();
 
       const battle = payload.battle || null;
-      const battleMeta = getWorldBattleMeta('world_boss', battle, {
-        boss: battle?.boss || { title: 'The Anomaly' },
-        eyebrow: 'Altar of Many Voices',
-        winText: getAnomalyVictoryText(payload.reward),
-        lossText: 'The Anomaly endured'
-      });
+      const battleMeta = getAnomalyBattleMeta(battle, payload);
       if (shouldShowWorldBattleReplay(battle)) {
         await showWorldBattleReplay(battle, battleMeta);
       }
 
-      const won = battle?.winner === 'player';
-      if (won) {
+      const pendingRespawn = state.anomalyPendingRespawn;
+      const finalMessage = state.anomalyFinalMessage;
+      state.anomalyPendingRespawn = null;
+      state.anomalyFinalMessage = '';
+      if (pendingRespawn) {
+        await resolveAmbushDefeat({ recovery: pendingRespawn, message: finalMessage });
+      } else if (battle?.winner === 'player') {
         audio?.play('sfx.bosses.defeated', { volume: 0.96 });
-        setMessage(payload.message || getAnomalyVictoryText(payload.reward), 'success');
-      } else if (payload.respawn) {
-        await resolveAmbushDefeat({ recovery: payload.respawn, message: payload.message });
+        setMessage(finalMessage || payload.message || getAnomalyVictoryText(payload.reward, battle?.floor), 'success');
       } else {
-        setMessage(payload.message || 'The Anomaly endured.', 'warning');
+        setMessage(finalMessage || payload.message || 'The Anomaly endured.', 'warning');
       }
     } catch (error) {
       if (error.status === 401) {
@@ -6240,6 +6281,148 @@ import './bag-item-visuals.js';
     }
   }
 
+  function applyAnomalyFloorPayload(payload = {}) {
+    if (payload.player) applyWorldPlayerUpdate(payload.player);
+    if (payload.anomaly) state.anomaly = normalizeWorldAnomaly(payload.anomaly);
+    state.anomalyRun = normalizeWorldAnomalyRun(payload.anomalyRun || payload.battle?.anomalyRun);
+    state.anomalyPendingRespawn = payload.respawn || null;
+    state.anomalyFinalMessage = String(payload.message || '');
+    setAnomalyBattleLock(Boolean(state.anomalyRun));
+  }
+
+  function getAnomalyBattleMeta(battle = {}, payload = {}) {
+    const floor = Math.max(1, Number(battle?.floor) || Number(payload.anomalyRun?.floor) || 1);
+    return getWorldBattleMeta('world_boss', battle, {
+      boss: battle?.boss || { title: 'The Anomaly' },
+      eyebrow: `Altar of Many Voices · Floor ${floor}`,
+      title: battle?.winner === 'player' ? `Floor ${floor} Cleared` : `Floor ${floor} Failed`,
+      winText: getAnomalyVictoryText(payload.reward || battle?.anomalyReward, floor),
+      lossText: `The Anomaly endured Floor ${floor}`
+    });
+  }
+
+  async function continueWorldAnomalyFloor(button) {
+    const run = state.anomalyRun;
+    if (!run?.canContinue || state.anomalyFloorBusy) return;
+    state.anomalyFloorBusy = true;
+    renderWorldDungeonBattleResultDock(state.activeWorldBattle || {});
+    setButtonBusy(button, true, `Opening Floor ${run.floor + 1}...`);
+
+    try {
+      const payload = await api('/api/world/anomaly/continue', {
+        method: 'POST',
+        body: { runId: run.id }
+      });
+      applyAnomalyFloorPayload(payload);
+      await playWorldAnomalyFloor(payload.battle, getAnomalyBattleMeta(payload.battle, payload));
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setMessage(error.message || 'The next Anomaly floor could not begin.', 'danger');
+      renderWorldDungeonBattleResultDock(state.activeWorldBattle || {});
+    } finally {
+      state.anomalyFloorBusy = false;
+      setButtonBusy(button, false);
+      if (state.anomalyRun && elements.worldBattleModal?.classList.contains('show') && state.activeWorldBattle) {
+        renderWorldDungeonBattleResultDock(state.activeWorldBattle);
+      }
+    }
+  }
+
+  async function playWorldAnomalyFloor(battle, meta) {
+    if (!battle) return;
+    const token = state.worldBattleReplayToken + 1;
+    state.worldBattleReplayToken = token;
+    state.activeWorldBattle = battle;
+    state.activeWorldBattleMeta = normalizeWorldBattleMeta(meta.type, battle, meta);
+    prepareWorldDungeonBattleReplay(battle, state.activeWorldBattleMeta);
+    const combatPlayback = dungeonCombat.prepareCombatPlayback();
+
+    try {
+      await dungeonLifecycle.replayFight({
+        waitForBattleIntro: true,
+        combatPlayback
+      });
+      const resultType = getWorldDungeonBattleResultType(battle);
+      if (state.worldBattleReplayToken === token && resultType) {
+        await showWorldDungeonBattleResultOverlay(resultType);
+      }
+      if (state.worldBattleReplayToken === token) {
+        renderWorldDungeonBattleResultDock(battle);
+        renderWorldDungeonBattleCenterIcon();
+      }
+    } catch (error) {
+      console.error('Anomaly floor replay failed', error);
+      setMessage(getWorldBattleFallbackMessage(battle, meta), battle.winner === 'player' ? 'success' : 'warning');
+      renderWorldDungeonBattleResultDock(battle);
+    }
+  }
+
+  async function leaveWorldAnomalyRun(button) {
+    const run = state.anomalyRun;
+    if (!run?.canLeave || state.anomalyFloorBusy) return;
+    state.anomalyFloorBusy = true;
+    renderWorldDungeonBattleResultDock(state.activeWorldBattle || {});
+    setButtonBusy(button, true, 'Leaving...');
+
+    try {
+      const payload = await api('/api/world/anomaly/leave', {
+        method: 'POST',
+        body: { runId: run.id }
+      });
+      if (payload.anomaly) state.anomaly = normalizeWorldAnomaly(payload.anomaly);
+      const leaveMessage = String(payload.message || `You left after Floor ${run.floor}.`);
+      state.anomalyFinalMessage = {
+        type: 'success',
+        title: 'Anomaly run ended.',
+        message: leaveMessage,
+        action: 'A new offering starts again at Floor 1.'
+      };
+      finishWorldAnomalyBattle();
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthError(error);
+        return;
+      }
+      setMessage(error.message || 'The Anomaly run could not be left safely.', 'danger');
+      renderWorldDungeonBattleResultDock(state.activeWorldBattle || {});
+    } finally {
+      state.anomalyFloorBusy = false;
+      setButtonBusy(button, false);
+      if (state.anomalyRun && elements.worldBattleModal?.classList.contains('show') && state.activeWorldBattle) {
+        renderWorldDungeonBattleResultDock(state.activeWorldBattle);
+      }
+    }
+  }
+
+  function finishWorldAnomalyBattle() {
+    state.anomalyExitAllowed = true;
+    state.anomalyRun = null;
+    setAnomalyBattleLock(false);
+    closeWorldBattleModal();
+  }
+
+  function setAnomalyBattleLock(locked) {
+    const modal = elements.worldBattleModal;
+    if (!modal) return;
+    modal.classList.toggle('is-anomaly-run-active', Boolean(locked));
+    const closeButton = modal.querySelector('.world-battle-close');
+    if (closeButton) closeButton.hidden = Boolean(locked);
+  }
+
+  function abandonAnomalyRunOnPageExit() {
+    const run = state.anomalyRun;
+    if (!run?.canContinue || state.anomalyPageExitSent) return;
+    state.anomalyPageExitSent = true;
+    void api('/api/world/anomaly/abandon', {
+      method: 'POST',
+      body: { runId: run.id },
+      keepalive: true
+    }).catch(() => {});
+  }
+
   function hideWorldAnomalyModal() {
     const modalElement = elements.worldAnomalyModal;
     const modalApi = window.bootstrap?.Modal;
@@ -6250,11 +6433,18 @@ import './bag-item-visuals.js';
     });
   }
 
-  function getAnomalyVictoryText(reward = {}) {
-    if (reward?.echoAwarded) {
-      return `Mythic ${reward.echo?.species || 'Demon'} Echo recovered`;
+  function getAnomalyVictoryText(reward = null, floor = 1) {
+    const floorLabel = `Floor ${Math.max(1, Number(floor) || 1)} cleared`;
+    const echoes = Array.isArray(reward?.echoes)
+      ? reward.echoes
+      : reward?.echo ? [reward.echo] : [];
+    const rolls = Math.max(1, Number(reward?.rolls) || Number(floor) || 1);
+    if (echoes.length === 1) {
+      return `${floorLabel} · Mythic ${echoes[0].species || 'Demon'} Echo recovered`;
     }
-    return `Victory recorded (${reward?.voiceShards || 0}/${reward?.pityRequired || ANOMALY_PITY_SHARDS})`;
+    if (echoes.length > 1) return `${floorLabel} · ${formatNumber(echoes.length)} Mythic Echoes recovered`;
+    if (reward) return `${floorLabel} · 0/${formatNumber(rolls)} Echo rolls succeeded`;
+    return floorLabel;
   }
 
   function renderWorldAnomalyModal() {
@@ -6285,10 +6475,9 @@ import './bag-item-visuals.js';
           ? `
             <dl class="world-anomaly-known">
               <div><dt>Offering</dt><dd>${priceAmount}</dd></div>
-              <div><dt>Mythic Echo</dt><dd class="world-anomaly-chance">${formatNumber(anomaly.echoChancePercent || 25)}%</dd></div>
-              <div><dt>Learnings</dt><dd>${formatNumber(anomaly.voiceShards)}/${formatNumber(anomaly.pityRequired)}</dd></div>
+              <div><dt>Floors</dt><dd>${formatNumber(anomaly.maxFloor || ANOMALY_MAX_FLOOR)}</dd></div>
+              <div><dt>Mythic Echo</dt><dd class="world-anomaly-chance">${formatNumber(anomaly.echoChancePercent || ANOMALY_ECHO_CHANCE_PERCENT)}% per Anomaly</dd></div>
             </dl>
-            <small>Experience: 4 victories guarantee one Mythic Echo, drawn from species missing from your collection when possible.</small>
           `
           : `
             <p>The stone speaks in voices that do not belong together.</p>
@@ -8110,7 +8299,7 @@ import './bag-item-visuals.js';
   }
 
   function createWorldDungeonBattleRun(battle = {}, meta = {}) {
-    const currentFloor = 1;
+    const currentFloor = Math.max(1, Number(battle.floor) || 1);
     const playerBefore = normalizeWorldDungeonTeam(battle.playerTeamBefore || battle.playerTeam || [], 'player');
     const enemyBefore = normalizeWorldDungeonTeam(battle.enemyTeamBefore || battle.enemyTeam || [], 'enemy');
     const playerAfter = Array.isArray(battle.playerTeamAfter) && battle.playerTeamAfter.length
@@ -8129,7 +8318,7 @@ import './bag-item-visuals.js';
       : [];
 
     return {
-      runId: `world-${meta.type || 'battle'}-${Date.now()}`,
+      runId: battle.anomalyRun?.id || `world-${meta.type || 'battle'}-${Date.now()}`,
       status: 'active',
       replayOnly: true,
       currentFloor,
@@ -8286,28 +8475,53 @@ import './bag-item-visuals.js';
 
     const won = battle.winner === 'player';
     const lost = battle.winner === 'enemy';
-    const label = won ? 'VICTORY' : lost ? 'DEFEAT' : 'BATTLE ENDED';
+    const isAnomaly = battle.combatType === 'world_anomaly';
+    const anomalyRun = isAnomaly
+      ? normalizeWorldAnomalyRun(battle.anomalyRun) || state.anomalyRun
+      : null;
+    const floor = Math.max(1, Number(battle.floor) || Number(anomalyRun?.floor) || 1);
+    const label = isAnomaly
+      ? won ? `FLOOR ${floor} CLEARED` : lost ? `FLOOR ${floor} LOST` : 'ANOMALY ENDED'
+      : won ? 'VICTORY' : lost ? 'DEFEAT' : 'BATTLE ENDED';
     const tone = won ? 'is-victory' : lost ? 'is-defeat' : 'is-neutral';
     const canReplay = shouldShowWorldBattleReplay(battle);
     const canHideWinningAmbushes = isWinningAmbushBattle(battle, state.activeWorldBattleMeta);
-    const anomalyReward = won ? renderAnomalyBattleReward(battle.anomalyReward) : '';
+    const anomalyReward = won ? renderAnomalyBattleReward(battle.anomalyReward, floor) : '';
+    const anomalyActive = Boolean(isAnomaly && won && anomalyRun?.canContinue);
+    const anomalyActions = isAnomaly
+      ? anomalyActive
+        ? `
+          <button class="btn btn-glass-muted world-anomaly-result-leave" type="button" ${state.anomalyFloorBusy ? 'disabled' : ''}>Leave</button>
+          <button class="btn btn-primary world-dungeon-result-continue" type="button" data-world-anomaly-continue ${state.anomalyFloorBusy ? 'disabled' : ''}>
+            ${state.anomalyFloorBusy ? 'Opening...' : `Continue to Floor ${floor + 1}`}
+          </button>
+        `
+        : `
+          <button class="btn btn-primary world-dungeon-result-continue" type="button" data-world-anomaly-finish>
+            ${won ? 'Complete' : 'Continue'}
+          </button>
+        `
+      : '<button class="btn btn-primary world-dungeon-result-continue" type="button">Continue</button>';
 
+    const resultAttributes = isAnomaly
+      ? 'role="dialog" aria-modal="true" aria-labelledby="worldAnomalyResultTitle"'
+      : 'role="status" aria-live="polite"';
+    resultLayer.classList.toggle('is-anomaly-result', isAnomaly);
     setWorldDungeonBattleResultMode(true);
     resultLayer.innerHTML = `
-      <div class="world-dungeon-result ${tone}" role="status" aria-live="polite">
-        <strong>${escapeHtml(label)}</strong>
+      <div class="world-dungeon-result ${tone} ${isAnomaly ? 'is-anomaly-modal' : ''}" ${resultAttributes}>
+        <strong${isAnomaly ? ' id="worldAnomalyResultTitle"' : ''}>${escapeHtml(label)}</strong>
         ${anomalyReward}
         <span class="world-dungeon-result-actions">
-          <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-replay title="Replay Fight" aria-label="Replay Fight" ${canReplay ? '' : 'disabled'}>
+          <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-replay title="Replay Fight" aria-label="Replay Fight" ${canReplay && !state.anomalyFloorBusy ? '' : 'disabled'}>
             ${renderIcon('list-restart')}
           </button>
-          <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-log title="Fight Log" aria-label="Fight Log" aria-pressed="false" ${canReplay ? '' : 'disabled'}>
+          <button class="btn btn-glass-muted btn-sm btn-icon-only world-dungeon-result-icon-btn" type="button" data-world-dungeon-result-log title="Fight Log" aria-label="Fight Log" aria-pressed="false" ${canReplay && !state.anomalyFloorBusy ? '' : 'disabled'}>
             ${renderIcon('log')}
           </button>
-          <button class="btn btn-primary world-dungeon-result-continue" type="button">
-            Continue
-          </button>
+          ${anomalyActions}
         </span>
+        ${anomalyActive ? '<small class="world-anomaly-run-warning">Leaving or reloading this page counts as a loss.</small>' : ''}
         ${canHideWinningAmbushes ? `
           <label class="world-dungeon-winning-ambush-toggle">
             <input type="checkbox" data-world-hide-winning-ambushes ${areWinningAmbushesHidden() ? 'checked' : ''}>
@@ -8316,7 +8530,17 @@ import './bag-item-visuals.js';
         ` : ''}
       </div>
     `;
-    resultLayer.querySelector('.world-dungeon-result-continue')?.addEventListener('click', closeWorldBattleModal, { once: true });
+    if (isAnomaly) {
+      resultLayer.querySelector('[data-world-anomaly-continue]')?.addEventListener('click', (event) => {
+        void continueWorldAnomalyFloor(event.currentTarget);
+      }, { once: true });
+      resultLayer.querySelector('.world-anomaly-result-leave')?.addEventListener('click', (event) => {
+        void leaveWorldAnomalyRun(event.currentTarget);
+      }, { once: true });
+      resultLayer.querySelector('[data-world-anomaly-finish]')?.addEventListener('click', finishWorldAnomalyBattle, { once: true });
+    } else {
+      resultLayer.querySelector('.world-dungeon-result-continue')?.addEventListener('click', closeWorldBattleModal, { once: true });
+    }
     resultLayer.querySelector('[data-world-dungeon-result-replay]')?.addEventListener('click', (event) => {
       void replayWorldDungeonBattleFromResult(event.currentTarget);
     });
@@ -8326,37 +8550,156 @@ import './bag-item-visuals.js';
     resultLayer.querySelector('[data-world-hide-winning-ambushes]')?.addEventListener('change', (event) => {
       setWinningAmbushesHidden(Boolean(event.currentTarget?.checked));
     });
-    positionWorldDungeonBattleResultLayer();
-    window.requestAnimationFrame?.(positionWorldDungeonBattleResultLayer);
+    bindAnomalyRewardSlider(resultLayer);
+    if (isAnomaly) {
+      window.requestAnimationFrame?.(() => {
+        const primaryAction = resultLayer.querySelector('[data-world-anomaly-continue], [data-world-anomaly-finish]');
+        if (primaryAction && !primaryAction.disabled) primaryAction.focus();
+      });
+    } else {
+      positionWorldDungeonBattleResultLayer();
+      window.requestAnimationFrame?.(positionWorldDungeonBattleResultLayer);
+    }
   }
 
-  function renderAnomalyBattleReward(reward = null) {
+  function bindAnomalyRewardSlider(resultLayer) {
+    const viewport = resultLayer?.querySelector('[data-world-anomaly-reward-viewport]');
+    const rewardList = resultLayer?.querySelector('.world-anomaly-reward-list');
+    const tooltip = resultLayer?.querySelector('[data-world-anomaly-reward-tooltip]');
+    if (!viewport) return;
+
+    const buttons = Array.from(resultLayer.querySelectorAll('[data-world-anomaly-reward-scroll]'));
+    const syncButtons = () => {
+      const maxScrollLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+      buttons.forEach((button) => {
+        const direction = Number(button.dataset.worldAnomalyRewardScroll) || 0;
+        button.disabled = direction < 0
+          ? viewport.scrollLeft <= 1
+          : viewport.scrollLeft >= maxScrollLeft - 1;
+      });
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        viewport.scrollBy({
+          left: (Number(button.dataset.worldAnomalyRewardScroll) || 0) * viewport.clientWidth,
+          behavior: 'smooth'
+        });
+      });
+    });
+    viewport.addEventListener('scroll', syncButtons, { passive: true });
+    window.requestAnimationFrame?.(syncButtons);
+
+    resultLayer.querySelectorAll('.world-anomaly-reward-echo[data-tooltip]').forEach((echoButton) => {
+      const showTooltip = () => {
+        if (!tooltip || !rewardList) return;
+        const title = tooltip.querySelector('[data-world-anomaly-tooltip-title]');
+        const status = tooltip.querySelector('[data-world-anomaly-tooltip-status]');
+        const total = tooltip.querySelector('[data-world-anomaly-tooltip-total]');
+        if (title) title.textContent = echoButton.dataset.tooltipTitle || '';
+        if (status) status.textContent = echoButton.dataset.tooltipStatus || '';
+        if (total) total.textContent = echoButton.dataset.tooltipTotal || '';
+        const listRect = rewardList.getBoundingClientRect();
+        const echoRect = echoButton.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const halfWidth = tooltipRect.width / 2;
+        const center = clamp(
+          echoRect.left - listRect.left + echoRect.width / 2,
+          halfWidth + 4,
+          Math.max(halfWidth + 4, listRect.width - halfWidth - 4)
+        );
+        const gap = 8;
+        const above = echoRect.top - listRect.top - tooltipRect.height - gap;
+        const canShowAbove = echoRect.top - tooltipRect.height - gap >= 8;
+        tooltip.style.left = `${center}px`;
+        tooltip.style.top = `${canShowAbove ? above : echoRect.bottom - listRect.top + gap}px`;
+        tooltip.classList.add('is-visible');
+      };
+      const hideTooltip = () => {
+        if (!tooltip) return;
+        tooltip.classList.remove('is-visible');
+      };
+      echoButton.addEventListener('mouseenter', showTooltip);
+      echoButton.addEventListener('mouseleave', () => {
+        if (document.activeElement !== echoButton) hideTooltip();
+      });
+      echoButton.addEventListener('focus', showTooltip);
+      echoButton.addEventListener('blur', () => {
+        if (!echoButton.matches(':hover')) hideTooltip();
+      });
+    });
+  }
+
+  function renderAnomalyBattleReward(reward = null, floor = 1) {
     if (!reward) return '';
-    if (reward.echoAwarded && reward.echo) {
-      const echo = reward.echo;
+    const echoes = Array.isArray(reward.echoes)
+      ? reward.echoes
+      : reward.echo ? [reward.echo] : [];
+    const rolls = Math.max(1, Number(reward.rolls) || Number(floor) || 1);
+    const rollSummary = `${formatNumber(echoes.length)} of ${formatNumber(rolls)} rolls succeeded`;
+
+    if (echoes.length) {
+      const hasSlider = echoes.length > 4;
       return `
-        <article class="world-anomaly-reward is-echo" style="--item-rarity: ${rarityCss('mythic')}">
-          <span class="world-anomaly-reward-art">
-            <img src="${escapeAttribute(toDemonImageUrl(echo, 'portrait') || echo.imageUrl || '')}" alt="" width="96" height="96">
-          </span>
-          <span class="world-anomaly-reward-copy">
-            <small>${reward.source === 'pity' ? 'Fourth victory guarantee' : 'The altar answered'}</small>
-            <b>Mythic ${escapeHtml(echo.species || 'Demon')} Echo</b>
-            <span>Added to your bag</span>
-          </span>
-        </article>
+        <div class="world-anomaly-reward-list">
+          <small class="world-anomaly-roll-summary">${rollSummary}</small>
+          <div class="world-anomaly-reward-slider ${hasSlider ? 'has-slider' : ''}">
+            ${hasSlider ? `
+              <button class="world-anomaly-reward-scroll" type="button" data-world-anomaly-reward-scroll="-1" aria-label="Previous Echo rewards" title="Previous Echo rewards">
+                ${renderIcon('back')}
+              </button>
+            ` : ''}
+            <div class="world-anomaly-reward-viewport" data-world-anomaly-reward-viewport>
+              <div class="world-anomaly-reward-track ${hasSlider ? '' : 'is-centered'}">
+                ${echoes.map((echo) => {
+                  const species = echo.species || 'Demon';
+                  const bagTotal = Math.max(0, Number(echo.quantity) || 0);
+                  const detailText = [
+                    `Mythic ${species} Echo`,
+                    'Added to your Bag',
+                    bagTotal ? `Bag total: ${formatNumber(bagTotal)}` : ''
+                  ].filter(Boolean).join(' · ');
+                  return `
+                    <button
+                      class="world-anomaly-reward-echo"
+                      type="button"
+                      style="--item-rarity: ${rarityCss('mythic')}"
+                      data-tooltip="${escapeAttribute(detailText)}"
+                      data-tooltip-title="${escapeAttribute(`Mythic ${species} Echo`)}"
+                      data-tooltip-status="Added to your Bag"
+                      data-tooltip-total="${escapeAttribute(bagTotal ? `Bag total: ${formatNumber(bagTotal)}` : '')}"
+                      aria-label="${escapeAttribute(detailText)}"
+                    >
+                      <img src="${escapeAttribute(toDemonImageUrl(echo, 'portrait') || echo.imageUrl || '')}" alt="" width="96" height="96">
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+            ${hasSlider ? `
+              <button class="world-anomaly-reward-scroll" type="button" data-world-anomaly-reward-scroll="1" aria-label="Next Echo rewards" title="Next Echo rewards">
+                ${renderIcon('chevron-right')}
+              </button>
+            ` : ''}
+          </div>
+          <div class="world-anomaly-reward-tooltip" data-world-anomaly-reward-tooltip role="tooltip">
+            <strong class="world-anomaly-reward-tooltip-title" data-world-anomaly-tooltip-title></strong>
+            <span class="world-anomaly-reward-tooltip-status" data-world-anomaly-tooltip-status></span>
+            <span class="world-anomaly-reward-tooltip-total" data-world-anomaly-tooltip-total></span>
+          </div>
+        </div>
       `;
     }
 
     return `
-      <article class="world-anomaly-reward is-victory">
+      <article class="world-anomaly-reward is-empty">
         <span class="world-anomaly-reward-victory" aria-hidden="true">
           <img src="${ANOMALY_ALTAR_SVG_URL}" alt="" width="52" height="52">
         </span>
         <span class="world-anomaly-reward-copy">
-          <small>Victory recorded</small>
-          <b>${formatNumber(reward.voiceShards || 0)}/${formatNumber(reward.pityRequired || ANOMALY_PITY_SHARDS)} Learnings</b>
-          <span>Experience: 4 victories guarantee one random Mythic Echo.</span>
+          <small>Floor ${formatNumber(floor)} rolls</small>
+          <b>No Mythic Echo</b>
+          <span>${rollSummary}.</span>
         </span>
       </article>
     `;
@@ -8437,6 +8780,10 @@ import './bag-item-visuals.js';
     const layer = modal?.querySelector('.world-dungeon-result-layer');
     const resultHost = layer?.parentElement;
     if (!layer || !resultHost) return;
+    if (layer.classList.contains('is-anomaly-result')) {
+      layer.style.removeProperty('--world-dungeon-result-top');
+      return;
+    }
 
     const hostRect = resultHost.getBoundingClientRect();
     const formationGrids = [
@@ -8446,7 +8793,11 @@ import './bag-item-visuals.js';
     if (!formationGrids.length || hostRect.height <= 0) return;
 
     const gridBottom = Math.max(...formationGrids.map((grid) => grid.getBoundingClientRect().bottom));
-    const top = clamp(Math.ceil(gridBottom - hostRect.top + 8), 0, hostRect.height);
+    const resultHeight = layer.firstElementChild?.getBoundingClientRect().height || 0;
+    const gridTop = Math.ceil(gridBottom - hostRect.top + 8);
+    const fullyVisibleTop = Math.max(8, Math.floor(hostRect.height - resultHeight - 8));
+    const mobileResultLayout = window.matchMedia?.('(max-width: 899.98px)').matches;
+    const top = clamp(mobileResultLayout ? gridTop : Math.min(gridTop, fullyVisibleTop), 0, hostRect.height);
     layer.style.setProperty('--world-dungeon-result-top', `${top}px`);
   }
 
