@@ -27,6 +27,7 @@ const PLAYER_TUTORIAL_SCHEMA_MIGRATION = '20260811_player_tutorial_schema_v1';
 const PLAYER_TUTORIAL_GUIDES_SCHEMA_MIGRATION = '20260811_player_tutorial_guides_schema_v1';
 const PLAYER_TUTORIAL_TRAINING_GRANT_SCHEMA_MIGRATION = '20260811_player_tutorial_training_grant_v1';
 const STARTER_TYPE_3_COMMON_ECHO_BACKFILL_MIGRATION = '20260811_starter_type_3_common_echo_v1';
+const PLAY_GAMES_SCHEMA_MIGRATION = '20260815_play_games_schema_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -614,8 +615,10 @@ async function applyBaselineSchema() {
       achievement_id VARCHAR(64) NOT NULL,
       unlocked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       steam_synced_at TIMESTAMP NULL,
+      play_games_synced_at TIMESTAMP NULL,
       PRIMARY KEY (player_id, achievement_id),
-      INDEX idx_player_achievements_unsynced (player_id, steam_synced_at)
+      INDEX idx_player_achievements_unsynced (player_id, steam_synced_at),
+      INDEX idx_player_achievements_play_games_unsynced (player_id, play_games_synced_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
   await normalizeUtf8Column('player_achievements', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
@@ -657,6 +660,33 @@ async function addPerformanceIndexes() {
     'players',
     'idx_players_rank_souls',
     'INDEX idx_players_rank_souls (souls, highest_floor, level, xp)'
+  );
+}
+
+async function addPlayGamesSchema() {
+  await addColumnIfMissing(
+    'player_achievements',
+    'play_games_synced_at',
+    '`play_games_synced_at` TIMESTAMP NULL'
+  );
+  await addIndexIfMissing(
+    'player_achievements',
+    'idx_player_achievements_play_games_unsynced',
+    'INDEX idx_player_achievements_play_games_unsynced (player_id, play_games_synced_at)'
+  );
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_play_games_credentials (
+      player_id VARCHAR(255) NOT NULL,
+      refresh_token_encrypted TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column(
+    'player_play_games_credentials',
+    'player_id',
+    'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL'
   );
 }
 
@@ -1177,6 +1207,7 @@ async function initializeSchema() {
   await runMigrationOnce(PLAYER_TUTORIAL_GUIDES_SCHEMA_MIGRATION, addPlayerTutorialGuidesSchema);
   await runMigrationOnce(PLAYER_TUTORIAL_TRAINING_GRANT_SCHEMA_MIGRATION, addPlayerTutorialTrainingGrantSchema);
   await runMigrationOnce(STARTER_TYPE_3_COMMON_ECHO_BACKFILL_MIGRATION, backfillStarterType3CommonEcho);
+  await runMigrationOnce(PLAY_GAMES_SCHEMA_MIGRATION, addPlayGamesSchema);
 }
 
 function ensureSchemaReady() {

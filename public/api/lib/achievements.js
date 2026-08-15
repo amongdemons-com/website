@@ -1,5 +1,11 @@
 const db = require('./db');
 const { isSteamConfigured, setUserAchievements } = require('./steam');
+const {
+  getPlayGamesAchievementId,
+  getPlayerAccessToken,
+  isPlayGamesConfigured,
+  unlockAchievements
+} = require('./play-games');
 const ACHIEVEMENTS = require('../data/achievements.json');
 
 const ACHIEVEMENTS_BY_ID = new Map(ACHIEVEMENTS.map((achievement) => [achievement.id, achievement]));
@@ -17,6 +23,7 @@ const DEMON_RARITY_COUNT = 6;
 const DEMON_TYPE_COUNT = 11;
 const COLLECTION_SLOT_COUNT = DEMON_RARITY_COUNT * DEMON_TYPE_COUNT;
 const queuedSteamSyncs = new Set();
+const queuedPlayGamesSyncs = new Set();
 
 // Unlocks achievements for a player. Idempotent (already unlocked ids are
 // skipped) and intentionally swallow-all: achievement bookkeeping must never
@@ -45,6 +52,7 @@ async function grantAchievements(playerId, achievementIds, queryable = db) {
 
     if (newlyUnlocked.length) {
       queueSteamSync(playerId);
+      queuePlayGamesSync(playerId);
     }
 
     return newlyUnlocked;
@@ -104,6 +112,20 @@ async function checkPvpWins(playerId, wins) {
     playerId,
     PVP_ACHIEVEMENTS.filter((achievement) => total >= achievement.threshold).map((achievement) => achievement.id)
   );
+}
+
+function queuePlayGamesSync(playerId) {
+  // As with Steam, unsynced rows are a durable outbox. When a refresh token is
+  // available this also mirrors unlocks earned from an ordinary web browser.
+  if (queuedPlayGamesSyncs.has(playerId)) return;
+  queuedPlayGamesSyncs.add(playerId);
+  setImmediate(async () => {
+    try {
+      await pushUnsyncedToPlayGames(playerId);
+    } finally {
+      queuedPlayGamesSyncs.delete(playerId);
+    }
+  });
 }
 
 async function checkRankedRating(playerId, rating, queryable = db) {
@@ -245,11 +267,45 @@ async function getPlayerAchievements(playerId) {
   return ACHIEVEMENTS.map((achievement) => ({
     id: achievement.id,
     steamName: achievement.steamName,
+    playGamesId: getPlayGamesAchievementId(achievement.id),
     title: achievement.title,
     description: achievement.description,
     unlocked: unlockedById.has(achievement.id),
     unlockedAt: unlockedById.get(achievement.id) || null
   }));
+}
+
+// Mirrors the same authoritative unlock rows to Play Games. A fresh access
+// token is supplied during Android login; later browser-earned unlocks use the
+// encrypted refresh token stored for that player.
+async function pushUnsyncedToPlayGames(playerId, options = {}) {
+  try {
+    if (!isPlayGamesConfigured()) return;
+
+    const [rows] = await db.query(
+      'SELECT achievement_id AS achievementId FROM player_achievements WHERE player_id = ? AND play_games_synced_at IS NULL',
+      [playerId]
+    );
+    const mappedRows = rows
+      .map((row) => ({ ...row, playGamesId: getPlayGamesAchievementId(row.achievementId) }))
+      .filter((row) => row.playGamesId);
+    if (!mappedRows.length) return;
+
+    const accessToken = options.accessToken || await getPlayerAccessToken(playerId);
+    if (!accessToken) return;
+
+    await unlockAchievements(accessToken, mappedRows.map((row) => row.playGamesId));
+    await db.query(
+      `UPDATE player_achievements
+       SET play_games_synced_at = CURRENT_TIMESTAMP
+       WHERE player_id = ?
+         AND achievement_id IN (?)
+         AND play_games_synced_at IS NULL`,
+      [playerId, mappedRows.map((row) => row.achievementId)]
+    );
+  } catch (error) {
+    console.error('Failed to sync achievements to Play Games:', error);
+  }
 }
 
 // Pushes every unlocked-but-unsynced achievement to Steam for players with a
@@ -309,5 +365,6 @@ module.exports = {
   grantAchievements,
   grantBossDefeat,
   grantDungeonBattleAchievements,
+  pushUnsyncedToPlayGames,
   pushUnsyncedToSteam
 };

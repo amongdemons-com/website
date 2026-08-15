@@ -414,8 +414,8 @@ async function mergeWorldBuffs(targetPlayerId, sourcePlayerId, connection) {
 async function mergeAchievements(targetPlayerId, sourcePlayerId, connection) {
   await connection.query(
     `INSERT IGNORE INTO player_achievements
-       (player_id, achievement_id, unlocked_at, steam_synced_at)
-     SELECT ?, achievement_id, unlocked_at, NULL
+       (player_id, achievement_id, unlocked_at, steam_synced_at, play_games_synced_at)
+     SELECT ?, achievement_id, unlocked_at, NULL, NULL
      FROM player_achievements WHERE player_id = ?`,
     [targetPlayerId, sourcePlayerId]
   );

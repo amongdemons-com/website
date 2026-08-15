@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="e6741e2455a7">
+    <meta name="among-demons-client-version" content="1ecdb5a4f6bb">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Login | Among Demons</title>
@@ -29,7 +29,7 @@
       // Inside the Steam wrapper this form is never shown: steam.js signs the
       // player in silently and redirects to camp. The wrapper preload exposes
       // steamBridge before first paint, so hiding here removes the form flash.
-      if (window.steamBridge) document.documentElement.dataset.steamBoot = '1';
+      if (window.steamBridge || window.amongDemonsAndroidBridge) document.documentElement.dataset.steamBoot = '1';
     </script>
     <style>
       html[data-steam-boot] { background: #071013; }
@@ -146,7 +146,7 @@
         </div>
       </div>
     </footer>
-    <script src="/app/dist/runtime.bundle.js?v=398636c282b4"></script>
+    <script src="/app/dist/runtime.bundle.js?v=d7b0cd386c9e"></script>
     <script src="/app/js/auth-ui.js?v=4ff320536077"></script>
   </body>
 </html>

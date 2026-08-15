@@ -6,7 +6,7 @@ const esbuild = require('esbuild');
 const ROOT = path.join(__dirname, '..');
 const APP_DIR = path.join(ROOT, 'public', 'app');
 const OUT_DIR = path.join(APP_DIR, 'dist');
-const COMMON_SCRIPT_PATTERN = /\s*<script src="(?:https:\/\/cdn\.jsdelivr\.net\/npm\/bootstrap@5\.3\.2\/dist\/js\/bootstrap\.bundle\.min\.js|\/app\/js\/(?:lucide-subset|icons|api-config|session|steam|audio|navigation|demon-cards)\.js|\/app\/dist\/runtime\.bundle\.js)(?:\?v=[^"]+)?"><\/script>/g;
+const COMMON_SCRIPT_PATTERN = /\s*<script src="(?:https:\/\/cdn\.jsdelivr\.net\/npm\/bootstrap@5\.3\.2\/dist\/js\/bootstrap\.bundle\.min\.js|\/app\/js\/(?:lucide-subset|icons|api-config|session|android|steam|audio|navigation|demon-cards)\.js|\/app\/dist\/runtime\.bundle\.js)(?:\?v=[^"]+)?"><\/script>/g;
 const DUNGEON_SCRIPT_PATTERN = /<script(?: type="module")? src="(?:\/app\/js\/dungeon\.js|\/app\/dist\/dungeon\.bundle\.js)(?:\?v=[^"]+)?"><\/script>/;
 const WORLD_SCRIPT_PATTERN = /<script(?: type="module")? src="(?:\/app\/js\/world-ui\.js|\/app\/dist\/world\.bundle\.js)(?:\?v=[^"]+)?"><\/script>/;
 

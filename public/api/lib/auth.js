@@ -29,7 +29,7 @@ async function createSession(playerId, options = {}) {
 
 function normalizeSessionAuthProvider(value) {
   const provider = String(value || '').trim().toLowerCase();
-  return ['steam', 'google', 'discord'].includes(provider) ? provider : 'web';
+  return ['steam', 'play_games', 'google', 'discord'].includes(provider) ? provider : 'web';
 }
 
 function cleanPlayer(row) {

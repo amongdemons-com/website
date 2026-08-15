@@ -22,7 +22,7 @@ function readClientFunction(source, name) {
 }
 
 function getSingleLineTutorialCopy(source) {
-  return source.split('\n').flatMap((line) => {
+  return source.split(/\r?\n/).flatMap((line) => {
     const quoted = line.match(/^\s*(?:body:\s*|[?:]\s*)'((?:\\'|[^'])*)'[,.]?$/);
     if (quoted) return [quoted[1].replace(/\\'/g, "'")];
     const templated = line.match(/^\s*(?:body:\s*|[?:]\s*)`([^`]*)`[,.]?$/);

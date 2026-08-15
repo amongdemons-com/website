@@ -59,6 +59,16 @@ DISCORD_CLIENT_SECRET=your_discord_client_secret
 
 The callback URLs registered with each provider should be `https://your-domain.com/api/auth/oauth/google/callback` and `https://your-domain.com/api/auth/oauth/discord/callback` (use `http://localhost:3000` for local development). Set `OAUTH_REDIRECT_ORIGIN` when the public callback origin differs from the request host. Provider review screens can use `https://amongdemons.com/privacy` and `https://amongdemons.com/terms` as policy URLs.
 
+Google Play Games automatic Android sign-in and server-side achievement mirroring use a Play Console **Game server** OAuth Web credential:
+
+```txt
+PLAY_GAMES_SERVER_CLIENT_ID=your_game_server_web_client_id
+PLAY_GAMES_SERVER_CLIENT_SECRET=your_game_server_web_client_secret
+PLAY_GAMES_TOKEN_ENCRYPTION_KEY=32_random_bytes_as_base64_or_64_hex_characters
+```
+
+Import the 54 definitions in `play-games-console/among-demons-achievements.zip`, then copy the Play Console-generated IDs into `public/api/data/play-games-achievement-ids.json` using `play-games-console/achievement-id-map.template.json`. The encryption key is required for immediate Play Games sync of achievements earned later in a normal browser; without it, Android launch-time reconciliation still catches them up.
+
 Start the server and open `http://localhost:3000`:
 
 ```bash
@@ -338,7 +348,8 @@ Tables are created on first API use by `public/api/lib/schema.js`:
 | --- | --- |
 | `players` | Credentials, deletion schedule, level, XP, Souls, PvP record, profile demon, unlocks |
 | `player_sessions` | Bearer/session tokens with expiration |
-| `player_oauth_accounts` | Linked Google/Discord identities |
+| `player_oauth_accounts` | Linked Google/Discord/Steam/Play Games identities |
+| `player_play_games_credentials` | Encrypted Play Games refresh tokens for server-side achievement mirroring |
 | `oauth_states` | Short-lived OAuth CSRF state |
 | `player_stat_points` | Skill-tree allocations |
 | `player_demons` | Permanent owned demon collection |

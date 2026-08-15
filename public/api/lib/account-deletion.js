@@ -13,6 +13,7 @@ const PLAYER_DATA_TABLES = [
   'player_world_merchant_stock',
   'player_world_merchant_purchases',
   'player_achievements',
+  'player_play_games_credentials',
   'player_daily_quests',
   'player_tutorials',
   'runs',
