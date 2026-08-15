@@ -59,6 +59,7 @@ const {
 } = require('./lib/world-anomaly');
 const { enrichCollectionDemonsWithTraining } = require('./lib/demon-training');
 const { getPlayerStatPointSummary } = require('./lib/account-stat-points');
+const { getTutorialProgress } = require('./lib/tutorial');
 const {
   getOrCreateCurrentSeason,
   getOrCreateRankedRating,
@@ -368,26 +369,35 @@ router.post('/world/move', requireAuth, async (req, res) => {
   const travelEvents = path.length
     ? validateTravelPath(currentPosition, position, path, activeBosses)
     : [];
-  const activeWorldTeam = await getActiveWorldTeam(req.player.id);
+  const hasAmbush = travelEvents.some((event) => event.type === 'ambush');
+  const [activeWorldTeam, tutorial] = await Promise.all([
+    getActiveWorldTeam(req.player.id),
+    hasAmbush ? getTutorialProgress(req.player.id) : null
+  ]);
 
   if (!activeWorldTeam.length) {
     return res.status(409).json({
       error: "It's dangerous to travel alone. Assign a team before traveling."
     });
   }
-  const travelCombatContext = travelEvents.some((event) => event.type === 'ambush')
+  const travelCombatContext = hasAmbush
     ? await resolveWorldCombatContext(req.player, { playerTeam: activeWorldTeam })
     : null;
 
-  await savePosition(req.player.id, position);
-  if ([WORLD_MIN, WORLD_MAX].includes(position.x) || [WORLD_MIN, WORLD_MAX].includes(position.y)) {
-    await achievements.grantAchievements(req.player.id, ['edgewalker']);
-  }
-
-  const resolvedTravel = await resolveTravelEvents(req.player, travelEvents, { combatContext: travelCombatContext });
-  const travelSettlement = await settleTravelAmbushRewards(req.player, resolvedTravel.rewards);
+  const resolvedTravel = await resolveTravelEvents(req.player, travelEvents, {
+    combatContext: travelCombatContext,
+    tutorialProtectedAmbush: isTutorialAmbushProtectionActive(tutorial)
+  });
   const playersAt = await getPlayersAt(position.x, position.y, req.player.id);
   const merchant = getActiveWorldMerchant();
+  const travelSettlement = await commitWorldTravel(req.player, position, resolvedTravel.rewards);
+  const travelAchievementIds = [...resolvedTravel.achievementIds];
+  if ([WORLD_MIN, WORLD_MAX].includes(position.x) || [WORLD_MIN, WORLD_MAX].includes(position.y)) {
+    travelAchievementIds.push('edgewalker');
+  }
+  if (travelAchievementIds.length) {
+    await achievements.grantAchievements(req.player.id, travelAchievementIds);
+  }
   res.json({
     position,
     player: getWorldPlayer(travelSettlement.player),
@@ -1050,6 +1060,7 @@ async function resolveTravelEvents(player, travelEvents = [], options = {}) {
   const resolved = [];
   const combatContext = options.combatContext || null;
   let grantedRoadLessTravelled = false;
+  const achievementIds = [];
   const rewards = {
     ambushesWon: 0,
     xp: 0,
@@ -1069,7 +1080,10 @@ async function resolveTravelEvents(player, travelEvents = [], options = {}) {
         player,
         event.position,
         WORLD_ENCOUNTERS,
-        { context: combatContext }
+        {
+          context: combatContext,
+          tutorialProtected: options.tutorialProtectedAmbush === true
+        }
       );
     } catch (error) {
       if (!error.status || error.status >= 500) throw error;
@@ -1083,7 +1097,7 @@ async function resolveTravelEvents(player, travelEvents = [], options = {}) {
       && !grantedRoadLessTravelled
     ) {
       grantedRoadLessTravelled = true;
-      await achievements.grantAchievements(player.id, ['road-less-travelled']);
+      achievementIds.push('road-less-travelled');
     }
     if (battle?.winner === 'player') {
       const victoryRewards = getAmbushVictoryRewards(battle);
@@ -1102,7 +1116,7 @@ async function resolveTravelEvents(player, travelEvents = [], options = {}) {
     }
   }
 
-  return { events: resolved, rewards };
+  return { events: resolved, rewards, achievementIds };
 }
 
 function getAmbushVictoryRewards(battle = {}) {
@@ -1112,18 +1126,9 @@ function getAmbushVictoryRewards(battle = {}) {
   };
 }
 
-async function settleTravelAmbushRewards(player, rewards = {}) {
+async function commitWorldTravel(player, position, rewards = {}) {
   const xp = Math.max(0, Math.round(Number(rewards.xp) || 0));
   const souls = Math.max(0, Math.floor(Number(rewards.souls) || 0));
-  if (!xp && !souls) {
-    return {
-      player,
-      progression: getAccountProgressionSummary(player.level, player.xp, {
-        previousLevel: player.level
-      })
-    };
-  }
-
   const connection = await db.getConnection();
   let committed = false;
   let playerPayload = player;
@@ -1131,30 +1136,33 @@ async function settleTravelAmbushRewards(player, rewards = {}) {
 
   try {
     await connection.beginTransaction();
-    const [rows] = await connection.query(
-      'SELECT * FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
-      [player.id]
-    );
-    const lockedPlayer = rows[0];
-    if (!lockedPlayer) {
-      const error = new Error('Player not found.');
-      error.status = 404;
-      throw error;
+    if (xp || souls) {
+      const [rows] = await connection.query(
+        'SELECT * FROM players WHERE id = ? LIMIT 1 FOR UPDATE',
+        [player.id]
+      );
+      const lockedPlayer = rows[0];
+      if (!lockedPlayer) {
+        const error = new Error('Player not found.');
+        error.status = 404;
+        throw error;
+      }
+
+      previousLevel = Math.max(1, Number(lockedPlayer.level) || 1);
+      const nextXp = Math.max(0, Number(lockedPlayer.xp) || 0) + xp;
+      const nextLevel = getNextAccountLevel(previousLevel, nextXp);
+      await connection.query(
+        'UPDATE players SET xp = ?, souls = souls + ?, level = ? WHERE id = ?',
+        [nextXp, souls, nextLevel, player.id]
+      );
+      const [updatedRows] = await connection.query(
+        'SELECT * FROM players WHERE id = ? LIMIT 1',
+        [player.id]
+      );
+      playerPayload = cleanPlayer(updatedRows[0]);
     }
 
-    previousLevel = Math.max(1, Number(lockedPlayer.level) || 1);
-    const nextXp = Math.max(0, Number(lockedPlayer.xp) || 0) + xp;
-    const nextLevel = getNextAccountLevel(previousLevel, nextXp);
-    await connection.query(
-      'UPDATE players SET xp = ?, souls = souls + ?, level = ? WHERE id = ?',
-      [nextXp, souls, nextLevel, player.id]
-    );
-    const [updatedRows] = await connection.query(
-      'SELECT * FROM players WHERE id = ? LIMIT 1',
-      [player.id]
-    );
-    playerPayload = cleanPlayer(updatedRows[0]);
-
+    await savePosition(player.id, position, connection);
     await connection.commit();
     committed = true;
   } catch (error) {
@@ -1164,7 +1172,9 @@ async function settleTravelAmbushRewards(player, rewards = {}) {
     connection.release();
   }
 
-  await achievements.checkAccountLevel(player.id, playerPayload.level);
+  if (xp || souls) {
+    await achievements.checkAccountLevel(player.id, playerPayload.level);
+  }
 
   return {
     player: playerPayload,
@@ -1613,6 +1623,10 @@ function getAnomalyResultMessage(result = {}) {
     : `You cleared Anomaly Floor ${floor}. ${rewardMessage}`;
 }
 
+function isTutorialAmbushProtectionActive(tutorial = {}) {
+  return tutorial?.status === 'in_progress' && tutorial?.checkpoint === 'world-travel';
+}
+
 function getWorldPvpPlayerRecord(player = {}) {
   return {
     pvpWins: Math.max(0, Number(player.pvpWins ?? player.pvp_wins) || 0),
@@ -1822,6 +1836,8 @@ router._test = {
   hasClaimableHuntRewards,
   isBlocked,
   isAmbushEligibleTile,
+  isTutorialAmbushProtectionActive,
+  commitWorldTravel,
   recordPvpChallengeResult,
   resolveTravelStepEvent
 };

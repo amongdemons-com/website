@@ -8,6 +8,10 @@
 
 - Resetting the Skill Tree now pays out and immediately ends any active World
   hunt, so its previous combat bonuses cannot keep earning rewards.
+- Tutorial prompts now recover if the World activity panel is closed on mobile,
+  and tutorial ambushes are scaled for a new hunter's starting team.
+- World travel now keeps position and ambush rewards in sync, and automatically
+  recovers if a previous travel request left the map on an outdated position.
 
 ## Patch 5
 

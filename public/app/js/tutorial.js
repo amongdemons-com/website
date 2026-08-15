@@ -95,7 +95,7 @@
     void init();
   });
   [
-    'world-ready', 'world-map-explored', 'world-team-editor-changed', 'world-team-saved',
+    'world-ready', 'world-map-explored', 'world-team-editor-changed', 'world-team-saved', 'world-side-panel',
     'world-route-previewed', 'world-travel-started', 'world-ambush', 'world-arrived',
     'world-hunt-fight', 'world-hunt-started', 'world-hunt-claimed', 'world-overlay', 'dungeon-state',
     'dungeon-battle-start', 'dungeon-extracted', 'bag-ready', 'bag-item-opened',
@@ -464,6 +464,21 @@
     if (model.eventState.worldOverlayOpen) return { hidden: true };
     const modalOpen = Boolean(document.getElementById('worldTeamModal')?.classList.contains('show'));
     const compact = isCompactTutorialViewport();
+
+    const sideToggle = document.getElementById('worldSideToggle');
+    const sideExpanded = sideToggle?.getAttribute('aria-expanded') === 'true';
+    if (!modalOpen && !sideExpanded) {
+      return {
+        title: 'Reopen your Active Team',
+        body: 'The World activity panel can be closed at any time. Open it again to continue choosing your travel formation.',
+        progress,
+        icon: 'shield-plus',
+        target: sideToggle,
+        mobileDock: compact ? 'top' : null,
+        primaryLabel: 'Open Panel',
+        onPrimary: () => sideToggle?.click()
+      };
+    }
 
     if (modalOpen) {
       const detailsOpen = Boolean(document.getElementById('demonDetailModal')?.classList.contains('show'));

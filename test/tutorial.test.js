@@ -196,6 +196,13 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /syncMobileTutorialSurfaces/);
   assert.match(client, /worldMapPanelPrepared/);
   assert.match(client, /worldTeamPanelPrepared/);
+  assert.match(client, /'world-side-panel'/);
+  assert.match(client, /title: 'Reopen your Active Team'/);
+  const worldTeamView = /function getWorldTeamView\(progress\)([\s\S]*?)function getWorldTravelView/.exec(client)?.[1] || '';
+  assert.ok(
+    worldTeamView.indexOf("if (!modalOpen && !sideExpanded)") < worldTeamView.indexOf('if (modalOpen)'),
+    'a closed World panel must be recoverable before the tutorial targets its hidden team action'
+  );
   assert.match(client, /href: '\/events'/);
   assert.match(client, /href: '\/bosses'/);
   assert.match(client, /applyWorldTeamRoleHighlights/);
@@ -275,9 +282,12 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(css, /\.tutorial-coachmark-host\.is-centered \.tutorial-coachmark\s*\{[\s\S]*?width:\s*min\(22rem, calc\(100vw - 1rem\)\)/);
   assert.doesNotMatch(css, /\.tutorial-coachmark\s*\{[\s\S]*?top:\s*auto\s*!important/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-team-saved'/);
+  assert.match(world, /tutorial\?\.emit\?\.\('world-side-panel', \{ expanded: nextExpanded \}\)/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-route-previewed'/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-map-explored'/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-team-editor-changed'/);
+  assert.match(world, /isWorldPositionConflictError/);
+  assert.match(world, /api\('\/api\/world\/state', \{ dedupe: false \}\)/);
   assert.match(world, /function moveWorldTeamEditorSlotEntry[\s\S]*?tutorial\?\.emit\?\.\('world-team-editor-changed'/);
   assert.match(world, /waitForAmbushConfirmation/);
   assert.match(world, /tutorial\?\.emit\?\.\('world-hunt-fight'/);

@@ -37,6 +37,8 @@ const WORLD_TERROR_MAX_LEVEL = 40;
 const DUNGEON_TERROR_START_FLOOR = 18;
 const WORLD_TEAM_LIMIT = 6;
 const WORLD_FORMATION_SLOT_COUNT = 9;
+const TUTORIAL_AMBUSH_ENCOUNTER_ID = 'tutorial-baobaw';
+const TUTORIAL_AMBUSH_STAT_MULTIPLIER = 0.5;
 
 async function getActiveWorldTeam(playerId) {
   const savedRows = await getSavedWorldTeamRows(playerId);
@@ -290,9 +292,12 @@ function getActiveWorldTeamSummary(team = []) {
 }
 
 async function simulateWorldAmbush(player, position, encounters = [], options = {}) {
-  const targetEncounter = pickAmbushEncounter(position, encounters);
+  const tutorialProtected = options.tutorialProtected === true;
+  const targetEncounter = tutorialProtected
+    ? pickTutorialAmbushEncounter(position, encounters)
+    : pickAmbushEncounter(position, encounters);
   if (!targetEncounter) return null;
-  const ambushEncounter = createAmbushEncounter(targetEncounter, position);
+  const ambushEncounter = createAmbushEncounter(targetEncounter, position, { tutorialProtected });
 
   return simulateWorldCombat({
     player,
@@ -572,7 +577,9 @@ async function simulateWorldCombat({ player, encounter, combatType, seed, contex
     throw error;
   }
 
-  const enemyTeam = materializeEncounterTeam(encounter, demonTypes);
+  const enemyTeam = encounter.tutorialProtectedAmbush
+    ? scaleTutorialAmbushTeam(materializeEncounterTeam(encounter, demonTypes))
+    : materializeEncounterTeam(encounter, demonTypes);
   const enemyBuffs = normalizeCombatBuffState({
     activeBuffs: createWorldTerrorBuffs(encounter)
   });
@@ -683,13 +690,45 @@ function pickAmbushEncounter(position, encounters = []) {
   ))[0];
 }
 
-function createAmbushEncounter(encounter = {}, position = {}) {
+function pickTutorialAmbushEncounter(position, encounters = []) {
+  return (encounters || []).find((encounter) => (
+    encounter.id === TUTORIAL_AMBUSH_ENCOUNTER_ID
+    && Array.isArray(encounter.team)
+    && encounter.team.length
+  )) || pickAmbushEncounter(position, encounters);
+}
+
+function createAmbushEncounter(encounter = {}, position = {}, options = {}) {
+  const tutorialProtected = options.tutorialProtected === true;
   return {
     ...encounter,
     sourceEncounterId: encounter.id || null,
     x: Number(position.x) || 0,
-    y: Number(position.y) || 0
+    y: Number(position.y) || 0,
+    ...(tutorialProtected
+      ? {
+        tutorialProtectedAmbush: true,
+        team: (Array.isArray(encounter.team) ? encounter.team : []).slice(0, 1).map((member) => ({
+          ...member,
+          rarity: 'common',
+          elite: false
+        }))
+      }
+      : {})
   };
+}
+
+function scaleTutorialAmbushTeam(team = []) {
+  return team.map((demon) => {
+    const maxHp = scaleStat(demon.maxHp || demon.hp, TUTORIAL_AMBUSH_STAT_MULTIPLIER);
+    return {
+      ...demon,
+      maxHp,
+      hp: maxHp,
+      atk: scaleStat(demon.atk, TUTORIAL_AMBUSH_STAT_MULTIPLIER),
+      speed: scaleStat(demon.speed, TUTORIAL_AMBUSH_STAT_MULTIPLIER)
+    };
+  });
 }
 
 function serializeEncounter(encounter = {}) {
@@ -804,7 +843,7 @@ function createWorldTerrorBuffs(encounter = {}) {
 }
 
 function getWorldTerrorPreview(encounter = {}) {
-  const level = getWorldTerrorLevel(encounter);
+  const level = encounter.tutorialProtectedAmbush ? 0 : getWorldTerrorLevel(encounter);
   const pressure = getEnemyPressureMultipliers(DUNGEON_TERROR_START_FLOOR + level, { terrorScaling: 'linear' });
 
   return {

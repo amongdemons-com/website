@@ -561,8 +561,13 @@ import './bag-item-visuals.js';
   }
 
   function setWorldSidePanelExpanded(expanded) {
-    state.sidePanelExpanded = Boolean(expanded);
+    const nextExpanded = Boolean(expanded);
+    const changed = state.sidePanelExpanded !== nextExpanded;
+    state.sidePanelExpanded = nextExpanded;
     syncWorldSidePanel();
+    if (changed) {
+      window.AmongDemons?.tutorial?.emit?.('world-side-panel', { expanded: nextExpanded });
+    }
   }
 
   function syncWorldSidePanel() {
@@ -1264,6 +1269,14 @@ import './bag-item-visuals.js';
         showTravelTeamRequiredModal();
         return;
       }
+      if (isWorldPositionConflictError(error)) {
+        try {
+          await recoverWorldPositionConflict();
+        } catch (recoveryError) {
+          handleAuthError(recoveryError);
+        }
+        return;
+      }
       if (error.status !== 401) {
         clearRoutePreview('idle');
       }
@@ -1297,6 +1310,34 @@ import './bag-item-visuals.js';
         path
       }
     });
+  }
+
+  function isWorldPositionConflictError(error) {
+    return error?.status === 409 && /world position changed/i.test(error.message || '');
+  }
+
+  async function recoverWorldPositionConflict() {
+    const payload = await api('/api/world/state', { dedupe: false });
+    const position = normalizePosition(payload.position || state.position);
+
+    state.position = position;
+    state.hunterRenderPosition = null;
+    state.playersAt = Array.isArray(payload.playersAt) ? payload.playersAt : [];
+    state.activeTeam = payload.activeTeam || state.activeTeam;
+    state.boundShrine = normalizeShrine(payload.boundShrine);
+    state.currentEvent = payload.currentEvent || getEventAt(position);
+    state.currentEncounter = payload.currentEncounter || getEncounterAt(position);
+    state.currentBoss = payload.currentBoss || getBossAt(position);
+    applyWorldPlayerUpdate(payload.player);
+    setWorldBossState(payload);
+    setWorldMerchantState(payload, { deferRender: true });
+    setHuntState(payload.hunt);
+    clearRoutePreview('idle');
+    centerOnHunter();
+    drawMarkers();
+    renderWorld();
+    renderPanels();
+    setMessage('Your World position was refreshed. Choose your route again.', 'warning');
   }
 
   function getTravelStepEvents(payload, path) {
