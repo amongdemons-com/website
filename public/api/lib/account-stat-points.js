@@ -1,6 +1,6 @@
 const db = require('./db');
 const { cleanPlayer } = require('./auth');
-const { getNextAccountLevel } = require('./progression');
+const { getAccountProgressionSummary, getNextAccountLevel } = require('./progression');
 const { isFeatureTestAccountId } = require('./system-players');
 
 const NODE_DEFINITIONS = Object.freeze({
@@ -239,7 +239,7 @@ async function savePlayerStatAllocations(player, source) {
   return createStatPointSummary(player, allocations);
 }
 
-async function resetPlayerStatAllocations(player) {
+async function resetPlayerStatAllocations(player, options = {}) {
   const connection = await db.getConnection();
   let committed = false;
 
@@ -273,6 +273,41 @@ async function resetPlayerStatAllocations(player) {
       throwStatPointError(`Reset costs ${resetCost} Soul${resetCost === 1 ? '' : 's'}.`);
     }
 
+    const [huntRows] = await connection.query(
+      'SELECT * FROM player_active_hunts WHERE player_id = ? LIMIT 1 FOR UPDATE',
+      [player.id]
+    );
+    const stoppedHunt = huntRows.length > 0;
+    const previousLevel = Math.max(1, Number(playerRows[0].level) || 1);
+    const currentXp = Math.max(0, Number(playerRows[0].xp) || 0);
+    let huntRewards = createEmptyHuntRewards();
+
+    if (stoppedHunt) {
+      // world-combat consumes stat summaries from this module, so load its
+      // settlement helpers lazily after module initialization is complete.
+      const worldCombat = options.calculateHuntRewards && options.getBuffedHuntSoulCapacity
+        ? null
+        : require('./world-combat');
+      const calculateHuntRewards = options.calculateHuntRewards || worldCombat.calculateHuntRewards;
+      const getBuffedHuntSoulCapacity = options.getBuffedHuntSoulCapacity
+        || worldCombat.getBuffedHuntSoulCapacity;
+      const getActiveWorldRewardBuffs = options.getActiveWorldRewardBuffs
+        || require('./world-buffs').getActiveWorldRewardBuffs;
+      const activeWorldBuffs = await getActiveWorldRewardBuffs(playerRows[0], connection);
+      const soulCapacity = getBuffedHuntSoulCapacity(
+        createStatPointSummary(playerRows[0], allocations),
+        activeWorldBuffs
+      );
+      huntRewards = await calculateHuntRewards(
+        parseHuntSnapshot(huntRows[0].snapshot),
+        options.stoppedAt || new Date(),
+        { soulCapacity }
+      );
+    }
+
+    const nextXp = currentXp + Math.max(0, Number(huntRewards.xp) || 0);
+    const nextLevel = getNextAccountLevel(previousLevel, nextXp);
+
     const columns = STAT_KEYS.join(', ');
     const placeholders = STAT_KEYS.map(() => '?').join(', ');
     const updates = STAT_KEYS.map((key) => `${key} = VALUES(${key})`).join(',\n       ');
@@ -286,7 +321,16 @@ async function resetPlayerStatAllocations(player) {
       [player.id, ...STAT_KEYS.map(() => 0)]
     );
 
-    if (resetCost > 0) {
+    if (stoppedHunt) {
+      await connection.query(
+        'UPDATE players SET xp = ?, souls = souls + ? - ?, level = ? WHERE id = ?',
+        [nextXp, Math.max(0, Number(huntRewards.souls) || 0), resetCost, nextLevel, player.id]
+      );
+      await connection.query(
+        'DELETE FROM player_active_hunts WHERE player_id = ?',
+        [player.id]
+      );
+    } else if (resetCost > 0) {
       await connection.query(
         'UPDATE players SET souls = souls - ? WHERE id = ?',
         [resetCost, player.id]
@@ -305,9 +349,20 @@ async function resetPlayerStatAllocations(player) {
       ...createStatPointSummary(updatedPlayerRows[0], ZERO_ALLOCATIONS),
       reset: {
         cost: resetCost,
-        usedPoints: getSpentPoints(allocations)
+        usedPoints: getSpentPoints(allocations),
+        stoppedHunt
       },
-      player: cleanPlayer(updatedPlayerRows[0])
+      hunt: {
+        stopped: stoppedHunt,
+        rewards: huntRewards
+      },
+      player: cleanPlayer(updatedPlayerRows[0]),
+      ...(stoppedHunt ? {
+        progression: {
+          ...getAccountProgressionSummary(nextLevel, nextXp, { previousLevel }),
+          souls: Math.max(0, Number(updatedPlayerRows[0].souls) || 0)
+        }
+      } : {})
     };
   } catch (error) {
     if (!committed) {
@@ -317,6 +372,26 @@ async function resetPlayerStatAllocations(player) {
   } finally {
     connection.release();
   }
+}
+
+function parseHuntSnapshot(value) {
+  try {
+    return JSON.parse(value || '{}');
+  } catch (error) {
+    return {};
+  }
+}
+
+function createEmptyHuntRewards() {
+  return {
+    elapsedSeconds: 0,
+    cycles: 0,
+    wins: 0,
+    xp: 0,
+    souls: 0,
+    soulCapacity: null,
+    soulsLost: 0
+  };
 }
 
 function getSkillTreeResetCost(allocations = {}) {

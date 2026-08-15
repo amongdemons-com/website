@@ -21,6 +21,10 @@ test('projected Skill Tree reset cost stays aligned with the action buttons', ()
   assert.match(styles, /\.ascension-reset-cost-preview-label\s*{[^}]*position:\s*absolute;[^}]*top:\s*calc\(100% \+ 0\.1rem\);[^}]*left:\s*50%;[^}]*transform:\s*translateX\(-50%\);/s);
 });
 
+test('a Skill Tree reset confirms when it force-stops an active hunt', () => {
+  assert.match(script, /Active hunt ended and its earned rewards were claimed\./);
+});
+
 test('uncapped Skill Tree nodes have color-matched multi-add controls on the requested side', () => {
   const sides = {
     health_mastery: 'left',

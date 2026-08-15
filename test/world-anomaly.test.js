@@ -56,7 +56,7 @@ test('Patch 4 announces The Anomaly ritual and Mythic Echo reward', () => {
 
 test('Patch 5 announces the reduced Altar offering', () => {
   const patch = patchNotes.slice(
-    patchNotes.indexOf('## Patch 5 (Current)'),
+    patchNotes.indexOf('## Patch 5'),
     patchNotes.indexOf('## Patch 4')
   );
 

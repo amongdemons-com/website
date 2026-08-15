@@ -519,8 +519,11 @@
       applyPlayer(payload.player);
       applySummary(payload);
       const cost = Math.max(0, Number(payload.reset?.cost ?? payload.resetCost) || 0);
+      const huntNotice = payload.hunt?.stopped
+        ? ' Active hunt ended and its earned rewards were claimed.'
+        : '';
       audio?.play('sfx.progression.skillReset', { volume: 0.9 });
-      setMessage(`All constellation bindings were released for ${formatNumber(cost)} Soul${cost === 1 ? '' : 's'}.`, 'success');
+      setMessage(`All constellation bindings were released for ${formatNumber(cost)} Soul${cost === 1 ? '' : 's'}.${huntNotice}`, 'success');
     } catch (error) {
       handleError(error);
     } finally {

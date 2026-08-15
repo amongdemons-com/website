@@ -6,6 +6,9 @@
 
 <!-- Add future player-facing changes for Patch 6 below this line. -->
 
+- Resetting the Skill Tree now pays out and immediately ends any active World
+  hunt, so its previous combat bonuses cannot keep earning rewards.
+
 ## Patch 5
 
 - Ranked Dungeon escape results now always let you continue without reloading
