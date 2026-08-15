@@ -6,6 +6,8 @@
 
 <!-- Add future player-facing changes for Patch 6 below this line. -->
 
+- Tutorial prompts are now shorter and focus on one action at a time, with
+  extra strategy notes removed from the core journey.
 - Resetting the Skill Tree now pays out and immediately ends any active World
   hunt, so its previous combat bonuses cannot keep earning rewards.
 - Tutorial prompts now recover if the World activity panel is closed on mobile,

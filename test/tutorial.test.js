@@ -14,6 +14,22 @@ const ROOT = path.join(__dirname, '..');
 const read = (...parts) => fs.readFileSync(path.join(ROOT, ...parts), 'utf8');
 const NOW = new Date('2026-08-11T10:00:00.000Z');
 
+function readClientFunction(source, name) {
+  const start = source.indexOf(`  function ${name}(`);
+  assert.notEqual(start, -1, `expected tutorial function ${name}`);
+  const end = source.indexOf('\n  function ', start + 1);
+  return source.slice(start, end === -1 ? source.length : end);
+}
+
+function getSingleLineTutorialCopy(source) {
+  return source.split('\n').flatMap((line) => {
+    const quoted = line.match(/^\s*(?:body:\s*|[?:]\s*)'((?:\\'|[^'])*)'[,.]?$/);
+    if (quoted) return [quoted[1].replace(/\\'/g, "'")];
+    const templated = line.match(/^\s*(?:body:\s*|[?:]\s*)`([^`]*)`[,.]?$/);
+    return templated ? [templated[1]] : [];
+  });
+}
+
 test('tutorial starts for an account and only moves forward', () => {
   const started = applyTutorialMutation(progress(), { action: 'start' }, NOW);
   assert.equal(started.status, 'in_progress');
@@ -206,7 +222,7 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /href: '\/events'/);
   assert.match(client, /href: '\/bosses'/);
   assert.match(client, /applyWorldTeamRoleHighlights/);
-  assert.match(client, /duplicate demons are allowed/);
+  assert.match(client, /Copies are allowed/);
   assert.match(client, /getActionDrivenWorldTravelView/);
   assert.match(client, /TUTORIAL_WORLD_SPOT = Object\.freeze\(\{ x: 0, y: -3 \}\)/);
   assert.match(client, /Travel to Area 0, -3/);
@@ -226,13 +242,13 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /choiceTargets/);
   assert.match(client, /Hunt defeated spots/);
   assert.match(client, /Recruit now or fight as-is/);
-  assert.match(client, /You can add more demons from Hand/);
-  assert.match(client, /Option 1 of 2: Fight another floor/);
-  assert.match(client, /Option 2 of 2: Extract safely/);
-  assert.match(client, /primaryLabel: 'Show Extraction Option'/);
+  assert.match(client, /Add from Hand if you like/);
+  assert.match(client, /Continue or leave safely/);
+  assert.match(client, /title: 'Extract an Echo'/);
+  assert.match(client, /primaryLabel: 'Show Extract'/);
   assert.match(client, /primaryLabel: 'Open Extraction'/);
-  assert.match(client, /secondaryLabel: 'Review Fight Option'/);
-  assert.match(client, /You can close and reopen this tray at any time/);
+  assert.match(client, /secondaryLabel: 'Back to Fight'/);
+  assert.match(client, /Open the flag, then choose one demon to extract/);
   assert.match(client, /isCurrentCheckpoint\('dungeon-extract'\)\) model\.localSteps\.dungeonExtract = 1/);
   assert.match(client, /target\?\.closest\?\.\('#dungeonMobileExtractBtn'\)[\s\S]*?model\.localSteps\.dungeonExtract = 1/);
   const dungeonExtractView = /function getDungeonExtractView\(progress\)([\s\S]*?)function getBagEchoView/.exec(client)?.[1] || '';
@@ -251,7 +267,7 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /Your permanent demon is ready/);
   assert.match(client, /getCollectionTrainingView/);
   assert.match(client, /Train once with Souls/);
-  assert.match(client, /Click on a demon card/);
+  assert.match(client, /Open a demon card/);
   assert.match(client, /revealMobileWorldTeamCollection/);
   assert.match(client, /mobileDock: 'bottom'/);
   assert.match(client, /positionCompactTutorial/);
@@ -316,7 +332,7 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(collection, /trainingCost/);
   assert.match(collection, /tutorial\?\.emit\?\.\('demon-trained'/);
   assert.match(collection, /function revealTrainingOutcome[\s\S]*?showTrainingResult[\s\S]*?tutorial\?\.emit\?\.\('demon-trained'/);
-  assert.match(client, /Now that we\\'re done training, let\\'s go back to check on our Hunt results\./);
+  assert.match(client, /Now return to World and check your Hunt\./);
   assert.match(client, /primaryLabel: 'Check Hunt Results'/);
   const trainingCompleteView = /if \(collection\.trainingComplete\) \{([\s\S]*?)\n    \}/.exec(client)?.[1] || '';
   assert.match(trainingCompleteView, /centered: true/);
@@ -325,7 +341,7 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.doesNotMatch(client, /Echoes lead to permanent demons/);
   assert.match(client, /if \(summonInProgress\) return \{ hidden: true \}/);
   assert.match(client, /if \(summonResultPrepared && !bag\.summoned\) return \{ hidden: true \}/);
-  assert.match(client, /The Echo has finished summoning[\s\S]*?primaryLabel: 'Next'/);
+  assert.match(client, /Your Echo is now permanent\.[\s\S]*?primaryLabel: 'Next'/);
   assert.match(skillTree, /tutorial\?\.emit\?\.\('skill-tree-ready'/);
   assert.match(skillTree, /tutorial\?\.emit\?\.\('skill-tree-saved'/);
   assert.match(dungeonPage, /id="shortTeamCount"/);
@@ -360,6 +376,36 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(tutorialCompleteView, /primaryLabel: 'Finish Tutorial'/);
   const huntStartedHandler = /name === 'world-hunt-started'[\s\S]*?\} else if \(name === 'world-hunt-claimed'/.exec(client)?.[0] || '';
   assert.doesNotMatch(huntStartedHandler, /advance\('dungeon-prepare'/);
+});
+
+test('core tutorial coachmarks keep each prompt light and focused', () => {
+  const client = read('public', 'app', 'js', 'tutorial.js');
+  const coreFunctions = [
+    'getWelcomeView',
+    'getWorldMapView',
+    'getWorldTeamView',
+    'getActionDrivenWorldTravelView',
+    'getDungeonPrepareView',
+    'getDungeonExtractView',
+    'getRouteHandoffView',
+    'getActionDrivenBagEchoView',
+    'getCollectionTrainingView',
+    'getWorldHuntRewardsView'
+  ];
+  const coreViews = coreFunctions.map((name) => readClientFunction(client, name)).join('\n');
+  const copy = getSingleLineTutorialCopy(coreViews);
+
+  assert.ok(copy.length >= 30, 'expected the active tutorial copy to be covered by the word budget');
+  copy.forEach((value) => {
+    const words = value
+      .replace(/\$\{[^}]+\}/g, '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    assert.ok(words.length <= 18, `tutorial prompt exceeds 18 words: "${value}"`);
+  });
+  assert.doesNotMatch(coreViews, /\bfacts:\s*\[/, 'core prompts should not add extra fact panels');
+  assert.match(coreViews, /Learn the basics one step at a time/);
 });
 
 function progress(overrides = {}) {

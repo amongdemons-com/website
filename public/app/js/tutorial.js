@@ -295,7 +295,7 @@
       window.AmongDemons?.showGameAlert?.({
         type: 'success',
         title: 'Tutorial complete.',
-        message: 'You are ready to explore, descend, collect Echoes, and train permanent demons.',
+        message: 'You are ready. Explore at your own pace.',
         action: 'You can replay the tutorial from Settings at any time.'
       }, { context: 'tutorial' });
     }
@@ -421,7 +421,7 @@
   function getWelcomeView() {
     return {
       title: 'Welcome, Hunter',
-      body: 'Take a quick journey through World, survive a Dungeon fight, and bring home your first Echo. You can skip whenever you like.',
+      body: 'Learn the basics one step at a time. You can skip whenever you like.',
       progress: `1 of ${TOTAL_MOMENTS}`,
       icon: 'map',
       centered: true,
@@ -451,7 +451,7 @@
   function getWorldMapView(progress) {
     return {
       title: 'Explore the World',
-      body: 'Pan around the map and wheel or pinch to zoom. You are only scouting for now—travel begins after you choose an Active Team.',
+      body: 'Pan or zoom the map to look around.',
       progress,
       icon: 'map',
       target: '#worldCanvasHost'
@@ -470,7 +470,7 @@
     if (!modalOpen && !sideExpanded) {
       return {
         title: 'Reopen your Active Team',
-        body: 'The World activity panel can be closed at any time. Open it again to continue choosing your travel formation.',
+        body: 'Open the World panel to continue building your team.',
         progress,
         icon: 'shield-plus',
         target: sideToggle,
@@ -500,10 +500,10 @@
               ? `Place this ${roleStep.label} demon`
               : 'Add this demon',
           body: /remove/i.test(actionLabel)
-            ? 'This demon is already assigned. Remove it only if you want to replace it.'
+            ? 'Remove this demon only if you want a replacement.'
             : roleStep
-              ? `Add places it in the next open ${roleStep.position} slot automatically. You can drag it to another matching spot afterward.`
-              : 'Add places this demon in its next open preferred slot. Drag from Collection when you want an exact spot.',
+              ? `Choose Add. It will fill the next open ${roleStep.position} slot.`
+              : 'Choose Add, or drag a demon into the slot you want.',
           progress,
           icon: 'shield-plus',
           target: detailsAction
@@ -516,16 +516,15 @@
         return {
           title: 'Start with a melee demon',
           body: teamCount >= 6
-            ? 'Your team is full. Open a melee card on the board and remove it, then add a glowing melee card to the front.'
+            ? 'Remove one team member, then add a glowing melee demon.'
             : compact
-              ? 'Tap a glowing melee card above, then Add. It will enter the glowing front row automatically.'
-              : `${melee.name ? `${melee.name} is one example. ` : ''}Choose any glowing melee card. Add places it in a glowing front slot, where it takes the pressure first.`,
+              ? 'Tap a glowing melee demon, then Add. It moves to the front.'
+              : `${melee.name ? `${melee.name} works. ` : ''}Choose a glowing melee demon for the front row.`,
           progress,
           icon: 'swords',
           target: melee.slot || melee.card || '#worldTeamEditorCollection',
           mobilePlacement: 'top',
-          mobileDock: 'bottom',
-          facts: compact ? null : [{ icon: 'shield', label: 'Melee', value: 'Glowing front line' }]
+          mobileDock: 'bottom'
         };
       }
 
@@ -534,16 +533,15 @@
         return {
           title: 'Protect a ranged demon',
           body: teamCount >= 6
-            ? 'Your team is full. Open a ranged card on the board and remove it, then add a glowing ranged card to the back.'
+            ? 'Remove one team member, then add a glowing ranged demon.'
             : compact
-              ? 'Tap a glowing ranged card above, then Add. It will enter one of the two protected back rows.'
-              : `${ranged.name ? `${ranged.name} is one example. ` : ''}Choose any glowing ranged card. Add places it in a glowing back slot, protected behind your melee line.`,
+              ? 'Tap a glowing ranged demon, then Add. It moves behind your melee line.'
+              : `${ranged.name ? `${ranged.name} works. ` : ''}Choose a glowing ranged demon for a back row.`,
           progress,
           icon: 'crosshair',
           target: ranged.slot || ranged.card || '#worldTeamEditorCollection',
           mobilePlacement: 'top',
-          mobileDock: 'bottom',
-          facts: compact ? null : [{ icon: 'crosshair', label: 'Ranged', value: 'Two glowing back lines' }]
+          mobileDock: 'bottom'
         };
       }
 
@@ -551,10 +549,8 @@
         document.getElementById('worldTeamEditorCount')?.classList.add('tutorial-team-counter');
         revealMobileWorldTeamCollection('fill');
         return {
-          title: `${teamCount}/6 — duplicate demons are allowed`,
-          body: compact
-            ? 'Use the cards above until the team reaches 6/6. Copies of the same permanent demon are allowed.'
-            : 'Fill all six Active Team slots. You can add the same permanent demon more than once, then drag copies into the exact formation you want.',
+          title: `${teamCount}/6 — Fill your team`,
+          body: 'Copies are allowed. Fill every slot, then arrange them if you like.',
           progress,
           icon: 'users',
           target: '#worldTeamEditorCount',
@@ -565,7 +561,7 @@
 
       return {
         title: 'Save your Active Team',
-        body: 'This formation travels with you, handles ambushes, and fights every Hunt. You can edit it whenever you return to World.',
+        body: 'This team travels, handles ambushes, and runs Hunts for you.',
         progress,
         icon: 'save',
         target: '#worldTeamSaveButton'
@@ -575,8 +571,8 @@
     return {
       title: world.hasActiveTeam ? 'Open Edit Team' : 'Choose an Active Team',
       body: world.hasActiveTeam
-        ? 'Let\'s open the editor and see how this travel formation is built.'
-        : 'World travel needs at least one demon. Your available demons are waiting in Collection.',
+        ? 'Open the editor to review your travel team.'
+        : 'Add at least one demon before travelling.',
       progress,
       icon: 'shield-plus',
       target: '#worldEditTeamButton',
@@ -640,7 +636,7 @@
     if (model.eventState.worldAmbush?.awaitingConfirmation) {
       return {
         title: 'You have been ambushed',
-        body: 'Some routes spring an ambush. Your Active Team fights automatically, so formation and stronger demons matter even between marked spots.',
+        body: 'Ambushes start automatically and use your Active Team.',
         progress,
         icon: 'swords',
         centered: true,
@@ -656,7 +652,7 @@
       prepareWorldTutorialSpot();
       return {
         title: 'Travel to Area 0, -3',
-        body: 'Select the glowing demon spot, preview its route, then choose Travel. The guide waits until you arrive before explaining the activity panel.',
+        body: 'Choose the glowing spot, preview the route, then Travel.',
         progress,
         icon: 'map-pin',
         target: ['#worldTutorialSpotAnchor', '#worldTargetTooltip:not(.d-none)'],
@@ -673,7 +669,7 @@
     if (!sideExpanded && !model.eventState.worldHunt.lost) {
       return {
         title: 'Open the World activity panel',
-        body: 'This panel shows what is waiting in your current area, including fights and unlocked Hunts.',
+        body: 'See this area’s fights and Hunts here.',
         progress,
         icon: 'map',
         target: sideToggle,
@@ -687,14 +683,10 @@
       const dungeonLink = findVisibleElement(['[data-game-route="dungeon"]', 'a[href="/dungeon"]']);
       return {
         title: 'Get stronger in a Dungeon',
-        body: 'This fight exposed a weak point. Dungeons let you recruit stronger units and extract Echoes; Summon permanent demons, then Train them with Souls before returning.',
+        body: 'No problem—Dungeon runs can help you find stronger demons.',
         progress,
         icon: 'sparkles',
         target: dungeonLink || '#worldCanvasHost',
-        facts: [
-          { icon: 'sparkles', label: 'Events', value: 'Special opportunities', href: '/events' },
-          { icon: 'crown', label: 'Bosses', value: 'Temporary victory buffs', href: '/bosses' }
-        ],
         mobilePlacement: 'top',
         primaryLabel: 'Enter First Dungeon',
         onPrimary: () => advance('dungeon-prepare', { navigate: '/dungeon' })
@@ -704,7 +696,7 @@
     if (model.eventState.worldHunt.started) {
       return {
         title: 'While the Hunt gathers Souls',
-        body: 'While we wait for those Souls to stack, let me show you how to collect demons. In a Dungeon, you can recruit during the run and extract an Echo to keep.',
+        body: 'Your team keeps Hunting while you visit the Dungeon for an Echo.',
         progress,
         icon: 'timer',
         target: ['.world-active-hunt-card', '[data-claim-hunt-rewards]'],
@@ -717,7 +709,7 @@
     const fightButton = findVisibleElement(['[data-try-hunt]']);
     if (fightButton) return {
       title: 'Fight to unlock this spot',
-      body: 'Fight once with your Active Team. Victory proves it can handle this area and unlocks passive Hunt; defeat means it is time to seek stronger demons.',
+      body: 'Win once to unlock Hunt for this spot.',
       progress,
       icon: 'swords',
       target: fightButton,
@@ -727,7 +719,7 @@
     const huntButton = findVisibleElement(['[data-start-hunting]']);
     if (huntButton) return {
       title: 'Hunt the defeated spot',
-      body: 'Start Hunt to let your Active Team repeat this battle over time. It banks reduced XP and Souls while you are away.',
+      body: 'Start Hunt. Your team will bank XP and Souls over time.',
       progress,
       icon: 'timer',
       target: huntButton,
@@ -737,7 +729,7 @@
     const claimButton = findVisibleElement(['[data-claim-hunt-rewards]']);
     return {
       title: 'While the Hunt gathers Souls',
-      body: 'While we wait for those Souls to stack, let me show you how to collect demons. In a Dungeon, you can recruit during the run and extract an Echo to keep.',
+      body: 'Your team keeps Hunting while you visit the Dungeon for an Echo.',
       progress,
       icon: 'timer',
       target: claimButton || '.world-active-hunt-card',
@@ -756,7 +748,7 @@
       const recruitButton = findVisibleElement(['#shortTeamModal.show [data-bs-dismiss="modal"].btn-primary']);
       return {
         title: 'Recruit now or fight as-is',
-        body: 'Your team is below this floor’s limit. Recruit returns to formation so you can fill the open slot; Skip accepts the smaller team and starts the fight.',
+        body: 'Recruit returns to formation. Skip starts with this smaller team.',
         progress,
         icon: 'users',
         target: '#shortTeamCount',
@@ -770,7 +762,7 @@
     if (dungeon.hasPendingPacts) {
       return {
         title: 'Choose a Demonic Pact',
-        body: 'Pacts change the rules of the descent. Pick the trade-off that best suits your team, then continue.',
+        body: 'Pick one trade-off, then continue.',
         progress,
         icon: 'sparkles',
         target: ['#demonicPactOverlay:not(.d-none)', '#dungeonHandBar:not(.d-none)']
@@ -782,8 +774,8 @@
       return {
         title: dungeon.status === 'defeated' ? 'Every defeat teaches' : 'Begin your descent',
         body: dungeon.status === 'defeated'
-          ? 'Adjust your formation and try again. The tutorial will continue after your first victory.'
-          : 'Open a new Dungeon run to prepare your first team.',
+          ? 'Adjust your formation and try again.'
+          : 'Start a run, then build your team.',
         progress,
         icon: 'swords',
         target: startButton
@@ -798,19 +790,15 @@
     return {
       title: fightButton ? 'Your team is ready' : 'Prepare your first team',
       body: fightButton
-        ? 'Front-line demons protect the back line. You can add more demons from Hand, then start the fight when the formation looks right.'
-        : 'Drag a Hand demon into formation. Tap it first to inspect its role and stats; put melee in front and keep ranged demons behind them.',
+        ? 'Add from Hand if you like, then Fight.'
+        : 'Drag a Hand demon into formation. Melee front, ranged behind.',
       progress,
       icon: 'swords',
       target: fightButton && !compact
         ? fightButton
         : ['#dungeonHandBar:not(.d-none)', '#teamGrid'],
       mobilePlacement: 'top',
-      choiceTargets: fightButton ? [fightButton] : null,
-      facts: fightButton ? null : [
-        { icon: 'swords', label: 'Melee', value: 'Front' },
-        { icon: 'crosshair', label: 'Ranged', value: 'Back' }
-      ]
+      choiceTargets: fightButton ? [fightButton] : null
     };
   }
 
@@ -830,8 +818,8 @@
       return {
         title: extractAction ? 'Preserve this exact Echo' : 'Inspect your reward',
         body: extractAction
-          ? 'Choose Extract to secure this demon as an Echo. You will confirm the choice before the run ends.'
-          : 'Review the demon, then close this view and choose one of the defeated demons that can be extracted.',
+          ? 'Choose Extract. You will confirm before leaving.'
+          : 'Close this view, then choose an eligible defeated demon.',
         progress,
         icon: 'amphora',
         target: extractAction || '#demonDetailModal.show .modal-content',
@@ -844,7 +832,7 @@
       const confirm = document.getElementById('cashoutConfirmBtn');
       return {
         title: 'Confirm extraction',
-        body: 'The chosen exact Echo will be secured in your Bag together with the XP and Souls earned during this run. Extraction ends the run.',
+        body: 'Confirm to keep this Echo, XP, and Souls, and end the run.',
         progress,
         icon: 'amphora',
         target: confirm,
@@ -871,13 +859,13 @@
 
     if (model.localSteps.dungeonExtract <= 0) {
       return {
-        title: 'Option 1 of 2: Fight another floor',
-        body: 'Recruit a defeated demon if you want, then press Fight to continue deeper. More floors can bring more rewards, but you can choose to leave instead.',
+        title: 'Continue or leave safely',
+        body: 'Fight goes deeper. Extract leaves with one Echo, XP, and Souls.',
         progress,
         icon: 'swords',
         target: continueFightButton || ['#dungeonHandBar:not(.d-none)', '#teamGrid'],
         mobileDock: compact ? 'top' : null,
-        primaryLabel: 'Show Extraction Option',
+        primaryLabel: 'Show Extract',
         onPrimary: () => setLocalStep(
           'dungeonExtract',
           1,
@@ -889,13 +877,13 @@
 
     if (compact && mobileExtractButton && !mobileRewardOpen) {
       return {
-        title: 'Option 2 of 2: Extract safely',
-        body: 'The flag opens the extraction tray. Choose one eligible demon as an Echo, then Extract to secure it with your XP and Souls and end the run safely. You can close and reopen this tray at any time.',
+        title: 'Extract an Echo',
+        body: 'Open the flag, then choose one demon to extract.',
         progress,
         icon: 'amphora',
         target: mobileExtractButton,
         mobileDock: 'top',
-        secondaryLabel: 'Review Fight Option',
+        secondaryLabel: 'Back to Fight',
         onSecondary: reviewFightOption,
         primaryLabel: 'Open Extraction',
         onPrimary: () => mobileExtractButton.click()
@@ -905,12 +893,12 @@
     if (selectedReward && rewardExtractButton) {
       return {
         title: 'Extract this Echo',
-        body: 'This exact demon is in the extraction slot. Review the payout, then choose Extract to confirm the Echo, keep your earned XP and Souls, and leave safely.',
+        body: 'Choose Extract to keep this Echo, XP, and Souls.',
         progress,
         icon: 'amphora',
         target: rewardExtractButton,
         mobileDock: compact ? 'top' : null,
-        secondaryLabel: 'Review Fight Option',
+        secondaryLabel: 'Back to Fight',
         onSecondary: reviewFightOption
       };
     }
@@ -919,7 +907,7 @@
       const nextDungeon = findVisibleElement(['a[href="/dungeon"]', '#startNewDungeonBtn']);
       return {
         title: 'No Echo was preserved',
-        body: 'You left safely with your run rewards, but the extraction slot was empty. Start another run when you are ready to secure an Echo.',
+        body: 'Extract again with a demon in the slot to keep an Echo.',
         progress,
         icon: 'amphora',
         target: nextDungeon
@@ -932,10 +920,8 @@
       '#teamGrid .dungeon-demon-card[data-instance-id]'
     ]);
     return {
-      title: 'Option 2 of 2: Extract safely',
-      body: compact
-        ? 'Tap an eligible demon and choose Extract from its details, or drag it into the open extraction slot. Confirming secures that Echo with your XP and Souls and ends the run.'
-        : 'Click an eligible demon and choose Extract from its details, or drag it into the extraction slot. Confirming secures that Echo with your XP and Souls and ends the run.',
+      title: 'Extract an Echo',
+      body: `${compact ? 'Tap' : 'Click'} a demon and choose Extract, or drag it into the extraction slot.`,
       progress,
       icon: 'amphora',
       target: echoCandidate || [
@@ -943,7 +929,7 @@
         '#dungeonHandBar:not(.d-none)'
       ],
       mobileDock: compact ? 'top' : null,
-      secondaryLabel: 'Review Fight Option',
+      secondaryLabel: 'Back to Fight',
       onSecondary: reviewFightOption
     };
   }
@@ -1036,7 +1022,7 @@
       ]);
       return {
         title: 'Echo secured',
-        body: 'Your Echo is safe. Choose View Bag on the extraction screen to see its summoning progress and refinement options.',
+        body: 'Choose View Bag to open the Echo you extracted.',
         progress: `${CHECKPOINTS.indexOf(checkpoint) + 2} of ${TOTAL_MOMENTS}`,
         icon: 'amphora',
         target: viewBag
@@ -1054,7 +1040,7 @@
     const routeTarget = findVisibleElement([`[data-game-route="${label.toLowerCase()}"]`, `a[href="${route}"]`]);
     return {
       title: `Continue in ${label}`,
-      body: `Your progress is saved. Return to ${label} whenever you are ready for the next short step.`,
+      body: `Your progress is saved. Return to ${label} for the next step.`,
       progress: `${CHECKPOINTS.indexOf(checkpoint) + 2} of ${TOTAL_MOMENTS}`,
       icon: routeMeta.icon,
       target: routeTarget
@@ -1069,7 +1055,7 @@
       const viewCollection = findVisibleElement(['#bagSummonModal.show a[href="/collection"]']);
       return {
         title: 'Your permanent demon is ready',
-        body: 'The Echo has finished summoning and become a permanent demon. Take a moment to review the result, then continue to Collection to learn how Training makes it stronger.',
+        body: 'Your Echo is now permanent. Continue to Collection for Training.',
         progress,
         icon: 'sparkles',
         target: viewCollection || summonResult,
@@ -1083,7 +1069,7 @@
     if (bag.summoned) {
       return {
         title: 'Your permanent demon is ready',
-        body: 'The Echo has become a permanent demon. Continue to Collection to find it and learn how Training makes it stronger.',
+        body: 'Your Echo is now permanent. Continue to Collection for Training.',
         progress,
         icon: 'sparkles',
         target: '#bagGrid',
@@ -1110,7 +1096,7 @@
       if (summonButton) {
         return {
           title: 'Summon a permanent demon',
-          body: 'A Common Echo needs only one copy. Choose Summon Demon to turn this Echo into a permanent Collection demon.',
+          body: 'Choose Summon Demon. This Common Echo needs one copy.',
           progress,
           icon: 'sparkles',
           target: summonButton,
@@ -1125,7 +1111,7 @@
     }
     return {
       title: 'Your Echo is in the Bag',
-      body: 'Open the highlighted Echo. Echoes of the same demon stack here; when an unowned demon is ready to manifest, a short Summon tip will appear.',
+      body: 'Open the highlighted Echo, then Summon it.',
       progress,
       icon: 'amphora',
       target: echoTarget,
@@ -1140,7 +1126,7 @@
     if (collection.trainingComplete) {
       return {
         title: 'Training complete',
-        body: 'Now that we\'re done training, let\'s go back to check on our Hunt results.',
+        body: 'Now return to World and check your Hunt.',
         progress,
         icon: 'book-plus',
         centered: true,
@@ -1159,8 +1145,8 @@
       return {
         title: affordable ? 'Train once with Souls' : 'Training uses earned Souls',
         body: affordable
-          ? `This first attempt costs ${cost || 'a few'} Souls. Training can raise Health, Attack, or Speed; success is not guaranteed. Auto Train repeats attempts within a budget you choose.`
-          : `This demon's next attempt costs ${cost || 'more'} Souls. Hunts and Dungeons provide more; Auto Train can repeat attempts within a budget later.`,
+          ? `Spend ${cost || 'a few'} Souls for one chance to raise a stat. Auto Train can repeat attempts later.`
+          : `This attempt costs ${cost || 'more'} Souls. Hunts and Dungeons provide more.`,
         progress,
         icon: 'book-plus',
         target: trainOnce,
@@ -1174,7 +1160,7 @@
     if (modalOpen) {
       return {
         title: 'Choose a demon that can still grow',
-        body: 'Close these details, then open the highlighted permanent demon. Fully trained demons no longer show Training actions.',
+        body: 'Close this, then open the highlighted demon.',
         progress,
         icon: 'book-plus',
         target: '#demonDetailModal.show [data-bs-dismiss="modal"]',
@@ -1188,8 +1174,8 @@
     if (trainingCard) {
       revealCollectionTrainingCard(trainingCard);
       return {
-        title: 'Click on a demon card',
-        body: 'Collection holds the demons you own permanently. Open the highlighted demon to find Train and Auto Train.',
+        title: 'Open a demon card',
+        body: 'Open the highlighted demon to find Training.',
         progress,
         icon: 'grid-3x3',
         target: trainingCard,
@@ -1200,7 +1186,7 @@
 
     return {
       title: 'Your Collection is ready',
-      body: 'Training raises permanent demon stats with Souls. Every visible demon here is already fully trained, so there is no attempt to make now.',
+      body: 'These demons are fully trained, so there is nothing to spend.',
       progress,
       icon: 'book-plus',
       target: '#collectionGrid',
@@ -1229,8 +1215,8 @@
       contextGuide: 'summon',
       title: summonAction ? 'Summon this demon permanently' : 'A new demon is ready to Summon',
       body: summonAction
-        ? 'These matching Echoes have filled the requirement. Summon consumes them and adds this demon to your permanent Collection.'
-        : 'This glowing stack belongs to a demon you do not own yet. Open it to see the completed Summon meter.',
+        ? 'The meter is full. Summon consumes these Echoes and unlocks the demon.'
+        : 'Open the glowing stack to view its full Summon meter.',
       progress: 'Summon tip',
       icon: 'sparkles',
       target: summonAction || (key ? `[data-bag-key="${key}"]` : '#bagGrid'),
@@ -1249,10 +1235,10 @@
       contextGuide: 'training',
       title: autoTrainSubmit ? 'Choose an Auto Train budget' : trainingAction ? 'Train with Souls' : 'Train a permanent demon',
       body: autoTrainSubmit
-        ? 'Choose how many Souls this session may spend. Auto Train repeats attempts until the budget, stat cap, or attempt limit is reached.'
+        ? 'Set a Souls budget. Auto Train stops when it reaches that limit.'
         : trainingAction
-        ? 'Train spends Souls for one stat-growth attempt. Auto Train repeats attempts within the budget you choose; success is never guaranteed.'
-        : 'Open this permanent demon to find Train and Auto Train. Training can raise Health, Attack, or Speed.',
+        ? 'Train spends Souls for one stat attempt. Auto Train repeats it.'
+        : 'Open this demon to find Train and Auto Train.',
       progress: 'Training tip',
       icon: 'book-plus',
       target: autoTrainSubmit || trainingAction || (id ? `.collection-demon-card[data-demon-id="${id}"]` : '#collectionGrid'),
@@ -1267,7 +1253,7 @@
       return {
         contextGuide: 'skill-tree',
         title: 'Level up: spend a Skill Point',
-        body: 'Each account level grants a point for permanent, account-wide bonuses. Open Skill Tree to choose where this level strengthens every team.',
+        body: 'Level-ups grant Skill Points for permanent bonuses. Open the Skill Tree.',
         progress: 'Level-up tip',
         icon: 'stars',
         target: '[data-game-route="skill-tree"]'
@@ -1280,8 +1266,8 @@
       contextGuide: 'skill-tree',
       title: saveButton ? 'Seal your Skill Tree choice' : 'Choose a permanent bonus',
       body: saveButton
-        ? 'Your point is only a draft until you press Save. Sealing it activates the bonus across World, Dungeon, and Ranked teams.'
-        : 'Choose any glowing unlocked node. Some branches unlock only after earlier ranks are filled.',
+        ? 'Press Save to activate this bonus everywhere.'
+        : 'Choose any glowing unlocked node.',
       progress: 'Level-up tip',
       icon: 'stars',
       target: saveButton || ['[data-stat-point-key]:not(.is-locked):not(.is-disabled)', '#skillTreeUnspentCard'],
@@ -1293,7 +1279,7 @@
     return {
       ...previousView,
       title: 'Skip the tutorial?',
-      body: 'The guide will stop for this account. You can replay it from Settings at any time.',
+      body: 'This skips the guide for this account. Replay it later in Settings.',
       primaryLabel: 'Keep Going',
       onPrimary: () => {
         model.confirmSkip = false;
@@ -1678,7 +1664,7 @@
     if (model.localSteps.worldHuntRewards >= 2 || model.eventState.worldHunt.claimed) {
       return {
         title: 'Hunt rewards secured',
-        body: 'The XP and Souls are yours, and the Hunt can keep running. You now know the full loop: explore, Hunt, collect Echoes, Summon, and Train.',
+        body: 'Keep the XP and Souls. Hunt can continue in the background.',
         progress,
         icon: 'hand-coins',
         centered: true,
@@ -1692,7 +1678,7 @@
     if (!sideExpanded) {
       return {
         title: 'Return to your Hunt',
-        body: 'Open the World activity panel to see what your Active Team earned while you were in the Dungeon.',
+        body: 'Open the World panel to check what your team earned.',
         progress,
         icon: 'timer',
         target: sideToggle,
@@ -1705,7 +1691,7 @@
     if (claimButton && !claimButton.disabled) {
       return {
         title: 'Claim the Hunt rewards',
-        body: 'Your Active Team kept working while you explored the Dungeon. Claim its banked XP and Souls; Hunt can continue afterward.',
+        body: 'Claim the banked XP and Souls. Hunt can continue afterward.',
         progress,
         icon: 'hand-coins',
         target: claimButton,
@@ -1716,7 +1702,7 @@
     if (claimButton) {
       return {
         title: 'Your Hunt is still building rewards',
-        body: 'No need to wait here. The Hunt continues banking XP and Souls, and you can claim them later from this panel.',
+        body: 'No need to wait. Claim the banked rewards later.',
         progress,
         icon: 'timer',
         centered: true,
@@ -1727,7 +1713,7 @@
 
     return {
       title: 'No Hunt rewards this time',
-      body: 'There is no active Hunt to claim from this run. Defeat a World spot and start Hunt whenever you want passive XP and Souls.',
+      body: 'Nothing to claim now. Start any Hunt when you are ready.',
       progress,
       icon: 'hand-coins',
       centered: true,
