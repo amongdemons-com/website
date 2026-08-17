@@ -5588,7 +5588,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/merchant/crowley.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/crowley.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Traveling Merchant</span>
@@ -9369,7 +9369,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card world-soul-font-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/events/soul-font.webp?v=93bca6f999e6" alt="" width="768" height="768" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/soul-font.webp?v=93bca6f999e6" alt="" width="768" height="768" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Soul Offering</span>
