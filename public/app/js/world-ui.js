@@ -4874,7 +4874,7 @@ import './bag-item-visuals.js';
   function renderWorldTeamEditorEmptySlot(position, slotNumber) {
     return `
       <div class="formation-empty formation-empty-${position}" aria-hidden="true" data-slot-number="${slotNumber}">
-        <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" width="1024" height="1024" loading="lazy" decoding="async" draggable="false">
+        ${renderFormationSlotPlaceholder(position)}
       </div>
     `;
   }
@@ -7761,7 +7761,7 @@ import './bag-item-visuals.js';
   function renderWorldBattleEmptySlot(position, slotNumber) {
     return `
       <div class="formation-empty formation-empty-${position}" aria-hidden="true" data-slot-number="${slotNumber}">
-        <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" width="1024" height="1024" loading="lazy" decoding="async" draggable="false">
+        ${renderFormationSlotPlaceholder(position)}
       </div>
     `;
   }
@@ -8044,6 +8044,14 @@ import './bag-item-visuals.js';
     const column = (normalizedSlot === null ? 0 : normalizedSlot) % FORMATION_GRID_COLUMNS;
     const frontColumn = side === 'enemy' ? 0 : FORMATION_GRID_COLUMNS - 1;
     return column === frontColumn ? 'front' : 'back';
+  }
+
+  function renderFormationSlotPlaceholder(position) {
+    const options = { size: 96, strokeWidth: 1.5 };
+    const icon = position === 'front'
+      ? renderIcon('shield', options)
+      : renderIcon('ranged', options);
+    return `<span class="formation-slot-placeholder-icon" aria-hidden="true">${icon}</span>`;
   }
 
   function normalizeFormationSlot(slot) {

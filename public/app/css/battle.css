@@ -4110,15 +4110,20 @@ body:not(.dungeon-page) > .navbar {
     box-shadow: inset 0 0 26px rgba(0,0,0,0.16);
 }
 
-.battle-side .formation-slot-placeholder-img {
-    display: block;
-    width: 78%;
-    height: 78%;
-    object-fit: contain;
-    opacity: 0.24;
+.battle-side .formation-slot-placeholder-icon {
+    display: grid;
+    place-items: center;
+    width: 60%;
+    height: 60%;
+    opacity: 0.26;
     filter: drop-shadow(0 0 12px rgba(207,226,220,0.14));
     pointer-events: none;
     user-select: none;
+}
+
+.battle-side .formation-slot-placeholder-icon svg {
+    width: 100%;
+    height: 100%;
 }
 
 .battle-side .formation-empty::before {
@@ -4157,7 +4162,7 @@ body:not(.dungeon-page) > .navbar {
     color: rgba(255,159,150,0.4);
 }
 
-.battle-side-enemy .formation-slot-placeholder-img {
+.battle-side-enemy .formation-slot-placeholder-icon {
     filter: drop-shadow(0 0 12px rgba(255,159,150,0.12));
 }
 

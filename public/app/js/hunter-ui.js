@@ -387,7 +387,7 @@
   function renderEmptyFormationSlot(position, slotNumber) {
     return `
       <div class="formation-empty formation-empty-${position}" aria-hidden="true" data-slot-number="${slotNumber}">
-        <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" width="1024" height="1024" loading="lazy" decoding="async" draggable="false">
+        ${renderFormationSlotPlaceholder(position)}
       </div>
     `;
   }
@@ -606,13 +606,21 @@
     return normalizeSlot(slot) % 3 === 2 ? 'front' : 'back';
   }
 
+  function renderFormationSlotPlaceholder(position) {
+    const options = { size: 96, strokeWidth: 1.5 };
+    const icon = position === 'front'
+      ? renderIcon('shield', options)
+      : renderIcon('ranged', options);
+    return `<span class="formation-slot-placeholder-icon" aria-hidden="true">${icon}</span>`;
+  }
+
   function renderEmpty(text) {
     return `<p class="hunter-empty">${escapeHtml(text)}</p>`;
   }
 
-  function renderIcon(name) {
+  function renderIcon(name, options = {}) {
     const renderer = window.AmongDemons?.ui?.renderIcon;
-    return typeof renderer === 'function' ? renderer(name, { size: 18 }) : '';
+    return typeof renderer === 'function' ? renderer(name, { size: 18, ...options }) : '';
   }
 
   function renderRankDivisionText(division) {

@@ -103,6 +103,14 @@ function getFormationSlotPosition(cellIndex, side = 'player') {
   return column === frontColumn ? 'front' : 'back';
 }
 
+function renderFormationSlotPlaceholder(position) {
+  const options = { size: 96, strokeWidth: 1.5 };
+  const icon = position === 'front'
+    ? renderIcon('shield', options)
+    : renderIcon('ranged', options);
+  return `<span class="formation-slot-placeholder-icon" aria-hidden="true">${icon}</span>`;
+}
+
 // Visual-only lane label (front / mid / back) used for responsive styling hooks.
 // Targeting/combat logic only ever cares about the binary front/back position above;
 // this just describes which depth column a slot lives in so CSS can re-orient the
@@ -152,14 +160,14 @@ function renderEmptyFormationSlot(position, slotNumber, options = {}) {
   if (options.collectionTeamTrigger) {
     return `
       <button class="formation-empty formation-empty-${position} collection-reinforcement-team-slot" type="button" data-slot-number="${slotNumber}" aria-label="Add a Collection demon to team slot ${slotNumber}" title="Add from collection">
-        <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" width="1024" height="1024" loading="lazy" decoding="async" draggable="false">
+        ${renderFormationSlotPlaceholder(position)}
       </button>
     `;
   }
 
   return `
     <div class="formation-empty formation-empty-${position}" aria-hidden="true" data-slot-number="${slotNumber}">
-      <img class="formation-slot-placeholder-img" src="/app/images/assets/amongdemons_team_slot_placeholder.png" alt="" width="1024" height="1024" loading="lazy" decoding="async" draggable="false">
+      ${renderFormationSlotPlaceholder(position)}
     </div>
   `;
 }
