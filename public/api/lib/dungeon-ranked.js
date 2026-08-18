@@ -238,7 +238,10 @@ function createDungeonRankedEncounter(opponent, context) {
 async function selectDungeonRankedOpponent(criteria, queryable = db, options = {}) {
   const minLevel = Math.max(1, criteria.playerLevel - DUNGEON_RANKED_LEVEL_RANGE);
   const maxLevel = criteria.playerLevel + DUNGEON_RANKED_LEVEL_RANGE;
-  const playerRating = Math.max(0, Math.floor(Number(criteria.playerRating) || DEFAULT_RATING));
+  const rawPlayerRating = Number(criteria.playerRating);
+  const playerRating = Number.isFinite(rawPlayerRating)
+    ? Math.max(0, Math.floor(rawPlayerRating))
+    : DEFAULT_RATING;
   const minRating = Math.max(0, playerRating - DUNGEON_RANKED_RATING_RANGE);
   const maxRating = playerRating + DUNGEON_RANKED_RATING_RANGE;
   const [rows] = await queryable.query(
@@ -325,7 +328,7 @@ async function selectDungeonRankedOpponent(criteria, queryable = db, options = {
     rating,
     division: getDivision(rating).name,
     team: snapshot.team,
-    buffs: stripTerrorCombatBuffs(snapshot.buffs || {})
+    buffs: normalizeDungeonRankedEnemyBuffs(snapshot.buffs || {})
   };
 }
 
@@ -411,7 +414,30 @@ async function applyDungeonRankedRatingResult(run, winner, connection) {
 }
 
 function getDungeonRankedEnemyBuffs(run) {
-  return stripTerrorCombatBuffs(run?.state?.rankedEncounter?.enemyBuffs || {});
+  return normalizeDungeonRankedEnemyBuffs(run?.state?.rankedEncounter?.enemyBuffs || {});
+}
+
+function normalizeDungeonRankedEnemyBuffs(buffs) {
+  const normalized = stripTerrorCombatBuffs(buffs);
+  const mirroredActiveCounts = normalized.active.reduce((counts, id) => {
+    counts.set(id, (counts.get(id) || 0) + 1);
+    return counts;
+  }, new Map());
+
+  const activeBuffs = normalized.activeBuffs.filter((buff) => {
+    if (buff.source !== 'combat') return true;
+
+    const mirroredCount = mirroredActiveCounts.get(buff.id) || 0;
+    if (mirroredCount <= 0) return true;
+
+    mirroredActiveCounts.set(buff.id, mirroredCount - 1);
+    return false;
+  });
+
+  return normalizeCombatBuffState({
+    ...normalized,
+    activeBuffs
+  });
 }
 
 function stripTerrorCombatBuffs(buffs) {

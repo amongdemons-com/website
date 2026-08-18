@@ -6,6 +6,8 @@
 
 <!-- Add future player-facing changes for Patch 6 below this line. -->
 
+- Ranked Dungeon ghosts no longer receive a second copy of their Pacts, and
+  hunters at 0 RP are now matched in the correct rating range.
 - Tutorial prompts are now shorter and focus on one action at a time, with
   extra strategy notes removed from the core journey.
 - Resetting the Skill Tree now pays out and immediately ends any active World

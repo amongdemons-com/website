@@ -21,7 +21,10 @@ const {
   selectDungeonRankedOpponent,
   serializeDungeonRankedEncounter
 } = require('../public/api/lib/dungeon-ranked');
-const { applyPreBattleBuffs } = require('../public/api/lib/combat-buffs');
+const {
+  applyPreBattleBuffs,
+  serializeCombatBuffState
+} = require('../public/api/lib/combat-buffs');
 const { advanceDungeonFloor } = require('../public/api/lib/dungeon-progression');
 const { serializeRun } = require('../public/api/lib/run-serialization');
 
@@ -269,6 +272,43 @@ test('Ranked dungeon snapshots reject Terror while preserving captured player bu
   assert.equal(preview[0].speed, 10);
 });
 
+test('serialized Ranked Pacts do not reapply stats already stored on the ghost team', () => {
+  const serializedBuffs = serializeCombatBuffState({
+    active: ['living_fortress'],
+    activeBuffs: [{
+      id: 'skill_vitality',
+      name: 'Soulbound Vitality',
+      source: 'skill_tree',
+      effects: [{ type: 'max_hp_flat', value: 25 }]
+    }]
+  });
+  const run = {
+    state: {
+      rankedEncounter: {
+        enemyBuffs: serializedBuffs
+      }
+    }
+  };
+  const enemyBuffs = getDungeonRankedEnemyBuffs(run);
+  const preview = applyPreBattleBuffs([{
+    instanceId: 'ranked-ghost',
+    maxHp: 125,
+    hp: 125,
+    atk: 10,
+    speed: 9,
+    runBuffStatsApplied: true
+  }], enemyBuffs)[0];
+
+  assert.deepEqual(enemyBuffs.active, ['living_fortress']);
+  assert.deepEqual(enemyBuffs.activeBuffs.map((buff) => buff.id), ['skill_vitality']);
+  assert.deepEqual(
+    serializeCombatBuffState(enemyBuffs).activeBuffs.map((buff) => buff.id),
+    ['living_fortress', 'skill_vitality']
+  );
+  assert.equal(preview.maxHp, 150);
+  assert.equal(preview.speed, 9);
+});
+
 test('opponent formations mirror their exact player-side slots', () => {
   const opponent = namespaceDungeonRankedOpponentTeam([
     { instanceId: 'front', formationSlot: 2, position: 'front' },
@@ -337,6 +377,38 @@ test('snapshot matchmaking uses capture-time RP instead of the opponent current 
   assert.equal(opponent.hunterName, 'Rival');
   assert.equal(opponent.division, 'Silver III');
   assert.deepEqual(opponent.buffs.active, ['shared_pain']);
+});
+
+test('snapshot matchmaking preserves zero RP for both sides of the match', async () => {
+  let receivedParams;
+  const opponent = await selectDungeonRankedOpponent({
+    playerId: 'player-a',
+    seasonId: 'season-a',
+    floor: 30,
+    playerLevel: 12,
+    playerRating: 0
+  }, {
+    async query(sql, params) {
+      receivedParams = params;
+      return [[{
+        id: 'zero-rp-snapshot',
+        player_id: 'player-b',
+        hunter_name: 'Zero Rival',
+        player_level: 12,
+        rating: 0,
+        previously_served: null,
+        snapshot: JSON.stringify({
+          snapshotVersion: DUNGEON_RANKED_SNAPSHOT_VERSION,
+          team: [{ instanceId: 'zero-rp-demon', formationSlot: 2 }],
+          buffs: {}
+        })
+      }]];
+    }
+  }, { random: () => 0 });
+
+  assert.equal(receivedParams[8], 0);
+  assert.equal(receivedParams[9], DUNGEON_RANKED_RATING_RANGE);
+  assert.equal(opponent.rating, 0);
 });
 
 test('missing eligible snapshots return no Ranked encounter', async () => {
