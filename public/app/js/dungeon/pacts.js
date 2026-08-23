@@ -10,7 +10,14 @@ const isCurrentFloorBattle = (...args) => dungeonActions.isCurrentFloorBattle(..
 const prepareRecruitStrategyState = (...args) => dungeonActions.prepareRecruitStrategyState(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
 const DEMON_RARITY_TOKEN_PATTERN = /(\[(?:common|uncommon|rare|epic|legendary|mythic)\])/gi;
+const PACT_TIERS = Object.freeze({
+  common: { number: 1, numeral: 'I', label: 'Pact Tier I' },
+  uncommon: { number: 2, numeral: 'II', label: 'Pact Tier II' },
+  rare: { number: 3, numeral: 'III', label: 'Pact Tier III' }
+});
 let activePactTooltipEventsBound = false;
+let demonicPactAlignmentResizeBound = false;
+let demonicPactAlignmentFrame = null;
 
 function hasPendingBuffChoices(run = state.run) {
   return getPendingBuffChoices(run).length > 0;
@@ -32,6 +39,7 @@ function renderDemonicPacts(isVisible = hasPendingBuffChoices()) {
     syncDemonicPactView();
     clearDemonicPactRecastAnimation();
     elements.dungeonPactGrid.innerHTML = '';
+    elements.dungeonPactGrid.style.removeProperty('--demonic-pact-copy-height');
     if (elements.dungeonPactActions) elements.dungeonPactActions.innerHTML = '';
     return;
   }
@@ -39,6 +47,8 @@ function renderDemonicPacts(isVisible = hasPendingBuffChoices()) {
   if (!wasVisible) state.isPactTeamPreview = false;
   const choices = getPendingBuffChoices();
   elements.dungeonPactGrid.innerHTML = choices.map(renderDemonicPactCard).join('');
+  syncDemonicPactCardAlignment();
+  bindDemonicPactCardAlignmentResize();
   if (elements.dungeonPactActions) {
     elements.dungeonPactActions.innerHTML = renderDemonicPactActions();
     bindClick(document.getElementById('demonicPactRerollBtn'), (event) => rerollDemonicPacts(event.currentTarget));
@@ -59,25 +69,103 @@ function syncDemonicPactView() {
   if (!elements.demonicPactViewToggle) return;
 
   elements.demonicPactViewToggle.classList.toggle('d-none', isTeamPreview);
-  elements.demonicPactViewToggle.textContent = 'View Team';
   elements.demonicPactViewToggle.setAttribute('aria-expanded', String(!isTeamPreview));
 }
 
+function syncDemonicPactCardAlignment() {
+  const grid = elements.dungeonPactGrid;
+  if (!grid) return;
+
+  grid.style.removeProperty('--demonic-pact-copy-height');
+  if (window.matchMedia?.('(max-width: 575.98px) and (orientation: portrait)').matches) return;
+
+  const copyBlocks = Array.from(grid.querySelectorAll('.demonic-pact-card-copy'));
+  const tallestCopy = copyBlocks.reduce((height, copy) => {
+    const boundsHeight = Number(copy.getBoundingClientRect?.().height) || 0;
+    return Math.max(height, boundsHeight, Number(copy.scrollHeight) || 0);
+  }, 0);
+
+  if (tallestCopy > 0) {
+    grid.style.setProperty('--demonic-pact-copy-height', `${Math.ceil(tallestCopy)}px`);
+  }
+}
+
+function bindDemonicPactCardAlignmentResize() {
+  if (demonicPactAlignmentResizeBound || typeof window.addEventListener !== 'function') return;
+  demonicPactAlignmentResizeBound = true;
+  window.addEventListener('resize', () => {
+    if (demonicPactAlignmentFrame !== null && typeof window.cancelAnimationFrame === 'function') {
+      window.cancelAnimationFrame(demonicPactAlignmentFrame);
+    }
+    if (typeof window.requestAnimationFrame === 'function') {
+      demonicPactAlignmentFrame = window.requestAnimationFrame(() => {
+        demonicPactAlignmentFrame = null;
+        syncDemonicPactCardAlignment();
+      });
+      return;
+    }
+    syncDemonicPactCardAlignment();
+  });
+}
+
 function renderDemonicPactCard(buff) {
-  const rarity = String(buff.rarity || 'common').toLowerCase();
-  const tags = Array.isArray(buff.tags) ? buff.tags : [];
+  const tier = getPactTier(buff.rarity);
+  const tags = (Array.isArray(buff.tags) ? buff.tags : [])
+    .filter((tag) => String(tag).toLowerCase() !== 'rarity');
   const icon = buff.icon || 'sparkles';
+  const targetsHtml = renderDemonicPactTargets(buff);
 
   return `
-    <button class="demonic-pact-card is-${escapeHtml(rarity)}" type="button" data-demonic-pact-id="${escapeHtml(buff.id)}">
-      <span class="demonic-pact-icon" aria-hidden="true">${renderIcon(icon, { size: 42, strokeWidth: 1.85 })}</span>
-      <span class="demonic-pact-rarity rarity-${escapeHtml(rarity)}">${escapeHtml(capitalize(rarity))}</span>
-      <strong>${escapeHtml(buff.name || buff.id)}</strong>
-      <span class="demonic-pact-description">${renderDemonicPactDescription(buff.description)}</span>
+    <button class="demonic-pact-card is-tier-${tier.number}" type="button" data-demonic-pact-id="${escapeHtml(buff.id)}">
+      <span class="demonic-pact-card-main">
+        <span class="demonic-pact-card-emblem">
+          <span class="demonic-pact-icon" aria-hidden="true">${renderIcon(icon, { size: 42, strokeWidth: 1.85 })}</span>
+          ${renderDemonicPactTier(tier)}
+        </span>
+        <span class="demonic-pact-card-copy">
+          <strong>${escapeHtml(buff.name || buff.id)}</strong>
+          <span class="demonic-pact-description">${renderDemonicPactDescription(buff.description)}</span>
+        </span>
+      </span>
+      ${targetsHtml}
       <span class="demonic-pact-tags">
         ${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}
       </span>
     </button>
+  `;
+}
+
+function getPactTier(rarity = 'common') {
+  return PACT_TIERS[String(rarity || 'common').toLowerCase()] || PACT_TIERS.common;
+}
+
+function renderDemonicPactTier(tier = PACT_TIERS.common) {
+  return `
+    <span class="demonic-pact-tier" aria-label="${escapeHtml(tier.label)}">
+      <span class="demonic-pact-tier-label">Pact Tier</span>
+      <span class="demonic-pact-tier-value">${escapeHtml(tier.numeral)}</span>
+    </span>
+  `;
+}
+
+function getDemonicPactTargetRarities(buff = {}) {
+  return (Array.isArray(buff.effects) ? buff.effects : [])
+    .flatMap((effect) => Array.isArray(effect?.targetRarities) ? effect.targetRarities : [])
+    .map((rarity) => String(rarity || '').toLowerCase())
+    .filter((rarity, index, rarities) => rarity && rarities.indexOf(rarity) === index);
+}
+
+function renderDemonicPactTargets(buff = {}) {
+  const targetRarities = getDemonicPactTargetRarities(buff);
+  if (!targetRarities.length) return '';
+
+  return `
+    <span class="demonic-pact-targets" aria-label="Affects ${escapeHtml(targetRarities.map(capitalize).join(' and '))} demons">
+      <span class="demonic-pact-targets-label">Affects</span>
+      <span class="demonic-pact-target-list">
+        ${targetRarities.map((rarity) => `<span class="demonic-pact-target rarity-${escapeHtml(rarity)}">${escapeHtml(capitalize(rarity))}</span>`).join('')}
+      </span>
+    </span>
   `;
 }
 
@@ -89,13 +177,12 @@ function renderDemonicPactDescription(description = '') {
       if (!match) return escapeHtml(part);
 
       const rarity = match[1].toLowerCase();
-      return `<span class="demonic-pact-rarity-token rarity-${escapeHtml(rarity)}">${escapeHtml(part)}</span>`;
+      return `<span class="demonic-pact-rarity-token rarity-${escapeHtml(rarity)}">${escapeHtml(capitalize(rarity))}</span>`;
     })
     .join('');
 }
 
 function renderActivePactIcon(buff) {
-  const rarity = String(buff.rarity || 'common').toLowerCase();
   const tooltip = getActivePactTooltip(buff);
   const escapedTooltip = escapeTooltipAttribute(tooltip);
   const tagName = buff.href ? 'a' : 'button';
@@ -107,7 +194,7 @@ function renderActivePactIcon(buff) {
 
   return `
     <${tagName}
-      class="active-pact-chip is-${escapeHtml(rarity)} ${attentionClass} ${temporaryClass}"
+      class="active-pact-chip ${attentionClass} ${temporaryClass}"
       ${linkAttributes}
       data-active-pact-id="${escapeHtml(buff.id)}"
       data-tooltip="${escapedTooltip}"
@@ -201,8 +288,12 @@ function formatPactPercentage(value) {
 
 function getActivePactTooltip(buff = {}) {
   const baseTooltip = buff.tooltip || `${buff.name || buff.id}: ${buff.description || ''}`;
+  const targetRarities = getDemonicPactTargetRarities(buff);
+  const targetTooltip = targetRarities.length
+    ? `Affects: ${targetRarities.map(capitalize).join(' and ')} demons.`
+    : '';
   const expiryTooltip = getBuffExpiryTooltip(buff);
-  return [baseTooltip, expiryTooltip].filter(Boolean).join('\n');
+  return [baseTooltip, targetTooltip, expiryTooltip].filter(Boolean).join('\n');
 }
 
 function getBuffExpiryTooltip(buff = {}) {
@@ -496,6 +587,9 @@ export {
   renderActivePactIcon,
   renderStackedActivePactIcon,
   renderDemonicPactCard,
+  getPactTier,
+  getDemonicPactTargetRarities,
+  syncDemonicPactCardAlignment,
   chooseDemonicPact,
   rerollDemonicPacts
 };

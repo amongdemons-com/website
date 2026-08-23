@@ -171,7 +171,6 @@
             ${hasNumber(demon.atk) ? renderDetailStat(renderAttackIcon(demon), attackStat.label, attackStat.value, attackStat.description) : ''}
             ${hasNumber(demon.speed) && !isRetaliateDemon(demon) ? renderDetailStat(renderSpeedIcon(), 'Speed', demon.speed, 'Speed') : ''}
             ${hasNumber(demon.hp) || hasNumber(demon.maxHp) ? renderDetailStat(renderIcon('hp'), 'HP', `${currentHp} / ${maxHp}`, 'HP') : ''}
-            ${renderDetailStatToggle(options.statToggle)}
           </div>
 
           ${renderDetailMeta(demon)}
@@ -181,6 +180,8 @@
               ${options.detailHtml}
             </div>
           ` : ''}
+
+          ${renderDetailStatToggle(options.statToggle)}
 
           ${actions.length ? `
             <div class="demon-detail-actions">
@@ -239,10 +240,12 @@
     const label = toggle.label || 'Show with buffs applied';
     const description = toggle.description || label;
     return `
-      <label class="demon-detail-stat-toggle" title="${escapeHtml(description)}">
-        <input type="checkbox" data-demon-detail-stat-toggle ${toggle.checked ? 'checked' : ''}>
-        <span>${escapeHtml(label)}</span>
-      </label>
+      <div class="demon-detail-stat-toggle-row">
+        <label class="demon-detail-stat-toggle" title="${escapeHtml(description)}">
+          <input type="checkbox" data-demon-detail-stat-toggle ${toggle.checked ? 'checked' : ''}>
+          <span>${escapeHtml(label)}</span>
+        </label>
+      </div>
     `;
   }
 

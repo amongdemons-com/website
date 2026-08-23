@@ -6,6 +6,8 @@
 
 <!-- Add future player-facing changes for Patch 6 below this line. -->
 
+- Demonic Pacts now use distinct Pact Tiers, clearer centered choice cards,
+  explicit rarity targets, and a more visible View Team action.
 - Team demon details can now switch between base stats and stats with active
   Pacts and buffs applied.
 - Ranked Dungeon ghosts no longer receive a second copy of their Pacts, and

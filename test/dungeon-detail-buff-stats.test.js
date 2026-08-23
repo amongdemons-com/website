@@ -90,7 +90,9 @@ test('only player-team detail cards offer a remembered in-card buff-stat checkbo
   assert.match(modalSource, /hasDungeonBuffedStatDifference\(baseDemon, buffedDemon\)/);
   assert.match(modalSource, /label: 'Show with buffs applied'/);
   assert.match(cardSource, /data-demon-detail-stat-toggle/);
+  assert.match(cardSource, /\$\{renderDetailMeta\(demon\)\}[\s\S]*\$\{renderDetailStatToggle\(options\.statToggle\)\}/);
   assert.match(css, /\.demon-detail-stat-toggle/);
+  assert.match(css, /\.demon-detail-stat-toggle-row\s*{[^}]*margin-top:\s*auto;/s);
   assert.doesNotMatch(cardSource, /demon-detail-stat-bonus/);
   assert.doesNotMatch(css, /demon-detail-buff-track/);
 });
