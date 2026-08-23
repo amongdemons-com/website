@@ -1,8 +1,8 @@
 import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
-import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
+import { RUN_KEY, BATTLE_SPEED_KEY, DUNGEON_DETAIL_BUFF_STATS_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
+import { renderSharedCombatStats, openDemonDetailsModal } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const addCollectionReinforcementToPool = (...args) => dungeonActions.addCollectionReinforcementToPool(...args);
@@ -17,6 +17,7 @@ const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreview
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
 const applyDungeonCombatStatPreviewToDemon = (...args) => dungeonActions.applyDungeonCombatStatPreviewToDemon(...args);
+const getDungeonBaseStatPreviewDemon = (...args) => dungeonActions.getDungeonBaseStatPreviewDemon(...args);
 const canExtractRun = (...args) => dungeonActions.canExtractRun(...args);
 const getRewardCandidates = (...args) => dungeonActions.getRewardCandidates(...args);
 const getSelectedCollectionReinforcements = (...args) => dungeonActions.getSelectedCollectionReinforcements(...args);
@@ -282,16 +283,7 @@ function bindDemonDetailCards() {
     card.addEventListener('click', (event) => {
       if (event.defaultPrevented || card.classList.contains('is-dragging') || card.classList.contains('suppress-detail-click')) return;
 
-      const demon = getDemonForDetailCard(card);
-      if (!demon) return;
-      const extractionCandidate = getExtractionCandidateForDetailCard(card);
-      if (demon.recruitSource === 'collection') {
-        markCollectionReinforcementStagedInteracted(demon.instanceId);
-      }
-
-      openDemonDetailsModal(demon, {
-        actions: getDungeonDetailActions(extractionCandidate)
-      });
+      openDungeonDemonDetails(card);
     });
 
     card.addEventListener('keydown', (event) => {
@@ -301,6 +293,46 @@ function bindDemonDetailCards() {
       card.click();
     });
   });
+}
+
+function openDungeonDemonDetails(card, showBuffStats = null, focusStatToggle = false) {
+  const isPlayerTeamCard = Boolean(card?.closest('#teamGrid'));
+  const shouldShowBuffStats = isPlayerTeamCard
+    ? showBuffStats ?? readDungeonDetailBuffStatsPreference()
+    : true;
+  const sourceDemon = isPlayerTeamCard ? getPlayerTeamDetailSourceDemon(card) : null;
+  const baseDemon = sourceDemon ? getDungeonBaseStatPreviewDemon(sourceDemon) : null;
+  const buffedDemon = sourceDemon ? applyDungeonCombatStatPreviewToDemon(sourceDemon) : null;
+  const demon = isPlayerTeamCard
+    ? shouldShowBuffStats ? buffedDemon : baseDemon
+    : getDemonForDetailCard(card);
+  if (!demon?.instanceId) return;
+
+  const extractionCandidate = getExtractionCandidateForDetailCard(card);
+  if (demon.recruitSource === 'collection') {
+    markCollectionReinforcementStagedInteracted(demon.instanceId);
+  }
+
+  openDemonDetailsModal(demon, {
+    actions: getDungeonDetailActions(extractionCandidate),
+    statToggle: isPlayerTeamCard && hasDungeonBuffedStatDifference(baseDemon, buffedDemon)
+      ? {
+        checked: shouldShowBuffStats,
+        label: 'Show with buffs applied',
+        description: 'Switch between this demon\'s base stats and its stats with active Pacts and buffs applied.',
+        onChange: (checked) => {
+          writeDungeonDetailBuffStatsPreference(checked);
+          openDungeonDemonDetails(card, checked, true);
+        }
+      }
+      : null
+  });
+
+  if (focusStatToggle) {
+    window.requestAnimationFrame?.(() => {
+      document.querySelector('[data-demon-detail-stat-toggle]')?.focus();
+    });
+  }
 }
 
 function getExtractionCandidateForDetailCard(card) {
@@ -329,6 +361,47 @@ function getDemonForDetailCard(card) {
     ...(state.isRecruiting ? getRecruitPreviewHand() : state.battleHandPreview || []).map(applyDungeonCombatStatPreviewToDemon),
     ...(state.isRecruiting ? getRecruitPreviewEnemyTeam() : state.run?.enemies || [])
   ].filter(Boolean).find((demon) => demon.instanceId === instanceId) || null;
+}
+
+function getPlayerTeamDetailSourceDemon(card) {
+  const instanceId = card?.dataset.instanceId;
+  if (!instanceId) return null;
+  const team = state.isRecruiting
+    ? state.recruitDraftTeam || []
+    : state.run?.team || [];
+
+  return team.find((demon) => (
+    demon?.instanceId === instanceId
+    || demon?.originalInstanceId === instanceId
+  )) || null;
+}
+
+function hasDungeonBuffedStatDifference(baseDemon = {}, buffedDemon = {}) {
+  return getDungeonDetailAttackValue(baseDemon) !== getDungeonDetailAttackValue(buffedDemon)
+    || Math.round(Number(baseDemon.maxHp) || Number(baseDemon.hp) || 0) !== Math.round(Number(buffedDemon.maxHp) || Number(buffedDemon.hp) || 0)
+    || Math.round(Number(baseDemon.speed) || 0) !== Math.round(Number(buffedDemon.speed) || 0);
+}
+
+function getDungeonDetailAttackValue(demon = {}) {
+  const value = Number(demon.effectiveAtk ?? demon.atk);
+  return Number.isFinite(value) ? Math.round(value) : 0;
+}
+
+function readDungeonDetailBuffStatsPreference() {
+  try {
+    const stored = localStorage.getItem(DUNGEON_DETAIL_BUFF_STATS_KEY);
+    return stored === null ? true : stored !== '0';
+  } catch (error) {
+    return true;
+  }
+}
+
+function writeDungeonDetailBuffStatsPreference(showBuffStats) {
+  try {
+    localStorage.setItem(DUNGEON_DETAIL_BUFF_STATS_KEY, showBuffStats ? '1' : '0');
+  } catch (error) {
+    // The checkbox still works for this visit when browser storage is blocked.
+  }
 }
 
 function getDungeonDetailActions(extractionCandidate = null) {
@@ -384,7 +457,11 @@ export {
   confirmCollectionReplacement,
   bindCollectionReinforcementPlaceholders,
   bindDemonDetailCards,
+  openDungeonDemonDetails,
   getDemonForDetailCard,
+  getPlayerTeamDetailSourceDemon,
+  hasDungeonBuffedStatDifference,
+  readDungeonDetailBuffStatsPreference,
   getDungeonDetailActions,
   isStrategyPhase
 };

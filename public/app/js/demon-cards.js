@@ -169,8 +169,9 @@
 
           <div class="demon-detail-stats" aria-label="Combat stats">
             ${hasNumber(demon.atk) ? renderDetailStat(renderAttackIcon(demon), attackStat.label, attackStat.value, attackStat.description) : ''}
-            ${hasNumber(demon.speed) && !isRetaliateDemon(demon) ? renderDetailStat(renderSpeedIcon(), 'Speed', demon.speed) : ''}
-            ${hasNumber(demon.hp) || hasNumber(demon.maxHp) ? renderDetailStat(renderIcon('hp'), 'HP', `${currentHp} / ${maxHp}`) : ''}
+            ${hasNumber(demon.speed) && !isRetaliateDemon(demon) ? renderDetailStat(renderSpeedIcon(), 'Speed', demon.speed, 'Speed') : ''}
+            ${hasNumber(demon.hp) || hasNumber(demon.maxHp) ? renderDetailStat(renderIcon('hp'), 'HP', `${currentHp} / ${maxHp}`, 'HP') : ''}
+            ${renderDetailStatToggle(options.statToggle)}
           </div>
 
           ${renderDetailMeta(demon)}
@@ -196,6 +197,13 @@
       if (!action || action.dismiss) return;
       button.addEventListener('click', () => action.onClick?.(demon, button));
     });
+
+    const statToggle = detailsModalElement.querySelector('[data-demon-detail-stat-toggle]');
+    if (statToggle && options.statToggle) {
+      statToggle.addEventListener('change', () => {
+        options.statToggle.onChange?.(statToggle.checked, statToggle);
+      });
+    }
 
     bootstrap.Modal.getOrCreateInstance(detailsModalElement).show();
   }
@@ -223,6 +231,18 @@
         ${iconHtml}
         <span class="demon-detail-stat-value">${escapeHtml(value)}</span>
       </span>
+    `;
+  }
+
+  function renderDetailStatToggle(toggle = null) {
+    if (!toggle) return '';
+    const label = toggle.label || 'Show with buffs applied';
+    const description = toggle.description || label;
+    return `
+      <label class="demon-detail-stat-toggle" title="${escapeHtml(description)}">
+        <input type="checkbox" data-demon-detail-stat-toggle ${toggle.checked ? 'checked' : ''}>
+        <span>${escapeHtml(label)}</span>
+      </label>
     `;
   }
 

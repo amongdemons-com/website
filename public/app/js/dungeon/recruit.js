@@ -315,6 +315,35 @@ function applyDungeonCombatStatPreviewToDemon(demon = {}) {
   return applyAccountStatBonusPreviewToDemon(applyRunBuffStatPreviewToDemon(demon));
 }
 
+function getDungeonBaseStatPreviewDemon(demon = {}) {
+  const next = { ...demon };
+  const currentMaxHp = Math.max(1, Number(demon.maxHp) || Number(demon.hp) || 1);
+  const currentHp = Math.max(0, Number(demon.hp) || 0);
+  const hpRatio = Math.max(0, Math.min(1, currentHp / currentMaxHp));
+  const baseMaxHp = Number(demon.runBaseMaxHp);
+  const baseAtk = Number(demon.runBaseAtk);
+  const baseSpeed = Number(demon.runBaseSpeed);
+
+  if (Number.isFinite(baseMaxHp) && baseMaxHp > 0) {
+    next.maxHp = Math.max(1, Math.round(baseMaxHp));
+    next.hp = Math.max(
+      currentHp > 0 ? 1 : 0,
+      Math.min(next.maxHp, Math.round(next.maxHp * hpRatio))
+    );
+  }
+
+  if (Number.isFinite(baseAtk) && baseAtk >= 0) {
+    next.atk = Math.max(0, Math.round(baseAtk));
+  }
+
+  if (Number.isFinite(baseSpeed) && baseSpeed > 0) {
+    next.speed = Math.max(1, Math.round(baseSpeed));
+  }
+
+  delete next.effectiveAtk;
+  return next;
+}
+
 function applyAttackStatPreviewChange(demon, updateAtk) {
   const previousAtk = Math.max(1, Number(demon.atk) || 1);
   const previousEffectiveAtk = Number(demon.effectiveAtk);
@@ -715,6 +744,7 @@ export {
   applyRunBuffStatPreviewToDemon,
   applyAccountStatBonusPreviewToDemon,
   applyDungeonCombatStatPreviewToDemon,
+  getDungeonBaseStatPreviewDemon,
   getCollectionStatPreviewDemon,
   getDraftPayloadSource,
   getSelectedCollectionReinforcement,

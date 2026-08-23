@@ -1907,6 +1907,31 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     height: 1rem;
 }
 
+.demon-detail-stat-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
+    min-height: 1.5rem;
+    margin-left: auto;
+    color: #a8b2bb;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.demon-detail-stat-toggle input {
+    width: 0.9rem;
+    height: 0.9rem;
+    margin: 0;
+    accent-color: #6fd6bd;
+}
+
+.demon-detail-stat-toggle input:checked + span {
+    color: #b8f5e6;
+}
+
 .demon-detail-meta {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
@@ -2035,10 +2060,11 @@ body:has(#demonDetailModal.show) .modal-backdrop {
         font-size: 0.72rem;
     }
 
-.demon-detail-extra {
+    .demon-detail-extra {
         padding-right: 0.75rem;
         padding-left: 0.75rem;
     }
+
 }
 
 .enemy-pressure-chip {

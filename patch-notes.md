@@ -6,6 +6,8 @@
 
 <!-- Add future player-facing changes for Patch 6 below this line. -->
 
+- Team demon details can now switch between base stats and stats with active
+  Pacts and buffs applied.
 - Ranked Dungeon ghosts no longer receive a second copy of their Pacts, and
   hunters at 0 RP are now matched in the correct rating range.
 - Tutorial prompts are now shorter and focus on one action at a time, with
