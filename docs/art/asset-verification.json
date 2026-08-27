@@ -1,0 +1,2073 @@
+{
+  "allRequestedDemonSourcesImported": false,
+  "importedDemons": 63,
+  "pendingManualSourceIds": [
+    25,
+    26,
+    27
+  ],
+  "filesChecked": 229,
+  "files": [
+    {
+      "file": "demons/1.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1280465,
+      "bytes": 447084,
+      "sha256": "e3a2b0718c06936c5aec318a60acc447c3e422314896a36df0f39becd3875320"
+    },
+    {
+      "file": "demons/portrait/1.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 210230,
+      "bytes": 21250,
+      "sha256": "47e3611dbc10e2796ac88b7d3d4f0f5d850e7651ab6f1bff4cc452aa8ba5de19"
+    },
+    {
+      "file": "demons/map/1.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 51741,
+      "bytes": 10016,
+      "sha256": "78f4539ed9db3b29368c990c6317c250c349c02924981e2284d85f7a38282279"
+    },
+    {
+      "file": "demons/2.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1215646,
+      "bytes": 599399,
+      "sha256": "b15adb22f902dcfbd1ca06f69a512f1f72599c10722ccb0e2e757bc008cf3f0c"
+    },
+    {
+      "file": "demons/portrait/2.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 198303,
+      "bytes": 27606,
+      "sha256": "54cd24798b3173c781afe344a101a928dc565976e3cdd1c78eb9c1bf264589e3"
+    },
+    {
+      "file": "demons/map/2.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 48541,
+      "bytes": 12754,
+      "sha256": "c6c866884cfc2dcf3f5bace524601c9011b01ac790d6d3df7140d5689c880092"
+    },
+    {
+      "file": "demons/3.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1131857,
+      "bytes": 767851,
+      "sha256": "99f05c937196a3f41479ecdb08904fd7972e3dec988bb9af5af75b4c6297a730"
+    },
+    {
+      "file": "demons/portrait/3.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 184125,
+      "bytes": 29652,
+      "sha256": "7734da79e63fe127049db7fc155828c92ff16a3ef315eee19f6088fbf1120a70"
+    },
+    {
+      "file": "demons/map/3.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 44916,
+      "bytes": 13628,
+      "sha256": "50e84695772e9cccc6aedbbe84b77cb067ee56b0cb800f8b21d0579c2a9690c4"
+    },
+    {
+      "file": "demons/4.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1100374,
+      "bytes": 848457,
+      "sha256": "60a6bbb9b2acac92b99c08a5a926fb9e3af2e73823db2c9d7d68d6b7cac620af"
+    },
+    {
+      "file": "demons/portrait/4.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 178689,
+      "bytes": 30776,
+      "sha256": "d15155f1fb6cd9c898eb63e121017c24103454d504af8ee51d69732319a48da5"
+    },
+    {
+      "file": "demons/map/4.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 43490,
+      "bytes": 13712,
+      "sha256": "85e672759a82e1b3d7bb82c9697b9ca39f1a16648f7c2162e3ed138ad898aed2"
+    },
+    {
+      "file": "demons/5.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1113894,
+      "bytes": 823195,
+      "sha256": "a27a783e25f890569f764d90746cdb13164a97426250d94097aca6b7fac2d3ad"
+    },
+    {
+      "file": "demons/portrait/5.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 180677,
+      "bytes": 32436,
+      "sha256": "ffa669a55cd5dc51f19474711e4c575206d8e3194f9c92bfffa54a7dc472f190"
+    },
+    {
+      "file": "demons/map/5.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 43897,
+      "bytes": 14658,
+      "sha256": "e1f707b5061eaaf673e1e77769c11193bf2f3c618518869c0ff27a7b7b3c2106"
+    },
+    {
+      "file": "demons/6.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1057796,
+      "bytes": 1039405,
+      "sha256": "23d5ccccee27ef8fc0d321409eea64f9ea7c1d10530555f4453bbea9c7677bc5"
+    },
+    {
+      "file": "demons/portrait/6.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 170846,
+      "bytes": 37542,
+      "sha256": "44ed855f73acacae743a92b920d01402cb517e711e895cddc957bb4111708c6d"
+    },
+    {
+      "file": "demons/map/6.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 41374,
+      "bytes": 16500,
+      "sha256": "f63c2b792fabe4c8796eabdf5bf032be169b75387c10dd82e92a5a7c841c8439"
+    },
+    {
+      "file": "demons/7.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1185909,
+      "bytes": 609817,
+      "sha256": "0330c9f330cb2069ab04f9b8c136f682f8910b56ea00591691829b00fd949b31"
+    },
+    {
+      "file": "demons/portrait/7.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 193189,
+      "bytes": 25930,
+      "sha256": "038c5d9c877626f1d90ae05a984bd423b0e973467f8e4cc9a88dd29ae6fa2fe3"
+    },
+    {
+      "file": "demons/map/7.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 47175,
+      "bytes": 12132,
+      "sha256": "eae63696481d9d44e92d2ddb3fe25f3e4aed72434221c118374cc291cc2c0acf"
+    },
+    {
+      "file": "demons/8.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1140019,
+      "bytes": 697927,
+      "sha256": "ddc7a440c74e83d4dbb4832f75754ad4a2b034d337a15ec1fac448eb01514ac5"
+    },
+    {
+      "file": "demons/portrait/8.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 183936,
+      "bytes": 32466,
+      "sha256": "a991419d9995cf0fe8c27c16ec7da451f2e474cda8051ee269bdfb403c87ba1c"
+    },
+    {
+      "file": "demons/map/8.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 44443,
+      "bytes": 15234,
+      "sha256": "50af661622810fc67776a1b2fcdf799a0c2beeecfacd82b63f940cd20259c3a9"
+    },
+    {
+      "file": "demons/9.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1248823,
+      "bytes": 594232,
+      "sha256": "5f1e280a416526ca7889f3a32e8404ebff0ee4e608cf818782f366499b79b28c"
+    },
+    {
+      "file": "demons/portrait/9.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 202254,
+      "bytes": 31538,
+      "sha256": "fd89609ab3f10985b8551dbaf46d0d0213242904377b19c3ebd02bcefa71bde3"
+    },
+    {
+      "file": "demons/map/9.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 49067,
+      "bytes": 14350,
+      "sha256": "bfa571255801b4b86c4f047a320f170b7bb3e2dd32a0aef201912b451735d047"
+    },
+    {
+      "file": "demons/10.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1142392,
+      "bytes": 804540,
+      "sha256": "c0087468533452d244f759ef1531633011a6420cb9605de5c90f026d8a5fcefd"
+    },
+    {
+      "file": "demons/portrait/10.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 183627,
+      "bytes": 39562,
+      "sha256": "7a71a7e29fa67f362a278dee858e0671f1802375b28738c34bf7e207d4e730a7"
+    },
+    {
+      "file": "demons/map/10.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 44234,
+      "bytes": 17966,
+      "sha256": "a175c5b7ea7e477753aa3925f39a4f6404d5d04ad40c1be953c9f58328be02c0"
+    },
+    {
+      "file": "demons/11.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1154254,
+      "bytes": 775546,
+      "sha256": "187a57d0c43b25d28b37a1ae07738e4fd2150c16d0a84c13e59e61ad03166b67"
+    },
+    {
+      "file": "demons/portrait/11.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 185256,
+      "bytes": 39334,
+      "sha256": "8a38fb223733b1c386e575aa45e026b2dcc094495cdc59783fe96e909bb681a7"
+    },
+    {
+      "file": "demons/map/11.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 44548,
+      "bytes": 17864,
+      "sha256": "bf99577c004e0119cd231357301c7910e11136b53e3abd34d85d53c266ba3fac"
+    },
+    {
+      "file": "demons/12.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1104392,
+      "bytes": 847354,
+      "sha256": "e724357e7115f02b42ae80ffd16e09d296fd78d9b15d3eeffbcb17389d6b02c2"
+    },
+    {
+      "file": "demons/portrait/12.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 176641,
+      "bytes": 41242,
+      "sha256": "2efb1f2b389e37243a15f74620eb37e1191f813e8044bc20db3cd17056941856"
+    },
+    {
+      "file": "demons/map/12.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 42353,
+      "bytes": 18296,
+      "sha256": "8f965b318e7f96f202db7f678826f81c7bb42263c7ac2053685812e2aa67420b"
+    },
+    {
+      "file": "demons/13.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1145916,
+      "bytes": 610316,
+      "sha256": "78061e25a6cedf89d526cf45a91bd607ea71ec3af42f255edf6bdcb1c3482d8d"
+    },
+    {
+      "file": "demons/portrait/13.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 189042,
+      "bytes": 18196,
+      "sha256": "fc3f8531e6b94c018b3049e68c70089e0e34f16fa30d0f78d1da25b62ddd0234"
+    },
+    {
+      "file": "demons/map/13.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 46769,
+      "bytes": 8160,
+      "sha256": "8141f8c2bc432551b752ec0fb12fc0f1a7f86ab499dd197435b72b1fc2820772"
+    },
+    {
+      "file": "demons/14.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1068000,
+      "bytes": 788190,
+      "sha256": "63ec1e190fa3ce31bcad1a07034d86641ab452e0798411ffdb6a0637b24d71cd"
+    },
+    {
+      "file": "demons/portrait/14.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 175811,
+      "bytes": 22036,
+      "sha256": "6f9e21e6e6acf0ad1d928080be75f70124d9511cfe0849284cbd91ce4ebab2ae"
+    },
+    {
+      "file": "demons/map/14.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 43405,
+      "bytes": 9576,
+      "sha256": "388dacad400cfe9827bc2cd6a578cc6ae4c65a21a806e00bfd3787e0b3e33731"
+    },
+    {
+      "file": "demons/15.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 933368,
+      "bytes": 971968,
+      "sha256": "74a4fa532d3f9bba8f6bfc61f44d9e0db2284669b63ea9563a07a037f7046022"
+    },
+    {
+      "file": "demons/portrait/15.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 153159,
+      "bytes": 26288,
+      "sha256": "6780fef8922b02f71dcb103dc31fe378cbc7ec5f71f75073ba7ff28e28578f21"
+    },
+    {
+      "file": "demons/map/15.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 37669,
+      "bytes": 11914,
+      "sha256": "cbcc39777d6d387c7e0eaf8ccb32656497b79048442255f1089182daa010c049"
+    },
+    {
+      "file": "demons/16.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 990604,
+      "bytes": 894774,
+      "sha256": "9d11a5cdc64f1c144cfb137993297ca45b8ed7fd4d14c8265a972e3ec9de8a6a"
+    },
+    {
+      "file": "demons/portrait/16.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 161795,
+      "bytes": 28434,
+      "sha256": "e7125f3a6de80987a1e409ffb51fb0508c002dcd950247565c2587cf2118c291"
+    },
+    {
+      "file": "demons/map/16.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 39592,
+      "bytes": 12978,
+      "sha256": "b6640c78c6bffd7fe17b0554bb4649a3101d3132d63fd5b86ade79c3184f2216"
+    },
+    {
+      "file": "demons/17.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 885860,
+      "bytes": 971000,
+      "sha256": "57c90d48fac5f13007dfa11b1e3092d0bac4a316accc8ab549b89af9f5a01b69"
+    },
+    {
+      "file": "demons/portrait/17.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 143561,
+      "bytes": 32598,
+      "sha256": "58ab52dd2c1251bc5cf40453c6db8cc0eab35e646bd71c14d19a57b02a690738"
+    },
+    {
+      "file": "demons/map/17.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 34845,
+      "bytes": 15068,
+      "sha256": "ce2834673410f451a0d6533e6d296c49c3f4e995a42e4b945b48a0168b7e9202"
+    },
+    {
+      "file": "demons/18.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 892183,
+      "bytes": 1014423,
+      "sha256": "69eacc54f4476b86a242a5d8ce9f65e926b870a6763ff74a54b56b15ff5facaf"
+    },
+    {
+      "file": "demons/portrait/18.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 142258,
+      "bytes": 38372,
+      "sha256": "56b486dc9a755cc2f94f83c155f19377a6fc6af437f13497dd721ff3263da2f9"
+    },
+    {
+      "file": "demons/map/18.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 33922,
+      "bytes": 18742,
+      "sha256": "4e5004a15b878c44b2aa17d6ddb7339362a90d64cd61e2616653f79053e12e71"
+    },
+    {
+      "file": "demons/19.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1154487,
+      "bytes": 621019,
+      "sha256": "3c7dcecee26ec38206edb38186d44a4a0690387020f6b1c3162e4ba52c598757"
+    },
+    {
+      "file": "demons/portrait/19.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 189399,
+      "bytes": 20672,
+      "sha256": "70eddd815023bd3875996db12393a1fa7192ddf6680f35c07a4dffa030bcc064"
+    },
+    {
+      "file": "demons/map/19.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 46646,
+      "bytes": 9448,
+      "sha256": "fc0d1599e4385d063e9702377dd75a74d10fef593cf4d3d24b03578c718e7b44"
+    },
+    {
+      "file": "demons/20.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1052731,
+      "bytes": 683359,
+      "sha256": "65fc476bb800b51260e33fde1ee1a714ef3c991d313ee181256a8975ba1ad886"
+    },
+    {
+      "file": "demons/portrait/20.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 171389,
+      "bytes": 27780,
+      "sha256": "a3a543b49557edfa2ae1c92096dd02800acc275e443c24065015aaac00c5e011"
+    },
+    {
+      "file": "demons/map/20.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 41876,
+      "bytes": 12790,
+      "sha256": "075f6c21d6d1bf2b4660e60bcf5ecdbf0f24c0b3ac07c74773facf58cbbc051f"
+    },
+    {
+      "file": "demons/21.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 960012,
+      "bytes": 894472,
+      "sha256": "1ae1293950df3e86872a3741f86a9ce5b9d8af26acba0ea92f6c08369dea70b7"
+    },
+    {
+      "file": "demons/portrait/21.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 155848,
+      "bytes": 33272,
+      "sha256": "2817dd55c2293aa59078b6dc64700f773f6290f3b74bd62af31a4d4d7874a602"
+    },
+    {
+      "file": "demons/map/21.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 37990,
+      "bytes": 15124,
+      "sha256": "eba507ee3db017658298afa13f1f9c6008bab731089035e2d55e33de69a86f1e"
+    },
+    {
+      "file": "demons/22.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 920108,
+      "bytes": 974726,
+      "sha256": "66d2fe0c2a2ac2e5cf8953ded52cdb2317713342b779d3a0853e0191f1ba777d"
+    },
+    {
+      "file": "demons/portrait/22.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 149263,
+      "bytes": 38728,
+      "sha256": "a1e284a854a821132307bff2cdeff33220a2d5048d21b567732f9d3146119e28"
+    },
+    {
+      "file": "demons/map/22.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 36371,
+      "bytes": 17574,
+      "sha256": "cb71f0964ebd4b1d3ae67be9db8d96092ec9968ed7ce57f7a4b9e1dc39e5bbbc"
+    },
+    {
+      "file": "demons/23.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 882545,
+      "bytes": 1160703,
+      "sha256": "3991d3265b7e325bb0bada4e40e54228628bcc18b0a95f4b52efd74a03fdaac5"
+    },
+    {
+      "file": "demons/portrait/23.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 142151,
+      "bytes": 41242,
+      "sha256": "a47a11755099591462d5ea531a0c55672abc6147c4fc4cc5085aaf0fbb500ab9"
+    },
+    {
+      "file": "demons/map/23.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 34445,
+      "bytes": 18150,
+      "sha256": "c894f133ebae312064c573aee227e8449d6535d1498b2a2ebe132ff4d36e86c9"
+    },
+    {
+      "file": "demons/24.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 868113,
+      "bytes": 1169462,
+      "sha256": "1567f1123a9c2846793d1b01232c2e109a9b516587d5e2fcb583f223e9c512b2"
+    },
+    {
+      "file": "demons/portrait/24.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 139978,
+      "bytes": 43752,
+      "sha256": "7007e75fdbf9cb5739db989f3253d4250f4931ab3b64c3070f56b86a381735a2"
+    },
+    {
+      "file": "demons/map/24.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 33901,
+      "bytes": 19070,
+      "sha256": "c3b218dd0f3df311a9a6fe4ca4c08c0170af6a8239966901ae72a24b68ffd946"
+    },
+    {
+      "file": "demons/25.png",
+      "width": 1024,
+      "height": 1024,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1279731,
+      "sha256": "718af1605f23f77e497da9eae3ab325acf92791ccba9ecaa81d82a2a9cd95ced"
+    },
+    {
+      "file": "demons/portrait/25.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 27968,
+      "sha256": "303c19316473d8691d9591850a013b0c559af3631c2c8ba081dab654cf446913"
+    },
+    {
+      "file": "demons/map/25.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 8924,
+      "sha256": "eb767a407c026e3708932bbb4f5c10e594986041119b6bfd292098bd33775ba3"
+    },
+    {
+      "file": "demons/26.png",
+      "width": 1024,
+      "height": 1024,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1373058,
+      "sha256": "fa659164ddf611e0a1159121bd6900f82b2119d876ea027e5977d5157d50b58c"
+    },
+    {
+      "file": "demons/portrait/26.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 30558,
+      "sha256": "e4a8433e075eeea82beaa6bfbc170e6ca96f12b9166620fd52df96f488fbd742"
+    },
+    {
+      "file": "demons/map/26.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 9444,
+      "sha256": "499581807ee41d5e8d4260c7f75404b02e945c0f1b1c41bd5c893ca9dba82e92"
+    },
+    {
+      "file": "demons/27.png",
+      "width": 1024,
+      "height": 1024,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1453103,
+      "sha256": "076e617ce12fc69c270489b46928868430fe87ba48bcbc53e2349cc176fbd66c"
+    },
+    {
+      "file": "demons/portrait/27.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 32678,
+      "sha256": "430031187845ce914210933b83b798d34cd2d1c10fcb37822db4868f75fa261e"
+    },
+    {
+      "file": "demons/map/27.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 9744,
+      "sha256": "36edd1f119f1e121265c1e2c1f1c9ceb69d091749fedb9f9834f3e530c20f8f8"
+    },
+    {
+      "file": "demons/28.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1003799,
+      "bytes": 903740,
+      "sha256": "9b92e89c295874bbdfe1cb14ddc488f51ae63942dd10485f5848360ff05c2063"
+    },
+    {
+      "file": "demons/portrait/28.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 162727,
+      "bytes": 31066,
+      "sha256": "7059851e84e0c0bdaf9e7cec59fa8595a913dc1d26fc71da44ff574dc863680c"
+    },
+    {
+      "file": "demons/map/28.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 39552,
+      "bytes": 13506,
+      "sha256": "51ad7ed42f003f92ebabba810b4793d6c042fe52a7ce65c1063839e16eb7abe7"
+    },
+    {
+      "file": "demons/29.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 975598,
+      "bytes": 922143,
+      "sha256": "0d9ef14352ba0f923cefe50c2456fb075661d9a364b309dd3fff32013c8ff875"
+    },
+    {
+      "file": "demons/portrait/29.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 157343,
+      "bytes": 30650,
+      "sha256": "527d0e1d58b665ad93db817374db824e6e0576aca4c6946cae959de0c2f9a2a4"
+    },
+    {
+      "file": "demons/map/29.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 38050,
+      "bytes": 13996,
+      "sha256": "c637d64c1d1df53b1250f6d5786b859d1db0470b4086b970cfa83a5a49204ca6"
+    },
+    {
+      "file": "demons/30.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 796558,
+      "bytes": 1112861,
+      "sha256": "2dc1f360cced2046fad6a9cb86ca3446e8f252e39412ba097606cc0e81585d06"
+    },
+    {
+      "file": "demons/portrait/30.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 126852,
+      "bytes": 40954,
+      "sha256": "3b22551582d1aa5697b5e30db864c1193bad141937c846b24cc227e7b299928f"
+    },
+    {
+      "file": "demons/map/30.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 30226,
+      "bytes": 18216,
+      "sha256": "b8b1350d8050d36bc0c1b8af2227ceda126168b4f38ad7284e3b62a6e18eb4f3"
+    },
+    {
+      "file": "demons/31.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1169492,
+      "bytes": 579414,
+      "sha256": "15bd964ffd3a1563845a9867e82e0321e7c9dc2f7c66b8801f1e5712db8aa55f"
+    },
+    {
+      "file": "demons/portrait/31.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 191151,
+      "bytes": 24594,
+      "sha256": "3f72c8ecae19af3916d5211e996c67cafc7d70a943b249ebbfb0bfed79c9a427"
+    },
+    {
+      "file": "demons/map/31.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 46865,
+      "bytes": 10962,
+      "sha256": "e6fd06483c15034dd7b6c628fce55a470042f88b8fabf3ed948a1bbbdc882b8a"
+    },
+    {
+      "file": "demons/32.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1075965,
+      "bytes": 765104,
+      "sha256": "84bd7205d911d7219f53528a2b52c8898225e2405854c833763928453e55e096"
+    },
+    {
+      "file": "demons/portrait/32.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 173620,
+      "bytes": 32078,
+      "sha256": "4c4f43bd8ca25c168d4ea50938fcf06ae34a2b2236b3654a23035485382b02f0"
+    },
+    {
+      "file": "demons/map/32.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 42104,
+      "bytes": 14468,
+      "sha256": "16905266a92998393860774c58726d7811ae3d8a1fb104f67e8e429145e21b24"
+    },
+    {
+      "file": "demons/33.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1186976,
+      "bytes": 683588,
+      "sha256": "04e05d827f4df000e57da063c880dfc1a52ca2723b3f7154eabc539fb9eb9aea"
+    },
+    {
+      "file": "demons/portrait/33.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 191921,
+      "bytes": 34674,
+      "sha256": "f64c48f54fc744abc23e09c546e3166e68a149de421c2f8de12b9e5b9e736e06"
+    },
+    {
+      "file": "demons/map/33.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 46604,
+      "bytes": 15568,
+      "sha256": "78a73b189e2fb9c71968f91da4cd5a572edb0a424966f8d8700c6c1c8310956f"
+    },
+    {
+      "file": "demons/34.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 967127,
+      "bytes": 1154256,
+      "sha256": "b0d56aa0c31fcb44b98068af6ed3ee54558acebdb7bc32dac4e5aeef6cd83848"
+    },
+    {
+      "file": "demons/portrait/34.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 154010,
+      "bytes": 46360,
+      "sha256": "683677a126e2d4cd20731c9fb468320c805410c3ad266b8e69ac1cf5e6cba52e"
+    },
+    {
+      "file": "demons/map/34.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 36853,
+      "bytes": 20226,
+      "sha256": "76f527ffd3c13f621015e4ec5b30798f9680b569993027539e60e333ac284c75"
+    },
+    {
+      "file": "demons/35.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 790573,
+      "bytes": 1477284,
+      "sha256": "43962e4e06dd5dde0501723613813d88d402180e81f85261719b9994a0dceca6"
+    },
+    {
+      "file": "demons/portrait/35.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 123186,
+      "bytes": 62868,
+      "sha256": "840e9886b8e87e8ec411423f28c5793c4bdfa7156535c11b6e7899bac0609768"
+    },
+    {
+      "file": "demons/map/35.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 28897,
+      "bytes": 27256,
+      "sha256": "f039119716b615f2298d543e50bd2bbe48e412fcf05bed3adee64ea2f4fe0ff1"
+    },
+    {
+      "file": "demons/36.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 833811,
+      "bytes": 1513320,
+      "sha256": "7b73e0316b6aa9d585ed5285dbe192c15a859a72729c8250801c8947778ba437"
+    },
+    {
+      "file": "demons/portrait/36.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 129240,
+      "bytes": 67552,
+      "sha256": "c47a1253a8c03524d8b36d89f5919b6e1563ddb0056bd99a6eb93b6a28d8794b"
+    },
+    {
+      "file": "demons/map/36.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 30261,
+      "bytes": 28910,
+      "sha256": "33d331dd83c7570d0124ea68cefbc1f80a6452791a729a8bdba8c6c0d45a2378"
+    },
+    {
+      "file": "demons/37.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1229518,
+      "bytes": 528158,
+      "sha256": "0437bd33bde04113e0cf36a95a103756f1e6ea1f1417b1c6c8aba73b07b94181"
+    },
+    {
+      "file": "demons/portrait/37.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 201240,
+      "bytes": 22378,
+      "sha256": "1a3aeb8cfa005cfd14054cd34b6a375772ef71d14e4e2a274a265cd92999f97a"
+    },
+    {
+      "file": "demons/map/37.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 49383,
+      "bytes": 10216,
+      "sha256": "44e455e2f10b1a54556c9bd709e56d1dcde01296fb7417b72621335e69f02ceb"
+    },
+    {
+      "file": "demons/38.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1259740,
+      "bytes": 572191,
+      "sha256": "f4f78a73c96dd3c883d1fe5865bef6ca7915fe9d2e9a8690dfc23740e0cdb902"
+    },
+    {
+      "file": "demons/portrait/38.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 205479,
+      "bytes": 26268,
+      "sha256": "fc6a8fbda231e43051ac0b5b4a2dbbe307d63af033ea2a7defe45b1d954fc0d6"
+    },
+    {
+      "file": "demons/map/38.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 50289,
+      "bytes": 11720,
+      "sha256": "b70d1fe2885c76b5da88fe416c8389ae3eef74dc7eafc8d92bdb94896c1d9510"
+    },
+    {
+      "file": "demons/39.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1177156,
+      "bytes": 741447,
+      "sha256": "f42b5aa09946f014dc37dd7bb68eb95395e0c6235ba490d782f046fde0716f2c"
+    },
+    {
+      "file": "demons/portrait/39.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 189426,
+      "bytes": 35738,
+      "sha256": "2da9eaee51ead507115339165d8df5ed0640b4cb1fbd18e68d9c722c3213541a"
+    },
+    {
+      "file": "demons/map/39.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 45772,
+      "bytes": 16116,
+      "sha256": "070a03455e303cb60f12b1db6e61bf94df50754dee219e1b26eb3761231ef06b"
+    },
+    {
+      "file": "demons/40.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1086264,
+      "bytes": 818066,
+      "sha256": "6a24825a602467978a1e22f47d2d10a961c005abdf9c05a66db9c6fd077d40a3"
+    },
+    {
+      "file": "demons/portrait/40.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 174471,
+      "bytes": 36168,
+      "sha256": "64b07656ae847cdac4b6b149870b4c8e94f13092920c4c9d82249211a8a97649"
+    },
+    {
+      "file": "demons/map/40.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 42055,
+      "bytes": 16546,
+      "sha256": "a109bf1a08e5619436753a2ba87c8198fe9ca2a47003ebec4d774b58c0554e0c"
+    },
+    {
+      "file": "demons/41.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1124119,
+      "bytes": 805293,
+      "sha256": "20bf2c66d59b5b3dc58a10e8c8b5c3ec8edda428e0636d3eb0e6e1e353217ea4"
+    },
+    {
+      "file": "demons/portrait/41.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 179910,
+      "bytes": 40306,
+      "sha256": "ee97dee18d74167b5b3c1255de57511be38321d7e90856a0caf0d84b8051d8cf"
+    },
+    {
+      "file": "demons/map/41.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 43286,
+      "bytes": 17924,
+      "sha256": "2b983e98703d9a7639be6d5bd26b9592772a1f31d67714975ac1414fd8a9cff8"
+    },
+    {
+      "file": "demons/42.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1144063,
+      "bytes": 800841,
+      "sha256": "06829a710861036650bba39d028105ceebecba93e06922f02f2cf025583d16ca"
+    },
+    {
+      "file": "demons/portrait/42.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 183074,
+      "bytes": 38294,
+      "sha256": "d606945589f8f0d175b5fef592b45ea7cd67288176465f9a856e183657b2783c"
+    },
+    {
+      "file": "demons/map/42.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 44007,
+      "bytes": 16846,
+      "sha256": "bfa9d85e068e9046300014c0fe0c908f7816b923e08a368029a6e8e7422adc53"
+    },
+    {
+      "file": "demons/43.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1248442,
+      "bytes": 669202,
+      "sha256": "71be024309e8a18fa855f1008a09b1c165aa00fe5e5221f304f3e40c46d3cce0"
+    },
+    {
+      "file": "demons/portrait/43.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 202873,
+      "bytes": 32778,
+      "sha256": "7d652a2cf1d53ab0aa906294e7f123f103cab6791838256497ad1deee490b4da"
+    },
+    {
+      "file": "demons/map/43.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 49494,
+      "bytes": 14756,
+      "sha256": "ac687f49d3b2dc096dbfe041c0e2f70e0927c80c58a3c46313ad0779035a7aa1"
+    },
+    {
+      "file": "demons/44.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1256442,
+      "bytes": 685347,
+      "sha256": "6ceb40e8f06e1dcd2869f280830b7a98c5b1ecb19d14e5020b4f2a8e50f4bb1f"
+    },
+    {
+      "file": "demons/portrait/44.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 203545,
+      "bytes": 36584,
+      "sha256": "4987e7f74b087cb3dc257fb8fa9e22c40cfec2de979e4fa7a5dfa0a9d1d12529"
+    },
+    {
+      "file": "demons/map/44.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 49463,
+      "bytes": 16346,
+      "sha256": "4fa64769b26295a9014ac63ea1e44ee697cf06909361acb81d5fcf53fc3abc05"
+    },
+    {
+      "file": "demons/45.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1176408,
+      "bytes": 913436,
+      "sha256": "7aae58611d8d05d4717dced7eb8a8a5c121844148844a7fc326e8ee425d43c95"
+    },
+    {
+      "file": "demons/portrait/45.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 188109,
+      "bytes": 49590,
+      "sha256": "8184c61d148ba422b3837b9f294b17aad06db6be72b47896dbb2c34cc750fa63"
+    },
+    {
+      "file": "demons/map/45.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 45087,
+      "bytes": 21412,
+      "sha256": "f9f610a34dae9198fef99d58fd480413f79f792affb8aafcd8bf9f3da50eadb6"
+    },
+    {
+      "file": "demons/46.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1108178,
+      "bytes": 1075878,
+      "sha256": "23c746f1ee92f6143e50c48a39d3a53a786518e9d762baf45e763f72fcde0afe"
+    },
+    {
+      "file": "demons/portrait/46.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 176809,
+      "bytes": 51864,
+      "sha256": "683a52098847ced373e1817196afd5c86e119df323b28d937975f9c0077fe5a4"
+    },
+    {
+      "file": "demons/map/46.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 42377,
+      "bytes": 21974,
+      "sha256": "cbade78815b014543402c0fabd85e2febb974d7d257f20f38263ad98e35f57f1"
+    },
+    {
+      "file": "demons/47.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1131687,
+      "bytes": 1046925,
+      "sha256": "207f978f2a2e7c555dc8e11fca1ea08dd5fd667eada1a364ed30b90f94dcb529"
+    },
+    {
+      "file": "demons/portrait/47.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 179017,
+      "bytes": 56968,
+      "sha256": "fd600ffe022af0373dca695bb42d939ab9180c880b38053a04b2c822ff35802a"
+    },
+    {
+      "file": "demons/map/47.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 42613,
+      "bytes": 23566,
+      "sha256": "9107774f2740cbd0e931254961e6927c71ccaa018c7a5f10698c3a4d08f9a4ef"
+    },
+    {
+      "file": "demons/48.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 946249,
+      "bytes": 1535738,
+      "sha256": "7764fd480ce69796ee74b4b17a594b774348211caae4f0ed87fc4d4a7933dc52"
+    },
+    {
+      "file": "demons/portrait/48.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 148348,
+      "bytes": 70314,
+      "sha256": "7de8bd0e7a8d9d420386a45aa9d09b6ffc7a6010366dc33e3dc0708441441927"
+    },
+    {
+      "file": "demons/map/48.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 34889,
+      "bytes": 28726,
+      "sha256": "45eef00370593a9ab52f92a2cb51b8f02415377fb5e92c56e1829c7788eeadc9"
+    },
+    {
+      "file": "demons/49.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1148631,
+      "bytes": 563793,
+      "sha256": "de7b5095d40d7b53abd373415a02a8d51cd4279c7078a212edb6365b73e0ab35"
+    },
+    {
+      "file": "demons/portrait/49.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 188159,
+      "bytes": 21466,
+      "sha256": "4c2c48634d4fe343820ae6de6ad4109728aafe789eca4b662fe99fba9d71e3fb"
+    },
+    {
+      "file": "demons/map/49.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 46207,
+      "bytes": 10090,
+      "sha256": "4155b4b885ca0a149b0c0e92299173204b00c5d0f0b53ef666d49322242d4bd2"
+    },
+    {
+      "file": "demons/50.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1057865,
+      "bytes": 761538,
+      "sha256": "d4976f23d357887495b2e0c5b09e4c25a5523d278795ec5623ea0afd7e273bd3"
+    },
+    {
+      "file": "demons/portrait/50.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 171875,
+      "bytes": 29948,
+      "sha256": "cb1a9cb090b89123c03400e001f5716e07fc5cd16ea14f4ae5561d67bd6eb429"
+    },
+    {
+      "file": "demons/map/50.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 41912,
+      "bytes": 13792,
+      "sha256": "fb951be4192b92a2956ae060bf80a0816487d94df356fc2f596efccc4d98db8d"
+    },
+    {
+      "file": "demons/51.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 921666,
+      "bytes": 1016321,
+      "sha256": "c330177d625f35b6be097d82b55f47299493acebfa26f708b230158daf4ada75"
+    },
+    {
+      "file": "demons/portrait/51.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 150071,
+      "bytes": 30148,
+      "sha256": "f59644d0a408ef02e7cef40988621a5c3987901c1710de6147308daaefcc9a8a"
+    },
+    {
+      "file": "demons/map/51.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 36660,
+      "bytes": 14028,
+      "sha256": "dd439bdc92a34a2d29915197e7082a394d1f149d5d85e490394553aae9b20dfb"
+    },
+    {
+      "file": "demons/52.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 651372,
+      "bytes": 1328716,
+      "sha256": "afa11a246d4eda75d1c718f725f6ea8f8591fc33793ec58399eb334d9fbf07bd"
+    },
+    {
+      "file": "demons/portrait/52.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 104481,
+      "bytes": 35622,
+      "sha256": "b613b4b50e413fe42d83017adb66370aaed6d449c11f3356c5e8e499fd0edafe"
+    },
+    {
+      "file": "demons/map/52.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 25110,
+      "bytes": 16334,
+      "sha256": "ab1dd31dfa0edb3d2058bc945b8dbb307713e0003a2beaba0bc4c2dabea368e1"
+    },
+    {
+      "file": "demons/53.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 597600,
+      "bytes": 1358498,
+      "sha256": "0dcedcb75ee93204c135e0ba322a8c171b00915961c90ff742ae97fad8578415"
+    },
+    {
+      "file": "demons/portrait/53.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 95905,
+      "bytes": 36112,
+      "sha256": "1a220d5920fd99ceab79fa6f29228a28521fc22d79ee17974e0521b8c69c2050"
+    },
+    {
+      "file": "demons/map/53.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 23137,
+      "bytes": 16322,
+      "sha256": "1171af596b280d6e4978c07be742d2d68fd37366cd791ac8a2377f32cf810a11"
+    },
+    {
+      "file": "demons/54.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 545734,
+      "bytes": 1549172,
+      "sha256": "b520f89ac0d5a05110e07de9f78eb4d6745dfdf72bad966488ba689aa5fbe752"
+    },
+    {
+      "file": "demons/portrait/54.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 86586,
+      "bytes": 41984,
+      "sha256": "fbec523a8e9d5e0c9731377045a4b32c1cb2300f211b9f20294321115b4074ba"
+    },
+    {
+      "file": "demons/map/54.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 20607,
+      "bytes": 18410,
+      "sha256": "8bce1e6ba5a2421df98b9fdf48b28c529550f2b195d9a0b378834e9de8a9e0d5"
+    },
+    {
+      "file": "demons/55.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1140462,
+      "bytes": 628993,
+      "sha256": "516ad459f464fddb02dc5df4b0befc814630b857ba70e14884d58a07657be827"
+    },
+    {
+      "file": "demons/portrait/55.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 187133,
+      "bytes": 23628,
+      "sha256": "529d8640c90e7eb71c699ceafd67db084071b6900700f692fb65510d127642f6"
+    },
+    {
+      "file": "demons/map/55.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 46080,
+      "bytes": 10494,
+      "sha256": "ac79915dc51e8da251e978abf66b48266202c8ad76e600f77fa80473d74a72cb"
+    },
+    {
+      "file": "demons/56.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1091251,
+      "bytes": 715745,
+      "sha256": "ea03c7424bb6a3947c82a8ea26face19f86ebf220257792fca6b406910299292"
+    },
+    {
+      "file": "demons/portrait/56.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 177130,
+      "bytes": 30060,
+      "sha256": "88e28c591cbeac312894862ff585cf4a52df9c61af044906772975ef27de97ca"
+    },
+    {
+      "file": "demons/map/56.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 43152,
+      "bytes": 13538,
+      "sha256": "5e51ffb5084cf9f28d98f4b394fe3fa781d86ea0803dfae408b017fd8752c5df"
+    },
+    {
+      "file": "demons/57.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1085222,
+      "bytes": 742251,
+      "sha256": "feef9bcfdf759a5444b94d5c87e326ceff4931cf0ff0c976bf268675944123d9"
+    },
+    {
+      "file": "demons/portrait/57.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 174899,
+      "bytes": 33464,
+      "sha256": "8578e70394f8017ccbe8d3bc1cd5cfa2e2764c9b9ca62f5fa4a7c2d2f1249a64"
+    },
+    {
+      "file": "demons/map/57.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 42319,
+      "bytes": 14838,
+      "sha256": "8c1d42af5ff0188c5facba7f9df3278852142dc7c590da2b3873cfaa43e2bd7e"
+    },
+    {
+      "file": "demons/58.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1140157,
+      "bytes": 692144,
+      "sha256": "dae0919b2b0c15687ca5848e7ed6dba7bfcc0f16ffcc73c2eda70187ee7c8b3f"
+    },
+    {
+      "file": "demons/portrait/58.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 184586,
+      "bytes": 31070,
+      "sha256": "844d8493ca1623376ea5a5c8e5e5059dc5f616441e6b92f47f1a703713a84dd8"
+    },
+    {
+      "file": "demons/map/58.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 44818,
+      "bytes": 14062,
+      "sha256": "3ccc9486c55334e01fdb1140e7a73b3c9a39bd9c5ec795af915730b6263c5d1e"
+    },
+    {
+      "file": "demons/59.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1093454,
+      "bytes": 849235,
+      "sha256": "50d2acefdb47fd4b9f940b666af557658d8e06a611e78dd95d038a284a759bb8"
+    },
+    {
+      "file": "demons/portrait/59.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 175021,
+      "bytes": 44638,
+      "sha256": "589b829ad71cbb3f73140bfdcef9ff19b72e28afc8130260f4ec9a58bbacb2c6"
+    },
+    {
+      "file": "demons/map/59.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 42046,
+      "bytes": 19670,
+      "sha256": "9326c774c68c83005ef2116fab73378ad6f3edf4b3702ec0cf6b21733431fbe4"
+    },
+    {
+      "file": "demons/60.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 946863,
+      "bytes": 1174879,
+      "sha256": "eb9eadfd0a775f8fa5ccfc198a6ae0872255de0a9b6b437cd80c20c2388ceabd"
+    },
+    {
+      "file": "demons/portrait/60.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 149012,
+      "bytes": 55554,
+      "sha256": "ab3f82e4fa702dfc9ac60fb43767ee02b488e70c647fbcbe1d2721ae3bb4028b"
+    },
+    {
+      "file": "demons/map/60.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 35231,
+      "bytes": 23954,
+      "sha256": "2ae60885e6c65198c60444988ceb17e42f8d6e446845545dfdbf9bf7a05f63c2"
+    },
+    {
+      "file": "demons/61.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1113023,
+      "bytes": 591773,
+      "sha256": "0742c502c2ee100ddfa8e8b6afe717c0cdbcf519a4a97a79336c9ea9ea17c818"
+    },
+    {
+      "file": "demons/portrait/61.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 182252,
+      "bytes": 23242,
+      "sha256": "234599b0f15f4a7edf433f33c03ab03e520b5267c1f21af8478d55f35f973d09"
+    },
+    {
+      "file": "demons/map/61.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 44768,
+      "bytes": 10558,
+      "sha256": "8ec817bf50364d98ba96a0e6882ccee79593ab6abb8f6435f55fa053defc9bab"
+    },
+    {
+      "file": "demons/62.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1073504,
+      "bytes": 734438,
+      "sha256": "1bcd5e24522e5fa3af569247c1fa491167450fab3ad7390860461b0b20dca417"
+    },
+    {
+      "file": "demons/portrait/62.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 175249,
+      "bytes": 25786,
+      "sha256": "0bd21d7d742508cf4d89fe1802000932f3d5e7d29244be71d6590c356ba03de4"
+    },
+    {
+      "file": "demons/map/62.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 42840,
+      "bytes": 11644,
+      "sha256": "d14447351beee02608ea11cf97e4649d538c5bb3fe9098bb7789971af29727ed"
+    },
+    {
+      "file": "demons/63.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1059345,
+      "bytes": 931443,
+      "sha256": "ebaab828627734fe4ccc96623171d424d4f8bcdf75ed8f751aac5528e573ecfd"
+    },
+    {
+      "file": "demons/portrait/63.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 172021,
+      "bytes": 33416,
+      "sha256": "8bcc8c4ed900a420f4d2c439ec7cf8eb551a1f6fe46add255abc48c7fbf521f2"
+    },
+    {
+      "file": "demons/map/63.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 41913,
+      "bytes": 14488,
+      "sha256": "de62b809460993db4e327b3d1fa1c74ae27a633500594666b33b50495b22f04c"
+    },
+    {
+      "file": "demons/64.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1021812,
+      "bytes": 921881,
+      "sha256": "9326b606e2a39947370b8497affc18e375e719f83b9a685d10f1ff47ad30563c"
+    },
+    {
+      "file": "demons/portrait/64.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 165506,
+      "bytes": 31990,
+      "sha256": "40fcbd8be96a3789a946343e4dc5eb7bf48cf09c4c1f0822a232f5ae6652c228"
+    },
+    {
+      "file": "demons/map/64.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 40170,
+      "bytes": 14136,
+      "sha256": "b813937907e2ae02babf2063a303bbb5dfbdd4f99223fac7b60cee59aff54186"
+    },
+    {
+      "file": "demons/65.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 885821,
+      "bytes": 965253,
+      "sha256": "43e3825f087570077a71164c0843d67c7583addbeb71071c37b7d3064970fb6f"
+    },
+    {
+      "file": "demons/portrait/65.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 142193,
+      "bytes": 36196,
+      "sha256": "233ccecc118b98930f1b10a6f38e7077f2c0b520bd0acafa3ddd810281b0bfa2"
+    },
+    {
+      "file": "demons/map/65.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 34208,
+      "bytes": 16104,
+      "sha256": "6fc42ff15b168b45dfa4632343adafcfe0849c96f4fa50a6488be2f7b09b204e"
+    },
+    {
+      "file": "demons/66.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 886923,
+      "bytes": 1154477,
+      "sha256": "80ca5eefe6f01ba7708f32a34a7d9b5257955445387f5101fb8847c742603a62"
+    },
+    {
+      "file": "demons/portrait/66.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 141666,
+      "bytes": 45800,
+      "sha256": "43cfe965c5a2933f8ee716cf4f413926d0a48004473a0c2afbf3ae4b2d198340"
+    },
+    {
+      "file": "demons/map/66.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "transparentPixels": 33951,
+      "bytes": 19394,
+      "sha256": "efc71766fe0035408b016e4d4931227f803e44d7f2c5af110be0c3f646daacbd"
+    },
+    {
+      "file": "demons/map-atlas.webp",
+      "width": 1152,
+      "height": 1024,
+      "alpha": true,
+      "transparentPixels": 710646,
+      "bytes": 292470,
+      "sha256": "f7b53b8c7b10073fc2834748f3cb80c0a697e057e5aed3f43518466df5608c06"
+    },
+    {
+      "file": "assets/background/amongdemons_bag.png",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1419332,
+      "sha256": "d4a4ff7021e29a3c883bbb65a08f2eafb58ba093a1b0e653c883cfeae7bb03be"
+    },
+    {
+      "file": "assets/background/amongdemons_bag.webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 64692,
+      "sha256": "2df0edbd0e4052226b55f2754f1457d549b2f13f3d7d18c8f10161556ca87498"
+    },
+    {
+      "file": "assets/background/amongdemons_bag.avif",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 42318,
+      "sha256": "dac1ab6fc614edead29edeb4cb8ee12d0665b9e6f6ba6c7cdf9d5405b0b2b803"
+    },
+    {
+      "file": "assets/background/amongdemons_campfire.png",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1613416,
+      "sha256": "4bb78ce81fc5d41e041e0708ea2765725a669ede2eb0635271382c72af360e6e"
+    },
+    {
+      "file": "assets/background/amongdemons_campfire.webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 87708,
+      "sha256": "af66b01007a1a06844b7223fa9063a6e12d95393c181cf246cd2056f23b640df"
+    },
+    {
+      "file": "assets/background/amongdemons_campfire.avif",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 57277,
+      "sha256": "72c1419e3172a3ebef24a6708b60e8bcf352ff03cbdfda5ab0bdd2b40f7d2ee4"
+    },
+    {
+      "file": "assets/background/amongdemons_collection.png",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1727568,
+      "sha256": "69b784e6193cc854cf1f57719516d50dc0d735b7f40ef2900d5b9d381f2926bf"
+    },
+    {
+      "file": "assets/background/amongdemons_collection.webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 117760,
+      "sha256": "29912ac252ef4f0a8290633a935ca9255ac8da2944c669b501ede037c63f9fa0"
+    },
+    {
+      "file": "assets/background/amongdemons_collection.avif",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 66755,
+      "sha256": "4d64777005f4a9821f5735cb68610c93bd6640bdb77b848149c04e9d03d0828d"
+    },
+    {
+      "file": "assets/background/amongdemons_dungeon.png",
+      "width": 1717,
+      "height": 916,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1711672,
+      "sha256": "b7d134e334d33cfff654807a49e5b839c30faef1cc57eac6f18a94fefe5d41e4"
+    },
+    {
+      "file": "assets/background/amongdemons_dungeon.webp",
+      "width": 1717,
+      "height": 916,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 91894,
+      "sha256": "c89a9a6808c58b1833069a30042129e2aef0c74a7b075d72e4089be39e0560d4"
+    },
+    {
+      "file": "assets/background/amongdemons_dungeon.avif",
+      "width": 1717,
+      "height": 916,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 61299,
+      "sha256": "d9b26ef0b51b26eafcab43ccdda973e55ed63c7d710bfeb0c9183756619d7884"
+    },
+    {
+      "file": "assets/background/amongdemons_home.png",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1815175,
+      "sha256": "4e0acb786547aa85418d565d67e6fb9fe43ba856c9ad41f702bdf1606e00550e"
+    },
+    {
+      "file": "assets/background/amongdemons_home.webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 112160,
+      "sha256": "f7c2ba854a0f6170b47216dd6fccf534c5e8a3269be68b1609883a7e0d0a76e7"
+    },
+    {
+      "file": "assets/background/amongdemons_home.avif",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 70557,
+      "sha256": "a35833bfc6faac1ba6e55303fd20050feaa19104774a2de2165c55030aaaef3a"
+    },
+    {
+      "file": "assets/background/amongdemons_home_logo.png",
+      "width": 1672,
+      "height": 941,
+      "alpha": true,
+      "transparentPixels": 0,
+      "bytes": 2680641,
+      "sha256": "4ea024943d9ac94736ad4fa855e6a7804e0941e24fd16cbcc1fce60f71e8cac8"
+    },
+    {
+      "file": "assets/background/amongdemons_home_logo.webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 122512,
+      "sha256": "14adb4f1099e40806f5c70f8d847e6e9ca6d3f2d9cfb210f79e8f65b48c4f6d8"
+    },
+    {
+      "file": "assets/background/amongdemons_home_logo.avif",
+      "width": 1672,
+      "height": 941,
+      "alpha": true,
+      "transparentPixels": 0,
+      "bytes": 71706,
+      "sha256": "03121b1b29079da32de55377a35cc7b3b766066b6bf0c05a16ff5415fadac305"
+    },
+    {
+      "file": "assets/background/amongdemons_rankings.png",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1325713,
+      "sha256": "70f8e28a83c3b8d9181ca97e243ca349703f9f56c73bd75924871c0eca237920"
+    },
+    {
+      "file": "assets/background/amongdemons_rankings.webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 61842,
+      "sha256": "9e1823bfc903559daa37b81725f1ee7a6bbe59443098eeaec25a8ddb70ad7efe"
+    },
+    {
+      "file": "assets/background/amongdemons_rankings.avif",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 37927,
+      "sha256": "80db1644e6daa573ccb6f169a06d0dba4f6baf6681e81bad3dcf1c6f25fae813"
+    },
+    {
+      "file": "assets/background/amongdemons_summon.png",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1759239,
+      "sha256": "fdd22de9edece17dd0cc11a0f82e3120ddd4bf556ea19cd9ef0d9a2697c0a93c"
+    },
+    {
+      "file": "assets/background/amongdemons_summon.webp",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 112414,
+      "sha256": "111f2e0d5f713631e7270a393a7082da2f45dbf0fb0e7401cd43904ad32c6d9f"
+    },
+    {
+      "file": "assets/background/amongdemons_summon.avif",
+      "width": 1672,
+      "height": 941,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 66300,
+      "sha256": "ba47842b48a75a990762acf651342a6b5fcc5399c7f513722118fe076b4dba67"
+    },
+    {
+      "file": "assets/world/crowley.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1459348,
+      "sha256": "89d5ddd9b623daaab81b8b2dd717dba50f76fa4d3ee070b79ee6c7bc19075179"
+    },
+    {
+      "file": "assets/world/crowley.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 33566,
+      "sha256": "f7d8130e31f9372480e0924a1629db21c368b86ecee03fb1df13ae3d187ed1c0"
+    },
+    {
+      "file": "assets/world/soul-font.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 1713211,
+      "sha256": "f374e52b05f7a95149d4ef671c762f1fbaccd1c48d86e447563024849bb959a8"
+    },
+    {
+      "file": "assets/world/soul-font.webp",
+      "width": 768,
+      "height": 768,
+      "alpha": false,
+      "transparentPixels": 0,
+      "bytes": 68912,
+      "sha256": "2a679d5ad5d6dcde535acc6f53c2956a882a5716cb5e9a55b473db8be11e86bb"
+    },
+    {
+      "file": "demons/anomaly.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1099725,
+      "bytes": 954151,
+      "sha256": "1203937a082f56a76183aec95b17adf8484b3a9ff2972d84200cd9e331dcfe4f"
+    },
+    {
+      "file": "demons/anomaly.webp",
+      "width": 1024,
+      "height": 1024,
+      "alpha": true,
+      "transparentPixels": 718394,
+      "bytes": 98568,
+      "sha256": "69d1849c71e5e9504785cd982e0df30b938948aec05f7b787b745ef8d91dad23"
+    }
+  ]
+}

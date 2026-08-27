@@ -191,12 +191,12 @@
     const explicitId = typeof demonOrUrl === 'object'
       ? Number(demonOrUrl?.sourceDemonId ?? demonOrUrl?.source_demon_id ?? demonOrUrl?.assetId)
       : 0;
-    const match = /^\/app\/images\/demons\/(?:(?:thumbnails|map|portrait)\/)?(\d+)\.(?:png|webp)$/i.exec(fallback);
+    const match = /^\/app\/images\/demons\/(?:(?:thumbnails|map|portrait)\/)?(\d+)\.(?:png|webp)(?:[?#].*)?$/i.exec(fallback);
     const sourceId = Number.isInteger(explicitId) && explicitId > 0
       ? explicitId
       : Number(match?.[1]) || 0;
     if (!sourceId || !['map', 'portrait'].includes(variant)) return fallback;
-    return `/app/images/demons/${variant}/${sourceId}.webp`;
+    return `/app/images/demons/${variant}/${sourceId}.webp?v=art-d07fa45af2e7`;
   }
 
   function getCurrentSoulText(soulElement) {

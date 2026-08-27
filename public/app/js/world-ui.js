@@ -62,7 +62,7 @@ import './bag-item-visuals.js';
   const WORLD_AMBUSH_DEFEAT_HOLD_MS = 140;
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
-  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp';
+  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-d07fa45af2e7';
   const MERCHANT_FALLBACK_MOVE_SECONDS = 30 * 60;
   const MERCHANT_FALLBACK_BRIBE_COST = 50;
   const MERCHANT_OFFER_LIMIT = 4;
@@ -5588,7 +5588,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/assets/world/crowley.webp" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/crowley.webp?v=art-d07fa45af2e7" alt="" width="512" height="512" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Traveling Merchant</span>
@@ -9377,7 +9377,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card world-soul-font-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/assets/world/soul-font.webp?v=93bca6f999e6" alt="" width="768" height="768" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/soul-font.webp?v=art-d07fa45af2e7" alt="" width="768" height="768" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Soul Offering</span>
@@ -10076,7 +10076,7 @@ import './bag-item-visuals.js';
             DEMON_MAP_ATLAS_FRAME_SIZE
           );
           textures.set(
-            `/app/images/demons/map/${id}.webp`,
+            `/app/images/demons/map/${id}.webp?v=art-d07fa45af2e7`,
             new Pixi.Texture({ source: atlas.source, frame })
           );
         });
@@ -10686,8 +10686,8 @@ import './bag-item-visuals.js';
   // Dialog portraits want more pixels than the tiny world-map tokens, so swap
   // the map WebP for the 512px portrait variant when the URL matches.
   function toDemonPortraitUrl(url) {
-    const match = /^\/app\/images\/demons\/map\/(\d+)\.webp$/.exec(String(url || ''));
-    return match ? `/app/images/demons/portrait/${match[1]}.webp` : url;
+    const match = /^\/app\/images\/demons\/map\/(\d+)\.webp(?:[?#].*)?$/.exec(String(url || ''));
+    return match ? `/app/images/demons/portrait/${match[1]}.webp?v=art-d07fa45af2e7` : url;
   }
 
   function delay(ms) {

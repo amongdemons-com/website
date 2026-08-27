@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const writeAsset = require('./write-asset');
 
 const SOURCE_DIR = path.join(__dirname, '..', 'public', 'app', 'images', 'assets', 'background');
 const FORMATS = [
@@ -30,9 +31,9 @@ async function main() {
 
       const image = sharp(sourcePath);
       if (format.extension === '.avif') {
-        await image.avif(format.options).toFile(outputPath);
+        writeAsset(outputPath, await image.avif(format.options).toBuffer());
       } else {
-        await image.webp(format.options).toFile(outputPath);
+        writeAsset(outputPath, await image.webp(format.options).toBuffer());
       }
       generated += 1;
     }

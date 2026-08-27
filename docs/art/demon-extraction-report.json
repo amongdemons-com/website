@@ -1,0 +1,1586 @@
+[
+  {
+    "id": 1,
+    "species": "Boof Nitza",
+    "rarity": "common",
+    "source": "demons/001-boof-nitza-common-v3.png",
+    "output": "1.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      143,
+      161,
+      162
+    ],
+    "chroma": [
+      18,
+      1
+    ],
+    "removedComponents": 3,
+    "transparentPixels": 1280458,
+    "partialPixels": 3347,
+    "unchangedOpaquePixels": 288711,
+    "sourceSha256": "b9a95143b6b29039f8d6571d566992b431ad813f083c2cebe45de95e9cbabefd",
+    "outputSha256": "e3a2b0718c06936c5aec318a60acc447c3e422314896a36df0f39becd3875320"
+  },
+  {
+    "id": 2,
+    "species": "Boof Nitza",
+    "rarity": "uncommon",
+    "source": "demons/002-boof-nitza-uncommon-v3.png",
+    "output": "2.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      138,
+      157,
+      159
+    ],
+    "chroma": [
+      19,
+      3
+    ],
+    "removedComponents": 9,
+    "transparentPixels": 1215627,
+    "partialPixels": 4811,
+    "unchangedOpaquePixels": 352078,
+    "sourceSha256": "0703e3cab169611005ea8962bd01e49ad3200260eb27048d026815c18e75925f",
+    "outputSha256": "b15adb22f902dcfbd1ca06f69a512f1f72599c10722ccb0e2e757bc008cf3f0c"
+  },
+  {
+    "id": 3,
+    "species": "Boof Nitza",
+    "rarity": "rare",
+    "source": "demons/003-boof-nitza-rare-v3.png",
+    "output": "3.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      136,
+      154,
+      156
+    ],
+    "chroma": [
+      19,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1131807,
+    "partialPixels": 4957,
+    "unchangedOpaquePixels": 435752,
+    "sourceSha256": "98b12c350fa68e42c83ea2bab37e1cc27e4fd5f6573074387eca8b5a6d8330c3",
+    "outputSha256": "99f05c937196a3f41479ecdb08904fd7972e3dec988bb9af5af75b4c6297a730"
+  },
+  {
+    "id": 4,
+    "species": "Boof Nitza",
+    "rarity": "epic",
+    "source": "demons/004-boof-nitza-epic-v3.png",
+    "output": "4.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      135,
+      158,
+      161
+    ],
+    "chroma": [
+      23,
+      4
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1100267,
+    "partialPixels": 5692,
+    "unchangedOpaquePixels": 466557,
+    "sourceSha256": "ad4e56330036d44e3314961025663d3968d9feba8e22e85f428a1eacfde2c0f5",
+    "outputSha256": "60a6bbb9b2acac92b99c08a5a926fb9e3af2e73823db2c9d7d68d6b7cac620af"
+  },
+  {
+    "id": 5,
+    "species": "Boof Nitza",
+    "rarity": "legendary",
+    "source": "demons/005-boof-nitza-legendary-v3.png",
+    "output": "5.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      140,
+      159,
+      162
+    ],
+    "chroma": [
+      19,
+      3
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1113890,
+    "partialPixels": 5625,
+    "unchangedOpaquePixels": 453001,
+    "sourceSha256": "81f065a477846e8be634bfa0890cc78a8fa1ddc81f0b053358c054b9f0b5d029",
+    "outputSha256": "a27a783e25f890569f764d90746cdb13164a97426250d94097aca6b7fac2d3ad"
+  },
+  {
+    "id": 6,
+    "species": "Boof Nitza",
+    "rarity": "mythic",
+    "source": "demons/006-boof-nitza-mythic-v3.png",
+    "output": "6.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      138,
+      162,
+      165
+    ],
+    "chroma": [
+      25,
+      3
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1057696,
+    "partialPixels": 7006,
+    "unchangedOpaquePixels": 507814,
+    "sourceSha256": "a7577a3202b218b6d3c777de69000fb0641e01a58411e9a4e0045a04daa254c0",
+    "outputSha256": "23d5ccccee27ef8fc0d321409eea64f9ea7c1d10530555f4453bbea9c7677bc5"
+  },
+  {
+    "id": 7,
+    "species": "Gon G'ah",
+    "rarity": "common",
+    "source": "demons/007-gon-gah-common-v2.png",
+    "output": "7.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      151,
+      173,
+      174
+    ],
+    "chroma": [
+      22,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1185888,
+    "partialPixels": 4591,
+    "unchangedOpaquePixels": 382037,
+    "sourceSha256": "17a4fc5349361f37c0c010b0b62e71d2aa954b2070fb3f138c66b691b5443759",
+    "outputSha256": "0330c9f330cb2069ab04f9b8c136f682f8910b56ea00591691829b00fd949b31"
+  },
+  {
+    "id": 8,
+    "species": "Gon G'ah",
+    "rarity": "uncommon",
+    "source": "demons/008-gon-gah-uncommon-v2.png",
+    "output": "8.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      153,
+      173,
+      173
+    ],
+    "chroma": [
+      20,
+      1
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 1140014,
+    "partialPixels": 6175,
+    "unchangedOpaquePixels": 426327,
+    "sourceSha256": "9f273876f7de3f8b8942db805fc281681c373b9b5a986165a0a733839979e45f",
+    "outputSha256": "ddc7a440c74e83d4dbb4832f75754ad4a2b034d337a15ec1fac448eb01514ac5"
+  },
+  {
+    "id": 9,
+    "species": "Gon G'ah",
+    "rarity": "rare",
+    "source": "demons/009-gon-gah-rare-v2.png",
+    "output": "9.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      146,
+      169,
+      170
+    ],
+    "chroma": [
+      23,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1248782,
+    "partialPixels": 6308,
+    "unchangedOpaquePixels": 317426,
+    "sourceSha256": "86278543cb038249a451fa25b8933fc9f589832bea46eb9b9bea83a375ef1297",
+    "outputSha256": "5f1e280a416526ca7889f3a32e8404ebff0ee4e608cf818782f366499b79b28c"
+  },
+  {
+    "id": 10,
+    "species": "Gon G'ah",
+    "rarity": "epic",
+    "source": "demons/010-gon-gah-epic-v2.png",
+    "output": "10.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      150,
+      169,
+      171
+    ],
+    "chroma": [
+      19,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1142392,
+    "partialPixels": 7983,
+    "unchangedOpaquePixels": 422141,
+    "sourceSha256": "1476c3ef8d21db5846544cb90c9faafe587a6fa12ef8283ad36bdfc8cbd7f28a",
+    "outputSha256": "c0087468533452d244f759ef1531633011a6420cb9605de5c90f026d8a5fcefd"
+  },
+  {
+    "id": 11,
+    "species": "Gon G'ah",
+    "rarity": "legendary",
+    "source": "demons/011-gon-gah-legendary-v2.png",
+    "output": "11.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      155,
+      174,
+      174
+    ],
+    "chroma": [
+      19,
+      0
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1154251,
+    "partialPixels": 7197,
+    "unchangedOpaquePixels": 411068,
+    "sourceSha256": "8c6bbef1c766e92e8050edadc52c17bbc62e08030817f98fdb94476051a96e65",
+    "outputSha256": "187a57d0c43b25d28b37a1ae07738e4fd2150c16d0a84c13e59e61ad03166b67"
+  },
+  {
+    "id": 12,
+    "species": "Gon G'ah",
+    "rarity": "mythic",
+    "source": "demons/012-gon-gah-mythic-v2.png",
+    "output": "12.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      149,
+      168,
+      168
+    ],
+    "chroma": [
+      20,
+      0
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1104373,
+    "partialPixels": 7564,
+    "unchangedOpaquePixels": 460579,
+    "sourceSha256": "2157c19ed25b624e75ba7932e31f90d0882e7c4aac9c6dbcaf35ab901a25c424",
+    "outputSha256": "e724357e7115f02b42ae80ffd16e09d296fd78d9b15d3eeffbcb17389d6b02c2"
+  },
+  {
+    "id": 13,
+    "species": "Ma'Zga",
+    "rarity": "common",
+    "source": "demons/013-mazga-common-v7.png",
+    "output": "13.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      147,
+      167,
+      168
+    ],
+    "chroma": [
+      20,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1145915,
+    "partialPixels": 2183,
+    "unchangedOpaquePixels": 424418,
+    "sourceSha256": "7a4d26cae30efd6567908db1e3f6c347fd9ae1c78f9bdb7695d1260b4af710e5",
+    "outputSha256": "78061e25a6cedf89d526cf45a91bd607ea71ec3af42f255edf6bdcb1c3482d8d"
+  },
+  {
+    "id": 14,
+    "species": "Ma'Zga",
+    "rarity": "uncommon",
+    "source": "demons/014-mazga-uncommon-v7.png",
+    "output": "14.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      146,
+      165,
+      167
+    ],
+    "chroma": [
+      19,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1068000,
+    "partialPixels": 2812,
+    "unchangedOpaquePixels": 501704,
+    "sourceSha256": "f67cf67b67efa866c794fa3ba4e154d803c46ee130a7073e11dfcfc7a100994e",
+    "outputSha256": "63ec1e190fa3ce31bcad1a07034d86641ab452e0798411ffdb6a0637b24d71cd"
+  },
+  {
+    "id": 15,
+    "species": "Ma'Zga",
+    "rarity": "rare",
+    "source": "demons/015-mazga-rare-v7.png",
+    "output": "15.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      145,
+      165,
+      166
+    ],
+    "chroma": [
+      21,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 933366,
+    "partialPixels": 3047,
+    "unchangedOpaquePixels": 636103,
+    "sourceSha256": "ded0bae13dc4b52905e7917cfcc177d2a1f7d78420f6f364aba3db5264794561",
+    "outputSha256": "74a4fa532d3f9bba8f6bfc61f44d9e0db2284669b63ea9563a07a037f7046022"
+  },
+  {
+    "id": 16,
+    "species": "Ma'Zga",
+    "rarity": "epic",
+    "source": "demons/016-mazga-epic-v9.png",
+    "output": "16.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      132,
+      153,
+      156
+    ],
+    "chroma": [
+      21,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 990600,
+    "partialPixels": 4398,
+    "unchangedOpaquePixels": 577518,
+    "sourceSha256": "6a0ff75755f8fbbe1ec7a8a67286061bdfcb5f6143be1665e22dbfc5bce2b4ea",
+    "outputSha256": "9d11a5cdc64f1c144cfb137993297ca45b8ed7fd4d14c8265a972e3ec9de8a6a"
+  },
+  {
+    "id": 17,
+    "species": "Ma'Zga",
+    "rarity": "legendary",
+    "source": "demons/017-mazga-legendary-v8.png",
+    "output": "17.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      142,
+      160,
+      162
+    ],
+    "chroma": [
+      18,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 885839,
+    "partialPixels": 4503,
+    "unchangedOpaquePixels": 682174,
+    "sourceSha256": "489515f1aa61d3c6fd2286b59c44eb49d14db492bf73cb7d6a03b725bafbff55",
+    "outputSha256": "57c90d48fac5f13007dfa11b1e3092d0bac4a316accc8ab549b89af9f5a01b69"
+  },
+  {
+    "id": 18,
+    "species": "Ma'Zga",
+    "rarity": "mythic",
+    "source": "demons/018-mazga-mythic-v9.png",
+    "output": "18.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      136,
+      153,
+      160
+    ],
+    "chroma": [
+      18,
+      6
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 892178,
+    "partialPixels": 7024,
+    "unchangedOpaquePixels": 673314,
+    "sourceSha256": "04e34d8705faa7123639c026f6b7ff4efc280124e18775df0a05e9775e2c5c15",
+    "outputSha256": "69eacc54f4476b86a242a5d8ce9f65e926b870a6763ff74a54b56b15ff5facaf"
+  },
+  {
+    "id": 19,
+    "species": "Tor Tza",
+    "rarity": "common",
+    "source": "demons/019-tor-tza-common-v4.png",
+    "output": "19.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      141,
+      161,
+      163
+    ],
+    "chroma": [
+      20,
+      2
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 1154464,
+    "partialPixels": 3487,
+    "unchangedOpaquePixels": 414565,
+    "sourceSha256": "5f39bc33e1887915d565c687eaacdb9a5d22c5547eee2fc39206b6ebf24b78c1",
+    "outputSha256": "3c7dcecee26ec38206edb38186d44a4a0690387020f6b1c3162e4ba52c598757"
+  },
+  {
+    "id": 20,
+    "species": "Tor Tza",
+    "rarity": "uncommon",
+    "source": "demons/020-tor-tza-uncommon-v2.png",
+    "output": "20.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      144,
+      164,
+      166
+    ],
+    "chroma": [
+      20,
+      3
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1052728,
+    "partialPixels": 4431,
+    "unchangedOpaquePixels": 515357,
+    "sourceSha256": "5acec17b98e85440c0fa8782f8c4d9eccf5e63c176c0211e58c00ebf187d7a1a",
+    "outputSha256": "65fc476bb800b51260e33fde1ee1a714ef3c991d313ee181256a8975ba1ad886"
+  },
+  {
+    "id": 21,
+    "species": "Tor Tza",
+    "rarity": "rare",
+    "source": "demons/021-tor-tza-rare-v2.png",
+    "output": "21.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      143,
+      167,
+      168
+    ],
+    "chroma": [
+      24,
+      1
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 960005,
+    "partialPixels": 4741,
+    "unchangedOpaquePixels": 607770,
+    "sourceSha256": "1a17e64974711b99aa91972e57b506af7e28a7ceb122c628c473045e35210718",
+    "outputSha256": "1ae1293950df3e86872a3741f86a9ce5b9d8af26acba0ea92f6c08369dea70b7"
+  },
+  {
+    "id": 22,
+    "species": "Tor Tza",
+    "rarity": "epic",
+    "source": "demons/022-tor-tza-epic-v2.png",
+    "output": "22.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      144,
+      164,
+      167
+    ],
+    "chroma": [
+      20,
+      4
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 920108,
+    "partialPixels": 4659,
+    "unchangedOpaquePixels": 647749,
+    "sourceSha256": "6508d4d614f960c500c54ddb48aadd49c951fb987736c85351b067c605059a06",
+    "outputSha256": "66d2fe0c2a2ac2e5cf8953ded52cdb2317713342b779d3a0853e0191f1ba777d"
+  },
+  {
+    "id": 23,
+    "species": "Tor Tza",
+    "rarity": "legendary",
+    "source": "demons/023-tor-tza-legendary-v2.png",
+    "output": "23.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      137,
+      160,
+      160
+    ],
+    "chroma": [
+      22,
+      1
+    ],
+    "removedComponents": 5,
+    "transparentPixels": 882492,
+    "partialPixels": 5647,
+    "unchangedOpaquePixels": 684377,
+    "sourceSha256": "3939636610bd0a586c784d0d22f71060e949831ed3dd70bf9e46a5f382c8e5b8",
+    "outputSha256": "3991d3265b7e325bb0bada4e40e54228628bcc18b0a95f4b52efd74a03fdaac5"
+  },
+  {
+    "id": 24,
+    "species": "Tor Tza",
+    "rarity": "mythic",
+    "source": "demons/024-tor-tza-mythic-v2.png",
+    "output": "24.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      146,
+      166,
+      168
+    ],
+    "chroma": [
+      21,
+      2
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 868107,
+    "partialPixels": 5276,
+    "unchangedOpaquePixels": 699133,
+    "sourceSha256": "2a265e2afc04a8fc4e4a3ffe40fc4ec70942c2429cd9571c257b19763a2463a8",
+    "outputSha256": "1567f1123a9c2846793d1b01232c2e109a9b516587d5e2fcb583f223e9c512b2"
+  },
+  {
+    "id": 25,
+    "species": "Vi'Zel",
+    "rarity": "common",
+    "source": "demons/025-vizel-common-v2.png",
+    "output": "25.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      147,
+      169,
+      171
+    ],
+    "chroma": [
+      22,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1165110,
+    "partialPixels": 3345,
+    "unchangedOpaquePixels": 404061,
+    "sourceSha256": "9e5432b9efa457a9fe07f669d4b14da0aacd3fd62e55fb1fabbda7c4083f7e8e",
+    "outputSha256": "bb2a41a4e5c85d413cfff4d4529bc58f846e4b1109517655ce8ad5e152c47319"
+  },
+  {
+    "id": 26,
+    "species": "Vi'Zel",
+    "rarity": "uncommon",
+    "source": "demons/026-vizel-uncommon-v2.png",
+    "output": "26.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      153,
+      171,
+      174
+    ],
+    "chroma": [
+      19,
+      3
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1117587,
+    "partialPixels": 3810,
+    "unchangedOpaquePixels": 451119,
+    "sourceSha256": "bcb3e4e55d6402b387d21a7d634b9ce00f188392fd2046f6e509cfdee1ad343d",
+    "outputSha256": "bfed96c65c9999b5e8ae3f17868c881c5228241910efc260c422ec705f251ce3"
+  },
+  {
+    "id": 27,
+    "species": "Vi'Zel",
+    "rarity": "rare",
+    "source": "demons/027-vizel-rare-v2.png",
+    "output": "27.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      151,
+      170,
+      173
+    ],
+    "chroma": [
+      19,
+      2
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 998289,
+    "partialPixels": 5187,
+    "unchangedOpaquePixels": 569040,
+    "sourceSha256": "348948ffd64354e139b4a67a24f24a22a8e0ff4635d006678e6d6a6dd35b28d0",
+    "outputSha256": "6b4033ae574caa9ae58a110a60280b8b1f23cb54f0cd7ffc31fb6485344acb46"
+  },
+  {
+    "id": 28,
+    "species": "Vi'Zel",
+    "rarity": "epic",
+    "source": "demons/028-vizel-epic-v2.png",
+    "output": "28.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      145,
+      165,
+      166
+    ],
+    "chroma": [
+      20,
+      1
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 1003796,
+    "partialPixels": 4903,
+    "unchangedOpaquePixels": 563817,
+    "sourceSha256": "daf47fa0f935e58ea45a12b4edebc46d17a872f613855859a0590b22bd2b1d53",
+    "outputSha256": "9b92e89c295874bbdfe1cb14ddc488f51ae63942dd10485f5848360ff05c2063"
+  },
+  {
+    "id": 29,
+    "species": "Vi'Zel",
+    "rarity": "legendary",
+    "source": "demons/029-vizel-legendary-v2.png",
+    "output": "29.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      149,
+      170,
+      171
+    ],
+    "chroma": [
+      22,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 975595,
+    "partialPixels": 5803,
+    "unchangedOpaquePixels": 591118,
+    "sourceSha256": "f59b2a9e93db2d9599ba3af8f7e3b3d1973235b7795b1bd48bdc7ff7be02b034",
+    "outputSha256": "0d9ef14352ba0f923cefe50c2456fb075661d9a364b309dd3fff32013c8ff875"
+  },
+  {
+    "id": 30,
+    "species": "Vi'Zel",
+    "rarity": "mythic",
+    "source": "demons/030-vizel-mythic-v4.png",
+    "output": "30.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      139,
+      162,
+      167
+    ],
+    "chroma": [
+      23,
+      5
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 796555,
+    "partialPixels": 6113,
+    "unchangedOpaquePixels": 769848,
+    "sourceSha256": "d81881f1828fbd82fe9d0ecdf08562e97ec2d8207684afea12570b3121dd6bee",
+    "outputSha256": "2dc1f360cced2046fad6a9cb86ca3446e8f252e39412ba097606cc0e81585d06"
+  },
+  {
+    "id": 31,
+    "species": "Goh Loomb",
+    "rarity": "common",
+    "source": "demons/031-goh-loomb-common-v2.png",
+    "output": "31.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      150,
+      168,
+      169
+    ],
+    "chroma": [
+      18,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1169484,
+    "partialPixels": 4067,
+    "unchangedOpaquePixels": 398965,
+    "sourceSha256": "63cf3da90cff92550ee37745a01f8128bb2b6ee591987f7a51381b25f43f30e4",
+    "outputSha256": "15bd964ffd3a1563845a9867e82e0321e7c9dc2f7c66b8801f1e5712db8aa55f"
+  },
+  {
+    "id": 32,
+    "species": "Goh Loomb",
+    "rarity": "uncommon",
+    "source": "demons/032-goh-loomb-uncommon-v2.png",
+    "output": "32.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      145,
+      165,
+      168
+    ],
+    "chroma": [
+      20,
+      3
+    ],
+    "removedComponents": 3,
+    "transparentPixels": 1075944,
+    "partialPixels": 6380,
+    "unchangedOpaquePixels": 490192,
+    "sourceSha256": "98072ea3b4cdf8c9aa29aa38d355e8675875c6f9f6c9d1889e6b3d24f7f62340",
+    "outputSha256": "84bd7205d911d7219f53528a2b52c8898225e2405854c833763928453e55e096"
+  },
+  {
+    "id": 33,
+    "species": "Goh Loomb",
+    "rarity": "rare",
+    "source": "demons/033-goh-loomb-rare-v2.png",
+    "output": "33.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      146,
+      168,
+      168
+    ],
+    "chroma": [
+      21,
+      0
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1186965,
+    "partialPixels": 6349,
+    "unchangedOpaquePixels": 379202,
+    "sourceSha256": "ec2ba55dddecc34b850028f24335fc62e1be890dcdcb3c03b78ef9d303a90307",
+    "outputSha256": "04e05d827f4df000e57da063c880dfc1a52ca2723b3f7154eabc539fb9eb9aea"
+  },
+  {
+    "id": 34,
+    "species": "Goh Loomb",
+    "rarity": "epic",
+    "source": "demons/034-goh-loomb-epic-v2.png",
+    "output": "34.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      149,
+      170,
+      172
+    ],
+    "chroma": [
+      21,
+      2
+    ],
+    "removedComponents": 5,
+    "transparentPixels": 967123,
+    "partialPixels": 8741,
+    "unchangedOpaquePixels": 596652,
+    "sourceSha256": "de1a202e02b2c78a6dd458d2aad184985c7ec02c076e204bfc27724d6c9390c2",
+    "outputSha256": "b0d56aa0c31fcb44b98068af6ed3ee54558acebdb7bc32dac4e5aeef6cd83848"
+  },
+  {
+    "id": 35,
+    "species": "Goh Loomb",
+    "rarity": "legendary",
+    "source": "demons/035-goh-loomb-legendary-v2.png",
+    "output": "35.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      145,
+      165,
+      165
+    ],
+    "chroma": [
+      20,
+      0
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 790564,
+    "partialPixels": 10639,
+    "unchangedOpaquePixels": 771313,
+    "sourceSha256": "95d915a3b5195bd8c5a7e66734d459c279fc9b98783d5ef86f08940b7e3394f5",
+    "outputSha256": "43962e4e06dd5dde0501723613813d88d402180e81f85261719b9994a0dceca6"
+  },
+  {
+    "id": 36,
+    "species": "Goh Loomb",
+    "rarity": "mythic",
+    "source": "demons/036-goh-loomb-mythic-v4.png",
+    "output": "36.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      143,
+      163,
+      165
+    ],
+    "chroma": [
+      20,
+      2
+    ],
+    "removedComponents": 5,
+    "transparentPixels": 833734,
+    "partialPixels": 10615,
+    "unchangedOpaquePixels": 728167,
+    "sourceSha256": "2f2ba5a27bc73804d09b567b6a2c29b57db8ca31de5fe20067094a7d07442bd3",
+    "outputSha256": "7b73e0316b6aa9d585ed5285dbe192c15a859a72729c8250801c8947778ba437"
+  },
+  {
+    "id": 37,
+    "species": "Baobaw",
+    "rarity": "common",
+    "source": "demons/037-baobaw-common-v5.png",
+    "output": "37.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      139,
+      157,
+      160
+    ],
+    "chroma": [
+      19,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1229513,
+    "partialPixels": 3949,
+    "unchangedOpaquePixels": 339054,
+    "sourceSha256": "21ced3022f3b9765a74de6c34dfad78e8ee72b0558675e5292446657f541147c",
+    "outputSha256": "0437bd33bde04113e0cf36a95a103756f1e6ea1f1417b1c6c8aba73b07b94181"
+  },
+  {
+    "id": 38,
+    "species": "Baobaw",
+    "rarity": "uncommon",
+    "source": "demons/038-baobaw-uncommon-v5.png",
+    "output": "38.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      136,
+      154,
+      157
+    ],
+    "chroma": [
+      19,
+      3
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1259719,
+    "partialPixels": 5540,
+    "unchangedOpaquePixels": 307257,
+    "sourceSha256": "4d7f06e2f0fb538a543145f133edf3860573c7f999bb56bfcf238a608241f08e",
+    "outputSha256": "f4f78a73c96dd3c883d1fe5865bef6ca7915fe9d2e9a8690dfc23740e0cdb902"
+  },
+  {
+    "id": 39,
+    "species": "Baobaw",
+    "rarity": "rare",
+    "source": "demons/039-baobaw-rare-v2.png",
+    "output": "39.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      147,
+      167,
+      169
+    ],
+    "chroma": [
+      21,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1177126,
+    "partialPixels": 7246,
+    "unchangedOpaquePixels": 388144,
+    "sourceSha256": "a26361b99c56b28b070f25214e8dda00852837b28a283624c85a99ee28612978",
+    "outputSha256": "f42b5aa09946f014dc37dd7bb68eb95395e0c6235ba490d782f046fde0716f2c"
+  },
+  {
+    "id": 40,
+    "species": "Baobaw",
+    "rarity": "epic",
+    "source": "demons/040-baobaw-epic-v2.png",
+    "output": "40.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      144,
+      164,
+      165
+    ],
+    "chroma": [
+      20,
+      1
+    ],
+    "removedComponents": 3,
+    "transparentPixels": 1086247,
+    "partialPixels": 7327,
+    "unchangedOpaquePixels": 478942,
+    "sourceSha256": "0d8d4137da1321683e5232949586e822f2e384b2ef43a0bab6a6bbbedcae8056",
+    "outputSha256": "6a24825a602467978a1e22f47d2d10a961c005abdf9c05a66db9c6fd077d40a3"
+  },
+  {
+    "id": 41,
+    "species": "Baobaw",
+    "rarity": "legendary",
+    "source": "demons/041-baobaw-legendary-v2.png",
+    "output": "41.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      151,
+      173,
+      173
+    ],
+    "chroma": [
+      21,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1124110,
+    "partialPixels": 7884,
+    "unchangedOpaquePixels": 440522,
+    "sourceSha256": "1adba4676acae6cf40e58827e6e58216aa8c917642b31036c5d5d0eba24de8bf",
+    "outputSha256": "20bf2c66d59b5b3dc58a10e8c8b5c3ec8edda428e0636d3eb0e6e1e353217ea4"
+  },
+  {
+    "id": 42,
+    "species": "Baobaw",
+    "rarity": "mythic",
+    "source": "demons/042-baobaw-mythic-v2.png",
+    "output": "42.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      146,
+      166,
+      168
+    ],
+    "chroma": [
+      21,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1144053,
+    "partialPixels": 8373,
+    "unchangedOpaquePixels": 420090,
+    "sourceSha256": "1e1aa314319f242c1ea6b1836d32cbc3df885e2ba826bd8682f72b19bb997a35",
+    "outputSha256": "06829a710861036650bba39d028105ceebecba93e06922f02f2cf025583d16ca"
+  },
+  {
+    "id": 43,
+    "species": "Ko Pak",
+    "rarity": "common",
+    "source": "demons/043-ko-pak-common-v2.png",
+    "output": "43.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      149,
+      166,
+      167
+    ],
+    "chroma": [
+      18,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1248419,
+    "partialPixels": 5915,
+    "unchangedOpaquePixels": 318182,
+    "sourceSha256": "b74e71053e9dcd90d09502b36b1d932ac765b70986a8741a82afdf2a0da6d66b",
+    "outputSha256": "71be024309e8a18fa855f1008a09b1c165aa00fe5e5221f304f3e40c46d3cce0"
+  },
+  {
+    "id": 44,
+    "species": "Ko Pak",
+    "rarity": "uncommon",
+    "source": "demons/044-ko-pak-uncommon-v2.png",
+    "output": "44.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      143,
+      166,
+      166
+    ],
+    "chroma": [
+      23,
+      0
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 1256407,
+    "partialPixels": 6439,
+    "unchangedOpaquePixels": 309670,
+    "sourceSha256": "7b5992ed7b453757014d3b9178332069681cc40458f9447936dee57aa8020237",
+    "outputSha256": "6ceb40e8f06e1dcd2869f280830b7a98c5b1ecb19d14e5020b4f2a8e50f4bb1f"
+  },
+  {
+    "id": 45,
+    "species": "Ko Pak",
+    "rarity": "rare",
+    "source": "demons/045-ko-pak-rare-v2.png",
+    "output": "45.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      151,
+      169,
+      169
+    ],
+    "chroma": [
+      18,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1176405,
+    "partialPixels": 9628,
+    "unchangedOpaquePixels": 386483,
+    "sourceSha256": "cf92c0c5b865f3f67e322ac2516bde7eb9f8c8c3603098ef6ee077ebcc268d08",
+    "outputSha256": "7aae58611d8d05d4717dced7eb8a8a5c121844148844a7fc326e8ee425d43c95"
+  },
+  {
+    "id": 46,
+    "species": "Ko Pak",
+    "rarity": "epic",
+    "source": "demons/046-ko-pak-epic-v2.png",
+    "output": "46.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      148,
+      167,
+      169
+    ],
+    "chroma": [
+      19,
+      2
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 1108173,
+    "partialPixels": 9264,
+    "unchangedOpaquePixels": 455079,
+    "sourceSha256": "d9964d580deb4560bcbec4905a9b08b2e05f4190488259c10aaea46ae5c75c7e",
+    "outputSha256": "23c746f1ee92f6143e50c48a39d3a53a786518e9d762baf45e763f72fcde0afe"
+  },
+  {
+    "id": 47,
+    "species": "Ko Pak",
+    "rarity": "legendary",
+    "source": "demons/047-ko-pak-legendary-v2.png",
+    "output": "47.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      148,
+      169,
+      169
+    ],
+    "chroma": [
+      21,
+      0
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1131680,
+    "partialPixels": 11225,
+    "unchangedOpaquePixels": 429611,
+    "sourceSha256": "f975878f8e681384b360380bf650b97742853e431008baabad9c3a0104d2e162",
+    "outputSha256": "207f978f2a2e7c555dc8e11fca1ea08dd5fd667eada1a364ed30b90f94dcb529"
+  },
+  {
+    "id": 48,
+    "species": "Ko Pak",
+    "rarity": "mythic",
+    "source": "demons/048-ko-pak-mythic-v2.png",
+    "output": "48.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      152,
+      171,
+      172
+    ],
+    "chroma": [
+      19,
+      1
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 946241,
+    "partialPixels": 10730,
+    "unchangedOpaquePixels": 615545,
+    "sourceSha256": "f1d6639fd38d3a47f4321219934c89a952e17022b9db3bcf3d62191f07a93658",
+    "outputSha256": "7764fd480ce69796ee74b4b17a594b774348211caae4f0ed87fc4d4a7933dc52"
+  },
+  {
+    "id": 49,
+    "species": "Chu Perk",
+    "rarity": "common",
+    "source": "demons/049-chu-perk-common-v2.png",
+    "output": "49.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      154,
+      171,
+      170
+    ],
+    "chroma": [
+      17,
+      -1
+    ],
+    "removedComponents": 2,
+    "transparentPixels": 1148630,
+    "partialPixels": 3334,
+    "unchangedOpaquePixels": 420552,
+    "sourceSha256": "d9d9ee94559ee4a168f58e9cb3b9e447f3154a16e3a1a20eb33be47e645fc1e7",
+    "outputSha256": "de7b5095d40d7b53abd373415a02a8d51cd4279c7078a212edb6365b73e0ab35"
+  },
+  {
+    "id": 50,
+    "species": "Chu Perk",
+    "rarity": "uncommon",
+    "source": "demons/050-chu-perk-uncommon-v2.png",
+    "output": "50.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      150,
+      170,
+      171
+    ],
+    "chroma": [
+      20,
+      2
+    ],
+    "removedComponents": 3,
+    "transparentPixels": 1057865,
+    "partialPixels": 4708,
+    "unchangedOpaquePixels": 509943,
+    "sourceSha256": "9ee8603efa7eb7cb6395a3f91fe2fce70cfb8b822807a2d6d485d838bdff328a",
+    "outputSha256": "d4976f23d357887495b2e0c5b09e4c25a5523d278795ec5623ea0afd7e273bd3"
+  },
+  {
+    "id": 51,
+    "species": "Chu Perk",
+    "rarity": "rare",
+    "source": "demons/051-chu-perk-rare-v4.png",
+    "output": "51.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      144,
+      164,
+      169
+    ],
+    "chroma": [
+      20,
+      5
+    ],
+    "removedComponents": 3,
+    "transparentPixels": 921663,
+    "partialPixels": 4123,
+    "unchangedOpaquePixels": 646730,
+    "sourceSha256": "e0bc0372b329dac6637897119fb2af93ab1938cefa2fb3d0f7521cd2c8f1f219",
+    "outputSha256": "c330177d625f35b6be097d82b55f47299493acebfa26f708b230158daf4ada75"
+  },
+  {
+    "id": 52,
+    "species": "Chu Perk",
+    "rarity": "epic",
+    "source": "demons/052-chu-perk-epic-v4.png",
+    "output": "52.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      133,
+      154,
+      162
+    ],
+    "chroma": [
+      22,
+      7
+    ],
+    "removedComponents": 3,
+    "transparentPixels": 651351,
+    "partialPixels": 4638,
+    "unchangedOpaquePixels": 916527,
+    "sourceSha256": "cc9eccc2d19e4fc291c2a71dba4b7553873b71e68ea8c93e3d207ef50029582a",
+    "outputSha256": "afa11a246d4eda75d1c718f725f6ea8f8591fc33793ec58399eb334d9fbf07bd"
+  },
+  {
+    "id": 53,
+    "species": "Chu Perk",
+    "rarity": "legendary",
+    "source": "demons/053-chu-perk-legendary-v4.png",
+    "output": "53.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      122,
+      146,
+      155
+    ],
+    "chroma": [
+      24,
+      10
+    ],
+    "removedComponents": 3,
+    "transparentPixels": 597597,
+    "partialPixels": 4662,
+    "unchangedOpaquePixels": 970257,
+    "sourceSha256": "14460f57308cff909e939aee290c902827208375bae723679862dc07a6a0431c",
+    "outputSha256": "0dcedcb75ee93204c135e0ba322a8c171b00915961c90ff742ae97fad8578415"
+  },
+  {
+    "id": 54,
+    "species": "Chu Perk",
+    "rarity": "mythic",
+    "source": "demons/054-chu-perk-mythic-v4.png",
+    "output": "54.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      114,
+      140,
+      151
+    ],
+    "chroma": [
+      26,
+      11
+    ],
+    "removedComponents": 3,
+    "transparentPixels": 545699,
+    "partialPixels": 5617,
+    "unchangedOpaquePixels": 1021200,
+    "sourceSha256": "3520b1ae5f7fc46e5fad28bcc43295b0afd5d47225a0d5e7871bb34460d7b9f3",
+    "outputSha256": "b520f89ac0d5a05110e07de9f78eb4d6745dfdf72bad966488ba689aa5fbe752"
+  },
+  {
+    "id": 55,
+    "species": "Ba Be'aga",
+    "rarity": "common",
+    "source": "demons/055-ba-beaga-common-v2.png",
+    "output": "55.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      149,
+      171,
+      173
+    ],
+    "chroma": [
+      22,
+      1
+    ],
+    "removedComponents": 4,
+    "transparentPixels": 1140446,
+    "partialPixels": 3489,
+    "unchangedOpaquePixels": 428581,
+    "sourceSha256": "e1b5432136ef66d4aeae538d596a3271c3b9be2a58bb7279ca1e8b09ef6a177e",
+    "outputSha256": "516ad459f464fddb02dc5df4b0befc814630b857ba70e14884d58a07657be827"
+  },
+  {
+    "id": 56,
+    "species": "Ba Be'aga",
+    "rarity": "uncommon",
+    "source": "demons/056-ba-beaga-uncommon-v2.png",
+    "output": "56.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      152,
+      171,
+      172
+    ],
+    "chroma": [
+      19,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1091248,
+    "partialPixels": 4946,
+    "unchangedOpaquePixels": 476322,
+    "sourceSha256": "02bf37933d2b907f14f35e204fefd3e48392dce2792fd86443ca17aea99c94a6",
+    "outputSha256": "ea03c7424bb6a3947c82a8ea26face19f86ebf220257792fca6b406910299292"
+  },
+  {
+    "id": 57,
+    "species": "Ba Be'aga",
+    "rarity": "rare",
+    "source": "demons/057-ba-beaga-rare-v2.png",
+    "output": "57.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      146,
+      169,
+      171
+    ],
+    "chroma": [
+      24,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1085207,
+    "partialPixels": 6611,
+    "unchangedOpaquePixels": 480698,
+    "sourceSha256": "301e35ede3d8b917f5cf63623dda37e3907c8a8cecc9f50a0f6be1f039550798",
+    "outputSha256": "feef9bcfdf759a5444b94d5c87e326ceff4931cf0ff0c976bf268675944123d9"
+  },
+  {
+    "id": 58,
+    "species": "Ba Be'aga",
+    "rarity": "epic",
+    "source": "demons/058-ba-beaga-epic-v2.png",
+    "output": "58.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      147,
+      169,
+      169
+    ],
+    "chroma": [
+      22,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1140148,
+    "partialPixels": 5430,
+    "unchangedOpaquePixels": 426938,
+    "sourceSha256": "05858ffeae48b34f935bcc05de551b6105f45ba7c3fb74b0b1fc1dc53de731d8",
+    "outputSha256": "dae0919b2b0c15687ca5848e7ed6dba7bfcc0f16ffcc73c2eda70187ee7c8b3f"
+  },
+  {
+    "id": 59,
+    "species": "Ba Be'aga",
+    "rarity": "legendary",
+    "source": "demons/059-ba-beaga-legendary-v4.png",
+    "output": "59.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      144,
+      164,
+      165
+    ],
+    "chroma": [
+      20,
+      2
+    ],
+    "removedComponents": 7,
+    "transparentPixels": 1093435,
+    "partialPixels": 6641,
+    "unchangedOpaquePixels": 472440,
+    "sourceSha256": "45ff70cfb07967640dd1d3c5df2a1c2cb3ecd3871bc24a497df9638ed9ee457e",
+    "outputSha256": "50d2acefdb47fd4b9f940b666af557658d8e06a611e78dd95d038a284a759bb8"
+  },
+  {
+    "id": 60,
+    "species": "Ba Be'aga",
+    "rarity": "mythic",
+    "source": "demons/060-ba-beaga-mythic-v4.png",
+    "output": "60.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      145,
+      164,
+      168
+    ],
+    "chroma": [
+      20,
+      4
+    ],
+    "removedComponents": 5,
+    "transparentPixels": 946856,
+    "partialPixels": 8220,
+    "unchangedOpaquePixels": 617440,
+    "sourceSha256": "9efbbe02d32ccb3ff0653a08d47dcf166a69066a877fcfdd877c3300d72da8cc",
+    "outputSha256": "eb9eadfd0a775f8fa5ccfc198a6ae0872255de0a9b6b437cd80c20c2388ceabd"
+  },
+  {
+    "id": 61,
+    "species": "Vee Scol",
+    "rarity": "common",
+    "source": "demons/061-vee-scol-common-v2.png",
+    "output": "61.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      151,
+      170,
+      173
+    ],
+    "chroma": [
+      20,
+      3
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1113019,
+    "partialPixels": 3354,
+    "unchangedOpaquePixels": 456143,
+    "sourceSha256": "8461ee287d56f7ad64377ebd74e12e4c2602e0d1b521dccbaf15365d765e677e",
+    "outputSha256": "0742c502c2ee100ddfa8e8b6afe717c0cdbcf519a4a97a79336c9ea9ea17c818"
+  },
+  {
+    "id": 62,
+    "species": "Vee Scol",
+    "rarity": "uncommon",
+    "source": "demons/062-vee-scol-uncommon-v2.png",
+    "output": "62.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      152,
+      174,
+      174
+    ],
+    "chroma": [
+      22,
+      1
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1073492,
+    "partialPixels": 4060,
+    "unchangedOpaquePixels": 494964,
+    "sourceSha256": "e417302bebce26e049a7b0445ad76861db59ae07b2bf48a654a059e94e4ef9f7",
+    "outputSha256": "1bcd5e24522e5fa3af569247c1fa491167450fab3ad7390860461b0b20dca417"
+  },
+  {
+    "id": 63,
+    "species": "Vee Scol",
+    "rarity": "rare",
+    "source": "demons/063-vee-scol-rare-v4.png",
+    "output": "63.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      141,
+      163,
+      166
+    ],
+    "chroma": [
+      21,
+      3
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1059323,
+    "partialPixels": 4778,
+    "unchangedOpaquePixels": 508415,
+    "sourceSha256": "298df91c5874717a3f79a7c84672deb4ed409710a300d2c7a9f3f4706a940187",
+    "outputSha256": "ebaab828627734fe4ccc96623171d424d4f8bcdf75ed8f751aac5528e573ecfd"
+  },
+  {
+    "id": 64,
+    "species": "Vee Scol",
+    "rarity": "epic",
+    "source": "demons/064-vee-scol-epic-v2.png",
+    "output": "64.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      140,
+      161,
+      162
+    ],
+    "chroma": [
+      21,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 1021777,
+    "partialPixels": 5514,
+    "unchangedOpaquePixels": 545225,
+    "sourceSha256": "8c4285724bb573beb5da88b08eccef5b4c2d058fa76087d18d58d2b6caf33488",
+    "outputSha256": "9326b606e2a39947370b8497affc18e375e719f83b9a685d10f1ff47ad30563c"
+  },
+  {
+    "id": 65,
+    "species": "Vee Scol",
+    "rarity": "legendary",
+    "source": "demons/065-vee-scol-legendary-v2.png",
+    "output": "65.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      150,
+      169,
+      171
+    ],
+    "chroma": [
+      19,
+      2
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 885821,
+    "partialPixels": 5930,
+    "unchangedOpaquePixels": 680765,
+    "sourceSha256": "3860e848db48979137b33afac776f81f5cfa7f8afb01d19999e5cd47b07ecb77",
+    "outputSha256": "43e3825f087570077a71164c0843d67c7583addbeb71071c37b7d3064970fb6f"
+  },
+  {
+    "id": 66,
+    "species": "Vee Scol",
+    "rarity": "mythic",
+    "source": "demons/066-vee-scol-mythic-v2.png",
+    "output": "66.png",
+    "width": 1254,
+    "height": 1254,
+    "matte": [
+      146,
+      167,
+      167
+    ],
+    "chroma": [
+      22,
+      0
+    ],
+    "removedComponents": 1,
+    "transparentPixels": 886909,
+    "partialPixels": 6210,
+    "unchangedOpaquePixels": 679397,
+    "sourceSha256": "add0ac0b4d2020ee2e6cf9397768964a508953d256eb1885b1f6abf21599e311",
+    "outputSha256": "80ca5eefe6f01ba7708f32a34a7d9b5257955445387f5101fb8847c742603a62"
+  }
+]

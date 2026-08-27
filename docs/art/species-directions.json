@@ -1,0 +1,420 @@
+[
+  {
+    "species": "Boof Nitza",
+    "slug": "boof-nitza",
+    "axis": "Scrappy light imp → lean trained horned warrior",
+    "identity": "Blue shaggy horned biped; common and uncommon are light imps, later tiers lean athletic fighters with modest trained muscle, proportionate limbs and a narrow waist. No excessive bulk or stick-thin limbs. Gold eyes, dark expressive jaw, two horn roots, blue-purple fur. No armor, weapons, wings or tail.",
+    "stages": [
+      {
+        "id": 1,
+        "rarity": "common",
+        "design": "A lean little blue horned imp with a small narrow pear torso, sloping shoulders, thin relaxed arms, modest hook hands and light slender legs. Keep the two short horn buds, round gold eyes, sly two-fang smile and pale icy-blue chest tuft; no purple mane. The enlarged head dominates a light agile body. No broad chest, muscular limbs, bulky paws or bulky thighs."
+      },
+      {
+        "id": 2,
+        "rarity": "uncommon",
+        "design": "A wiry blue imp, narrow torso and low sloping shoulders, thin lightly bent arms and modest dark hooked claw hands, slim legs. Keep the two short curved horns, gold eyes, crooked fang grin and small violet collar around the pale-blue chest tuft. Slightly more developed than common through horns and ruff, never through muscle mass."
+      },
+      {
+        "id": 3,
+        "rarity": "rare",
+        "design": "Lean trained blue fighter, not a skinny stick figure. Compact athletic torso, moderate sloping shoulders, a clear waist, firm but restrained upper arms/forearms, normal-sized hooked claws and proportionate strong legs. No swollen deltoids or huge fists. Keep the two tall crescent horns, gold eyes, open toothy crescent grin, angular blue cheek fur, violet V ruff and icy-blue chest tuft."
+      },
+      {
+        "id": 4,
+        "rarity": "epic",
+        "design": "A fit disciplined blue demon soldier's physique: compact athletic torso, proportionate shoulders, lightly toned arms, moderate forearms and normal-sized hooked hands, sturdy agile legs. About half the arm/shoulder bulk of the v2 brute, but not thin rods. Keep two outward-sweeping crescent horns, gold eyes, dark toothy mouth, forehead tufts and purple pointed bib. No actual uniform, armor or weapons; soldier describes fitness and stance."
+      },
+      {
+        "id": 5,
+        "rarity": "legendary",
+        "design": "An experienced lean blue warrior with a trained athletic frame, modest muscular definition in a few broad shapes, narrow waist and proportionate shoulders/arms/legs. Claws are capable but not enormous mitts. Keep two giant inward horns with one outside prong each, gold eyes, ivory-toothed cavernous mouth and descending purple-magenta mane. Powerful through poise, horns and expression, not a bodybuilder's bulk."
+      },
+      {
+        "id": 6,
+        "rarity": "mythic",
+        "design": "Mythic blue horned warrior: a fit trained soldier's build with defined but restrained cartoon muscle, firm shoulders, tapered waist and proportionate strong arms and legs. Neither bulky nor skeletal. Keep exactly two colossal forked horns, gold eyes, broad roaring black maw with big ivory teeth, violet-magenta mane and cyan chest tuft. Reduce the v2 torso and arm bulk decisively while retaining credible physical strength. No huge barrel chest, oversized biceps, gorilla fists, armor or weapons."
+      }
+    ]
+  },
+  {
+    "species": "Gon G'ah",
+    "slug": "gon-gah",
+    "axis": "Wide-eyed bug imp → many-eyed antenna monarch",
+    "identity": "Insectlike navy/teal shaggy biped, smooth rounded dotted blue dome, enormous circular orange-gold staring eyes, small ivory fangs, thin jointed arms and legs with dark curved claws. Antenna-like segmented horns, optional amber eye nodules at high tiers. Not Boof's angry furry mammal face. No wings or tail in this new progression.",
+    "stages": [
+      {
+        "id": 7,
+        "rarity": "common",
+        "design": "COMMON: Tiny skinny bug imp, huge round gold-orange eyes on a smooth round teal dome, just THREE dark forehead dots. Exactly TWO very short curved antenna horns, small fanged mouth, no hanging tendrils. Simple ragged navy teardrop torso, thin short jointed arms and two bowed legs. No extra eyes, no wing structures or chest spots."
+      },
+      {
+        "id": 8,
+        "rarity": "uncommon",
+        "design": "UNCOMMON: Slightly taller bug demon. TWO longer curved antenna horns sweep sideways with little hooked tips. Huge round orange eyes, five simple forehead dots, two protruding ivory fangs and a small black open mouth with one short blue chin tendril. Ragged dark torso, slightly longer jointed claws. No branched horns or secondary eyes."
+      },
+      {
+        "id": 9,
+        "rarity": "rare",
+        "design": "RARE: Bug stalker with TWO wide forked segmented outer antenna horns plus TWO short inner points, giving four horn roots and six visible tips. Large staring amber eyes, small toothy open black mouth with two short blue chin tendrils. Narrow blue diamond belly marking and pointed teal shoulder tufts. Thin articulated limbs, no secondary eyes or wings."
+      },
+      {
+        "id": 10,
+        "rarity": "epic",
+        "design": "EPIC: Broad antenna silhouette over a skinny dark body. TWO large outward hooked segmented outer horns each with one upward fork plus TWO inner curved horns. Larger toothed black mouth with three short chin tendrils. Two round closed coral eye-bud nodules on shoulders, a small pink belly dot. Shoulder fringe broadens but remains insect shag. Main eyes orange; no open extra eyes yet."
+      },
+      {
+        "id": 11,
+        "rarity": "legendary",
+        "design": "LEGENDARY: An antenna-crowned insect demon with huge sideways antler-like segmented outer horns and two upright inner hooks. Main circular eyes gold-orange. Two OPEN smaller amber eyes, one on each shoulder, four eyes total. Long fanged dark mouth with three simple blue tendrils. Violet-blue chest fringe, two closed coral buds on lower torso. Long claw hands and thin legs; no wings."
+      },
+      {
+        "id": 12,
+        "rarity": "mythic",
+        "design": "MYTHIC: An all-seeing insect monarch. TWO enormous spreading branched segmented outer horns with upward forks and TWO smaller inner hooks form a wide crown. Exactly SEVEN amber eyes: two huge circular face eyes, two smaller shoulder eyes and THREE smaller torso eyes arranged as a downward triangle. All eyes are simple flat orange discs with dark pupils. Large fanged mouth and three broad dangling blue chin tendrils; narrow shaggy navy body, teal shoulder mass, long thin articulated claw arms and two legs. No wings, armor or more limbs."
+      }
+    ]
+  },
+  {
+    "species": "Ma'Zga",
+    "slug": "mazga",
+    "axis": "Poison puddle → goo scorpion tail → rearing wave → airborne goo hands",
+    "identity": "A living teal/navy/purple poison blob with an embedded fang-maw and an attached purple puddle base. Gold eyes through legendary; pink at mythic. No humanoid torso, feet or muscular anatomy. Epic gains a scorpion-shaped tail made entirely of the same goo. Legendary remains the single rearing liquid arc. Mythic has two once-forked horns and raised goo hands attached to the upper body but disconnected from the bottom puddle; these side appendages must not form closed circles.",
+    "stages": [
+      {
+        "id": 13,
+        "rarity": "common",
+        "design": "COMMON: A small low asymmetrical poison puddle with a softly slumped teal mound rising from a wide irregular navy-purple ooze base. The body is one continuous fluid mass; no legs, feet, hands, neck or separate torso. Two tiny drooping side lobes are part of the blob, not arms. Large flat gold eyes with black pupils and a mischievous brow. A small vertical open black maw with two tiny pale-green venom fangs. Only a few broad teal drips over the darker lower mass. No horns, forehead mark, green mantle or external effects. Entire creature about 60% canvas height and slightly wider than tall."
+      },
+      {
+        "id": 14,
+        "rarity": "uncommon",
+        "design": "UNCOMMON: A growing young blob, still low and broad with a substantial spreading purple puddle base. Slightly taller slumped teal face mound, navy ooze underneath. One small dull-green forehead spot, gold eyes, a longer open dark mouth and two attached green lower-lip drips. Two short soft side flows droop outward without joints or fingers. No horns yet. Show increased ooze volume and a stronger face, not a new torso. About 67% canvas height, width remains at least the body height."
+      },
+      {
+        "id": 15,
+        "rarity": "rare",
+        "design": "RARE: A mature poison blob with more volume in its lopsided teal mound and a wide navy-purple pooling base, no humanoid body. Two short raised ooze nubs mark the future horn roots. Three small green forehead marks, fierce gold eyes and an open dark maw with four pointed greenish teeth. Three thick attached venom drips hang from the lower lip. The two side flows stretch further from the body and taper into dripping lobes, never hands. One small green poison patch begins on one shoulder-like lobe. About 74% canvas height."
+      },
+      {
+        "id": 16,
+        "rarity": "epic",
+        "design": "EPIC: A low, broad crawling poison blob with an uneven wedge silhouette, not an upright bell-shaped mound. The face is embedded near the leading edge of the continuous teal mass, angled in three-quarter view, with gold eyes and a medium broad crooked fang-maw. Two SHORT BACK-SWEPT HOOK horns grow from rare's nubs, closer to sideways than upright. One thick low forward ooze surge extends from a side flow, while the opposite side remains pooled, establishing the first raised fluid extension. Navy lower ooze and wide trailing purple pool; a few small green poison patches and three heavy mouth drips. No separate limbs, head, neck, feet or muscular anatomy. Body noticeably wider than tall, sparse simple flowing shapes. LATEST v9 CORRECTION: Add ONE scorpion-like tail rooted in the rear of the blob, rising ABOVE the body and curling forward overhead into a hooked goo stinger. Tail is the same continuous teal/navy/green viscous material and simple matte rendering as the demon, not an insect shell, metal, a horn or a separate creature. Retain the low crawling body, existing two short horns, face and puddle."
+      },
+      {
+        "id": 17,
+        "rarity": "legendary",
+        "design": "LEGENDARY: The epic's forward ooze surge grows into ONE LARGE REARING CURL, producing an unmistakable asymmetrical breaking-wave silhouette with a visible open gap beneath the overhang. The entire substantial body, including the face-bearing mass, sweeps upward and forward in one continuous thick liquid arc anchored to the spreading navy-purple puddle; not a thin snake neck. The opposite side stays low and heavy. Two medium-long horns sweep OUTWARD and hook upward at their tips, not the epic's short back-hooks or mythic's forks. Gold eyes, a deep slanted vertical maw and a few large poison fangs. Two broad green poison flows trace the curve; few thick drips. No humanoid limbs, wings, frill, feet, clothing or detached effects."
+      },
+      {
+        "id": 18,
+        "rarity": "mythic",
+        "design": "MYTHIC v9: Preserve the v8 broad central poison blob, pink eyes with black pupils, six large venom teeth, two once-forked horn roots (four tips total), palette and central purple puddle. The two raised side appendages become airborne goo arms/hands attached ONLY at their upper roots beside the central mass. Break their entire lower connection to the puddle: both free ends hang well above it, with a broad open gap beneath each that reaches the outside background. End each appendage in a few broad tapering goo digits or lobes so it reads as a loose hand of liquid. No closed rings, circular holes, pillars reaching the ground or dripping bridges to the pool. The central blob remains grounded; hands stay in the air. No humanoid torso, muscular anatomy, jointed skeletal arms, wings, gills or additional faces."
+      }
+    ]
+  },
+  {
+    "species": "Tor Tza",
+    "slug": "tor-tza",
+    "axis": "Little ember → walking furnace",
+    "identity": "Hornless stocky charcoal shaggy fire demon, dark skull/owl-like angular face, yellow eyes, orange sawtooth grin at stronger stages, blue-gray neck/chest tuft. Orange-yellow flames attached to crown and hands; fire is bold outlined flat shapes. Two arms, two claw feet; never horns, wings, lava scenery or smoke.",
+    "stages": [
+      {
+        "id": 19,
+        "rarity": "common",
+        "design": "COMMON: Small squat charcoal imp with one short candle-like orange flame and yellow center on head. Pale-yellow angry eyes, CLOSED zigzag mouth, small turquoise chest tuft, short dark claw hands with just tiny orange ember cuffs, no full flaming fists. Plain charcoal body, no belly core, no shoulder fire or horns. Add the missing plain black pupil to the viewer-left gold eye, matching the pupil size and direction of the other eye. Keep all other features and composition unchanged."
+      },
+      {
+        "id": 20,
+        "rarity": "uncommon",
+        "design": "UNCOMMON: Stocky charcoal demon with a three-tongue medium head flame, yellow eyes and a small bright orange sawtooth grin. Orange cheek points, modest gray-teal chest tuft, one orange diamond ember mark on belly. Small flames wrap both wrists while dark claws remain visible. No belly furnace or shoulder flames."
+      },
+      {
+        "id": 21,
+        "rarity": "rare",
+        "design": "RARE: Broader dark fire demon with a tall swept-back flame crest, bright yellow round eyes, orange jagged grin and thick blue-gray neck mane. Three large red-orange ember diamonds form a simple chest-to-belly pattern. Heavy forearms each wear a large two-tone flame cuff, dark claws separate. No circular core yet, no horns."
+      },
+      {
+        "id": 22,
+        "rarity": "epic",
+        "design": "EPIC: A coal-black furnace brute with square shoulders, a fan of FIVE broad head flame tongues and a circular orange belly furnace with yellow inner center. Blue-gray mane above the core, fierce yellow eyes and broad orange sawtooth mouth. Big flame-wrapped fists, stout clawed feet. Two small orange shoulder-flame tips; no smoke or particles."
+      },
+      {
+        "id": 23,
+        "rarity": "legendary",
+        "design": "LEGENDARY: Imposing heavy fire demon with a grim owl-like angular charcoal mask and narrowed yellow eyes. A wide arched orange-yellow fire crest crowns head, broad charcoal jagged shoulders, thick blue-gray neck mane. Large oval belly furnace bordered by three chunky dark plates. Long curved black claws emerge from broad burning forearms. Fire remains attached and graphic, no horns."
+      },
+      {
+        "id": 24,
+        "rarity": "mythic",
+        "design": "MYTHIC: Ultimate walking furnace, squat huge barrel torso and enormous claw forearms. A continuous ATTACHED fire mane rises from both shoulders behind head into a tall three-lobed inferno crown, broad simple orange outer shapes with pale-yellow cores, NOT wings or a floating halo. Fierce yellow eyes and enormous bright sawtooth grin. Broad open orange-yellow belly furnace framed by chunky charcoal body plates, a small teal chest tuft. Two flaming arms with very large visible black claws, two stout feet. No sparks, smoke, glow, backdrop flames or horns."
+      }
+    ]
+  },
+  {
+    "species": "Vi'Zel",
+    "slug": "vizel",
+    "axis": "Horn-bud calf demon → colossal crowned bull",
+    "identity": "FOUR-LEGGED navy/blue demon bull with bovine muzzle and nostrils, side ears, angry red eyes, shaggy forequarters, hoof-like feet and a tufted tail. Horn span and neck mane define progression; later burgundy/red branching body motifs and purple ruff. Never bipedal, humanoid, armored or winged.",
+    "stages": [
+      {
+        "id": 25,
+        "rarity": "common",
+        "design": "COMMON: Small sturdy blue demon bull on FOUR short legs. Two very short dark upward horn buds, broad bovine muzzle, sideways pointed ears, red eyes, short blue shoulder fur and tiny tufted tail. Plain dark navy torso with small muted burgundy chest tuft. No inner horns, no red body markings, no huge mane. Remove every white/light catchlight from both eyes; each eye uses only a flat red field and its existing black pupil/outline. Preserve all other art."
+      },
+      {
+        "id": 26,
+        "rarity": "uncommon",
+        "design": "UNCOMMON: Compact blue bull with TWO short curved horns sweeping outward and up, each with a red base band, plus TWO tiny inner horn nubs. A slightly longer navy shoulder mane, stronger forelegs, narrow red eyes, bovine muzzle, four hoof-like feet and tufted tail. No branching chest marks. CRITICAL: Exactly FOUR total horns only: TWO big outer horns and TWO little inner horn buds. No third inner horn, no extra dark forehead spike. All forehead hair tufts must be BLUE. Remove every white/light catchlight from both eyes; each eye uses only a flat red field and its existing black pupil/outline. Preserve all other art."
+      },
+      {
+        "id": 27,
+        "rarity": "rare",
+        "design": "RARE: Heavy-fronted quadruped bull with TWO very wide thick crescent horns and TWO small inner horns. Violet-red horn base bands, red eyes, blue muzzle, navy neck mane and a small pink-purple ridge along shoulder/back. Horn span wider than body, clearly four legs, no branching body motifs yet. Remove every white/light catchlight from both eyes; each eye uses only a flat red field and its existing black pupil/outline. Preserve all other art."
+      },
+      {
+        "id": 28,
+        "rarity": "epic",
+        "design": "EPIC: Powerful low charging bull, heavy shoulders and two huge upward crescent outer horns plus two inner horns. RED branching flame-like marks on forehead, both sides of chest and one flank. Long angular navy mane, red eyes, broad blue muzzle, four stout legs, long tufted tail. Keep natural fur, no metal armor."
+      },
+      {
+        "id": 29,
+        "rarity": "legendary",
+        "design": "LEGENDARY: Proud massive demon bull with TWO giant outer horns whose tips FORK into two clear prongs, plus TWO smaller inner horns. Broad navy chest mane, red antler-shaped V chest motif and red forehead marks. Thick forelegs, broad muzzle, red eyes, tufted tail. Four feet fully visible. Wider and taller horn canopy than epic."
+      },
+      {
+        "id": 30,
+        "rarity": "mythic",
+        "design": "Restore the chunky graphic cartoon rendering of the roster. Keep the four-legged mythic bull, two forked outer horns plus two inner horns (six tips), huge head/forequarters, purple mane and split beard, a few bold red branch marks, red eyes with black pupils, tufted tail. Simplify horn segments, fur masses and red motifs drastically. No little strands, veins, glossy highlight, white eye glow, realistic anatomy or painterly shading."
+      }
+    ]
+  },
+  {
+    "species": "Goh Loomb",
+    "slug": "goh-loomb",
+    "axis": "Simple fledgling → four-winged mythic avian demon",
+    "identity": "Teal/navy avian demon with coral feather crown, beak, gold eyes, talons and wings rooted on the back; its two claw arms are always separate from the wings.",
+    "stages": [
+      {
+        "id": 31,
+        "rarity": "common",
+        "design": "Small scrappy avian imp. Squat rounded torso, large stern golden eyes and short pointed teal beak. Two SHORT blue pointed ear-horns, each less than a quarter of head height. Small neat teal collar, no layered mantle. Exactly TWO SMALL FOLDED wings tucked against the upper back, visible at the sides and ending at the hips; no open wingspan, no overhead wing arcs, no curled wing joints. Navy feathers, only a tiny muted mauve tip patch. Separate short claw arms and two sturdy bird talon feet. Short three-feather tail tuft, almost no pink. The silhouette must be compact and simple, visibly the least powerful tier, never baby-cute."
+      },
+      {
+        "id": 32,
+        "rarity": "uncommon",
+        "design": "Alert young avian hunter, slightly leaner than common. Angular teal brow and stern golden eyes, short hooked beak. Two medium-short blue swept ear-horns, around half of head height. A modest pointed neck ruff. Exactly TWO MEDIUM wings partly unfurled diagonally DOWN AND OUT behind the arms, with clearly longer flight feathers than common, tips stopping around knee height. Wings are predominantly navy with a narrow muted VIOLET band; only tiny dusty-pink tips. Wings never arc high above the head. Two separate claw arms and two bird talon feet. A short narrow forked tail extends behind. Confident crouched three-quarter stance. No coral crown, breast emblem, extra wings or big pink plumes."
+      },
+      {
+        "id": 33,
+        "rarity": "rare",
+        "design": "Lean dangerous avian assassin. Sharp teal facial mask, angry golden-orange eyes and hooked beak. Two long thin upright BLUE ear-horns roughly head-height. Exactly TWO full flight wings extended broadly to either side in a LOW HORIZONTAL SWEEP, with angular blade-like primary feather groups, forming a strong wide bar silhouette below the horn tips. Navy wings with a clear broad VIOLET inner band and a thin CORAL-PINK outer feather band; colors are flat. A pointed teal neck ruff and larger curved hand talons, two separate arms, two bird feet. One long narrow two-pronged feather tail with pink ends. No coral-colored horns, no huge crown, no chest emblem and no second wing pair."
+      },
+      {
+        "id": 34,
+        "rarity": "epic",
+        "design": "Powerful avian demon commander with a slightly broader chest, sharp beak and fierce orange eyes. The two ear-horns now become thick CORAL-PINK backward-sweeping crests, with one small dark-blue feather spur behind each. Exactly TWO LARGE wings lifted into a WIDE DIAGONAL V, making an aggressive rising silhouette rather than the rare's horizontal wings. Large dark-blue blade-shaped leading feathers, broad violet and coral feather blocks inside. A substantial layered teal shoulder/neck mantle with a single CORAL V-shaped chest-feather mark. Two separate strong claw arms and two taloned bird feet. A long three-feather tail opens in a small fan behind one hip, pink tips. No extra wing pair, no circular halo, no metal armor or weapons."
+      },
+      {
+        "id": 35,
+        "rarity": "legendary",
+        "design": "Regal and dangerous avian demon with a broad proud stance, large curved hand talons and stern orange-gold eyes. Sharp teal beak mask. Two tall CORAL-PINK outer feather horns each fork into two pointed tips, forming a dramatic four-tip crown, but no dark inner horns yet. Exactly TWO ENORMOUS wings raised and arched high like a grand canopy, each with a distinctive hooked navy shoulder/leading-edge feather at its upper elbow and long wide blade primary groups. Huge navy-violet shapes with bold coral-pink inner bands and a small pale-peach tip accent. A thick tiered teal mantle and larger coral V chest plumage. Two separate claw arms, two bird talon feet. A luxurious five-feather tail fan, fewer broad feather shapes rather than many thin feathers. Stronger and more ceremonial than epic but still only two wings. No halo, no weapons, no second wing pair."
+      },
+      {
+        "id": 36,
+        "rarity": "mythic",
+        "design": "Ultimate ascended avian demon: a compact powerful torso, fierce intense golden-orange eyes, sharp teal beak and dominant crown. Two towering CORAL outer feather-horns with split tips plus TWO shorter dark-violet inner prongs form the crown; broad simple shapes, not filigree. UNIQUE MYTHIC FEATURE: exactly FOUR WINGS in TWO PAIRS, all attached to ONE torso. Two enormous upper wings sweep upward and outward; two clearly separate smaller lower wings sweep down and outward from below them. The four wings must form a readable X-shaped silhouette with a clear gap between upper and lower wings on each side. Each wing uses only a few broad navy, violet, coral-pink and pale-peach feather masses. TWO normal clawed arms remain clearly visible in front, separate from all four wings, and TWO strong taloned feet below. Broad teal neck mantle and bold CORAL V breast plumage with a small pale-peach center. A large five-pronged fan tail anchors the lower silhouette. Grounded commanding three-quarter stance; head enlarged enough to remain a character at icon size. This is a demonic bird, not an angel or human in armor. No halo, rings, sword, extra heads, atmospheric glow or background elements. Keep four wings but move the entire lower pair's roots to the BACK below the upper pair. Lower wings pass behind ribcage and arms. Both hands/wrists/elbows must have independent continuous outlines and clear gaps from the wing roots. No wing begins at a hand. Preserve all other mythic bird features."
+      }
+    ]
+  },
+  {
+    "species": "Baobaw",
+    "slug": "baobaw",
+    "axis": "Clawed toddler → growing juvenile → long-clawed nightmare",
+    "identity": "Lean navy skull-faced stalker with a pale teal mask, gold early eyes shifting pink later, two horn roots and unmistakable curved black talons from common onward. Common is a mischievous toddler; uncommon bridges its proportions toward rare. Arms, claws, horns and maw lengthen gradually. Purple neck/wrist tufts emerge at uncommon. No bulky muscle, armor, tail or wings.",
+    "stages": [
+      {
+        "id": 37,
+        "rarity": "common",
+        "design": "COMMON: A mischievous toddler Baobaw, not an infant plush toy. Large but less oversized pale teal skull-mask face, big gold eyes with a playful angled brow, two short slightly curved dark horns and a short black jagged mouth with a few small teeth. Compact lean navy torso, clearly visible short legs and arms reaching mid-thigh. Each hand has THREE distinct curved black talons with clear gaps, approximately palm-length, and small feet have pointed black toe claws. Claws read in the silhouette but remain much shorter than rare's scythes. Minimal navy ruff, no purple mantle. Slightly staggered confident toddler stance, about 68–72% of the square canvas height."
+      },
+      {
+        "id": 38,
+        "rarity": "uncommon",
+        "design": "UNCOMMON: Juvenile Baobaw halfway between the new toddler common and the unchanged long-limbed rare. Taller and leaner than common but still youthful, with a relatively large skull-mask face, gold eyes, two medium-short inward-curving horns and a moderately elongated black jagged maw that does not reach the chest. Arms extend to just above the knees, with THREE medium-length curved black talons per hand, longer than common but shorter than rare. Legs lengthen moderately without adult extreme lankiness. A few small violet shoulder tufts and tiny wrist tufts introduce rare's mantle. Modest hunched alert stance, about 79–83% canvas height, no muscular bulk."
+      },
+      {
+        "id": 39,
+        "rarity": "rare",
+        "design": "RARE: Long-armed skull-faced stalker with two full tall crescent horns, pink-orange eyes and a gaping vertical maw stretching to upper chest. Narrow purple shoulder V and forearm cuffs, long curved black talons reaching below knees, lean asymmetrical crouch. No white chest, no wings or tail."
+      },
+      {
+        "id": 40,
+        "rarity": "epic",
+        "design": "EPIC: Menacing crouched navy stalker with two broad sweeping inward horns and TWO small inner forehead prongs. Large violet angular shoulder mantle, a tapered black chest/beard void, orange-pink eyes and a stretched jagged grin above long chin fang shapes. Long forearms end in unusually large sickle fingers held open near ground. Narrow hips and feet."
+      },
+      {
+        "id": 41,
+        "rarity": "legendary",
+        "design": "LEGENDARY: Tall lean nightmare with TWO massive hooked outer crescent horns and TWO short inner forehead prongs. Wide stiff purple shoulder ruff rises into tall pointed side fins of FUR, not wings. Pink eyes in angular teal skull, long black open maw, two large blue shoulder studs. Oversized long sickle fingers on arms that nearly reach the ground, narrow bent legs."
+      },
+      {
+        "id": 42,
+        "rarity": "mythic",
+        "design": "MYTHIC: Ultimate clawed nightmare, lean towering navy shape compressed into readable cartoon proportions. TWO huge inward-arching crescent horns each with a short inner spur, violet crown tufts, fierce PINK eyes. A long vertical black maw with jagged teal edge teeth descends into a pointed dark chest void. Vast vivid violet-purple raised shoulder ruff forms a serrated cloak silhouette, but is FUR not wings. TWO exceptionally long arms with huge scythe-like black fingers spread beside body, TWO narrow claw legs. No extra arms, pale chest, armor or tail."
+      }
+    ]
+  },
+  {
+    "species": "Ko Pak",
+    "slug": "ko-pak",
+    "axis": "Small sapling → ancient hollow-tree guardian",
+    "identity": "Living tree skeleton, teal-blue bark skull with orange eyes, bare brown branch antlers, olive green leaves and later autumn/coral bark plates. Dark recessed chest with woody ribs, twig fingers and root feet. Two arms/two legs, not furry or wearing human clothes.",
+    "stages": [
+      {
+        "id": 43,
+        "rarity": "common",
+        "design": "COMMON: A small wiry sapling demon, teal wooden skull with orange eyes and a simple jagged mouth. TWO short brown twig antlers each with one tiny fork, one small green leafy crown sprout, sparse shoulder leaf clumps. Simple hollow dark chest with TWO visible teal rib bands, thin twig hands and short root feet. No bark armor or coral accents."
+      },
+      {
+        "id": 44,
+        "rarity": "uncommon",
+        "design": "UNCOMMON: A taller teal tree imp with TWO medium brown branch antlers each splitting into two bold tips, modest olive leaf shoulder collar and one crown tuft. Three broad woody rib bands, longer twig fingers and forked root toes. One small rusty patch on each forearm. No heavy bark plates or chest core."
+      },
+      {
+        "id": 45,
+        "rarity": "rare",
+        "design": "RARE: A lean tree demon with two wide branching brown antlers, angular teal skull and round orange eyes. CORAL-RED branching rib motif across dark chest, coral bark strips on forearms and upper legs, olive shoulder/hip leaf clumps. Broad root feet, long curved branch fingers. No glowing heart or enormous crown canopy."
+      },
+      {
+        "id": 46,
+        "rarity": "epic",
+        "design": "EPIC: Mature tree sentinel with two tall multi-fork brown antlers, pointed teal crown with a small coral growth, wide olive leafy shoulder collar and thicker bark forearms. Dark hollow chest behind four simple teal ribs, three large red berry-like nodules on collar. Twisted root shins broaden at base. No luminous heart yet."
+      },
+      {
+        "id": 47,
+        "rarity": "legendary",
+        "design": "LEGENDARY: Ancient teal tree demon with broad forked antlers like a bare upper canopy, orange skull eyes, thick autumn-brown layered shoulder bark with projecting branch spikes and rigid brown forearm bracers. Dark open chest with a SMALL flat amber seed-shaped heart behind woody ribs. Long black twig fingers, stout buttress-root feet. Few large olive leaf masses."
+      },
+      {
+        "id": 48,
+        "rarity": "mythic",
+        "design": "MYTHIC: An ancient hollow-tree guardian. TWO huge BROWN branching antler trunks form a broad vaulted canopy with a few large forked branches, not a mass of thin twigs. Teal carved skull, fierce orange eyes; massive autumn-brown bark shoulder plates and olive leaf mantle. Large hollow chest with sweeping teal rib arches framing ONE bright flat orange seed-shaped heart. Heavy bark forearms, long branch claws, TWO thick buttress-root legs spreading into broad root feet. Torso still skeletal, not furry. No extra trees, weapons or scenery."
+      }
+    ]
+  },
+  {
+    "species": "Chu Perk",
+    "slug": "chu-perk",
+    "axis": "Tiny mushroom imp → steadily growing fungal colossus",
+    "identity": "Dark blue/teal mushroom demon with a pink spotted cap, hooked claws and curled pink tails. Grow torso width, forearms, hands and feet steadily through rare, epic, legendary and mythic. The cap crown grows from shoulder buds to small side caps to mature caps. Giant rounded strength, never a human bodybuilder or detailed fur rendering.",
+    "stages": [
+      {
+        "id": 49,
+        "rarity": "common",
+        "design": "COMMON: A tiny squat mushroom sprout with ONE small smooth drooping dusty pink cap and just three navy spots. Dark violet underside with three broad gill strokes. Short featureless navy stalk: NO eyes or mouth. Tiny arms and two little claw feet, a small ragged blue body and ONE short pink tail curled close to hip. No tall frills, extra caps or eye motifs."
+      },
+      {
+        "id": 50,
+        "rarity": "uncommon",
+        "design": "UNCOMMON: ONE medium domed mauve-pink cap with five blue spots and three chunky pink brim drips, faceless dark stalk with NO eyes or mouth. Slightly taller blue body, pale-blue chest patch, small blue fungal back frill, two arms and two feet. ONE longer blue-pink tail curls to the side. No secondary caps."
+      },
+      {
+        "id": 51,
+        "rarity": "rare",
+        "design": "RARE bridge stage: noticeably stockier than uncommon yet far below epic bulk. Shorter thicker stem-neck, rounded sturdy navy/teal torso, moderately thick forearms, larger but modest claw hands and stable short feet. One broad coral-pink cap with pale teal spots, exactly two flat pink eyes under brim, small pink neck frill, pale cream belly patch, one curled pink tail. Body trunk about 30% of canvas width, smooth strong shapes and sparse detail. No bicep/pec/abs anatomy."
+      },
+      {
+        "id": 52,
+        "rarity": "epic",
+        "design": "EPIC heavyweight: same family body plan as rare, one measured increase in torso, forearm and foot width. Huge and strong relative to common but leave obvious room for legendary/mythic. Trunk about 40% of canvas width. One broad pink-violet cap with a few pale spots, four small flat pink neck eyes, two tiny rounded purple shoulder mushroom buds foreshadowing future side caps, short layered navy-blue frill, a pale blush belly patch, two curled pink tails behind body. Two powerful arms and supporting feet; no human muscle diagram or fine fur."
+      },
+      {
+        "id": 53,
+        "rarity": "legendary",
+        "design": "LEGENDARY giant: clearly larger and stronger than epic, trunk about 49% of canvas width, heavier rounded forearms, bigger hands and broad feet. Maintain same simple organic mushroom anatomy. The two epic shoulder buds mature into small pink side caps on short stems, below a wide central violet/pink cap. One large pink slit eye beneath central brim, two curled pink tails, pale blush belly patch, broad blue frill of only a few large lobes. Three caps total, side caps visibly smaller and less developed than mythic. No fine fur or sculpted pectorals."
+      },
+      {
+        "id": 54,
+        "rarity": "mythic",
+        "design": "MYTHIC colossus: largest stage by a clear but believable final increment, trunk about 57% of canvas width, enormous rounded arms/hands, heavy legs and largest feet. Same fungal body plan as legendary. Three fully mature caps: large teal central cap with pink rim/spots and one orange-pink black-slit eye in front, two larger pink side caps on short thick shoulder stalks. Four separate visible curled pink tails emerge behind torso, two per side with clear gaps. Broad layered teal fungal frill, at most two rows of large shapes. Cap crown and four tails culminate earlier growth, not a new unrelated body. No realistic muscle anatomy, fine fur, glow or texture."
+      }
+    ]
+  },
+  {
+    "species": "Ba Be'aga",
+    "slug": "ba-beaga",
+    "axis": "Small hooded revenant → floating horned healer",
+    "identity": "Hooded blue skeletal wraith in dark navy tattered cloth, orange eyes shifting pink/red, horns and two skeletal hands. Legendary/mythic spell flames use the game's healing color #8DE7FF (pale cyan), not pink. Soft cloth silhouette, no armor, scythe, staff or wings.",
+    "stages": [
+      {
+        "id": 55,
+        "rarity": "common",
+        "design": "COMMON: Small grounded hooded blue skeleton with tiny orange eyes, simple skull teeth, two very short horn nubs behind hood. Plain short navy robe with a ragged hem and a muted dusty PINK waist sash with short ends. Two small skeletal hands, two clearly visible bare blue feet. Simple narrow silhouette, no spells, cloak ribbons or armor."
+      },
+      {
+        "id": 56,
+        "rarity": "uncommon",
+        "design": "UNCOMMON: Hooded blue skull with orange eyes and TWO short upward-curved horns. Longer navy robe with an angular little shoulder mantle, slightly flared torn sleeves, no sash. Two skeletal hands, bare blue feet still visible. One broad cloth strip trails from side hem. No magic flames."
+      },
+      {
+        "id": 57,
+        "rarity": "rare",
+        "design": "RARE: Grim blue skull with gold eyes inside a large pointed hood. TWO broad crescent horns arch above head, layered navy shoulder cape, long split robe panels curling to both sides. Two elongated skeletal hands, two feet visible beneath robe. Strong triangular outline, still grounded, no spells."
+      },
+      {
+        "id": 58,
+        "rarity": "epic",
+        "design": "EPIC: Hovering horned wraith, blue skull with small pink eyes, TWO long curved horns above a pointed navy hood. Broad jagged shoulder cape, robe tapering downward into THREE torn cloth tails, NO visible feet. Two bony claw hands and two broad cloth ribbons streaming from sleeves. No spell flames yet. Clear gap above oval shadow."
+      },
+      {
+        "id": 59,
+        "rarity": "legendary",
+        "design": "LEGENDARY: Floating hooded skeletal spellcaster with pink eyes, TWO tall crescent horns and an imposing high pointed shoulder cape. Long navy robe divides into five broad trailing strips, no feet. TWO skeletal hands hold TWO small outlined PALE CYAN (#8DE7FF) curling spell flames, one touching each palm. A few broad side cloth ribbons, no armor, staff or aura. Preserve the existing eye color and horn silhouette."
+      },
+      {
+        "id": 60,
+        "rarity": "mythic",
+        "design": "MYTHIC: Ultimate floating horned wraith with fierce red-orange eyes in an enlarged blue skull and black pointed hood. TWO huge inward-crescent horns each with a broad forked tip, forming a crown above hood. Very broad layered navy shoulder cape sweeps outward and down into THREE wide ragged cloth tails plus two sleeve ribbons, not wings. TWO long skeletal claw hands each hold one large compact PALE CYAN (#8DE7FF) double-curl flame, outlined flat shapes. NO feet visible; robe hovers over a plain oval shadow. No weapon, metal armor, extra limbs or background magic. Preserve the existing eye color and horn silhouette."
+      }
+    ]
+  },
+  {
+    "species": "Vee Scol",
+    "slug": "vee-scol",
+    "axis": "Hooded armored imp → towering storm-armored tyrant",
+    "identity": "Navy-blue armored hooded storm demon with angular blue skull-mask, luminous colored eyes, heavy claw gauntlets and armored feet, ragged diagonal cloth wraps and chest emblem. Armor is large matte graphic plates. No horns, wings or weapons; distinct from Ba Be'aga's bare skull and soft robe.",
+    "stages": [
+      {
+        "id": 61,
+        "rarity": "common",
+        "design": "COMMON: Small armored hooded imp with simple pointed navy hood, pitch-black face, icy CYAN eyes and short cyan jagged tooth grin. Only TWO modest smooth shoulder plates and plain short gauntlets, dark claw hands, two chunky armored feet. Small blue circular chest medallion, simple navy diagonal wrap skirt. No spikes, lightning, horns or tall crest."
+      },
+      {
+        "id": 62,
+        "rarity": "uncommon",
+        "design": "UNCOMMON: Sturdier navy hooded demon with gold eyes and angular blue skull-mask teeth. Pointed cloth hood, shoulder armor with ONE short outward spike on each side, short forearm guards each with one thorn. Two claws and armored feet, diagonal torso wraps, no chest medallion. No crest or magic effects."
+      },
+      {
+        "id": 63,
+        "rarity": "rare",
+        "design": "RARE: Armored stalker with purple-pink eyes, pointed blue skull mask inside tall navy hood, shoulder plates each with TWO clear large spikes and heavier thorn gauntlets. A clean pointed hood top without any flame or plume. Ragged wrap skirt, two planted armored feet, no pendant or background lightning."
+      },
+      {
+        "id": 64,
+        "rarity": "epic",
+        "design": "EPIC: Broad armored demon with a rigid pointed hood and angular cheek plates, purple-pink eyes, large spiked navy shoulder pauldrons and heavy blue gauntlets. ROUND dark-purple chest pendant with a pink circular rim. Strong fitted torso crossed by broad dark wraps, jagged skirt and two armored feet. No hood plume this stage, no horns."
+      },
+      {
+        "id": 65,
+        "rarity": "legendary",
+        "design": "LEGENDARY: Heavy navy-blue armored tyrant, RED-PINK eyes, sharp blue skull mask under a rigid ridged HELMET replacing cloth hood. Two flared helmet side points and a short central blade crest. Very broad upturned shoulder armor, massive forearm gauntlets, huge dark claws, broad armored feet. RED DIAMOND chest jewel fastening crossed straps, ragged navy skirt. No circular pendant or horns."
+      },
+      {
+        "id": 66,
+        "rarity": "mythic",
+        "design": "MYTHIC: Ultimate storm-armored tyrant with a towering swept FLAME-SHAPED BLUE ARMOR CREST, not fire or a horn. Fierce MAGENTA eyes and a long pointed blue skull mask. Two enormous upward-arched shoulder pauldrons frame head, each reduced to THREE broad blade spikes. Massive blue forearm armor and huge black claw hands, thick planted armored feet, wide muscular cartoon torso, long jagged navy skirt. Bright RED-PINK DIAMOND chest jewel and two tiny matching side insets. Only two short flat violet lightning zigzags attached to gauntlets. No wings, horns, weapon, smoke or storm backdrop."
+      }
+    ]
+  }
+]

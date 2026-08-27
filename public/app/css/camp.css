@@ -8,7 +8,7 @@ body.camp-page {
         linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.76)),
         radial-gradient(circle at 26% 16%, rgba(111,214,189,0.13), transparent 24rem),
         radial-gradient(circle at 78% 20%, rgba(232,199,106,0.1), transparent 22rem),
-        image-set(url("/app/images/assets/background/amongdemons_campfire.avif") type("image/avif"), url("/app/images/assets/background/amongdemons_campfire.webp") type("image/webp"), url("/app/images/assets/background/amongdemons_campfire.png") type("image/png")) center top / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_campfire.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_campfire.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_campfire.png?v=art-d07fa45af2e7") type("image/png")) center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
@@ -264,7 +264,7 @@ body.camp-page {
         radial-gradient(circle at 18% 20%, rgba(111,214,189,0.1), transparent 22rem),
         radial-gradient(circle at 86% 12%, rgba(232,199,106,0.08), transparent 20rem),
         linear-gradient(rgba(2,6,9,0.42), rgba(2,6,9,0.82)),
-        image-set(url("/app/images/assets/background/amongdemons_campfire.avif") type("image/avif"), url("/app/images/assets/background/amongdemons_campfire.webp") type("image/webp"), url("/app/images/assets/background/amongdemons_campfire.png") type("image/png")) center / cover no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_campfire.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_campfire.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_campfire.png?v=art-d07fa45af2e7") type("image/png")) center / cover no-repeat,
         #04090d;
     color: var(--ad-text);
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -672,7 +672,7 @@ body.camp-page > .camp-lobby {
     inset: 0;
     background:
         linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.62)),
-        image-set(url("/app/images/assets/background/amongdemons_campfire.avif") type("image/avif"), url("/app/images/assets/background/amongdemons_campfire.webp") type("image/webp"), url("/app/images/assets/background/amongdemons_campfire.png") type("image/png")) center / cover no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_campfire.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_campfire.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_campfire.png?v=art-d07fa45af2e7") type("image/png")) center / cover no-repeat;
     opacity: 0.48;
     transform: scale(1.03);
 }
@@ -1235,7 +1235,7 @@ body.camp-page {
         radial-gradient(circle at 82% 14%, rgba(156,122,200,0.05), transparent 24rem),
         linear-gradient(90deg, rgba(5,10,12,0.68), rgba(5,10,12,0.08) 36%, rgba(5,10,12,0.12) 65%, rgba(5,10,12,0.7)),
         linear-gradient(180deg, rgba(5,10,12,0.08), rgba(5,10,12,0.5)),
-        image-set(url("/app/images/assets/background/amongdemons_campfire.avif") type("image/avif"), url("/app/images/assets/background/amongdemons_campfire.webp") type("image/webp"), url("/app/images/assets/background/amongdemons_campfire.png") type("image/png")) center / cover no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_campfire.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_campfire.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_campfire.png?v=art-d07fa45af2e7") type("image/png")) center / cover no-repeat,
         var(--ad-bg, #071013);
 }
 

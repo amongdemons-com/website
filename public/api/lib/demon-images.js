@@ -1,4 +1,4 @@
-const DEMON_IMAGE_PATTERN = /^\/app\/images\/demons\/(?:(?:thumbnails|map|portrait)\/)?(\d+)\.(?:png|webp)$/i;
+const DEMON_IMAGE_PATTERN = /^\/app\/images\/demons\/(?:(?:thumbnails|map|portrait)\/)?(\d+)\.(?:png|webp)(?:[?#].*)?$/i;
 const VALID_VARIANTS = new Set(['map', 'portrait']);
 
 function getDemonSourceId(demonOrUrl) {
@@ -22,7 +22,7 @@ function getDemonImageUrl(demonOrUrl, variant = 'portrait') {
     : String(demonOrUrl || '');
   const sourceId = getDemonSourceId(demonOrUrl);
   if (!sourceId || !VALID_VARIANTS.has(variant)) return fallback;
-  return `/app/images/demons/${variant}/${sourceId}.webp`;
+  return `/app/images/demons/${variant}/${sourceId}.webp?v=art-d07fa45af2e7`;
 }
 
 function withDemonImageVariants(demon = {}) {

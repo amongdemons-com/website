@@ -366,8 +366,8 @@ function remapZoneTypeId(typeId) {
 }
 
 function toWorldMapImageUrl(url) {
-  const match = /^\/app\/images\/demons\/(?:thumbnails\/)?(\d+)\.png$/.exec(String(url || ''));
-  return match ? `/app/images/demons/map/${match[1]}.webp` : url;
+  const match = /^\/app\/images\/demons\/(?:thumbnails\/)?(\d+)\.png(?:[?#].*)?$/.exec(String(url || ''));
+  return match ? `/app/images/demons/map/${match[1]}.webp?v=art-d07fa45af2e7` : url;
 }
 
 function tileKey(x, y) {

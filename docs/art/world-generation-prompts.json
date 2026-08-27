@@ -1,0 +1,254 @@
+[
+  {
+    "id": "dungeon",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/background/amongdemons_dungeon.png",
+    "webpOutput": "public/app/images/assets/background/amongdemons_dungeon.webp",
+    "requiredWebpSize": [
+      1717,
+      916
+    ],
+    "transparent": false,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/assets/background/amongdemons_dungeon.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A wide ruined dungeon battle arena. Broad open slate-teal stone floor fills the lower half for teams to fight on. Chunky broken gothic archways and short stairs at both sides. One small cyan portal left and one violet portal right, distant teal pillars and a recessed central doorway. A few simplified violet mushrooms and restrained warm torch accents at the far edges. Strong depth built from just three flat value layers, not atmospheric fog. No objects or steps blocking the central combat area.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+    "review": "Reviewed full generated image: recognizable subject, bold cartoon rendering, correct composition and no text.",
+    "selectedGeneration": "exec-6d5b85df-0082-4b8c-a714-7f3bbed5aeea.png"
+  },
+  {
+    "id": "home",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/background/amongdemons_home.png",
+    "webpOutput": "public/app/images/assets/background/amongdemons_home.webp",
+    "requiredWebpSize": [
+      1672,
+      941
+    ],
+    "transparent": false,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/assets/background/amongdemons_home.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A haunted forest path through crumbling stone ruins. Large gnarled tree silhouettes frame the upper left and right. A winding broad flagstone path leads through a central dark-teal arch toward distant pale teal tree silhouettes. A few chunky pink-purple mushrooms and small warm orange lanterns along the edges. Keep the central upper-middle area quiet for page headings. Moody but playful cartoon adventure, no characters.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+    "review": "Reviewed full generated image: readable chunky cartoon scenery, original scene identity, open central space and no text.",
+    "selectedGeneration": "exec-77b84529-2255-44bf-b066-be26d688f02d.png"
+  },
+  {
+    "id": "bag",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/background/amongdemons_bag.png",
+    "webpOutput": "public/app/images/assets/background/amongdemons_bag.webp",
+    "requiredWebpSize": [
+      1672,
+      941
+    ],
+    "transparent": false,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/assets/background/amongdemons_bag.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A vaulted underground storage crypt for demon Echo vessels. Heavy arched ceiling, thick stone ribs, stout wooden shelves along both sides holding a FEW large simple potion bottles, small sealed chests and opaque vessels. Warm candles low at the two side edges; blue-green shadows. Broad EMPTY slate floor and distant simple arched doorway in center. No intricate library books, labels, glyph writing or hundreds of tiny props.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+    "review": "Reviewed full generated image: readable chunky cartoon scenery, original scene identity, open central space and no text.",
+    "selectedGeneration": "exec-7bfa6d48-e665-4d8e-9768-566f957281ac.png"
+  },
+  {
+    "id": "collection",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/background/amongdemons_collection.png",
+    "webpOutput": "public/app/images/assets/background/amongdemons_collection.webp",
+    "requiredWebpSize": [
+      1672,
+      941
+    ],
+    "transparent": false,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/assets/background/amongdemons_collection.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A spectral creature collection archive in a crypt. Chunky curved shelves and large arched stone niches frame both sides, each containing a simple teal glass vessel with one abstract spirit shape. Vessels are background props, not detailed demons. Soft olive accents, cyan teal focal lights and a few warm amber candles. Circular flagstone floor in the foreground and open central chamber/distant arch. Only a FEW bold alcoves on each side, no dense clutter.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+    "review": "Reviewed full generated image: readable chunky cartoon scenery, original scene identity, open central space and no text.",
+    "selectedGeneration": "exec-613c0b6c-4b3a-483f-8552-071b78b22f97.png"
+  },
+  {
+    "id": "campfire",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/background/amongdemons_campfire.png",
+    "webpOutput": "public/app/images/assets/background/amongdemons_campfire.webp",
+    "requiredWebpSize": [
+      1672,
+      941
+    ],
+    "transparent": false,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/assets/background/amongdemons_campfire.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A small campfire in forest ruins at night. Chunky gnarled trees frame the edges, simple dark canvas tent left, a low crate and small lantern right. A modest orange-yellow fire with bold outlined flame shapes in a ring of chunky stones low at center. Behind it a quiet empty clearing and distant ruined arch with a hint of teal light. Dark navy, blue-green and muted violet forest, warm small campfire accent. No characters, people, ghost faces or detailed vegetation.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+    "review": "Reviewed full generated image: readable chunky cartoon scenery, original scene identity, open central space and no text.",
+    "selectedGeneration": "exec-74635089-f1c1-4897-b7db-ffe4a9b75079.png"
+  },
+  {
+    "id": "rankings",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/background/amongdemons_rankings.png",
+    "webpOutput": "public/app/images/assets/background/amongdemons_rankings.webp",
+    "requiredWebpSize": [
+      1672,
+      941
+    ],
+    "transparent": false,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/assets/background/amongdemons_rankings.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A grand but simplified stone hall celebrating ranked demon hunters. Broad open dark slate foreground, a short centered staircase far back leading to a single empty gold-lit stone throne/podium. Thick vertical pillars, one plain purple banner on each side with a simple abstract diamond emblem (not lettering), two cyan braziers at the far edges. Cool teal/navy hall and one restrained amber-gold focal area in distance. Clear chunky gothic geometry, no people, no trophies clutter, no text.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+    "review": "Reviewed full generated image: recognizable ranked hall / summoning dais, simplified strong cartoon forms, no text and room for UI.",
+    "selectedGeneration": "exec-79015385-d3d1-44cb-a1d4-de8e79dc2132.png"
+  },
+  {
+    "id": "summon",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/background/amongdemons_summon.png",
+    "webpOutput": "public/app/images/assets/background/amongdemons_summon.webp",
+    "requiredWebpSize": [
+      1672,
+      941
+    ],
+    "transparent": false,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/assets/background/amongdemons_summon.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A demon summoning crypt. A large round stone dais sunk into the broad lower-middle floor; its ring carries a few simple cyan geometric grooves, not readable letters or intricate sigils. Two stout bowls of pale teal spectral fire at the left and right edges. Broad ruined arch overhead and distant shadowed passage center. Small warm candles pushed to the sides. Thick stone shapes and restrained teal/olive/navy palette. Center remains uncluttered and available for an overlaid summoned demon.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+    "review": "Reviewed full generated image: recognizable ranked hall / summoning dais, simplified strong cartoon forms, no text and room for UI.",
+    "selectedGeneration": "exec-29be6a61-bcbc-4df8-9f51-9756c5f5f8d9.png"
+  },
+  {
+    "id": "crowley",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/world/crowley.png",
+    "webpOutput": "public/app/images/assets/world/crowley.webp",
+    "requiredWebpSize": [
+      512,
+      512
+    ],
+    "transparent": false,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/assets/world/crowley.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset: ONE square illustrated event portrait for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: Crowley the enigmatic traveling merchant from Image 1, redrawn as a compact expressive cartoon character in our approved demon art style. Preserve a dark wide-brim hat with two curved horns, sly pale blue-gray face under brim, dark layered long coat and purple scarf, belt satchel, chunky crooked staff held in his left hand on the viewer right with a small warm lantern hanging from its top, and a small cyan soul flame in his right upturned palm on viewer left. Full body, boots in frame, head enlarged to cartoon proportions (about 3 heads tall excluding hat); wiry gentleman, no buff demon. Sparse purple twilight forest backdrop with just a few gnarled tree silhouettes and a tiny merchant wagon tucked behind left, much quieter than subject. No added horns on his body, no extra arms, no letters.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Square 1:1 canvas. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+    "review": "Reviewed full generated image: recognizable subject, bold cartoon rendering, correct composition and no text.",
+    "selectedGeneration": "exec-fab61a5a-cc54-4959-ad0f-3ac3700a5ea6.png"
+  },
+  {
+    "id": "whispering-well",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/world/soul-font.png",
+    "webpOutput": "public/app/images/assets/world/soul-font.webp",
+    "requiredWebpSize": [
+      768,
+      768
+    ],
+    "transparent": false,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/assets/world/soul-font.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset: ONE square illustrated event portrait for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: The Whispering Well from Image 1 redrawn with bold simple cartoon linework and flat color. A squat round dark slate stone well built of a FEW thick blocks, wide rim, dark central basin. Large gold eye/sun sigil with a central pupil and four simple points on front. One tall ivory cream flame edged in pale cyan rises from the well, rendered as clean flat outlined lobes, with FOUR small simple pale-cyan skull spirits floating nearby. Two or three little ivory skulls low beside the base. Sparse purple twilight forest backdrop with angular trees and two standing stones, low contrast. Whole well and flame in frame. No fine cracks, no photographic fire, no bloom, no texture or readable text.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Square 1:1 canvas. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+    "review": "Reviewed full generated image: recognizable subject, bold cartoon rendering, correct composition and no text.",
+    "selectedGeneration": "exec-2634c7bc-bf87-4917-8767-cd70f003bcae.png"
+  },
+  {
+    "id": "anomaly",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/demons/anomaly.png",
+    "webpOutput": "public/app/images/demons/anomaly.webp",
+    "requiredWebpSize": [
+      1024,
+      1024
+    ],
+    "transparent": true,
+    "status": "visually-approved",
+    "referenceRoles": [
+      "Original asset: scene/identity reference only",
+      "Approved demon: rendering style only"
+    ],
+    "references": [
+      "git:797ea44:public/app/images/demons/anomaly.webp",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Create ONE NEW full-body Anomaly demon illustration for Among Demons. This is a fresh redraw, not a tracing. Image 1 shows the subject identity only; Image 2 shows the approved simple cartoon rendering. Match Image 2's bold dark outlines and broad matte color masses. A blue-violet asymmetric demon with an oversized head, ONE hooked blue horn and ONE brown branching antler; TWO flat yellow face eyes, ONE oval PURPLE forehead eye, TWO small yellow eyes on the brown woody left shoulder and ONE small purple eye on the violet right shoulder. CRITICAL: all eyes are MATTE PAPER CUTOUTS, each iris is ONE perfectly uniform opaque color with ONE plain black pupil. The purple eyes are flat #A54DD1 shapes, no lighter patch anywhere inside. Yellow eyes are flat #EFB43C shapes, no white or lighter patch anywhere inside. No reflections, no shine, no glints, no white dots, no highlights on ANY eye. The eyes look like simple ink-and-colored-paper game icons. Shaggy navy-violet body in a few broad tufts, left arm woody with branch points, right shoulder violet featherlike fringe, two long arms ending in dark hooked claws, two planted claw feet. One vertical dark mouth in torso with a few large simple ivory teeth. Keep his distinctive chimera appearance, not a generic imp. About 3 heads tall, stronger compact cartoon proportions; no realistic creature anatomy. Full body, all claws and horns in frame, square composition. Render on a perfectly uniform pale gray #909DA0 backdrop for subsequent deterministic extraction. NO CHECKERBOARD, no ground shadow, no forest or moon. Clean sparse cartoon illustration, one hard shadow per material; no wet gloss, detailed fur, little surface texture, glow, particles, lettering, borders or UI. The whole character should feel like the same game as the approved demon in Image 2.",
+    "review": "Selected the fresh gray-matte redraw for original purple third-eye identity, asymmetry and simple rendering. Four gold eyes and two purple eyes, no white glowing eyes; two pale purple tonal accents remain. Gray matte extracted deterministically after generation.",
+    "selectedGeneration": "exec-fe5215e8-b8e7-4910-bfb6-8cefc7344739.png",
+    "attempts": [
+      {
+        "prompt": "Use case: stylized-concept.\nAsset: ONE transparent full-body battle sprite for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: The Anomaly chimera from Image 1 redesigned only in RENDERING into the same bold cartoon series as our approved demons. Full body centered with all antlers, claws and feet inside 8% safe margins. Asymmetrical navy-blue and violet shaggy body, an enlarged menacing angular face with TWO gold eyes and ONE large purple third eye in forehead, flat colors and black pupils, no catchlights. Exactly two mismatched horn roots: one heavy hooked blue horn and one bare branching brown antler. One shoulder and arm are woody/root-like with TWO small amber eye nodules; other side a simple violet ragged feather/fur mass with ONE pink eye nodule at shoulder. A narrow vertical dark chest-mouth with a few large ivory teeth, not realistic exposed anatomy. Two long crooked claw arms and two planted claw feet. About 3 heads tall, strong compact silhouette, not tall realistic creature. Keep identity through simple broad forms, not dozens of fine eyes or thorn details. NO backdrop, moon, trees, floor, ground shadow or halo; actual transparent alpha background, not a painted checkerboard.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Square 1:1 canvas. Render true transparency with alpha.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+        "generatedFile": "exec-02c5b87b-fe33-441d-bb99-bfcb3753c035.png",
+        "review": "Identity and proportions accepted; eye catchlights and opaque painted checkerboard need correction."
+      },
+      {
+        "prompt": "Use case: precise-object-edit. Image 1 is the EDIT TARGET, our approved cartoon Anomaly drawing. Preserve the whole character EXACTLY: silhouette, six eyes (two gold face eyes, purple forehead eye, two gold left shoulder eyes, one purple right shoulder eye), mismatched horn and antler, shaggy blue/violet body, brown woody left side, dark vertical chest maw with ivory teeth, claws, pose, scale, outlines and existing colors. Change ONLY the unwanted shiny spots in the eyes and remove the backdrop. Every eye must be flat gold or purple with a plain BLACK pupil. REMOVE ALL WHITE OR PALE CATCHLIGHTS and glossy reflections from ALL SIX EYES, including the forehead and both shoulder eyes. Do not remove the pupils. Production sprite: actual transparent alpha background, no white background, no gray backdrop, no painted checkerboard, no ground shadow or glow. If transparency is not possible, use a perfectly uniform pale gray #909DA0 background, NEVER draw a checkerboard. Do not redraw or redesign the demon, no new detail, no text or frame.",
+        "generatedFile": "exec-ae1ce69e-87d0-44d8-bab9-7e88a1734e90.png",
+        "review": "Targeted edit still retained white eye reflections and a painted checkerboard; not selected."
+      },
+      {
+        "prompt": "Create ONE NEW full-body Anomaly demon illustration for Among Demons. This is a fresh redraw, not a tracing. Image 1 shows the subject identity only; Image 2 shows the approved simple cartoon rendering. Match Image 2's bold dark outlines and broad matte color masses. A blue-violet asymmetric demon with an oversized head, ONE hooked blue horn and ONE brown branching antler; TWO flat yellow face eyes, ONE oval PURPLE forehead eye, TWO small yellow eyes on the brown woody left shoulder and ONE small purple eye on the violet right shoulder. CRITICAL: all eyes are MATTE PAPER CUTOUTS, each iris is ONE perfectly uniform opaque color with ONE plain black pupil. The purple eyes are flat #A54DD1 shapes, no lighter patch anywhere inside. Yellow eyes are flat #EFB43C shapes, no white or lighter patch anywhere inside. No reflections, no shine, no glints, no white dots, no highlights on ANY eye. The eyes look like simple ink-and-colored-paper game icons. Shaggy navy-violet body in a few broad tufts, left arm woody with branch points, right shoulder violet featherlike fringe, two long arms ending in dark hooked claws, two planted claw feet. One vertical dark mouth in torso with a few large simple ivory teeth. Keep his distinctive chimera appearance, not a generic imp. About 3 heads tall, stronger compact cartoon proportions; no realistic creature anatomy. Full body, all claws and horns in frame, square composition. Render on a perfectly uniform pale gray #909DA0 backdrop for subsequent deterministic extraction. NO CHECKERBOARD, no ground shadow, no forest or moon. Clean sparse cartoon illustration, one hard shadow per material; no wet gloss, detailed fur, little surface texture, glow, particles, lettering, borders or UI. The whole character should feel like the same game as the approved demon in Image 2.",
+        "generatedFile": "exec-fe5215e8-b8e7-4910-bfb6-8cefc7344739.png",
+        "review": "Cleaner gray matte and no white face-eye spots; two purple eye orbs still have pale reflections."
+      },
+      {
+        "prompt": "Edit only the two PURPLE EYES in this Anomaly demon image. Replace the big round forehead eye and the small round right-shoulder eye with flat ANGULAR ALMOND-shaped pink demon eyes, like his two yellow face eyes. Single solid muted magenta fill, one plain BLACK oval pupil, thick near-black contour. These two eyes should look like flat ink symbols, not shiny eyeballs or jewels. No white dots, no lighter oval spots, no reflections. Preserve the other four gold eyes, complete body, colors, horns, claws, drawing style, scale and gray background exactly. No other changes.",
+        "generatedFile": "exec-d4bdbae0-86de-4ee1-a03e-29928ec9a33f.png",
+        "review": "Not selected: changed signature eye shapes/colors to pink diamonds without eliminating tonal accents."
+      }
+    ]
+  }
+]
