@@ -8,11 +8,25 @@ const battleCss = fs.readFileSync(
   'utf8'
 );
 
-test('mobile portrait dungeon cards zoom their demon artwork', () => {
+test('demon card artwork stays contained without desktop or portrait zoom overrides', () => {
   assert.match(
     battleCss,
-    /@media \(max-width: 600px\) and \(orientation: portrait\)[\s\S]*?body\.dungeon-page:not\(\.ranked-page\) \.dungeon-demon-card \.dungeon-demon-card-image img\s*\{[\s\S]*?transform: scale\(1\.48\)/
+    /\.dungeon-demon-card \.dungeon-demon-card-image img\s*\{[^}]*object-fit: contain;[^}]*transform: none;/
   );
+  const imageRules = [...battleCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([, selectors]) => /dungeon-demon-card-image img|cashout-demon-preview-img/.test(selectors));
+  for (const [, selectors, declarations] of imageRules) {
+    assert.doesNotMatch(declarations, /object-fit:\s*cover|transform:\s*scale\(/, selectors.trim());
+  }
+});
+
+test('card stats occupy their own row instead of covering sprite feet', () => {
+  assert.match(battleCss, /\.dungeon-demon-card\s*\{[^}]*display: grid;[^}]*grid-template-rows: minmax\(0, 1fr\) auto;/);
+  for (const [, selectors, declarations] of battleCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!/dungeon-demon-card-(image|body)\s*$/.test(selectors.trim())) continue;
+    assert.doesNotMatch(declarations, /position:\s*absolute/, selectors.trim());
+  }
+  assert.match(battleCss, /\.dungeon-demon-card-body\s*\{[^}]*grid-area: 2 \/ 1;/);
 });
 
 test('mobile portrait hand replaces HP bars with a one-pixel separator', () => {

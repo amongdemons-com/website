@@ -597,7 +597,10 @@
     "partialPixels": 3345,
     "unchangedOpaquePixels": 404061,
     "sourceSha256": "9e5432b9efa457a9fe07f669d4b14da0aacd3fd62e55fb1fabbda7c4083f7e8e",
-    "outputSha256": "bb2a41a4e5c85d413cfff4d4529bc58f846e4b1109517655ce8ad5e152c47319"
+    "outputSha256": "bb8d4d3f0f2153c38c5220866fe2a795afabcd9f1612f3c12e42d7fc4a88dc3c",
+    "extractedSha256": "bb2a41a4e5c85d413cfff4d4529bc58f846e4b1109517655ce8ad5e152c47319",
+    "pixelRepair": "vizel-eye-repairs.json",
+    "pixelRepairChangedPixels": 205
   },
   {
     "id": 26,
@@ -621,7 +624,10 @@
     "partialPixels": 3810,
     "unchangedOpaquePixels": 451119,
     "sourceSha256": "bcb3e4e55d6402b387d21a7d634b9ce00f188392fd2046f6e509cfdee1ad343d",
-    "outputSha256": "bfed96c65c9999b5e8ae3f17868c881c5228241910efc260c422ec705f251ce3"
+    "outputSha256": "733916b3cb258a5643546a4a9c51f60e50c895d7be4167fa78b8dc2c7cb4cfbb",
+    "extractedSha256": "bfed96c65c9999b5e8ae3f17868c881c5228241910efc260c422ec705f251ce3",
+    "pixelRepair": "vizel-eye-repairs.json",
+    "pixelRepairChangedPixels": 132
   },
   {
     "id": 27,
@@ -645,7 +651,10 @@
     "partialPixels": 5187,
     "unchangedOpaquePixels": 569040,
     "sourceSha256": "348948ffd64354e139b4a67a24f24a22a8e0ff4635d006678e6d6a6dd35b28d0",
-    "outputSha256": "6b4033ae574caa9ae58a110a60280b8b1f23cb54f0cd7ffc31fb6485344acb46"
+    "outputSha256": "d96dea2f6f43dc077381f81be39d5bc85ea86d0dfef3dd86df1a24eadc2fafab",
+    "extractedSha256": "6b4033ae574caa9ae58a110a60280b8b1f23cb54f0cd7ffc31fb6485344acb46",
+    "pixelRepair": "vizel-eye-repairs.json",
+    "pixelRepairChangedPixels": 156
   },
   {
     "id": 28,

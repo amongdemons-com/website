@@ -25,11 +25,14 @@ async function inspect(relative, size, alpha) {
 
 async function main() {
   const provenance = JSON.parse(fs.readFileSync(path.join(root, 'docs/art/demon-provenance.json'), 'utf8'));
+  const extraction = JSON.parse(fs.readFileSync(path.join(root, 'docs/art/demon-extraction-report.json'), 'utf8'));
   const pending = provenance.filter(row => row.status !== 'imported').map(row => row.id);
   const files = [];
   for (let id = 1; id <= 66; id++) {
     const ready = !pending.includes(id);
-    files.push(await inspect(`demons/${id}.png`, ready ? [1254, 1254] : null, ready));
+    const master = await inspect(`demons/${id}.png`, ready ? [1254, 1254] : null, ready);
+    if (ready) assert.equal(master.sha256, extraction.find(row => row.id === id)?.outputSha256, `demon ${id}: differs from the approved extraction or recorded pixel repair`);
+    files.push(master);
     files.push(await inspect(`demons/portrait/${id}.webp`, [512, 512], ready));
     files.push(await inspect(`demons/map/${id}.webp`, [256, 256], ready));
   }

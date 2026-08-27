@@ -101,7 +101,7 @@ test('the altar presentation follows shared modal, merchant card, and Soul amoun
   assert.match(worldCss, /\.world-anomaly-modal \.modal-content \{\s*background: linear-gradient\([^;]+#080d0f\);/);
   assert.match(worldCss, /\.world-anomaly-soul-value \.soul-amount \{\s*color: #fff;/);
   assert.match(worldCss, /\.world-anomaly-soul-value \{\s*vertical-align: middle;/);
-  assert.match(worldCss, /\.world-anomaly-card \.world-anomaly-card-portrait img \{\s*width: 110%;\s*height: 110%;/);
+  assert.match(worldCss, /\.world-anomaly-card \.world-anomaly-card-portrait img \{\s*width: 100%;\s*height: 100%;[^}]*object-fit: contain;/);
 });
 
 test('The Anomaly is rarityless, enemy-only, and uses the approved fixed stats', () => {

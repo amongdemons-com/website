@@ -1,0 +1,92 @@
+{
+  "date": "2026-08-27",
+  "method": "In-app browser; local fixtures use production CSS and shared demon-card renderer. No authenticated gameplay or database writes.",
+  "checks": [
+    "Images loaded with nonzero dimensions",
+    "object-fit: contain and no image transform",
+    "Image rectangle inside card bounds",
+    "Image rectangle above stats row"
+  ],
+  "results": [
+    {
+      "mode": "collection",
+      "viewport": [
+        390,
+        844
+      ],
+      "images": 78,
+      "minimumArtHeight": 104.84375,
+      "failures": []
+    },
+    {
+      "mode": "collection",
+      "viewport": [
+        1100,
+        844
+      ],
+      "images": 78,
+      "minimumArtHeight": 170.015625,
+      "failures": []
+    },
+    {
+      "mode": "reward",
+      "viewport": [
+        390,
+        844
+      ],
+      "images": 13,
+      "minimumArtHeight": 69.65625,
+      "failures": []
+    },
+    {
+      "mode": "dungeon",
+      "viewport": [
+        844,
+        390
+      ],
+      "images": 21,
+      "minimumArtHeight": 44.578125,
+      "failures": []
+    },
+    {
+      "mode": "ranked",
+      "viewport": [
+        390,
+        844
+      ],
+      "images": 21,
+      "minimumArtHeight": 36.84375,
+      "failures": []
+    },
+    {
+      "mode": "hunter",
+      "viewport": [
+        390,
+        844
+      ],
+      "images": 12,
+      "minimumArtHeight": 57.9375,
+      "failures": []
+    },
+    {
+      "mode": "details",
+      "viewport": [
+        390,
+        844
+      ],
+      "images": 12,
+      "minimumArtHeight": 300,
+      "failures": []
+    },
+    {
+      "mode": "dungeon",
+      "viewport": [
+        390,
+        844
+      ],
+      "images": 21,
+      "minimumArtHeight": 40.15625,
+      "failures": []
+    }
+  ]
+}

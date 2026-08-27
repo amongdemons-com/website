@@ -1,0 +1,87 @@
+{
+  "authorization": "User requested our saved versions and explicitly allowed pixel editing on 2026-08-27.",
+  "method": "Localized pupil and red iris edge reconstruction after matte extraction. No image regeneration.",
+  "repairs": [
+    {
+      "id": 25,
+      "x": 891,
+      "y": 550,
+      "width": 16,
+      "height": 13,
+      "edge": [
+        900.8,
+        902.7,
+        902.1
+      ],
+      "pupil": [
+        888,
+        565
+      ],
+      "irisX": 909,
+      "pupilRgb": [
+        1,
+        1,
+        0
+      ],
+      "changedPixels": 205,
+      "alphaUnchanged": true,
+      "pixelsOutsidePatchUnchanged": true,
+      "inputSha256": "bb2a41a4e5c85d413cfff4d4529bc58f846e4b1109517655ce8ad5e152c47319",
+      "outputSha256": "bb8d4d3f0f2153c38c5220866fe2a795afabcd9f1612f3c12e42d7fc4a88dc3c"
+    },
+    {
+      "id": 26,
+      "x": 879,
+      "y": 598,
+      "width": 11,
+      "height": 12,
+      "edge": [
+        887.2,
+        888.1,
+        887.5
+      ],
+      "pupil": [
+        876,
+        610
+      ],
+      "irisX": 894,
+      "pupilRgb": [
+        3,
+        2,
+        1
+      ],
+      "changedPixels": 132,
+      "alphaUnchanged": true,
+      "pixelsOutsidePatchUnchanged": true,
+      "inputSha256": "bfed96c65c9999b5e8ae3f17868c881c5228241910efc260c422ec705f251ce3",
+      "outputSha256": "733916b3cb258a5643546a4a9c51f60e50c895d7be4167fa78b8dc2c7cb4cfbb"
+    },
+    {
+      "id": 27,
+      "x": 883,
+      "y": 635,
+      "width": 12,
+      "height": 13,
+      "edge": [
+        890.4,
+        891.4,
+        890.2
+      ],
+      "pupil": [
+        879,
+        647
+      ],
+      "irisX": 897,
+      "pupilRgb": [
+        4,
+        2,
+        1
+      ],
+      "changedPixels": 156,
+      "alphaUnchanged": true,
+      "pixelsOutsidePatchUnchanged": true,
+      "inputSha256": "6b4033ae574caa9ae58a110a60280b8b1f23cb54f0cd7ffc31fb6485344acb46",
+      "outputSha256": "d96dea2f6f43dc077381f81be39d5bc85ea86d0dfef3dd86df1a24eadc2fafab"
+    }
+  ]
+}

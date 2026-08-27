@@ -475,7 +475,7 @@ body.collection-page {
         linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.78)),
         radial-gradient(circle at 18% 18%, rgba(111,214,189,0.14), transparent 24rem),
         radial-gradient(circle at 86% 14%, rgba(232,199,106,0.11), transparent 22rem),
-        image-set(url("/app/images/assets/background/amongdemons_collection.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_collection.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_collection.png?v=art-d07fa45af2e7") type("image/png")) center top / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_collection.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_collection.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_collection.png?v=art-df103bc9b9a9") type("image/png")) center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
@@ -580,6 +580,7 @@ body.collection-page {
 
 .collection-card-grid .dungeon-demon-card {
     width: 100%;
+    flex: 1 1 auto;
 }
 
 .collection-demon-card img {

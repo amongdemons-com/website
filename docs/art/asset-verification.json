@@ -1,11 +1,7 @@
 {
-  "allRequestedDemonSourcesImported": false,
-  "importedDemons": 63,
-  "pendingManualSourceIds": [
-    25,
-    26,
-    27
-  ],
+  "allRequestedDemonSourcesImported": true,
+  "importedDemons": 66,
+  "pendingManualSourceIds": [],
   "filesChecked": 229,
   "files": [
     {
@@ -658,84 +654,84 @@
     },
     {
       "file": "demons/25.png",
-      "width": 1024,
-      "height": 1024,
-      "alpha": false,
-      "transparentPixels": 0,
-      "bytes": 1279731,
-      "sha256": "718af1605f23f77e497da9eae3ab325acf92791ccba9ecaa81d82a2a9cd95ced"
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1165113,
+      "bytes": 548062,
+      "sha256": "bb8d4d3f0f2153c38c5220866fe2a795afabcd9f1612f3c12e42d7fc4a88dc3c"
     },
     {
       "file": "demons/portrait/25.webp",
       "width": 512,
       "height": 512,
-      "alpha": false,
-      "transparentPixels": 0,
-      "bytes": 27968,
-      "sha256": "303c19316473d8691d9591850a013b0c559af3631c2c8ba081dab654cf446913"
+      "alpha": true,
+      "transparentPixels": 191028,
+      "bytes": 20272,
+      "sha256": "0464c526a7320b882fc93449b3e3a7a0a413e5ba33df2354bb6c356c96c553b1"
     },
     {
       "file": "demons/map/25.webp",
       "width": 256,
       "height": 256,
-      "alpha": false,
-      "transparentPixels": 0,
-      "bytes": 8924,
-      "sha256": "eb767a407c026e3708932bbb4f5c10e594986041119b6bfd292098bd33775ba3"
+      "alpha": true,
+      "transparentPixels": 46991,
+      "bytes": 9298,
+      "sha256": "0139be221e9fcfbd90140dc83cdd16b9d6fb925c0ba46083613bbe97430e9f50"
     },
     {
       "file": "demons/26.png",
-      "width": 1024,
-      "height": 1024,
-      "alpha": false,
-      "transparentPixels": 0,
-      "bytes": 1373058,
-      "sha256": "fa659164ddf611e0a1159121bd6900f82b2119d876ea027e5977d5157d50b58c"
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1117589,
+      "bytes": 625703,
+      "sha256": "733916b3cb258a5643546a4a9c51f60e50c895d7be4167fa78b8dc2c7cb4cfbb"
     },
     {
       "file": "demons/portrait/26.webp",
       "width": 512,
       "height": 512,
-      "alpha": false,
-      "transparentPixels": 0,
-      "bytes": 30558,
-      "sha256": "e4a8433e075eeea82beaa6bfbc170e6ca96f12b9166620fd52df96f488fbd742"
+      "alpha": true,
+      "transparentPixels": 182812,
+      "bytes": 22940,
+      "sha256": "21f35fa13cc2de32a6688bb480132d1ed6c776de25ea7ac05c0af77d0db71302"
     },
     {
       "file": "demons/map/26.webp",
       "width": 256,
       "height": 256,
-      "alpha": false,
-      "transparentPixels": 0,
-      "bytes": 9444,
-      "sha256": "499581807ee41d5e8d4260c7f75404b02e945c0f1b1c41bd5c893ca9dba82e92"
+      "alpha": true,
+      "transparentPixels": 44845,
+      "bytes": 10756,
+      "sha256": "d818b8cfe6586397a4febb0cb25a4a358b85f816d456fc610d3010285e3d3d7a"
     },
     {
       "file": "demons/27.png",
-      "width": 1024,
-      "height": 1024,
-      "alpha": false,
-      "transparentPixels": 0,
-      "bytes": 1453103,
-      "sha256": "076e617ce12fc69c270489b46928868430fe87ba48bcbc53e2349cc176fbd66c"
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 998290,
+      "bytes": 826403,
+      "sha256": "d96dea2f6f43dc077381f81be39d5bc85ea86d0dfef3dd86df1a24eadc2fafab"
     },
     {
       "file": "demons/portrait/27.webp",
       "width": 512,
       "height": 512,
-      "alpha": false,
-      "transparentPixels": 0,
-      "bytes": 32678,
-      "sha256": "430031187845ce914210933b83b798d34cd2d1c10fcb37822db4868f75fa261e"
+      "alpha": true,
+      "transparentPixels": 161622,
+      "bytes": 28292,
+      "sha256": "34f9aa8f21e6ab6701b500f7c9657ae6129fa6c39aa4ff19492a35692da6c624"
     },
     {
       "file": "demons/map/27.webp",
       "width": 256,
       "height": 256,
-      "alpha": false,
-      "transparentPixels": 0,
-      "bytes": 9744,
-      "sha256": "36edd1f119f1e121265c1e2c1f1c9ceb69d091749fedb9f9834f3e530c20f8f8"
+      "alpha": true,
+      "transparentPixels": 39228,
+      "bytes": 12854,
+      "sha256": "be5a4a40e8478cf2e83ed5ea6eeb6a4d7741a4e3ce2ec8aa18d53fb04deb32e9"
     },
     {
       "file": "demons/28.png",
@@ -1795,9 +1791,9 @@
       "width": 1152,
       "height": 1024,
       "alpha": true,
-      "transparentPixels": 710646,
-      "bytes": 292470,
-      "sha256": "f7b53b8c7b10073fc2834748f3cb80c0a697e057e5aed3f43518466df5608c06"
+      "transparentPixels": 742301,
+      "bytes": 292000,
+      "sha256": "2e36f9a39501219ba067ed1f9c7d587e12b7188bc11b6806edc5dd9bd802b2b2"
     },
     {
       "file": "assets/background/amongdemons_bag.png",

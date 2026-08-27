@@ -903,7 +903,7 @@ main {
 
 .demon-mini-card img {
     aspect-ratio: 1 / 1;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .demon-mini-card .card-body {
@@ -1819,8 +1819,8 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     width: 100%;
     height: 100%;
     min-height: 0;
-    object-fit: cover;
-    object-position: center 22%;
+    object-fit: contain;
+    object-position: center;
 }
 
 .demon-detail-panel {
@@ -2560,7 +2560,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
 .cashout-demon-card img {
     width: 100%;
     aspect-ratio: 1 / 1;
-    object-fit: cover;
+    object-fit: contain;
     border-radius: 4px;
     margin-bottom: 0.65rem;
 }
@@ -3921,7 +3921,7 @@ body.seo-page {
     min-height: 100vh;
     background:
         linear-gradient(rgba(5,10,12,0.68), rgba(5,10,12,0.86)),
-        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-d07fa45af2e7") type("image/png")) center top / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-df103bc9b9a9") type("image/png")) center top / cover fixed no-repeat,
         #071013;
     color: var(--ad-text, #f5f7f8);
 }
@@ -4159,7 +4159,7 @@ body.seo-page {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .seo-demon-card-body {
@@ -4429,7 +4429,7 @@ body.seo-page {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .seo-boss-summary-panel .seo-stat-list {
@@ -4642,7 +4642,7 @@ body.seo-page {
         linear-gradient(rgba(5,9,12,0.76), rgba(5,9,12,0.9)),
         radial-gradient(circle at 18% 6%, rgba(232,199,106,0.12), transparent 24rem),
         radial-gradient(circle at 82% 14%, rgba(111,214,189,0.12), transparent 22rem),
-        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-d07fa45af2e7") type("image/png")) center top / cover fixed no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-df103bc9b9a9") type("image/png")) center top / cover fixed no-repeat;
     background-attachment: fixed;
 }
 
@@ -4934,7 +4934,7 @@ body.rankings-page {
         linear-gradient(rgba(6,13,16,0.48), rgba(6,13,16,0.78)),
         radial-gradient(circle at 18% 10%, rgba(111,214,189,0.14), transparent 22rem),
         radial-gradient(circle at 78% 16%, rgba(232,199,106,0.11), transparent 24rem),
-        image-set(url("/app/images/assets/background/amongdemons_rankings.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_rankings.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_rankings.png?v=art-d07fa45af2e7") type("image/png")) center top / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_rankings.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_rankings.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_rankings.png?v=art-df103bc9b9a9") type("image/png")) center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
@@ -6360,7 +6360,7 @@ body.rankings-page {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .profile-demon-option-copy {
@@ -6468,7 +6468,7 @@ body.rankings-page {
     overflow: hidden;
     background:
         linear-gradient(180deg, rgba(3,8,10,0.92), rgba(6,10,14,0.96)),
-        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-d07fa45af2e7") type("image/png")) center / cover no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-df103bc9b9a9") type("image/png")) center / cover no-repeat;
     padding: clamp(1rem, 3vw, 2.4rem);
     animation: demonic-pact-overlay-in 520ms ease-out both;
 }
@@ -10205,7 +10205,7 @@ body.skill-tree-page {
         radial-gradient(circle at 18% 30%, rgba(111,214,189,0.09), transparent 28rem),
         radial-gradient(circle at 82% 28%, rgba(231,138,85,0.08), transparent 25rem),
         linear-gradient(180deg, rgba(3,8,10,0.74), rgba(4,10,13,0.96)),
-        image-set(url("/app/images/assets/background/amongdemons_summon.avif?v=art-d07fa45af2e7") type("image/avif"), url("/app/images/assets/background/amongdemons_summon.webp?v=art-d07fa45af2e7") type("image/webp"), url("/app/images/assets/background/amongdemons_summon.png?v=art-d07fa45af2e7") type("image/png")) center / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_summon.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_summon.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_summon.png?v=art-df103bc9b9a9") type("image/png")) center / cover fixed no-repeat,
         var(--ad-bg, #071013);
 }
 
@@ -11423,7 +11423,7 @@ body.hunter-page {
     min-height: 100vh;
     background:
         linear-gradient(180deg, rgba(4, 11, 14, 0.82), rgba(10, 19, 24, 0.94) 42%, rgba(4, 9, 12, 0.98)),
-        image-set(url("/images/assets/background/amongdemons_home.avif?v=art-d07fa45af2e7") type("image/avif"), url("/images/assets/background/amongdemons_home.webp?v=art-d07fa45af2e7") type("image/webp"), url("/images/assets/background/amongdemons_home.png?v=art-d07fa45af2e7") type("image/png")) center top / cover fixed,
+        image-set(url("/images/assets/background/amongdemons_home.avif?v=art-df103bc9b9a9") type("image/avif"), url("/images/assets/background/amongdemons_home.webp?v=art-df103bc9b9a9") type("image/webp"), url("/images/assets/background/amongdemons_home.png?v=art-df103bc9b9a9") type("image/png")) center top / cover fixed,
         #05090c;
     color: #edf5f2;
 }
