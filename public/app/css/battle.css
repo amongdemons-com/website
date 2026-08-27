@@ -13,7 +13,7 @@ body.dungeon-page {
     background:
         linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-df103bc9b9a9") type("image/png")) center / cover no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-d96bfa7cd346") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-d96bfa7cd346") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-d96bfa7cd346") type("image/png")) center / cover no-repeat,
         #071013;
     overscroll-behavior: none;
 }
@@ -327,7 +327,8 @@ body:not(.dungeon-page) {
 }
 
 .battle-side .dungeon-demon-card-image {
-    position: relative;
+    position: absolute;
+    inset: 0;
     min-height: 0;
 }
 
@@ -346,8 +347,7 @@ body:not(.dungeon-page) {
 .dungeon-demon-card {
     position: relative;
     box-sizing: border-box;
-    display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
+    display: block;
     flex: 0 1 8rem;
     aspect-ratio: 1 / 1;
     min-width: 0;
@@ -572,11 +572,11 @@ body:not(.dungeon-page) {
 }
 
 .dungeon-demon-card-image {
-    position: relative;
-    grid-area: 1 / 1;
+    position: absolute;
+    inset: 0;
     min-width: 0;
     min-height: 0;
-    background: rgba(0,0,0,0.2);
+    background: var(--demon-card-backdrop) center / cover no-repeat;
 }
 
 .dungeon-demon-card-image img {
@@ -645,8 +645,10 @@ body:not(.dungeon-page) {
 }
 
 .dungeon-demon-card-body {
-    position: relative;
-    grid-area: 2 / 1;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -2183,7 +2185,7 @@ body:not(.dungeon-page) {
     padding: 0;
     background:
         linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
-        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-df103bc9b9a9") type("image/png")) center / cover no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-d96bfa7cd346") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-d96bfa7cd346") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-d96bfa7cd346") type("image/png")) center / cover no-repeat;
     background-attachment: scroll;
 }
 
@@ -2759,7 +2761,8 @@ body:not(.dungeon-page) {
 }
 
 .battle-side .formation-lane-cards.is-compressed .dungeon-demon-card-image {
-    position: relative;
+    position: absolute;
+    inset: 0;
     min-height: 0;
 }
 
@@ -2953,7 +2956,7 @@ body:not(.dungeon-page) {
         border-bottom: 1px solid rgba(161,212,201,0.13);
         background:
             linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
-            image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-df103bc9b9a9") type("image/png")) center / cover fixed no-repeat;
+            image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-d96bfa7cd346") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-d96bfa7cd346") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-d96bfa7cd346") type("image/png")) center / cover fixed no-repeat;
         background-attachment: fixed;
     }
 
@@ -3393,7 +3396,7 @@ body:not(.dungeon-page) {
 
 #cashoutModalBody .cashout-selected-reward .dungeon-demon-card {
     position: relative;
-    display: grid;
+    display: block;
     overflow: hidden;
 }
 
@@ -3409,7 +3412,8 @@ body:not(.dungeon-page) {
 }
 
 #cashoutModalBody .cashout-selected-reward .dungeon-demon-card-image {
-    position: relative;
+    position: absolute;
+    inset: 0;
     display: block;
     border-radius: 0;
 }
@@ -3688,7 +3692,7 @@ body:not(.dungeon-page) > .navbar {
     background:
         linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-df103bc9b9a9") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-df103bc9b9a9") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-df103bc9b9a9") type("image/png")) center / cover no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-d96bfa7cd346") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-d96bfa7cd346") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-d96bfa7cd346") type("image/png")) center / cover no-repeat;
     background-attachment: scroll;
 }
 
@@ -3795,7 +3799,7 @@ body:not(.dungeon-page) > .navbar {
 
 .dungeon-demon-card.cashout-demon-card,
 .dungeon-demon-card.reward-demon-card {
-    display: grid;
+    display: block;
     border-width: 2px;
     border-top-width: 5px;
     padding: 0;
@@ -3808,7 +3812,7 @@ body:not(.dungeon-page) > .navbar {
     margin: 0;
     border-radius: 0;
     aspect-ratio: auto;
-    /* Full transparent sprites sit above the stats, including on phones. */
+    /* Use the entire card behind the stats without zooming or cropping. */
     object-fit: contain;
     object-position: center;
     transform: none;

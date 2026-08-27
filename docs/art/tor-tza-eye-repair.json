@@ -1,0 +1,21 @@
+{
+  "id": 19,
+  "operation": "Connect the pupil to its upper eyelid, viewer-left eye",
+  "patch": {
+    "x": 546,
+    "y": 504,
+    "width": 30,
+    "height": 38
+  },
+  "polygon": "549,506 574,523 573,539 547.5,525",
+  "pupilRgb": [
+    0,
+    0,
+    0
+  ],
+  "changedPixels": 473,
+  "alphaUnchanged": true,
+  "pixelsOutsidePatchUnchanged": true,
+  "inputSha256": "3c7dcecee26ec38206edb38186d44a4a0690387020f6b1c3162e4ba52c598757",
+  "outputSha256": "75a2646dc3477cc00383f0739be08b4695b3cd2c2b93de251be98ec1484820c1"
+}

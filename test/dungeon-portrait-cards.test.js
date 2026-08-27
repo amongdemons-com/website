@@ -20,13 +20,13 @@ test('demon card artwork stays contained without desktop or portrait zoom overri
   }
 });
 
-test('card stats occupy their own row instead of covering sprite feet', () => {
-  assert.match(battleCss, /\.dungeon-demon-card\s*\{[^}]*display: grid;[^}]*grid-template-rows: minmax\(0, 1fr\) auto;/);
+test('card artwork fills the entire card with stats overlaid at the bottom', () => {
+  assert.match(battleCss, /\.dungeon-demon-card\s*\{[^}]*display: block;/);
   for (const [, selectors, declarations] of battleCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    if (!/dungeon-demon-card-(image|body)\s*$/.test(selectors.trim())) continue;
-    assert.doesNotMatch(declarations, /position:\s*absolute/, selectors.trim());
+    if (!/dungeon-demon-card-image\s*$/.test(selectors.trim()) || !/position:/.test(declarations)) continue;
+    assert.match(declarations, /position:\s*absolute;\s*inset:\s*0;/, selectors.trim());
   }
-  assert.match(battleCss, /\.dungeon-demon-card-body\s*\{[^}]*grid-area: 2 \/ 1;/);
+  assert.match(battleCss, /\.dungeon-demon-card-body\s*\{[^}]*position: absolute;[^}]*bottom: 0;/);
 });
 
 test('mobile portrait hand replaces HP bars with a one-pixel separator', () => {

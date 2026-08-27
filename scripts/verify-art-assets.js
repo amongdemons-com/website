@@ -43,6 +43,11 @@ async function main() {
     const size = name === 'dungeon' ? [1717, 916] : [1672, 941];
     for (const ext of ['png', 'webp', 'avif']) files.push(await inspect(`assets/background/amongdemons_${name}.${ext}`, size, false));
   }
+  for (const ext of ['png', 'webp', 'avif']) {
+    const backdrop = await inspect(`assets/background/demon-card.${ext}`, [1254, 1254], false);
+    assert.equal(backdrop.transparentPixels, 0, 'The shared card scenery must be opaque');
+    files.push(backdrop);
+  }
   for (const [asset, size, alpha] of [['assets/world/crowley', 512, false], ['assets/world/soul-font', 768, false], ['demons/anomaly', 1024, true]]) {
     files.push(await inspect(`${asset}.png`, null, alpha));
     files.push(await inspect(`${asset}.webp`, [size, size], alpha));

@@ -47,7 +47,7 @@ The one-time Vi'Zel repair script accepts the original extracted cutout director
 
 ## Card fitting
 
-Shared demon cards use a contained, unscaled image above a separate stats row. Removed the old 30% desktop and 48% portrait-phone zooms. Collection cards fill their grid cells. Detail, reward/cashout, public guide, summon and boss portraits also contain the full artwork; the Anomaly event portrait no longer oversizes its frame.
+Shared demon cards use a contained, unscaled image across the full card height, with compact stats overlaid at the bottom. The temporary separate stats row was removed following user feedback because it shortened the artwork. The old 30% desktop and 48% portrait-phone zooms remain removed. Collection cards fill their grid cells. Detail, reward/cashout, public guide, summon and boss portraits also contain the full artwork; the Anomaly event portrait no longer oversizes its frame.
 
 ## Verification completed
 
@@ -55,7 +55,7 @@ Shared demon cards use a contained, unscaled image above a separate stats row. R
 - Vi'Zel edits change 205, 132 and 156 pixels respectively. A full pixel comparison confirms zero alpha changes and zero RGB changes outside the three patch rectangles.
 - All 229 production image files decoded; expected sizes, required alpha and approved master hashes checked. The strict check passes with no pending IDs.
 - `npm run build` succeeds and all 263 tests pass, including the full-sprite card regression checks.
-- In-app browser fixtures use the production CSS and shared card renderer with local sample data. Collection, battle/hand, compressed formation, ranked, hunter, cashout/reward and detail layouts passed image-loading, containment and stats-overlap checks at the viewport sizes recorded in `card-verification.json`. These checks do not perform authenticated gameplay or database actions.
+- In-app browser fixtures use the production CSS and shared card renderer with local sample data. The full-height image checks and viewport sizes are recorded in `card-verification.json`. These checks do not perform authenticated gameplay or database actions.
 - The local website's Ma'Zga mythic and repaired Vi'Zel rare pages were checked in the in-app browser with transparent sprites against the regenerated home scene, without horizontal overflow.
 - No database migration, gameplay change, main-branch merge or deployment performed.
 

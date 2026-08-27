@@ -197,7 +197,7 @@ function renderDungeonEndScreen() {
 
 function renderDungeonStartPrompt() {
   return `
-    <img src="/app/images/demons/1.png?v=art-df103bc9b9a9" alt="Boof Nitza demon preparing for a dungeon run" width="1024" height="1024" loading="lazy" decoding="async">
+    <img src="/app/images/demons/1.png?v=art-d96bfa7cd346" alt="Boof Nitza demon preparing for a dungeon run" width="1024" height="1024" loading="lazy" decoding="async">
     <p class="mb-0 text-muted">Ready to descend into the dungeon?</p>
     <button class="btn btn-primary dungeon-start-prompt-btn" id="startNewDungeonBtn" type="button">
       ${renderIcon('play')}
