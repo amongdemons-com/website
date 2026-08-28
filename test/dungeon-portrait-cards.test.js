@@ -36,6 +36,6 @@ test('mobile portrait hand replaces HP bars with a one-pixel separator', () => {
   );
   assert.match(
     battleCss,
-    /body\.dungeon-page:not\(\.ranked-page\) \.dungeon-hand-cards \.combat-hp-meta\s*\{[\s\S]*?border-top: 1px solid/
+    /body\.dungeon-page:not\(\.ranked-page\) \.dungeon-hand-cards \.combat-stat-footer\s*\{[\s\S]*?border-top: 1px solid/
   );
 });

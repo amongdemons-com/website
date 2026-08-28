@@ -22,7 +22,7 @@ function getDemonImageUrl(demonOrUrl, variant = 'portrait') {
     : String(demonOrUrl || '');
   const sourceId = getDemonSourceId(demonOrUrl);
   if (!sourceId || !VALID_VARIANTS.has(variant)) return fallback;
-  return `/app/images/demons/${variant}/${sourceId}.webp?v=art-3668d0ffc131`;
+  return `/app/images/demons/${variant}/${sourceId}.webp?v=art-59b6cb9757bc`;
 }
 
 function withDemonImageVariants(demon = {}) {

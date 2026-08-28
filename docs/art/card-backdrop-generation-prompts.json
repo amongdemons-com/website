@@ -1,0 +1,249 @@
+{
+  "status": "Applied 2026-08-28; existing approved backgrounds reused without generation.",
+  "sourcePreview": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v4/final-prompts.json",
+  "variants": [
+    {
+      "typeId": 1,
+      "species": "Boof Nitza",
+      "selectedName": "Storm blue",
+      "files": {
+        "png": "assets/background/demon-card-type-1.png",
+        "webp": "assets/background/demon-card-type-1.webp",
+        "avif": "assets/background/demon-card-type-1.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon background for Among Demons Vee Scol (Chaotic).\nImage 1 is the EDIT TARGET and rendering master. This is a COLOR-ONLY edit of our newly strengthened cartoon swirl. Preserve the composition and crisp flat rendering EXACTLY: identical outline and position of every broad swirling plane, identical curly tips, same large quiet center, same graphic edges, same tiny restrained amount of matte texture. Do not redesign the image.\nReplace the green palette with Storm blue. Clear saturated sky/cornflower blue of chaotic storm; no green or purple cast.\nUse a lively clearly colored main field near #91BDE9, solid darker-but-still-medium swirl planes near #6A9DD1, and lighter colored planes near #B9D7F4. These are reference color targets, not text to include. Retain the existing value separation between the few broad planes; the colored center must stay brighter than the navy and black foreground character outlines. Keep the master image's substantial color strength and confident cartoon shape definition. NO pastel, whitened, milky, faded, gray-washed or translucent treatment. The center is quiet because it has very few details, not because it is nearly white.\nAll colors should belong to this type family; remove all green from the input unless this type's palette calls for it. Change ONLY palette. Keep the same small number of hard flat matte color planes. No additional contrast outlines, inner lines, cast shadows, or shapes. Background boundaries are medium palette colors; no black or near-black linework, no dark hole or vignette.\nNo characters, text, symbols, runes, particles, floor, puddles, rocks, moss, scenery, ground line, pedestal, physical portal frame, spotlight, white glow, bloom, neon, gloss, 3D, new grain, fine texture, ornaments, or extra tendrils. Do not increase shape density. The same type palette will sit behind every evolution, including short centered poison blobs, so invent no ground reference. Full bleed, opaque square, same dimensions as target. Output only the one recolored background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/generated_images/01a04211-9f27-7740-a185-4bef291ea397/exec-8ada7fee-c6e9-48c2-b144-18eae926c99f.png"
+      ],
+      "source": {
+        "typeId": 1,
+        "species": "Boof Nitza",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/01-boof-nitza.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/01-boof-nitza.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/01-boof-nitza.avif"
+      },
+      "rationale": "User-selected reuse of Vee Scol’s v2 storm blue background."
+    },
+    {
+      "typeId": 2,
+      "species": "Gon G'ah",
+      "selectedName": "Steel blue",
+      "files": {
+        "png": "assets/background/demon-card-type-2.png",
+        "webp": "assets/background/demon-card-type-2.webp",
+        "avif": "assets/background/demon-card-type-2.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon background for Among Demons Boof Nitza (Fighter).\nImage 1 is the EDIT TARGET and rendering master. This is a COLOR-ONLY edit of our newly strengthened cartoon swirl. Preserve the composition and crisp flat rendering EXACTLY: identical outline and position of every broad swirling plane, identical curly tips, same large quiet center, same graphic edges, same tiny restrained amount of matte texture. Do not redesign the image.\nReplace the green palette with Steel blue. Cool steel blue; neutral physical strikes, stronger colored silver rather than washed-out gray.\nUse a lively clearly colored main field near #A4BFD0, solid darker-but-still-medium swirl planes near #789AAF, and lighter colored planes near #C4D8E1. These are reference color targets, not text to include. Retain the existing value separation between the few broad planes; the colored center must stay brighter than the navy and black foreground character outlines. Keep the master image's substantial color strength and confident cartoon shape definition. NO pastel, whitened, milky, faded, gray-washed or translucent treatment. The center is quiet because it has very few details, not because it is nearly white.\nAll colors should belong to this type family; remove all green from the input unless this type's palette calls for it. Change ONLY palette. Keep the same small number of hard flat matte color planes. No additional contrast outlines, inner lines, cast shadows, or shapes. Background boundaries are medium palette colors; no black or near-black linework, no dark hole or vignette.\nNo characters, text, symbols, runes, particles, floor, puddles, rocks, moss, scenery, ground line, pedestal, physical portal frame, spotlight, white glow, bloom, neon, gloss, 3D, new grain, fine texture, ornaments, or extra tendrils. Do not increase shape density. The same type palette will sit behind every evolution, including short centered poison blobs, so invent no ground reference. Full bleed, opaque square, same dimensions as target. Output only the one recolored background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/generated_images/01a04211-9f27-7740-a185-4bef291ea397/exec-8ada7fee-c6e9-48c2-b144-18eae926c99f.png"
+      ],
+      "source": {
+        "typeId": 2,
+        "species": "Gon G'ah",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/02-gon-gah.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/02-gon-gah.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/02-gon-gah.avif"
+      },
+      "rationale": "User confirmed that Gon G’ah looks perfect on Boof’s original steel-blue background. Keep this assignment."
+    },
+    {
+      "typeId": 3,
+      "species": "Ma'Zga",
+      "selectedName": "Arcane teal",
+      "files": {
+        "png": "assets/background/demon-card-type-3.png",
+        "webp": "assets/background/demon-card-type-3.webp",
+        "avif": "assets/background/demon-card-type-3.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon background for Among Demons Gon G'ah (Sniper).\nImage 1 is the EDIT TARGET and rendering master. This is a COLOR-ONLY edit of our newly strengthened cartoon swirl. Preserve the composition and crisp flat rendering EXACTLY: identical outline and position of every broad swirling plane, identical curly tips, same large quiet center, same graphic edges, same tiny restrained amount of matte texture. Do not redesign the image.\nReplace the green palette with Ink teal. A green-leaning teal drawn from the sniper's dome. Distinct from the bright blue cyan healer.\nUse a lively clearly colored main field near #76C3B3, solid darker-but-still-medium swirl planes near #4DA58E, and lighter colored planes near #A6DDCA. These are reference color targets, not text to include. Retain the existing value separation between the few broad planes; the colored center must stay brighter than the navy and black foreground character outlines. Keep the master image's substantial color strength and confident cartoon shape definition. NO pastel, whitened, milky, faded, gray-washed or translucent treatment. The center is quiet because it has very few details, not because it is nearly white.\nAll colors should belong to this type family; remove all green from the input unless this type's palette calls for it. Change ONLY palette. Keep the same small number of hard flat matte color planes. No additional contrast outlines, inner lines, cast shadows, or shapes. Background boundaries are medium palette colors; no black or near-black linework, no dark hole or vignette.\nNo characters, text, symbols, runes, particles, floor, puddles, rocks, moss, scenery, ground line, pedestal, physical portal frame, spotlight, white glow, bloom, neon, gloss, 3D, new grain, fine texture, ornaments, or extra tendrils. Do not increase shape density. The same type palette will sit behind every evolution, including short centered poison blobs, so invent no ground reference. Full bleed, opaque square, same dimensions as target. Output only the one recolored background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/generated_images/01a04211-9f27-7740-a185-4bef291ea397/exec-8ada7fee-c6e9-48c2-b144-18eae926c99f.png"
+      ],
+      "source": {
+        "typeId": 11,
+        "species": "Vee Scol",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/11-vee-scol.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/11-vee-scol.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/11-vee-scol.avif"
+      },
+      "rationale": "Arcane teal assigned to Ma’Zga: a cool blue-green swirl around the dark living goo, with the same quiet center and sparse texture."
+    },
+    {
+      "typeId": 4,
+      "species": "Tor Tza",
+      "selectedName": "Ember coral",
+      "files": {
+        "png": "assets/background/demon-card-type-4.png",
+        "webp": "assets/background/demon-card-type-4.webp",
+        "avif": "assets/background/demon-card-type-4.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon background for Among Demons Tor Tza (AoE).\nImage 1 is the EDIT TARGET and rendering master. This is a COLOR-ONLY edit of our newly strengthened cartoon swirl. Preserve the composition and crisp flat rendering EXACTLY: identical outline and position of every broad swirling plane, identical curly tips, same large quiet center, same graphic edges, same tiny restrained amount of matte texture. Do not redesign the image.\nReplace the green palette with Ember coral. Orange-red coral and ember orange; distinct from red-wine garnet and golden amber. No pink cast.\nUse a lively clearly colored main field near #EDA27A, solid darker-but-still-medium swirl planes near #D77B54, and lighter colored planes near #F5C892. These are reference color targets, not text to include. Retain the existing value separation between the few broad planes; the colored center must stay brighter than the navy and black foreground character outlines. Keep the master image's substantial color strength and confident cartoon shape definition. NO pastel, whitened, milky, faded, gray-washed or translucent treatment. The center is quiet because it has very few details, not because it is nearly white.\nAll colors should belong to this type family; remove all green from the input unless this type's palette calls for it. Change ONLY palette. Keep the same small number of hard flat matte color planes. No additional contrast outlines, inner lines, cast shadows, or shapes. Background boundaries are medium palette colors; no black or near-black linework, no dark hole or vignette.\nNo characters, text, symbols, runes, particles, floor, puddles, rocks, moss, scenery, ground line, pedestal, physical portal frame, spotlight, white glow, bloom, neon, gloss, 3D, new grain, fine texture, ornaments, or extra tendrils. Do not increase shape density. The same type palette will sit behind every evolution, including short centered poison blobs, so invent no ground reference. Full bleed, opaque square, same dimensions as target. Output only the one recolored background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/generated_images/01a04211-9f27-7740-a185-4bef291ea397/exec-8ada7fee-c6e9-48c2-b144-18eae926c99f.png"
+      ],
+      "source": {
+        "typeId": 4,
+        "species": "Tor Tza",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/04-tor-tza.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/04-tor-tza.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/04-tor-tza.avif"
+      },
+      "rationale": "Coral-red spell and orange fire crown."
+    },
+    {
+      "typeId": 5,
+      "species": "Vi'Zel",
+      "selectedName": "Brick red",
+      "files": {
+        "png": "assets/background/demon-card-type-5.png",
+        "webp": "assets/background/demon-card-type-5.webp",
+        "avif": "assets/background/demon-card-type-5.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon card background for Vi'Zel in Among Demons.\nInput 1 is the EDIT TARGET: our approved defined rose swirl. Preserve this exact composition and cartoon rendering. Input 2 is Tor Tza's existing orange background, a COLOR-DISTINCTION reference only; do not copy its orange palette.\nChange only the first image's palette to WARM BRICK RED. Use solid matte iron-oxide / brick-red color: main colored field near #CF786D, deeper red swirl planes near #AD514A, and restrained lighter warm-red planes near #E9A08B. Keep it clearly redder and a little deeper than reference 2's fire orange. It must also be clearly less pink and less mauve than reference 1, whose rose palette is now assigned to another demon. No purple, raspberry, candy pink, orange-peach dominance, brown mud or near-white pastel wash. These hex colors are palette guidance, not printed text.\nPreserve the first image's identical broad asymmetric curl layout, positions, scale, small number of planes, crisp confident color boundaries and large quiet center. Color swap only: no additional curls, lines, textures, outlines, objects or details. Same rich-but-controlled cartoon color strength as our latest set. Broad matte fills, no glossy or photographic treatment. Any shallow shadow is a simple existing flat color plane. Keep the restrained texture amount; no added fine grain.\nThe center stays a calm medium-light brick-red color field, brighter than the foreground demon's navy and black outlines. Avoid making it a pale spotlight or dark hole. Background boundaries use medium colors from the red palette, never black or near-black ink. Keep the center empty of detail so tiny common and wide mythic demons both remain visible.\nNo characters, words, UI, symbols, runes, rings, particles, glow, bloom, neon, white haze, rocks, moss, puddles, floor, horizon, pedestal, cast shadow, props, border or watermark. No changes to composition or density. Full bleed, opaque square, same dimensions as input 1. Output only the single finished brick-red background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v2/variants/05-vizel.png",
+        "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v2/variants/04-tor-tza.png"
+      ],
+      "source": {
+        "typeId": 5,
+        "species": "Vi'Zel",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/05-vizel.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/05-vizel.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/05-vizel.avif"
+      },
+      "rationale": "Brick red remains behind Vi’Zel. The revised navy/blue character has yellow eyes and gold accents across all six evolutions."
+    },
+    {
+      "typeId": 6,
+      "species": "Goh Loomb",
+      "selectedName": "Claw amber",
+      "files": {
+        "png": "assets/background/demon-card-type-6.png",
+        "webp": "assets/background/demon-card-type-6.webp",
+        "avif": "assets/background/demon-card-type-6.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon background for Among Demons Baobaw (Striker).\nImage 1 is the EDIT TARGET and rendering master. This is a COLOR-ONLY edit of our newly strengthened cartoon swirl. Preserve the composition and crisp flat rendering EXACTLY: identical outline and position of every broad swirling plane, identical curly tips, same large quiet center, same graphic edges, same tiny restrained amount of matte texture. Do not redesign the image.\nReplace the green palette with Claw amber. Golden yellow amber from the striker spell. No orange coral, dirty brown or beige.\nUse a lively clearly colored main field near #E8C36C, solid darker-but-still-medium swirl planes near #CFAB4E, and lighter colored planes near #F2DA91. These are reference color targets, not text to include. Retain the existing value separation between the few broad planes; the colored center must stay brighter than the navy and black foreground character outlines. Keep the master image's substantial color strength and confident cartoon shape definition. NO pastel, whitened, milky, faded, gray-washed or translucent treatment. The center is quiet because it has very few details, not because it is nearly white.\nAll colors should belong to this type family; remove all green from the input unless this type's palette calls for it. Change ONLY palette. Keep the same small number of hard flat matte color planes. No additional contrast outlines, inner lines, cast shadows, or shapes. Background boundaries are medium palette colors; no black or near-black linework, no dark hole or vignette.\nNo characters, text, symbols, runes, particles, floor, puddles, rocks, moss, scenery, ground line, pedestal, physical portal frame, spotlight, white glow, bloom, neon, gloss, 3D, new grain, fine texture, ornaments, or extra tendrils. Do not increase shape density. The same type palette will sit behind every evolution, including short centered poison blobs, so invent no ground reference. Full bleed, opaque square, same dimensions as target. Output only the one recolored background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/generated_images/01a04211-9f27-7740-a185-4bef291ea397/exec-8ada7fee-c6e9-48c2-b144-18eae926c99f.png"
+      ],
+      "source": {
+        "typeId": 7,
+        "species": "Baobaw",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/07-baobaw.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/07-baobaw.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/07-baobaw.avif"
+      },
+      "rationale": "Claw amber assigned to Goh Loomb: a warm field that separates its dark silhouette and wings without extra detail."
+    },
+    {
+      "typeId": 7,
+      "species": "Baobaw",
+      "selectedName": "Spectral violet",
+      "files": {
+        "png": "assets/background/demon-card-type-7.png",
+        "webp": "assets/background/demon-card-type-7.webp",
+        "avif": "assets/background/demon-card-type-7.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon background for Among Demons Goh Loomb (Assassin).\nImage 1 is the EDIT TARGET and rendering master. This is a COLOR-ONLY edit of our newly strengthened cartoon swirl. Preserve the composition and crisp flat rendering EXACTLY: identical outline and position of every broad swirling plane, identical curly tips, same large quiet center, same graphic edges, same tiny restrained amount of matte texture. Do not redesign the image.\nReplace the green palette with Spectral violet. Blue-leaning spectral violet for the assassin's spell. More blue than mushroom mauve, not pink.\nUse a lively clearly colored main field near #B19BDE, solid darker-but-still-medium swirl planes near #8D76BE, and lighter colored planes near #CDBAEF. These are reference color targets, not text to include. Retain the existing value separation between the few broad planes; the colored center must stay brighter than the navy and black foreground character outlines. Keep the master image's substantial color strength and confident cartoon shape definition. NO pastel, whitened, milky, faded, gray-washed or translucent treatment. The center is quiet because it has very few details, not because it is nearly white.\nAll colors should belong to this type family; remove all green from the input unless this type's palette calls for it. Change ONLY palette. Keep the same small number of hard flat matte color planes. No additional contrast outlines, inner lines, cast shadows, or shapes. Background boundaries are medium palette colors; no black or near-black linework, no dark hole or vignette.\nNo characters, text, symbols, runes, particles, floor, puddles, rocks, moss, scenery, ground line, pedestal, physical portal frame, spotlight, white glow, bloom, neon, gloss, 3D, new grain, fine texture, ornaments, or extra tendrils. Do not increase shape density. The same type palette will sit behind every evolution, including short centered poison blobs, so invent no ground reference. Full bleed, opaque square, same dimensions as target. Output only the one recolored background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/generated_images/01a04211-9f27-7740-a185-4bef291ea397/exec-8ada7fee-c6e9-48c2-b144-18eae926c99f.png"
+      ],
+      "source": {
+        "typeId": 6,
+        "species": "Goh Loomb",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/06-goh-loomb.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/06-goh-loomb.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/06-goh-loomb.avif"
+      },
+      "rationale": "Spectral violet assigned to Baobaw: a cool eerie swirl behind its skull face, dark fur and long claws."
+    },
+    {
+      "typeId": 8,
+      "species": "Ko Pak",
+      "selectedName": "Root olive",
+      "files": {
+        "png": "assets/background/demon-card-type-8.png",
+        "webp": "assets/background/demon-card-type-8.webp",
+        "avif": "assets/background/demon-card-type-8.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon background for Among Demons Ko Pak (Thorns).\nImage 1 is the EDIT TARGET and rendering master. This is a COLOR-ONLY edit of our newly strengthened cartoon swirl. Preserve the composition and crisp flat rendering EXACTLY: identical outline and position of every broad swirling plane, identical curly tips, same large quiet center, same graphic edges, same tiny restrained amount of matte texture. Do not redesign the image.\nReplace the green palette with Root olive. Earthy yellow-olive leaf green, distinctly more yellow than the fresh poison green, not teal.\nUse a lively clearly colored main field near #B7C87D, solid darker-but-still-medium swirl planes near #96AD5B, and lighter colored planes near #D4DF9D. These are reference color targets, not text to include. Retain the existing value separation between the few broad planes; the colored center must stay brighter than the navy and black foreground character outlines. Keep the master image's substantial color strength and confident cartoon shape definition. NO pastel, whitened, milky, faded, gray-washed or translucent treatment. The center is quiet because it has very few details, not because it is nearly white.\nAll colors should belong to this type family; remove all green from the input unless this type's palette calls for it. Change ONLY palette. Keep the same small number of hard flat matte color planes. No additional contrast outlines, inner lines, cast shadows, or shapes. Background boundaries are medium palette colors; no black or near-black linework, no dark hole or vignette.\nNo characters, text, symbols, runes, particles, floor, puddles, rocks, moss, scenery, ground line, pedestal, physical portal frame, spotlight, white glow, bloom, neon, gloss, 3D, new grain, fine texture, ornaments, or extra tendrils. Do not increase shape density. The same type palette will sit behind every evolution, including short centered poison blobs, so invent no ground reference. Full bleed, opaque square, same dimensions as target. Output only the one recolored background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/generated_images/01a04211-9f27-7740-a185-4bef291ea397/exec-8ada7fee-c6e9-48c2-b144-18eae926c99f.png"
+      ],
+      "source": {
+        "typeId": 8,
+        "species": "Ko Pak",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/08-ko-pak.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/08-ko-pak.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/08-ko-pak.avif"
+      },
+      "rationale": "Olive-green thorn spell and leaves."
+    },
+    {
+      "typeId": 9,
+      "species": "Chu Perk",
+      "selectedName": "Garnet red",
+      "files": {
+        "png": "assets/background/demon-card-type-9.png",
+        "webp": "assets/background/demon-card-type-9.webp",
+        "avif": "assets/background/demon-card-type-9.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon background for Among Demons Vi'Zel (Bruiser).\nImage 1 is the EDIT TARGET and rendering master. This is a COLOR-ONLY edit of our newly strengthened cartoon swirl. Preserve the composition and crisp flat rendering EXACTLY: identical outline and position of every broad swirling plane, identical curly tips, same large quiet center, same graphic edges, same tiny restrained amount of matte texture. Do not redesign the image.\nReplace the green palette with Garnet red. Wine-red raspberry leaning towards red, not orange, violet, or candy pink; follows the bull's red markings.\nUse a lively clearly colored main field near #D595A5, solid darker-but-still-medium swirl planes near #BA6F87, and lighter colored planes near #E9BCCA. These are reference color targets, not text to include. Retain the existing value separation between the few broad planes; the colored center must stay brighter than the navy and black foreground character outlines. Keep the master image's substantial color strength and confident cartoon shape definition. NO pastel, whitened, milky, faded, gray-washed or translucent treatment. The center is quiet because it has very few details, not because it is nearly white.\nAll colors should belong to this type family; remove all green from the input unless this type's palette calls for it. Change ONLY palette. Keep the same small number of hard flat matte color planes. No additional contrast outlines, inner lines, cast shadows, or shapes. Background boundaries are medium palette colors; no black or near-black linework, no dark hole or vignette.\nNo characters, text, symbols, runes, particles, floor, puddles, rocks, moss, scenery, ground line, pedestal, physical portal frame, spotlight, white glow, bloom, neon, gloss, 3D, new grain, fine texture, ornaments, or extra tendrils. Do not increase shape density. The same type palette will sit behind every evolution, including short centered poison blobs, so invent no ground reference. Full bleed, opaque square, same dimensions as target. Output only the one recolored background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/generated_images/01a04211-9f27-7740-a185-4bef291ea397/exec-8ada7fee-c6e9-48c2-b144-18eae926c99f.png"
+      ],
+      "source": {
+        "typeId": 9,
+        "species": "Chu Perk",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/09-chu-perk.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/09-chu-perk.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/09-chu-perk.avif"
+      },
+      "rationale": "User-selected reuse of Vi'Zel’s v2 garnet red background."
+    },
+    {
+      "typeId": 10,
+      "species": "Ba Be'aga",
+      "selectedName": "Soul cyan",
+      "files": {
+        "png": "assets/background/demon-card-type-10.png",
+        "webp": "assets/background/demon-card-type-10.webp",
+        "avif": "assets/background/demon-card-type-10.avif"
+      },
+      "historicalPrompt": "Use case: precise-object-edit.\nAsset: ONE opaque square cartoon background for Among Demons Ba Be'aga (Healer).\nImage 1 is the EDIT TARGET and rendering master. This is a COLOR-ONLY edit of our newly strengthened cartoon swirl. Preserve the composition and crisp flat rendering EXACTLY: identical outline and position of every broad swirling plane, identical curly tips, same large quiet center, same graphic edges, same tiny restrained amount of matte texture. Do not redesign the image.\nReplace the green palette with Soul cyan. Clear healing cyan, blue-leaning rather than green; keyed to the spell #8DE7FF without a near-white wash.\nUse a lively clearly colored main field near #81D0DF, solid darker-but-still-medium swirl planes near #58B4CA, and lighter colored planes near #AFE4EC. These are reference color targets, not text to include. Retain the existing value separation between the few broad planes; the colored center must stay brighter than the navy and black foreground character outlines. Keep the master image's substantial color strength and confident cartoon shape definition. NO pastel, whitened, milky, faded, gray-washed or translucent treatment. The center is quiet because it has very few details, not because it is nearly white.\nAll colors should belong to this type family; remove all green from the input unless this type's palette calls for it. Change ONLY palette. Keep the same small number of hard flat matte color planes. No additional contrast outlines, inner lines, cast shadows, or shapes. Background boundaries are medium palette colors; no black or near-black linework, no dark hole or vignette.\nNo characters, text, symbols, runes, particles, floor, puddles, rocks, moss, scenery, ground line, pedestal, physical portal frame, spotlight, white glow, bloom, neon, gloss, 3D, new grain, fine texture, ornaments, or extra tendrils. Do not increase shape density. The same type palette will sit behind every evolution, including short centered poison blobs, so invent no ground reference. Full bleed, opaque square, same dimensions as target. Output only the one recolored background.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/generated_images/01a04211-9f27-7740-a185-4bef291ea397/exec-8ada7fee-c6e9-48c2-b144-18eae926c99f.png"
+      ],
+      "source": {
+        "typeId": 10,
+        "species": "Ba Be'aga",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/10-ba-beaga.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/10-ba-beaga.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/variants/10-ba-beaga.avif"
+      },
+      "rationale": "Cyan healing flames, exact spell hue #8DE7FF."
+    },
+    {
+      "typeId": 11,
+      "species": "Vee Scol",
+      "selectedName": "Charcoal slate",
+      "files": {
+        "png": "assets/background/demon-card-type-11.png",
+        "webp": "assets/background/demon-card-type-11.webp",
+        "avif": "assets/background/demon-card-type-11.avif"
+      },
+      "historicalPrompt": "Reused the existing approved charcoal/slate gray swirl without pixel changes.",
+      "historicalReferences": [
+        "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/alternates/vee-scol-charcoal.png"
+      ],
+      "source": {
+        "typeId": 11,
+        "species": "Vee Scol gray selection",
+        "png": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/alternates/vee-scol-charcoal.png",
+        "webp": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/alternates/vee-scol-charcoal.webp",
+        "avif": "C:/Users/aluro/.codex/visualizations/2026/08/27/01a04211-9f27-7740-a185-4bef291ea397/type-swirl-studies-v3/alternates/vee-scol-charcoal.avif"
+      },
+      "rationale": "The selected charcoal/slate gray stays with Vee Scol. Gon G’ah retains the separate steel-blue background."
+    }
+  ]
+}

@@ -582,154 +582,97 @@
     "id": 25,
     "species": "Vi'Zel",
     "rarity": "common",
-    "source": "demons/025-vizel-common-v2.png",
+    "source": "type-swirl-studies-v4/generated-originals/25.png",
     "output": "25.png",
     "width": 1254,
     "height": 1254,
-    "matte": [
-      147,
-      169,
-      171
-    ],
-    "chroma": [
-      22,
-      2
-    ],
-    "removedComponents": 1,
-    "transparentPixels": 1165110,
-    "partialPixels": 3345,
-    "unchangedOpaquePixels": 404061,
-    "sourceSha256": "9e5432b9efa457a9fe07f669d4b14da0aacd3fd62e55fb1fabbda7c4083f7e8e",
-    "outputSha256": "bb8d4d3f0f2153c38c5220866fe2a795afabcd9f1612f3c12e42d7fc4a88dc3c",
-    "extractedSha256": "bb2a41a4e5c85d413cfff4d4529bc58f846e4b1109517655ce8ad5e152c47319",
-    "pixelRepair": "vizel-eye-repairs.json",
-    "pixelRepairChangedPixels": 205
+    "method": "Approved imagegen color edit, neutral checkerboard extraction and localized legendary pupil repair.",
+    "transparentPixels": 1146918,
+    "partialPixels": 9199,
+    "verifiedUnchangedInteriorPixels": 412488,
+    "sourceSha256": "8ab69ce862acc7e0c930d6515702f022e5bdff120b88153590851e47effee101",
+    "outputSha256": "cd1f21d666ee9ef1cd3ae652c41a62ed42963e7e983de511d872cca8df5b5133",
+    "revision": "vizel-yellow-revision.json"
   },
   {
     "id": 26,
     "species": "Vi'Zel",
     "rarity": "uncommon",
-    "source": "demons/026-vizel-uncommon-v2.png",
+    "source": "type-swirl-studies-v4/generated-originals/26.png",
     "output": "26.png",
     "width": 1254,
     "height": 1254,
-    "matte": [
-      153,
-      171,
-      174
-    ],
-    "chroma": [
-      19,
-      3
-    ],
-    "removedComponents": 1,
-    "transparentPixels": 1117587,
-    "partialPixels": 3810,
-    "unchangedOpaquePixels": 451119,
-    "sourceSha256": "bcb3e4e55d6402b387d21a7d634b9ce00f188392fd2046f6e509cfdee1ad343d",
-    "outputSha256": "733916b3cb258a5643546a4a9c51f60e50c895d7be4167fa78b8dc2c7cb4cfbb",
-    "extractedSha256": "bfed96c65c9999b5e8ae3f17868c881c5228241910efc260c422ec705f251ce3",
-    "pixelRepair": "vizel-eye-repairs.json",
-    "pixelRepairChangedPixels": 132
+    "method": "Approved imagegen color edit, neutral checkerboard extraction and localized legendary pupil repair.",
+    "transparentPixels": 1096595,
+    "partialPixels": 10273,
+    "verifiedUnchangedInteriorPixels": 461158,
+    "sourceSha256": "7a6479e66dbe8f93617fbd046f31c506b1f07748e9cfd40eb3166c2f397b81a9",
+    "outputSha256": "14b779f7d335659d7063fd7e8d08b32e3d11884a6a0149d29fdb47ee082adb23",
+    "revision": "vizel-yellow-revision.json"
   },
   {
     "id": 27,
     "species": "Vi'Zel",
     "rarity": "rare",
-    "source": "demons/027-vizel-rare-v2.png",
+    "source": "type-swirl-studies-v4/generated-originals/27.png",
     "output": "27.png",
     "width": 1254,
     "height": 1254,
-    "matte": [
-      151,
-      170,
-      173
-    ],
-    "chroma": [
-      19,
-      2
-    ],
-    "removedComponents": 2,
-    "transparentPixels": 998289,
-    "partialPixels": 5187,
-    "unchangedOpaquePixels": 569040,
-    "sourceSha256": "348948ffd64354e139b4a67a24f24a22a8e0ff4635d006678e6d6a6dd35b28d0",
-    "outputSha256": "d96dea2f6f43dc077381f81be39d5bc85ea86d0dfef3dd86df1a24eadc2fafab",
-    "extractedSha256": "6b4033ae574caa9ae58a110a60280b8b1f23cb54f0cd7ffc31fb6485344acb46",
-    "pixelRepair": "vizel-eye-repairs.json",
-    "pixelRepairChangedPixels": 156
+    "method": "Approved imagegen color edit, neutral checkerboard extraction and localized legendary pupil repair.",
+    "transparentPixels": 1013141,
+    "partialPixels": 13138,
+    "verifiedUnchangedInteriorPixels": 540140,
+    "sourceSha256": "dc25b03ef34f0587ae7d8fbd99afaf22e919c033c0478416a3db75f19fe18369",
+    "outputSha256": "a04cc91aca5d89edd6d516d359caddd7ae424c262f4b3c555f93cd2347b73e22",
+    "revision": "vizel-yellow-revision.json"
   },
   {
     "id": 28,
     "species": "Vi'Zel",
     "rarity": "epic",
-    "source": "demons/028-vizel-epic-v2.png",
+    "source": "type-swirl-studies-v4/generated-originals/28.png",
     "output": "28.png",
     "width": 1254,
     "height": 1254,
-    "matte": [
-      145,
-      165,
-      166
-    ],
-    "chroma": [
-      20,
-      1
-    ],
-    "removedComponents": 2,
-    "transparentPixels": 1003796,
-    "partialPixels": 4903,
-    "unchangedOpaquePixels": 563817,
-    "sourceSha256": "daf47fa0f935e58ea45a12b4edebc46d17a872f613855859a0590b22bd2b1d53",
-    "outputSha256": "9b92e89c295874bbdfe1cb14ddc488f51ae63942dd10485f5848360ff05c2063"
+    "method": "Approved imagegen color edit, neutral checkerboard extraction and localized legendary pupil repair.",
+    "transparentPixels": 1019013,
+    "partialPixels": 13739,
+    "verifiedUnchangedInteriorPixels": 534142,
+    "sourceSha256": "5c898f1a403d083aa2db38a58953d44ebbb3bd9ffee835576b94c93b178b5c94",
+    "outputSha256": "05872c200ac7339bbd6d4e6ec6264abaf53b82186326375c42b3f273f3a96dc2",
+    "revision": "vizel-yellow-revision.json"
   },
   {
     "id": 29,
     "species": "Vi'Zel",
     "rarity": "legendary",
-    "source": "demons/029-vizel-legendary-v2.png",
+    "source": "type-swirl-studies-v4/generated-originals/29.png",
     "output": "29.png",
     "width": 1254,
     "height": 1254,
-    "matte": [
-      149,
-      170,
-      171
-    ],
-    "chroma": [
-      22,
-      1
-    ],
-    "removedComponents": 1,
-    "transparentPixels": 975595,
-    "partialPixels": 5803,
-    "unchangedOpaquePixels": 591118,
-    "sourceSha256": "f59b2a9e93db2d9599ba3af8f7e3b3d1973235b7795b1bd48bdc7ff7be02b034",
-    "outputSha256": "0d9ef14352ba0f923cefe50c2456fb075661d9a364b309dd3fff32013c8ff875"
+    "method": "Approved imagegen color edit, neutral checkerboard extraction and localized legendary pupil repair.",
+    "transparentPixels": 990631,
+    "partialPixels": 14948,
+    "verifiedUnchangedInteriorPixels": 560118,
+    "sourceSha256": "e038120385e85083a14a23627d71b9a0edb5b61ea10950b3414b91bcd27ec916",
+    "outputSha256": "80ffcc814c35d0d2e6f0eac9c66499d9e587d895b0e09155180455e911b8345f",
+    "revision": "vizel-yellow-revision.json"
   },
   {
     "id": 30,
     "species": "Vi'Zel",
     "rarity": "mythic",
-    "source": "demons/030-vizel-mythic-v4.png",
+    "source": "type-swirl-studies-v4/generated-originals/30.png",
     "output": "30.png",
     "width": 1254,
     "height": 1254,
-    "matte": [
-      139,
-      162,
-      167
-    ],
-    "chroma": [
-      23,
-      5
-    ],
-    "removedComponents": 2,
-    "transparentPixels": 796555,
-    "partialPixels": 6113,
-    "unchangedOpaquePixels": 769848,
-    "sourceSha256": "d81881f1828fbd82fe9d0ecdf08562e97ec2d8207684afea12570b3121dd6bee",
-    "outputSha256": "2dc1f360cced2046fad6a9cb86ca3446e8f252e39412ba097606cc0e81585d06"
+    "method": "Approved imagegen color edit, neutral checkerboard extraction and localized legendary pupil repair.",
+    "transparentPixels": 830542,
+    "partialPixels": 16045,
+    "verifiedUnchangedInteriorPixels": 718217,
+    "sourceSha256": "9ee72e7c497977b3a625b9c0ee6b05206d0d262e79b7e2eb5b79333eff6a69b2",
+    "outputSha256": "c9d216ea349bb3ee6b8e7866a6b4820028ff40c740a274ee26c1958d98b72857",
+    "revision": "vizel-yellow-revision.json"
   },
   {
     "id": 31,

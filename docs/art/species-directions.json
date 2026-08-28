@@ -155,8 +155,47 @@
     "species": "Vi'Zel",
     "slug": "vizel",
     "axis": "Horn-bud calf demon → colossal crowned bull",
-    "identity": "FOUR-LEGGED navy/blue demon bull with bovine muzzle and nostrils, side ears, angry red eyes, shaggy forequarters, hoof-like feet and a tufted tail. Horn span and neck mane define progression; later burgundy/red branching body motifs and purple ruff. Never bipedal, humanoid, armored or winged.",
+    "identity": "FOUR-LEGGED navy/blue demon bull with bovine muzzle, side ears, golden-yellow eyes, solid black pupils and no white catchlights. Existing accents are yellow/gold with ochre shadows; mythic extends gold into its mane, split beard, tail tuft and inner horn accents. Main body stays navy/blue and outlines near-black. Retain approved horn counts, poses and progression; never humanoid, armored or winged.",
     "stages": [
+      {
+        "rarity": "common",
+        "id": 25,
+        "design": "Recolor both red irises to saturated golden yellow. Recolor the small burgundy throat/chest tuft directly below the muzzle to warm golden yellow with a simple ochre shadow. Keep the two short dark horn buds, dark muzzle, navy hooves, blue body, tail and all other areas unchanged. Do not add forehead or body markings.",
+        "promptFile": "vizel-yellow-revision.json"
+      },
+      {
+        "rarity": "uncommon",
+        "id": 26,
+        "design": "Recolor both red irises and the red base bands on the two large outer horns to saturated golden yellow with ochre shadow. Preserve the two small inner horn buds and dark navy horn cores and tips. Keep the entire navy/blue body and mane unchanged. Do not add markings.",
+        "promptFile": "vizel-yellow-revision.json"
+      },
+      {
+        "rarity": "rare",
+        "id": 27,
+        "design": "Recolor both red irises, pink/red horn base bands and the small pink/purple jagged shoulder/back ridge to saturated golden yellow, ochre in the existing shadow planes. Keep the huge sweeping dark navy-purple outer horn material dark, the two small inner horns dark, the navy/blue body, blue muzzle and dark hooves unchanged. Do not add body markings.",
+        "promptFile": "vizel-yellow-revision.json"
+      },
+      {
+        "rarity": "epic",
+        "id": 28,
+        "design": "Recolor both red irises and every existing red branching marking on forehead, chest and flank to saturated golden yellow, with ochre only in existing shadow planes. Preserve the two long outer horns and two small inner horns, their dark navy-purple material, the blue/navy mane and body, dark hooves, face and pose unchanged. Do not add new markings.",
+        "promptFile": "vizel-yellow-revision.json"
+      },
+      {
+        "rarity": "legendary",
+        "id": 29,
+        "design": "Recolor both red irises and all existing red branch-shaped forehead/chest markings to saturated golden yellow. Recolor the brighter burgundy/purple horn accent planes to warm gold with ochre shadow, retaining the darkest horn material as dark navy/charcoal. Preserve exactly two forked outer horns plus two inner horns, all six tips, and all existing shapes. Keep the navy/blue mane and body unchanged. Remove the white dots/catchlights from the eyes; pupils must be solid black.",
+        "promptFile": "vizel-yellow-revision.json"
+      },
+      {
+        "rarity": "mythic",
+        "id": 30,
+        "design": "Recolor both red irises and every red branching forehead/chest/leg/flank marking to saturated golden yellow. Recolor the bright purple accent family on the horn planes, shoulder mane, long split beard and tail tuft to warm golden yellow with ochre shadows. Keep the main body, legs, face and ears navy/blue; keep the deep horn shadows and hooves dark navy/charcoal. Preserve exactly two forked outer horns plus two inner horns (six tips), all jagged mane shapes, beard shape, markings, anatomy and pose. Remove all white eye dots/catchlights; pupils must be solid black.",
+        "promptFile": "vizel-yellow-revision.json"
+      }
+    ],
+    "historicalIdentity": "FOUR-LEGGED navy/blue demon bull with bovine muzzle and nostrils, side ears, angry red eyes, shaggy forequarters, hoof-like feet and a tufted tail. Horn span and neck mane define progression; later burgundy/red branching body motifs and purple ruff. Never bipedal, humanoid, armored or winged.",
+    "historicalStages": [
       {
         "id": 25,
         "rarity": "common",

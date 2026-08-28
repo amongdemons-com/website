@@ -517,18 +517,18 @@
         1254
       ],
       "bounds": {
-        "left": 146,
-        "top": 261,
-        "right": 1068,
-        "bottom": 1065,
-        "width": 923,
-        "height": 805,
+        "left": 139,
+        "top": 218,
+        "right": 1082,
+        "bottom": 1045,
+        "width": 944,
+        "height": 828,
         "components": 1,
-        "ignoredPixels": 1
+        "ignoredPixels": 0
       },
       "translation": {
-        "x": 20,
-        "y": -36
+        "x": 16,
+        "y": -5
       }
     },
     {
@@ -539,17 +539,17 @@
       ],
       "bounds": {
         "left": 128,
-        "top": 219,
-        "right": 1069,
-        "bottom": 1080,
-        "width": 942,
-        "height": 862,
+        "top": 171,
+        "right": 1093,
+        "bottom": 1055,
+        "width": 966,
+        "height": 885,
         "components": 1,
         "ignoredPixels": 0
       },
       "translation": {
-        "x": 28,
-        "y": -23
+        "x": 16,
+        "y": 14
       }
     },
     {
@@ -559,18 +559,18 @@
         1254
       ],
       "bounds": {
-        "left": 36,
-        "top": 133,
-        "right": 1212,
-        "bottom": 1128,
-        "width": 1177,
-        "height": 996,
+        "left": 41,
+        "top": 137,
+        "right": 1201,
+        "bottom": 1126,
+        "width": 1161,
+        "height": 990,
         "components": 1,
-        "ignoredPixels": 4
+        "ignoredPixels": 0
       },
       "translation": {
-        "x": 3,
-        "y": -4
+        "x": 6,
+        "y": -5
       }
     },
     {
@@ -580,17 +580,17 @@
         1254
       ],
       "bounds": {
-        "left": 62,
-        "top": 95,
-        "right": 1137,
-        "bottom": 1117,
-        "width": 1076,
-        "height": 1023,
+        "left": 61,
+        "top": 97,
+        "right": 1134,
+        "bottom": 1115,
+        "width": 1074,
+        "height": 1019,
         "components": 1,
         "ignoredPixels": 0
       },
       "translation": {
-        "x": 27,
+        "x": 29,
         "y": 21
       }
     },
@@ -601,17 +601,17 @@
         1254
       ],
       "bounds": {
-        "left": 83,
-        "top": 60,
-        "right": 1103,
-        "bottom": 1165,
-        "width": 1021,
-        "height": 1106,
+        "left": 91,
+        "top": 62,
+        "right": 1108,
+        "bottom": 1163,
+        "width": 1018,
+        "height": 1102,
         "components": 1,
-        "ignoredPixels": 2
+        "ignoredPixels": 0
       },
       "translation": {
-        "x": 34,
+        "x": 27,
         "y": 14
       }
     },
@@ -622,18 +622,18 @@
         1254
       ],
       "bounds": {
-        "left": 39,
-        "top": 43,
-        "right": 1170,
-        "bottom": 1195,
-        "width": 1132,
-        "height": 1153,
+        "left": 58,
+        "top": 37,
+        "right": 1154,
+        "bottom": 1180,
+        "width": 1097,
+        "height": 1144,
         "components": 1,
-        "ignoredPixels": 23
+        "ignoredPixels": 0
       },
       "translation": {
-        "x": 22,
-        "y": 8
+        "x": 21,
+        "y": 18
       }
     },
     {

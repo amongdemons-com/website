@@ -1,0 +1,225 @@
+{
+  "date": "2026-08-28",
+  "assetVersion": "art-c510cd391357",
+  "environment": "Local exported Express application on 127.0.0.1:3147; public read-only routes; no startup migrations, authenticated gameplay or account operations.",
+  "tool": "In-app browser",
+  "screenshotsVisuallyInspected": [
+    "/bosses at 1280x720",
+    "/bosses/warden at 1280x720",
+    "/bosses/warden at 390x844"
+  ],
+  "wardenDesktop": {
+    "formation": [
+      {
+        "cardClientHeight": 105,
+        "fit": "contain",
+        "frameHeight": 105.3125,
+        "fullHeight": true,
+        "gemBorder": "rgb(16, 24, 32)",
+        "gemShape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "image": "/app/images/demons/portrait/6.webp?v=art-c510cd391357",
+        "loaded": true
+      },
+      {
+        "cardClientHeight": 105,
+        "fit": "contain",
+        "frameHeight": 105.328125,
+        "fullHeight": true,
+        "gemBorder": "rgb(16, 24, 32)",
+        "gemShape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "image": "/app/images/demons/portrait/6.webp?v=art-c510cd391357",
+        "loaded": true
+      },
+      {
+        "cardClientHeight": 105,
+        "fit": "contain",
+        "frameHeight": 105.328125,
+        "fullHeight": true,
+        "gemBorder": "rgb(16, 24, 32)",
+        "gemShape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "image": "/app/images/demons/portrait/6.webp?v=art-c510cd391357",
+        "loaded": true
+      }
+    ],
+    "horizontalOverflow": false,
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    }
+  },
+  "wardenPhone": {
+    "cards": [
+      {
+        "backdrop": "1",
+        "badgeSize": "16.1875px",
+        "border": "rgb(16, 24, 32)",
+        "contentHeight": 86,
+        "fillInset": "1px",
+        "fit": "contain",
+        "frameHeight": 86.109375,
+        "fullHeight": true,
+        "height": 90.109375
+      },
+      {
+        "backdrop": "1",
+        "badgeSize": "16.1875px",
+        "border": "rgb(16, 24, 32)",
+        "contentHeight": 86,
+        "fillInset": "1px",
+        "fit": "contain",
+        "frameHeight": 86.109375,
+        "fullHeight": true,
+        "height": 90.109375
+      },
+      {
+        "backdrop": "1",
+        "badgeSize": "16.1875px",
+        "border": "rgb(16, 24, 32)",
+        "contentHeight": 86,
+        "fillInset": "1px",
+        "fit": "contain",
+        "frameHeight": 86.109375,
+        "fullHeight": true,
+        "height": 90.109375
+      }
+    ],
+    "heroBadge": {
+      "border": "rgb(16, 24, 32)",
+      "centerOffset": 0,
+      "inside": true
+    },
+    "overflow": false,
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "bossesPhone": {
+    "cards": [
+      {
+        "backgroundType": 5,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "Ash Sentinel",
+        "shape": "polygon(25% 0px, 75% 0px, 100% 50%, 75% 100%, 25% 100%, 0px 50%)",
+        "spriteId": 29
+      },
+      {
+        "backgroundType": 1,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "Warden",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 6
+      },
+      {
+        "backgroundType": 2,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "Void Ranger",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 12
+      },
+      {
+        "backgroundType": 3,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "The Corruptor",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 18
+      },
+      {
+        "backgroundType": 4,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "Fire Dancer",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 24
+      },
+      {
+        "backgroundType": 5,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "Iron Vanguard",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 30
+      },
+      {
+        "backgroundType": 6,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "The Last Whisper",
+        "shape": "polygon(25% 0px, 75% 0px, 100% 50%, 75% 100%, 25% 100%, 0px 50%)",
+        "spriteId": 35
+      },
+      {
+        "backgroundType": 7,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "The Linebreaker",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 42
+      },
+      {
+        "backgroundType": 8,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "The Withered King",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 48
+      },
+      {
+        "backgroundType": 9,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "The Colossus",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 54
+      },
+      {
+        "backgroundType": 10,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "Threadmother",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 60
+      },
+      {
+        "backgroundType": 11,
+        "border": "rgb(16, 24, 32)",
+        "centered": true,
+        "name": "Storm Portal",
+        "shape": "polygon(50% 0px, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0px 50%, 31% 39%, 15% 15%, 39% 31%)",
+        "spriteId": 66
+      }
+    ],
+    "overflow": false,
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "catalogDesktop": {
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "portraitCount": 66,
+    "incorrectBackgrounds": [],
+    "allPortraitsContained": true,
+    "horizontalOverflow": false,
+    "yellowViZelSpriteIds": [
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ]
+  },
+  "browserWarningsAndErrors": [],
+  "limitations": [
+    "Combat colors and unchanged motions were tested through the actual renderer in unit tests, not an authenticated live battle replay.",
+    "Catalog palette checks inspect computed CSS; offscreen lazy-loaded images were not all captured in screenshots."
+  ]
+}

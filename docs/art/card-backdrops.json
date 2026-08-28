@@ -1,0 +1,317 @@
+{
+  "approved": "2026-08-28",
+  "status": "applied",
+  "source": "type-swirl-studies-v4",
+  "fallbackTypeId": 11,
+  "rule": "Select by the displayed demon source ID, never by rarity; each type shares one palette across all six evolutions.",
+  "variants": [
+    {
+      "typeId": 1,
+      "species": "Boof Nitza",
+      "name": "Storm blue",
+      "palette": {
+        "base": "#91BDE9",
+        "motif": "#6A9DD1",
+        "secondary": "#B9D7F4"
+      },
+      "demonIds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-1.png",
+        "webp": "assets/background/demon-card-type-1.webp",
+        "avif": "assets/background/demon-card-type-1.avif"
+      },
+      "sha256": {
+        "png": "a6e94995a4afe59ee5af4fd4a7068308cf55e612e7485d9e1ad8a8c58f6c203a",
+        "webp": "c030d66a447a7befcfaa0994b196280301a8b6201ae2c5e027fb73f2237e04c4",
+        "avif": "90693548fe1e50f0f6d83475b99cc4badec21c2d90451db5c8e19f8d9baeb830"
+      }
+    },
+    {
+      "typeId": 2,
+      "species": "Gon G'ah",
+      "name": "Steel blue",
+      "palette": {
+        "base": "#A4BFD0",
+        "motif": "#789AAF",
+        "secondary": "#C4D8E1"
+      },
+      "demonIds": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-2.png",
+        "webp": "assets/background/demon-card-type-2.webp",
+        "avif": "assets/background/demon-card-type-2.avif"
+      },
+      "sha256": {
+        "png": "70528e9f24287e9d0535a2c9c38e0b975153cabd18b87f91e3d623516ece7019",
+        "webp": "62caae313d68956666eff4a680db117bebca1c3be57789b79a7e1776e03a0d5c",
+        "avif": "ac6b02308ab3c14e499a8bac32d60f062588f9418a844989cf1c76f33fac5c42"
+      }
+    },
+    {
+      "typeId": 3,
+      "species": "Ma'Zga",
+      "name": "Arcane teal",
+      "palette": {
+        "base": "#76C3B3",
+        "motif": "#4DA58E",
+        "secondary": "#A6DDCA"
+      },
+      "demonIds": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-3.png",
+        "webp": "assets/background/demon-card-type-3.webp",
+        "avif": "assets/background/demon-card-type-3.avif"
+      },
+      "sha256": {
+        "png": "9f49b8a644f008f70ef40d055dfaa305e064294ef6548aa245a62e419a180d1f",
+        "webp": "02f44f8885e18fd5b4dbf19472a7e2e86943f7576e0512b7e374eb1df067aa38",
+        "avif": "b539b2a38a6c69b682669e2690fa80117918520c2e3ad3b5d0ac0a9374f9fb22"
+      }
+    },
+    {
+      "typeId": 4,
+      "species": "Tor Tza",
+      "name": "Ember coral",
+      "palette": {
+        "base": "#EDA27A",
+        "motif": "#D77B54",
+        "secondary": "#F5C892"
+      },
+      "demonIds": [
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-4.png",
+        "webp": "assets/background/demon-card-type-4.webp",
+        "avif": "assets/background/demon-card-type-4.avif"
+      },
+      "sha256": {
+        "png": "a55e025b183e5e337059b9d30b48fde5d2b369e2e21b16466b12ede934273202",
+        "webp": "eb595ae9cfd8329a220f6ad0f75a385aadb4e87252900e9114e4152ff09b0b4d",
+        "avif": "aefb93d94bba44c0059204f99cce9ca463b87126a2dc7f54f87bf5286ef8aa3d"
+      }
+    },
+    {
+      "typeId": 5,
+      "species": "Vi'Zel",
+      "name": "Brick red",
+      "palette": {
+        "base": "#CF786D",
+        "motif": "#AD514A",
+        "secondary": "#E9A08B"
+      },
+      "demonIds": [
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-5.png",
+        "webp": "assets/background/demon-card-type-5.webp",
+        "avif": "assets/background/demon-card-type-5.avif"
+      },
+      "sha256": {
+        "png": "0e6d1e331db18aafc24f97a0167405a33a16cc89d3b6f0cbbd1ea2e83da95dd0",
+        "webp": "016d2c75ea1125db24782b2404108585ad6306221a1242db448c19ee11337586",
+        "avif": "7537657c31a444af771861b2972a2248a19e72d50ccc1f60e50ba1ecef1f434c"
+      }
+    },
+    {
+      "typeId": 6,
+      "species": "Goh Loomb",
+      "name": "Claw amber",
+      "palette": {
+        "base": "#E8C36C",
+        "motif": "#CFAB4E",
+        "secondary": "#F2DA91"
+      },
+      "demonIds": [
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-6.png",
+        "webp": "assets/background/demon-card-type-6.webp",
+        "avif": "assets/background/demon-card-type-6.avif"
+      },
+      "sha256": {
+        "png": "5fdbcddb742547e621fc86e56192af3953882c2c3063c11f9888c343b0e70740",
+        "webp": "4cf346c8eede61762a902b8e675aa308cd851bd9f6f940d25c82cc80538f62d3",
+        "avif": "2443b3d453c9a2eadf04cd854d6b067c575ac2200f0e0abb3abda7431b9c879f"
+      }
+    },
+    {
+      "typeId": 7,
+      "species": "Baobaw",
+      "name": "Spectral violet",
+      "palette": {
+        "base": "#B19BDE",
+        "motif": "#8D76BE",
+        "secondary": "#CDBAEF"
+      },
+      "demonIds": [
+        37,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-7.png",
+        "webp": "assets/background/demon-card-type-7.webp",
+        "avif": "assets/background/demon-card-type-7.avif"
+      },
+      "sha256": {
+        "png": "2967e375c69944b1925680127c9e4f9222d4690694cec6b33f4fda524361157a",
+        "webp": "8c17c5e97e4640c1f6e0ae04e36a19a08fcc2d4f05d4e9c825d3e948784100e5",
+        "avif": "15b779aba04368152c59bb64ef571d3959a87b8973b6cddc668f13f0c11d11df"
+      }
+    },
+    {
+      "typeId": 8,
+      "species": "Ko Pak",
+      "name": "Root olive",
+      "palette": {
+        "base": "#B7C87D",
+        "motif": "#96AD5B",
+        "secondary": "#D4DF9D"
+      },
+      "demonIds": [
+        43,
+        44,
+        45,
+        46,
+        47,
+        48
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-8.png",
+        "webp": "assets/background/demon-card-type-8.webp",
+        "avif": "assets/background/demon-card-type-8.avif"
+      },
+      "sha256": {
+        "png": "0c135a5796dfa5429246de9e8a716ee951f786d9838cf7b554e7cbbbb125415b",
+        "webp": "b2f47dd679f02b69c052b2acb9d59ae6e53bd634a18b73b7857cb50414f10d51",
+        "avif": "51a990298c7371f7b9c4b2586de2a09637fedfc78a0a8cf3de4f3eb934e5f0c4"
+      }
+    },
+    {
+      "typeId": 9,
+      "species": "Chu Perk",
+      "name": "Garnet red",
+      "palette": {
+        "base": "#D595A5",
+        "motif": "#BA6F87",
+        "secondary": "#E9BCCA"
+      },
+      "demonIds": [
+        49,
+        50,
+        51,
+        52,
+        53,
+        54
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-9.png",
+        "webp": "assets/background/demon-card-type-9.webp",
+        "avif": "assets/background/demon-card-type-9.avif"
+      },
+      "sha256": {
+        "png": "22420c4b3e17eac02a15206e4ed22c68ab80122f6f5b60fc93cb01d3211a8373",
+        "webp": "c71c83aa2ee3a7676a8400bdad4186255780d6a2f3ba102e91019896506790dd",
+        "avif": "43434e95554b8b8a420fc346491c23c64892a8d0bcbf8bcb4344d1b30b3dcb73"
+      }
+    },
+    {
+      "typeId": 10,
+      "species": "Ba Be'aga",
+      "name": "Soul cyan",
+      "palette": {
+        "base": "#81D0DF",
+        "motif": "#58B4CA",
+        "secondary": "#AFE4EC"
+      },
+      "demonIds": [
+        55,
+        56,
+        57,
+        58,
+        59,
+        60
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-10.png",
+        "webp": "assets/background/demon-card-type-10.webp",
+        "avif": "assets/background/demon-card-type-10.avif"
+      },
+      "sha256": {
+        "png": "1b25402136da5a2a4c66bac81ef30131acc2b37643ea07f992631ae186867216",
+        "webp": "a9ffef10b42f5e80e10425b53bbb528d3718e9e06ff4680904452527eb35740f",
+        "avif": "362870abb056a2ec6af153c6d47ecc9ba83133babcd21b292924cc48a24c0d45"
+      }
+    },
+    {
+      "typeId": 11,
+      "species": "Vee Scol",
+      "name": "Charcoal slate",
+      "palette": {
+        "base": "#82949C",
+        "motif": "#526772",
+        "secondary": "#ADBBC2"
+      },
+      "demonIds": [
+        61,
+        62,
+        63,
+        64,
+        65,
+        66
+      ],
+      "files": {
+        "png": "assets/background/demon-card-type-11.png",
+        "webp": "assets/background/demon-card-type-11.webp",
+        "avif": "assets/background/demon-card-type-11.avif"
+      },
+      "sha256": {
+        "png": "f36c45adf4f44606726ecfa19c5eb77b9be44318cc8f36418f5ee19df2cdec7d",
+        "webp": "59af272c5c5ec796f846ba4c53531a10a7d89968310b94040f01580e8204139e",
+        "avif": "d04d1b7ff85e0041e2f34cbf67593896b81ce4cea06cac7f63d9e7aba071dae0"
+      }
+    }
+  ]
+}

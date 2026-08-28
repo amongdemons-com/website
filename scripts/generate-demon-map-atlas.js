@@ -1,10 +1,11 @@
-// Packs all compact world-map demon portraits into one WebP request.
+// Packs compact world-map demon portraits and type backdrops into one request.
 //
 // Usage: node scripts/generate-demon-map-atlas.js
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const writeAsset = require('./write-asset');
 
 const APP_DIR = path.join(__dirname, '..', 'public', 'app');
 const SOURCE_DIR = path.join(APP_DIR, 'images', 'demons', 'map');
@@ -19,7 +20,10 @@ async function main() {
     .map((name) => ({ id: Number(name.replace(/\.webp$/, '')), name }))
     .sort((left, right) => left.id - right.id);
   const columns = Math.ceil(Math.sqrt(entries.length));
-  const rows = Math.ceil(entries.length / columns);
+  const backdrops = JSON.parse(fs.readFileSync(
+    path.join(__dirname, '../docs/art/card-backdrops.json'), 'utf8'
+  )).variants.slice().sort((left, right) => left.typeId - right.typeId);
+  const rows = Math.ceil((entries.length + backdrops.length) / columns);
   const composites = await Promise.all(entries.map(async (entry, index) => ({
     input: await sharp(path.join(SOURCE_DIR, entry.name))
       .resize(FRAME_SIZE, FRAME_SIZE, { fit: 'contain' })
@@ -29,16 +33,26 @@ async function main() {
     top: Math.floor(index / columns) * FRAME_SIZE
   })));
 
-  await sharp({
+  // Append after the demon frames so their IDs and frame positions stay stable.
+  composites.push(...await Promise.all(backdrops.map(async (entry, index) => ({
+    input: await sharp(path.join(APP_DIR, 'images', entry.files.png))
+      .resize(FRAME_SIZE, FRAME_SIZE, { fit: 'cover' })
+      .png()
+      .toBuffer(),
+    left: ((entries.length + index) % columns) * FRAME_SIZE,
+    top: Math.floor((entries.length + index) / columns) * FRAME_SIZE
+  }))));
+
+  const atlas = await sharp({
     create: {
       width: columns * FRAME_SIZE,
       height: rows * FRAME_SIZE,
       channels: 4,
       background: { r: 0, g: 0, b: 0, alpha: 0 }
     }
-  }).composite(composites).webp({ quality: 82 }).toFile(OUTPUT_PATH);
+  }).composite(composites).webp({ quality: 82 }).toBuffer();
 
-  const atlas = fs.readFileSync(OUTPUT_PATH);
+  writeAsset(OUTPUT_PATH, atlas);
   const hash = crypto.createHash('sha256').update(atlas).digest('hex').slice(0, 12);
   fs.mkdirSync(MODULE_DIR, { recursive: true });
   fs.writeFileSync(MODULE_PATH, [
@@ -46,10 +60,13 @@ async function main() {
     `export const DEMON_MAP_ATLAS_FRAME_SIZE = ${FRAME_SIZE};`,
     `export const DEMON_MAP_ATLAS_COLUMNS = ${columns};`,
     `export const DEMON_MAP_ATLAS_IDS = ${JSON.stringify(entries.map((entry) => entry.id))};`,
+    `export const DEMON_MAP_BACKDROP_IDS = ${JSON.stringify(backdrops.map((entry) => entry.typeId))};`,
+    `export const DEMON_MAP_BACKDROP_TYPES = ${JSON.stringify(Object.fromEntries(backdrops.flatMap(entry => entry.demonIds.map(id => [id, entry.typeId]))))};`,
+    `export const DEMON_MAP_BACKDROP_URLS = ${JSON.stringify(Object.fromEntries(backdrops.map(entry => [entry.typeId, `/app/images/${entry.files.webp}?v=${entry.sha256.webp.slice(0, 12)}`])))};`,
     ''
   ].join('\n'));
 
-  console.log(`Demon map atlas: ${entries.length} frames, ${(atlas.length / 1024).toFixed(1)} KB.`);
+  console.log(`Demon map atlas: ${entries.length} portraits + ${backdrops.length} backdrops, ${(atlas.length / 1024).toFixed(1)} KB.`);
 }
 
 main().catch((error) => {

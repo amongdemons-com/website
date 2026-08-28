@@ -18,7 +18,10 @@ import {
   DEMON_MAP_ATLAS_COLUMNS,
   DEMON_MAP_ATLAS_FRAME_SIZE,
   DEMON_MAP_ATLAS_IDS,
-  DEMON_MAP_ATLAS_URL
+  DEMON_MAP_ATLAS_URL,
+  DEMON_MAP_BACKDROP_IDS,
+  DEMON_MAP_BACKDROP_TYPES,
+  DEMON_MAP_BACKDROP_URLS
 } from './generated/demon-map-atlas.js';
 import './bag-item-visuals.js';
 
@@ -62,7 +65,7 @@ import './bag-item-visuals.js';
   const WORLD_AMBUSH_DEFEAT_HOLD_MS = 140;
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
-  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-3668d0ffc131';
+  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-59b6cb9757bc';
   const MERCHANT_FALLBACK_MOVE_SECONDS = 30 * 60;
   const MERCHANT_FALLBACK_BRIBE_COST = 50;
   const MERCHANT_OFFER_LIMIT = 4;
@@ -201,6 +204,7 @@ import './bag-item-visuals.js';
     bosses: [],
     merchant: null,
     encounterTextures: new Map(),
+    demonBackdropTextures: new Map(),
     encounterMarkerNodes: new Map(),
     bossTextures: new Map(),
     tileTextures: new Map(),
@@ -1992,6 +1996,9 @@ import './bag-item-visuals.js';
   };
   const ZONE_COLOR_VARIANTS = {
     5: '#D8D0C4',
+    // Keep world terrain stable when attack palettes are reassigned.
+    6: '#C084FC',
+    7: '#FFB23F',
     9: '#A9B7C8'
   };
   const ZONE_PALETTES = Array.from({ length: TYPE_COUNT + 1 }, (item, typeId) => (
@@ -4437,18 +4444,7 @@ import './bag-item-visuals.js';
     node.addChild(base);
 
     const texture = state.encounterTextures.get(encounter.keyDemon?.imageUrl);
-    if (texture) {
-      const portrait = new Pixi.Sprite(texture);
-      portrait.anchor.set(0.5);
-      portrait.width = radius * 2;
-      portrait.height = radius * 2;
-
-      const mask = new Pixi.Graphics();
-      mask.circle(0, 0, radius).fill({ color: 0xffffff });
-      node.addChild(mask);
-      portrait.mask = mask;
-      node.addChild(portrait);
-    } else {
+    if (!addDemonMarkerPortrait(node, encounter.keyDemon, texture, radius)) {
       base.circle(0, 0, radius).fill({ color: ringColor, alpha: 0.25 });
     }
 
@@ -4512,23 +4508,45 @@ import './bag-item-visuals.js';
       node.addChild(base);
 
       const texture = state.bossTextures.get(boss.keyDemon?.imageUrl);
-      if (texture) {
-        const portrait = new Pixi.Sprite(texture);
-        portrait.anchor.set(0.5);
-        portrait.width = radius * 2;
-        portrait.height = radius * 2;
-
-        const mask = new Pixi.Graphics();
-        mask.circle(0, 0, radius).fill({ color: 0xffffff });
-        node.addChild(mask);
-        portrait.mask = mask;
-        node.addChild(portrait);
-      } else {
+      if (!addDemonMarkerPortrait(node, boss.keyDemon, texture, radius)) {
         base.circle(0, 0, radius).fill({ color: ringColor, alpha: 0.22 });
       }
 
       layer.addChild(node);
     });
+  }
+
+  function getDemonMarkerBackdropType(demon = {}) {
+    // Follow the actual portrait, just like the CSS card backgrounds. Some
+    // cached payloads lack typeId; metadata is only a fallback for custom art.
+    const spriteId = String(demon?.imageUrl || '').match(/\/demons\/(?:portrait\/|map\/|thumbnails\/)?(\d+)\.(?:png|webp|avif)(?:[?#]|$)/)?.[1];
+    const spriteType = DEMON_MAP_BACKDROP_TYPES[spriteId];
+    if (spriteType) return spriteType;
+    const typeId = Number(demon?.typeId);
+    return DEMON_MAP_BACKDROP_IDS.includes(typeId) ? typeId : 11;
+  }
+
+  function addDemonMarkerPortrait(node, demon, texture, radius) {
+    const Pixi = window.PIXI;
+    const backdrop = state.demonBackdropTextures.get(getDemonMarkerBackdropType(demon));
+    if (!texture && !backdrop) return false;
+
+    const art = new Pixi.Container();
+    // One shared circular mask keeps the backdrop behind the transparent
+    // demon, without covering rarity rings, boss crowns or defeated badges.
+    for (const layerTexture of [backdrop, texture]) {
+      if (!layerTexture) continue;
+      const sprite = new Pixi.Sprite(layerTexture);
+      sprite.anchor.set(0.5);
+      sprite.width = radius * 2;
+      sprite.height = radius * 2;
+      art.addChild(sprite);
+    }
+    const mask = new Pixi.Graphics().circle(0, 0, radius).fill({ color: 0xffffff });
+    art.mask = mask;
+    node.addChild(mask);
+    node.addChild(art);
+    return true;
   }
 
   // The hunter token uses a player-only badge shape so a demon profile avatar
@@ -5588,7 +5606,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/assets/world/crowley.webp?v=art-3668d0ffc131" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/crowley.webp?v=art-59b6cb9757bc" alt="" width="512" height="512" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Traveling Merchant</span>
@@ -9377,7 +9395,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card world-soul-font-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/assets/world/soul-font.webp?v=art-3668d0ffc131" alt="" width="768" height="768" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/soul-font.webp?v=art-59b6cb9757bc" alt="" width="768" height="768" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Soul Offering</span>
@@ -10076,12 +10094,30 @@ import './bag-item-visuals.js';
             DEMON_MAP_ATLAS_FRAME_SIZE
           );
           textures.set(
-            `/app/images/demons/map/${id}.webp?v=art-3668d0ffc131`,
+            `/app/images/demons/map/${id}.webp?v=art-59b6cb9757bc`,
             new Pixi.Texture({ source: atlas.source, frame })
           );
         });
+        DEMON_MAP_BACKDROP_IDS.forEach((typeId, index) => {
+          const frameIndex = DEMON_MAP_ATLAS_IDS.length + index;
+          const frame = new Pixi.Rectangle(
+            (frameIndex % DEMON_MAP_ATLAS_COLUMNS) * DEMON_MAP_ATLAS_FRAME_SIZE,
+            Math.floor(frameIndex / DEMON_MAP_ATLAS_COLUMNS) * DEMON_MAP_ATLAS_FRAME_SIZE,
+            DEMON_MAP_ATLAS_FRAME_SIZE,
+            DEMON_MAP_ATLAS_FRAME_SIZE
+          );
+          state.demonBackdropTextures.set(typeId, new Pixi.Texture({ source: atlas.source, frame }));
+        });
       } catch (error) {
         console.warn('Unable to load the demon map atlas; falling back to individual textures.', error);
+        await Promise.all(DEMON_MAP_BACKDROP_IDS.map(async (typeId) => {
+          try {
+            state.demonBackdropTextures.set(typeId, await Pixi.Assets.load(DEMON_MAP_BACKDROP_URLS[typeId]));
+          } catch (backdropError) {
+            // The dark marker base remains readable if both art sources fail.
+            state.demonBackdropTextures.delete(typeId);
+          }
+        }));
       }
       return textures;
     })();

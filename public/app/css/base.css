@@ -1153,7 +1153,26 @@ main {
     line-height: 1;
 }
 
-.combat-hp-meta.is-separated {
+.combat-stat-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    margin-top: 0.18rem;
+    min-width: 0;
+}
+
+.combat-stat-footer > .combat-stat-strip {
+    min-width: 0;
+}
+
+.dungeon-demon-card .combat-stat-footer > .combat-hp-meta {
+    flex: 0 0 auto;
+    margin-top: 0;
+    margin-left: auto;
+}
+
+.combat-stat-footer.is-separated {
     margin-top: 0.35rem;
     padding-top: 0.35rem;
     border-top: 1px solid rgba(161,212,201,0.16);
@@ -2285,6 +2304,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
         margin-top: 0.12rem;
     }
 
+.combat-stat-footer,
 .combat-hp-meta {
         margin-top: 0.12rem;
         font-size: 0.46rem;
@@ -3275,7 +3295,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
 
 /* Visual theme: misted dungeon, teal magic, restrained ember accents */
 :root {
-    --demon-card-backdrop: image-set(url("/app/images/assets/background/demon-card.avif?v=art-3668d0ffc131") type("image/avif"), url("/app/images/assets/background/demon-card.webp?v=art-3668d0ffc131") type("image/webp"), url("/app/images/assets/background/demon-card.png?v=art-3668d0ffc131") type("image/png"));
+    --demon-card-backdrop: var(--demon-backdrop-type-11);
     --ad-bg: #071013;
     --ad-bg-soft: #0d191d;
     --ad-surface: rgba(13,25,29,0.86);
@@ -3922,7 +3942,7 @@ body.seo-page {
     min-height: 100vh;
     background:
         linear-gradient(rgba(5,10,12,0.68), rgba(5,10,12,0.86)),
-        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-3668d0ffc131") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-3668d0ffc131") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-3668d0ffc131") type("image/png")) center top / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-59b6cb9757bc") type("image/png")) center top / cover fixed no-repeat,
         #071013;
     color: var(--ad-text, #f5f7f8);
 }
@@ -4204,13 +4224,68 @@ body.seo-page {
         rgba(0,0,0,0.42);
 }
 
+/* Shared by interactive cards and server-rendered boss guides. */
+.dungeon-demon-rarity-gem {
+    --rarity-shape: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    position: absolute;
+    z-index: 4;
+    top: 0.34rem;
+    left: 0.34rem;
+    width: 0.88rem;
+    height: 0.88rem;
+    border: 0;
+    border-radius: 0;
+    background: #101820;
+    clip-path: var(--rarity-shape);
+    filter: none;
+}
+
+.dungeon-demon-rarity-gem::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: var(--rarity-color, #D1D5D8);
+    clip-path: var(--rarity-shape);
+}
+
+.dungeon-demon-rarity-gem--common {
+    --rarity-shape: polygon(0 8%, 100% 8%, 50% 100%);
+}
+
+.dungeon-demon-rarity-gem--uncommon {
+    --rarity-shape: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.dungeon-demon-rarity-gem--rare {
+    --rarity-shape: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    top: 0.28rem;
+    left: 0.28rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+.dungeon-demon-rarity-gem--epic {
+    --rarity-shape: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%);
+}
+
+.dungeon-demon-rarity-gem--legendary {
+    --rarity-shape: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+
+.dungeon-demon-rarity-gem--mythic {
+    --rarity-shape: polygon(50% 0, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0 50%, 31% 39%, 15% 15%, 39% 31%);
+    top: 0.28rem;
+    left: 0.28rem;
+    width: 1rem;
+    height: 1rem;
+}
+
 .boss-key-demon-art {
     position: relative;
     isolation: isolate;
 }
 
-.boss-key-demon-art::before,
-.boss-key-demon-art::after {
+.boss-key-demon-art::before {
     content: "";
     position: absolute;
     z-index: 2;
@@ -4235,16 +4310,14 @@ body.seo-page {
     transform: translateX(-50%);
 }
 
-.boss-key-demon-art::after {
+.boss-key-demon-art .boss-key-demon-gem {
+    top: auto;
+    left: 50%;
     bottom: 0.16rem;
-    width: 0.66rem;
-    height: 0.66rem;
-    border: 1px solid rgba(255,255,255,0.76);
-    background: var(--rarity-color, #e25041);
-    box-shadow:
-        0 0 0 2px rgba(4,10,12,0.78),
-        0 0 0.7rem var(--rarity-color, #e25041);
-    transform: translateX(-50%) rotate(45deg);
+    width: 1.1rem;
+    height: 1.1rem;
+    transform: translateX(-50%);
+    pointer-events: none;
 }
 
 .seo-boss-advantages strong {
@@ -4643,7 +4716,7 @@ body.seo-page {
         linear-gradient(rgba(5,9,12,0.76), rgba(5,9,12,0.9)),
         radial-gradient(circle at 18% 6%, rgba(232,199,106,0.12), transparent 24rem),
         radial-gradient(circle at 82% 14%, rgba(111,214,189,0.12), transparent 22rem),
-        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-3668d0ffc131") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-3668d0ffc131") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-3668d0ffc131") type("image/png")) center top / cover fixed no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-59b6cb9757bc") type("image/png")) center top / cover fixed no-repeat;
     background-attachment: fixed;
 }
 
@@ -4935,7 +5008,7 @@ body.rankings-page {
         linear-gradient(rgba(6,13,16,0.48), rgba(6,13,16,0.78)),
         radial-gradient(circle at 18% 10%, rgba(111,214,189,0.14), transparent 22rem),
         radial-gradient(circle at 78% 16%, rgba(232,199,106,0.11), transparent 24rem),
-        image-set(url("/app/images/assets/background/amongdemons_rankings.avif?v=art-3668d0ffc131") type("image/avif"), url("/app/images/assets/background/amongdemons_rankings.webp?v=art-3668d0ffc131") type("image/webp"), url("/app/images/assets/background/amongdemons_rankings.png?v=art-3668d0ffc131") type("image/png")) center top / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_rankings.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/amongdemons_rankings.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/amongdemons_rankings.png?v=art-59b6cb9757bc") type("image/png")) center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
@@ -6469,7 +6542,7 @@ body.rankings-page {
     overflow: hidden;
     background:
         linear-gradient(180deg, rgba(3,8,10,0.92), rgba(6,10,14,0.96)),
-        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-3668d0ffc131") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-3668d0ffc131") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-3668d0ffc131") type("image/png")) center / cover no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-59b6cb9757bc") type("image/png")) center / cover no-repeat;
     padding: clamp(1rem, 3vw, 2.4rem);
     animation: demonic-pact-overlay-in 520ms ease-out both;
 }
@@ -10206,7 +10279,7 @@ body.skill-tree-page {
         radial-gradient(circle at 18% 30%, rgba(111,214,189,0.09), transparent 28rem),
         radial-gradient(circle at 82% 28%, rgba(231,138,85,0.08), transparent 25rem),
         linear-gradient(180deg, rgba(3,8,10,0.74), rgba(4,10,13,0.96)),
-        image-set(url("/app/images/assets/background/amongdemons_summon.avif?v=art-3668d0ffc131") type("image/avif"), url("/app/images/assets/background/amongdemons_summon.webp?v=art-3668d0ffc131") type("image/webp"), url("/app/images/assets/background/amongdemons_summon.png?v=art-3668d0ffc131") type("image/png")) center / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_summon.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/amongdemons_summon.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/amongdemons_summon.png?v=art-59b6cb9757bc") type("image/png")) center / cover fixed no-repeat,
         var(--ad-bg, #071013);
 }
 
@@ -11424,7 +11497,7 @@ body.hunter-page {
     min-height: 100vh;
     background:
         linear-gradient(180deg, rgba(4, 11, 14, 0.82), rgba(10, 19, 24, 0.94) 42%, rgba(4, 9, 12, 0.98)),
-        image-set(url("/images/assets/background/amongdemons_home.avif?v=art-3668d0ffc131") type("image/avif"), url("/images/assets/background/amongdemons_home.webp?v=art-3668d0ffc131") type("image/webp"), url("/images/assets/background/amongdemons_home.png?v=art-3668d0ffc131") type("image/png")) center top / cover fixed,
+        image-set(url("/images/assets/background/amongdemons_home.avif?v=art-59b6cb9757bc") type("image/avif"), url("/images/assets/background/amongdemons_home.webp?v=art-59b6cb9757bc") type("image/webp"), url("/images/assets/background/amongdemons_home.png?v=art-59b6cb9757bc") type("image/png")) center top / cover fixed,
         #05090c;
     color: #edf5f2;
 }
@@ -12657,3 +12730,75 @@ body.hunter-page {
 .camp-player-mark img {
     background: var(--demon-card-backdrop) center / cover no-repeat;
 }
+
+/* BEGIN GENERATED DEMON TYPE BACKDROPS */
+:root {
+    --demon-backdrop-type-1: image-set(url("/app/images/assets/background/demon-card-type-1.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-1.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-1.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-2: image-set(url("/app/images/assets/background/demon-card-type-2.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-2.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-2.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-3: image-set(url("/app/images/assets/background/demon-card-type-3.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-3.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-3.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-4: image-set(url("/app/images/assets/background/demon-card-type-4.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-4.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-4.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-5: image-set(url("/app/images/assets/background/demon-card-type-5.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-5.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-5.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-6: image-set(url("/app/images/assets/background/demon-card-type-6.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-6.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-6.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-7: image-set(url("/app/images/assets/background/demon-card-type-7.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-7.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-7.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-8: image-set(url("/app/images/assets/background/demon-card-type-8.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-8.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-8.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-9: image-set(url("/app/images/assets/background/demon-card-type-9.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-9.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-9.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-10: image-set(url("/app/images/assets/background/demon-card-type-10.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-10.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-10.png?v=art-59b6cb9757bc") type("image/png"));
+    --demon-backdrop-type-11: image-set(url("/app/images/assets/background/demon-card-type-11.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/demon-card-type-11.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/demon-card-type-11.png?v=art-59b6cb9757bc") type("image/png"));
+}
+
+/* Boof Nitza: Storm blue; shared by all six evolutions. */
+:is(img[src*="/demons/1."], img[src*="/demons/portrait/1."], img[src*="/demons/map/1."], img[src*="/demons/thumbnails/1."], img[src*="/demons/2."], img[src*="/demons/portrait/2."], img[src*="/demons/map/2."], img[src*="/demons/thumbnails/2."], img[src*="/demons/3."], img[src*="/demons/portrait/3."], img[src*="/demons/map/3."], img[src*="/demons/thumbnails/3."], img[src*="/demons/4."], img[src*="/demons/portrait/4."], img[src*="/demons/map/4."], img[src*="/demons/thumbnails/4."], img[src*="/demons/5."], img[src*="/demons/portrait/5."], img[src*="/demons/map/5."], img[src*="/demons/thumbnails/5."], img[src*="/demons/6."], img[src*="/demons/portrait/6."], img[src*="/demons/map/6."], img[src*="/demons/thumbnails/6."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/1."], img[src*="/demons/portrait/1."], img[src*="/demons/map/1."], img[src*="/demons/thumbnails/1."], img[src*="/demons/2."], img[src*="/demons/portrait/2."], img[src*="/demons/map/2."], img[src*="/demons/thumbnails/2."], img[src*="/demons/3."], img[src*="/demons/portrait/3."], img[src*="/demons/map/3."], img[src*="/demons/thumbnails/3."], img[src*="/demons/4."], img[src*="/demons/portrait/4."], img[src*="/demons/map/4."], img[src*="/demons/thumbnails/4."], img[src*="/demons/5."], img[src*="/demons/portrait/5."], img[src*="/demons/map/5."], img[src*="/demons/thumbnails/5."], img[src*="/demons/6."], img[src*="/demons/portrait/6."], img[src*="/demons/map/6."], img[src*="/demons/thumbnails/6."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-1);
+}
+/* Gon G'ah: Steel blue; shared by all six evolutions. */
+:is(img[src*="/demons/7."], img[src*="/demons/portrait/7."], img[src*="/demons/map/7."], img[src*="/demons/thumbnails/7."], img[src*="/demons/8."], img[src*="/demons/portrait/8."], img[src*="/demons/map/8."], img[src*="/demons/thumbnails/8."], img[src*="/demons/9."], img[src*="/demons/portrait/9."], img[src*="/demons/map/9."], img[src*="/demons/thumbnails/9."], img[src*="/demons/10."], img[src*="/demons/portrait/10."], img[src*="/demons/map/10."], img[src*="/demons/thumbnails/10."], img[src*="/demons/11."], img[src*="/demons/portrait/11."], img[src*="/demons/map/11."], img[src*="/demons/thumbnails/11."], img[src*="/demons/12."], img[src*="/demons/portrait/12."], img[src*="/demons/map/12."], img[src*="/demons/thumbnails/12."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/7."], img[src*="/demons/portrait/7."], img[src*="/demons/map/7."], img[src*="/demons/thumbnails/7."], img[src*="/demons/8."], img[src*="/demons/portrait/8."], img[src*="/demons/map/8."], img[src*="/demons/thumbnails/8."], img[src*="/demons/9."], img[src*="/demons/portrait/9."], img[src*="/demons/map/9."], img[src*="/demons/thumbnails/9."], img[src*="/demons/10."], img[src*="/demons/portrait/10."], img[src*="/demons/map/10."], img[src*="/demons/thumbnails/10."], img[src*="/demons/11."], img[src*="/demons/portrait/11."], img[src*="/demons/map/11."], img[src*="/demons/thumbnails/11."], img[src*="/demons/12."], img[src*="/demons/portrait/12."], img[src*="/demons/map/12."], img[src*="/demons/thumbnails/12."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-2);
+}
+/* Ma'Zga: Arcane teal; shared by all six evolutions. */
+:is(img[src*="/demons/13."], img[src*="/demons/portrait/13."], img[src*="/demons/map/13."], img[src*="/demons/thumbnails/13."], img[src*="/demons/14."], img[src*="/demons/portrait/14."], img[src*="/demons/map/14."], img[src*="/demons/thumbnails/14."], img[src*="/demons/15."], img[src*="/demons/portrait/15."], img[src*="/demons/map/15."], img[src*="/demons/thumbnails/15."], img[src*="/demons/16."], img[src*="/demons/portrait/16."], img[src*="/demons/map/16."], img[src*="/demons/thumbnails/16."], img[src*="/demons/17."], img[src*="/demons/portrait/17."], img[src*="/demons/map/17."], img[src*="/demons/thumbnails/17."], img[src*="/demons/18."], img[src*="/demons/portrait/18."], img[src*="/demons/map/18."], img[src*="/demons/thumbnails/18."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/13."], img[src*="/demons/portrait/13."], img[src*="/demons/map/13."], img[src*="/demons/thumbnails/13."], img[src*="/demons/14."], img[src*="/demons/portrait/14."], img[src*="/demons/map/14."], img[src*="/demons/thumbnails/14."], img[src*="/demons/15."], img[src*="/demons/portrait/15."], img[src*="/demons/map/15."], img[src*="/demons/thumbnails/15."], img[src*="/demons/16."], img[src*="/demons/portrait/16."], img[src*="/demons/map/16."], img[src*="/demons/thumbnails/16."], img[src*="/demons/17."], img[src*="/demons/portrait/17."], img[src*="/demons/map/17."], img[src*="/demons/thumbnails/17."], img[src*="/demons/18."], img[src*="/demons/portrait/18."], img[src*="/demons/map/18."], img[src*="/demons/thumbnails/18."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-3);
+}
+/* Tor Tza: Ember coral; shared by all six evolutions. */
+:is(img[src*="/demons/19."], img[src*="/demons/portrait/19."], img[src*="/demons/map/19."], img[src*="/demons/thumbnails/19."], img[src*="/demons/20."], img[src*="/demons/portrait/20."], img[src*="/demons/map/20."], img[src*="/demons/thumbnails/20."], img[src*="/demons/21."], img[src*="/demons/portrait/21."], img[src*="/demons/map/21."], img[src*="/demons/thumbnails/21."], img[src*="/demons/22."], img[src*="/demons/portrait/22."], img[src*="/demons/map/22."], img[src*="/demons/thumbnails/22."], img[src*="/demons/23."], img[src*="/demons/portrait/23."], img[src*="/demons/map/23."], img[src*="/demons/thumbnails/23."], img[src*="/demons/24."], img[src*="/demons/portrait/24."], img[src*="/demons/map/24."], img[src*="/demons/thumbnails/24."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/19."], img[src*="/demons/portrait/19."], img[src*="/demons/map/19."], img[src*="/demons/thumbnails/19."], img[src*="/demons/20."], img[src*="/demons/portrait/20."], img[src*="/demons/map/20."], img[src*="/demons/thumbnails/20."], img[src*="/demons/21."], img[src*="/demons/portrait/21."], img[src*="/demons/map/21."], img[src*="/demons/thumbnails/21."], img[src*="/demons/22."], img[src*="/demons/portrait/22."], img[src*="/demons/map/22."], img[src*="/demons/thumbnails/22."], img[src*="/demons/23."], img[src*="/demons/portrait/23."], img[src*="/demons/map/23."], img[src*="/demons/thumbnails/23."], img[src*="/demons/24."], img[src*="/demons/portrait/24."], img[src*="/demons/map/24."], img[src*="/demons/thumbnails/24."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-4);
+}
+/* Vi'Zel: Brick red; shared by all six evolutions. */
+:is(img[src*="/demons/25."], img[src*="/demons/portrait/25."], img[src*="/demons/map/25."], img[src*="/demons/thumbnails/25."], img[src*="/demons/26."], img[src*="/demons/portrait/26."], img[src*="/demons/map/26."], img[src*="/demons/thumbnails/26."], img[src*="/demons/27."], img[src*="/demons/portrait/27."], img[src*="/demons/map/27."], img[src*="/demons/thumbnails/27."], img[src*="/demons/28."], img[src*="/demons/portrait/28."], img[src*="/demons/map/28."], img[src*="/demons/thumbnails/28."], img[src*="/demons/29."], img[src*="/demons/portrait/29."], img[src*="/demons/map/29."], img[src*="/demons/thumbnails/29."], img[src*="/demons/30."], img[src*="/demons/portrait/30."], img[src*="/demons/map/30."], img[src*="/demons/thumbnails/30."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/25."], img[src*="/demons/portrait/25."], img[src*="/demons/map/25."], img[src*="/demons/thumbnails/25."], img[src*="/demons/26."], img[src*="/demons/portrait/26."], img[src*="/demons/map/26."], img[src*="/demons/thumbnails/26."], img[src*="/demons/27."], img[src*="/demons/portrait/27."], img[src*="/demons/map/27."], img[src*="/demons/thumbnails/27."], img[src*="/demons/28."], img[src*="/demons/portrait/28."], img[src*="/demons/map/28."], img[src*="/demons/thumbnails/28."], img[src*="/demons/29."], img[src*="/demons/portrait/29."], img[src*="/demons/map/29."], img[src*="/demons/thumbnails/29."], img[src*="/demons/30."], img[src*="/demons/portrait/30."], img[src*="/demons/map/30."], img[src*="/demons/thumbnails/30."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-5);
+}
+/* Goh Loomb: Claw amber; shared by all six evolutions. */
+:is(img[src*="/demons/31."], img[src*="/demons/portrait/31."], img[src*="/demons/map/31."], img[src*="/demons/thumbnails/31."], img[src*="/demons/32."], img[src*="/demons/portrait/32."], img[src*="/demons/map/32."], img[src*="/demons/thumbnails/32."], img[src*="/demons/33."], img[src*="/demons/portrait/33."], img[src*="/demons/map/33."], img[src*="/demons/thumbnails/33."], img[src*="/demons/34."], img[src*="/demons/portrait/34."], img[src*="/demons/map/34."], img[src*="/demons/thumbnails/34."], img[src*="/demons/35."], img[src*="/demons/portrait/35."], img[src*="/demons/map/35."], img[src*="/demons/thumbnails/35."], img[src*="/demons/36."], img[src*="/demons/portrait/36."], img[src*="/demons/map/36."], img[src*="/demons/thumbnails/36."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/31."], img[src*="/demons/portrait/31."], img[src*="/demons/map/31."], img[src*="/demons/thumbnails/31."], img[src*="/demons/32."], img[src*="/demons/portrait/32."], img[src*="/demons/map/32."], img[src*="/demons/thumbnails/32."], img[src*="/demons/33."], img[src*="/demons/portrait/33."], img[src*="/demons/map/33."], img[src*="/demons/thumbnails/33."], img[src*="/demons/34."], img[src*="/demons/portrait/34."], img[src*="/demons/map/34."], img[src*="/demons/thumbnails/34."], img[src*="/demons/35."], img[src*="/demons/portrait/35."], img[src*="/demons/map/35."], img[src*="/demons/thumbnails/35."], img[src*="/demons/36."], img[src*="/demons/portrait/36."], img[src*="/demons/map/36."], img[src*="/demons/thumbnails/36."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-6);
+}
+/* Baobaw: Spectral violet; shared by all six evolutions. */
+:is(img[src*="/demons/37."], img[src*="/demons/portrait/37."], img[src*="/demons/map/37."], img[src*="/demons/thumbnails/37."], img[src*="/demons/38."], img[src*="/demons/portrait/38."], img[src*="/demons/map/38."], img[src*="/demons/thumbnails/38."], img[src*="/demons/39."], img[src*="/demons/portrait/39."], img[src*="/demons/map/39."], img[src*="/demons/thumbnails/39."], img[src*="/demons/40."], img[src*="/demons/portrait/40."], img[src*="/demons/map/40."], img[src*="/demons/thumbnails/40."], img[src*="/demons/41."], img[src*="/demons/portrait/41."], img[src*="/demons/map/41."], img[src*="/demons/thumbnails/41."], img[src*="/demons/42."], img[src*="/demons/portrait/42."], img[src*="/demons/map/42."], img[src*="/demons/thumbnails/42."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/37."], img[src*="/demons/portrait/37."], img[src*="/demons/map/37."], img[src*="/demons/thumbnails/37."], img[src*="/demons/38."], img[src*="/demons/portrait/38."], img[src*="/demons/map/38."], img[src*="/demons/thumbnails/38."], img[src*="/demons/39."], img[src*="/demons/portrait/39."], img[src*="/demons/map/39."], img[src*="/demons/thumbnails/39."], img[src*="/demons/40."], img[src*="/demons/portrait/40."], img[src*="/demons/map/40."], img[src*="/demons/thumbnails/40."], img[src*="/demons/41."], img[src*="/demons/portrait/41."], img[src*="/demons/map/41."], img[src*="/demons/thumbnails/41."], img[src*="/demons/42."], img[src*="/demons/portrait/42."], img[src*="/demons/map/42."], img[src*="/demons/thumbnails/42."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-7);
+}
+/* Ko Pak: Root olive; shared by all six evolutions. */
+:is(img[src*="/demons/43."], img[src*="/demons/portrait/43."], img[src*="/demons/map/43."], img[src*="/demons/thumbnails/43."], img[src*="/demons/44."], img[src*="/demons/portrait/44."], img[src*="/demons/map/44."], img[src*="/demons/thumbnails/44."], img[src*="/demons/45."], img[src*="/demons/portrait/45."], img[src*="/demons/map/45."], img[src*="/demons/thumbnails/45."], img[src*="/demons/46."], img[src*="/demons/portrait/46."], img[src*="/demons/map/46."], img[src*="/demons/thumbnails/46."], img[src*="/demons/47."], img[src*="/demons/portrait/47."], img[src*="/demons/map/47."], img[src*="/demons/thumbnails/47."], img[src*="/demons/48."], img[src*="/demons/portrait/48."], img[src*="/demons/map/48."], img[src*="/demons/thumbnails/48."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/43."], img[src*="/demons/portrait/43."], img[src*="/demons/map/43."], img[src*="/demons/thumbnails/43."], img[src*="/demons/44."], img[src*="/demons/portrait/44."], img[src*="/demons/map/44."], img[src*="/demons/thumbnails/44."], img[src*="/demons/45."], img[src*="/demons/portrait/45."], img[src*="/demons/map/45."], img[src*="/demons/thumbnails/45."], img[src*="/demons/46."], img[src*="/demons/portrait/46."], img[src*="/demons/map/46."], img[src*="/demons/thumbnails/46."], img[src*="/demons/47."], img[src*="/demons/portrait/47."], img[src*="/demons/map/47."], img[src*="/demons/thumbnails/47."], img[src*="/demons/48."], img[src*="/demons/portrait/48."], img[src*="/demons/map/48."], img[src*="/demons/thumbnails/48."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-8);
+}
+/* Chu Perk: Garnet red; shared by all six evolutions. */
+:is(img[src*="/demons/49."], img[src*="/demons/portrait/49."], img[src*="/demons/map/49."], img[src*="/demons/thumbnails/49."], img[src*="/demons/50."], img[src*="/demons/portrait/50."], img[src*="/demons/map/50."], img[src*="/demons/thumbnails/50."], img[src*="/demons/51."], img[src*="/demons/portrait/51."], img[src*="/demons/map/51."], img[src*="/demons/thumbnails/51."], img[src*="/demons/52."], img[src*="/demons/portrait/52."], img[src*="/demons/map/52."], img[src*="/demons/thumbnails/52."], img[src*="/demons/53."], img[src*="/demons/portrait/53."], img[src*="/demons/map/53."], img[src*="/demons/thumbnails/53."], img[src*="/demons/54."], img[src*="/demons/portrait/54."], img[src*="/demons/map/54."], img[src*="/demons/thumbnails/54."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/49."], img[src*="/demons/portrait/49."], img[src*="/demons/map/49."], img[src*="/demons/thumbnails/49."], img[src*="/demons/50."], img[src*="/demons/portrait/50."], img[src*="/demons/map/50."], img[src*="/demons/thumbnails/50."], img[src*="/demons/51."], img[src*="/demons/portrait/51."], img[src*="/demons/map/51."], img[src*="/demons/thumbnails/51."], img[src*="/demons/52."], img[src*="/demons/portrait/52."], img[src*="/demons/map/52."], img[src*="/demons/thumbnails/52."], img[src*="/demons/53."], img[src*="/demons/portrait/53."], img[src*="/demons/map/53."], img[src*="/demons/thumbnails/53."], img[src*="/demons/54."], img[src*="/demons/portrait/54."], img[src*="/demons/map/54."], img[src*="/demons/thumbnails/54."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-9);
+}
+/* Ba Be'aga: Soul cyan; shared by all six evolutions. */
+:is(img[src*="/demons/55."], img[src*="/demons/portrait/55."], img[src*="/demons/map/55."], img[src*="/demons/thumbnails/55."], img[src*="/demons/56."], img[src*="/demons/portrait/56."], img[src*="/demons/map/56."], img[src*="/demons/thumbnails/56."], img[src*="/demons/57."], img[src*="/demons/portrait/57."], img[src*="/demons/map/57."], img[src*="/demons/thumbnails/57."], img[src*="/demons/58."], img[src*="/demons/portrait/58."], img[src*="/demons/map/58."], img[src*="/demons/thumbnails/58."], img[src*="/demons/59."], img[src*="/demons/portrait/59."], img[src*="/demons/map/59."], img[src*="/demons/thumbnails/59."], img[src*="/demons/60."], img[src*="/demons/portrait/60."], img[src*="/demons/map/60."], img[src*="/demons/thumbnails/60."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/55."], img[src*="/demons/portrait/55."], img[src*="/demons/map/55."], img[src*="/demons/thumbnails/55."], img[src*="/demons/56."], img[src*="/demons/portrait/56."], img[src*="/demons/map/56."], img[src*="/demons/thumbnails/56."], img[src*="/demons/57."], img[src*="/demons/portrait/57."], img[src*="/demons/map/57."], img[src*="/demons/thumbnails/57."], img[src*="/demons/58."], img[src*="/demons/portrait/58."], img[src*="/demons/map/58."], img[src*="/demons/thumbnails/58."], img[src*="/demons/59."], img[src*="/demons/portrait/59."], img[src*="/demons/map/59."], img[src*="/demons/thumbnails/59."], img[src*="/demons/60."], img[src*="/demons/portrait/60."], img[src*="/demons/map/60."], img[src*="/demons/thumbnails/60."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-10);
+}
+/* Vee Scol: Charcoal slate; shared by all six evolutions. */
+:is(img[src*="/demons/61."], img[src*="/demons/portrait/61."], img[src*="/demons/map/61."], img[src*="/demons/thumbnails/61."], img[src*="/demons/62."], img[src*="/demons/portrait/62."], img[src*="/demons/map/62."], img[src*="/demons/thumbnails/62."], img[src*="/demons/63."], img[src*="/demons/portrait/63."], img[src*="/demons/map/63."], img[src*="/demons/thumbnails/63."], img[src*="/demons/64."], img[src*="/demons/portrait/64."], img[src*="/demons/map/64."], img[src*="/demons/thumbnails/64."], img[src*="/demons/65."], img[src*="/demons/portrait/65."], img[src*="/demons/map/65."], img[src*="/demons/thumbnails/65."], img[src*="/demons/66."], img[src*="/demons/portrait/66."], img[src*="/demons/map/66."], img[src*="/demons/thumbnails/66."]),
+:where(.dungeon-demon-card-image, .demon-detail-art, .seo-demon-card-art, .seo-demon-detail-art, .seo-boss-detail-art, .seo-boss-summary-art, .profile-demon-option-art, .world-boss-dialog-portrait-frame):has(> :is(img[src*="/demons/61."], img[src*="/demons/portrait/61."], img[src*="/demons/map/61."], img[src*="/demons/thumbnails/61."], img[src*="/demons/62."], img[src*="/demons/portrait/62."], img[src*="/demons/map/62."], img[src*="/demons/thumbnails/62."], img[src*="/demons/63."], img[src*="/demons/portrait/63."], img[src*="/demons/map/63."], img[src*="/demons/thumbnails/63."], img[src*="/demons/64."], img[src*="/demons/portrait/64."], img[src*="/demons/map/64."], img[src*="/demons/thumbnails/64."], img[src*="/demons/65."], img[src*="/demons/portrait/65."], img[src*="/demons/map/65."], img[src*="/demons/thumbnails/65."], img[src*="/demons/66."], img[src*="/demons/portrait/66."], img[src*="/demons/map/66."], img[src*="/demons/thumbnails/66."])) {
+    --demon-card-backdrop: var(--demon-backdrop-type-11);
+}
+/* END GENERATED DEMON TYPE BACKDROPS */

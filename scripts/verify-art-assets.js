@@ -44,8 +44,14 @@ async function main() {
     files.push(await inspect(`demons/portrait/${id}.webp`, [512, 512], ready));
     files.push(await inspect(`demons/map/${id}.webp`, [256, 256], ready));
   }
-  files.push(await inspect('demons/map-atlas.webp', [1152, 1024], true));
   const atlasModule = fs.readFileSync(path.join(root, 'public/app/js/generated/demon-map-atlas.js'), 'utf8');
+  const atlasValue = name => JSON.parse(atlasModule.match(new RegExp(`export const ${name} = ([^;]+);`))[1]);
+  const atlasIds = atlasValue('DEMON_MAP_ATLAS_IDS');
+  const atlasBackdropIds = atlasValue('DEMON_MAP_BACKDROP_IDS');
+  const atlasSize = atlasValue('DEMON_MAP_ATLAS_FRAME_SIZE');
+  const atlasColumns = atlasValue('DEMON_MAP_ATLAS_COLUMNS');
+  const atlasRows = Math.ceil((atlasIds.length + atlasBackdropIds.length) / atlasColumns);
+  files.push(await inspect('demons/map-atlas.webp', [atlasColumns * atlasSize, atlasRows * atlasSize], true));
   assert.ok(atlasModule.includes(hash(path.join(imageRoot, 'demons/map-atlas.webp')).slice(0, 12)), 'stale atlas stamp');
   for (const name of ['bag', 'campfire', 'collection', 'dungeon', 'home', 'home_logo', 'rankings', 'summon']) {
     const size = name === 'dungeon' ? [1717, 916] : [1672, 941];
@@ -56,6 +62,36 @@ async function main() {
     assert.equal(backdrop.transparentPixels, 0, 'The shared card scenery must be opaque');
     files.push(backdrop);
   }
+  const backdrops = JSON.parse(fs.readFileSync(path.join(root, 'docs/art/card-backdrops.json'), 'utf8'));
+  assert.deepEqual(atlasBackdropIds, backdrops.variants.map(row => row.typeId).sort((a, b) => a - b));
+  const atlasBackdropTypes = atlasValue('DEMON_MAP_BACKDROP_TYPES');
+  assert.equal(backdrops.variants.length, 11, 'All demon types need a backdrop');
+  assert.equal(new Set(backdrops.variants.flatMap(row => row.demonIds)).size, 66, 'Backdrop coverage must include all 66 demons');
+  const backdropHashes = new Set();
+  for (const variant of backdrops.variants) {
+    for (const id of variant.demonIds) assert.equal(atlasBackdropTypes[id], variant.typeId, `Map backdrop mismatch for demon ${id}`);
+    const frameIndex = atlasIds.length + atlasBackdropIds.indexOf(variant.typeId);
+    const frame = sharp(path.join(imageRoot, 'demons/map-atlas.webp')).extract({
+      left: (frameIndex % atlasColumns) * atlasSize,
+      top: Math.floor(frameIndex / atlasColumns) * atlasSize,
+      width: atlasSize, height: atlasSize
+    });
+    // stats() inspects its input, so materialize the extracted/resized image.
+    const frameStats = await sharp(await frame.toBuffer()).stats();
+    const sourceStats = await sharp(await sharp(path.join(imageRoot, variant.files.png)).resize(atlasSize, atlasSize).toBuffer()).stats();
+    assert.equal(frameStats.isOpaque, true, `Type ${variant.typeId}: map backdrop must be opaque`);
+    for (let channel = 0; channel < 3; channel++) {
+      assert.ok(Math.abs(frameStats.channels[channel].mean - sourceStats.channels[channel].mean) < 5, `Type ${variant.typeId}: atlas backdrop palette differs from source`);
+    }
+    for (const ext of ['png', 'webp', 'avif']) {
+      const backdrop = await inspect(variant.files[ext], [1254, 1254], false);
+      assert.equal(backdrop.transparentPixels, 0, 'Type backdrop must be opaque');
+      assert.equal(backdrop.sha256, variant.sha256[ext], `Type ${variant.typeId}: approved ${ext} backdrop changed`);
+      if (ext === 'png') backdropHashes.add(backdrop.sha256);
+      files.push(backdrop);
+    }
+  }
+  assert.equal(backdropHashes.size, 11, 'Assigned type backdrops must remain distinct');
   for (const [asset, size, alpha] of [['assets/world/crowley', 512, false], ['assets/world/soul-font', 768, false], ['demons/anomaly', 1024, true]]) {
     files.push(await inspect(`${asset}.png`, null, alpha));
     files.push(await inspect(`${asset}.webp`, [size, size], alpha));
