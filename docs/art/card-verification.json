@@ -1,13 +1,14 @@
 {
   "date": "2026-08-28",
+  "artVersion": "art-3668d0ffc131",
   "method": "In-app browser; local fixtures use production CSS and the shared demon-card renderer with local data and actual formation markup. No authenticated gameplay or database writes.",
   "checks": [
     "Images loaded with nonzero dimensions",
     "object-fit: contain and no image transform",
     "Image rectangle inside card bounds",
     "Image layer spans the full card height; stats remain overlaid",
-    "Shared minimal card backdrop resolves",
-    "All six poison stages visually checked alongside other species; all 66 sprite bases measured in the separate asset audit"
+    "Shared jade stone card backdrop resolves from production assets",
+    "All six poison stages visually checked alongside other species; all 132 display sprites have centered visible bounds measured in the separate asset audit"
   ],
   "results": [
     {
@@ -99,5 +100,5 @@
       "failures": []
     }
   ],
-  "fixtureCorrection": "The first Hunter fixture incorrectly nested a sample grid inside the board and collapsed its cards. It was replaced with the actual battle-side/formation-slot markup from hunter-ui.js; the corrected formation passed."
+  "fixtureNotes": "Study previews use the same renderer with an explicit texture override. Final results above use the production backdrop without an override. Checks cover local rendering, not live account/gameplay flows."
 }

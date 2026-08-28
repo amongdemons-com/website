@@ -1,6 +1,5 @@
 const assert = require('node:assert/strict');
 
-const BASELINE = 0.95;
 const ALPHA_THRESHOLD = 8;
 const MIN_COMPONENT_PIXELS = 16;
 const EDGE_PADDING = 2;
@@ -43,11 +42,10 @@ function findContentBounds(data, width, height, options = {}) {
   return { left, top, right, bottom, width: right - left + 1, height: bottom - top + 1, components, ignoredPixels };
 }
 
-function groundImage(data, width, height) {
+function centerImage(data, width, height) {
   const bounds = findContentBounds(data, width, height);
-  const baseline = Math.round(height * BASELINE) - 1;
   const dx = Math.round((width - bounds.width) / 2) - bounds.left;
-  const dy = baseline - bounds.bottom;
+  const dy = Math.round((height - bounds.height) / 2) - bounds.top;
   const crop = {
     left: Math.max(0, bounds.left - EDGE_PADDING),
     top: Math.max(0, bounds.top - EDGE_PADDING),
@@ -55,7 +53,7 @@ function groundImage(data, width, height) {
     bottom: Math.min(height - 1, bounds.bottom + EDGE_PADDING)
   };
   assert.ok(crop.left + dx >= 0 && crop.right + dx < width
-    && crop.top + dy >= 0 && crop.bottom + dy < height, 'Grounding would clip the character');
+    && crop.top + dy >= 0 && crop.bottom + dy < height, 'Centering would clip the character');
   const output = Buffer.alloc(data.length);
   const rowBytes = (crop.right - crop.left + 1) * 4;
   for (let y = crop.top; y <= crop.bottom; y++) {
@@ -63,7 +61,7 @@ function groundImage(data, width, height) {
     const target = ((y + dy) * width + crop.left + dx) * 4;
     data.copy(output, target, source, source + rowBytes);
   }
-  return { data: output, bounds, translation: { x: dx, y: dy }, baseline };
+  return { data: output, bounds, translation: { x: dx, y: dy } };
 }
 
-module.exports = { BASELINE, ALPHA_THRESHOLD, MIN_COMPONENT_PIXELS, findContentBounds, groundImage };
+module.exports = { ALPHA_THRESHOLD, MIN_COMPONENT_PIXELS, findContentBounds, centerImage };

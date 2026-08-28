@@ -6,7 +6,7 @@
   const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => escapeHtml(value));
   const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const session = window.AmongDemons.getSession();
-  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-a3749ed70473';
+  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-3668d0ffc131';
   const PROFILE_DEMON_RARITY_ORDER = {
     common: 1,
     uncommon: 2,

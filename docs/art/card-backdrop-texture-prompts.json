@@ -1,0 +1,52 @@
+[
+  {
+    "id": "jade-stone",
+    "title": "Jade stone and moss",
+    "prompt": "Use case: stylized-concept.\nAsset: ONE square opaque background texture for small Among Demons character cards, full bleed.\nReferences: Image 1 is our approved collection room, MATERIAL and PALETTE inspiration only. Image 2 is an approved demon, CARTOON RENDERING and silhouette-contrast reference only. Do not put any demon, character, soul bottle or other prop in the output.\nThis is a flat decorative MATERIAL FIELD behind a centered character, not a scene. No horizon, floor perspective, plinth, ring, spotlight or contact shadow. The design must work behind both a short wide centered puddle and a tall centered demon.\nComposition: at least 70% calm uninterrupted color, especially the middle 65% of the square. Just 3 to 5 very broad irregular worn stone color planes, 2 or 3 simplified flat patches of moss/lichen mainly around the far edges, and a few sparse short shallow scuffs. Two complementary material textures: smooth ancient stone and rounded flat lichen/moss. Large shapes, restrained internal texture, no busy repeated pattern.\nStyle: our bold simple cartoon world, matte flat fills with one hard-edged shallow shadow per shape. The background's lines and shape boundaries have LOW LOCAL CONTRAST, in slightly darker colors from the same palette. Absolutely NO black or near-black outlines in the background: those belong to the demon and must be the strongest contours. No realistic mineral texture, fine grain, painterly brushwork, gloss or photographic light.\nKeep the entire field lighter than the dark navy and black demon outlines, even the corners. More colorful and lively than a gray teal gradient. Do not create a blank gradient. No architecture, trees, branches, roots, bricks outlined as a grid, tiny pebbles, grass blades, ornaments, faces, symbols, text, UI, borders, logos, watermarks or characters.\nCOLOR DIRECTION: fresh luminous jade/seafoam stone base around #78C8A6, with broad lighter mineral planes around #A2D5AD. Restrained moss/lichen accents in light yellow-green around #ACC67A, shallow scuffs in medium jade around #69AD91. Colors inspired by the collection room's cyan souls and green moss, but a lighter and more colorful field for black-outline contrast. Not neon, not electric green. Overall jade should dominate.",
+    "date": "2026-08-28",
+    "mode": "built-in imagegen",
+    "intent": "generate",
+    "references": [
+      "public/app/images/assets/background/amongdemons_collection.png",
+      "public/app/images/demons/1.png"
+    ],
+    "referenceRoles": [
+      "Approved collection room: material and palette reference only",
+      "Approved demon: cartoon rendering and silhouette contrast reference only; no character in output"
+    ],
+    "output": "docs/art/backdrop-studies/jade-stone.png",
+    "selectedGeneration": "exec-60569a39-b938-4d32-baf8-2629e0fe8b49.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "transparent": false,
+    "status": "selected-for-branch-review",
+    "review": "Selected after card-size review: bright jade supports black outlines, broad stone planes and sparse light lichen add material variation, and the palette relates to collection/summon scenes. No scenery ground or horizon. User approval pending."
+  },
+  {
+    "id": "amber-limestone",
+    "title": "Amber limestone and lichen",
+    "prompt": "Use case: stylized-concept.\nAsset: ONE square opaque background texture for small Among Demons character cards, full bleed.\nReferences: Image 1 is our approved collection room, MATERIAL and PALETTE inspiration only. Image 2 is an approved demon, CARTOON RENDERING and silhouette-contrast reference only. Do not put any demon, character, soul bottle or other prop in the output.\nThis is a flat decorative MATERIAL FIELD behind a centered character, not a scene. No horizon, floor perspective, plinth, ring, spotlight or contact shadow. The design must work behind both a short wide centered puddle and a tall centered demon.\nComposition: at least 70% calm uninterrupted color, especially the middle 65% of the square. Just 3 to 5 very broad irregular worn stone color planes, 2 or 3 simplified flat patches of moss/lichen mainly around the far edges, and a few sparse short shallow scuffs. Two complementary material textures: smooth ancient stone and rounded flat lichen/moss. Large shapes, restrained internal texture, no busy repeated pattern.\nStyle: our bold simple cartoon world, matte flat fills with one hard-edged shallow shadow per shape. The background's lines and shape boundaries have LOW LOCAL CONTRAST, in slightly darker colors from the same palette. Absolutely NO black or near-black outlines in the background: those belong to the demon and must be the strongest contours. No realistic mineral texture, fine grain, painterly brushwork, gloss or photographic light.\nKeep the entire field lighter than the dark navy and black demon outlines, even the corners. More colorful and lively than a gray teal gradient. Do not create a blank gradient. No architecture, trees, branches, roots, bricks outlined as a grid, tiny pebbles, grass blades, ornaments, faces, symbols, text, UI, borders, logos, watermarks or characters.\nCOLOR DIRECTION: lively warm golden-ochre limestone base around #CFAC64, broad lighter amber mineral planes around #E1C682, and restrained warm yellow-green lichen around #B3BD74 at the edges. Shallow stone scuffs around #BAA264, NOT brown-black cracks. Inspired by the collection room's warm lantern/candle light and mossy masonry, lifted into a bright card material that contrasts our mainly navy, teal and purple demons. Warm gold should dominate. Not orange lava, not parchment, not gray beige.",
+    "date": "2026-08-28",
+    "mode": "built-in imagegen",
+    "intent": "generate",
+    "references": [
+      "public/app/images/assets/background/amongdemons_collection.png",
+      "public/app/images/demons/1.png"
+    ],
+    "referenceRoles": [
+      "Approved collection room: material and palette reference only",
+      "Approved demon: cartoon rendering and silhouette contrast reference only; no character in output"
+    ],
+    "output": "docs/art/backdrop-studies/amber-limestone.png",
+    "selectedGeneration": "exec-20953948-a9c7-49ac-85de-59cffdd8da77.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "transparent": false,
+    "status": "retained-alternative",
+    "review": "Warm golden limestone and sparse yellow-green lichen give strong separation from navy/teal/purple demons. More assertive across the grid; retained for comparison rather than assigned by rarity."
+  }
+]

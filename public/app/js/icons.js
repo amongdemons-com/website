@@ -196,7 +196,7 @@
       ? explicitId
       : Number(match?.[1]) || 0;
     if (!sourceId || !['map', 'portrait'].includes(variant)) return fallback;
-    return `/app/images/demons/${variant}/${sourceId}.webp?v=art-a3749ed70473`;
+    return `/app/images/demons/${variant}/${sourceId}.webp?v=art-3668d0ffc131`;
   }
 
   function getCurrentSoulText(soulElement) {
