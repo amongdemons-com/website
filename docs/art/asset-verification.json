@@ -2,7 +2,7 @@
   "allRequestedDemonSourcesImported": true,
   "importedDemons": 66,
   "pendingManualSourceIds": [],
-  "filesChecked": 265,
+  "filesChecked": 298,
   "files": [
     {
       "file": "demons/1.png",
@@ -3708,6 +3708,303 @@
       "transparentPixels": 718394,
       "bytes": 98568,
       "sha256": "69d1849c71e5e9504785cd982e0df30b938948aec05f7b787b745ef8d91dad23"
+    },
+    {
+      "file": "items/echo/01-melee.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 831806,
+      "bytes": 743731,
+      "sha256": "e3ac6e7d346864c42d715df0661363400fd467f49e0c73372878d9d510fefb76"
+    },
+    {
+      "file": "items/echo/01-melee.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 135157,
+      "bytes": 25388,
+      "sha256": "0f612f5bf1cb783c54080cd3ec15353f426ab0a4b9197ec48e4363122ed80325"
+    },
+    {
+      "file": "items/echo/01-melee-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 237956,
+      "bytes": 8533,
+      "sha256": "144565902cab1203e1492be95d2c7491d64f5c360cc3057f4857d5142a078904"
+    },
+    {
+      "file": "items/echo/02-ranged.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1265300,
+      "bytes": 457309,
+      "sha256": "e4c8578625d37e7298c4078eb00661a794b77294114ccff21be3362acababea8"
+    },
+    {
+      "file": "items/echo/02-ranged.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 208407,
+      "bytes": 17038,
+      "sha256": "af75fd3a9fe522d7e1f7f6c6c773a317341fed55b807126ee23e3304637a9ea6"
+    },
+    {
+      "file": "items/echo/02-ranged-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 253608,
+      "bytes": 4370,
+      "sha256": "3dcd9a14e48823d5af2fdd213d28f0c0aa4f04c8562324fad40ecb7eeb161ee5"
+    },
+    {
+      "file": "items/echo/03-poisoner.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1053501,
+      "bytes": 664682,
+      "sha256": "243fad4e3187355fd77fa49da1b9ceeb986f66a73294705d36926071556be61a"
+    },
+    {
+      "file": "items/echo/03-poisoner.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 172723,
+      "bytes": 27832,
+      "sha256": "4442be1596618e90723293e2937ab72199fd85b1dc69d091922c1b7693264ff0"
+    },
+    {
+      "file": "items/echo/03-poisoner-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 240222,
+      "bytes": 7792,
+      "sha256": "324fc5c6b2e87b00aa95e80344edc0a1881cbca828f6701470a2160f94ad70f8"
+    },
+    {
+      "file": "items/echo/04-aoe.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 874487,
+      "bytes": 942914,
+      "sha256": "9b23626fd97f1ec8e420d56c038bbe5e7435b73683dbc7bb8d6c87fe46cd906a"
+    },
+    {
+      "file": "items/echo/04-aoe.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 142348,
+      "bytes": 40654,
+      "sha256": "a3812730c7c15f9a2ab9126bafff0838929fdddf7394f7f05fb74929c28b43df"
+    },
+    {
+      "file": "items/echo/04-aoe-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 234257,
+      "bytes": 10335,
+      "sha256": "f0c5d21219018c763678d571edee72a32a9c043405ca23f6f0a0361f2b98917a"
+    },
+    {
+      "file": "items/echo/05-bruiser.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 677045,
+      "bytes": 926229,
+      "sha256": "1600c53cd435698a5c05c2c476679eaf8849b97db8813223824ca48a9255c1f3"
+    },
+    {
+      "file": "items/echo/05-bruiser.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 110256,
+      "bytes": 26750,
+      "sha256": "1c9a5fe7b37c8108f15a66486814c88fef1d628137c15caeb2c18b2fc9e8d8b4"
+    },
+    {
+      "file": "items/echo/05-bruiser-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 224528,
+      "bytes": 8029,
+      "sha256": "b427d76fd129807a330ee181f2696016a8d8058f9985c36c3b9cb3c2ff40c556"
+    },
+    {
+      "file": "items/echo/06-assassin.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 1320707,
+      "bytes": 433715,
+      "sha256": "1c297da5b2d070d3453628ddeb8d4f9ad171f1ddccaff20a4372f500115c0863"
+    },
+    {
+      "file": "items/echo/06-assassin.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 217850,
+      "bytes": 22322,
+      "sha256": "e497726788844a49b031c1c6a97893935bbde72486659b2ba858831f60a5afed"
+    },
+    {
+      "file": "items/echo/06-assassin-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 255700,
+      "bytes": 6700,
+      "sha256": "15ce6dac56b6c3eb9dff44e5c4e4b025981f8452ccc9acde321bef6a9b0bf1d9"
+    },
+    {
+      "file": "items/echo/07-striker.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 900727,
+      "bytes": 774924,
+      "sha256": "f09cf9288d34fb9a53b9db4ff695ad0bfaa6c6603c3a601109cd2acfc3cb64ab"
+    },
+    {
+      "file": "items/echo/07-striker.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 146123,
+      "bytes": 31702,
+      "sha256": "019cb4396ff3652bd40be8d1ff8bf1f2e089b1df508f96916c6f1e9715be8ce8"
+    },
+    {
+      "file": "items/echo/07-striker-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 244006,
+      "bytes": 10794,
+      "sha256": "4d7d242f742683fd7496cbe1009b976466c9db333eec2ed9e96850c00fa09c1d"
+    },
+    {
+      "file": "items/echo/08-counter-tank.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 889904,
+      "bytes": 993768,
+      "sha256": "50f2ca7edbe3a6e0044336a9da0a85452d163608bbfdb512f052b99af343defe"
+    },
+    {
+      "file": "items/echo/08-counter-tank.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 144214,
+      "bytes": 36560,
+      "sha256": "2d5ba630f4e9ca1a38e803230f42cc78c57d560a8626ab76b2da00b8d27bae99"
+    },
+    {
+      "file": "items/echo/08-counter-tank-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 238888,
+      "bytes": 9118,
+      "sha256": "8813b0f80dd3204cecefa5215a06c6168ae7c27beaec68d09265a54f4e9d17d4"
+    },
+    {
+      "file": "items/echo/09-juggernaut.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 759629,
+      "bytes": 1018622,
+      "sha256": "9f666d4c38ec3daa196a4d19faf8a5107213614c47c7cbafa2612e86e091f16f"
+    },
+    {
+      "file": "items/echo/09-juggernaut.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 123097,
+      "bytes": 27672,
+      "sha256": "b79de8d5c7cd8c79d60f07ec04d55e544ebf6ea47cfc6a271b34b743a0258631"
+    },
+    {
+      "file": "items/echo/09-juggernaut-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 242329,
+      "bytes": 10091,
+      "sha256": "92cb7dbbb76bd3b35137eb2521f03db68513d25aeb4f03cecf302cd7f423befa"
+    },
+    {
+      "file": "items/echo/10-healer.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 978047,
+      "bytes": 754871,
+      "sha256": "2f653425f0beae1471233af8e6fd1b01b41127dce7f6295275cbb3bbdd0e251b"
+    },
+    {
+      "file": "items/echo/10-healer.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 161008,
+      "bytes": 28492,
+      "sha256": "a446137bf9bac537f68d7094fe6840f8136304830779505e2879c25d36dac8ec"
+    },
+    {
+      "file": "items/echo/10-healer-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 226756,
+      "bytes": 11256,
+      "sha256": "b127d3624be00a65b1aec5515e9538de00a7121dc8b1021995e035bbad932d82"
+    },
+    {
+      "file": "items/echo/11-chaotic.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "transparentPixels": 956237,
+      "bytes": 855479,
+      "sha256": "0d927b22ab16adf85214133f3f47624c9e6eee60fafcedff414f2f2df5a0139f"
+    },
+    {
+      "file": "items/echo/11-chaotic.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 155554,
+      "bytes": 38008,
+      "sha256": "c70ccfc3cc5a2683f3b4cd67f2d354d116b3e1ac444c44148ae7e2414e6d3bb1"
+    },
+    {
+      "file": "items/echo/11-chaotic-mask.png",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "transparentPixels": 239161,
+      "bytes": 9717,
+      "sha256": "24dfd38155eafbbe39a5d86dcd7535a631b28d1e771a6fc999c1790667990ce9"
     }
   ]
 }

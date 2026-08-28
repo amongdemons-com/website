@@ -66,6 +66,15 @@ Shared demon cards use a contained, unscaled image across the full card height, 
 
 The swirl backdrops retain broad, quiet colored shapes and restrained texture. They have no implied floor to conflict with centered puddles. Generated CSS selects the palette from the actual sprite's numeric source ID, including versioned PNG, portrait/map WebP and legacy thumbnail paths. Parent art frames and image-based portraits are covered, so dynamic avatar changes and server-rendered guides stay synchronized without a JavaScript timing dependency. Portrait/map WebPs keep centered visible bounds; detached hands/flames remain included. Public boss formations also use centered portrait WebPs.
 
+## Approved Bag Echo integration
+
+- All eleven approved Echo concepts are installed as transparent 1254px PNG masters and 512px WebPs at the existing item paths. The gray presentation matte and empty upper windows were removed without regenerating the designs; actual gray essence remains intact.
+- `echo-art.json` records approval, source/master hashes, extraction and variant hashes. `echo-generation-prompts.json` preserves the exact prompts and selected refinements. Run `npm run assets:echoes` to regenerate the WebPs and liquid-only animation masks; the normal build includes this step.
+- The approved color shapes stay in the artwork. Subtle motion is masked above the liquid, not over the ivory symbols or vessel frame. Existing rarity ornaments, aura, badges and reduced-motion support remain separate. Vi'Zel is yellow, Goh Loomb amber and Baobaw violet.
+- Echo image and mask URLs share the independent content stamp `echo-d4f6b5038dc1`; JS/CSS/client stamps were rebuilt. Existing demon/world artwork remains unchanged.
+- Full build, all 279 tests and the 298-image asset check pass. The asset checker also validates approved Echo hashes, transparency, dimensions and mask containment.
+- Browser checks used production Bag markup/styles/scripts with local static data: eleven types across all six rarities on desktop, detail dialogs, and all eleven types in a 390×844 phone viewport. No horizontal overflow or missing images; artwork uses `contain`. See `echo-verification.json`. No account creation, gameplay, DB changes, merge, push or deployment occurred.
+
 ## Current card and map presentation verification
 
 - Card frames now use opaque rarity colors with a restrained colored glow; the emblems retain their dark outlines. Image corner radius is zero and body top padding is `1em` on desktop and phones.

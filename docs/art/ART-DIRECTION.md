@@ -28,6 +28,16 @@ The 66 production masters are `public/app/images/demons/1.png` through `66.png`.
 
 Per-stage details and the exact original generation prompts are saved in `demon-provenance.json`; `species-directions.json` contains the family briefs. A prompt's old gray-background instructions describe the historical concept generation, not production transparency requirements.
 
+## Bag Echoes
+
+The eleven vessel designs from `echo-studies-v1` were approved for integration on 2026-08-28. Preserve their distinctive silhouettes and large ivory role symbols. Use the same near-black ink, broad matte colors and sparse hard shadows as the demon roster; do not restore scratched metal, shiny bevels or miniature ornaments.
+
+The transparent full-size PNG masters are `public/app/images/items/echo/*.png` (excluding `*-mask.png`). `echo-art.json` records their hashes and the selected preview sources; `echo-generation-prompts.json` preserves the prompts and refinements. The original neutral preview matte and empty upper windows become transparent; painted essence, frames, symbols and outlines stay intact. Boof Nitza and Chu Perk retain their gray liquid, not a transparent hole in its place.
+
+One drawing serves all six rarities. Rarity remains in the Bag badge, aura and ornament, never baked into the drawing or used to desaturate its colors. The approved essence colors are silver gray, ink blue, venom green, ember red, golden yellow, claw amber, spectral violet, olive green, slate gray, soul cyan and arcane blue in type order. In particular, this Echo approval updates Vi'Zel to yellow, Goh Loomb to amber and Baobaw to violet; the earlier exclusion of Bag palettes from the combat-only color swap is superseded for these approved assets.
+
+`npm run assets:echoes` produces the existing 512px WebP paths plus new liquid-only PNG masks. The approved color blocks remain in the image; a restrained animated overlay is clipped above them, excluding ivory glyphs, metal and empty glass. Do not restore the old opaque gradient fill behind the vessel. Keep reduced-motion support and version both the WebP and mask URLs together. Verify every type on light/dark backgrounds and in Bag slots and detail views.
+
 ## Environments and world subjects
 
 Carry the same strong ink, broad simple forms and flat shadows into scenery. Preserve each existing asset's purpose, scene identity, framing and color mood. Use chunky stone, simplified trees and a few large readable props. Lower contrast through the center where UI and game characters sit. Full-page environments are opaque landscape images, with safe center crops for mobile.

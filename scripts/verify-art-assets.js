@@ -96,6 +96,24 @@ async function main() {
     files.push(await inspect(`${asset}.png`, null, alpha));
     files.push(await inspect(`${asset}.webp`, [size, size], alpha));
   }
+  const echoes = JSON.parse(fs.readFileSync(path.join(root, 'docs/art/echo-art.json'), 'utf8'));
+  assert.equal(echoes.items.length, 11, 'Every Echo type needs approved artwork');
+  for (const item of echoes.items) {
+    const base = `items/echo/${item.asset}`;
+    const master = await inspect(`${base}.png`, [1254, 1254], true);
+    const webp = await inspect(`${base}.webp`, [512, 512], true);
+    const mask = await inspect(`${base}-mask.png`, [512, 512], false);
+    assert.equal(master.sha256, item.masterSha256, `${base}: unrecorded master change`);
+    assert.equal(webp.sha256, item.webpSha256, `${base}: stale WebP`);
+    assert.equal(mask.sha256, item.maskSha256, `${base}: stale liquid mask`);
+    assert.ok(mask.alpha && mask.transparentPixels > 512 * 512 * .5, `${base}: liquid mask is not transparent`);
+    const sourcePixels = await sharp(path.join(imageRoot, `${base}.png`)).resize(512, 512).ensureAlpha().raw().toBuffer();
+    const maskPixels = await sharp(path.join(imageRoot, `${base}-mask.png`)).ensureAlpha().raw().toBuffer();
+    for (let p = 3; p < maskPixels.length; p += 4) {
+      if (maskPixels[p] > 220) assert.ok(sourcePixels[p] > 200, `${base}: motion escapes the vessel at pixel ${(p - 3) / 4}`);
+    }
+    files.push(master, webp, mask);
+  }
   const report = { allRequestedDemonSourcesImported: pending.length === 0, importedDemons: 66 - pending.length, pendingManualSourceIds: pending, filesChecked: files.length, files };
   fs.writeFileSync(path.join(root, 'docs/art/asset-verification.json'), JSON.stringify(report, null, 2) + '\n');
   console.log(`${files.length} image files decoded; ${66 - pending.length}/66 approved demon masters imported. Pending manual sources: ${pending.join(', ') || 'none'}.`);

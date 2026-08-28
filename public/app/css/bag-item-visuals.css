@@ -2,8 +2,6 @@
     --echo-glow-size: 7px;
     --echo-aura-opacity: 0.12;
     --echo-ornament-opacity: 0;
-    --echo-shell-brightness: 0.9;
-    --echo-shell-saturation: 0.92;
     --echo-fill-polish: 0.2;
     --echo-essence-color: #D1D5D8;
     position: relative;
@@ -26,10 +24,7 @@
     z-index: 4;
     display: block;
     object-fit: contain;
-    filter:
-        brightness(var(--echo-shell-brightness))
-        saturate(var(--echo-shell-saturation))
-        drop-shadow(0 5px 4px rgba(0, 0, 0, 0.62));
+    filter: drop-shadow(0 5px 4px rgba(0, 0, 0, 0.62));
     transition: filter 0.18s ease;
 }
 
@@ -53,15 +48,12 @@
 }
 
 .echo-essence-fill {
-    z-index: 2;
+    /* The approved illustration already contains the flat colored liquid.
+       Animate only a restrained highlight over it, never a replacement fill. */
+    z-index: 5;
     overflow: hidden;
-    background:
-        linear-gradient(
-            180deg,
-            color-mix(in srgb, var(--echo-essence-color) 62%, white) 0%,
-            var(--echo-essence-color) 48%,
-            color-mix(in srgb, var(--echo-essence-color) 68%, #020809) 100%
-        );
+    opacity: calc(0.08 + var(--echo-fill-polish) * 0.16);
+    mix-blend-mode: screen;
     -webkit-mask-image: var(--echo-fill-mask);
     mask-image: var(--echo-fill-mask);
     -webkit-mask-position: center;
@@ -136,8 +128,6 @@
     --echo-glow-size: 9px;
     --echo-aura-opacity: 0.15;
     --echo-ornament-opacity: 0.08;
-    --echo-shell-brightness: 0.94;
-    --echo-shell-saturation: 0.98;
     --echo-fill-polish: 0.26;
 }
 
@@ -145,8 +135,6 @@
     --echo-glow-size: 11px;
     --echo-aura-opacity: 0.19;
     --echo-ornament-opacity: 0.2;
-    --echo-shell-brightness: 0.98;
-    --echo-shell-saturation: 1.02;
     --echo-fill-polish: 0.32;
 }
 
@@ -154,8 +142,6 @@
     --echo-glow-size: 13px;
     --echo-aura-opacity: 0.23;
     --echo-ornament-opacity: 0.36;
-    --echo-shell-brightness: 1.03;
-    --echo-shell-saturation: 1.06;
     --echo-fill-polish: 0.4;
 }
 
@@ -163,8 +149,6 @@
     --echo-glow-size: 16px;
     --echo-aura-opacity: 0.3;
     --echo-ornament-opacity: 0.62;
-    --echo-shell-brightness: 1.09;
-    --echo-shell-saturation: 1.1;
     --echo-fill-polish: 0.48;
 }
 
@@ -172,8 +156,6 @@
     --echo-glow-size: 19px;
     --echo-aura-opacity: 0.36;
     --echo-ornament-opacity: 0.88;
-    --echo-shell-brightness: 1.14;
-    --echo-shell-saturation: 1.16;
     --echo-fill-polish: 0.58;
 }
 
@@ -181,6 +163,11 @@
     background:
         linear-gradient(90deg, transparent 42%, color-mix(in srgb, var(--echo-essence-color) 36%, white) 48% 52%, transparent 58%),
         radial-gradient(ellipse at center, transparent 0 16%, color-mix(in srgb, var(--echo-essence-color) 42%, white) 18% 22%, transparent 25%);
+}
+
+/* Hover may emphasize rarity without muting the approved essence palette. */
+.bag-item:is(:hover, :focus-visible, .is-inspecting) .echo-item-visual {
+    filter: drop-shadow(0 0 16px color-mix(in srgb, var(--item-rarity) 42%, transparent));
 }
 
 .echo-type-poisoner .echo-fill-surface {

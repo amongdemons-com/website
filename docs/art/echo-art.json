@@ -1,0 +1,360 @@
+{
+  "approved": "2026-08-28",
+  "sourceStudy": "echo-studies-v1",
+  "rendering": "Filled approved artwork. CSS motion overlays only the liquid mask; rarity effects remain separate.",
+  "items": [
+    {
+      "typeId": 1,
+      "species": "Boof Nitza",
+      "asset": "01-melee",
+      "essence": "#D1D5D8",
+      "sourceSha256": "0fc87676e8a53b8369de192cca9259651c948c56f6a826ad8250759b89a15217",
+      "masterSha256": "e3ac6e7d346864c42d715df0661363400fd467f49e0c73372878d9d510fefb76",
+      "extraction": {
+        "typeId": 1,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          183,
+          195,
+          198
+        ],
+        "chroma": [
+          12,
+          3
+        ],
+        "removedComponents": 2,
+        "transparentPixels": 752892,
+        "partialPixels": 1800,
+        "unchangedOpaquePixels": 817824,
+        "sourceSha256": "0fc87676e8a53b8369de192cca9259651c948c56f6a826ad8250759b89a15217",
+        "outputSha256": "b63ad32f19f6b985ca241c9dcdf4a761b84573cf6851fe7d2b9503f8e0158c12",
+        "clearedWindowPixels": 78914
+      },
+      "webpSha256": "0f612f5bf1cb783c54080cd3ec15353f426ab0a4b9197ec48e4363122ed80325",
+      "maskSha256": "144565902cab1203e1492be95d2c7491d64f5c360cc3057f4857d5142a078904",
+      "essenceMaskPixels": 132050
+    },
+    {
+      "typeId": 2,
+      "species": "Gon G'ah",
+      "asset": "02-ranged",
+      "essence": "#171D24",
+      "sourceSha256": "372b31cc9e6837dc44863aa46051d3bc85de1344a51537bf20e4ac419ad621f7",
+      "masterSha256": "e4c8578625d37e7298c4078eb00661a794b77294114ccff21be3362acababea8",
+      "extraction": {
+        "typeId": 2,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          180,
+          191,
+          194
+        ],
+        "chroma": [
+          11,
+          4
+        ],
+        "removedComponents": 4,
+        "transparentPixels": 1265300,
+        "partialPixels": 2640,
+        "unchangedOpaquePixels": 304576,
+        "sourceSha256": "372b31cc9e6837dc44863aa46051d3bc85de1344a51537bf20e4ac419ad621f7",
+        "outputSha256": "e4c8578625d37e7298c4078eb00661a794b77294114ccff21be3362acababea8",
+        "clearedWindowPixels": 0
+      },
+      "webpSha256": "af75fd3a9fe522d7e1f7f6c6c773a317341fed55b807126ee23e3304637a9ea6",
+      "maskSha256": "3dcd9a14e48823d5af2fdd213d28f0c0aa4f04c8562324fad40ecb7eeb161ee5",
+      "essenceMaskPixels": 44577
+    },
+    {
+      "typeId": 3,
+      "species": "Ma'Zga",
+      "asset": "03-poisoner",
+      "essence": "#167246",
+      "sourceSha256": "b8d272ffa2cb7354e5b58596b7ece937d2d0b473544d4944f9f1a7f5d97aa19a",
+      "masterSha256": "243fad4e3187355fd77fa49da1b9ceeb986f66a73294705d36926071556be61a",
+      "extraction": {
+        "typeId": 3,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          183,
+          192,
+          194
+        ],
+        "chroma": [
+          9,
+          2
+        ],
+        "removedComponents": 4,
+        "transparentPixels": 1053501,
+        "partialPixels": 2827,
+        "unchangedOpaquePixels": 516188,
+        "sourceSha256": "b8d272ffa2cb7354e5b58596b7ece937d2d0b473544d4944f9f1a7f5d97aa19a",
+        "outputSha256": "243fad4e3187355fd77fa49da1b9ceeb986f66a73294705d36926071556be61a",
+        "clearedWindowPixels": 0
+      },
+      "webpSha256": "4442be1596618e90723293e2937ab72199fd85b1dc69d091922c1b7693264ff0",
+      "maskSha256": "324fc5c6b2e87b00aa95e80344edc0a1881cbca828f6701470a2160f94ad70f8",
+      "essenceMaskPixels": 122545
+    },
+    {
+      "typeId": 4,
+      "species": "Tor Tza",
+      "asset": "04-aoe",
+      "essence": "#E25041",
+      "sourceSha256": "108dd371464d068ecee30d274453ec5b27fa93c8f5373fb96fcb396135e6e2ff",
+      "masterSha256": "9b23626fd97f1ec8e420d56c038bbe5e7435b73683dbc7bb8d6c87fe46cd906a",
+      "extraction": {
+        "typeId": 4,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          184,
+          195,
+          197
+        ],
+        "chroma": [
+          11,
+          2
+        ],
+        "removedComponents": 4,
+        "transparentPixels": 874486,
+        "partialPixels": 3038,
+        "unchangedOpaquePixels": 694992,
+        "sourceSha256": "108dd371464d068ecee30d274453ec5b27fa93c8f5373fb96fcb396135e6e2ff",
+        "outputSha256": "9b23626fd97f1ec8e420d56c038bbe5e7435b73683dbc7bb8d6c87fe46cd906a",
+        "clearedWindowPixels": 0
+      },
+      "webpSha256": "a3812730c7c15f9a2ab9126bafff0838929fdddf7394f7f05fb74929c28b43df",
+      "maskSha256": "f0c5d21219018c763678d571edee72a32a9c043405ca23f6f0a0361f2b98917a",
+      "essenceMaskPixels": 154968
+    },
+    {
+      "typeId": 5,
+      "species": "Vi'Zel",
+      "asset": "05-bruiser",
+      "essence": "#F4C542",
+      "sourceSha256": "db456102ea8896fea5b964fa8458db25133cfd7269ba8c2fd4e573ca13b75396",
+      "masterSha256": "1600c53cd435698a5c05c2c476679eaf8849b97db8813223824ca48a9255c1f3",
+      "extraction": {
+        "typeId": 5,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          184,
+          193,
+          195
+        ],
+        "chroma": [
+          9,
+          2
+        ],
+        "removedComponents": 1,
+        "transparentPixels": 677045,
+        "partialPixels": 1623,
+        "unchangedOpaquePixels": 893848,
+        "sourceSha256": "db456102ea8896fea5b964fa8458db25133cfd7269ba8c2fd4e573ca13b75396",
+        "outputSha256": "1600c53cd435698a5c05c2c476679eaf8849b97db8813223824ca48a9255c1f3",
+        "clearedWindowPixels": 0
+      },
+      "webpSha256": "1c9a5fe7b37c8108f15a66486814c88fef1d628137c15caeb2c18b2fc9e8d8b4",
+      "maskSha256": "b427d76fd129807a330ee181f2696016a8d8058f9985c36c3b9cb3c2ff40c556",
+      "essenceMaskPixels": 210745
+    },
+    {
+      "typeId": 6,
+      "species": "Goh Loomb",
+      "asset": "06-assassin",
+      "essence": "#FFB23F",
+      "sourceSha256": "5e6d6ac395dea5732f4226b24455008d022b2d22a453a3c632b9012230e1591a",
+      "masterSha256": "1c297da5b2d070d3453628ddeb8d4f9ad171f1ddccaff20a4372f500115c0863",
+      "extraction": {
+        "typeId": 6,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          183,
+          193,
+          195
+        ],
+        "chroma": [
+          10,
+          2
+        ],
+        "removedComponents": 2,
+        "transparentPixels": 1320706,
+        "partialPixels": 2175,
+        "unchangedOpaquePixels": 249635,
+        "sourceSha256": "5e6d6ac395dea5732f4226b24455008d022b2d22a453a3c632b9012230e1591a",
+        "outputSha256": "1c297da5b2d070d3453628ddeb8d4f9ad171f1ddccaff20a4372f500115c0863",
+        "clearedWindowPixels": 0
+      },
+      "webpSha256": "e497726788844a49b031c1c6a97893935bbde72486659b2ba858831f60a5afed",
+      "maskSha256": "15ce6dac56b6c3eb9dff44e5c4e4b025981f8452ccc9acde321bef6a9b0bf1d9",
+      "essenceMaskPixels": 30601
+    },
+    {
+      "typeId": 7,
+      "species": "Baobaw",
+      "asset": "07-striker",
+      "essence": "#C084FC",
+      "sourceSha256": "f5bb142a2692fb256efe94bc928504c47a68c8d58bae7e22845deab9de119a34",
+      "masterSha256": "f09cf9288d34fb9a53b9db4ff695ad0bfaa6c6603c3a601109cd2acfc3cb64ab",
+      "extraction": {
+        "typeId": 7,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          182,
+          193,
+          195
+        ],
+        "chroma": [
+          11,
+          3
+        ],
+        "removedComponents": 2,
+        "transparentPixels": 900727,
+        "partialPixels": 2831,
+        "unchangedOpaquePixels": 668958,
+        "sourceSha256": "f5bb142a2692fb256efe94bc928504c47a68c8d58bae7e22845deab9de119a34",
+        "outputSha256": "f09cf9288d34fb9a53b9db4ff695ad0bfaa6c6603c3a601109cd2acfc3cb64ab",
+        "clearedWindowPixels": 0
+      },
+      "webpSha256": "019cb4396ff3652bd40be8d1ff8bf1f2e089b1df508f96916c6f1e9715be8ce8",
+      "maskSha256": "4d7d242f742683fd7496cbe1009b976466c9db333eec2ed9e96850c00fa09c1d",
+      "essenceMaskPixels": 93222
+    },
+    {
+      "typeId": 8,
+      "species": "Ko Pak",
+      "asset": "08-counter-tank",
+      "essence": "#6E8F45",
+      "sourceSha256": "f498292d2666019fdee56cf1030287d3e14b7ad6d0aa0c012b92b76cf73e8364",
+      "masterSha256": "50f2ca7edbe3a6e0044336a9da0a85452d163608bbfdb512f052b99af343defe",
+      "extraction": {
+        "typeId": 8,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          178,
+          186,
+          190
+        ],
+        "chroma": [
+          8,
+          4
+        ],
+        "removedComponents": 6,
+        "transparentPixels": 889904,
+        "partialPixels": 3613,
+        "unchangedOpaquePixels": 678999,
+        "sourceSha256": "f498292d2666019fdee56cf1030287d3e14b7ad6d0aa0c012b92b76cf73e8364",
+        "outputSha256": "50f2ca7edbe3a6e0044336a9da0a85452d163608bbfdb512f052b99af343defe",
+        "clearedWindowPixels": 0
+      },
+      "webpSha256": "2d5ba630f4e9ca1a38e803230f42cc78c57d560a8626ab76b2da00b8d27bae99",
+      "maskSha256": "8813b0f80dd3204cecefa5215a06c6168ae7c27beaec68d09265a54f4e9d17d4",
+      "essenceMaskPixels": 128183
+    },
+    {
+      "typeId": 9,
+      "species": "Chu Perk",
+      "asset": "09-juggernaut",
+      "essence": "#9BA8B8",
+      "sourceSha256": "5aa71f4fe42e1d95ddefd48121a8a187bb715c5673c2c907323c8be93a3f64e4",
+      "masterSha256": "9f666d4c38ec3daa196a4d19faf8a5107213614c47c7cbafa2612e86e091f16f",
+      "extraction": {
+        "typeId": 9,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          185,
+          195,
+          197
+        ],
+        "chroma": [
+          9,
+          2
+        ],
+        "removedComponents": 2,
+        "transparentPixels": 710809,
+        "partialPixels": 2340,
+        "unchangedOpaquePixels": 859367,
+        "sourceSha256": "5aa71f4fe42e1d95ddefd48121a8a187bb715c5673c2c907323c8be93a3f64e4",
+        "outputSha256": "fc20876e52f680f176f7ea1a20f8a42a07329642375c97a4024fcee1153890b8",
+        "clearedWindowPixels": 48820
+      },
+      "webpSha256": "b79de8d5c7cd8c79d60f07ec04d55e544ebf6ea47cfc6a271b34b743a0258631",
+      "maskSha256": "92cb7dbbb76bd3b35137eb2521f03db68513d25aeb4f03cecf302cd7f423befa",
+      "essenceMaskPixels": 105072
+    },
+    {
+      "typeId": 10,
+      "species": "Ba Be'aga",
+      "asset": "10-healer",
+      "essence": "#8DE7FF",
+      "sourceSha256": "e028964d2d67b2cdd6d9129fd1d06bbcb716144bfda723da80042f71878841a6",
+      "masterSha256": "2f653425f0beae1471233af8e6fd1b01b41127dce7f6295275cbb3bbdd0e251b",
+      "extraction": {
+        "typeId": 10,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          182,
+          193,
+          196
+        ],
+        "chroma": [
+          11,
+          3
+        ],
+        "removedComponents": 1,
+        "transparentPixels": 978047,
+        "partialPixels": 1968,
+        "unchangedOpaquePixels": 592501,
+        "sourceSha256": "e028964d2d67b2cdd6d9129fd1d06bbcb716144bfda723da80042f71878841a6",
+        "outputSha256": "2f653425f0beae1471233af8e6fd1b01b41127dce7f6295275cbb3bbdd0e251b",
+        "clearedWindowPixels": 0
+      },
+      "webpSha256": "a446137bf9bac537f68d7094fe6840f8136304830779505e2879c25d36dac8ec",
+      "maskSha256": "b127d3624be00a65b1aec5515e9538de00a7121dc8b1021995e035bbad932d82",
+      "essenceMaskPixels": 198167
+    },
+    {
+      "typeId": 11,
+      "species": "Vee Scol",
+      "asset": "11-chaotic",
+      "essence": "#52B7FF",
+      "sourceSha256": "314a30ae0bbf078a036d579a0a99ef751afe09212b637aca3b67fc4f919fa0b6",
+      "masterSha256": "0d927b22ab16adf85214133f3f47624c9e6eee60fafcedff414f2f2df5a0139f",
+      "extraction": {
+        "typeId": 11,
+        "width": 1254,
+        "height": 1254,
+        "matte": [
+          184,
+          193,
+          195
+        ],
+        "chroma": [
+          10,
+          2
+        ],
+        "removedComponents": 9,
+        "transparentPixels": 956235,
+        "partialPixels": 3498,
+        "unchangedOpaquePixels": 612783,
+        "sourceSha256": "314a30ae0bbf078a036d579a0a99ef751afe09212b637aca3b67fc4f919fa0b6",
+        "outputSha256": "0d927b22ab16adf85214133f3f47624c9e6eee60fafcedff414f2f2df5a0139f",
+        "clearedWindowPixels": 0
+      },
+      "webpSha256": "c70ccfc3cc5a2683f3b4cd67f2d354d116b3e1ac444c44148ae7e2414e6d3bb1",
+      "maskSha256": "24dfd38155eafbbe39a5d86dcd7535a631b28d1e771a6fc999c1790667990ce9",
+      "essenceMaskPixels": 125597
+    }
+  ],
+  "version": "echo-d4f6b5038dc1"
+}

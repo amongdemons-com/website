@@ -5,14 +5,15 @@
   const renderers = new Map();
   const RARITIES = new Set(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']);
   const ASSET_BASE = '/app/images/items/echo';
+  const ECHO_ART_VERSION = 'echo-d4f6b5038dc1';
   const ECHO_TYPES = Object.freeze({
     1: { key: 'melee', label: 'Melee', asset: '01-melee', motion: 'strike', essence: '#D1D5D8' },
     2: { key: 'ranged', label: 'Ranged sniper', asset: '02-ranged', motion: 'focus', essence: '#171D24' },
     3: { key: 'poisoner', label: 'Poisoner', asset: '03-poisoner', motion: 'bubble', essence: '#167246' },
     4: { key: 'aoe', label: 'AOE', asset: '04-aoe', motion: 'expand', essence: '#E25041' },
-    5: { key: 'bruiser', label: 'Bruiser', asset: '05-bruiser', motion: 'heavy', essence: '#C8BDAA' },
-    6: { key: 'assassin', label: 'Assassin', asset: '06-assassin', motion: 'dart', essence: '#C084FC' },
-    7: { key: 'striker', label: 'Striker / cleave', asset: '07-striker', motion: 'cleave', essence: '#FFB23F' },
+    5: { key: 'bruiser', label: 'Bruiser', asset: '05-bruiser', motion: 'heavy', essence: '#F4C542' },
+    6: { key: 'assassin', label: 'Assassin', asset: '06-assassin', motion: 'dart', essence: '#FFB23F' },
+    7: { key: 'striker', label: 'Striker / cleave', asset: '07-striker', motion: 'cleave', essence: '#C084FC' },
     8: { key: 'counter-tank', label: 'Counter tank', asset: '08-counter-tank', motion: 'roots', essence: '#6E8F45' },
     9: { key: 'juggernaut', label: 'Juggernaut', asset: '09-juggernaut', motion: 'core', essence: '#9BA8B8' },
     10: { key: 'healer', label: 'Healer', asset: '10-healer', motion: 'rise', essence: '#8DE7FF' },
@@ -43,8 +44,8 @@
     const type = knownType || ECHO_TYPES[1];
     const rarity = normalizeRarity(item?.rarity);
     const context = options.context === 'detail' ? 'detail' : 'slot';
-    const shellUrl = `${ASSET_BASE}/${type.asset}.webp`;
-    const maskUrl = `${ASSET_BASE}/${type.asset}-mask.png`;
+    const shellUrl = `${ASSET_BASE}/${type.asset}.webp?v=${ECHO_ART_VERSION}`;
+    const maskUrl = `${ASSET_BASE}/${type.asset}-mask.png?v=${ECHO_ART_VERSION}`;
     const typeAttribute = knownType ? String(typeId) : 'unknown';
     const loading = context === 'detail' ? 'eager' : 'lazy';
     const title = typeof options.title === 'string'

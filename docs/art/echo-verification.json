@@ -1,0 +1,168 @@
+{
+  "date": "2026-08-28",
+  "scope": "Production Bag HTML, CSS and JavaScript with display-only local data. No authenticated gameplay or database writes.",
+  "echoVersion": "echo-d4f6b5038dc1",
+  "build": "passed",
+  "tests": {
+    "passed": 279,
+    "failed": 0
+  },
+  "assetVerification": {
+    "files": 298,
+    "passed": true
+  },
+  "phone": {
+    "viewport": [
+      390,
+      844
+    ],
+    "horizontalOverflow": false,
+    "rows": [
+      {
+        "type": "1",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "2",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "3",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "4",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "5",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "6",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "7",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "8",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "9",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "10",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      },
+      {
+        "type": "11",
+        "rarity": "mythic",
+        "loaded": true,
+        "fit": "contain",
+        "overlayAbove": true,
+        "width": 113.671875
+      }
+    ]
+  },
+  "desktop": [
+    {
+      "rarity": "common",
+      "loadedImages": 12,
+      "images": 12,
+      "allContained": true,
+      "detailVisible": true,
+      "detailWidth": 126,
+      "horizontalOverflow": false
+    },
+    {
+      "rarity": "uncommon",
+      "loadedImages": 12,
+      "images": 12,
+      "allContained": true,
+      "detailVisible": true,
+      "detailWidth": 126,
+      "horizontalOverflow": false
+    },
+    {
+      "rarity": "rare",
+      "loadedImages": 12,
+      "images": 12,
+      "allContained": true,
+      "detailVisible": true,
+      "detailWidth": 126,
+      "horizontalOverflow": false
+    },
+    {
+      "rarity": "epic",
+      "loadedImages": 12,
+      "images": 12,
+      "allContained": true,
+      "detailVisible": true,
+      "detailWidth": 126,
+      "horizontalOverflow": false
+    },
+    {
+      "rarity": "legendary",
+      "loadedImages": 12,
+      "images": 12,
+      "allContained": true,
+      "detailVisible": true,
+      "detailWidth": 126,
+      "horizontalOverflow": false
+    },
+    {
+      "rarity": "mythic",
+      "loadedImages": 12,
+      "images": 12,
+      "allContained": true,
+      "detailVisible": true,
+      "detailWidth": 126,
+      "horizontalOverflow": false
+    }
+  ],
+  "deployment": "Not merged, pushed or deployed."
+}
