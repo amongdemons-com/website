@@ -3,6 +3,7 @@ const path = require('node:path');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const sharp = require('sharp');
+const { BASELINE, findContentBounds } = require('./demon-grounding');
 const root = path.join(__dirname, '..');
 const imageRoot = path.join(root, 'public/app/images');
 const hash = f => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
@@ -20,7 +21,14 @@ async function inspect(relative, size, alpha) {
     assert.equal(data[3], 0, `${relative}: top-left matte remains`);
     assert.equal(data[data.length - 1], 0, `${relative}: bottom-right matte remains`);
   }
-  return { file: relative, width: metadata.width, height: metadata.height, alpha: metadata.hasAlpha, transparentPixels: zero, bytes: fs.statSync(file).size, sha256: hash(file) };
+  let contentBounds;
+  if (/^demons\/(portrait|map)\/\d+\.webp$/.test(relative) && alpha) {
+    contentBounds = findContentBounds(data, info.width, info.height, { minComponentPixels: 1 });
+    assert.ok(Math.abs((contentBounds.bottom + 1) - info.height * BASELINE) <= 2, `${relative}: base is not grounded`);
+    assert.ok(Math.abs((contentBounds.left + contentBounds.right + 1) / 2 - info.width / 2) <= 2, `${relative}: silhouette is off-center`);
+    assert.ok(contentBounds.top > 0 && contentBounds.left > 0 && contentBounds.right < info.width - 1, `${relative}: silhouette touches canvas edge`);
+  }
+  return { file: relative, width: metadata.width, height: metadata.height, alpha: metadata.hasAlpha, transparentPixels: zero, contentBounds, bytes: fs.statSync(file).size, sha256: hash(file) };
 }
 
 async function main() {

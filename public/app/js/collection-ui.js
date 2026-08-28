@@ -309,13 +309,13 @@
   function getCollectionCardImageUrl(demon) {
     const sourceDemonId = Number(demon?.sourceDemonId || demon?.source_demon_id);
     if (Number.isInteger(sourceDemonId) && sourceDemonId > 0) {
-      return `/app/images/demons/portrait/${sourceDemonId}.webp?v=art-d96bfa7cd346`;
+      return `/app/images/demons/portrait/${sourceDemonId}.webp?v=art-a3749ed70473`;
     }
 
     const imageUrl = String(demon?.imageUrl || demon?.image_url || '');
     const sourceMatch = /^\/app\/images\/demons\/(\d+)\.png(?:[?#].*)?$/.exec(imageUrl);
     return sourceMatch
-      ? `/app/images/demons/portrait/${sourceMatch[1]}.webp?v=art-d96bfa7cd346`
+      ? `/app/images/demons/portrait/${sourceMatch[1]}.webp?v=art-a3749ed70473`
       : imageUrl;
   }
 

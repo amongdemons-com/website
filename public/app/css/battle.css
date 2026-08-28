@@ -13,7 +13,7 @@ body.dungeon-page {
     background:
         linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-d96bfa7cd346") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-d96bfa7cd346") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-d96bfa7cd346") type("image/png")) center / cover no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-a3749ed70473") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-a3749ed70473") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-a3749ed70473") type("image/png")) center / cover no-repeat,
         #071013;
     overscroll-behavior: none;
 }
@@ -2185,7 +2185,7 @@ body:not(.dungeon-page) {
     padding: 0;
     background:
         linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
-        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-d96bfa7cd346") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-d96bfa7cd346") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-d96bfa7cd346") type("image/png")) center / cover no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-a3749ed70473") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-a3749ed70473") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-a3749ed70473") type("image/png")) center / cover no-repeat;
     background-attachment: scroll;
 }
 
@@ -2956,7 +2956,7 @@ body:not(.dungeon-page) {
         border-bottom: 1px solid rgba(161,212,201,0.13);
         background:
             linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
-            image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-d96bfa7cd346") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-d96bfa7cd346") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-d96bfa7cd346") type("image/png")) center / cover fixed no-repeat;
+            image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-a3749ed70473") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-a3749ed70473") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-a3749ed70473") type("image/png")) center / cover fixed no-repeat;
         background-attachment: fixed;
     }
 
@@ -3692,7 +3692,7 @@ body:not(.dungeon-page) > .navbar {
     background:
         linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-d96bfa7cd346") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-d96bfa7cd346") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-d96bfa7cd346") type("image/png")) center / cover no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-a3749ed70473") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-a3749ed70473") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-a3749ed70473") type("image/png")) center / cover no-repeat;
     background-attachment: scroll;
 }
 

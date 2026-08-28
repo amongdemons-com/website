@@ -605,6 +605,7 @@
 
   function showSummonResult(demon, demonId = null) {
     const rarity = normalizeRarity(demon.rarity);
+    const imageUrl = window.AmongDemons.ui?.toDemonImageUrl?.(demon, 'portrait') || demon.portraitImageUrl || demon.imageUrl || demon.image_url || '';
     elements.bagSummonContent.style.setProperty('--item-rarity', getRarityColor(rarity));
     elements.bagSummonContent.innerHTML = `
       <div class="modal-header">
@@ -615,7 +616,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body bag-action-result-body">
-        <img class="bag-summon-portrait" src="${escapeHtml(demon.imageUrl || demon.image_url || '')}" alt="${escapeHtml(`${capitalize(rarity)} ${demon.species || 'demon'}`)}">
+        <img class="bag-summon-portrait" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(`${capitalize(rarity)} ${demon.species || 'demon'}`)}">
         <p class="bag-action-description" id="bagSummonDescription">Your summon has joined your permanent Collection.</p>
       </div>
       <div class="modal-footer bag-action-footer-centered">

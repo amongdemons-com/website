@@ -1,0 +1,7 @@
+Use case: precise-object-edit.
+Asset: shared square demon-card backdrop for Among Demons, opaque full-bleed image.
+Input 1 is the EDIT TARGET: our forest card background. Simplify it radically into an almost empty, quiet backdrop that supports small bold cartoon demon sprites.
+KEEP: the muted desaturated blue-green/gray-teal atmosphere and simple matte cartoon color treatment.
+REMOVE ALL recognizable scenery: every tree, branch, root, leaf, plant, rock, pebble, water ripple and path. Remove the strong horizon, ground perspective lines, and black foreground borders. There must be no outlined objects anywhere.
+RESULT: a plain calm muted teal field with only very broad barely perceptible tonal depth, slightly lighter through the center and gently darker along the outer edges and bottom. The entire lower half is an uninterrupted quiet surface. No obvious floor boundary; a short puddle demon and a tall standing demon must both feel natural on this background. Keep sufficient midtone contrast for dark navy and purple demon silhouettes, without a glowing halo or spotlight.
+Style: understated flat-color cartoon backdrop, no texture, no painterly brush marks, no grain, no 3D, no lighting rays, no bloom. No figures, faces, eyes, symbols, text, runes, frames, borders, circles, pedestal, cast shadow or watermark. One square background only, no demons.

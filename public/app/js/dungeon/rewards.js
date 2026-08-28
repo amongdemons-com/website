@@ -89,7 +89,7 @@ function renderCashoutModal() {
 }
 
 function renderCashoutDemonPreview(demon, candidate) {
-  const imageUrl = demon.imageUrl || demon.image_url || CASHOUT_FALLBACK_IMAGE_URL;
+  const imageUrl = window.AmongDemons.ui?.toDemonImageUrl?.(demon, 'portrait') || demon.portraitImageUrl || demon.imageUrl || demon.image_url || CASHOUT_FALLBACK_IMAGE_URL;
   const rarityKey = String(demon.rarity || 'common').toLowerCase();
   const rarity = capitalize(rarityKey);
   const name = demon.species || demon.name || 'Demon';

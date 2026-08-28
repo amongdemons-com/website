@@ -80,16 +80,41 @@
     "transparent": false,
     "status": "visually-approved",
     "referenceRoles": [
-      "Original asset: scene/identity reference only",
-      "Approved demon: rendering style only"
+      "Approved collection room: edit target; preserve layout",
+      "Exact game soul icon: shape reference"
     ],
     "references": [
-      "git:797ea44:public/app/images/assets/background/amongdemons_collection.webp",
-      "public/app/images/demons/1.png"
+      "git:650ffc3:public/app/images/assets/background/amongdemons_collection.png",
+      "public/app/images/assets/soul.svg"
     ],
-    "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A spectral creature collection archive in a crypt. Chunky curved shelves and large arched stone niches frame both sides, each containing a simple teal glass vessel with one abstract spirit shape. Vessels are background props, not detailed demons. Soft olive accents, cyan teal focal lights and a few warm amber candles. Circular flagstone floor in the foreground and open central chamber/distant arch. Only a FEW bold alcoves on each side, no dense clutter.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
-    "review": "Reviewed full generated image: readable chunky cartoon scenery, original scene identity, open central space and no text.",
-    "selectedGeneration": "exec-613c0b6c-4b3a-483f-8552-071b78b22f97.png"
+    "prompt": "Use case: precise-object-edit.\nAsset: Among Demons collection room background, wide 16:9, opaque full-bleed illustration.\nINPUT 1 is the EDIT TARGET, our approved chunky ink cartoon crypt. INPUT 2 is the exact game SOUL ICON, a simple cyan ghost-like droplet silhouette with TWO large dark oval eyes and a tapered uneven lower tail. It is a shape reference, not a logo to print.\nCHANGE: replace the muddled spirit shapes inside ALL TEN glass bottles/vessels in Image 1 with clearly readable souls based closely on Image 2. The six large foreground bottles each contain ONE complete cyan soul floating inside the glass, with TWO separated large dark oval eyes, an unbroken rounded head and a simple tapered wavy tail. The four smaller background bottles also contain simplified miniature versions of the same recognizable two-eye soul. Every soul must fit fully INSIDE its bottle, not painted on a label. Consistent soul species, small natural pose/tilt differences only. No mouth, no nose, no extra eyes, no skulls, no hands, no random cutouts or scribbles. The soul shape is unmistakable even at small size.\nPRESERVE: exactly the same broad room layout, ten bottle placements, shelves, stone arches, open center, circular foreground floor, lanterns, roots, crystal, dark teal/olive/amber palette and bold near-black cartoon outlines. Simplified matte flat fills and one hard shadow; do not add detail or make it painterly. Bottles remain translucent teal glass with visible rims and stoppers. Soul cyan is a contained flat color, no bloom or light rays. Do not add foreground characters, text, runes, labels, logos or watermarks. Only one image.",
+    "review": "All ten vessels contain recognizable cyan souls with two dark oval eyes, a rounded head and tapered tail; original chamber layout preserved.",
+    "selectedGeneration": "exec-f07e5c2d-912b-4b51-a274-111df6ffc8d1.png",
+    "history": [
+      {
+        "id": "collection",
+        "mode": "built-in imagegen",
+        "output": "public/app/images/assets/background/amongdemons_collection.png",
+        "webpOutput": "public/app/images/assets/background/amongdemons_collection.webp",
+        "requiredWebpSize": [
+          1672,
+          941
+        ],
+        "transparent": false,
+        "status": "visually-approved",
+        "referenceRoles": [
+          "Original asset: scene/identity reference only",
+          "Approved demon: rendering style only"
+        ],
+        "references": [
+          "git:797ea44:public/app/images/assets/background/amongdemons_collection.webp",
+          "public/app/images/demons/1.png"
+        ],
+        "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A spectral creature collection archive in a crypt. Chunky curved shelves and large arched stone niches frame both sides, each containing a simple teal glass vessel with one abstract spirit shape. Vessels are background props, not detailed demons. Soft olive accents, cyan teal focal lights and a few warm amber candles. Circular flagstone floor in the foreground and open central chamber/distant arch. Only a FEW bold alcoves on each side, no dense clutter.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
+        "review": "Reviewed full generated image: readable chunky cartoon scenery, original scene identity, open central space and no text.",
+        "selectedGeneration": "exec-613c0b6c-4b3a-483f-8552-071b78b22f97.png"
+      }
+    ]
   },
   {
     "id": "campfire",
@@ -248,6 +273,37 @@
         "prompt": "Edit only the two PURPLE EYES in this Anomaly demon image. Replace the big round forehead eye and the small round right-shoulder eye with flat ANGULAR ALMOND-shaped pink demon eyes, like his two yellow face eyes. Single solid muted magenta fill, one plain BLACK oval pupil, thick near-black contour. These two eyes should look like flat ink symbols, not shiny eyeballs or jewels. No white dots, no lighter oval spots, no reflections. Preserve the other four gold eyes, complete body, colors, horns, claws, drawing style, scale and gray background exactly. No other changes.",
         "generatedFile": "exec-d4bdbae0-86de-4ee1-a03e-29928ec9a33f.png",
         "review": "Not selected: changed signature eye shapes/colors to pink diamonds without eliminating tonal accents."
+      }
+    ]
+  },
+  {
+    "id": "demon-card",
+    "mode": "built-in imagegen",
+    "output": "public/app/images/assets/background/demon-card.png",
+    "webpOutput": "public/app/images/assets/background/demon-card.webp",
+    "avifOutput": "public/app/images/assets/background/demon-card.avif",
+    "requiredWebpSize": [
+      1254,
+      1254
+    ],
+    "transparent": false,
+    "status": "visually-reviewed",
+    "references": [
+      "git:fbd3d2d:public/app/images/assets/background/demon-card.png"
+    ],
+    "referenceRoles": [
+      "Previous forest backdrop: edit target; retain palette, remove scenery"
+    ],
+    "prompt": "Use case: precise-object-edit.\nAsset: shared square demon-card backdrop for Among Demons, opaque full-bleed image.\nInput 1 is the EDIT TARGET: our forest card background. Simplify it radically into an almost empty, quiet backdrop that supports small bold cartoon demon sprites.\nKEEP: the muted desaturated blue-green/gray-teal atmosphere and simple matte cartoon color treatment.\nREMOVE ALL recognizable scenery: every tree, branch, root, leaf, plant, rock, pebble, water ripple and path. Remove the strong horizon, ground perspective lines, and black foreground borders. There must be no outlined objects anywhere.\nRESULT: a plain calm muted teal field with only very broad barely perceptible tonal depth, slightly lighter through the center and gently darker along the outer edges and bottom. The entire lower half is an uninterrupted quiet surface. No obvious floor boundary; a short puddle demon and a tall standing demon must both feel natural on this background. Keep sufficient midtone contrast for dark navy and purple demon silhouettes, without a glowing halo or spotlight.\nStyle: understated flat-color cartoon backdrop, no texture, no painterly brush marks, no grain, no 3D, no lighting rays, no bloom. No figures, faces, eyes, symbols, text, runes, frames, borders, circles, pedestal, cast shadow or watermark. One square background only, no demons.",
+    "selectedGeneration": "exec-c192f456-c780-4aa7-8707-a56ec140d83b.png",
+    "review": "Nearly empty muted teal field, no outlined scenery or fixed horizon/platform/shadow. Reviewed behind all six poison stages and other species on desktop and phone card layouts. Sprites are separate transparent layers, aligned by visible alpha bounds.",
+    "sourceAnalysis": "Original portrait samples 1,7,13,19,25,31,37,49,61 mostly use misty teal forests framed by dark trees and damp ground. Only the cool palette is carried forward; trees and rocks are too busy when repeated behind small demons.",
+    "history": [
+      {
+        "selectedGeneration": "exec-74ec72fa-5d05-4bcc-8d94-29425fee4f34.png",
+        "preservedInGit": "fbd3d2d",
+        "status": "superseded",
+        "review": "Forest framing matched the original setting, but the user found tree and rock outlines cluttered behind demons. Fixed scenery ground also exposed inconsistent bottom padding in the sprites."
       }
     ]
   }

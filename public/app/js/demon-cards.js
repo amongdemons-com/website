@@ -145,7 +145,7 @@
     const actions = options.actions || [];
     const title = options.title || demon.species || demon.name || capitalize(demon.rarity) || 'Demon';
     const titleHtml = renderDetailTitle(title, demon);
-    const imageUrl = demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
+    const imageUrl = ui.toDemonImageUrl?.(demon, 'portrait') || demon.portraitImageUrl || demon.imageUrl || demon.image_url || FALLBACK_IMAGE_URL;
     const hideRarity = Boolean(options.hideRarity || demon.hideRarity);
     const rarity = hideRarity ? '' : capitalize(demon.rarity || 'common');
     const attackStat = getAttackStat(demon);

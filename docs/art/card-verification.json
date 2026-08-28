@@ -1,11 +1,13 @@
 {
-  "date": "2026-08-27",
-  "method": "In-app browser; local fixtures use production CSS and shared demon-card renderer. No authenticated gameplay or database writes.",
+  "date": "2026-08-28",
+  "method": "In-app browser; local fixtures use production CSS and the shared demon-card renderer with local data and actual formation markup. No authenticated gameplay or database writes.",
   "checks": [
     "Images loaded with nonzero dimensions",
     "object-fit: contain and no image transform",
     "Image rectangle inside card bounds",
-    "Image rectangle above stats row"
+    "Image layer spans the full card height; stats remain overlaid",
+    "Shared minimal card backdrop resolves",
+    "All six poison stages visually checked alongside other species; all 66 sprite bases measured in the separate asset audit"
   ],
   "results": [
     {
@@ -15,7 +17,8 @@
         844
       ],
       "images": 78,
-      "minimumArtHeight": 104.84375,
+      "minimumArtHeight": 158.40625,
+      "minimumFrameCoverage": 1.0025712025316456,
       "failures": []
     },
     {
@@ -25,17 +28,19 @@
         844
       ],
       "images": 78,
-      "minimumArtHeight": 170.015625,
+      "minimumArtHeight": 242.859375,
+      "minimumFrameCoverage": 0.9994212962962963,
       "failures": []
     },
     {
-      "mode": "reward",
+      "mode": "dungeon",
       "viewport": [
         390,
         844
       ],
-      "images": 13,
-      "minimumArtHeight": 69.65625,
+      "images": 21,
+      "minimumArtHeight": 73,
+      "minimumFrameCoverage": 0.9980837264150944,
       "failures": []
     },
     {
@@ -45,7 +50,8 @@
         390
       ],
       "images": 21,
-      "minimumArtHeight": 44.578125,
+      "minimumArtHeight": 89,
+      "minimumFrameCoverage": 0.996292372881356,
       "failures": []
     },
     {
@@ -55,17 +61,19 @@
         844
       ],
       "images": 21,
-      "minimumArtHeight": 36.84375,
+      "minimumArtHeight": 73,
+      "minimumFrameCoverage": 0.9980837264150944,
       "failures": []
     },
     {
-      "mode": "hunter",
+      "mode": "reward",
       "viewport": [
         390,
         844
       ],
-      "images": 12,
-      "minimumArtHeight": 57.9375,
+      "images": 13,
+      "minimumArtHeight": 105.8125,
+      "minimumFrameCoverage": 0.9982311320754716,
       "failures": []
     },
     {
@@ -76,17 +84,20 @@
       ],
       "images": 12,
       "minimumArtHeight": 300,
+      "minimumFrameCoverage": 1,
       "failures": []
     },
     {
-      "mode": "dungeon",
+      "mode": "hunter",
       "viewport": [
         390,
         844
       ],
-      "images": 21,
-      "minimumArtHeight": 40.15625,
+      "images": 9,
+      "minimumArtHeight": 94.625,
+      "minimumFrameCoverage": 0.9960526315789474,
       "failures": []
     }
-  ]
+  ],
+  "fixtureCorrection": "The first Hunter fixture incorrectly nested a sample grid inside the board and collapsed its cards. It was replaced with the actual battle-side/formation-slot markup from hunter-ui.js; the corrected formation passed."
 }
