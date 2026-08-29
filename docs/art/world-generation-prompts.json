@@ -1,26 +1,28 @@
 [
   {
     "id": "dungeon",
-    "mode": "built-in imagegen",
-    "output": "public/app/images/assets/background/amongdemons_dungeon.png",
-    "webpOutput": "public/app/images/assets/background/amongdemons_dungeon.webp",
+    "mode": "user-provided texture (no generation)",
+    "output": "public/app/images/assets/background/amongdemons_dungeon_isometric.png",
+    "webpOutput": "public/app/images/assets/background/amongdemons_dungeon_isometric.webp",
+    "avifOutput": "public/app/images/assets/background/amongdemons_dungeon_isometric.avif",
     "requiredWebpSize": [
-      1717,
-      916
+      1254,
+      1254
     ],
     "transparent": false,
-    "status": "visually-approved",
+    "status": "user-selected",
     "referenceRoles": [
-      "Original asset: scene/identity reference only",
-      "Approved demon: rendering style only"
+      "User-provided blue cobblestone texture: active dungeon background source"
     ],
     "references": [
-      "git:797ea44:public/app/images/assets/background/amongdemons_dungeon.webp",
-      "public/app/images/demons/1.png"
+      "user attachment: codex-clipboard-5ed74472-b91c-4348-9ba5-f8601745508a.png"
     ],
-    "prompt": "Use case: stylized-concept.\nAsset: ONE wide landscape game background for Among Demons.\nInput images: Image 1 is the original asset for scene identity and composition ONLY; do not copy its painted rendering. Image 2 is our approved cartoon demon STYLE reference only, never put that creature into this scene.\nSUBJECT: A wide ruined dungeon battle arena. Broad open slate-teal stone floor fills the lower half for teams to fight on. Chunky broken gothic archways and short stairs at both sides. One small cyan portal left and one violet portal right, distant teal pillars and a recessed central doorway. A few simplified violet mushrooms and restrained warm torch accents at the far edges. Strong depth built from just three flat value layers, not atmospheric fog. No objects or steps blocking the central combat area.\nSTYLE LOCK: Bold near-black organic outer contours and sparse thinner interior marks. Broad clean matte color masses, a single simple hard shadow per material. Slightly scrappy expressive cartoon fantasy, simplified chunky forms, readable at small size. Background architecture/trees should look drawn by the same artist as Image 2. No photorealism, painterly texture, glossy 3D, intricate bark, individual fur or feathers, intricate filigree, soft gradients, bloom, volumetric light, mist, particles or cinematic realism.\nCOMPOSITION: Wide landscape about 16:9, edge-to-edge opaque scenery. Keep focal architecture in the middle 60% to survive mobile cover cropping; quiet central negative space for game UI. Preserve the source's cool dark setting but use clearly separated flat color planes; don't make it unreadably black.\nNo text, logo, labels, UI, border, watermark, multiple panels or comparisons.",
-    "review": "Reviewed full generated image: recognizable subject, bold cartoon rendering, correct composition and no text.",
-    "selectedGeneration": "exec-6d5b85df-0082-4b8c-a714-7f3bbed5aeea.png"
+    "prompt": "No ImageGen prompt was used; this active source is the user-provided texture.",
+    "review": "Selected by the user as a repetitive dungeon floor texture. CSS repeats the square source at a controlled responsive scale so every viewport remains covered without arena edges or scenery obstructions.",
+    "previousSelectedGeneration": "exec-f9ad6805-7017-4636-b5a6-ba1143ec998d.png",
+    "unboundedFloorGeneration": "exec-5e74f6fa-73d0-4880-a40d-066c5bf431ff.png",
+    "sourceGeneration": "exec-36e58f4d-5d8b-4f09-adc8-e81fdb51fb37.png",
+    "rejectedGeneration": "exec-9a1ff157-9c14-4b96-b024-b8df16d43649.png"
   },
   {
     "id": "home",

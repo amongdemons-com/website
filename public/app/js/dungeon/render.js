@@ -652,7 +652,6 @@ function watchFormationLaneSizing() {
 function syncCompressedFormationLanes() {
   syncFormationGridSizing();
   requestAnimationFrame(() => {
-    syncFormationGridSizing();
     const laneAdjustments = [];
     const lanes = Array.from(document.querySelectorAll('.battle-side .formation-lane-cards'));
     lanes.forEach((lane) => {
@@ -660,6 +659,8 @@ function syncCompressedFormationLanes() {
       lane.classList.remove('is-compressed');
       lane.style.removeProperty('--dungeon-demon-card-width');
       lane.style.removeProperty('--dungeon-demon-card-height');
+
+      if (usesDesktopFormationCss()) return;
 
       if (!cards.length) return;
 
@@ -694,6 +695,11 @@ function syncCompressedFormationLanes() {
 function syncFormationGridSizing() {
   const grids = Array.from(document.querySelectorAll('.battle-side .battle-formation-grid'));
   grids.forEach((grid) => {
+    if (usesDesktopFormationCss()) {
+      clearFormationGridCardSize(grid);
+      return;
+    }
+
     const container = grid.parentElement;
     if (!container) return;
 
@@ -717,6 +723,8 @@ function syncFormationGridSizing() {
 }
 
 function getCurrentFormationGridInlineStyle(container) {
+  if (usesDesktopFormationCss()) return '';
+
   const grid = container?.querySelector?.('.battle-formation-grid');
   const width = grid?.style.getPropertyValue('--dungeon-demon-card-width');
   const height = grid?.style.getPropertyValue('--dungeon-demon-card-height');
@@ -735,6 +743,15 @@ function setFormationGridCardSize(grid, width, height) {
   if (grid.style.getPropertyValue('--dungeon-demon-card-height') !== heightValue) {
     grid.style.setProperty('--dungeon-demon-card-height', heightValue);
   }
+}
+
+function clearFormationGridCardSize(grid) {
+  grid?.style.removeProperty('--dungeon-demon-card-width');
+  grid?.style.removeProperty('--dungeon-demon-card-height');
+}
+
+function usesDesktopFormationCss() {
+  return window.matchMedia('(min-width: 992px)').matches;
 }
 
 function cssPixels(value) {
