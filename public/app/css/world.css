@@ -2578,8 +2578,7 @@ body.is-world-side-collapsed .world-map-controls {
     outline: 1px solid rgba(232,199,106,0.62);
     box-shadow:
         0 0 0 2px rgba(232,199,106,0.12),
-        0 14px 28px rgba(0,0,0,0.32),
-        0 0 18px color-mix(in srgb, var(--rarity-color, #D1D5D8) 16%, transparent);
+        0 14px 28px rgba(0,0,0,0.32);
 }
 
 .world-team-editor-in-team-mark {

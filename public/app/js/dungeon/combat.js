@@ -1169,7 +1169,7 @@ function showFloatingDamage(instanceId, amount, type, attackerId, effect, option
   if (type === 'poison' && Number(options.burstCount) > 1) {
     const burstCount = Math.max(1, Number(options.burstCount) || 1);
     const scale = Math.min(2.2, 1 + (burstCount - 1) * 0.12);
-    floating.style.fontSize = `calc(1.22rem * ${scale.toFixed(2)})`;
+    floating.style.fontSize = `calc(2.44rem * ${scale.toFixed(2)})`;
   }
   appendTemporaryElement(floating, 760);
 }

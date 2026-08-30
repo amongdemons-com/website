@@ -1622,7 +1622,7 @@ main {
     align-items: center;
     gap: 0.12rem;
     color: var(--combat-color, #f19187);
-    font-size: 1.22rem;
+    font-size: 2.44rem;
     font-weight: 900;
     line-height: 1;
     -webkit-text-stroke: 0;
@@ -4164,9 +4164,7 @@ body.seo-page {
     overflow: hidden;
     position: relative;
     border-color: rgba(255,255,255,0.12);
-    box-shadow:
-        inset 0 3px 0 var(--rarity-color, var(--ad-teal, #6fd6bd)),
-        0 12px 28px rgba(0,0,0,0.28);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.28);
 }
 
 .seo-demon-card-art {
@@ -6540,9 +6538,7 @@ body.rankings-page {
     display: grid;
     place-items: center;
     overflow: hidden;
-    background:
-        linear-gradient(180deg, rgba(3,8,10,0.92), rgba(6,10,14,0.96)),
-        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-59b6cb9757bc") type("image/png")) center / cover no-repeat;
+    background: linear-gradient(180deg, rgba(3,8,10,0.92), rgba(6,10,14,0.96));
     padding: clamp(1rem, 3vw, 2.4rem);
     animation: demonic-pact-overlay-in 520ms ease-out both;
 }

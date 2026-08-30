@@ -91,3 +91,17 @@ test('shared rarity shapes have a dark outer contour and preserve their rarity-c
   assert.match(baseCss, /\.dungeon-demon-rarity-gem::after\s*\{[^}]*inset: 2px;[^}]*background: var\(--rarity-color, #D1D5D8\);/s);
   assert.match(baseCss, /\.boss-key-demon-art \.boss-key-demon-gem\s*\{[^}]*top: auto;[^}]*left: 50%;/s);
 });
+
+test('shared demon cards use a neutral frame without a rarity-colored glow', () => {
+  const cardRules = [...battleCss.matchAll(/\.dungeon-demon-card\s*\{([^}]*)\}/g)]
+    .map((match) => match[1]);
+  const frame = cardRules
+    .find((declarations) => /border:\s*1px solid rgba\(255,255,255,0\.14\);/.test(declarations)) || '';
+  const ambientCard = cardRules
+    .find((declarations) => /0 10px 26px/.test(declarations)) || '';
+
+  assert.match(frame, /border:\s*1px solid rgba\(255,255,255,0\.14\);/);
+  assert.doesNotMatch(frame, /rarity-color|border-top-width/);
+  assert.doesNotMatch(ambientCard, /rarity-color/);
+  assert.doesNotMatch(baseCss.match(/\.seo-demon-card\s*\{([^}]*)\}/)?.[1] || '', /rarity-color/);
+});

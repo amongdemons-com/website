@@ -351,8 +351,7 @@ body:not(.dungeon-page) {
     flex: 0 1 8rem;
     aspect-ratio: 1 / 1;
     min-width: 0;
-    border: 2px solid var(--rarity-color, #D1D5D8);
-    border-top-width: 5px;
+    border: 1px solid rgba(255,255,255,0.14);
     border-radius: 6px;
     background: rgba(0,0,0,0.18);
     overflow: visible;
@@ -562,7 +561,7 @@ body:not(.dungeon-page) {
 }
 
 .dungeon-demon-card.is-recruit-draggable {
-    border-color: var(--rarity-color, #D1D5D8);
+    border-color: rgba(255,255,255,0.18);
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
 }
 
@@ -1995,7 +1994,7 @@ body:not(.dungeon-page) {
 }
 
 .dungeon-choice-card {
-    border-color: var(--rarity-color, #D1D5D8);
+    border-color: rgba(255,255,255,0.16);
     color: #fff;
     padding: 0;
     text-align: left;
@@ -2004,8 +2003,8 @@ body:not(.dungeon-page) {
 
 .dungeon-choice-card:hover,
 .dungeon-choice-card.active {
-    border-color: var(--rarity-color, #D1D5D8);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--rarity-color, #D1D5D8) 34%, transparent), 0 0 18px color-mix(in srgb, var(--rarity-color, #D1D5D8) 22%, transparent);
+    border-color: rgba(232,199,106,0.72);
+    box-shadow: 0 0 0 2px rgba(232,199,106,0.18), 0 0 18px rgba(232,199,106,0.12);
     transform: scale(1.035);
     z-index: 2;
 }
@@ -3645,17 +3644,16 @@ body:not(.dungeon-page) > .navbar {
 
 .demon-type-page .demon-card-grid .dungeon-demon-card {
     width: min(100%, 20rem);
-    border-color: var(--rarity-color, #D1D5D8);
+    border-color: rgba(255,255,255,0.14);
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.05),
-        0 16px 34px rgba(0,0,0,0.42),
-        0 0 20px color-mix(in srgb, var(--rarity-color, #D1D5D8) 16%, transparent);
+        0 16px 34px rgba(0,0,0,0.42);
 }
 
 .demon-type-page .demon-card-grid .dungeon-demon-card:hover {
-    border-color: var(--rarity-color, #D1D5D8);
+    border-color: rgba(255,255,255,0.24);
     box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--rarity-color, #D1D5D8) 24%, transparent),
+        0 0 0 2px rgba(255,255,255,0.08),
         0 20px 44px rgba(0,0,0,0.5);
 }
 
@@ -3723,8 +3721,7 @@ body:not(.dungeon-page) > .navbar {
     background: rgba(3,9,11,0.42);
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.05),
-        0 10px 26px rgba(0,0,0,0.24),
-        0 0 8px color-mix(in srgb, var(--rarity-color, #D1D5D8) 28%, transparent);
+        0 10px 26px rgba(0,0,0,0.24);
 }
 
 .dungeon-demon-card-body {
@@ -3748,8 +3745,7 @@ body:not(.dungeon-page) > .navbar {
 .dungeon-demon-card.cashout-demon-card,
 .dungeon-demon-card.reward-demon-card {
     display: block;
-    border-width: 2px;
-    border-top-width: 5px;
+    border-width: 1px;
     padding: 0;
     text-align: left;
 }
@@ -3880,7 +3876,7 @@ body:not(.dungeon-page) > .navbar {
 
 .battle-side .battle-formation-grid {
     --dungeon-formation-gap: clamp(0.44rem, 0.75vw, 0.7rem);
-    --dungeon-demon-card-width: clamp(6rem, min(11.5vw, 22vh), 15.5rem);
+    --dungeon-demon-card-width: clamp(6rem, min(11.5vw, 20vh), 15.5rem);
     --dungeon-demon-card-height: var(--dungeon-demon-card-width);
     display: grid;
     grid-template-columns: repeat(3, minmax(0, var(--dungeon-demon-card-width)));
@@ -3999,13 +3995,11 @@ body:not(.dungeon-page) > .navbar {
     min-width: 0;
     min-height: 0;
     border-width: 1px;
-    border-top-width: 4px;
     border-radius: 8px;
     overflow: hidden;
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.05),
-        0 12px 24px rgba(0,0,0,0.34),
-        0 0 12px color-mix(in srgb, var(--rarity-color, #D1D5D8) 28%, transparent);
+        0 12px 24px rgba(0,0,0,0.34);
 }
 
 .battle-side .dungeon-demon-card-image,
@@ -4864,8 +4858,7 @@ body .battle-speed-option.game-primary-action:disabled {
 .dungeon-reward-demon-card {
     box-shadow:
         inset 0 0 0 1px rgba(255,255,255,0.05),
-        0 10px 22px rgba(0,0,0,0.3),
-        0 0 10px color-mix(in srgb, var(--rarity-color, #D1D5D8) 28%, transparent);
+        0 10px 22px rgba(0,0,0,0.3);
 }
 
 .dungeon-hand-empty {
@@ -5024,10 +5017,6 @@ body .battle-speed-option.game-primary-action:disabled {
     .battle-side .dungeon-demon-card,
     .battle-side .formation-empty {
         border-radius: 6px;
-    }
-
-.battle-side .dungeon-demon-card {
-        border-top-width: 3px;
     }
 
 .battle-side .dungeon-demon-card-body {
@@ -6167,21 +6156,17 @@ body.is-world-battle-result-animating .battle-result-burst.is-defeat {
 }
 
 /*
- * Repeating dungeon floor stage.
+ * Framed-grid dungeon stage.
  *
- * Formation slots remain in the DOM as invisible hit targets so battle
- * playback, keyboard access and drag/drop keep their stable slot IDs. The
- * visible treatment is intentionally cardless: character cutouts and their
- * compact combat readout sit directly on the painted arena floor.
+ * The original framed 3x3 formation grids, responsive arena layout and slot
+ * interactions remain visible. Formation cards reuse the approved per-type
+ * backdrops while keeping their neutral, rarity-independent framing.
  */
 body.dungeon-page {
-    --dungeon-floor-texture-size: clamp(34rem, 52vw, 56rem);
     background:
-        image-set(
-            url("/app/images/assets/background/amongdemons_dungeon_isometric.avif") type("image/avif"),
-            url("/app/images/assets/background/amongdemons_dungeon_isometric.webp") type("image/webp"),
-            url("/app/images/assets/background/amongdemons_dungeon_isometric.png") type("image/png")
-        ) center / var(--dungeon-floor-texture-size) var(--dungeon-floor-texture-size) repeat,
+        linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
+        radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-59b6cb9757bc") type("image/png")) center / cover no-repeat,
         #071013;
 }
 
@@ -6191,118 +6176,32 @@ body.dungeon-page .dungeon-battle-card {
 
 body.dungeon-page .dungeon-battle-body {
     background:
-        linear-gradient(180deg, rgba(2, 7, 10, 0.08), rgba(2, 7, 10, 0.24)),
-        image-set(
-            url("/app/images/assets/background/amongdemons_dungeon_isometric.avif") type("image/avif"),
-            url("/app/images/assets/background/amongdemons_dungeon_isometric.webp") type("image/webp"),
-            url("/app/images/assets/background/amongdemons_dungeon_isometric.png") type("image/png")
-        ) center / var(--dungeon-floor-texture-size) var(--dungeon-floor-texture-size) repeat;
+        linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
+        radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
+        image-set(url("/app/images/assets/background/amongdemons_dungeon.avif?v=art-59b6cb9757bc") type("image/avif"), url("/app/images/assets/background/amongdemons_dungeon.webp?v=art-59b6cb9757bc") type("image/webp"), url("/app/images/assets/background/amongdemons_dungeon.png?v=art-59b6cb9757bc") type("image/png")) center / cover no-repeat;
 }
 
-@media (min-width: 992px) {
-    body.dungeon-page .dungeon-arena {
-        box-sizing: border-box;
-        padding-bottom: clamp(1rem, 2.8vh, 1.5rem);
-    }
+/* Keep every occupied cell legible as part of the formation grid. The demon
+ * itself remains cardless; these are neutral slot boundaries, not rarity
+ * frames. */
+body.dungeon-page .battle-side .formation-slot.has-demon {
+    border-color: rgba(161,212,201,0.14);
+    background: rgba(3,9,11,0.08);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.025);
 }
 
-body.dungeon-page .battle-side .battle-formation-grid,
-body.dungeon-page .battle-side-player .battle-formation-grid,
-body.dungeon-page .battle-side-enemy .battle-formation-grid {
-    gap: clamp(0.08rem, 0.4vw, 0.32rem);
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
+body.dungeon-page .battle-side-player .formation-slot.has-demon {
+    border-color: rgba(111,214,189,0.18);
 }
 
-body.dungeon-page .battle-side-enemy.is-ranked-encounter-planning #enemyGrid .battle-formation-grid::before {
-    display: none;
-}
-
-body.dungeon-page .battle-side .formation-slot,
-body.dungeon-page .battle-side .formation-slot.is-empty,
-body.dungeon-page .battle-side .formation-slot-front,
-body.dungeon-page .battle-side-player .formation-slot.is-empty,
-body.dungeon-page .battle-side-enemy .formation-slot.is-empty {
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-body.dungeon-page .battle-side .formation-slot-cards {
-    position: relative;
-}
-
-body.dungeon-page .battle-side .formation-slot-cards.is-drag-over {
-    box-shadow: none;
-}
-
-body.dungeon-page .battle-side .formation-slot-cards.is-drag-over::after {
-    content: "";
-    position: absolute;
-    right: 10%;
-    bottom: 7%;
-    left: 10%;
-    z-index: 0;
-    height: 18%;
-    border: 2px solid rgba(243, 220, 147, 0.82);
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(232, 199, 106, 0.24), transparent 70%);
-    box-shadow: 0 0 20px rgba(232, 199, 106, 0.28);
-    pointer-events: none;
-}
-
-body.dungeon-page .battle-side .formation-empty,
-body.dungeon-page .battle-side-enemy .formation-empty {
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    color: transparent;
-}
-
-body.dungeon-page .battle-side .formation-empty::before,
-body.dungeon-page .battle-side .formation-slot-placeholder-icon {
-    display: none;
-}
-
-body.dungeon-page .battle-side-player .collection-reinforcement-team-slot::after {
-    content: "+";
-    display: grid;
-    width: clamp(1.8rem, 28%, 3.2rem);
-    aspect-ratio: 1;
-    place-items: center;
-    border: 1px dashed rgba(141, 231, 255, 0.48);
-    border-radius: 50%;
-    background: rgba(4, 18, 22, 0.5);
-    color: rgba(180, 241, 255, 0.82);
-    font-size: clamp(1rem, 2.2vw, 1.65rem);
-    line-height: 1;
-    box-shadow: 0 0 16px rgba(82, 183, 255, 0.13);
-}
-
-body.dungeon-page .battle-side-player .collection-reinforcement-team-slot:hover,
-body.dungeon-page .battle-side-player .collection-reinforcement-team-slot:focus-visible {
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    outline: none;
-}
-
-body.dungeon-page .battle-side-player .collection-reinforcement-team-slot:hover::after,
-body.dungeon-page .battle-side-player .collection-reinforcement-team-slot:focus-visible::after {
-    border-color: rgba(180, 241, 255, 0.9);
-    background: rgba(8, 35, 42, 0.72);
-    box-shadow: 0 0 22px rgba(82, 183, 255, 0.28);
+body.dungeon-page .battle-side-enemy .formation-slot.has-demon {
+    border-color: rgba(226,80,65,0.2);
 }
 
 body.dungeon-page .battle-side .dungeon-demon-card {
     isolation: isolate;
     border: 0;
-    border-radius: 0;
+    border-radius: 7px;
     background: transparent;
     box-shadow: none;
     overflow: visible;
@@ -6334,18 +6233,16 @@ body.dungeon-page .battle-side-enemy .dungeon-demon-card.is-attacking::before {
 
 body.dungeon-page .battle-side .dungeon-demon-card-image {
     z-index: 1;
-    overflow: visible;
-    border-radius: 0;
-    background: none !important;
+    overflow: hidden;
+    border-radius: 7px;
+    background: var(--demon-card-backdrop) center / cover no-repeat !important;
 }
 
 body.dungeon-page .battle-side .dungeon-demon-card-image img {
     object-fit: contain;
     object-position: center bottom;
     transform: none;
-    filter:
-        drop-shadow(0 0.22rem 0.1rem rgba(0, 0, 0, 0.92))
-        drop-shadow(0 0 0.32rem rgba(7, 18, 20, 0.76));
+    filter: none;
 }
 
 body.dungeon-page .battle-side .dungeon-demon-rarity-gem {
@@ -6353,40 +6250,19 @@ body.dungeon-page .battle-side .dungeon-demon-rarity-gem {
 }
 
 body.dungeon-page .battle-side .dungeon-demon-card-body {
-    right: 10%;
-    bottom: 1%;
-    left: 10%;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 3;
-    overflow: visible;
-    padding: 0;
-    background: transparent;
+    overflow: hidden;
+    padding: 1em 0.34rem 0.34rem;
+    border-radius: 0 0 7px 7px;
+    background: linear-gradient(to top, rgba(3,8,10,0.95), rgba(3,8,10,0.62) 58%, transparent);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 1), 0 0 5px rgba(0, 0, 0, 0.95);
 }
 
 body.dungeon-page .battle-side .combat-hp-bar {
-    border: 1px solid rgba(222, 238, 234, 0.38);
+    border: 0;
     background: rgba(1, 7, 8, 0.76);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.78);
-}
-
-body.dungeon-page .battle-side .dungeon-demon-card.is-attacking .dungeon-demon-card-image img {
-    filter:
-        drop-shadow(0 0.25rem 0.12rem rgba(0, 0, 0, 0.94))
-        drop-shadow(0 0 0.48rem var(--combat-color, rgba(232, 199, 106, 0.82)));
-}
-
-body.dungeon-page .battle-side .dungeon-demon-card.is-healed .dungeon-demon-card-image img {
-    filter:
-        drop-shadow(0 0.22rem 0.1rem rgba(0, 0, 0, 0.92))
-        drop-shadow(0 0 0.5rem rgba(141, 231, 255, 0.8));
-}
-
-@media (max-width: 600px) and (orientation: portrait) {
-    body.dungeon-page .dungeon-battle-body {
-        background-position: center;
-    }
-
-    body.dungeon-page .battle-side .battle-formation-grid {
-        gap: 0.08rem;
-    }
+    box-shadow: none;
 }

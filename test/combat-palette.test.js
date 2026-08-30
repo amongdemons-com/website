@@ -4,6 +4,9 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 
+const baseCss=fs.readFileSync(path.join(__dirname,'../public/app/css/base.css'),'utf8');
+const combatSource=fs.readFileSync(path.join(__dirname,'../public/app/js/dungeon/combat.js'),'utf8');
+
 function loadCombat() {
   const created=[];
   const cards=new Map(['goh','baobaw','target'].map((id,index)=>[id,{
@@ -52,3 +55,8 @@ test('Goh Loomb stays a fast assassin zap and Baobaw stays a swipe after the pal
   }
 });
 
+test('floating combat amounts are at least twice their original size',()=>{
+  const floatingRule=baseCss.match(/\.floating-combat-number\s*\{([^}]*)\}/)?.[1]||'';
+  assert.match(floatingRule,/font-size:\s*2\.44rem;/);
+  assert.match(combatSource,/fontSize = `calc\(2\.44rem \* \$\{scale\.toFixed\(2\)\}\)`/);
+});

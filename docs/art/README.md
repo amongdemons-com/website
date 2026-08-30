@@ -77,7 +77,7 @@ The swirl backdrops retain broad, quiet colored shapes and restrained texture. T
 
 ## Current card and map presentation verification
 
-- Card frames now use opaque rarity colors with a restrained colored glow; the emblems retain their dark outlines. Image corner radius is zero and body top padding is `1em` on desktop and phones.
+- Card frames use a subtle neutral border and shadow; rarity stays in the emblem and label, and the emblems retain their dark outlines. Image corner radius is zero and body top padding is `1em` on desktop and phones.
 - Attack and speed sit on the left below the HP bar, with HP value/icon on the right. The overlay still occupies the full-height art area. Overflow shields, role-specific icons and the compact phone-hand separator remain supported.
 - World encounter spots and boss circles share the approved type backdrops. The 300.9 KB atlas holds 66 portraits plus 11 background tiles, about 14 KB more than the previous portrait-only atlas and no extra normal image request. Individual approved WebPs are the fallback if the atlas fails.
 - `npm run build`, all 277 tests and the 265-image asset check pass. The checker also inspects every atlas background tile for opacity, source palette agreement and correct demon-type mapping.
