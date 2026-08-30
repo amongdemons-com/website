@@ -6,6 +6,7 @@
 
 <!-- Add future player-facing changes for Patch 6 below this line. -->
 
+- Damage numbers are now twice as large across every fight.
 - Demonic Pacts now use distinct Pact Tiers, clearer centered choice cards,
   explicit rarity targets, and a more visible View Team action.
 - Team demon details can now switch between base stats and stats with active
