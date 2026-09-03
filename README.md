@@ -414,7 +414,6 @@ CSS is split per page - `base.css` loads everywhere; `battle.css`, `camp.css`, `
 | `public/api/lib/rng.js` | Deterministic seeded RNG |
 | `public/api/lib/db.js` | MySQL pool and `.env` loading |
 | `public/api/lib/schema.js` | Table creation and additive schema checks |
-| `public/api/lib/async-errors.js` | Express async error forwarding |
 | `lib/seo-pages.js` | Server-rendered home/catalog pages, sitemap, robots.txt, canonical host |
 
 ## Maintenance Scripts

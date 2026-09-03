@@ -21,10 +21,10 @@
     "bootstrap": "^5.3.2",
     "compression": "^1.8.1",
     "dotenv": "^17.4.2",
-    "express": "^4.22.2",
+    "express": "^5.2.1",
     "lucide": "^1.16.0",
-    "mysql2": "^3.22.3",
-    "pixi.js": "^8.19.0",
+    "mysql2": "^3.24.3",
+    "pixi.js": "^8.20.1",
     "sharp": "^0.35.3"
   },
   "devDependencies": {
