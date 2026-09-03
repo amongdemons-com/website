@@ -89,6 +89,7 @@
     const hasHp = hasNumber(demon.hp) || hasNumber(demon.maxHp);
     const hasAtk = hasNumber(demon.atk);
     const hasSpeed = hasNumber(demon.speed) && !options.hideSpeed && !isRetaliateDemon(demon);
+    const displayedSpeed = getDisplayedSpeed(demon.speed, options.maxDisplayedSpeed);
     const attackStat = getAttackStat(demon);
     const hpBar = getCombatHpBarLayout(demon.hp, demon.maxHp, demon.shield);
     const { currentHp, maxHp, shield, hpPercent, shieldPercent } = hpBar;
@@ -101,7 +102,7 @@
       ${hasAtk || hasSpeed ? `
         <div class="combat-stat-strip" aria-label="Combat stats">
           ${hasAtk ? `<span title="${escapeHtml(attackStat.description)}" aria-label="${escapeHtml(attackStat.description)}">${renderAttackIcon(demon)}<span class="js-demon-atk">${escapeHtml(attackStat.value)}</span></span>` : ''}
-          ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(demon.speed)}</span>` : ''}
+          ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(displayedSpeed)}</span>` : ''}
         </div>
       ` : ''}
       ${showHpBar ? `
@@ -149,6 +150,7 @@
     const hideRarity = Boolean(options.hideRarity || demon.hideRarity);
     const rarity = hideRarity ? '' : capitalize(demon.rarity || 'common');
     const attackStat = getAttackStat(demon);
+    const displayedSpeed = getDisplayedSpeed(demon.speed, options.statsOptions?.maxDisplayedSpeed);
     const currentHp = Math.max(0, Number(demon.hp) || 0);
     const maxHp = Math.max(currentHp, Number(demon.maxHp) || Number(demon.hp) || 1);
 
@@ -169,7 +171,7 @@
 
           <div class="demon-detail-stats" aria-label="Combat stats">
             ${hasNumber(demon.atk) ? renderDetailStat(renderAttackIcon(demon), attackStat.label, attackStat.value, attackStat.description) : ''}
-            ${hasNumber(demon.speed) && !isRetaliateDemon(demon) ? renderDetailStat(renderSpeedIcon(), 'Speed', demon.speed, 'Speed') : ''}
+            ${hasNumber(demon.speed) && !isRetaliateDemon(demon) ? renderDetailStat(renderSpeedIcon(), 'Speed', displayedSpeed, 'Speed') : ''}
             ${hasNumber(demon.hp) || hasNumber(demon.maxHp) ? renderDetailStat(renderIcon('hp'), 'HP', `${currentHp} / ${maxHp}`, 'HP') : ''}
           </div>
 
@@ -413,6 +415,13 @@
 
   function hasNumber(value) {
     return value !== null && value !== undefined && value !== '' && !Number.isNaN(Number(value));
+  }
+
+  function getDisplayedSpeed(speed, maxDisplayedSpeed) {
+    const numericSpeed = Number(speed);
+    const numericCap = Number(maxDisplayedSpeed);
+    if (!Number.isFinite(numericSpeed) || !Number.isFinite(numericCap)) return speed;
+    return Math.min(numericSpeed, numericCap);
   }
 
   function isRetaliateDemon(demon = {}) {

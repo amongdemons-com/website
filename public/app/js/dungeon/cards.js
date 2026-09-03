@@ -1,7 +1,7 @@
 import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
-import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
+import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_DISPLAYED_ATTACK_SPEED, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
 import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
@@ -221,7 +221,11 @@ function renderDungeonDemonCard(demon, options = {}) {
   return renderSharedDemonCard(demon, {
     ...options,
     className,
-    overlayHtml
+    overlayHtml,
+    statsOptions: {
+      ...options.statsOptions,
+      maxDisplayedSpeed: MAX_DUNGEON_DISPLAYED_ATTACK_SPEED
+    }
   });
 }
 
@@ -328,7 +332,8 @@ function getFirstDraftIndexForPosition(collection, position) {
 
 function renderCombatStats(demon) {
   return renderSharedCombatStats(demon, {
-    hideSpeed: isRetaliateDemon(demon)
+    hideSpeed: isRetaliateDemon(demon),
+    maxDisplayedSpeed: MAX_DUNGEON_DISPLAYED_ATTACK_SPEED
   });
 }
 
