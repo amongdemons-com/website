@@ -265,9 +265,9 @@
         1254
       ],
       "bounds": {
-        "left": 48,
+        "left": 55,
         "top": 338,
-        "right": 1198,
+        "right": 1205,
         "bottom": 948,
         "width": 1151,
         "height": 611,
@@ -275,7 +275,7 @@
         "ignoredPixels": 0
       },
       "translation": {
-        "x": 4,
+        "x": -3,
         "y": -16
       }
     },

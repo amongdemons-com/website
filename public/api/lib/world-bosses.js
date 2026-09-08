@@ -367,7 +367,7 @@ function remapZoneTypeId(typeId) {
 
 function toWorldMapImageUrl(url) {
   const match = /^\/app\/images\/demons\/(?:thumbnails\/)?(\d+)\.png(?:[?#].*)?$/.exec(String(url || ''));
-  return match ? `/app/images/demons/map/${match[1]}.webp?v=art-c008070f9ca2` : url;
+  return match ? `/app/images/demons/map/${match[1]}.webp?v=art-570e7495b84f` : url;
 }
 
 function tileKey(x, y) {
