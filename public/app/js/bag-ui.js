@@ -437,7 +437,6 @@
           animate: true,
           forceLevelUpAnimation: true
         });
-        showUnravelResult(payload);
       }
     } catch (error) {
       stopSummonRitual();

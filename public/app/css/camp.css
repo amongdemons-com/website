@@ -1403,8 +1403,11 @@ body.camp-page::before {
 .camp-page .camp-xp-progress,
 .quest-progress {
     height: 0.42rem;
-    border: 0;
     background: #040a0c;
+}
+
+.quest-progress {
+    border: 1px solid #192829;
 }
 
 .camp-page .camp-xp-progress-bar,
@@ -1530,6 +1533,7 @@ body.camp-page::before {
 .camp-scene-depth {
     position: absolute;
     inset: 0;
+    display: none;
     background:
         #24201c;
     pointer-events: none;
@@ -2492,6 +2496,11 @@ body.camp-page {
         min-height: 0;
     }
 
+.camp-player-panel,
+.camp-world-buffs {
+        overflow: visible;
+    }
+
 .camp-world-buffs {
         align-content: start;
         max-block-size: clamp(4.6rem, 18dvh, 10rem);
@@ -2515,6 +2524,10 @@ body.camp-page {
 .camp-world-buffs::-webkit-scrollbar-thumb {
         border-radius: 999px;
         background: #665d38;
+    }
+
+.camp-world-buffs {
+        overflow: visible;
     }
 }
 

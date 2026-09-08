@@ -2407,6 +2407,12 @@ body.is-world-side-collapsed .world-map-controls {
     padding: 0.5rem;
 }
 
+@media (min-width: 900px) {
+    .world-team-editor-collection-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
 .world-team-editor-collection-grid .world-empty-text {
     grid-column: 1 / -1;
     align-self: start;
@@ -3239,9 +3245,13 @@ body.is-world-side-collapsed .world-map-controls {
     height: 0.92rem;
 }
 
-.world-active-hunt-card .world-card-action,
 .world-travel-card .world-card-action {
     justify-self: stretch;
+}
+
+.world-active-hunt-card .world-end-hunt-action {
+    justify-self: center;
+    width: auto;
 }
 
 .world-hunt-reward-lines {
@@ -4656,7 +4666,7 @@ body.is-world-side-collapsed .world-map-controls {
         grid-template-columns: minmax(0, 1fr);
     }
 
-.world-sidebar-card .world-card-action {
+.world-sidebar-card .world-card-action:not(.world-end-hunt-action) {
         justify-self: stretch;
         width: 100%;
     }

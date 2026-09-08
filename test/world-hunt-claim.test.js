@@ -52,3 +52,13 @@ test('claiming hunt XP forces confirmed level-up celebrations to play', () => {
   assert.match(source, /forceLevelUpAnimation:\s*leveledUp/);
   assert.match(source, /if \(!leveledUp\) playQuestCompleteSound\(\)/);
 });
+
+test('travel arrival automatically starts hunting at an unlocked demon spot', () => {
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'app', 'js', 'world-ui.js'),
+    'utf8'
+  );
+
+  assert.match(source, /function maybeStartUnlockedHuntAfterTravel\(\) \{[\s\S]*?isHuntActive\(\)[\s\S]*?state\.currentBoss[\s\S]*?isEncounterUnlocked\(encounter\.id\)[\s\S]*?void startHunting\(encounter\.id, null\);/);
+  assert.match(source, /maybeOpenWorldArrivalEvent\(\);\s*maybeStartUnlockedHuntAfterTravel\(\);/);
+});

@@ -490,7 +490,6 @@
         body: { allocations: state.draft }
       }));
       audio?.play('sfx.progression.skillUnlock', { volume: 0.9 });
-      setMessage('Constellation sealed. Your skill bonuses are active.', 'success');
       window.AmongDemons?.tutorial?.emit?.('skill-tree-saved');
     } catch (error) {
       handleError(error);

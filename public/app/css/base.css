@@ -1613,7 +1613,15 @@ main {
     -webkit-text-stroke: 0;
     paint-order: stroke fill;
     text-shadow:
-        none;
+        -0.08rem -0.08rem 0 var(--combat-text-outline, #fff),
+        0 -0.08rem 0 var(--combat-text-outline, #fff),
+        0.08rem -0.08rem 0 var(--combat-text-outline, #fff),
+        -0.08rem 0 0 var(--combat-text-outline, #fff),
+        0.08rem 0 0 var(--combat-text-outline, #fff),
+        -0.08rem 0.08rem 0 var(--combat-text-outline, #fff),
+        0 0.08rem 0 var(--combat-text-outline, #fff),
+        0.08rem 0.08rem 0 var(--combat-text-outline, #fff),
+        0 3px 8px rgba(0, 0, 0, 0.95);
     pointer-events: none;
     white-space: nowrap;
     will-change: transform, opacity;
@@ -3157,11 +3165,11 @@ body:has(#demonDetailModal.show) .modal-backdrop {
 
 @keyframes collection-training-vortex-pulse {
     0% {
-        opacity: 1;
+        opacity: 0.2;
         transform: scale(1);
     }
     54% {
-        opacity: 1;
+        opacity: 0.72;
         transform: scale(0.9);
     }
     100% {
@@ -3177,7 +3185,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     }
     16%,
     62% {
-        filter: none;
+        filter: drop-shadow(0 0 34px rgba(85,255,255,0.78)) saturate(1.34) brightness(1.18);
     }
 }
 

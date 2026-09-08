@@ -6477,3 +6477,65 @@ body.dungeon-page .formation-lane-cards.is-drag-over:has(.dungeon-demon-card.is-
 body.dungeon-page .dungeon-hand-cards.is-drag-over:has(.dungeon-demon-card.is-drag-over)::after {
     display: none;
 }
+
+/* Keep demon art readable inside every card while leaving map markers,
+ * player/boss tokens, navigation, and camp portraits outside this treatment. */
+.dungeon-demon-card-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dungeon-demon-card .dungeon-demon-card-image img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.battle-side .formation-lane-cards.is-compressed .dungeon-demon-card-image img,
+#cashoutModalBody .cashout-selected-reward .dungeon-demon-card-image img,
+body.dungeon-page .battle-side .dungeon-demon-card-image img,
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-card .dungeon-demon-card-image img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* Cashout previews use a direct image instead of the shared image wrapper. */
+#cashoutModalBody .cashout-selected-reward .cashout-demon-preview-img {
+    position: absolute;
+    inset: 10%;
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* Enemy art faces the hunter in battle and during dungeon planning. */
+.battle-side-enemy .dungeon-demon-card-image img,
+body.dungeon-page .battle-side-enemy .dungeon-demon-card-image img {
+    transform: scaleX(-1);
+}
+
+/* Boss guide formations already encode their intended layout; keep their
+ * portraits in the guide's original orientation. */
+.seo-boss-team-board.battle-side-enemy .dungeon-demon-card-image img {
+    transform: none;
+}
+
+/* The collection-recruit placeholder keeps its main-branch dashed border but
+ * no longer pulses for attention. */
+.collection-reinforcement-placeholder.is-collection-reinforcement-attention {
+    animation: none;
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+    /* Override the older mobile zoom so the shared 80% sizing remains true. */
+    body.dungeon-page:not(.ranked-page) .battle-side-enemy .dungeon-demon-card .dungeon-demon-card-image img {
+        width: 80%;
+        height: 80%;
+        transform: scaleX(-1);
+    }
+}

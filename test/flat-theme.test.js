@@ -7,12 +7,23 @@ const esbuild = require('esbuild');
 const cssDir = path.join(__dirname, '../public/app/css');
 const sheets = fs.readdirSync(cssDir).filter(name => name.endsWith('.css'));
 
-test('all site styles parse and keep blur and image glow effects disabled', () => {
+test('all site styles parse and keep blur and non-training image glow effects disabled', () => {
   for (const name of sheets) {
     const source = fs.readFileSync(path.join(cssDir, name), 'utf8');
     const parsed = esbuild.transformSync(source, { loader: 'css' });
     assert.deepEqual(parsed.warnings, [], name);
-    assert.doesNotMatch(source, /drop-shadow\(|blur\(/, name);
+    const sourceWithoutIntentionalAnimationGlow = source
+      .replace(
+      /@keyframes collection-training-fed-card\s*\{[\s\S]*?\r?\n\}\r?\n\r?\n(?=@keyframes dungeon-loading-spin)/,
+      ''
+      )
+      .replace(/\.bag-summon-portrait\s*\{[\s\S]*?\r?\n\}/, '')
+      .replace(/\.bag-action-echo-result\s*\{[\s\S]*?\r?\n\}/, '')
+      .replace(
+        /@keyframes bag-summon-vessel-feed\s*\{[\s\S]*?\r?\n\}\r?\n\r?\n(?=@media \(max-width: 767\.98px\))/,
+        ''
+      );
+    assert.doesNotMatch(sourceWithoutIntentionalAnimationGlow, /drop-shadow\(|blur\(/, name);
     for (const match of source.matchAll(/backdrop-filter\s*:\s*([^;]+);/g)) {
       assert.match(match[1], /^none(?:\s*!important)?$/, `${name}: ${match[0]}`);
     }
