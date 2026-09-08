@@ -10,12 +10,10 @@ const renderSource = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dun
 const dragSource = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'drag-drop.js'), 'utf8');
 
 test('dungeon uses the wide environment artwork without a repeating rock texture', () => {
-  for (const extension of ['png', 'webp', 'avif']) {
-    const assetPath = path.join(ROOT, 'public', 'app', 'images', 'assets', 'background', `amongdemons_dungeon.${extension}`);
-    assert.equal(fs.existsSync(assetPath), true, `missing ${path.basename(assetPath)}`);
-    assert.match(stageStyles, new RegExp(`amongdemons_dungeon\\.${extension}`));
-  }
-  assert.match(stageStyles, /amongdemons_dungeon\.png[^;}]*center \/ cover no-repeat/);
+  const assetPath = path.join(ROOT, 'public', 'app', 'images', 'assets', 'background', 'amongdemons_dungeon_cartoon_v2.png');
+  assert.equal(fs.existsSync(assetPath), true, `missing ${path.basename(assetPath)}`);
+  assert.match(stageStyles, /amongdemons_dungeon_cartoon_v2\.png[^;}]*center \/ cover no-repeat/);
+  assert.doesNotMatch(stageStyles, /amongdemons_dungeon\.(?:png|webp|avif)/);
   assert.doesNotMatch(stageStyles, /amongdemons_dungeon_isometric/);
   assert.doesNotMatch(stageStyles, /--dungeon-floor-texture-size/);
 });
