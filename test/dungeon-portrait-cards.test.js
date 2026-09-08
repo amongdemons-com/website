@@ -8,16 +8,31 @@ const battleCss = fs.readFileSync(
   'utf8'
 );
 
-test('demon card artwork stays contained without desktop or portrait zoom overrides', () => {
+test('formation card artwork stays contained without desktop or portrait zoom overrides', () => {
   assert.match(
     battleCss,
-    /\.dungeon-demon-card \.dungeon-demon-card-image img\s*\{[^}]*object-fit: contain;[^}]*transform: none;/
+    /body\.dungeon-page \.battle-side \.dungeon-demon-card-image img\s*\{[^}]*object-fit: contain;[^}]*transform: none;/
   );
   const imageRules = [...battleCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    .filter(([, selectors]) => /dungeon-demon-card-image img|cashout-demon-preview-img/.test(selectors));
+    .filter(([, selectors]) => /body\.dungeon-page \.battle-side \.dungeon-demon-card-image img|formation-lane-cards\.is-compressed \.dungeon-demon-card-image img/.test(selectors));
   for (const [, selectors, declarations] of imageRules) {
     assert.doesNotMatch(declarations, /object-fit:\s*cover|transform:\s*scale\(/, selectors.trim());
   }
+});
+
+test('dungeon hand cards use type backdrops without card frames', () => {
+  assert.match(
+    battleCss,
+    /:where\(body\.dungeon-page #dungeonHandBar\) \.dungeon-demon-card\s*\{[\s\S]*?border: 0;/
+  );
+  assert.match(
+    battleCss,
+    /:where\(body\.dungeon-page #dungeonHandBar\) \.dungeon-demon-card-image\s*\{[\s\S]*?background: var\(--demon-card-backdrop\) center \/ cover no-repeat;/
+  );
+  assert.match(
+    battleCss,
+    /:where\(body\.dungeon-page #dungeonHandBar\) \.dungeon-demon-card \.dungeon-demon-card-image img\s*\{[\s\S]*?object-fit: cover;[\s\S]*?object-position: center 22%;[\s\S]*?transform: none;/
+  );
 });
 
 test('card artwork fills the entire card with stats overlaid at the bottom', () => {
@@ -36,6 +51,6 @@ test('mobile portrait hand replaces HP bars with a one-pixel separator', () => {
   );
   assert.match(
     battleCss,
-    /body\.dungeon-page:not\(\.ranked-page\) \.dungeon-hand-cards \.combat-stat-footer\s*\{[\s\S]*?border-top: 1px solid/
+    /body\.dungeon-page:not\(\.ranked-page\) #dungeonHandBar \.dungeon-hand-cards \.combat-hp-meta\s*\{[\s\S]*?border-top: 1px solid/
   );
 });

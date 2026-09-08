@@ -50,6 +50,13 @@ test('card stats follow the health bar with attack and speed before the right-ha
   assert.match(html.slice(attack, hp), />23<\/span>/);
   assert.match(html.slice(hp), /js-demon-hp">164<\/span>/);
 
+  const legacy = ui.renderCombatStats(demon, { legacyLayout: true });
+  const legacyBar = legacy.indexOf('class="combat-hp-bar');
+  const legacyAttack = legacy.indexOf('class="combat-stat-strip');
+  const legacyHp = legacy.indexOf('class="combat-hp-meta');
+  assert.ok(legacyAttack >= 0 && legacyAttack < legacyBar && legacyBar < legacyHp);
+  assert.doesNotMatch(legacy, /combat-stat-footer/);
+
   const withoutBar = ui.renderCombatStats(demon, { hideHpBar: true });
   assert.doesNotMatch(withoutBar, /class="combat-hp-bar/);
   assert.match(withoutBar, /class="combat-stat-footer is-separated"/);

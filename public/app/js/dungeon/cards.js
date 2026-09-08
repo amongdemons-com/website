@@ -224,7 +224,8 @@ function renderDungeonDemonCard(demon, options = {}) {
     overlayHtml,
     statsOptions: {
       ...options.statsOptions,
-      maxDisplayedSpeed: MAX_DUNGEON_DISPLAYED_ATTACK_SPEED
+      maxDisplayedSpeed: MAX_DUNGEON_DISPLAYED_ATTACK_SPEED,
+      legacyLayout: options.side === 'hand'
     }
   });
 }

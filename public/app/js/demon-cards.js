@@ -98,23 +98,31 @@
 
     if (!hasHp && !hasAtk && !hasSpeed) return '';
 
+    const combatStatStrip = hasAtk || hasSpeed ? `
+      <div class="combat-stat-strip" aria-label="Combat stats">
+        ${hasAtk ? `<span title="${escapeHtml(attackStat.description)}" aria-label="${escapeHtml(attackStat.description)}">${renderAttackIcon(demon)}<span class="js-demon-atk">${escapeHtml(attackStat.value)}</span></span>` : ''}
+        ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(displayedSpeed)}</span>` : ''}
+      </div>
+    ` : '';
+    const combatHpBar = showHpBar ? `
+      <div class="combat-hp-bar${shield > 0 ? ' has-overflow-shield' : ''}" data-current-shield="${shield}" aria-label="${escapeHtml(hpBarLabel)}" title="${escapeHtml(hpBarLabel)}">
+        <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${formatCombatBarPercent(hpPercent)}%"></div>
+        <div class="combat-overflow-shield-fill js-demon-shield-fill" style="width: ${formatCombatBarPercent(shieldPercent)}%" aria-hidden="true"></div>
+      </div>
+    ` : '';
+    const combatHpMeta = hasHp ? `
+      <div class="combat-hp-meta${showHpBar ? '' : ' is-separated'}"><span class="combat-current-hp js-demon-hp">${currentHp}</span>${renderIcon('hp')}</div>
+    ` : '';
+
+    if (options.legacyLayout) {
+      return `${combatStatStrip}${combatHpBar}${combatHpMeta}`;
+    }
+
     return `
-      ${showHpBar ? `
-        <div class="combat-hp-bar${shield > 0 ? ' has-overflow-shield' : ''}" data-current-shield="${shield}" aria-label="${escapeHtml(hpBarLabel)}" title="${escapeHtml(hpBarLabel)}">
-          <div class="combat-hp-fill js-demon-hp-fill" data-max-hp="${maxHp}" style="width: ${formatCombatBarPercent(hpPercent)}%"></div>
-          <div class="combat-overflow-shield-fill js-demon-shield-fill" style="width: ${formatCombatBarPercent(shieldPercent)}%" aria-hidden="true"></div>
-        </div>
-      ` : ''}
+      ${combatHpBar}
       <div class="combat-stat-footer${hasHp && !showHpBar ? ' is-separated' : ''}">
-        ${hasAtk || hasSpeed ? `
-          <div class="combat-stat-strip" aria-label="Combat stats">
-            ${hasAtk ? `<span title="${escapeHtml(attackStat.description)}" aria-label="${escapeHtml(attackStat.description)}">${renderAttackIcon(demon)}<span class="js-demon-atk">${escapeHtml(attackStat.value)}</span></span>` : ''}
-            ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(displayedSpeed)}</span>` : ''}
-          </div>
-        ` : ''}
-        ${hasHp ? `
-          <div class="combat-hp-meta"><span class="combat-current-hp js-demon-hp">${currentHp}</span>${renderIcon('hp')}</div>
-        ` : ''}
+        ${combatStatStrip}
+        ${combatHpMeta}
       </div>
     `;
   }

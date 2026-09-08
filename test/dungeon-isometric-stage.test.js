@@ -71,29 +71,7 @@ test('dungeon formation grids use flat opaque cartoon surfaces', () => {
   assert.match(stageStyles, /is-ranked-encounter-planning #enemyGrid \.battle-formation-grid::before\s*\{\s*display:\s*none;/);
 });
 
-test('dungeon hand and battle controls use the same flat opaque treatment', () => {
-  const handShellRule = stageStyles.match(/#dungeonHandBar,[\s\S]*?\.dungeon-replaylog-box\s*\{([^}]*)\}/)?.[1] || '';
-  const handTabRule = stageStyles.match(/#dungeonHandBar \.dungeon-hand-tab,[\s\S]*?\.dungeon-hand-scroll-btn\s*\{([^}]*)\}/)?.[1] || '';
-  const controlShellRule = stageStyles.match(/\.dungeon-bottom-controls \.battle-playback-control,[\s\S]*?\.dungeon-bottom-controls \.battle-speed-control\s*\{([^}]*)\}/)?.[1] || '';
-  const controlButtonRule = stageStyles.match(/\.dungeon-bottom-controls \.battle-playback-btn,[\s\S]*?\.dungeon-bottom-controls \.battle-speed-option\s*\{([^}]*)\}/)?.[1] || '';
-  const activeControlRule = stageStyles.match(/\.dungeon-bottom-controls \.battle-playback-btn\.game-primary-action,[\s\S]*?\.battle-speed-option\.active\.game-primary-action\s*\{([^}]*)\}/)?.[1] || '';
-  const disabledControlRule = stageStyles.match(/\.dungeon-bottom-controls \.battle-playback-btn:disabled,[\s\S]*?\.battle-speed-option:disabled\s*\{([^}]*)\}/)?.[1] || '';
-
-  assert.match(handShellRule, /background:\s*#132c2d;/);
-  assert.match(handTabRule, /background:\s*#0d2022;/);
-  assert.match(controlShellRule, /background:\s*#132c2d;/);
-  assert.match(controlButtonRule, /background:\s*#0d2022;/);
-  assert.match(activeControlRule, /background:\s*#6fd6bd;/);
-  assert.match(disabledControlRule, /background:\s*#0a1719;/);
-  assert.match(disabledControlRule, /opacity:\s*1;/);
-
-  for (const rule of [handShellRule, handTabRule, controlShellRule, controlButtonRule, activeControlRule, disabledControlRule]) {
-    assert.match(rule, /box-shadow:\s*none;/);
-    assert.doesNotMatch(rule, /rgba\(|gradient\(|transparent/);
-  }
-});
-
-test('occupied demons restore their type backdrops without rarity frames', () => {
+test('occupied demons retain type backdrops and show rarity badges without rarity frames', () => {
   const occupiedSlotRule = stageStyles.match(/\.battle-side-player \.formation-slot,[\s\S]*?\.battle-side-player \.formation-slot\.is-empty\s*\{([^}]*)\}/)?.[1] || '';
   const cardRule = stageStyles.match(/\.battle-side \.dungeon-demon-card\s*\{([^}]*)\}/)?.[1] || '';
   const cardImageRule = stageStyles.match(/\.battle-side \.dungeon-demon-card-image\s*\{([^}]*)\}/)?.[1] || '';
@@ -104,7 +82,7 @@ test('occupied demons restore their type backdrops without rarity frames', () =>
   assert.match(occupiedSlotRule, /background:\s*#0d2022;/);
   assert.match(stageStyles, /\.battle-side \.dungeon-demon-card\s*\{[\s\S]*?border:\s*0;[\s\S]*?background:\s*transparent;[\s\S]*?box-shadow:\s*none;/);
   assert.match(stageStyles, /\.battle-side \.dungeon-demon-card-image\s*\{[\s\S]*?background:\s*var\(--demon-card-backdrop\) center \/ cover no-repeat !important;/);
-  assert.match(stageStyles, /\.battle-side \.dungeon-demon-rarity-gem\s*\{\s*display:\s*none;/);
+  assert.match(stageStyles, /\.battle-side \.dungeon-demon-rarity-gem\s*\{\s*display:\s*block;/);
   assert.match(cardRule, /border-radius:\s*7px;/);
   assert.match(cardImageRule, /border-radius:\s*7px;/);
   assert.match(cardBodyRule, /right:\s*0;/);

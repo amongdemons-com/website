@@ -6287,166 +6287,6 @@ body.dungeon-page .battle-side-enemy.is-ranked-encounter-planning #enemyGrid .ba
     display: none;
 }
 
-/* Match the lower battle chrome to the flat formation grid. The hand and
- * playback surfaces stay subdued and opaque; active controls use one solid
- * teal fill instead of a gradient or glow. */
-body.dungeon-page #dungeonHandBar,
-body.dungeon-page .dungeon-replaylog-box {
-    border-color: #5d5133;
-    background: #132c2d;
-    box-shadow: none;
-}
-
-body.dungeon-page #dungeonHandBar .dungeon-hand-tab,
-body.dungeon-page #dungeonHandBar .dungeon-hand-scroll-btn {
-    border-color: #2c534d;
-    background: #0d2022;
-    color: #839995;
-    box-shadow: none;
-}
-
-body.dungeon-page #dungeonHandBar .dungeon-hand-tab:not(:disabled):hover,
-body.dungeon-page #dungeonHandBar .dungeon-hand-tab:not(:disabled):focus-visible,
-body.dungeon-page #dungeonHandBar .dungeon-hand-scroll-btn:not(:disabled):hover,
-body.dungeon-page #dungeonHandBar .dungeon-hand-scroll-btn:not(:disabled):focus-visible {
-    border-color: #4d8378;
-    background: #173436;
-    color: #effffc;
-    box-shadow: none;
-}
-
-body.dungeon-page #dungeonHandBar .dungeon-hand-tab.active {
-    border-color: #4d8378;
-    background: #214342;
-    color: #effffc;
-    box-shadow: none;
-}
-
-body.dungeon-page #dungeonHandBar .dungeon-hand-tab:focus-visible,
-body.dungeon-page #dungeonHandBar .dungeon-hand-scroll-btn:focus-visible {
-    outline: 2px solid #7babb3;
-    outline-offset: -2px;
-}
-
-body.dungeon-page #dungeonHandBar .dungeon-hand-cards.is-drag-over {
-    outline: 3px solid #f3c55c;
-    outline-offset: -3px;
-    box-shadow: none;
-}
-
-body.dungeon-page #dungeonHandBar .dungeon-hand-empty,
-body.dungeon-page #dungeonHandBar .dungeon-hand-battle-placeholder {
-    border-color: #5d5133;
-    background: #0d2022;
-    color: #9c8c64;
-    box-shadow: none;
-}
-
-body.dungeon-page #dungeonHandBar .collection-reinforcement-placeholder {
-    border-color: #4d7a83;
-    background: #0d2022;
-    color: #7babb3;
-    box-shadow: none;
-}
-
-body.dungeon-page #dungeonHandBar .collection-reinforcement-placeholder.is-collection-reinforcement-attention,
-body.dungeon-page #dungeonHandBar .dungeon-hand-tab.is-level-power-attention {
-    animation: none;
-    box-shadow: none;
-}
-
-body.dungeon-page .dungeon-bottom-controls .battle-playback-control,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-control {
-    border-color: #3e7168;
-    background: #132c2d;
-    box-shadow: none;
-}
-
-body.dungeon-page .dungeon-bottom-controls .battle-playback-btn,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-option {
-    border-color: #2c534d;
-    background: #0d2022;
-    color: #839995;
-    box-shadow: none;
-    text-shadow: none;
-}
-
-body.dungeon-page .dungeon-bottom-controls .battle-playback-btn:not(:disabled):hover,
-body.dungeon-page .dungeon-bottom-controls .battle-playback-btn:not(:disabled):focus-visible,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-option:not(:disabled):hover,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-option:not(:disabled):focus-visible {
-    border-color: #4d8378;
-    background: #173436;
-    color: #effffc;
-    box-shadow: none;
-}
-
-body.dungeon-page .dungeon-bottom-controls .battle-playback-btn.game-primary-action,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-option.active,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-option.active.game-primary-action {
-    border-color: #8fe6d1;
-    background: #6fd6bd;
-    color: #06110f;
-    box-shadow: none;
-    text-shadow: none;
-}
-
-body.dungeon-page .dungeon-bottom-controls .battle-playback-btn.game-primary-action:not(:disabled):hover,
-body.dungeon-page .dungeon-bottom-controls .battle-playback-btn.game-primary-action:focus-visible,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-option.active:not(:disabled):hover,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-option.active:focus-visible {
-    border-color: #b8f5e6;
-    background: #8be2ce;
-    color: #06110f;
-    box-shadow: none;
-}
-
-body.dungeon-page .dungeon-bottom-controls .battle-playback-btn:disabled,
-body.dungeon-page .dungeon-bottom-controls .battle-playback-btn.game-primary-action:disabled,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-option:disabled {
-    border-color: #223c39;
-    background: #0a1719;
-    color: #455e5a;
-    box-shadow: none;
-    text-shadow: none;
-    opacity: 1;
-}
-
-body.dungeon-page .dungeon-bottom-controls .battle-playback-btn:focus-visible,
-body.dungeon-page .dungeon-bottom-controls .battle-speed-option:focus-visible {
-    outline: 2px solid #7babb3;
-    outline-offset: 2px;
-}
-
-body.dungeon-page .dungeon-replaylog-box .dungeon-replaylog-btn {
-    border-color: #2c534d;
-    background: #0d2022;
-    color: #839995;
-    box-shadow: none;
-    text-shadow: none;
-}
-
-body.dungeon-page .dungeon-replaylog-box .dungeon-replaylog-btn:not(:disabled):hover,
-body.dungeon-page .dungeon-replaylog-box .dungeon-replaylog-btn:not(:disabled):focus-visible {
-    border-color: #4d8378;
-    background: #173436;
-    color: #effffc;
-    box-shadow: none;
-}
-
-body.dungeon-page .dungeon-replaylog-box .dungeon-replaylog-btn:disabled {
-    border-color: #223c39;
-    background: #0a1719;
-    color: #455e5a;
-    box-shadow: none;
-    opacity: 1;
-}
-
-body.dungeon-page .dungeon-replaylog-box .dungeon-replaylog-btn:focus-visible {
-    outline: 2px solid #7babb3;
-    outline-offset: -2px;
-}
-
 body.dungeon-page .battle-side .dungeon-demon-card {
     isolation: isolate;
     border: 0;
@@ -6495,7 +6335,7 @@ body.dungeon-page .battle-side .dungeon-demon-card-image img {
 }
 
 body.dungeon-page .battle-side .dungeon-demon-rarity-gem {
-    display: none;
+    display: block;
 }
 
 body.dungeon-page .battle-side .dungeon-demon-card-body {
@@ -6514,4 +6354,96 @@ body.dungeon-page .battle-side .combat-hp-bar {
     border: 0;
     background: rgba(1, 7, 8, 0.76);
     box-shadow: none;
+}
+
+/*
+ * Keep hand cards on the original main-branch presentation. Formation cards
+ * above retain the art-branch grid treatment.
+ */
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-card {
+    border: 0;
+    border-radius: 6px;
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-card-image {
+    border-radius: 4px;
+    background: var(--demon-card-backdrop) center / cover no-repeat;
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-card .dungeon-demon-card-image img {
+    object-fit: cover;
+    object-position: center 22%;
+    transform: none;
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-card-body {
+    padding: 1.35rem 0.42rem 0.42rem;
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem {
+    --rarity-shape: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    position: absolute;
+    top: 0.34rem;
+    left: 0.34rem;
+    width: 0.88rem;
+    height: 0.88rem;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    clip-path: var(--rarity-shape);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rarity-color, #D1D5D8) 82%, transparent));
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: var(--rarity-color, #D1D5D8);
+    clip-path: var(--rarity-shape);
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem--common {
+    --rarity-shape: polygon(0 8%, 100% 8%, 50% 100%);
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem--uncommon {
+    --rarity-shape: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem--rare,
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem--mythic {
+    top: 0.28rem;
+    left: 0.28rem;
+    width: 1rem;
+    height: 1rem;
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem--rare {
+    --rarity-shape: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem--epic {
+    --rarity-shape: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%);
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem--legendary {
+    --rarity-shape: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem--mythic {
+    --rarity-shape: polygon(50% 0, 61% 31%, 85% 15%, 69% 39%, 100% 50%, 69% 61%, 85% 85%, 61% 69%, 50% 100%, 39% 69%, 15% 85%, 31% 61%, 0 50%, 31% 39%, 15% 15%, 39% 31%);
+}
+
+:where(body.dungeon-page #dungeonHandBar) .dungeon-hand-cards .dungeon-demon-card {
+    box-shadow:
+        0 10px 22px rgba(0,0,0,0.3),
+        0 0 16px color-mix(in srgb, var(--rarity-color, #D1D5D8) 10%, transparent);
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+    body.dungeon-page:not(.ranked-page) #dungeonHandBar .dungeon-hand-cards .combat-hp-meta {
+        margin-top: 0.1rem;
+        padding-top: 0.1rem;
+        border-top: 1px solid rgba(161,212,201,0.2);
+    }
 }
