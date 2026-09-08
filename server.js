@@ -2,7 +2,6 @@ const express = require('express');
 const compression = require('compression');
 const fs = require('fs');
 const path = require('path');
-require('./public/api/lib/async-errors');
 const apiRoutes = require('./public/api');
 const { getFullBossCatalog, getFullDemonCatalog } = require('./public/api/lib/game-data');
 const {

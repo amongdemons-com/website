@@ -9,6 +9,7 @@ export const BATTLE_CARD_SHAKE_KEY = 'amongdemons-battle-card-shake';
 export const DUNGEON_AUTO_RESOLVE_KEY = 'amongdemons-dungeon-auto-resolve';
 export const DUNGEON_HIDE_RECRUIT_FIRST_MODAL_KEY = 'amongdemons-dungeon-hide-recruit-first-modal';
 export const DUNGEON_DETAIL_BUFF_STATS_KEY = 'amongdemons-dungeon-detail-show-buff-stats';
+export const MAX_DUNGEON_DISPLAYED_ATTACK_SPEED = 100;
 export const MAX_DUNGEON_TEAM_SIZE = 6;
 export const FORMATION_GRID_COLUMNS = 3;
 export const FORMATION_GRID_SIZE = 9;
