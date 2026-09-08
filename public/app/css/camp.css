@@ -189,7 +189,7 @@ body.camp-page {
 .camp-xp-progress.is-max-level .camp-xp-progress-bar,
 .camp-page .camp-xp-progress.is-max-level .camp-xp-progress-bar {
     width: 100% !important;
-    background: #f3d45d;
+    background: #FEC550;
     box-shadow: none;
 }
 
@@ -526,7 +526,7 @@ body.camp-page > .camp-lobby {
     width: 0%;
     height: 100%;
     border-radius: inherit;
-    background: #55ffff;
+    background: #FEC550;
     box-shadow:
         none;
     transition: width 260ms ease;
@@ -1410,7 +1410,10 @@ body.camp-page::before {
     border: 1px solid #192829;
 }
 
-.camp-page .camp-xp-progress-bar,
+.camp-page .camp-xp-progress-bar {
+    background: #FEC550;
+}
+
 .quest-progress > span {
     background: var(--ad-teal, #6fd6bd);
 }
@@ -2152,7 +2155,7 @@ body.camp-page::before {
 .camp-xp-progress.is-level-up-anchored::before,
 [data-xp-progress].is-level-up-anchored::before {
     inset: -0.42rem;
-    border: 1px solid #665d38;
+    border: 1px solid rgba(232,199,106,0.42);
     border-radius: inherit;
     box-shadow:
         none;
@@ -2167,7 +2170,7 @@ body.camp-page::before {
     width: min(9rem, 42vw);
     height: 2.15rem;
     background:
-        none;
+        linear-gradient(90deg, transparent, rgba(255,255,255,0.92), rgba(232,199,106,0.92), transparent);
     filter: none;
     transform: translate(-50%, -50%) scaleX(0.2);
     animation: level-up-track-sweep 1350ms cubic-bezier(0.16, 1, 0.3, 1) var(--level-up-delay, 0ms) both;
@@ -2183,7 +2186,7 @@ body.camp-page::before {
 .camp-xp-progress.is-level-up-soft::before,
 [data-xp-progress].is-level-up-soft::before {
     inset: -0.28rem;
-    border: 1px solid #5d5634;
+    border: 1px solid rgba(232,199,106,0.38);
     border-radius: inherit;
     animation: level-up-soft-aura 800ms ease-out both;
 }

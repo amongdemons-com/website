@@ -15,14 +15,10 @@ const renderCollectionReinforcementPlaceholder = (...args) => dungeonActions.ren
 const renderDemonCard = (...args) => dungeonActions.renderDemonCard(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
 const renderRun = (...args) => dungeonActions.renderRun(...args);
-const getActiveBuffs = (...args) => dungeonActions.getActiveBuffs(...args);
 const openCashoutModal = (...args) => dungeonActions.openCashoutModal(...args);
-const compactActivePacts = (...args) => dungeonActions.compactActivePacts(...args);
-const renderStackedActivePactIcon = (...args) => dungeonActions.renderStackedActivePactIcon(...args);
 const shouldShowCollectionReinforcementHandPlaceholder = (...args) => dungeonActions.shouldShowCollectionReinforcementHandPlaceholder(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
 const isExtractionUnlocked = (...args) => dungeonActions.isExtractionUnlocked(...args);
-let handTabEventsBound = false;
 let handScrollEventsBound = false;
 let handScrollResizeEventsBound = false;
 let handScrollSyncFrame = 0;
@@ -33,75 +29,22 @@ function renderHandBar(hand, isVisible, isInteractive = false, mode = 'recruit')
   elements.dungeonHandBar.classList.toggle('d-none', !isVisible);
   if (!isVisible) {
     setElementHtml(elements.dungeonHandGrid, '');
-    elements.dungeonHandGrid.classList.remove('is-pacts-tab');
-    elements.dungeonHandBar.classList.remove('has-pacts', 'is-pacts-tab-active', 'has-level-power-prompt', 'is-battle-controls-mode');
-    updateHandTabs('hand', 0, false);
+    elements.dungeonHandBar.classList.remove('is-battle-controls-mode');
     return;
   }
 
-  const activeBuffs = getHandBuffs();
-  const hasLevelPowerPrompt = activeBuffs.some((buff) => buff.id === 'account-level-power-available');
-  if (!['hand', 'pacts'].includes(state.activeHandTab)) {
-    state.activeHandTab = 'hand';
-  }
-
-  const activeTab = state.activeHandTab === 'pacts' ? 'pacts' : 'hand';
-
-  elements.dungeonHandBar.classList.add('has-pacts');
-  elements.dungeonHandBar.classList.toggle('is-pacts-tab-active', activeTab === 'pacts');
-  elements.dungeonHandBar.classList.toggle('has-level-power-prompt', hasLevelPowerPrompt);
   elements.dungeonHandBar.classList.toggle('is-battle-controls-mode', mode === 'battle' || state.isPactTeamPreview);
-  elements.dungeonHandGrid.classList.toggle('is-pacts-tab', activeTab === 'pacts');
-  updateHandTabs(activeTab, activeBuffs.length, hasLevelPowerPrompt);
-  if (activeTab === 'pacts') {
-    setElementHtml(elements.dungeonHandGrid, renderHandPactTags(activeBuffs));
-  } else {
-    const handRenderKey = [
-      'hand',
-      mode,
-      isInteractive ? 'interactive' : 'locked'
-    ].join(':');
-    setElementHtml(elements.dungeonHandGrid, renderHandCards(hand, isInteractive, mode), {
-      patchDemonLane: true,
-      renderKey: handRenderKey
-    });
-  }
-  bindHandTabs();
+  const handRenderKey = [
+    'hand',
+    mode,
+    isInteractive ? 'interactive' : 'locked'
+  ].join(':');
+  setElementHtml(elements.dungeonHandGrid, renderHandCards(hand, isInteractive, mode), {
+    patchDemonLane: true,
+    renderKey: handRenderKey
+  });
   bindHandScrollButtons();
   scheduleHandScrollControlsSync();
-}
-
-function updateHandTabs(activeTab = 'hand', buffCount = 0, hasLevelPowerPrompt = false) {
-  const handTab = elements.dungeonHandBar?.querySelector('[data-dungeon-hand-tab="hand"]');
-  const pactsTab = elements.dungeonHandBar?.querySelector('[data-dungeon-hand-tab="pacts"]');
-
-  if (handTab) {
-    handTab.classList.toggle('active', activeTab === 'hand');
-    handTab.setAttribute('aria-selected', activeTab === 'hand' ? 'true' : 'false');
-  }
-
-  if (pactsTab) {
-    pactsTab.classList.remove('d-none');
-    pactsTab.classList.toggle('active', activeTab === 'pacts');
-    pactsTab.classList.toggle('is-level-power-attention', hasLevelPowerPrompt);
-    pactsTab.setAttribute('aria-selected', activeTab === 'pacts' ? 'true' : 'false');
-    pactsTab.disabled = false;
-    pactsTab.setAttribute('aria-label', buffCount > 0 ? `Buffs, ${buffCount} active` : 'Buffs, none active');
-  }
-}
-
-function bindHandTabs() {
-  if (handTabEventsBound) return;
-  handTabEventsBound = true;
-
-  document.addEventListener('click', (event) => {
-    const button = event.target.closest?.('[data-dungeon-hand-tab]');
-    if (!button || !elements.dungeonHandBar?.contains(button)) return;
-
-    const nextTab = button.dataset.dungeonHandTab === 'pacts' ? 'pacts' : 'hand';
-    state.activeHandTab = nextTab;
-    renderRun();
-  });
 }
 
 function bindHandScrollButtons() {
@@ -160,24 +103,14 @@ function syncHandScrollControls() {
 }
 
 function getHandScrollAmount(viewport) {
-  const card = viewport.querySelector('.dungeon-demon-card, .collection-reinforcement-placeholder, .dungeon-hand-empty, .active-pact-chip');
-  const lane = viewport.querySelector('.dungeon-hand-cards, .dungeon-hand-pacts');
+  const card = viewport.querySelector('.dungeon-demon-card, .collection-reinforcement-placeholder, .dungeon-hand-empty');
+  const lane = viewport.querySelector('.dungeon-hand-cards');
   const laneStyles = lane ? window.getComputedStyle(lane) : null;
   const columnGap = parseFloat(laneStyles?.columnGap || '');
   const fallbackGap = parseFloat(laneStyles?.gap || '');
   const gap = Number.isFinite(columnGap) ? columnGap : (Number.isFinite(fallbackGap) ? fallbackGap : 0);
   const cardWidth = card?.getBoundingClientRect().width || 0;
   return Math.max(cardWidth + gap, viewport.clientWidth * 0.72, 1);
-}
-
-function getHandBuffs() {
-  const levelPowerBuff = createLevelPowerBuff(state.statPoints);
-  const levelPowerPrompt = createLevelPowerPrompt(state.statPoints);
-  return [
-    ...(levelPowerBuff ? [levelPowerBuff] : []),
-    ...(levelPowerPrompt ? [levelPowerPrompt] : []),
-    ...compactActivePacts(getActiveBuffs(), { onlySource: 'combat' })
-  ];
 }
 
 function createLevelPowerBuff(statPoints) {
@@ -219,55 +152,9 @@ function createLevelPowerBuff(statPoints) {
   };
 }
 
-function createLevelPowerPrompt(statPoints) {
-  const unspentPoints = Math.max(0, Number(statPoints?.unspentPoints) || 0);
-  if (!statPoints || unspentPoints <= 0) return null;
-
-  return {
-    id: 'account-level-power-available',
-    name: 'Level Points Available',
-    description: `You have ${unspentPoints} skill point${unspentPoints === 1 ? '' : 's'} available.`,
-    tooltip: [
-      'Level Points Available',
-      `${unspentPoints} skill point${unspentPoints === 1 ? '' : 's'} unspent`,
-      'Open Skill Tree to allocate them.'
-    ].join('\n'),
-    rarity: 'account-available',
-    icon: 'plus',
-    href: '/skill-tree',
-    attention: true,
-    tags: ['Skill Tree']
-  };
-}
-
 function formatLevelPowerBonus(value) {
   const number = Number(value) || 0;
   return Number.isInteger(number) ? String(number) : number.toFixed(1).replace(/\.0$/, '');
-}
-
-function renderHandPactTags(activeBuffs) {
-  if (!activeBuffs.length) {
-    return '<div class="dungeon-hand-pacts-empty">No active buffs yet.</div>';
-  }
-
-  return `
-    <div class="dungeon-hand-scroll-shell dungeon-hand-pacts-shell">
-      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="-1" aria-label="Scroll buffs left" title="Scroll buffs left" hidden disabled>
-        ${renderIcon('back')}
-      </button>
-      <div class="dungeon-hand-scroll-viewport" data-hand-scroll-viewport>
-        <div class="dungeon-hand-pacts" aria-label="Active dungeon buffs">
-          ${activeBuffs.map((buff) => renderStackedActivePactIcon(buff, {
-            stackClass: 'dungeon-pact-stack',
-            countClass: 'dungeon-pact-stack-count'
-          })).join('')}
-        </div>
-      </div>
-      <button class="dungeon-hand-scroll-btn" type="button" data-hand-scroll="1" aria-label="Scroll buffs right" title="Scroll buffs right" hidden disabled>
-        ${renderIcon('chevron-right')}
-      </button>
-    </div>
-  `;
 }
 
 function renderHandCards(demons, isInteractive = false, mode = 'recruit') {
@@ -616,12 +503,7 @@ function markHandFlowLanded(target) {
 
 export {
   renderHandBar,
-  getHandBuffs,
   createLevelPowerBuff,
-  createLevelPowerPrompt,
-  updateHandTabs,
-  bindHandTabs,
-  renderHandPactTags,
   renderHandCards,
   shouldHighlightHandUpgrades,
   findWeakerTeamDemon,

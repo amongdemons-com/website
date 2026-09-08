@@ -804,8 +804,8 @@ function hitTargetCard(targetId, heavy) {
   if (prefersReducedMotion()) return;
   const card = findDemonCard(targetId);
   if (!card) return;
-  // Heavy hits use the positional card shake; when card shake is disabled, fall back to the
-  // lighter flinch so the impact still reads without the card rattling.
+  // Heavy hits use the stronger demon-art shake; when that setting is disabled, fall back to
+  // the lighter flinch so the impact still reads without rattling the whole card.
   const shakeAllowed = isCardShakeEnabled();
   playTemporaryCardClass(card, heavy && shakeAllowed ? 'is-shaking' : 'is-hit', heavy && shakeAllowed ? 360 : 240);
 }

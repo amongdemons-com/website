@@ -555,7 +555,7 @@ body.is-world-side-collapsed .world-map-controls {
 .world-enemy-demons.world-enc-demons,
 .world-hunt-assigned-demons.world-enc-demons,
 .world-hunt-target-demons.world-enc-demons {
-    justify-content: flex-start;
+    justify-content: center;
     margin-top: 0;
 }
 
@@ -3013,6 +3013,16 @@ body.is-world-side-collapsed .world-map-controls {
     min-width: 4.5rem;
 }
 
+.world-sidebar-card.world-spot-card.is-unfought {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.world-sidebar-card.world-spot-card.is-unfought .world-card-action {
+    grid-column: 1;
+    justify-self: center;
+    width: auto;
+}
+
 .world-boss-card .world-card-action {
     align-self: center;
     justify-self: center;
@@ -3536,6 +3546,7 @@ body.is-world-side-collapsed .world-map-controls {
 .world-encounter-title {
     display: flex;
     align-items: baseline;
+    justify-content: center;
     gap: 0.24rem;
     min-width: 0;
 }
@@ -3555,7 +3566,7 @@ body.is-world-side-collapsed .world-map-controls {
 }
 
 .world-encounter-copy .world-enc-demons {
-    justify-content: flex-start;
+    justify-content: center;
 }
 
 .world-encounter-player .btn {
@@ -3720,7 +3731,6 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     grid-column: 1 / -1;
 }
 
-.world-battle-modal #dungeonHandBar.is-world-battle-result-mode .dungeon-hand-tabs,
 .world-battle-modal #dungeonHandBar.is-world-battle-result-mode #dungeonBottomControls {
     display: none !important;
 }
@@ -4669,6 +4679,11 @@ body.is-world-side-collapsed .world-map-controls {
 .world-sidebar-card .world-card-action:not(.world-end-hunt-action) {
         justify-self: stretch;
         width: 100%;
+    }
+
+.world-sidebar-card.world-spot-card.is-unfought .world-card-action {
+        justify-self: center;
+        width: auto;
     }
 
 .world-pvp-actions {

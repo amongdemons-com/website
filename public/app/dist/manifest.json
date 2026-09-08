@@ -1,6 +1,6 @@
 {
-  "clientVersion": "e7353ea89bf8",
+  "clientVersion": "bd3c9a04e486",
   "runtime": "/app/dist/runtime.bundle.js?v=6d103310ab20",
-  "dungeon": "/app/dist/dungeon.bundle.js?v=f32f5fb0d147",
-  "world": "/app/dist/world.bundle.js?v=d3a6d31826fc"
+  "dungeon": "/app/dist/dungeon.bundle.js?v=66ca669dde84",
+  "world": "/app/dist/world.bundle.js?v=d6bace693f89"
 }

@@ -4,10 +4,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.join(__dirname, '..');
+const sharedStyles = fs.readFileSync(path.join(root, 'public', 'app', 'css', 'base.css'), 'utf8');
+const campStyles = fs.readFileSync(path.join(root, 'public', 'app', 'css', 'camp.css'), 'utf8');
 const styles = fs.readFileSync(path.join(root, 'public', 'app', 'css', 'battle.css'), 'utf8');
 const handSource = fs.readFileSync(path.join(root, 'public', 'app', 'js', 'dungeon', 'hand.js'), 'utf8');
 const cardsSource = fs.readFileSync(path.join(root, 'public', 'app', 'js', 'dungeon', 'cards.js'), 'utf8');
 const renderSource = fs.readFileSync(path.join(root, 'public', 'app', 'js', 'dungeon', 'render.js'), 'utf8');
+const dungeonHtml = fs.readFileSync(path.join(root, 'public', 'app', 'dungeon.html'), 'utf8');
 
 test('dungeon hand scroll controls are available outside mobile portrait', () => {
   const globalShellRule = styles.match(/\.dungeon-hand-scroll-shell\s*\{[^}]*display:\s*grid;[^}]*\}/s);
@@ -33,6 +36,58 @@ test('upgrade-highlighted recruit hands retain the scroll-control grid', () => {
     styles,
     /@media \(min-width: 576px\)[\s\S]*?#dungeonHandBar:has\(\.dungeon-demon-card\.is-team-upgrade\) \.dungeon-hand-scroll-shell\s*\{[^}]*display:\s*grid;/s
   );
+});
+
+test('dungeon hand only exposes demon cards and keeps buffs in the formation summaries', () => {
+  assert.doesNotMatch(dungeonHtml, /dungeon-hand-tabs|data-dungeon-hand-tab|dungeonMobileBuffsBtn/);
+  assert.doesNotMatch(handSource, /renderHandPactTags|getHandBuffs|activeHandTab/);
+  assert.doesNotMatch(renderSource, /dungeonMobileHandBtn|dungeonMobileBuffsBtn|setDungeonMobileHandTab/);
+  assert.match(renderSource, /renderBattleBuffSummaryChip\(teamBuffs, \{ side: 'enemy' \}\)/);
+  assert.match(renderSource, /renderBattleBuffSummaryChip\(buffs, \{ side: 'player' \}\)/);
+});
+
+test('demon death tilt is scoped to the artwork while the card keeps defeated grayscale', () => {
+  assert.doesNotMatch(styles, /\.dungeon-demon-card\.is-dying\s*\{[^}]*animation:\s*demon-death-fall/s);
+  assert.match(styles, /\.dungeon-demon-card\.is-dying \.dungeon-demon-card-image img\s*\{[^}]*animation:\s*demon-death-fall/s);
+  assert.match(styles, /\.dungeon-demon-card\.is-defeated\s*\{[^}]*filter:\s*grayscale\(0\.75\)/s);
+});
+
+test('demon reactions stay on the artwork and preserve enemy mirroring', () => {
+  assert.doesNotMatch(styles, /\.dungeon-demon-card\.is-attacking\s*\{[^}]*animation:/s);
+  assert.doesNotMatch(styles, /\.dungeon-demon-card\.is-shaking\s*\{[^}]*animation:/s);
+  assert.doesNotMatch(styles, /\.dungeon-demon-card\.is-hit\s*\{[^}]*animation:/s);
+  assert.doesNotMatch(styles, /\.dungeon-demon-card\.is-poison-tick\s*\{[^}]*animation:/s);
+  assert.match(styles, /\.dungeon-demon-card\.is-attacking \.dungeon-demon-card-image img\s*\{[^}]*animation:\s*demon-attack-hop/s);
+  assert.match(styles, /\.dungeon-demon-card\.is-shaking \.dungeon-demon-card-image img\s*\{[^}]*animation:\s*demon-target-shake/s);
+  assert.match(styles, /\.dungeon-demon-card\.is-hit \.dungeon-demon-card-image img\s*\{[^}]*animation:\s*demon-hit-flinch/s);
+  assert.match(styles, /\.battle-side-enemy \.dungeon-demon-card-image img[\s\S]*?--demon-image-scale-x:\s*-1;[\s\S]*?transform:\s*scaleX\(var\(--demon-image-scale-x\)/s);
+  assert.match(sharedStyles, /@keyframes demon-death-fall[\s\S]*?scaleX\(var\(--demon-image-scale-x, 1\)\)/s);
+  assert.match(sharedStyles, /@keyframes demon-target-shake[\s\S]*?scaleX\(var\(--demon-image-scale-x, 1\)\)/s);
+});
+
+test('battle and level-up effects retain main-branch transparency', () => {
+  assert.match(sharedStyles, /\.dark-spike::before\s*\{[^}]*background:\s*linear-gradient\([^;]*rgba\(4,8,10,0\)/s);
+  assert.match(sharedStyles, /\.combat-impact-core\s*\{[^}]*background:\s*radial-gradient\([^;]*transparent 72%\)/s);
+  assert.match(sharedStyles, /\.combat-impact-particle\s*\{[^}]*background:\s*linear-gradient\([^;]*transparent\)/s);
+
+  for (const [animation, keyframe, opacity] of [
+    ['fireball-ember-fade', '24%', '0.88'],
+    ['fire-nova-flash', '18%', '0.95'],
+    ['fire-spark-flicker', '52%', '0.92'],
+    ['poison-bubble-flame', '58%', '0.86'],
+    ['heal-ring-rise', '72%', '0.72'],
+    ['chaos-lightning-flash', '36%', '0.38'],
+    ['level-up-spark', '74%', '0.86']
+  ]) {
+    assert.match(
+      sharedStyles,
+      new RegExp(`@keyframes ${animation}[\\s\\S]*?${keyframe}\\s*\\{[\\s\\S]*?opacity:\\s*${opacity};`)
+    );
+  }
+
+  assert.match(sharedStyles, /\.level-up-celebration-vignette\s*\{[\s\S]*?conic-gradient\([^;]*transparent/s);
+  assert.match(sharedStyles, /\.level-up-beams\s*\{[\s\S]*?repeating-conic-gradient\([^;]*transparent/s);
+  assert.match(campStyles, /\.nav-xp-progress\.is-level-up-anchored::after[\s\S]*?linear-gradient\(90deg, transparent/s);
 });
 
 test('upgrade-highlighted hand cards paint above the hand frame', () => {

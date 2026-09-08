@@ -53,6 +53,7 @@ test('max-level XP bars stay full yellow and identify the cap', () => {
   assert.match(iconsSource, /<strong>Max level<\/strong>/);
   assert.match(iconsSource, /progress\.classList\.toggle\('is-max-level', nextState\.isMaxLevel\)/);
   assert.match(campSource, /progress\.isMaxLevel\s*\? 'Max level'/);
-  assert.match(baseCss, /\.nav-xp-progress\.is-max-level[\s\S]*?width: 100% !important;[\s\S]*?#f3d45d/);
-  assert.match(campCss, /\.camp-xp-progress\.is-max-level[\s\S]*?width: 100% !important;[\s\S]*?#f3d45d/);
+  assert.match(baseCss, /\.nav-xp-progress\.is-max-level[\s\S]*?width: 100% !important;[\s\S]*?#FEC550/);
+  assert.match(campCss, /\.camp-xp-progress\.is-max-level[\s\S]*?width: 100% !important;[\s\S]*?#FEC550/);
+  assert.match(campCss, /\.camp-page \.camp-xp-progress-bar[\s\S]*?background: #FEC550/);
 });

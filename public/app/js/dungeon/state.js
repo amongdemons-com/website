@@ -24,7 +24,6 @@ export const state = {
   isPactTeamPreview: false,
   pactRevealTimer: null,
   battleHandPreview: null,
-  activeHandTab: 'hand',
   isMobileRewardBoxOpen: false,
   recruitDraftTeam: null,
   recruitDraftPool: null,

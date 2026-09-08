@@ -488,7 +488,6 @@ async function chooseDemonicPact(buffId, button = null) {
       state.run = updatedRun;
       state.combatLog = isCurrentFloorBattle(state.run) ? state.run.lastBattle?.combatLog || [] : [];
       state.isPactRevealPending = false;
-      state.activeHandTab = 'hand';
       state.isRecruiting = Boolean(state.run.awaitingRecruit && !hasPendingBuffChoices(state.run));
       if (state.isRecruiting) {
         prepareRecruitStrategyState();

@@ -7,6 +7,10 @@ const styles = fs.readFileSync(
   path.join(__dirname, '..', 'public', 'app', 'css', 'base.css'),
   'utf8'
 );
+const battleStyles = fs.readFileSync(
+  path.join(__dirname, '..', 'public', 'app', 'css', 'battle.css'),
+  'utf8'
+);
 const pactSource = fs.readFileSync(
   path.join(__dirname, '..', 'public', 'app', 'js', 'dungeon', 'pacts.js'),
   'utf8'
@@ -44,6 +48,14 @@ test('desktop Pact content centers as one collision-free stack', () => {
   assert.match(tagStyles, /grid-row:\s*3;/);
   assert.doesNotMatch(tagStyles, /position:\s*(?:absolute|fixed)/);
   assert.match(pactSource, /function syncDemonicPactCardAlignment\(\)[\s\S]*--demonic-pact-copy-height[\s\S]*tallestCopy/);
+});
+
+test('Pact recasts retain the animated card and seal feedback', () => {
+  assert.match(pactSource, /await playDemonicPactRecastOut\(\)[\s\S]*beginDemonicPactRecastIn\(\)[\s\S]*renderRun\(\)/);
+  assert.match(styles, /\.demonic-pact-stage::after\s*{[\s\S]*?repeating-conic-gradient[\s\S]*?box-shadow:[\s\S]*?0 0 48px/);
+  assert.match(styles, /@keyframes demonic-pact-recast-fold-out[\s\S]*?filter: brightness\(0\.7\)/);
+  assert.match(styles, /@keyframes demonic-pact-recast-deal-in[\s\S]*?filter: brightness\(1\.8\) saturate\(1\.18\)/);
+  assert.match(battleStyles, /\.dungeon-hand-bar\s*{[\s\S]*?background: #081316;/);
 });
 
 test('View Team is grouped beside the centered Recast action on desktop', () => {

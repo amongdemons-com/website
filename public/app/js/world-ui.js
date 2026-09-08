@@ -5758,7 +5758,7 @@ import './bag-item-visuals.js';
       : `<button class="btn btn-primary btn-sm world-card-action ${state.huntBusyAction === 'fight' ? 'is-busy' : ''}" type="button" data-try-hunt="${escapeAttribute(encounter.id)}" ${state.huntBusy ? 'disabled aria-busy="true"' : ''}>${state.huntBusyAction === 'fight' ? 'Fighting…' : 'Fight'}</button>`;
 
     return `
-      <article class="world-sidebar-card world-spot-card">
+      <article class="world-sidebar-card world-spot-card ${unlocked ? '' : 'is-unfought'}">
         <span class="world-card-copy">
           ${renderEncounterTitle(encounter)}
           ${renderWorldCardMeta([
@@ -8438,7 +8438,6 @@ import './bag-item-visuals.js';
     dungeonState.selectedRewardDemonKey = null;
     dungeonState.rewardDraftCandidate = null;
     dungeonState.battleHandPreview = null;
-    dungeonState.activeHandTab = 'hand';
     dungeonState.isMobileRewardBoxOpen = false;
     dungeonState.isRecruitContinuePending = false;
     dungeonState.collectionReinforcementPlaceholderInteracted = true;

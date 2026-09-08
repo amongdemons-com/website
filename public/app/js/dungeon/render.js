@@ -41,7 +41,6 @@ const renderButtonMeleeIcon = (...args) => dungeonActions.renderButtonMeleeIcon(
 const renderDemonCard = (...args) => dungeonActions.renderDemonCard(...args);
 const renderDemonCards = (...args) => dungeonActions.renderDemonCards(...args);
 const renderDungeonDemonCard = (...args) => dungeonActions.renderDungeonDemonCard(...args);
-const bindActivePactTooltips = (...args) => dungeonActions.bindActivePactTooltips(...args);
 const getActiveBuffs = (...args) => dungeonActions.getActiveBuffs(...args);
 const createLevelPowerBuff = (...args) => dungeonActions.createLevelPowerBuff(...args);
 const renderDemonicPacts = (...args) => dungeonActions.renderDemonicPacts(...args);
@@ -184,7 +183,6 @@ function renderRun() {
   bindPointerDragAndDrop();
   bindCollectionReinforcementPlaceholders();
   bindDemonDetailCards();
-  bindActivePactTooltips();
   playRecruitSwapEffect();
   playEnemyRevealEffect();
   watchFormationLaneSizing();
@@ -950,39 +948,12 @@ function renderDungeonMobileFightBox(options = {}) {
     : mode === 'preparing'
       ? 'Preparing the next fight'
       : isRankedChoice ? 'Choose your response to the rival hunter' : 'Start the next fight';
-  const hasRun = Boolean(state.run);
-  const activeTab = state.activeHandTab === 'pacts' ? 'pacts' : 'hand';
   const rewardOpen = Boolean(state.isMobileRewardBoxOpen && canExtract);
-  const tabDisabled = !hasRun || isFighting;
   const extractTitle = !isExtractionUnlocked(state.run)
     ? 'Win your first fight to unlock extraction'
     : 'Extract';
 
   const changed = setElementHtml(elements.dungeonMobileFightBox, `
-    <button
-      class="dungeon-mobile-nav-btn ${activeTab === 'hand' ? 'active' : ''}"
-      id="dungeonMobileHandBtn"
-      type="button"
-      title="Hand"
-      aria-label="Hand"
-      aria-pressed="${activeTab === 'hand' ? 'true' : 'false'}"
-      ${tabDisabled ? 'disabled' : ''}
-    >
-      ${renderIcon('collection')}
-      <span class="visually-hidden">Hand</span>
-    </button>
-    <button
-      class="dungeon-mobile-nav-btn ${activeTab === 'pacts' ? 'active' : ''}"
-      id="dungeonMobileBuffsBtn"
-      type="button"
-      title="Buffs"
-      aria-label="Buffs"
-      aria-pressed="${activeTab === 'pacts' ? 'true' : 'false'}"
-      ${tabDisabled ? 'disabled' : ''}
-    >
-      ${renderIcon('stars')}
-      <span class="visually-hidden">Buffs</span>
-    </button>
     <button
       class="dungeon-mobile-nav-btn"
       id="dungeonMobileReplayBtn"
@@ -1039,17 +1010,9 @@ function renderDungeonMobileFightBox(options = {}) {
 }
 
 function bindDungeonMobileNavButtons() {
-  bindClick(document.getElementById('dungeonMobileHandBtn'), () => setDungeonMobileHandTab('hand'));
-  bindClick(document.getElementById('dungeonMobileBuffsBtn'), () => setDungeonMobileHandTab('pacts'));
   bindClick(document.getElementById('dungeonMobileReplayBtn'), replayFight);
   bindClick(document.getElementById('dungeonMobileLogBtn'), toggleFightLogPanel);
   bindClick(document.getElementById('dungeonMobileExtractBtn'), toggleDungeonMobileRewardBox);
-}
-
-function setDungeonMobileHandTab(tab) {
-  if (!state.run || state.isBattleAnimating) return;
-  state.activeHandTab = tab === 'pacts' ? 'pacts' : 'hand';
-  renderRun();
 }
 
 function toggleDungeonMobileRewardBox() {
