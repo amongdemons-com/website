@@ -105,3 +105,10 @@ test('shared demon cards use a neutral frame without a rarity-colored glow', () 
   }
   assert.doesNotMatch(baseCss.match(/\.seo-demon-card\s*\{([^}]*)\}/)?.[1] || '', /rarity-color/);
 });
+
+test('demon detail modals use a neutral top edge', () => {
+  const modalContent = baseCss.match(/\.demon-detail-modal \.modal-content\s*\{([^}]*)\}/s)?.[1] || '';
+
+  assert.match(modalContent, /border: 1px solid #2f3639;/);
+  assert.doesNotMatch(modalContent, /border-top|rarity-color/);
+});

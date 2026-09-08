@@ -133,3 +133,24 @@ test('active Pact chips no longer reuse demon rarity stripes', async () => {
   });
   assert.match(targetedHtml, /Affects: Rare demons\./);
 });
+
+test('Pact choices use flat tier labels and uppercase sans-serif titles', () => {
+  const styles = fs.readFileSync(path.join(__dirname, '..', 'public', 'app', 'css', 'base.css'), 'utf8');
+  const cardStyles = styles.match(/\.demonic-pact-card\s*\{([^}]*)\}/s)?.[1] || '';
+  const tierStyles = styles.match(/\.demonic-pact-tier\s*\{([^}]*)\}/s)?.[1] || '';
+  const titleStyles = styles.match(/\.demonic-pact-card strong\s*\{([^}]*)\}/s)?.[1] || '';
+  const headingStyles = styles.match(/\.demonic-pact-stage-heading h2\s*\{([^}]*)\}/s)?.[1] || '';
+
+  assert.match(cardStyles, /border: 1px solid #2c3436;/);
+  assert.doesNotMatch(cardStyles, /border-top/);
+  assert.match(tierStyles, /border: 0;/);
+  assert.match(tierStyles, /background: transparent;/);
+  for (const declarations of [titleStyles, headingStyles]) {
+    assert.match(declarations, /font-family: Arial, Helvetica, sans-serif;/);
+    assert.match(declarations, /text-transform: uppercase;/);
+  }
+  assert.doesNotMatch(
+    styles.match(/body\.dungeon-page:not\(\.ranked-page\) \.demonic-pact-card\s*\{([^}]*)\}/s)?.[1] || '',
+    /border-top-width/
+  );
+});

@@ -1789,7 +1789,6 @@ body:has(#demonDetailModal.show) .modal-backdrop {
 
 .demon-detail-modal .modal-content {
     border: 1px solid #2f3639;
-    border-top: 5px solid var(--rarity-color, #D1D5D8);
     border-radius: 8px;
     background: #15191d;
     box-shadow: 0 24px 70px rgba(0,0,0,0.66);
@@ -6617,10 +6616,11 @@ body.rankings-page {
 .demonic-pact-stage-heading h2 {
     margin: 0;
     color: #fff8d8;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(2.3rem, 6vw, 5.1rem);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: clamp(1.7rem, 3.2vw, 2.8rem);
     line-height: 0.9;
     letter-spacing: 0;
+    text-transform: uppercase;
     text-shadow:
         none;
 }
@@ -6651,7 +6651,6 @@ body.rankings-page {
     min-width: 0;
     min-height: clamp(20rem, 40vh, 27.5rem);
     border: 1px solid #2c3436;
-    border-top: 5px solid var(--pact-tier-color);
     border-radius: 8px;
     background:
         #071214;
@@ -6785,9 +6784,9 @@ body.rankings-page {
     align-items: center;
     gap: 0.28rem;
     min-height: 1.45rem;
-    border: 1px solid var(--pact-tier-color);
+    border: 0;
     border-radius: 999px;
-    background: var(--pact-tier-soft);
+    background: transparent;
     color: var(--pact-tier-color);
     padding: 0.2rem 0.48rem;
     font-size: 0.68rem;
@@ -6804,9 +6803,10 @@ body.rankings-page {
 .demonic-pact-card strong {
     min-width: 0;
     color: #fff;
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(1.45rem, 2.35vw, 2.2rem);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: clamp(1.05rem, 1.6vw, 1.6rem);
     line-height: 1.02;
+    text-transform: uppercase;
 }
 
 .demonic-pact-description {
@@ -7425,7 +7425,6 @@ body.dungeon-page:not(.ranked-page) .demonic-pact-card {
         justify-items: start;
         row-gap: 0.12rem;
         min-height: 0;
-        border-top-width: 3px;
         padding: 0.46rem 0.55rem;
         text-align: left;
     }
