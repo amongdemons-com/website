@@ -20,10 +20,19 @@ function spriteSelectors(ids) {
   ));
 }
 
+function getBackdropSource(variants, variant) {
+  const sourceTypeId = variant.backgroundTypeId ?? variant.typeId;
+  assert(Number.isInteger(sourceTypeId), `Invalid backdrop source type ${sourceTypeId} for type ${variant.typeId}`);
+  const source = variants.find(candidate => candidate.typeId === sourceTypeId);
+  assert(source, `Unknown backdrop source type ${sourceTypeId} for type ${variant.typeId}`);
+  return source;
+}
+
 function renderBackdropCss(variants, version) {
   const coveredIds = new Set();
   const types = new Set();
   const definitions = [], rules = [];
+  assert.equal(new Set(variants.map(variant => variant.typeId)).size, 11, 'Every type needs a backdrop');
   for (const variant of variants) {
     assert(Number.isInteger(variant.typeId) && variant.typeId >= 1 && variant.typeId <= 11);
     assert(!types.has(variant.typeId), 'Duplicate backdrop type');
@@ -32,16 +41,24 @@ function renderBackdropCss(variants, version) {
       assert(Number.isInteger(id) && id >= 1 && id <= 66 && !coveredIds.has(id), 'Invalid/duplicate sprite ID');
       coveredIds.add(id);
     }
-    const images = ['avif', 'webp', 'png'].map(format => {
-      const file = variant.files[format];
-      assert(/^assets\/background\/demon-card-type-\d+\.(?:png|webp|avif)$/.test(file));
-      return `url("/app/images/${file}?v=${version}") type("image/${format}")`;
-    });
+    const source = getBackdropSource(variants, variant);
     const variable = `--demon-backdrop-type-${variant.typeId}`;
-    definitions.push(`    ${variable}: image-set(${images.join(', ')});`);
+    if (source.typeId === variant.typeId) {
+      const images = ['avif', 'webp', 'png'].map(format => {
+        const file = source.files[format];
+        assert(/^assets\/background\/demon-card-type-\d+\.(?:png|webp|avif)$/.test(file));
+        return `url("/app/images/${file}?v=${version}") type("image/${format}")`;
+      });
+      definitions.push(`    ${variable}: image-set(${images.join(', ')});`);
+    } else {
+      definitions.push(`    ${variable}: var(--demon-backdrop-type-${source.typeId});`);
+    }
     const selectors = spriteSelectors(variant.demonIds).join(', ');
+    const sourceLabel = source.typeId === variant.typeId
+      ? `${variant.name}`
+      : `${source.name} (type ${source.typeId})`;
     rules.push([
-      `/* ${variant.species}: ${variant.name}; shared by all six evolutions. */`,
+      `/* ${variant.species}: ${sourceLabel}; shared by all six evolutions. */`,
       `:is(${selectors}),`,
       `:where(${FRAMES.join(', ')}):has(> :is(${selectors})) {`,
       `    --demon-card-backdrop: var(${variable});`,
@@ -69,4 +86,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { renderBackdropCss, spriteSelectors };
+module.exports = { getBackdropSource, renderBackdropCss, spriteSelectors };

@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const sharp = require('sharp');
 const { findContentBounds } = require('./demon-placement');
+const { getBackdropSource } = require('./generate-demon-card-backdrops');
 const root = path.join(__dirname, '..');
 const imageRoot = path.join(root, 'public/app/images');
 const hash = f => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
@@ -67,8 +68,10 @@ async function main() {
   const atlasBackdropTypes = atlasValue('DEMON_MAP_BACKDROP_TYPES');
   assert.equal(backdrops.variants.length, 11, 'All demon types need a backdrop');
   assert.equal(new Set(backdrops.variants.flatMap(row => row.demonIds)).size, 66, 'Backdrop coverage must include all 66 demons');
-  const backdropHashes = new Set();
+  const sourceFor = (variant) => getBackdropSource(backdrops.variants, variant);
+  const backdropSourceHashes = new Set();
   for (const variant of backdrops.variants) {
+    const source = sourceFor(variant);
     for (const id of variant.demonIds) assert.equal(atlasBackdropTypes[id], variant.typeId, `Map backdrop mismatch for demon ${id}`);
     const frameIndex = atlasIds.length + atlasBackdropIds.indexOf(variant.typeId);
     const frame = sharp(path.join(imageRoot, 'demons/map-atlas.webp')).extract({
@@ -78,7 +81,7 @@ async function main() {
     });
     // stats() inspects its input, so materialize the extracted/resized image.
     const frameStats = await sharp(await frame.toBuffer()).stats();
-    const sourceStats = await sharp(await sharp(path.join(imageRoot, variant.files.png)).resize(atlasSize, atlasSize).toBuffer()).stats();
+    const sourceStats = await sharp(await sharp(path.join(imageRoot, source.files.png)).resize(atlasSize, atlasSize).toBuffer()).stats();
     assert.equal(frameStats.isOpaque, true, `Type ${variant.typeId}: map backdrop must be opaque`);
     for (let channel = 0; channel < 3; channel++) {
       assert.ok(Math.abs(frameStats.channels[channel].mean - sourceStats.channels[channel].mean) < 5, `Type ${variant.typeId}: atlas backdrop palette differs from source`);
@@ -87,11 +90,11 @@ async function main() {
       const backdrop = await inspect(variant.files[ext], [1254, 1254], false);
       assert.equal(backdrop.transparentPixels, 0, 'Type backdrop must be opaque');
       assert.equal(backdrop.sha256, variant.sha256[ext], `Type ${variant.typeId}: approved ${ext} backdrop changed`);
-      if (ext === 'png') backdropHashes.add(backdrop.sha256);
+      if (ext === 'png') backdropSourceHashes.add(source.sha256[ext]);
       files.push(backdrop);
     }
   }
-  assert.equal(backdropHashes.size, 11, 'Assigned type backdrops must remain distinct');
+  assert.equal(backdropSourceHashes.size, new Set(backdrops.variants.map((variant) => sourceFor(variant).typeId)).size, 'Assigned backdrop sources must remain distinct');
   for (const [asset, size, alpha] of [['assets/world/crowley', 512, false], ['assets/world/soul-font', 768, false], ['demons/anomaly', 1024, true]]) {
     files.push(await inspect(`${asset}.png`, null, alpha));
     files.push(await inspect(`${asset}.webp`, [size, size], alpha));

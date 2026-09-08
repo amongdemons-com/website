@@ -65,7 +65,7 @@ import './bag-item-visuals.js';
   const WORLD_AMBUSH_DEFEAT_HOLD_MS = 140;
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
-  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-59b6cb9757bc';
+  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-c008070f9ca2';
   const MERCHANT_FALLBACK_MOVE_SECONDS = 30 * 60;
   const MERCHANT_FALLBACK_BRIBE_COST = 50;
   const MERCHANT_OFFER_LIMIT = 4;
@@ -184,6 +184,7 @@ import './bag-item-visuals.js';
     bossLayer: null,
     hunterLayer: null,
     hunterFrame: null,
+    hunterBackdrop: null,
     hunterAvatar: null,
     hunterMask: null,
     hunterAvatarTexture: null,
@@ -703,6 +704,7 @@ import './bag-item-visuals.js';
     state.bossLayer = new Pixi.Container();
     state.hunterLayer = new Pixi.Container();
     state.hunterFrame = new Pixi.Graphics();
+    state.hunterBackdrop = new Pixi.Sprite(Pixi.Texture.EMPTY);
     state.hunterAvatar = new Pixi.Sprite(Pixi.Texture.EMPTY);
     state.effectLayer = new Pixi.Graphics();
     state.merchantArrowLayer = new Pixi.Graphics();
@@ -712,12 +714,15 @@ import './bag-item-visuals.js';
     state.soulFontArrowLayer.eventMode = 'none';
     state.soulFontArrowLayer.label = 'soul-font-direction-arrow';
 
+    state.hunterBackdrop.anchor.set(0.5);
     state.hunterAvatar.anchor.set(0.5);
     state.hunterLayer.addChild(state.hunterFrame);
+    state.hunterLayer.addChild(state.hunterBackdrop);
     state.hunterLayer.addChild(state.hunterAvatar);
     // Circular portrait mask for the hunter token (repositioned in drawHunter).
     state.hunterMask = new Pixi.Graphics();
     state.hunterLayer.addChild(state.hunterMask);
+    state.hunterBackdrop.mask = state.hunterMask;
     state.hunterAvatar.mask = state.hunterMask;
 
     state.viewport.addChild(state.groundLayer);
@@ -4554,10 +4559,19 @@ import './bag-item-visuals.js';
   function drawHunter() {
     const layer = state.hunterLayer;
     const frame = state.hunterFrame;
+    const backdrop = state.hunterBackdrop;
     const avatar = state.hunterAvatar;
     if (!layer || !frame) return;
 
     const center = tileCenter(state.hunterRenderPosition || state.position);
+    const playerImageUrl = toDemonImageUrl(
+      state.player?.profileDemonImageUrl || DEFAULT_PROFILE_IMAGE_URL,
+      'map'
+    );
+    const backdropTexture = state.demonBackdropTextures.get(
+      getDemonMarkerBackdropType({ imageUrl: playerImageUrl })
+    );
+    const hasBackdrop = Boolean(backdrop && backdropTexture);
     const hasAvatar = Boolean(avatar && state.hunterAvatarTexture);
     const avatarRadius = 22;
     const frameRadius = 25;
@@ -4595,6 +4609,16 @@ import './bag-item-visuals.js';
       .fill({ color: BOARD_COLORS.selection, alpha: 0.96 })
       .stroke({ color: 0x020607, width: 1.2, alpha: 0.75 });
 
+    if (hasBackdrop) {
+      backdrop.texture = backdropTexture;
+      backdrop.visible = true;
+      backdrop.position.set(center.x, center.y);
+      backdrop.width = avatarRadius * 2;
+      backdrop.height = avatarRadius * 2;
+    } else if (backdrop) {
+      backdrop.visible = false;
+    }
+
     if (hasAvatar) {
       avatar.texture = state.hunterAvatarTexture;
       avatar.visible = true;
@@ -4605,12 +4629,18 @@ import './bag-item-visuals.js';
         state.hunterMask.clear();
         state.hunterMask.circle(center.x, center.y, avatarRadius).fill({ color: 0xffffff });
       }
-    } else {
+    } else if (!hasBackdrop) {
       if (avatar) avatar.visible = false;
       if (state.hunterMask) state.hunterMask.clear();
       frame.circle(center.x, center.y, 8)
         .fill({ color: 0x6fd6bd, alpha: 0.95 })
         .stroke({ color: 0xf8fbf9, width: 1, alpha: 0.64 });
+    } else {
+      if (avatar) avatar.visible = false;
+      if (state.hunterMask) {
+        state.hunterMask.clear();
+        state.hunterMask.circle(center.x, center.y, avatarRadius).fill({ color: 0xffffff });
+      }
     }
   }
 
@@ -5606,7 +5636,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/assets/world/crowley.webp?v=art-59b6cb9757bc" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/crowley.webp?v=art-c008070f9ca2" alt="" width="512" height="512" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Traveling Merchant</span>
@@ -9395,7 +9425,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card world-soul-font-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/assets/world/soul-font.webp?v=art-59b6cb9757bc" alt="" width="768" height="768" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/soul-font.webp?v=art-c008070f9ca2" alt="" width="768" height="768" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Soul Offering</span>
@@ -10094,7 +10124,7 @@ import './bag-item-visuals.js';
             DEMON_MAP_ATLAS_FRAME_SIZE
           );
           textures.set(
-            `/app/images/demons/map/${id}.webp?v=art-59b6cb9757bc`,
+            `/app/images/demons/map/${id}.webp?v=art-c008070f9ca2`,
             new Pixi.Texture({ source: atlas.source, frame })
           );
         });

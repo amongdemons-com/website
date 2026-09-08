@@ -8,7 +8,7 @@ Branch: `art/approved-demons-and-world`. Based on the approved demon progression
 
 Seven environments have been regenerated, and the eighth home/social background combines the new home scene with the unchanged original brand logo. Crowley, the Whispering Well and Anomaly have also been regenerated. Anomaly has actual transparent alpha; Crowley and the Well are illustrated square event portraits. Map event markers and Echo art were not in this replacement scope.
 
-The collection's ten bottles contain recognizable two-eyed souls matching the game icon. Tor Tza common's pupil connects to its upper eyelid. Cards now use eleven distinct type-specific swirl backgrounds, replacing jade stone. All display sprites remain centered on both axes, including small early evolutions and low poison puddles. Boss guide crests and formation cards now share the six rarity shapes, with dark outlines on all card rarity badges. Goh Loomb and Baobaw swap attack/number palettes only: amber for Goh Loomb, violet for Baobaw; existing attack motions and timings remain intact.
+ The collection's ten bottles contain recognizable two-eyed souls matching the game icon. Tor Tza common's pupil connects to its upper eyelid. Cards now use the approved type-specific swirl assignments, replacing jade stone; types 4, 6 and 11 reuse type 2's background, while types 5, 7 and 9 reuse type 1's. All display sprites remain centered on both axes, including small early evolutions and low poison puddles. Boss guide crests and formation cards now share the six rarity shapes, with dark outlines on all card rarity badges. Goh Loomb and Baobaw swap attack/number palettes only: amber for Goh Loomb, violet for Baobaw; existing attack motions and timings remain intact.
 
 ## Direction and provenance
 
@@ -42,7 +42,7 @@ World artwork was made with **built-in imagegen**. The selected Anomaly was gene
 | --- | --- | --- |
 | Demons | `public/app/images/demons/{id}.png` | `portrait/{id}.webp` at 512px; `map/{id}.webp` at 256px; `map-atlas.webp` with 128px frames |
 | Environments | `public/app/images/assets/background/*.png` | matching WebP and AVIF, same dimensions |
-| Type card backdrops | `public/app/images/assets/background/demon-card-type-{1..11}.png` | matching 1254px WebP and AVIF; exact approved copies |
+ | Type card backdrops | `public/app/images/assets/background/demon-card-type-{1..11}.png` | matching 1254px WebP and AVIF; the manifest records shared source assignments |
 | Historical backdrops | `demon-card.*` and `docs/art/backdrop-studies/` | Retained for reference; not selected by the website |
 | Crowley | `public/app/images/assets/world/crowley.png` | `crowley.webp` at 512px |
 | Whispering Well | `public/app/images/assets/world/soul-font.png` | `soul-font.webp` at 768px |
@@ -79,7 +79,7 @@ The swirl backdrops retain broad, quiet colored shapes and restrained texture. T
 
 - Card frames use a subtle neutral border and shadow; rarity stays in the emblem and label, and the emblems retain their dark outlines. Image corner radius is zero and body top padding is `1em` on desktop and phones.
 - Attack and speed sit on the left below the HP bar, with HP value/icon on the right. The overlay still occupies the full-height art area. Overflow shields, role-specific icons and the compact phone-hand separator remain supported.
-- World encounter spots and boss circles share the approved type backdrops. The 300.9 KB atlas holds 66 portraits plus 11 background tiles, about 14 KB more than the previous portrait-only atlas and no extra normal image request. Individual approved WebPs are the fallback if the atlas fails.
+ - World encounter spots and boss circles share the approved type backdrops. The atlas holds 66 portraits plus 11 type slots, with shared source images where configured, and no extra normal image request. Individual approved WebPs are the fallback if the atlas fails.
 - `npm run build`, all 277 tests and the 265-image asset check pass. The checker also inspects every atlas background tile for opacity, source palette agreement and correct demon-type mapping.
 - In-app browser previews at 1280×720 and 390×844 use the production card CSS/renderer and actual World marker functions with static local data. All six rarity colors, normal/compact cards and eleven pairs of encounter/boss circles were visually inspected. Stats remain below HP, aligned left/right without overlap; artwork remains full height. No account creation, database writes or authenticated gameplay were performed.
 - Current content stamp: `art-59b6cb9757bc`. No merge, push or deployment performed.

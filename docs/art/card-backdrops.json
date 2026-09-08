@@ -3,7 +3,7 @@
   "status": "applied",
   "source": "type-swirl-studies-v4",
   "fallbackTypeId": 11,
-  "rule": "Select by the displayed demon source ID, never by rarity; each type shares one palette across all six evolutions.",
+  "rule": "Select by the displayed demon source ID, never by rarity; each type shares one background across all six evolutions. backgroundTypeId reuses another type's approved background when present.",
   "variants": [
     {
       "typeId": 1,
@@ -91,6 +91,7 @@
     },
     {
       "typeId": 4,
+      "backgroundTypeId": 2,
       "species": "Tor Tza",
       "name": "Ember coral",
       "palette": {
@@ -119,6 +120,7 @@
     },
     {
       "typeId": 5,
+      "backgroundTypeId": 1,
       "species": "Vi'Zel",
       "name": "Brick red",
       "palette": {
@@ -147,6 +149,7 @@
     },
     {
       "typeId": 6,
+      "backgroundTypeId": 2,
       "species": "Goh Loomb",
       "name": "Claw amber",
       "palette": {
@@ -175,6 +178,7 @@
     },
     {
       "typeId": 7,
+      "backgroundTypeId": 1,
       "species": "Baobaw",
       "name": "Spectral violet",
       "palette": {
@@ -231,6 +235,7 @@
     },
     {
       "typeId": 9,
+      "backgroundTypeId": 1,
       "species": "Chu Perk",
       "name": "Garnet red",
       "palette": {
@@ -287,6 +292,7 @@
     },
     {
       "typeId": 11,
+      "backgroundTypeId": 2,
       "species": "Vee Scol",
       "name": "Charcoal slate",
       "palette": {

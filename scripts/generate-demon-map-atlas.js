@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const writeAsset = require('./write-asset');
+const { getBackdropSource } = require('./generate-demon-card-backdrops');
 
 const APP_DIR = path.join(__dirname, '..', 'public', 'app');
 const SOURCE_DIR = path.join(APP_DIR, 'images', 'demons', 'map');
@@ -23,6 +24,7 @@ async function main() {
   const backdrops = JSON.parse(fs.readFileSync(
     path.join(__dirname, '../docs/art/card-backdrops.json'), 'utf8'
   )).variants.slice().sort((left, right) => left.typeId - right.typeId);
+  const sourceFor = (entry) => getBackdropSource(backdrops, entry);
   const rows = Math.ceil((entries.length + backdrops.length) / columns);
   const composites = await Promise.all(entries.map(async (entry, index) => ({
     input: await sharp(path.join(SOURCE_DIR, entry.name))
@@ -35,7 +37,7 @@ async function main() {
 
   // Append after the demon frames so their IDs and frame positions stay stable.
   composites.push(...await Promise.all(backdrops.map(async (entry, index) => ({
-    input: await sharp(path.join(APP_DIR, 'images', entry.files.png))
+    input: await sharp(path.join(APP_DIR, 'images', sourceFor(entry).files.png))
       .resize(FRAME_SIZE, FRAME_SIZE, { fit: 'cover' })
       .png()
       .toBuffer(),
@@ -62,7 +64,7 @@ async function main() {
     `export const DEMON_MAP_ATLAS_IDS = ${JSON.stringify(entries.map((entry) => entry.id))};`,
     `export const DEMON_MAP_BACKDROP_IDS = ${JSON.stringify(backdrops.map((entry) => entry.typeId))};`,
     `export const DEMON_MAP_BACKDROP_TYPES = ${JSON.stringify(Object.fromEntries(backdrops.flatMap(entry => entry.demonIds.map(id => [id, entry.typeId]))))};`,
-    `export const DEMON_MAP_BACKDROP_URLS = ${JSON.stringify(Object.fromEntries(backdrops.map(entry => [entry.typeId, `/app/images/${entry.files.webp}?v=${entry.sha256.webp.slice(0, 12)}`])))};`,
+    `export const DEMON_MAP_BACKDROP_URLS = ${JSON.stringify(Object.fromEntries(backdrops.map(entry => { const source = sourceFor(entry); return [entry.typeId, `/app/images/${source.files.webp}?v=${source.sha256.webp.slice(0, 12)}`]; })))};`,
     ''
   ].join('\n'));
 

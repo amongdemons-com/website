@@ -21,7 +21,11 @@ test('versioned demon image URLs retain source IDs and round-trip between varian
   assert.equal(getDemonImageUrl('/external/sprite.webp?v=old'), '/external/sprite.webp?v=old');
 });
 
-test('every master, portrait and map sprite selects exactly its own type backdrop', () => {
+test('every master, portrait and map sprite selects exactly its assigned type backdrop', () => {
+  const expectedBackgroundTypes = { 4: 2, 5: 1, 6: 2, 7: 1, 9: 1, 11: 2 };
+  for (const variant of backdrops.variants) {
+    assert.equal(variant.backgroundTypeId || variant.typeId, expectedBackgroundTypes[variant.typeId] || variant.typeId);
+  }
   for (let id = 1; id <= 66; id++) {
     for (const variant of ['', 'portrait/', 'map/', 'thumbnails/']) {
       const url = `/app/images/demons/${variant}${id}.webp?v=art-test`;
@@ -34,6 +38,9 @@ test('every master, portrait and map sprite selects exactly its own type backdro
   const css = renderBackdropCss(backdrops.variants, 'art-test');
   assert.doesNotMatch(css, /file:\/\/|C:\\|\.codex/);
   assert.match(css, /:has\(> :is\(img\[src\*=/);
+  for (const [typeId, backgroundTypeId] of Object.entries(expectedBackgroundTypes)) {
+    assert.match(css, new RegExp(`--demon-backdrop-type-${typeId}: var\\(--demon-backdrop-type-${backgroundTypeId}\\);`));
+  }
 });
 
 test('backdrop generation rejects incomplete or overlapping source assignments', () => {

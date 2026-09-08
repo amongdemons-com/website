@@ -40,6 +40,7 @@ function loadMarkerHarness({ atlasFails = false, defeated = false } = {}) {
     destroy() {}
   }
   class Graphics extends Container {
+    clear() { return this; }
     circle(x, y, radius) { this.circleBounds = { x, y, radius }; return this; }
     ellipse() { return this; }
     fill() { return this; }
@@ -60,7 +61,7 @@ function loadMarkerHarness({ atlasFails = false, defeated = false } = {}) {
   const requests = [];
   const atlas = { source: { id: 'shared-map-atlas' } };
   const context = {
-    window: { PIXI: { Container, Graphics, Sprite, Rectangle, Texture, Assets: {
+    window: { PIXI: { Container, Graphics, Sprite, Rectangle, Texture: Object.assign(Texture, { EMPTY: { id: 'empty' } }), Assets: {
       async load(url) {
         requests.push(url);
         if (url.includes('map-atlas.webp')) {
@@ -71,6 +72,9 @@ function loadMarkerHarness({ atlasFails = false, defeated = false } = {}) {
       }
     } } },
     state: { encounterTextures: new Map(), bossTextures: new Map(), demonBackdropTextures: new Map(), bossLayer: new Container(), bosses: [] },
+    BOARD_COLORS: { selection: 0xd7b765 },
+    DEFAULT_PROFILE_IMAGE_URL: '/app/images/demons/map/1.webp?v=test',
+    toDemonImageUrl: value => typeof value === 'object' ? value.imageUrl : value,
     tileCenter: tile => ({ x: tile.x * 64, y: tile.y * 64 }),
     rarityHex: () => 0xfac51c,
     seededRng: () => () => 0.5,
@@ -79,7 +83,7 @@ function loadMarkerHarness({ atlasFails = false, defeated = false } = {}) {
     console: { warn() {} }
   };
   const atlasSource = fs.readFileSync(path.join(__dirname, '../public/app/js/generated/demon-map-atlas.js'), 'utf8');
-  const functions = ['getDemonMarkerBackdropType', 'addDemonMarkerPortrait', 'createEncounterMarkerNode', 'drawBossMarkers', 'getDemonMapAtlasTextures']
+  const functions = ['getDemonMarkerBackdropType', 'addDemonMarkerPortrait', 'createEncounterMarkerNode', 'drawBossMarkers', 'drawHunter', 'getDemonMapAtlasTextures']
     .map(name => {
       const source = worldSource.match(new RegExp(`  (?:async )?function ${name}\\([\\s\\S]*?\\n  \\}`))?.[0];
       assert.ok(source, `Missing production function ${name}`);
@@ -134,6 +138,40 @@ test('encounter and boss circles place the backdrop under the demon inside one c
   const missingPortrait = new Container();
   assert.equal(context.addDemonMarkerPortrait(missingPortrait, keyDemon, null, 22), true);
   assert.equal(missingPortrait.children.find(child => child.mask).children.length, 1);
+});
+
+test('the World player token places its type backdrop behind the profile demon', async () => {
+  const { context, Container } = loadMarkerHarness();
+  const layer = new Container();
+  const frame = new context.window.PIXI.Graphics();
+  const backdrop = new context.window.PIXI.Sprite({ id: 'empty' });
+  const avatar = new context.window.PIXI.Sprite({ id: 'empty' });
+  const mask = new context.window.PIXI.Graphics();
+  const backdropTexture = { id: 'type-4-backdrop-from-type-2' };
+  layer.addChild(frame);
+  layer.addChild(backdrop);
+  layer.addChild(avatar);
+  layer.addChild(mask);
+  Object.assign(context.state, {
+    hunterLayer: layer,
+    hunterFrame: frame,
+    hunterBackdrop: backdrop,
+    hunterAvatar: avatar,
+    hunterMask: mask,
+    hunterAvatarTexture: { id: 'player-demon' },
+    demonBackdropTextures: new Map([[4, backdropTexture]]),
+    player: { profileDemonImageUrl: '/app/images/demons/map/19.webp?v=test' },
+    position: { x: 2, y: 3 }
+  });
+  context.tileCenter = tile => ({ x: tile.x * 64, y: tile.y * 64 });
+
+  context.drawHunter();
+
+  assert.equal(backdrop.texture, backdropTexture);
+  assert.equal(backdrop.visible, true);
+  assert.equal(avatar.visible, true);
+  assert.equal(mask.circleBounds.radius, 22);
+  assert.equal(layer.children.indexOf(backdrop) < layer.children.indexOf(avatar), true);
 });
 
 test('world backdrop loading falls back to individual WebPs if the atlas fails', async () => {
