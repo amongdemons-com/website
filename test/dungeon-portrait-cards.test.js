@@ -35,6 +35,17 @@ test('dungeon hand cards use type backdrops without card frames', () => {
   );
 });
 
+test('dungeon hand rarity badges keep the shared dark outer contour', () => {
+  assert.match(
+    battleCss,
+    /:where\(body\.dungeon-page #dungeonHandBar\) \.dungeon-demon-rarity-gem\s*\{[\s\S]*?background:\s*#101820;[\s\S]*?filter:\s*none;/
+  );
+  assert.match(
+    battleCss,
+    /:where\(body\.dungeon-page #dungeonHandBar\) \.dungeon-demon-rarity-gem::after\s*\{[\s\S]*?inset:\s*2px;[\s\S]*?background:\s*var\(--rarity-color, #D1D5D8\);/
+  );
+});
+
 test('card artwork fills the entire card with stats overlaid at the bottom', () => {
   assert.match(battleCss, /\.dungeon-demon-card\s*\{[^}]*display: block;/);
   for (const [, selectors, declarations] of battleCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {

@@ -233,6 +233,8 @@ function renderDungeonDemonCard(demon, options = {}) {
 function renderDemonCard(demon, options) {
   const isPlayer = options.side === 'player';
   const isHandTeamUpgrade = options.side === 'hand' && Boolean(options.isTeamUpgrade);
+  const teamUpgradeTargetIds = new Set((options.teamUpgradeTargetInstanceIds || []).map((instanceId) => String(instanceId)));
+  const isTeamUpgradeTarget = isPlayer && teamUpgradeTargetIds.has(String(demon.instanceId));
   const isRecruitPoolDemon = Boolean(options.allowRecruitDrag && demon.recruitSource);
   const isRewardDraggable = Boolean(options.allowRewardDrag && demon.rewardCandidateKey);
   const canDropRecruit = Boolean(state.isRecruiting && isPlayer);
@@ -243,6 +245,7 @@ function renderDemonCard(demon, options) {
     isRecruitPoolDemon ? 'is-recruit-draggable' : '',
     isRewardDraggable ? 'is-reward-draggable' : '',
     isHandTeamUpgrade ? 'is-team-upgrade' : '',
+    isTeamUpgradeTarget ? 'is-team-upgrade-target' : '',
     demon.recruitSource === 'collection' && !state.collectionReinforcementStagedInteracted ? 'is-collection-reinforcement-attention' : '',
     canDropRecruit ? 'is-recruit-drop-target' : '',
     hasPoisonStatus(demon) ? 'is-poisoned' : '',
@@ -255,7 +258,7 @@ function renderDemonCard(demon, options) {
     active: state.selectedSwapInstanceId === demon.instanceId ||
       state.selectedRecruitRewardId === demon.rewardId ||
       state.selectedRewardDemonKey === demon.rewardCandidateKey,
-    overlayHtml: `${isHandTeamUpgrade ? renderTeamUpgradeIndicator() : ''}${renderDemonStatus(demon)}`,
+    overlayHtml: `${isHandTeamUpgrade ? renderTeamUpgradeIndicator() : ''}${isTeamUpgradeTarget ? renderTeamDowngradeIndicator() : ''}${renderDemonStatus(demon)}`,
     attributes: {
       'data-instance-id': demon.instanceId,
       'data-reward-id': demon.rewardId || null,
@@ -269,15 +272,40 @@ function renderDemonCard(demon, options) {
 }
 
 function renderTeamUpgradeIndicator() {
-  const arrow = renderIcon('arrow-up', {
-    className: 'dungeon-team-upgrade-arrow',
-    size: 14,
-    strokeWidth: 3.25
-  });
+  const arrow = renderTeamUpgradeArrow('arrow-up');
 
   return `
     <span class="dungeon-team-upgrade-indicator" role="img" aria-label="Upgrade available" title="Upgrade available">
       ${arrow}${arrow}
+    </span>
+  `;
+}
+
+function renderTeamDowngradeIndicator() {
+  const arrow = renderTeamUpgradeArrow('arrow-down');
+
+  return `
+    <span class="dungeon-team-downgrade-indicator" role="img" aria-label="Swap out for an upgrade" title="Swap out for an upgrade">
+      ${arrow}${arrow}
+    </span>
+  `;
+}
+
+function renderTeamUpgradeArrow(name) {
+  const outline = renderIcon(name, {
+    className: 'dungeon-team-upgrade-arrow dungeon-team-upgrade-arrow-outline',
+    size: 14,
+    strokeWidth: 6.5
+  });
+  const foreground = renderIcon(name, {
+    className: 'dungeon-team-upgrade-arrow dungeon-team-upgrade-arrow-foreground',
+    size: 14,
+    strokeWidth: 4.5
+  });
+
+  return `
+    <span class="dungeon-team-upgrade-arrow-wrap" aria-hidden="true">
+      ${outline}${foreground}
     </span>
   `;
 }
@@ -363,6 +391,7 @@ export {
   renderDungeonDemonCard,
   renderDemonCard,
   renderTeamUpgradeIndicator,
+  renderTeamDowngradeIndicator,
   renderDemonStatus,
   renderNewEncounterBadge,
   hasPoisonStatus,

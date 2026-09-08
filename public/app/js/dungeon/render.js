@@ -21,6 +21,8 @@ const formatBattleSpeed = (...args) => dungeonActions.formatBattleSpeed(...args)
 const getRecruitPreviewEnemyTeam = (...args) => dungeonActions.getRecruitPreviewEnemyTeam(...args);
 const getRecruitPreviewHand = (...args) => dungeonActions.getRecruitPreviewHand(...args);
 const getRecruitPreviewTeam = (...args) => dungeonActions.getRecruitPreviewTeam(...args);
+const getHandUpgradeTargetInstanceIds = (...args) => dungeonActions.getHandUpgradeTargetInstanceIds(...args);
+const shouldHighlightHandUpgrades = (...args) => dungeonActions.shouldHighlightHandUpgrades(...args);
 const getVisibleDungeonRankedEncounter = (...args) => dungeonActions.getVisibleDungeonRankedEncounter(...args);
 const applyDungeonCombatStatPreviewToDemon = (...args) => dungeonActions.applyDungeonCombatStatPreviewToDemon(...args);
 const getRecruitTeamLimit = (...args) => dungeonActions.getRecruitTeamLimit(...args);
@@ -131,6 +133,9 @@ function renderRun() {
   // ends while still suppressing all hand/recruit preparation content.
   const showHand = true;
   const handInteractive = Boolean(isHandStrategy && !pactChoiceBlocksDrag);
+  const teamUpgradeTargetInstanceIds = shouldHighlightHandUpgrades(handInteractive, handMode)
+    ? getHandUpgradeTargetInstanceIds(hand, team)
+    : [];
   const rewardInteractive = handInteractive;
   const canExtract = Boolean(!hasPendingPacts && !state.isResultAnimating && canExtractRun());
   const teamGridStyle = getCurrentFormationGridInlineStyle(elements.teamGrid);
@@ -155,6 +160,7 @@ function renderRun() {
   setElementHtml(elements.teamGrid, renderDemonCards(team, {
     side: 'player',
     allowFormationDrag: run.status === 'active' && !pactChoiceBlocksDrag && (!run.awaitingRecruit || state.isRecruiting),
+    teamUpgradeTargetInstanceIds,
     gridStyle: teamGridStyle
   }), { patchFormationGrid: true, renderKey: teamGridRenderKey });
   setElementHtml(elements.enemyGrid, renderDemonCards((isHandStrategy || (run.team || []).length) ? enemies : [], {

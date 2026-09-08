@@ -108,7 +108,13 @@ function bindNativeDropTarget(target, options) {
     target.classList.add('is-drag-over');
   });
 
-  target.addEventListener('dragleave', () => target.classList.remove('is-drag-over'));
+  target.addEventListener('dragleave', (event) => {
+    // Native dragleave also fires while crossing descendants inside a target.
+    // Keep the highlight until the pointer actually leaves the drop zone.
+    const relatedTarget = event.relatedTarget;
+    if (relatedTarget?.nodeType && target.contains(relatedTarget)) return;
+    target.classList.remove('is-drag-over');
+  });
   target.addEventListener('drop', (event) => {
     const payload = options.readPayload(event);
     target.classList.remove('is-drag-over');

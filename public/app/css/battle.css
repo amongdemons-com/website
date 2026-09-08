@@ -1847,67 +1847,131 @@ body:not(.dungeon-page) {
 
 .dungeon-hand-cards .dungeon-demon-card.is-team-upgrade {
     z-index: 2;
-    transform: translateY(-4px);
-    animation: team-upgrade-gold-pulse 1.4s ease-in-out infinite;
+    box-shadow: none;
+}
+
+.dungeon-hand-cards .dungeon-demon-card.is-team-upgrade::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    box-sizing: border-box;
+    border: 2px solid #FEC550;
+    border-radius: inherit;
+    pointer-events: none;
 }
 
 .dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator {
     position: absolute;
-    top: 0.18rem;
+    top: 0.28rem;
     left: 50%;
     z-index: 5;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.04rem;
-    color: #fff1a8;
+    padding: 0.08rem 0.16rem;
+    color: #FEC550;
     pointer-events: none;
-    filter:
-        drop-shadow(0 1px 1px rgba(0,0,0,0.96))
-        drop-shadow(0 0 4px rgba(255,184,28,0.88));
-    animation: team-upgrade-arrows-float 900ms ease-in-out infinite;
+    filter: none;
+    animation: team-upgrade-arrows-pulse 900ms ease-in-out infinite;
 }
 
 .dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator .dungeon-team-upgrade-arrow {
     width: clamp(0.68rem, 13%, 0.88rem);
     height: clamp(0.68rem, 13%, 0.88rem);
     flex: none;
+    stroke-width: 4.5;
 }
 
-@keyframes team-upgrade-arrows-float {
+.dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator .dungeon-team-upgrade-arrow-wrap,
+.battle-side-player .dungeon-demon-card.is-team-upgrade-target > .dungeon-team-downgrade-indicator .dungeon-team-upgrade-arrow-wrap {
+    display: inline-grid;
+    place-items: center;
+    width: clamp(0.68rem, 13%, 0.88rem);
+    height: clamp(0.68rem, 13%, 0.88rem);
+    flex: none;
+    overflow: visible;
+}
+
+.dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator .dungeon-team-upgrade-arrow-wrap > .dungeon-team-upgrade-arrow,
+.battle-side-player .dungeon-demon-card.is-team-upgrade-target > .dungeon-team-downgrade-indicator .dungeon-team-upgrade-arrow-wrap > .dungeon-team-upgrade-arrow {
+    grid-area: 1 / 1;
+    position: static;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.dungeon-team-upgrade-arrow-outline {
+    color: #070b0c;
+}
+
+.dungeon-team-upgrade-arrow-foreground {
+    color: inherit;
+    stroke-width: 4.5;
+}
+
+.battle-side-player .dungeon-demon-card.is-team-upgrade-target {
+    z-index: 2;
+    box-shadow: none;
+}
+
+.battle-side-player .dungeon-demon-card.is-team-upgrade-target::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    box-sizing: border-box;
+    border: 2px solid #FEC550;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.battle-side-player .dungeon-demon-card.is-team-upgrade-target > .dungeon-team-downgrade-indicator {
+    position: absolute;
+    top: 0.28rem;
+    left: 50%;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.04rem;
+    padding: 0.08rem 0.16rem;
+    color: #FEC550;
+    pointer-events: none;
+    filter: none;
+    animation: team-upgrade-arrows-pulse 900ms ease-in-out infinite;
+}
+
+.battle-side-player .dungeon-demon-card.is-team-upgrade-target > .dungeon-team-downgrade-indicator .dungeon-team-upgrade-arrow {
+    width: clamp(0.68rem, 13%, 0.88rem);
+    height: clamp(0.68rem, 13%, 0.88rem);
+    flex: none;
+    stroke-width: 4.5;
+}
+
+.dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator .dungeon-team-upgrade-arrow-wrap > .dungeon-team-upgrade-arrow-outline,
+.battle-side-player .dungeon-demon-card.is-team-upgrade-target > .dungeon-team-downgrade-indicator .dungeon-team-upgrade-arrow-wrap > .dungeon-team-upgrade-arrow-outline {
+    stroke-width: 7.5;
+}
+
+@keyframes team-upgrade-arrows-pulse {
     0%, 100% {
         transform: translate(-50%, 1px);
     }
     50% {
-        transform: translate(-50%, -3px);
-    }
-}
-
-@keyframes team-upgrade-gold-pulse {
-    0%, 100% {
-        border-color: rgba(255,213,79,0.48);
-        box-shadow:
-            inset 0 0 0 1px rgba(255,224,120,0.08),
-            0 0 10px rgba(255,184,28,0.16);
-    }
-    50% {
-        border-color: rgba(255,232,130,0.86);
-        box-shadow:
-            0 0 0 2px rgba(255,213,79,0.14),
-            0 0 22px rgba(255,184,28,0.42);
+        transform: translate(-50%, -1px);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .dungeon-hand-cards .dungeon-demon-card.is-team-upgrade {
+    .dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator {
         animation: none;
-        border-color: rgba(255,232,130,0.78);
-        box-shadow:
-            0 0 0 1px rgba(255,213,79,0.12),
-            0 0 18px rgba(255,184,28,0.32);
+        transform: translateX(-50%);
     }
 
-    .dungeon-hand-cards .dungeon-demon-card.is-team-upgrade > .dungeon-team-upgrade-indicator {
+    .battle-side-player .dungeon-demon-card.is-team-upgrade-target > .dungeon-team-downgrade-indicator {
         animation: none;
         transform: translateX(-50%);
     }
@@ -4675,6 +4739,17 @@ body .battle-speed-option.game-primary-action:disabled {
     padding: 0;
 }
 
+.dungeon-replaylog-box .dungeon-replaylog-btn .game-icon {
+    width: 1.8rem;
+    height: 1.8rem;
+}
+
+body.dungeon-page .dungeon-mobile-nav-btn#dungeonMobileReplayBtn .game-icon,
+body.dungeon-page .dungeon-mobile-nav-btn#dungeonMobileLogBtn .game-icon {
+    width: 2rem;
+    height: 2rem;
+}
+
 .dungeon-mobile-fight-box {
     display: none;
 }
@@ -5799,12 +5874,16 @@ body.is-world-battle-result-animating .battle-result-burst.is-defeat {
 
 #dungeonHandBar:has(.dungeon-demon-card.is-team-upgrade) .dungeon-hand-scroll-viewport {
     position: relative;
-    top: -6px;
-    box-sizing: border-box;
-    height: calc(100% + 6px);
-    padding-top: 6px;
     overflow-x: auto;
     overflow-y: hidden;
+}
+
+#dungeonHandBar:has(.dungeon-demon-card.is-team-upgrade) .dungeon-hand-scroll-viewport {
+    z-index: 3;
+}
+
+#dungeonHandBar:has(.dungeon-demon-card.is-team-upgrade) .dungeon-demon-card.is-team-upgrade {
+    z-index: 10;
 }
 
 @media (min-width: 576px) {
@@ -6389,9 +6468,9 @@ body.dungeon-page .battle-side .combat-hp-bar {
     height: 0.88rem;
     border: 0;
     border-radius: 0;
-    background: #fff;
+    background: #101820;
     clip-path: var(--rarity-shape);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--rarity-color, #D1D5D8) 82%, transparent));
+    filter: none;
 }
 
 :where(body.dungeon-page #dungeonHandBar) .dungeon-demon-rarity-gem::after {
@@ -6446,4 +6525,54 @@ body.dungeon-page .battle-side .combat-hp-bar {
         padding-top: 0.1rem;
         border-top: 1px solid rgba(161,212,201,0.2);
     }
+}
+
+/* Keep every valid dungeon drop target visible with the same flat gold focus.
+ * The explicit priority is intentional: cards, lanes, and reward boxes each
+ * have older shadow/outline rules with different specificity. */
+body.dungeon-page .dungeon-demon-card.is-drag-over,
+body.dungeon-page .formation-lane-cards.is-drag-over,
+body.dungeon-page .formation-slot-cards.is-drag-over,
+body.dungeon-page .formation-lane-label.is-drag-over,
+body.dungeon-page .dungeon-reward-dropzone.is-drag-over,
+body.dungeon-page .dungeon-reward-slot.is-drag-over {
+    position: relative;
+    isolation: auto !important;
+    outline: 0 !important;
+    outline-offset: 0;
+    box-shadow: none !important;
+}
+
+body.dungeon-page .dungeon-reward-dropzone.is-drag-over .dungeon-reward-slot {
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+body.dungeon-page .dungeon-demon-card.is-drag-over::after,
+body.dungeon-page .formation-lane-cards.is-drag-over::after,
+body.dungeon-page .formation-slot-cards.is-drag-over::after,
+body.dungeon-page .formation-lane-label.is-drag-over::after,
+body.dungeon-page .dungeon-reward-dropzone.is-drag-over::after,
+body.dungeon-page .dungeon-reward-slot.is-drag-over::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3700;
+    box-sizing: border-box;
+    border: 3px solid #f3c55c;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* A card swap is more specific than the hand lane target. When the native
+ * drag event bubbles through both elements, keep only the card's highlight. */
+body.dungeon-page .formation-lane-cards.is-drag-over:has(.dungeon-demon-card.is-drag-over),
+body.dungeon-page .dungeon-hand-cards.is-drag-over:has(.dungeon-demon-card.is-drag-over) {
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+body.dungeon-page .formation-lane-cards.is-drag-over:has(.dungeon-demon-card.is-drag-over)::after,
+body.dungeon-page .dungeon-hand-cards.is-drag-over:has(.dungeon-demon-card.is-drag-over)::after {
+    display: none;
 }

@@ -321,6 +321,28 @@ function findWeakerTeamDemon(candidate, team = []) {
   )) || null;
 }
 
+function getHandUpgradeTargetInstanceIds(hand = [], team = []) {
+  const targetIds = new Set();
+
+  (hand || []).forEach((candidate) => {
+    if (candidate?.suppressUpgradeHighlight) return;
+    const candidateTypeId = Number(candidate?.typeId || candidate?.type_id || candidate?.type);
+    if (!candidateTypeId) return;
+
+    (team || []).forEach((teamDemon) => {
+      const sameType = Number(teamDemon?.typeId || teamDemon?.type_id || teamDemon?.type) === candidateTypeId;
+      if (!sameType || !isBetterDemon(candidate, teamDemon)) return;
+
+      const instanceId = teamDemon?.instanceId;
+      if (instanceId !== undefined && instanceId !== null && instanceId !== '') {
+        targetIds.add(String(instanceId));
+      }
+    });
+  });
+
+  return [...targetIds];
+}
+
 function isBetterDemon(candidate, current) {
   const getVisibleAttack = (demon) => {
     const effectiveAtk = demon?.effectiveAtk;
@@ -603,6 +625,7 @@ export {
   renderHandCards,
   shouldHighlightHandUpgrades,
   findWeakerTeamDemon,
+  getHandUpgradeTargetInstanceIds,
   isBetterDemon,
   renderEmptyHand,
   renderRewardBox,

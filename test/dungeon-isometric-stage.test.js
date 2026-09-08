@@ -7,6 +7,7 @@ const ROOT = path.join(__dirname, '..');
 const css = fs.readFileSync(path.join(ROOT, 'public', 'app', 'css', 'battle.css'), 'utf8');
 const stageStyles = css.slice(css.indexOf('Framed-grid dungeon stage.'));
 const renderSource = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'render.js'), 'utf8');
+const dragSource = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'drag-drop.js'), 'utf8');
 
 test('dungeon uses the wide environment artwork without a repeating rock texture', () => {
   for (const extension of ['png', 'webp', 'avif']) {
@@ -51,6 +52,8 @@ test('dungeon formation grids use flat opaque cartoon surfaces', () => {
   const enemySlotsRule = stageStyles.match(/\.battle-side-enemy \.formation-slot,[\s\S]*?\.battle-side-enemy \.formation-slot\.is-empty\s*\{([^}]*)\}/)?.[1] || '';
   const placeholderRule = stageStyles.match(/\.battle-side \.formation-slot-placeholder-icon\s*\{([^}]*)\}/)?.[1] || '';
   const dragRule = stageStyles.match(/\.battle-side \.formation-slot-cards\.is-drag-over\s*\{([^}]*)\}/)?.[1] || '';
+  const commonDragRule = stageStyles.match(/body\.dungeon-page \.dungeon-demon-card\.is-drag-over,[\s\S]*?\{([^}]*)\}/)?.[1] || '';
+  const commonDragOverlay = stageStyles.match(/body\.dungeon-page \.dungeon-demon-card\.is-drag-over::after,[\s\S]*?\{([^}]*)\}/)?.[1] || '';
 
   assert.match(playerGridRule, /border-color:\s*#3e7168;/);
   assert.match(playerGridRule, /background:\s*#132c2d;/);
@@ -68,7 +71,45 @@ test('dungeon formation grids use flat opaque cartoon surfaces', () => {
   assert.match(placeholderRule, /filter:\s*none;/);
   assert.match(dragRule, /outline:\s*3px solid #f3c55c;/);
   assert.match(dragRule, /box-shadow:\s*none;/);
+  assert.match(commonDragRule, /outline:\s*0\s*!important;/);
+  assert.match(commonDragRule, /isolation:\s*auto\s*!important;/);
+  assert.match(commonDragRule, /box-shadow:\s*none\s*!important;/);
+  assert.match(commonDragOverlay, /border:\s*3px solid #f3c55c;/);
+  assert.match(commonDragOverlay, /z-index:\s*3700;/);
+  assert.match(commonDragOverlay, /pointer-events:\s*none;/);
+  assert.match(stageStyles, /\.formation-lane-cards\.is-drag-over:has\(\.dungeon-demon-card\.is-drag-over\)[\s\S]*?outline:\s*0\s*!important;/);
+  assert.match(stageStyles, /\.dungeon-hand-cards\.is-drag-over:has\(\.dungeon-demon-card\.is-drag-over\)::after[\s\S]*?display:\s*none;/);
   assert.match(stageStyles, /is-ranked-encounter-planning #enemyGrid \.battle-formation-grid::before\s*\{\s*display:\s*none;/);
+});
+
+test('dungeon replay and upgrade cues use large flat icon and fixed border treatments', () => {
+  const replayIconRule = css.match(/\.dungeon-replaylog-box \.dungeon-replaylog-btn \.game-icon\s*\{([^}]*)\}/)?.[1] || '';
+  const upgradeRule = css.match(/\.dungeon-hand-cards \.dungeon-demon-card\.is-team-upgrade\s*\{([^}]*)\}/)?.[1] || '';
+  const upgradeBorder = css.match(/\.dungeon-hand-cards \.dungeon-demon-card\.is-team-upgrade::after\s*\{([^}]*)\}/)?.[1] || '';
+  const arrowRule = css.match(/\.dungeon-hand-cards \.dungeon-demon-card\.is-team-upgrade > \.dungeon-team-upgrade-indicator\s*\{([^}]*)\}/)?.[1] || '';
+
+  assert.match(replayIconRule, /width:\s*1\.8rem;/);
+  assert.match(replayIconRule, /height:\s*1\.8rem;/);
+  assert.match(css, /dungeonMobileReplayBtn \.game-icon,[\s\S]*?dungeonMobileLogBtn \.game-icon\s*\{[^}]*width:\s*2rem;[^}]*height:\s*2rem;/);
+  assert.match(upgradeBorder, /border:\s*2px solid #FEC550;/);
+  assert.match(upgradeRule, /box-shadow:\s*none;/);
+  assert.doesNotMatch(css, /@keyframes team-upgrade-gold-pulse/);
+  assert.doesNotMatch(upgradeBorder, /animation:/);
+  assert.doesNotMatch(upgradeRule, /transform:\s*translateY/);
+  assert.doesNotMatch(upgradeBorder, /box-shadow:/);
+  assert.doesNotMatch(arrowRule, /border:/);
+  assert.match(css, /\.dungeon-team-upgrade-arrow\s*\{[^}]*stroke-width:\s*4\.5;/s);
+  assert.match(css, /\.dungeon-team-upgrade-arrow-outline\s*\{[^}]*color:\s*#070b0c;/s);
+  assert.match(css, /\.dungeon-team-upgrade-arrow-wrap\s*> \.dungeon-team-upgrade-arrow-outline\s*\{[^}]*stroke-width:\s*7\.5;/s);
+  assert.match(css, /\.dungeon-team-upgrade-arrow-foreground\s*\{[^}]*color:\s*inherit;[^}]*stroke-width:\s*4\.5;/s);
+  assert.match(arrowRule, /filter:\s*none;/);
+  assert.match(css, /\.battle-side-player \.dungeon-demon-card\.is-team-upgrade-target\s*\{[^}]*box-shadow:\s*none;/s);
+  assert.doesNotMatch(css, /\.battle-side-player \.dungeon-demon-card\.is-team-upgrade-target::after\s*\{[^}]*animation:/s);
+  assert.match(css, /\.battle-side-player \.dungeon-demon-card\.is-team-upgrade-target > \.dungeon-team-downgrade-indicator\s*\{[^}]*color:\s*#FEC550;/s);
+});
+
+test('native drag highlights survive transitions across nested target content', () => {
+  assert.match(dragSource, /dragleave', \(event\) => \{[\s\S]*?relatedTarget\?\.nodeType && target\.contains\(relatedTarget\)/);
 });
 
 test('occupied demons retain type backdrops and show rarity badges without rarity frames', () => {
