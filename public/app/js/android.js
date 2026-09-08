@@ -135,7 +135,7 @@
     ].join(';');
     overlay.innerHTML =
       '<style>@keyframes playGamesConnectSpin{to{transform:rotate(360deg)}}</style>' +
-      '<div style="width:2.2rem;height:2.2rem;border-radius:50%;border:3px solid rgba(111,214,189,0.2);border-top-color:var(--ad-teal, #6fd6bd);animation:playGamesConnectSpin 0.9s linear infinite;" aria-hidden="true"></div>' +
+      '<div style="width:2.2rem;height:2.2rem;border-radius:50%;border:3px solid #1c3835;border-top-color:var(--ad-teal, #6fd6bd);animation:playGamesConnectSpin 0.9s linear infinite;" aria-hidden="true"></div>' +
       '<div>Signing in through Google Play Games&hellip;</div>';
     document.body.appendChild(overlay);
     overlayTimeout = window.setTimeout(removeConnectOverlay, 12000);

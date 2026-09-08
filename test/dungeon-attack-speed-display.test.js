@@ -45,21 +45,41 @@ function loadDemonCardUi() {
   return { ui: context.window.AmongDemons.ui, modalBody };
 }
 
-test('demon card and detail modal can cap displayed attack speed without mutating it', () => {
+test('card DPT caps attack speed while details retain separate uncropped stats', () => {
   const { ui, modalBody } = loadDemonCardUi();
-  const demon = { typeId: 1, atk: 20, speed: 147 };
+  const demon = { typeId: 1, atk: 142100, speed: 147, hp: 2400000, maxHp: 3000000 };
   const statsOptions = { maxDisplayedSpeed: 100 };
 
   const cardHtml = ui.renderDemonCard(demon, { hideRarity: true, statsOptions });
-  assert.match(cardHtml, /data-test-icon="speed"><\/i>100/);
-  assert.doesNotMatch(cardHtml, /data-test-icon="speed"><\/i>147/);
+  assert.match(cardHtml, /js-demon-atk">142\.1k<\/span>/);
+  assert.doesNotMatch(cardHtml, /data-test-icon="speed"/);
 
   ui.openDemonDetailsModal(demon, { hideRarity: true, statsOptions });
   assert.match(
     modalBody.innerHTML,
     /data-detail-stat="speed"[\s\S]*?<span class="demon-detail-stat-value">100<\/span>/
   );
+  assert.match(modalBody.innerHTML, /data-detail-stat="atk"[\s\S]*?demon-detail-stat-value">142100<\/span>/);
+  assert.match(modalBody.innerHTML, /demon-detail-stat-value">2400000 \/ 3000000<\/span>/);
+  assert.doesNotMatch(modalBody.innerHTML, /per tick|DPT|142\.1k|2\.4m/);
   assert.equal(demon.speed, 147);
+});
+
+test('per-tick card stats use effective attack and preserve Kopak retaliation', () => {
+  const { ui } = loadDemonCardUi();
+  for (const typeId of [1, 3, 4, 10]) {
+    const html = ui.renderDemonCard({ typeId, atk: 20, effectiveAtk: 31, speed: 25 });
+    assert.match(html, /js-demon-atk">7\.8<\/span>/);
+    assert.match(html, typeId === 10 ? /Healing per tick/ : /Damage per tick/);
+    assert.doesNotMatch(html, /data-test-icon="speed"/);
+  }
+  for (const identity of [{ typeId: 8 }, { type_id: 8 }, { type: 8 }]) {
+    const html = ui.renderDemonCard({ ...identity, atk: 1200, speed: 25 });
+    assert.match(html, /title="Retaliation: 1200"/);
+    assert.match(html, /js-demon-atk">1\.2k<\/span>/);
+    assert.doesNotMatch(html, /per tick|data-test-icon="speed"/);
+  }
+  assert.match(ui.renderDemonCard({ atk: 20, speed: 0 }), /js-demon-atk">0<\/span>/);
 });
 
 test('dungeon cards and detail modal use the 100 attack-speed display cap', () => {

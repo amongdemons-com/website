@@ -1,6 +1,8 @@
 export const renderSharedDemonCard = window.AmongDemons.ui.renderDemonCard;
 export const renderSharedCombatStats = window.AmongDemons.ui.renderCombatStats;
 export const getCombatHpBarLayout = window.AmongDemons.ui.getCombatHpBarLayout;
+export const formatDemonCardNumber = window.AmongDemons.ui.formatDemonCardNumber;
+export const getDemonCardAttackStat = window.AmongDemons.ui.getDemonCardAttackStat;
 export const openDemonDetailsModal = window.AmongDemons.ui.openDemonDetailsModal;
 export const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
 export const renderSoulAmount = window.AmongDemons.ui.renderSoulAmount || ((value) => String(value || 0));

@@ -16,7 +16,7 @@ test('Settings offers an opt-in low-power world map preference', () => {
   assert.match(settingsSource, /bindPreferenceToggle\(elements\.worldLowPower, WORLD_LOW_POWER_KEY, false\)/);
 });
 
-test('low-power mode reduces Pixi cost without removing map effects', () => {
+test('low-power mode preserves flat navigation indicators without ambient lighting', () => {
   const worldSource = read('public', 'app', 'js', 'world-ui.js');
   const effectUpdater = worldSource.match(/function updateWorldEffects\(\) \{[\s\S]*?\n  \}/)?.[0] || '';
 
@@ -26,7 +26,8 @@ test('low-power mode reduces Pixi cost without removing map effects', () => {
   assert.match(worldSource, /if \(state\.lowPowerMode\) app\.ticker\.maxFPS = WORLD_LOW_POWER_FPS/);
   assert.match(effectUpdater, /if \(state\.lowPowerMode && !state\.worldEffectsDirty\) return/);
   assert.match(effectUpdater, /updatePathPulse\(\)/);
-  assert.match(effectUpdater, /updatePuddleFx\(\)/);
+  assert.doesNotMatch(effectUpdater, /update\w*(?:Glow|Aura|Fx)\(\)/);
+  assert.match(effectUpdater, /updateSoulFontDirectionArrow\(\)/);
   assert.match(effectUpdater, /updateMerchantDirectionArrow\(\)/);
   assert.match(worldSource, /function updateCameraStatus\(\) \{\s+invalidateWorldEffects\(\)/);
 });

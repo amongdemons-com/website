@@ -96,12 +96,12 @@ test('shared demon cards use a neutral frame without a rarity-colored glow', () 
   const cardRules = [...battleCss.matchAll(/\.dungeon-demon-card\s*\{([^}]*)\}/g)]
     .map((match) => match[1]);
   const frame = cardRules
-    .find((declarations) => /border:\s*1px solid rgba\(255,255,255,0\.14\);/.test(declarations)) || '';
-  const ambientCard = cardRules
-    .find((declarations) => /0 10px 26px/.test(declarations)) || '';
+    .find((declarations) => /border:\s*1px solid #2a3134;/.test(declarations)) || '';
 
-  assert.match(frame, /border:\s*1px solid rgba\(255,255,255,0\.14\);/);
+  assert.match(frame, /border:\s*1px solid #2a3134;/);
   assert.doesNotMatch(frame, /rarity-color|border-top-width/);
-  assert.doesNotMatch(ambientCard, /rarity-color/);
+  for (const declarations of cardRules) {
+    assert.doesNotMatch(declarations, /box-shadow:\s*(?!none\b)\S/);
+  }
   assert.doesNotMatch(baseCss.match(/\.seo-demon-card\s*\{([^}]*)\}/)?.[1] || '', /rarity-color/);
 });

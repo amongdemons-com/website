@@ -1,6 +1,6 @@
 .echo-item-visual {
     --echo-glow-size: 7px;
-    --echo-aura-opacity: 0.12;
+    --echo-aura-opacity: 1;
     --echo-ornament-opacity: 0;
     --echo-fill-polish: 0.2;
     --echo-essence-color: #D1D5D8;
@@ -8,6 +8,13 @@
     isolation: isolate;
     width: 75%;
     height: 75%;
+}
+
+/* The illustration supplies the color; no light is painted over or behind it. */
+.echo-rarity-aura,
+.echo-essence-fill,
+.echo-rarity-ornament {
+    display: none;
 }
 
 .echo-item-shell,
@@ -24,7 +31,7 @@
     z-index: 4;
     display: block;
     object-fit: contain;
-    filter: drop-shadow(0 5px 4px rgba(0, 0, 0, 0.62));
+    filter: none;
     transition: filter 0.18s ease;
 }
 
@@ -43,7 +50,7 @@
 .echo-rarity-aura {
     z-index: 0;
     opacity: var(--echo-aura-opacity);
-    filter: blur(calc(var(--echo-glow-size) * 1.35));
+    filter: none;
     transform: scale(1.025);
 }
 
@@ -53,7 +60,7 @@
     z-index: 5;
     overflow: hidden;
     opacity: calc(0.08 + var(--echo-fill-polish) * 0.16);
-    mix-blend-mode: screen;
+    mix-blend-mode: normal;
     -webkit-mask-image: var(--echo-fill-mask);
     mask-image: var(--echo-fill-mask);
     -webkit-mask-position: center;
@@ -70,10 +77,8 @@
     display: block;
     opacity: calc(0.52 + var(--echo-fill-polish));
     background:
-        radial-gradient(circle at 32% 78%, color-mix(in srgb, var(--echo-essence-color) 42%, white) 0 5%, transparent 18%),
-        radial-gradient(circle at 68% 42%, color-mix(in srgb, var(--echo-essence-color) 32%, white) 0 4%, transparent 16%),
-        linear-gradient(145deg, transparent 28%, color-mix(in srgb, var(--echo-essence-color) 45%, white) 48%, transparent 68%);
-    mix-blend-mode: screen;
+        color-mix(in srgb, var(--echo-essence-color) 45%, white);
+    mix-blend-mode: normal;
     transform-box: fill-box;
     transform-origin: center;
 }
@@ -87,8 +92,7 @@
     border: 1px solid color-mix(in srgb, var(--item-rarity) 60%, white);
     border-radius: 50%;
     box-shadow:
-        0 0 10px color-mix(in srgb, var(--item-rarity) 38%, transparent),
-        inset 0 0 12px color-mix(in srgb, var(--item-rarity) 18%, transparent);
+        none;
 }
 
 .echo-rarity-ornament::before,
@@ -100,7 +104,7 @@
     content: '';
     border: 1px solid color-mix(in srgb, var(--item-rarity) 58%, white);
     background: var(--item-rarity);
-    box-shadow: 0 0 7px var(--item-rarity);
+    box-shadow: none;
     transform: translateY(-50%) rotate(45deg);
 }
 
@@ -117,103 +121,96 @@
     height: 2rem;
     place-items: center;
     color: #eefcff;
-    border: 1px solid rgba(238, 252, 255, 0.5);
+    border: 1px solid #7b8689;
     border-radius: 50%;
-    background: rgba(3, 10, 13, 0.82);
+    background: #040b0e;
     font-weight: 950;
     transform: translate(-50%, -50%);
 }
 
 .echo-item-visual[data-rarity="uncommon"] {
     --echo-glow-size: 9px;
-    --echo-aura-opacity: 0.15;
-    --echo-ornament-opacity: 0.08;
+    --echo-aura-opacity: 1;
+    --echo-ornament-opacity: 1;
     --echo-fill-polish: 0.26;
 }
 
 .echo-item-visual[data-rarity="rare"] {
     --echo-glow-size: 11px;
-    --echo-aura-opacity: 0.19;
-    --echo-ornament-opacity: 0.2;
+    --echo-aura-opacity: 1;
+    --echo-ornament-opacity: 1;
     --echo-fill-polish: 0.32;
 }
 
 .echo-item-visual[data-rarity="epic"] {
     --echo-glow-size: 13px;
-    --echo-aura-opacity: 0.23;
-    --echo-ornament-opacity: 0.36;
+    --echo-aura-opacity: 1;
+    --echo-ornament-opacity: 1;
     --echo-fill-polish: 0.4;
 }
 
 .echo-item-visual[data-rarity="legendary"] {
     --echo-glow-size: 16px;
-    --echo-aura-opacity: 0.3;
-    --echo-ornament-opacity: 0.62;
+    --echo-aura-opacity: 1;
+    --echo-ornament-opacity: 1;
     --echo-fill-polish: 0.48;
 }
 
 .echo-item-visual[data-rarity="mythic"] {
     --echo-glow-size: 19px;
-    --echo-aura-opacity: 0.36;
-    --echo-ornament-opacity: 0.88;
+    --echo-aura-opacity: 1;
+    --echo-ornament-opacity: 1;
     --echo-fill-polish: 0.58;
 }
 
 .echo-type-ranged .echo-fill-surface {
     background:
-        linear-gradient(90deg, transparent 42%, color-mix(in srgb, var(--echo-essence-color) 36%, white) 48% 52%, transparent 58%),
-        radial-gradient(ellipse at center, transparent 0 16%, color-mix(in srgb, var(--echo-essence-color) 42%, white) 18% 22%, transparent 25%);
+        color-mix(in srgb, var(--echo-essence-color) 42%, white);
 }
 
 /* Hover may emphasize rarity without muting the approved essence palette. */
 .bag-item:is(:hover, :focus-visible, .is-inspecting) .echo-item-visual {
-    filter: drop-shadow(0 0 16px color-mix(in srgb, var(--item-rarity) 42%, transparent));
+    filter: none;
 }
 
 .echo-type-poisoner .echo-fill-surface {
     background:
-        radial-gradient(circle at 34% 76%, color-mix(in srgb, var(--echo-essence-color) 45%, white) 0 4%, transparent 5%),
-        radial-gradient(circle at 65% 58%, color-mix(in srgb, var(--echo-essence-color) 40%, white) 0 3%, transparent 4%),
-        radial-gradient(circle at 48% 35%, color-mix(in srgb, var(--echo-essence-color) 35%, white) 0 2.5%, transparent 3.5%);
+        color-mix(in srgb, var(--echo-essence-color) 35%, white);
 }
 
 .echo-type-aoe .echo-fill-surface {
-    background: repeating-radial-gradient(circle at center, color-mix(in srgb, var(--echo-essence-color) 42%, white) 0 3%, transparent 5% 14%);
+    background: color-mix(in srgb, var(--echo-essence-color) 42%, white);
 }
 
 .echo-type-bruiser .echo-fill-surface {
-    background: repeating-linear-gradient(0deg, color-mix(in srgb, var(--echo-essence-color) 30%, white) 0 6%, transparent 8% 20%);
+    background: color-mix(in srgb, var(--echo-essence-color) 30%, white);
 }
 
 .echo-type-assassin .echo-fill-surface {
-    background: linear-gradient(145deg, transparent 36%, color-mix(in srgb, var(--echo-essence-color) 55%, white) 42% 48%, transparent 54%);
+    background: color-mix(in srgb, var(--echo-essence-color) 55%, white);
 }
 
 .echo-type-striker .echo-fill-surface {
-    background: repeating-linear-gradient(155deg, transparent 0 18%, color-mix(in srgb, var(--echo-essence-color) 46%, white) 20% 25%, transparent 28% 44%);
+    background: color-mix(in srgb, var(--echo-essence-color) 46%, white);
 }
 
 .echo-type-counter-tank .echo-fill-surface {
     background:
-        conic-gradient(from 25deg at center, transparent, color-mix(in srgb, var(--echo-essence-color) 36%, white), transparent 26%),
-        radial-gradient(circle, color-mix(in srgb, var(--echo-essence-color) 28%, white), transparent 52%);
+        color-mix(in srgb, var(--echo-essence-color) 28%, white);
 }
 
 .echo-type-juggernaut .echo-fill-surface {
     background:
-        radial-gradient(circle at 50% 64%, color-mix(in srgb, var(--echo-essence-color) 58%, white) 0 7%, transparent 19%),
-        linear-gradient(0deg, color-mix(in srgb, var(--echo-essence-color) 32%, #020809), transparent 54%);
+        color-mix(in srgb, var(--echo-essence-color) 32%, #020809);
 }
 
 .echo-type-healer .echo-fill-surface {
     background:
-        radial-gradient(circle at 35% 72%, color-mix(in srgb, var(--echo-essence-color) 52%, white) 0 3%, transparent 5%),
-        radial-gradient(circle at 63% 54%, color-mix(in srgb, var(--echo-essence-color) 46%, white) 0 3%, transparent 5%),
-        linear-gradient(0deg, color-mix(in srgb, var(--echo-essence-color) 30%, white), transparent 62%);
+        color-mix(in srgb, var(--echo-essence-color) 30%, white);
 }
 
 .echo-type-chaotic .echo-fill-surface {
-    background: conic-gradient(from 40deg, color-mix(in srgb, var(--echo-essence-color) 38%, white), transparent 18%, color-mix(in srgb, var(--echo-essence-color) 62%, white) 34%, transparent 55%, var(--echo-essence-color));
+    background: color-mix(in srgb, var(--echo-essence-color) 38%, white);
 }
 
 .echo-motion-strike .echo-fill-surface { animation: echo-raster-strike 3.2s ease-in-out infinite; }
@@ -230,7 +227,7 @@
 
 .bag-unknown-visual {
     position: relative;
-    filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.52));
+    filter: none;
 }
 
 .unknown-item-body {
@@ -240,8 +237,8 @@
     aspect-ratio: 1;
     place-items: center;
     border: 2px solid color-mix(in srgb, var(--item-rarity) 50%, #9cb9be);
-    background: linear-gradient(135deg, color-mix(in srgb, var(--item-rarity) 16%, #1a292d), #0b1518);
-    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.5), 0 0 14px color-mix(in srgb, var(--item-rarity) 22%, transparent);
+    background: color-mix(in srgb, var(--item-rarity) 16%, #1a292d);
+    box-shadow: none;
     transform: rotate(45deg);
 }
 
@@ -249,62 +246,62 @@
     color: var(--item-rarity);
     font-size: 1.6rem;
     font-weight: 950;
-    text-shadow: 0 0 8px var(--item-rarity);
+    text-shadow: none;
     transform: rotate(-45deg);
 }
 
 @keyframes echo-raster-strike {
-    0%, 74%, 100% { opacity: 0.62; transform: translate(0); }
+    0%, 74%, 100% { opacity: 1; transform: translate(0); }
     80% { opacity: 1; transform: translate(-3%, 1%) scale(1.04); }
-    87% { opacity: 0.76; transform: translate(3%, -1%) scale(0.98); }
+    87% { opacity: 1; transform: translate(3%, -1%) scale(0.98); }
 }
 
 @keyframes echo-raster-focus {
-    0%, 100% { opacity: 0.48; transform: scaleX(0.88); }
+    0%, 100% { opacity: 1; transform: scaleX(0.88); }
     48%, 55% { opacity: 1; transform: scaleX(1.04); }
 }
 
 @keyframes echo-raster-rise {
-    0%, 100% { opacity: 0.48; transform: translateY(8%); }
-    50% { opacity: 0.96; transform: translateY(-8%); }
+    0%, 100% { opacity: 1; transform: translateY(8%); }
+    50% { opacity: 1; transform: translateY(-8%); }
 }
 
 @keyframes echo-raster-expand {
-    0%, 100% { opacity: 0.48; transform: scale(0.88); }
+    0%, 100% { opacity: 1; transform: scale(0.88); }
     50% { opacity: 1; transform: scale(1.08); }
 }
 
 @keyframes echo-raster-heavy {
-    0%, 100% { opacity: 0.55; transform: translateY(-2%) scaleY(1); }
-    55% { opacity: 0.9; transform: translateY(7%) scaleY(0.92); }
+    0%, 100% { opacity: 1; transform: translateY(-2%) scaleY(1); }
+    55% { opacity: 1; transform: translateY(7%) scaleY(0.92); }
 }
 
 @keyframes echo-raster-dart {
-    0%, 100% { opacity: 0.42; transform: translate(-9%, 9%); }
+    0%, 100% { opacity: 1; transform: translate(-9%, 9%); }
     46% { opacity: 1; transform: translate(9%, -9%); }
-    54% { opacity: 0.3; transform: translate(12%, -12%); }
+    54% { opacity: 1; transform: translate(12%, -12%); }
 }
 
 @keyframes echo-raster-cleave {
-    0%, 100% { opacity: 0.48; transform: translate(-7%, 4%); }
+    0%, 100% { opacity: 1; transform: translate(-7%, 4%); }
     50% { opacity: 1; transform: translate(7%, -4%); }
 }
 
 @keyframes echo-raster-roots {
-    0%, 100% { opacity: 0.52; transform: rotate(-1deg) scaleY(0.96); }
-    50% { opacity: 0.92; transform: rotate(1deg) scaleY(1.04); }
+    0%, 100% { opacity: 1; transform: rotate(-1deg) scaleY(0.96); }
+    50% { opacity: 1; transform: rotate(1deg) scaleY(1.04); }
 }
 
 @keyframes echo-raster-core {
-    0%, 100% { opacity: 0.5; transform: scale(0.92); }
+    0%, 100% { opacity: 1; transform: scale(0.92); }
     50% { opacity: 1; transform: scale(1.08); }
 }
 
 @keyframes echo-raster-chaos {
-    0%, 100% { opacity: 0.48; transform: translate(-4%, 3%) rotate(-3deg); }
+    0%, 100% { opacity: 1; transform: translate(-4%, 3%) rotate(-3deg); }
     25% { opacity: 1; transform: translate(5%, -4%) rotate(4deg); }
-    50% { opacity: 0.62; transform: translate(-3%, -5%) rotate(1deg); }
-    75% { opacity: 0.88; transform: translate(4%, 4%) rotate(-5deg); }
+    50% { opacity: 1; transform: translate(-3%, -5%) rotate(1deg); }
+    75% { opacity: 1; transform: translate(4%, 4%) rotate(-5deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {

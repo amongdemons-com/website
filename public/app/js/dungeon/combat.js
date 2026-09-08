@@ -2,7 +2,7 @@ import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, BATTLE_SCREEN_SHAKE_KEY, BATTLE_CARD_SHAKE_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedDemonCard, renderSharedCombatStats, getCombatHpBarLayout, openDemonDetailsModal, renderIcon } from './shared-ui.js';
+import { renderSharedDemonCard, renderSharedCombatStats, getCombatHpBarLayout, formatDemonCardNumber, getDemonCardAttackStat, openDemonDetailsModal, renderIcon } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const audio = window.AmongDemons.audio;
@@ -1026,19 +1026,7 @@ function drawFireNova(centerX, centerY, reach, attackerId, effect) {
   if (prefersReducedMotion()) return;
   const radius = Math.max(20, Number(reach) || 60);
   const nova = createCombatElement('fire-nova', attackerId, effect);
-  // Hollow-centred bloom: the inner part is transparent so the middle doesn't read as a solid
-  // red disc, the colour only builds toward the outer edge of the shockwave.
-  const gradientId = `fire-nova-grad-${Math.random().toString(36).slice(2, 8)}`;
   nova.innerHTML = renderViewportSvg(`
-      <defs>
-        <radialGradient id="${gradientId}" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0%" style="stop-color: var(--combat-color, #E25041); stop-opacity: 0" />
-          <stop offset="52%" style="stop-color: var(--combat-color, #E25041); stop-opacity: 0" />
-          <stop offset="82%" style="stop-color: var(--combat-color, #E25041); stop-opacity: 0.62" />
-          <stop offset="100%" style="stop-color: var(--combat-color, #E25041); stop-opacity: 0" />
-        </radialGradient>
-      </defs>
-      <circle class="fire-nova-flash" cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" r="${(radius * 0.72).toFixed(1)}" style="fill: url(#${gradientId})" />
       <circle class="fire-nova-ring fire-nova-ring-hot" cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" r="${(radius * 0.62).toFixed(1)}" />
       <circle class="fire-nova-ring" cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" r="${radius.toFixed(1)}" />
       <circle class="fire-nova-ring fire-nova-ring-delayed" cx="${centerX.toFixed(1)}" cy="${centerY.toFixed(1)}" r="${radius.toFixed(1)}" />
@@ -1060,7 +1048,7 @@ function updateTargetCard(instanceId, hp, attackerSide = 'unknown', options = {}
     : Math.max(0, Number(hpBarElement?.dataset.currentShield) || 0);
   const layout = getCombatHpBarLayout(hp, maxHp, shield);
   const hpElement = card.querySelector('.js-demon-hp');
-  if (hpElement) hpElement.textContent = layout.currentHp;
+  if (hpElement) hpElement.textContent = formatDemonCardNumber(layout.currentHp);
 
   if (hpFillElement) {
     hpFillElement.style.width = `${layout.hpPercent}%`;
@@ -1125,13 +1113,11 @@ function syncDemonAttackCard(instanceId) {
   const attackElement = card?.querySelector('.js-demon-atk');
   if (!card || !demon || !attackElement || !isSingleTargetCombatDemon(demon)) return;
 
-  const attack = Number.isFinite(Number(demon.effectiveAtk)) && Number(demon.effectiveAtk) > 0
-    ? Number(demon.effectiveAtk)
-    : Number(demon.atk);
-  attackElement.textContent = String(Math.max(1, Math.round(attack || 1)));
+  const attackStat = getDemonCardAttackStat(demon);
+  attackElement.textContent = attackStat.value;
   const statElement = attackElement.parentElement;
-  statElement?.setAttribute('title', `Attack: ${attackElement.textContent}`);
-  statElement?.setAttribute('aria-label', `Attack: ${attackElement.textContent}`);
+  statElement?.setAttribute('title', attackStat.description);
+  statElement?.setAttribute('aria-label', attackStat.description);
   card.classList.add('is-shared-pain-empowered');
 }
 

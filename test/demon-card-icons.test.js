@@ -26,7 +26,7 @@ function loadCardUi() {
 
 test('demon cards select role-specific attack icons', () => {
   const renderCard = loadCardUi().renderDemonCard;
-  const renderType = (typeId) => renderCard({ typeId, atk: 10 }, { hideRarity: true });
+  const renderType = (typeId) => renderCard({ typeId, atk: 10, speed: 50 }, { hideRarity: true });
 
   assert.match(renderType(1), /data-test-icon="attack"/);
   assert.match(renderType(2), /data-test-icon="ranged"/);
@@ -35,9 +35,26 @@ test('demon cards select role-specific attack icons', () => {
   assert.match(renderType(3), /data-test-icon="poison"/);
   assert.match(renderType(4), /data-test-icon="aoe"/);
   assert.match(renderType(7), /data-test-icon="attack"/);
+  assert.match(renderType(10), /data-test-icon="cross"/);
 });
 
-test('card stats follow the health bar with attack and speed before the right-hand HP value', () => {
+test('card numbers abbreviate thousands and millions with at most one decimal', () => {
+  const ui = loadCardUi();
+  for (const [value, expected] of [
+    [0, '0'], [12.36, '12.4'], [1000, '1k'], [1200, '1.2k'],
+    [142100, '142.1k'], [999949, '999.9k'], [999950, '1m'],
+    [1000000, '1m'], [2400000, '2.4m']
+  ]) {
+    assert.equal(ui.formatDemonCardNumber(value), expected);
+  }
+  const html = ui.renderDemonCard({ typeId: 8, atk: 1200, hp: 2400000, maxHp: 3000000 });
+  assert.match(html, /js-demon-hp">2\.4m<\/span>/);
+  assert.match(html, /js-demon-atk">1\.2k<\/span>/);
+  assert.match(html, /data-max-hp="3000000"/);
+  assert.match(html, /aria-label="HP 2400000 of 3000000"/);
+});
+
+test('card stats follow the health bar with DPT before the right-hand HP value', () => {
   const ui = loadCardUi();
   const demon = { typeId: 3, atk: 9, speed: 23, hp: 164, maxHp: 200 };
   const html = ui.renderCombatStats(demon);
@@ -47,7 +64,8 @@ test('card stats follow the health bar with attack and speed before the right-ha
   const hp = html.indexOf('class="combat-hp-meta');
   assert.ok(bar >= 0 && bar < footer && footer < attack && attack < hp);
   assert.match(html.slice(attack, hp), /data-test-icon="poison"/);
-  assert.match(html.slice(attack, hp), />23<\/span>/);
+  assert.match(html.slice(attack, hp), /js-demon-atk">2\.1<\/span>/);
+  assert.doesNotMatch(html, /data-test-icon="speed"/);
   assert.match(html.slice(hp), /js-demon-hp">164<\/span>/);
 
   const legacy = ui.renderCombatStats(demon, { legacyLayout: true });

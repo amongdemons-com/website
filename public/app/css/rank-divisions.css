@@ -1,21 +1,21 @@
 .rank-division-text {
     --rank-color: #98a3ad;
-    --rank-glow: rgba(152, 163, 173, 0.28);
+    --rank-glow: #30393e;
     color: var(--rank-color);
     font-weight: 850;
-    text-shadow: 0 0 10px var(--rank-glow);
+    text-shadow: none;
 }
 
 /* Shared division badge used by Ranked and player-facing profile surfaces. */
 .ranked-rank {
     --rank-color: #c98052;
-    --rank-glow: rgba(201, 128, 82, .35);
+    --rank-glow: #4b3729;
     display: inline-flex;
     align-items: center;
     gap: .28rem;
     color: var(--rank-color);
     line-height: 1;
-    text-shadow: 0 0 10px var(--rank-glow);
+    text-shadow: none;
     white-space: nowrap;
 }
 
@@ -23,7 +23,7 @@
     width: 1.32rem;
     height: 1.46rem;
     object-fit: contain;
-    filter: drop-shadow(0 0 5px var(--rank-glow));
+    filter: none;
 }
 
 .ranked-rank.is-compact {
@@ -44,44 +44,44 @@
 
 .rank-division-text--unranked {
     --rank-color: #98a3ad;
-    --rank-glow: rgba(152, 163, 173, 0.28);
+    --rank-glow: #30393e;
 }
 
 .rank-division-text--iron-iii,
-.ranked-rank--iron-iii { --rank-color: #9b6c62; --rank-glow: rgba(155, 108, 98, .34); }
+.ranked-rank--iron-iii { --rank-color: #9b6c62; --rank-glow: #392f2e; }
 .rank-division-text--iron-ii,
-.ranked-rank--iron-ii  { --rank-color: #9b6c62; --rank-glow: rgba(155, 108, 98, .4); }
+.ranked-rank--iron-ii  { --rank-color: #9b6c62; --rank-glow: #423533; }
 .rank-division-text--iron-i,
-.ranked-rank--iron-i   { --rank-color: #9b6c62; --rank-glow: rgba(155, 108, 98, .46); }
+.ranked-rank--iron-i   { --rank-color: #9b6c62; --rank-glow: #4b3a37; }
 .rank-division-text--bronze-iii,
-.ranked-rank--bronze-iii { --rank-color: #bd7048; --rank-glow: rgba(189, 112, 72, .36); }
+.ranked-rank--bronze-iii { --rank-color: #bd7048; --rank-glow: #493326; }
 .rank-division-text--bronze-ii,
-.ranked-rank--bronze-ii  { --rank-color: #d18452; --rank-glow: rgba(209, 132, 82, .4); }
+.ranked-rank--bronze-ii  { --rank-color: #d18452; --rank-glow: #583e2c; }
 .rank-division-text--bronze-i,
-.ranked-rank--bronze-i   { --rank-color: #e69b62; --rank-glow: rgba(230, 155, 98, .44); }
+.ranked-rank--bronze-i   { --rank-color: #e69b62; --rank-glow: #694d36; }
 .rank-division-text--silver-iii,
-.ranked-rank--silver-iii { --rank-color: #9eafbd; --rank-glow: rgba(158, 175, 189, .36); }
+.ranked-rank--silver-iii { --rank-color: #9eafbd; --rank-glow: #3d4950; }
 .rank-division-text--silver-ii,
-.ranked-rank--silver-ii  { --rank-color: #bdcad4; --rank-glow: rgba(189, 202, 212, .4); }
+.ranked-rank--silver-ii  { --rank-color: #bdcad4; --rank-glow: #505a60; }
 .rank-division-text--silver-i,
-.ranked-rank--silver-i   { --rank-color: #e0eaf1; --rank-glow: rgba(224, 234, 241, .46); }
+.ranked-rank--silver-i   { --rank-color: #e0eaf1; --rank-glow: #6b7479; }
 .rank-division-text--gold-iii,
-.ranked-rank--gold-iii   { --rank-color: #d79a20; --rank-glow: rgba(215, 154, 32, .38); }
+.ranked-rank--gold-iii   { --rank-color: #d79a20; --rank-glow: #564418; }
 .rank-division-text--gold-ii,
-.ranked-rank--gold-ii    { --rank-color: #efb934; --rank-glow: rgba(239, 185, 52, .44); }
+.ranked-rank--gold-ii    { --rank-color: #efb934; --rank-glow: #6d5a22; }
 .rank-division-text--gold-i,
-.ranked-rank--gold-i     { --rank-color: #ffd866; --rank-glow: rgba(255, 216, 102, .5); }
+.ranked-rank--gold-i     { --rank-color: #ffd866; --rank-glow: #83743d; }
 .rank-division-text--platinum-iii,
-.ranked-rank--platinum-iii { --rank-color: #4fb98e; --rank-glow: rgba(79, 185, 142, .4); }
+.ranked-rank--platinum-iii { --rank-color: #4fb98e; --rank-glow: #245444; }
 .rank-division-text--platinum-ii,
-.ranked-rank--platinum-ii  { --rank-color: #62d0a4; --rank-glow: rgba(98, 208, 164, .46); }
+.ranked-rank--platinum-ii  { --rank-color: #62d0a4; --rank-glow: #316856; }
 .rank-division-text--platinum-i,
-.ranked-rank--platinum-i   { --rank-color: #91f0c7; --rank-glow: rgba(145, 240, 199, .54); }
+.ranked-rank--platinum-i   { --rank-color: #91f0c7; --rank-glow: #528974; }
 .rank-division-text--diamond-iii,
-.ranked-rank--diamond-iii  { --rank-color: #5aa7ed; --rank-glow: rgba(90, 167, 237, .42); }
+.ranked-rank--diamond-iii  { --rank-color: #5aa7ed; --rank-glow: #2a4f6f; }
 .rank-division-text--diamond-ii,
-.ranked-rank--diamond-ii   { --rank-color: #76c5ff; --rank-glow: rgba(118, 197, 255, .48); }
+.ranked-rank--diamond-ii   { --rank-color: #76c5ff; --rank-glow: #3c6784; }
 .rank-division-text--diamond-i,
-.ranked-rank--diamond-i    { --rank-color: #a9e5ff; --rank-glow: rgba(169, 229, 255, .56); }
+.ranked-rank--diamond-i    { --rank-color: #a9e5ff; --rank-glow: #628797; }
 .rank-division-text--demonic,
-.ranked-rank--demonic      { --rank-color: #e58aff; --rank-glow: rgba(202, 76, 255, .62); }
+.ranked-rank--demonic      { --rank-color: #e58aff; --rank-glow: #8035a5; }

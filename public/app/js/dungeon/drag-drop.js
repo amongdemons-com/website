@@ -595,7 +595,7 @@ function activatePointerDrag(event, drag) {
   drag.ghost.removeAttribute('tabindex');
   drag.ghost.setAttribute('aria-hidden', 'true');
   drag.ghost.style.width = `${drag.card.getBoundingClientRect().width}px`;
-  drag.ghost.style.opacity = '0.94';
+  drag.ghost.style.opacity = '1';
   drag.ghost.style.visibility = 'visible';
   document.body.appendChild(drag.ghost);
   const point = getDragPoint(event);

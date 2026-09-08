@@ -549,18 +549,18 @@ function flowEnemyCardToHand(source, target, index) {
 
   const animation = ghost.animate([
     {
-      opacity: 0.98,
+      opacity: 1,
       transform: 'translate3d(0, 0, 0) scale(1, 1) rotate(0deg)',
       filter: 'brightness(1)'
     },
     {
       offset: 0.58,
-      opacity: 0.96,
+      opacity: 1,
       transform: `translate3d(${arcX}px, ${arcY}px, 0) scale(${Math.max(scaleX, 0.88)}, ${Math.max(scaleY, 0.88)}) rotate(${tilt}deg)`,
       filter: 'brightness(1.18)'
     },
     {
-      opacity: 0.2,
+      opacity: 1,
       transform: `translate3d(${deltaX}px, ${deltaY}px, 0) scale(${scaleX}, ${scaleY}) rotate(0deg)`,
       filter: 'brightness(1.06)'
     }

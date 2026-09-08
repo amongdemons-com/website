@@ -88,9 +88,9 @@
   function renderCombatStats(demon = {}, options = {}) {
     const hasHp = hasNumber(demon.hp) || hasNumber(demon.maxHp);
     const hasAtk = hasNumber(demon.atk);
-    const hasSpeed = hasNumber(demon.speed) && !options.hideSpeed && !isRetaliateDemon(demon);
+    const attackStat = getDemonCardAttackStat(demon, options);
+    const hasSpeed = hasNumber(demon.speed) && !options.hideSpeed && !isRetaliateDemon(demon) && !attackStat.isPerTick;
     const displayedSpeed = getDisplayedSpeed(demon.speed, options.maxDisplayedSpeed);
-    const attackStat = getAttackStat(demon);
     const hpBar = getCombatHpBarLayout(demon.hp, demon.maxHp, demon.shield);
     const { currentHp, maxHp, shield, hpPercent, shieldPercent } = hpBar;
     const showHpBar = hasHp && !options.hideHpBar;
@@ -101,7 +101,7 @@
     const combatStatStrip = hasAtk || hasSpeed ? `
       <div class="combat-stat-strip" aria-label="Combat stats">
         ${hasAtk ? `<span title="${escapeHtml(attackStat.description)}" aria-label="${escapeHtml(attackStat.description)}">${renderAttackIcon(demon)}<span class="js-demon-atk">${escapeHtml(attackStat.value)}</span></span>` : ''}
-        ${hasSpeed ? `<span>${renderSpeedIcon()}${escapeHtml(displayedSpeed)}</span>` : ''}
+        ${hasSpeed ? `<span>${renderSpeedIcon()}${formatDemonCardNumber(displayedSpeed)}</span>` : ''}
       </div>
     ` : '';
     const combatHpBar = showHpBar ? `
@@ -111,7 +111,7 @@
       </div>
     ` : '';
     const combatHpMeta = hasHp ? `
-      <div class="combat-hp-meta${showHpBar ? '' : ' is-separated'}"><span class="combat-current-hp js-demon-hp">${currentHp}</span>${renderIcon('hp')}</div>
+      <div class="combat-hp-meta${showHpBar ? '' : ' is-separated'}"><span class="combat-current-hp js-demon-hp">${formatDemonCardNumber(currentHp)}</span>${renderIcon('hp')}</div>
     ` : '';
 
     if (options.legacyLayout) {
@@ -148,6 +148,15 @@
 
   function formatCombatBarPercent(value) {
     return String(Number((Number(value) || 0).toFixed(4)));
+  }
+
+  function formatDemonCardNumber(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return '';
+    const magnitude = Math.abs(number);
+    if (magnitude >= 999950) return `${Number((number / 1000000).toFixed(1))}m`;
+    if (magnitude >= 1000) return `${Number((number / 1000).toFixed(1))}k`;
+    return String(Number(number.toFixed(1)));
   }
 
   function openDemonDetailsModal(demon = {}, options = {}) {
@@ -338,6 +347,20 @@
     return `<${tag} ${renderAttributes(attributes)}>${icon}<span>${escapeHtml(action.label || 'Action')}</span>${helper}</${tag}>`;
   }
 
+  function getDemonCardAttackStat(demon = {}, options = {}) {
+    const attackStat = getAttackStat(demon);
+    const isPerTick = !isRetaliateDemon(demon) && hasNumber(demon.speed) && Number.isFinite(Number(demon.speed));
+    // The attack meter requires 100 points and allows at most one action per tick.
+    const speed = Math.max(0, Math.min(100, Number(getDisplayedSpeed(demon.speed, options.maxDisplayedSpeed)) || 0));
+    const amount = isPerTick ? Number(attackStat.value) * speed / 100 : attackStat.value;
+    const value = formatDemonCardNumber(amount);
+    const label = isPerTick
+      ? isHealingDemon(demon) ? 'Healing per tick' : 'Damage per tick'
+      : attackStat.label;
+
+    return { value, isPerTick, description: `${label}: ${isPerTick ? value : attackStat.value}` };
+  }
+
   function getDetailActionGlassClass(variant = '') {
     const normalized = String(variant || '').toLowerCase();
     if (normalized.includes('danger')) return 'btn-glass-danger';
@@ -435,7 +458,7 @@
   }
 
   function isRetaliateDemon(demon = {}) {
-    return Number(demon.typeId) === 8 || demon.role === 'counter_tank' || demon.targeting === 'none';
+    return Number(demon.typeId || demon.type_id || demon.type) === 8 || demon.role === 'counter_tank' || demon.targeting === 'none';
   }
 
   function isHealingDemon(demon = {}) {
@@ -551,6 +574,8 @@
   ui.renderDemonCard = renderDemonCard;
   ui.renderCombatStats = renderCombatStats;
   ui.getCombatHpBarLayout = getCombatHpBarLayout;
+  ui.formatDemonCardNumber = formatDemonCardNumber;
+  ui.getDemonCardAttackStat = getDemonCardAttackStat;
   ui.openDemonDetailsModal = openDemonDetailsModal;
   ui.formatRoleLabel = formatTraitLabel;
   ui.formatTraitLabel = formatTraitLabel;

@@ -237,7 +237,7 @@ test('Anomaly floor results handle zero or multiple Echoes in a one-line reward 
   assert.match(worldCss, /\.world-anomaly-reward-list/);
   assert.match(worldCss, /\.world-anomaly-reward-track \{[\s\S]*?display: flex;/);
   assert.match(worldCss, /\.world-anomaly-reward-echo \{[\s\S]*?flex: 0 0 calc\(\(100% - 1\.14rem\) \/ 4\);/);
-  assert.match(worldCss, /\.world-anomaly-reward-tooltip \{[\s\S]*?background: rgba\(3, 9, 11, 0\.96\);/);
+  assert.match(worldCss, /\.world-anomaly-reward-tooltip \{[\s\S]*?background: #03090b;/);
   assert.match(worldCss, /\.world-dungeon-result \.world-anomaly-reward-tooltip \.world-anomaly-reward-tooltip-title \{[\s\S]*?color: #e25041;[\s\S]*?font-size: 0\.78rem;/);
   assert.match(worldCss, /\.world-anomaly-reward-tooltip-status \{[\s\S]*?color: #8ed6a6;/);
   assert.match(worldCss, /\.world-anomaly-reward-tooltip-total \{[\s\S]*?color: #e8c76a;/);
@@ -251,8 +251,8 @@ test('Anomaly floor results handle zero or multiple Echoes in a one-line reward 
   assert.doesNotMatch(echoHoverRule, /transform|translateY/);
   assert.doesNotMatch(worldUi, /Learning gained|Learnings complete/);
   const rewardRule = /\.world-anomaly-reward\s*\{([\s\S]*?)\n\}/.exec(worldCss)?.[1] || '';
-  assert.match(rewardRule, /rgba\(221, 177, 66, 0\.46\)/);
-  assert.match(rewardRule, /rgba\(82, 58, 13, 0\.5\)/);
+  assert.match(rewardRule, /#695a29/);
+  assert.match(rewardRule, /#2d2510/);
   assert.doesNotMatch(rewardRule, /167, 79, 224|64, 16, 84/);
 });
 

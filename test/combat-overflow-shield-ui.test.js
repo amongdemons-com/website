@@ -83,5 +83,5 @@ test('Dungeon and World playback keep shield values synchronized with the shared
   assert.match(dungeonCombat, /shield: entry\.targetShield/);
   assert.match(dungeonCombat, /getCombatHpBarLayout\(hp, maxHp, shield\)/);
   assert.match(worldCombat, /target\.shield = Math\.max\(0, Number\(entry\.targetShield\) \|\| 0\)/);
-  assert.match(styles, /\.combat-overflow-shield-fill \{[\s\S]*?right: 0;[\s\S]*?background: linear-gradient\(90deg, #dce9e8, #ffffff\);/);
+  assert.match(styles, /\.combat-overflow-shield-fill \{[\s\S]*?right: 0;[\s\S]*?background: #dce9e8;/);
 });

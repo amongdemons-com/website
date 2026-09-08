@@ -38,11 +38,11 @@ test('dungeon retains the original framed formation structure and responsive spa
   assert.match(gridRule, /--dungeon-demon-card-width:\s*clamp\(6rem, min\(11\.5vw, 20vh\), 15\.5rem\);/);
   assert.doesNotMatch(gridRule, /min\(11\.5vw, 22vh\)/);
   assert.match(gridRule, /gap:\s*var\(--dungeon-formation-gap\);/);
-  assert.match(gridRule, /border:\s*1px solid rgba\(161,212,201,0\.18\);/);
+  assert.match(gridRule, /border:\s*1px solid #233334;/);
   assert.match(gridRule, /padding:\s*clamp\(0\.45rem, 0\.8vw, 0\.68rem\);/);
-  assert.match(playerGridRule, /border-color:\s*rgba\(111,214,189,0\.32\);/);
-  assert.match(enemyGridRule, /border-color:\s*rgba\(226,80,65,0\.34\);/);
-  assert.match(slotRule, /border:\s*1px solid rgba\(161,212,201,0\.1\);/);
+  assert.match(playerGridRule, /border-color:\s*#284f49;/);
+  assert.match(enemyGridRule, /border-color:\s*#512623;/);
+  assert.match(slotRule, /border:\s*1px solid #162425;/);
 });
 
 test('dungeon formation grids use flat opaque cartoon surfaces', () => {

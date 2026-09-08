@@ -79,11 +79,8 @@ import './bag-item-visuals.js';
   const ANOMALY_FALLBACK_COST = 5_000;
   const ANOMALY_MAX_FLOOR = 9;
   const ANOMALY_ECHO_CHANCE_PERCENT = 25;
-  // Marker-local offsets shared by drawWorldMerchantMarker and its animated
-  // glow (updateMerchantGlow): where the soul lantern hangs inside the wagon
-  // and the center of the curtained opening its light spills out of.
+  // Marker-local position of the merchant's soul lantern.
   const MERCHANT_LANTERN_OFFSET = { x: -9, y: -4.3 };
-  const MERCHANT_INTERIOR_GLOW = { x: 0, y: 1 };
   const WORLD_LOW_POWER_KEY = 'amongdemons-world-low-power';
   const WORLD_LOW_POWER_FPS = 20;
   let demonMapAtlasPromise = null;
@@ -177,7 +174,6 @@ import './bag-item-visuals.js';
     hoverTile: null,
     pathLayer: null,
     pathPulse: null,
-    anomalyGlow: null,
     anomalyAltarTexture: null,
     markerLayer: null,
     encounterLayer: null,
@@ -210,9 +206,6 @@ import './bag-item-visuals.js';
     bossTextures: new Map(),
     tileTextures: new Map(),
     terrainBuilt: false,
-    puddleFxTiles: [],
-    puddleFxStyles: null,
-    puddleFxLast: 0,
     lowPowerMode: readWorldLowPowerPreference(),
     worldEffectsDirty: true,
     selectedEncounter: null,
@@ -687,18 +680,11 @@ import './bag-item-visuals.js';
     state.viewport = new Pixi.Container();
     state.groundLayer = new Pixi.Container(); // static terrain + obstacles
     state.gridLayer = new Pixi.Graphics();    // faint static grid
-    state.fogLayer = new Pixi.Graphics();     // event glows + active tile (dynamic)
+    state.fogLayer = new Pixi.Graphics();     // active tile outline
     state.roadLayer = new Pixi.Container();    // static roads
     state.hoverLayer = new Pixi.Graphics();    // hovered-tile hint (dynamic)
     state.pathLayer = new Pixi.Graphics();
     state.pathPulse = new Pixi.Graphics();     // animated destination ring
-    state.shrineGlow = new Pixi.Graphics();    // animated soul smoke around forsaken shrines
-    state.anomalyGlow = new Pixi.Graphics();   // dark energy pulled into the Altar of Many Voices
-    state.portalGlow = new Pixi.Graphics();    // animated breathing aura around darkness portals
-    state.soulFontGlow = new Pixi.Graphics();  // restrained breathing halo behind the Whispering Well
-    state.merchantGlow = new Pixi.Graphics();  // animated lantern flicker on the traveling merchant
-    state.bossAura = new Pixi.Graphics();      // animated pulsating aura beneath boss markers
-    state.puddleFx = new Pixi.Graphics();      // animated bubbles / embers over puddles
     state.markerLayer = new Pixi.Container();
     state.encounterLayer = new Pixi.Container();
     state.bossLayer = new Pixi.Container();
@@ -729,19 +715,11 @@ import './bag-item-visuals.js';
     state.viewport.addChild(state.gridLayer);
     state.viewport.addChild(state.fogLayer);
     state.viewport.addChild(state.roadLayer);
-    state.viewport.addChild(state.puddleFx);
     state.viewport.addChild(state.hoverLayer);
     state.viewport.addChild(state.pathLayer);
     state.viewport.addChild(state.pathPulse);
-    state.viewport.addChild(state.shrineGlow);
-    state.viewport.addChild(state.anomalyGlow);
-    state.viewport.addChild(state.portalGlow);
-    state.viewport.addChild(state.soulFontGlow);
     state.viewport.addChild(state.markerLayer);
-    // Above the markers so the lantern light spills over the wagon curtains.
-    state.viewport.addChild(state.merchantGlow);
     state.viewport.addChild(state.encounterLayer);
-    state.viewport.addChild(state.bossAura);
     state.viewport.addChild(state.bossLayer);
     state.viewport.addChild(state.hunterLayer);
     state.viewport.addChild(state.effectLayer);
@@ -2283,7 +2261,6 @@ import './bag-item-visuals.js';
         const cx = 22 + rng() * 20;
         const cy = 26 + rng() * 16;
         const r = 1.6 + rng() * 1.8;
-        g.ellipse(cx, cy + 1.5, r * 1.2, r * 0.6).fill({ color: 0x000000, alpha: 0.18 });
         g.ellipse(cx, cy, r, r * 0.8).fill({ color: palette.prop, alpha: 0.85 });
       }
     });
@@ -2643,7 +2620,7 @@ import './bag-item-visuals.js';
 
   // Baked surface of a poison puddle: a darker depth pool, floating scum
   // blotches and a glossy toxic sheen. The rising gas bubbles are animated
-  // separately (see drawPoisonFxParticle).
+  // without ambient particle overlays.
   function drawPoisonDetails(g, cx, cy, radius, rng, colors) {
     const { deep, glow } = colors;
 
@@ -2690,7 +2667,7 @@ import './bag-item-visuals.js';
 
   // Cooled crust plates and the occasional white-hot well - the non-fissure
   // surface of a lava pool. The rising embers are animated separately
-  // (see drawLavaFxParticle).
+  // without ambient particle overlays.
   function drawLavaCrust(g, cx, cy, radius, rng, colors) {
     const { deep, fissure, glow } = colors;
 
@@ -2723,100 +2700,6 @@ import './bag-item-visuals.js';
 
   function drawGiantLavaPuddle(g, tiles, palette) {
     drawGiantPuddle(g, tiles, palette, lavaPuddleColors, drawLavaCrust);
-  }
-
-  // --- animated puddle particles (rising bubbles / embers) -------------------
-  // The puddle bodies are baked once; only these particles animate. They loop
-  // purely off a time value (no per-particle state) and are drawn each tick for
-  // on-screen puddle tiles only, so cost scales with what's visible, not the
-  // whole world.
-  const PUDDLE_FX_RADIUS = TILE_SIZE * 0.42;
-
-  // Deterministic 0..1 hash so a particle can pick a fresh spawn spot each loop.
-  function fxHash(a, b, c) {
-    let h = Math.imul((a | 0) ^ 0x9e3779b1, 2654435761);
-    h = Math.imul(h ^ ((b | 0) + 0x85ebca6b), 2246822519);
-    h = Math.imul(h ^ ((c | 0) + 0x27d4eb2f), 3266489917);
-    h ^= h >>> 15;
-    return (h >>> 0) / 4294967296;
-  }
-
-  // A poison gas bubble: translucent dark body with a bright rim.
-  function drawPoisonFxParticle(g, x, y, r, alpha, colors) {
-    g.circle(x, y, r * 1.6).fill({ color: colors.glow, alpha: 0.14 * alpha });
-    g.circle(x, y, r).fill({ color: colors.deep, alpha: 0.7 * alpha })
-      .stroke({ color: colors.glow, width: 1.2, alpha: 0.85 * alpha });
-  }
-
-  // A lava ember: a glowing hot dot with a soft halo.
-  function drawLavaFxParticle(g, x, y, r, alpha, colors) {
-    g.circle(x, y, r * 1.9).fill({ color: colors.glow, alpha: 0.22 * alpha });
-    g.circle(x, y, r).fill({ color: colors.glow, alpha: 0.92 * alpha });
-  }
-
-  // Draw one tile's worth of rising particles at time `now` (ms). Each particle
-  // is born low in the pool, floats north, shrinks and fades over its lifetime,
-  // then respawns at a new spot on the next loop.
-  function drawPuddleFxParticles(g, cx, cy, now, seed, style) {
-    const radius = PUDDLE_FX_RADIUS;
-    for (let i = 0; i < style.count; i += 1) {
-      const t = now / style.period + i / style.count;
-      const life = t - Math.floor(t); // 0 at birth → 1 at top
-      const cycle = Math.floor(t); // increments each loop → reseed spawn
-      const baseX = cx + (fxHash(seed, i * 7 + 1, cycle) - 0.5) * radius * 0.9;
-      const sway = Math.sin(life * Math.PI * 1.4 + fxHash(seed, i * 7 + 3, cycle) * 6.283) * radius * 0.12;
-      const x = baseX + sway;
-      const y = cy + radius * 0.15 - life * radius * style.rise;
-      const r = radius * style.startR * (1 - life * 0.72); // shrink as it rises
-      if (r <= 0.4) continue;
-      const alpha = Math.sin(life * Math.PI); // fade in then out
-      style.render(g, x, y, r, alpha, style.colors);
-    }
-  }
-
-  // Build the per-style particle config once (colours depend on zone palette).
-  function buildPuddleFxStyles() {
-    return {
-      poison: {
-        colors: poisonPuddleColors(ZONE_PALETTES[3] || DEFAULT_ZONE_PALETTE),
-        render: drawPoisonFxParticle,
-        count: 3, period: 2600, rise: 1.35, startR: 0.13
-      },
-      lava: {
-        colors: lavaPuddleColors(ZONE_PALETTES[4] || DEFAULT_ZONE_PALETTE),
-        render: drawLavaFxParticle,
-        count: 4, period: 2100, rise: 1.5, startR: 0.13
-      }
-    };
-  }
-
-  // Ticker: redraw the animated particles for every on-screen puddle tile.
-  function updatePuddleFx() {
-    const layer = state.puddleFx;
-    if (!layer) return;
-    const tiles = state.puddleFxTiles;
-    if (!tiles || !tiles.length) return;
-
-    const now = getWorldEffectTime();
-    // Embers drift slowly - ~30fps is plenty and halves the redraw cost.
-    if (!state.lowPowerMode && now - (state.puddleFxLast || 0) < 33) return;
-    state.puddleFxLast = now;
-
-    layer.clear();
-
-    // Visible world rectangle (with a tile of margin) for culling.
-    const scale = state.viewport.scale.x || 1;
-    const margin = TILE_SIZE;
-    const left = -state.viewport.x / scale - margin;
-    const top = -state.viewport.y / scale - margin;
-    const right = (state.app.screen.width - state.viewport.x) / scale + margin;
-    const bottom = (state.app.screen.height - state.viewport.y) / scale + margin;
-
-    const styles = state.puddleFxStyles;
-    for (const tile of tiles) {
-      if (tile.cx < left || tile.cx > right || tile.cy < top || tile.cy > bottom) continue;
-      drawPuddleFxParticles(layer, tile.cx, tile.cy, now, tile.seed, styles[tile.styleKey]);
-    }
   }
 
   // Group blocked tiles of a given explicit type into orthogonally-connected
@@ -3073,11 +2956,6 @@ import './bag-item-visuals.js';
       }
     }
 
-    // Every poison/lava tile emits animated particles on the ticker, whether it
-    // renders solo or as part of a merge.
-    state.puddleFxStyles = buildPuddleFxStyles();
-    state.puddleFxTiles = [];
-    const PUDDLE_FX_TYPES = { poison: 'poison', lava: 'lava' };
 
     for (let y = min; y <= max; y += 1) {
       for (let x = min; x <= max; x += 1) {
@@ -3090,16 +2968,7 @@ import './bag-item-visuals.js';
         const blocked = getBlockedTile({ x, y });
         if (blocked) {
           const blockType = getBlockedTileType(blocked);
-          const fxStyle = PUDDLE_FX_TYPES[blockType];
-          if (fxStyle) {
-            const c = tileCenter({ x, y });
-            state.puddleFxTiles.push({
-              cx: c.x,
-              cy: c.y,
-              seed: (Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263)) >>> 0,
-              styleKey: fxStyle
-            });
-          }
+
           if (blockType === 'sign') {
             // Signs are passable world markers, drawn above roads with the
             // other interactive objects in drawEventMarkers().
@@ -3309,8 +3178,7 @@ import './bag-item-visuals.js';
     if (!layer) return;
     layer.clear();
 
-    // Event glows all animate on the ticker now (updateShrineGlow /
-    // updatePortalGlow), so only the active tile outline is drawn here.
+    // The active tile keeps its flat selection outline.
 
     // Active tile: a faint gold ground-ring under the hunter token.
     const active = tileCenter(state.position);
@@ -3393,9 +3261,7 @@ import './bag-item-visuals.js';
     // world's established pale-blue path color.
     const geometry = getStablePathGeometry(path);
     const dashes = buildPathDashes(geometry.curve, geometry.cumulative, geometry.visibleFromDistance);
-    drawPathDashPass(layer, dashes, { color: PATH_GLOW, width: 14, alpha: 0.08 });
-    drawPathDashPass(layer, dashes, { color: PATH_GLOW, width: 7, alpha: 0.2 });
-    drawPathDashPass(layer, dashes, { color: PATH_CORE, width: 3.2, alpha: 0.9 });
+    drawPathDashPass(layer, dashes, { color: PATH_CORE, width: 3.2, alpha: 1 });
   }
 
   function getStablePathGeometry(path) {
@@ -3549,13 +3415,6 @@ import './bag-item-visuals.js';
     if (state.lowPowerMode && !state.worldEffectsDirty) return;
 
     updatePathPulse();
-    updateShrineGlow();
-    updateAnomalyAltarGlow();
-    updatePortalGlow();
-    updateSoulFontGlow();
-    updateMerchantGlow();
-    updateBossAura();
-    updatePuddleFx();
     updateMerchantDirectionArrow();
     updateSoulFontDirectionArrow();
     state.worldEffectsDirty = false;
@@ -3579,185 +3438,8 @@ import './bag-item-visuals.js';
     if (path.length < 2) return;
 
     const c = tileCenter(path[path.length - 1]);
-    const phase = (getWorldEffectTime() % 1600) / 1600;
-    layer.circle(c.x, c.y, 8 + phase * 10).stroke({ color: PATH_GLOW, width: 1.5, alpha: 0.32 * (1 - phase) });
-    layer.circle(c.x, c.y, 6).fill({ color: PATH_GLOW, alpha: 0.14 });
-    layer.circle(c.x, c.y, 2.6).fill({ color: PATH_CORE, alpha: 0.9 });
-  }
-
-  // Animated soul glow for forsaken shrines - a gently breathing blue halo with a
-  // few drifting "smoke" wisps that rise and fade in a loop (runs on the ticker).
-  function updateShrineGlow() {
-    const layer = state.shrineGlow;
-    if (!layer) return;
-    layer.clear();
-
-    const shrines = (state.events || []).filter((event) => event.type === 'forsaken_shrine');
-    if (!shrines.length) return;
-
-    const now = getWorldEffectTime();
-    const soul = BOARD_COLORS.shrineSoul;
-    const WISPS = 3;
-
-    shrines.forEach((event) => {
-      const c = tileCenter(event);
-      const bound = isBoundShrine(event);
-      const base = bound ? 0.26 : 0.16;
-      const phase = (event.x * 13 + event.y * 7);
-
-      // Steady (non-pulsing) soul halo, drawn here so it sits above the roads.
-      layer.circle(c.x, c.y - 2, TILE_SIZE * 0.36).fill({ color: soul, alpha: bound ? 0.16 : 0.1 });
-
-      // Rising wisps of soul-smoke: born at the shrine, drift up, expand, fade.
-      for (let i = 0; i < WISPS; i += 1) {
-        const seed = phase + i * 37;
-        const life = ((now / 3200) + i / WISPS + seed * 0.013) % 1;
-        const rise = life * 30;
-        const drift = Math.sin(life * Math.PI * 2 + seed) * 5;
-        const radius = 3.5 + life * 8;
-        const alpha = Math.sin(life * Math.PI) * base * 0.7;
-        if (alpha <= 0) continue;
-        layer.circle(c.x + drift, c.y - 6 - rise, radius).fill({ color: soul, alpha });
-      }
-    });
-  }
-
-  function updateAnomalyAltarGlow() {
-    const layer = state.anomalyGlow;
-    if (!layer) return;
-    layer.clear();
-
-    const altars = (state.events || []).filter(isAnomalyAltarEvent);
-    if (!altars.length) return;
-    const reducedMotion = state.lowPowerMode || window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-    const now = reducedMotion ? 0 : getWorldEffectTime();
-
-    altars.forEach((event) => {
-      const c = tileCenter(event);
-      const phase = event.x * 29 + event.y * 17;
-      const breath = reducedMotion ? 0.35 : (Math.sin(now / 980 + phase) + 1) / 2;
-      layer.circle(c.x, c.y - 2, TILE_SIZE * (0.44 + breath * 0.08))
-        .fill({ color: 0x401054, alpha: 0.1 + breath * 0.045 });
-      layer.circle(c.x, c.y - 4, TILE_SIZE * (0.28 + breath * 0.05))
-        .fill({ color: 0xa74fe0, alpha: 0.07 + breath * 0.04 });
-
-      if (reducedMotion) return;
-      for (let index = 0; index < 4; index += 1) {
-        const life = ((now / 2800) + index / 4 + phase * 0.009) % 1;
-        const radius = 28 * (1 - life) + 4;
-        const angle = index * Math.PI * 0.5 + life * Math.PI * 1.7 + phase;
-        const alpha = Math.sin(life * Math.PI) * 0.32;
-        layer.circle(
-          c.x + Math.cos(angle) * radius,
-          c.y - 5 + Math.sin(angle) * radius * 0.42,
-          1.2 + life * 1.8
-        ).fill({ color: index === 0 ? 0xdc82ff : 0xa74fe0, alpha });
-      }
-    });
-  }
-
-  // Animated aura for darkness portals - a soft violet glow that slowly swells
-  // and shrinks in a loop (runs on the ticker).
-  function updatePortalGlow() {
-    const layer = state.portalGlow;
-    if (!layer) return;
-    layer.clear();
-
-    const portals = (state.events || []).filter((event) => isDarknessPortalEvent(event));
-    if (!portals.length) return;
-
-    const now = getWorldEffectTime();
-    portals.forEach((event) => {
-      const c = tileCenter(event);
-      // Per-portal phase offset so the portals don't all pulse in sync.
-      const phase = event.x * 17 + event.y * 29;
-      const breath = (Math.sin(now / 900 + phase) + 1) / 2; // 0..1 loop, ~5.6s
-      const radius = TILE_SIZE * (0.34 + breath * 0.12);
-      layer.circle(c.x, c.y, radius)
-        .fill({ color: BOARD_COLORS.portalGlow, alpha: 0.12 + breath * 0.08 });
-      layer.circle(c.x, c.y, radius * 0.6)
-        .fill({ color: BOARD_COLORS.portalGlow, alpha: 0.1 + breath * 0.06 });
-    });
-  }
-
-  // Animated warm flicker for the traveling merchant's soul lantern - an
-  // uneven candle-like halo with tiny embers drifting up off the flame, plus a
-  // faint glow breathing out of the curtained opening (runs on the ticker,
-  // drawn above the marker so the light spills over the wagon curtains).
-  function updateMerchantGlow() {
-    const layer = state.merchantGlow;
-    if (!layer) return;
-    layer.clear();
-
-    const merchant = state.merchant;
-    if (!merchant) return;
-
-    const c = tileCenter(merchant);
-    const now = getWorldEffectTime();
-    const gold = 0xe8b04a;
-    const phase = merchant.x * 23 + merchant.y * 41;
-
-    // Two layered sine frequencies give the lantern an uneven candle flicker.
-    const flicker = 0.5
-      + Math.sin(now / 480 + phase) * 0.28
-      + Math.sin(now / 130 + phase * 1.7) * 0.14;
-    const lanternX = c.x + MERCHANT_LANTERN_OFFSET.x;
-    const lanternY = c.y + MERCHANT_LANTERN_OFFSET.y;
-    layer.circle(lanternX, lanternY, 8 + flicker * 3)
-      .fill({ color: gold, alpha: 0.06 + flicker * 0.06 });
-    layer.circle(lanternX, lanternY, 4 + flicker * 1.6)
-      .fill({ color: 0xffd27a, alpha: 0.09 + flicker * 0.08 });
-
-    // A few embers rising off the flame: born at the lantern, drift up, fade.
-    for (let i = 0; i < 3; i += 1) {
-      const life = ((now / 2600) + i / 3 + phase * 0.011) % 1;
-      const rise = life * 11;
-      const drift = Math.sin(life * Math.PI * 2 + phase + i * 29) * 2.5;
-      const alpha = Math.sin(life * Math.PI) * 0.45;
-      if (alpha <= 0) continue;
-      layer.circle(lanternX + drift, lanternY - 3 - rise, 0.8 + life * 0.7)
-        .fill({ color: 0xffd98a, alpha });
-    }
-
-    // Warm light breathing out of the curtained opening.
-    const breath = (Math.sin(now / 1100 + phase) + 1) / 2;
-    layer.ellipse(c.x + MERCHANT_INTERIOR_GLOW.x, c.y + MERCHANT_INTERIOR_GLOW.y, 9 + breath * 2.5, 8 + breath * 2.5)
-      .fill({ color: gold, alpha: 0.04 + breath * 0.05 });
-  }
-
-  // Animated pulsating aura beneath boss markers - a gold halo that swells and
-  // fades in a loop, with a second slower ring so the threat reads at a glance
-  // (runs on the ticker, drawn under the boss node in drawBossMarkers).
-  function updateBossAura() {
-    const layer = state.bossAura;
-    if (!layer) return;
-    layer.clear();
-
-    const bosses = state.bosses || [];
-    if (!bosses.length) return;
-
-    const now = getWorldEffectTime();
-    const gold = 0xf2c35e;
-
-    bosses.forEach((boss) => {
-      const c = tileCenter(boss);
-      const selected = state.selectedBoss?.id === boss.id;
-      // Per-boss phase so multiple bosses don't pulse in lockstep.
-      const phase = boss.x * 19 + boss.y * 31;
-      const breath = (Math.sin(now / 780 + phase) + 1) / 2; // 0..1 loop, ~4.9s
-      const intensity = selected ? 1 : 0.7;
-
-      // Soft breathing halo.
-      layer.circle(c.x, c.y, TILE_SIZE * (0.58 + breath * 0.3))
-        .fill({ color: gold, alpha: (0.1 + breath * 0.1) * intensity });
-      layer.circle(c.x, c.y, TILE_SIZE * (0.36 + breath * 0.16))
-        .fill({ color: gold, alpha: (0.08 + breath * 0.08) * intensity });
-
-      // An outward pulse ring that expands and fades on a separate cadence.
-      const pulse = ((now / 1900) + phase * 0.01) % 1;
-      layer.circle(c.x, c.y, TILE_SIZE * (0.44 + pulse * 0.6))
-        .stroke({ color: gold, width: 2.4, alpha: (1 - pulse) * 0.42 * intensity });
-    });
+    layer.circle(c.x, c.y, 8).stroke({ color: PATH_GLOW, width: 1.5, alpha: 1 });
+    layer.circle(c.x, c.y, 2.6).fill({ color: PATH_CORE, alpha: 1 });
   }
 
   function drawMarkers() {
@@ -3782,9 +3464,7 @@ import './bag-item-visuals.js';
       const rng = seededRng((Math.imul(event.x | 0, 48271) ^ Math.imul(event.y | 0, 16807)) >>> 0);
 
       if (event.type === 'darkness-portal') {
-        // A dark well with pale light swirling into it. The breathing aura is
-        // drawn by updatePortalGlow on the ticker, beneath this marker.
-        marker.ellipse(0, 14, 17, 6).fill({ color: 0x000000, alpha: 0.38 });
+        // The portal keeps its original violet outline without an outer aura.
         marker.circle(0, 0, 15).fill({ color: 0x0d0812, alpha: 0.95 })
           .stroke({ color, width: 2.5, alpha: 0.95 });
         for (let i = 0; i < 3; i += 1) {
@@ -3837,31 +3517,7 @@ import './bag-item-visuals.js';
     return marker;
   }
 
-  // A quiet ivory pulse beneath the Whispering Well. Keeping this on its own
-  // layer lets the light breathe without moving or fading the marker itself.
-  function updateSoulFontGlow() {
-    const layer = state.soulFontGlow;
-    if (!layer) return;
-    layer.clear();
-
-    const wells = (state.events || []).filter((event) => event.type === 'soul-font');
-    if (!wells.length) return;
-
-    const now = getWorldEffectTime();
-    wells.forEach((event) => {
-      const c = tileCenter(event);
-      const phase = event.x * 17 + event.y * 31;
-      const breath = (Math.sin(now / 1050 + phase) + 1) / 2;
-
-      const glowY = c.y - 3 * SOUL_FONT_MARKER_SCALE;
-      layer.circle(c.x, glowY, TILE_SIZE * (0.48 + breath * 0.07))
-        .fill({ color: 0xf5efd7, alpha: 0.035 + breath * 0.025 });
-      layer.circle(c.x, glowY, TILE_SIZE * (0.34 + breath * 0.05))
-        .fill({ color: 0xfffdf0, alpha: 0.035 + breath * 0.02 });
-    });
-  }
-
-  // A flat, front-facing black stone well holding an ivory soul-flame. The
+// A flat, front-facing black stone well holding an ivory soul-flame. The
   // straight rim and single silhouette keep it in the map's illustrated plane.
   function drawSoulFontMarker(marker, rng) {
     const ivory = 0xf5efd7;
@@ -3939,7 +3595,7 @@ import './bag-item-visuals.js';
   // A traveling vardo seen from the front: big side wheels, a dark timber
   // body, an arched crimson roof with a scalloped valance, and curtains drawn
   // back to spill warm lantern light over shelves of wares. The lantern's
-  // living flicker comes from updateMerchantGlow on the ticker.
+  // colors come from the original merchant palette.
   function drawWorldMerchantMarker(layer) {
     const merchant = state.merchant;
     const Pixi = window.PIXI;
@@ -3961,7 +3617,6 @@ import './bag-item-visuals.js';
     const iron = 0x171716;
 
     // Ground shadow.
-    marker.ellipse(0, 20, 26, 6.5).fill({ color: 0x000000, alpha: 0.42 });
 
     // Wheels seen edge-on - the caravan faces us, so each one is a slim
     // iron-shod rim peeking out beside the body, with a worn tread highlight
@@ -4305,7 +3960,6 @@ import './bag-item-visuals.js';
     const iron = 0x171716;
 
     // Ground shadow and a slightly crooked, sharpened post.
-    g.ellipse(2, 23, 17, 5).fill({ color: 0x000000, alpha: 0.42 });
     g.poly([-4, -3, 4, -3, 3, 23, 0, 28, -3, 23])
       .fill({ color: woodDark, alpha: 0.98 })
       .stroke({ color: 0x110904, width: 1.5, alpha: 0.92 });
@@ -4339,12 +3993,11 @@ import './bag-item-visuals.js';
   }
 
   // A forsaken shrine: a cracked standing stone on a slab, its carved rune
-  // spilling soul-light. The drifting smoke comes from updateShrineGlow.
+  // carrying the original blue soul rune.
   function drawShrineMarker(g, soul, bound, rng) {
     const glowAlpha = bound ? 0.9 : 0.66;
 
     // Ground shadow + base slab.
-    g.ellipse(1, 16, 17, 6).fill({ color: 0x000000, alpha: 0.4 });
     g.poly([-14, 13, 14, 13, 11, 18, -11, 18]).fill({ color: 0x161a19, alpha: 0.96 })
       .stroke({ color: 0x070909, width: 1.4, alpha: 0.9 });
 
@@ -4359,13 +4012,11 @@ import './bag-item-visuals.js';
       .stroke({ color: 0x0a0d0d, width: 1.1, alpha: 0.7 });
 
     // Carved soul rune, glowing.
-    g.circle(0, -3, 8).fill({ color: soul, alpha: bound ? 0.16 : 0.09 });
     g.moveTo(0, -9).lineTo(0, 3).stroke({ color: soul, width: 1.6, alpha: glowAlpha });
     g.moveTo(-4, -6.5).lineTo(4, -6.5).stroke({ color: soul, width: 1.5, alpha: glowAlpha });
     g.moveTo(-3.5, 0).lineTo(3.5, 0).stroke({ color: soul, width: 1.3, alpha: glowAlpha * 0.8 });
 
     // A small soul-flame guttering at the crown.
-    g.circle(0, -21, 5.5).fill({ color: soul, alpha: bound ? 0.28 : 0.16 });
     g.ellipse(0, -21, 2.4, 3.4).fill({ color: soul, alpha: glowAlpha });
     g.ellipse(0, -21.8, 1.1, 1.8).fill({ color: 0xeafcff, alpha: 0.9 });
   }
@@ -4425,24 +4076,8 @@ import './bag-item-visuals.js';
       node.cullArea = new Pixi.Rectangle(-radius - 12, -radius - 12, radius * 2 + 24, radius * 2 + 48);
     }
 
-    // A grounded world node: trampled dark earth where the demon prowls, a
-    // soft ground shadow, a faint rarity glow, and a single thin ring around
-    // the portrait - no UI-sticker rings or runes.
+    // A flat portrait with its original rarity-colored selection ring.
     const base = new Pixi.Graphics();
-    // Trampled ground: overlapping dark scuffs with a few prowl marks.
-    for (let i = 0; i < 3; i += 1) {
-      base.ellipse((rng() - 0.5) * 14, radius - 4 + (rng() - 0.5) * 8, radius * (0.6 + rng() * 0.3), 6 + rng() * 4)
-        .fill({ color: 0x000000, alpha: 0.1 });
-    }
-    for (let i = 0; i < 4; i += 1) {
-      const a = rng() * Math.PI;
-      const dist = radius * (0.7 + rng() * 0.4);
-      base.ellipse(Math.cos(a) * dist, radius - 2 + Math.sin(a) * 6, 1.6 + rng(), 1 + rng() * 0.8)
-        .fill({ color: 0x000000, alpha: 0.22 });
-    }
-    base.ellipse(0, radius + 3, radius - 2, 5).fill({ color: 0x000000, alpha: 0.35 }); // shadow
-    base.circle(0, 0, radius + 4).fill({ color: ringColor, alpha: selected ? 0.2 : 0.09 }); // glow
-    if (selected) base.circle(0, 0, radius + 8).fill({ color: ringColor, alpha: 0.08 });
     base.circle(0, 0, radius + 1).fill({ color: 0x080c0e, alpha: 0.92 });
     base.circle(0, 0, radius + 2.5).stroke({ color: 0x0a0705, width: 2, alpha: 0.7 }); // dark rim seats the ring
     base.circle(0, 0, radius + 1).stroke({ color: ringColor, width: selected ? 2.5 : 1.5, alpha: selected ? 0.95 : 0.6 });
@@ -5531,16 +5166,13 @@ import './bag-item-visuals.js';
 
     return `
       <svg class="world-shrine-mark" viewBox="-17 -28 34 51" aria-hidden="true" focusable="false">
-        <ellipse cx="1" cy="16" rx="17" ry="6" fill="#000000" opacity="0.4"></ellipse>
         <polygon points="-14,13 14,13 11,18 -11,18" fill="#161a19" fill-opacity="0.96" stroke="#070909" stroke-width="1.4" stroke-opacity="0.9"></polygon>
         <polygon points="-8,13 -9,-10 -4,-17 3,-19 8,-12 9,5 7,13" fill="#1d2323" fill-opacity="0.97" stroke="#0a0d0d" stroke-width="1.6" stroke-opacity="0.9"></polygon>
         <polygon points="-7.5,10 -8.5,-9 -4,-16 -2,-16 -3.5,10" fill="#394547" fill-opacity="0.4"></polygon>
         <path d="M4 -18 L1 -8 L3.5 2" fill="none" stroke="#0a0d0d" stroke-width="1.1" stroke-opacity="0.7"></path>
-        <circle cx="0" cy="-3" r="8" fill="${soul}" fill-opacity="${bound ? 0.16 : 0.09}"></circle>
         <line x1="0" y1="-9" x2="0" y2="3" stroke="${soul}" stroke-width="1.6" stroke-opacity="${glowAlpha}"></line>
         <line x1="-4" y1="-6.5" x2="4" y2="-6.5" stroke="${soul}" stroke-width="1.5" stroke-opacity="${glowAlpha}"></line>
         <line x1="-3.5" y1="0" x2="3.5" y2="0" stroke="${soul}" stroke-width="1.3" stroke-opacity="${glowAlpha * 0.8}"></line>
-        <circle cx="0" cy="-21" r="5.5" fill="${soul}" fill-opacity="${bound ? 0.28 : 0.16}"></circle>
         <ellipse cx="0" cy="-21" rx="2.4" ry="3.4" fill="${soul}" fill-opacity="${glowAlpha}"></ellipse>
         <ellipse cx="0" cy="-21.8" rx="1.1" ry="1.8" fill="#eafcff" fill-opacity="0.9"></ellipse>
       </svg>
@@ -6758,9 +6390,9 @@ import './bag-item-visuals.js';
       const arc = 54 + ((index % 3) * 13);
       const animation = soul.animate([
         { transform: `translate(0, 0) scale(0.35)`, opacity: 0 },
-        { transform: `translate(${travelX * 0.18}px, ${(travelY * 0.24) + spread - arc}px) scale(0.82)`, opacity: 0.95, offset: 0.22 },
+        { transform: `translate(${travelX * 0.18}px, ${(travelY * 0.24) + spread - arc}px) scale(0.82)`, opacity: 1, offset: 0.22 },
         { transform: `translate(${travelX * 0.56}px, ${(travelY * 0.58) + spread - (arc * 0.72)}px) scale(1)`, opacity: 1, offset: 0.58 },
-        { transform: `translate(${travelX * 0.84}px, ${(travelY * 0.84) + spread - (arc * 0.28)}px) scale(0.72)`, opacity: 0.84, offset: 0.84 },
+        { transform: `translate(${travelX * 0.84}px, ${(travelY * 0.84) + spread - (arc * 0.28)}px) scale(0.72)`, opacity: 1, offset: 0.84 },
         { transform: `translate(${travelX}px, ${travelY}px) scale(0.15)`, opacity: 0 }
       ], {
         duration: 820 + ((index % 4) * 55),
@@ -10834,7 +10466,6 @@ import './bag-item-visuals.js';
     state.encounterMarkerNodes.clear();
     state.bossTextures.forEach((texture) => texture?.destroy?.(true));
     state.bossTextures.clear();
-    state.puddleFxTiles = [];
     state.terrainBuilt = false;
 
     if (state.app) {

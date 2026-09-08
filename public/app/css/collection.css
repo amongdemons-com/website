@@ -15,19 +15,18 @@
     gap: 0.45rem;
     width: var(--dungeon-demon-card-width, 9.25rem);
     color: #8de7ff;
-    border: 2px dashed rgba(141,231,255,0.54);
+    border: 2px dashed #4f8492;
     border-radius: 6px;
-    background: rgba(16,45,56,0.42);
+    background: #0b1c23;
     box-shadow:
-        inset 0 0 0 1px rgba(141,231,255,0.08),
-        0 0 18px rgba(82,183,255,0.14);
+        none;
     cursor: pointer;
 }
 
 .collection-missing-echo-label {
     color: #8de7ff;
-    border-color: rgba(141, 231, 255, 0.26);
-    background: rgba(12, 54, 65, 0.7);
+    border-color: #2a4850;
+    background: #0b2b33;
 }
 
 .collection-reinforcement-placeholder-icon {
@@ -59,9 +58,9 @@
     margin-right: 0;
     margin-left: 0;
     padding: 0.62rem;
-    border: 1px solid rgba(85,255,255,0.14);
+    border: 1px solid #123134;
     border-radius: 6px;
-    background: rgba(5,14,17,0.52);
+    background: #060f12;
 }
 
 .demon-detail-actions:has(.collection-train-action) .btn {
@@ -92,7 +91,7 @@
 
 .collection-train-action small {
     display: block;
-    color: rgba(207,226,220,0.72);
+    color: #97a7a4;
     font-size: 0.62rem;
     font-weight: 800;
     letter-spacing: 0;
@@ -103,7 +102,7 @@
 .collection-train-loading-dot {
     width: 0.58rem;
     height: 0.58rem;
-    border: 2px solid rgba(245,255,255,0.34);
+    border: 2px solid #586163;
     border-top-color: #f5ffff;
     border-radius: 50%;
     animation: dungeon-loading-spin 0.78s linear infinite;
@@ -111,17 +110,16 @@
 
 .collection-auto-train-modal .modal-content {
     overflow: hidden;
-    border: 1px solid rgba(85,255,255,0.2);
+    border: 1px solid #174042;
     border-radius: 8px;
-    background:
-        radial-gradient(circle at 90% 0%, rgba(85,255,255,0.11), transparent 35%),
+    background: radial-gradient(circle at 90% 0%, rgba(85,255,255,0.11), transparent 35%),
         linear-gradient(145deg, rgba(10,24,27,0.98), rgba(5,12,15,0.99));
-    box-shadow: 0 24px 70px rgba(0,0,0,0.62), 0 0 40px rgba(85,255,255,0.08);
+    box-shadow: 0 24px 70px rgba(0,0,0,0.62);
 }
 
 .collection-auto-train-modal .modal-header {
     align-items: flex-start;
-    border-bottom-color: rgba(85,255,255,0.12);
+    border-bottom-color: #102d2f;
 }
 
 .collection-auto-train-kicker {
@@ -160,10 +158,10 @@
 
 .collection-auto-train-balance {
     padding: 0.72rem 0.8rem;
-    border: 1px solid rgba(85,255,255,0.14);
+    border: 1px solid #123134;
     border-radius: 6px;
-    background: rgba(5,18,21,0.66);
-    color: rgba(220,232,235,0.72);
+    background: #061114;
+    color: #a0acaf;
     font-size: 0.72rem;
     font-weight: 900;
     letter-spacing: 0.06em;
@@ -183,9 +181,9 @@
     display: grid;
     gap: 0.7rem;
     padding: 0.85rem;
-    border: 1px solid rgba(250,197,28,0.18);
+    border: 1px solid #333115;
     border-radius: 6px;
-    background: linear-gradient(135deg, rgba(250,197,28,0.07), rgba(85,255,255,0.04));
+    background: #181d14;
 }
 
 .collection-auto-train-selected label {
@@ -217,7 +215,7 @@
 
 .collection-auto-train-hint,
 .collection-auto-train-empty {
-    color: rgba(207,226,220,0.67);
+    color: #8d9d9a;
     font-size: 0.72rem;
     line-height: 1.45;
 }
@@ -252,7 +250,7 @@
 }
 
 .collection-auto-train-results-head > span {
-    color: rgba(207,226,220,0.68);
+    color: #8f9f9c;
     font-size: 0.66rem;
     text-align: right;
 }
@@ -263,25 +261,25 @@
     max-height: min(34vh, 17rem);
     overflow-y: auto;
     padding: 0.58rem;
-    border: 1px solid rgba(161,212,201,0.13);
+    border: 1px solid #1b292b;
     border-radius: 6px;
-    background: rgba(2,8,10,0.58);
-    scrollbar-color: rgba(85,255,255,0.34) transparent;
+    background: #040b0e;
+    scrollbar-color: #226163 transparent;
 }
 
 .collection-auto-train-attempt {
     display: grid;
     gap: 0.38rem;
     padding: 0.58rem 0.65rem;
-    border: 1px solid rgba(161,212,201,0.13);
-    border-left: 3px solid rgba(228,104,94,0.72);
+    border: 1px solid #1b292b;
+    border-left: 3px solid #a64f49;
     border-radius: 5px;
-    background: rgba(12,20,22,0.74);
+    background: #0b1315;
 }
 
 .collection-auto-train-attempt.is-success {
     border-left-color: #41a85f;
-    background: linear-gradient(90deg, rgba(65,168,95,0.1), rgba(12,20,22,0.74) 42%);
+    background: #0d1f1b;
 }
 
 .collection-auto-train-attempt-head {
@@ -304,21 +302,21 @@
 
 .collection-auto-train-attempt-info,
 .collection-auto-train-attempt-stats {
-    color: rgba(220,232,235,0.72);
+    color: #a0acaf;
     font-size: 0.66rem;
 }
 
 .collection-auto-train-attempt-stats {
     justify-content: flex-start;
     gap: 0.8rem;
-    color: rgba(168,182,191,0.82);
+    color: #8b98a0;
 }
 
 .collection-auto-train-error {
     padding: 0.72rem;
-    border: 1px solid rgba(228,104,94,0.32);
+    border: 1px solid #4e2c2b;
     border-radius: 5px;
-    background: rgba(40,12,12,0.48);
+    background: #170e10;
     color: #ffd4ce;
     font-size: 0.76rem;
 }
@@ -439,7 +437,7 @@
 .dungeon-demon-card.is-collection-reinforcement-attention,
     .collection-reinforcement-placeholder.is-collection-reinforcement-attention {
         animation: none;
-        box-shadow: 0 0 0 2px rgba(141,231,255,0.24), 0 0 18px rgba(82,183,255,0.2);
+        box-shadow: none;
     }
 
 .attack-zap path,
@@ -471,8 +469,7 @@
 
 body.collection-page {
     min-height: 100%;
-    background:
-        linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.78)),
+    background: linear-gradient(rgba(6,13,16,0.5), rgba(6,13,16,0.78)),
         radial-gradient(circle at 18% 18%, rgba(111,214,189,0.14), transparent 24rem),
         radial-gradient(circle at 86% 14%, rgba(232,199,106,0.11), transparent 22rem),
         image-set(url("/app/images/assets/background/amongdemons_collection.avif?v=art-570e7495b84f") type("image/avif"), url("/app/images/assets/background/amongdemons_collection.webp?v=art-570e7495b84f") type("image/webp"), url("/app/images/assets/background/amongdemons_collection.png?v=art-570e7495b84f") type("image/png")) center top / cover fixed no-repeat,
@@ -487,15 +484,14 @@ body.collection-page {
     color: var(--ad-text);
     font-weight: 700;
     letter-spacing: 0;
-    text-shadow: 0 2px 18px rgba(0,0,0,0.46);
+    text-shadow: none;
 }
 
 .collection-page .card {
-    border-color: rgba(111,214,189,0.18);
+    border-color: #1a3432;
     background:
-        linear-gradient(180deg, rgba(111,214,189,0.05), transparent 38%),
-        rgba(7,16,19,0.78);
-    backdrop-filter: blur(2px);
+        #071013;
+    backdrop-filter: none;
 }
 
 .collection-gallery-card {
@@ -509,9 +505,9 @@ body.collection-page {
     min-width: 2rem;
     min-height: 1.45rem;
     padding: 0.12rem 0.55rem;
-    border: 1px solid rgba(111,214,189,0.28);
+    border: 1px solid #244743;
     border-radius: 999px;
-    background: rgba(111,214,189,0.12);
+    background: #132827;
     color: var(--ad-green);
     font-size: 0.8rem;
     font-weight: 800;
@@ -526,8 +522,8 @@ body.collection-page {
 }
 
 .collection-controls .form-select {
-    border-color: rgba(161,212,201,0.18);
-    background-color: rgba(4,10,12,0.72);
+    border-color: #233334;
+    background-color: #050c0e;
     color: var(--ad-text);
 }
 
@@ -544,9 +540,9 @@ body.collection-page {
     min-height: calc(1.5em + 0.5rem + 2px);
     gap: 0.45rem;
     padding: 0.25rem 0.65rem;
-    border: 1px solid rgba(161,212,201,0.18);
+    border: 1px solid #233334;
     border-radius: 0.375rem;
-    background: rgba(4,10,12,0.72);
+    background: #050c0e;
     color: var(--ad-text);
     font-size: 0.875rem;
     line-height: 1.2;
@@ -575,7 +571,7 @@ body.collection-page {
 
 .collection-demon-card {
     width: 100%;
-    background: rgba(3,9,11,0.55);
+    background: #050c0f;
 }
 
 .collection-card-grid .dungeon-demon-card {
@@ -588,26 +584,26 @@ body.collection-page {
 }
 
 .collection-missing-card {
-    --rarity-color: rgba(161,212,201,0.45) !important;
-    border-color: rgba(161,212,201,0.14);
+    --rarity-color: #4c6865 !important;
+    border-color: #1d2b2c;
     border-style: dashed;
-    opacity: 0.62;
+    opacity: 1;
     filter: grayscale(0.95);
     cursor: pointer;
 }
 
 .collection-missing-card .dungeon-demon-rarity-gem {
-    opacity: 0.35;
+    opacity: 1;
 }
 
 .collection-missing-card img {
-    opacity: 0.7;
-    filter: grayscale(1) contrast(0.78) brightness(0.78);
+    opacity: 1;
+    filter: grayscale(1) contrast(0.78);
 }
 
 .collection-missing-label {
     margin-top: 0.45rem;
-    color: rgba(209,219,218,0.72);
+    color: #98a2a2;
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0;
@@ -625,9 +621,9 @@ body.collection-page {
     min-width: 2.35rem;
     min-height: 1.08rem;
     padding: 0.14rem 0.42rem;
-    border: 1px solid rgba(85,255,255,0.28);
+    border: 1px solid #1d5355;
     border-radius: 4px;
-    background: rgba(5,25,29,0.78);
+    background: #05171b;
     color: #8dffff;
     font-size: 0.56rem;
     font-weight: 900;
@@ -641,19 +637,17 @@ body.collection-page {
 .collection-training-panel {
     display: grid;
     gap: 0.58rem;
-    border: 1px solid rgba(85,255,255,0.18);
+    border: 1px solid #153b3d;
     border-radius: 6px;
     background:
-        linear-gradient(135deg, rgba(85,255,255,0.08), rgba(250,197,28,0.05)),
-        rgba(5,14,17,0.62);
+        #060f12;
     padding: 0.72rem;
 }
 
 .collection-training-panel.is-maxed {
-    border-color: rgba(250,197,28,0.32);
+    border-color: #554a16;
     background:
-        linear-gradient(135deg, rgba(250,197,28,0.12), rgba(85,255,255,0.05)),
-        rgba(23,17,7,0.66);
+        #12110b;
 }
 
 .is-maxed .collection-training-stat-list{
@@ -694,9 +688,9 @@ body.collection-page {
 
 .collection-training-disabled-reason {
     flex: 0 0 auto;
-    border: 1px solid rgba(228,104,94,0.34);
+    border: 1px solid #522e2d;
     border-radius: 999px;
-    background: rgba(40,12,12,0.48);
+    background: #170e10;
     color: #ffd4ce;
     font-size: 0.64rem;
     font-weight: 900;
@@ -734,7 +728,7 @@ body.collection-page {
 }
 
 .collection-training-action-cost small {
-    color: rgba(207,226,220,0.68);
+    color: #8f9f9c;
     font-size: 0.62rem;
     font-weight: 800;
     letter-spacing: 0;
@@ -751,7 +745,7 @@ body.collection-page {
 }
 
 .collection-training-cost-label {
-    color: rgba(207,226,220,0.72);
+    color: #97a7a4;
     letter-spacing: 0.05em;
 }
 
@@ -827,7 +821,7 @@ body.collection-page {
 .collection-training-stat-track {
     height: 0.34rem;
     border-radius: 999px;
-    background: rgba(207,226,220,0.14);
+    background: #232d2f;
     overflow: hidden;
 }
 
@@ -835,11 +829,11 @@ body.collection-page {
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #41a85f, #55ffff);
+    background: #41a85f;
 }
 
 .collection-training-stat.is-maxed .collection-training-stat-track span {
-    background: linear-gradient(90deg, #e8c76a, #fac51c);
+    background: #e8c76a;
 }
 
 .collection-training-burst {
@@ -859,9 +853,8 @@ body.collection-page {
     inset: 0;
     border-radius: inherit;
     background:
-        radial-gradient(circle at 50% 50%, rgba(85,255,255,0.22), transparent 16%),
-        radial-gradient(circle at 50% 50%, rgba(85,255,255,0.12), transparent 40%);
-    mix-blend-mode: screen;
+        none;
+    mix-blend-mode: normal;
     animation: collection-training-vortex-pulse 4100ms ease-out both;
 }
 
@@ -882,8 +875,7 @@ body.collection-page {
     border-radius: 999px;
     background: var(--ad-soul, #55ffff);
     box-shadow:
-        0 0 calc(10px * var(--size, 1)) rgba(85,255,255,0.78),
-        0 0 calc(18px * var(--size, 1)) rgba(85,255,255,0.28);
+        none;
     opacity: 0;
     transform: translate(-50%, -50%) translate(var(--sx), var(--sy)) scale(calc(var(--size, 1) * 0.55));
     animation: collection-training-particle-converge var(--duration, 1900ms) cubic-bezier(0.14, 0.92, 0.16, 1) both;
@@ -898,11 +890,10 @@ body.collection-page {
     aspect-ratio: 1;
     border-radius: 50%;
     background:
-        radial-gradient(circle, rgba(255,255,255,0.82) 0 8%, rgba(85,255,255,0.52) 9% 28%, transparent 62%);
+        #d2d4d5;
     box-shadow:
-        0 0 32px rgba(85,255,255,0.68),
-        0 0 52px rgba(85,255,255,0.3);
-    mix-blend-mode: screen;
+        none;
+    mix-blend-mode: normal;
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.1);
     animation: collection-training-core-impact 4100ms ease-out both;
@@ -931,34 +922,28 @@ body.collection-page {
     display: inline-flex;
     align-items: center;
     gap: 0.48rem;
-    border: 2px solid rgba(250,197,28,0.66);
+    border: 2px solid #a78719;
     border-radius: 999px;
     background:
-        linear-gradient(135deg, rgba(250,197,28,0.22), rgba(85,255,255,0.16)),
-        rgba(8,18,19,0.94);
+        #081213;
     color: #fff6ce;
     box-shadow:
-        0 12px 32px rgba(0,0,0,0.5),
-        0 0 30px rgba(250,197,28,0.28),
-        inset 0 0 0 1px rgba(255,255,255,0.12);
+        none;
     font-size: 1.18rem;
     font-weight: 900;
     line-height: 1;
     padding: 0.62rem 0.86rem;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.72);
+    text-shadow: none;
     white-space: nowrap;
 }
 
 .collection-training-result-pop .is-failure {
-    border-color: rgba(228,104,94,0.72);
+    border-color: #a64f49;
     background:
-        linear-gradient(135deg, rgba(228,104,94,0.22), rgba(250,197,28,0.1)),
-        rgba(20,9,9,0.94);
+        #13090a;
     color: #ffd7d3;
     box-shadow:
-        0 12px 32px rgba(0,0,0,0.5),
-        0 0 30px rgba(228,104,94,0.26),
-        inset 0 0 0 1px rgba(255,255,255,0.1);
+        none;
 }
 
 .collection-training-result-pop .game-icon,
@@ -969,15 +954,12 @@ body.collection-page {
 }
 
 .collection-training-result-pop .collection-training-spent-pill {
-    border-color: rgba(85,255,255,0.58);
+    border-color: #349b9c;
     background:
-        linear-gradient(135deg, rgba(85,255,255,0.24), rgba(67,135,255,0.2)),
-        rgba(5,19,28,0.96);
+        #05131c;
     color: #c8ffff;
     box-shadow:
-        0 12px 32px rgba(0,0,0,0.5),
-        0 0 30px rgba(85,255,255,0.24),
-        inset 0 0 0 1px rgba(255,255,255,0.12);
+        none;
 }
 
 .collection-training-spent-minus {
@@ -992,9 +974,9 @@ body.collection-page {
 
 .collection-empty-state {
     min-height: 320px;
-    border: 1px dashed rgba(161,212,201,0.2);
+    border: 1px dashed #263737;
     border-radius: var(--ad-radius);
-    background: rgba(4,10,12,0.32);
+    background: #060e11;
 }
 
 @media (max-width: 767.98px) {

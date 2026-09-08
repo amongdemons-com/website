@@ -470,7 +470,7 @@ test('ranked encounter identity shows Unranked when the opponent has no live rat
   assert.equal(serialized.opponent.liveDivision, 'Unranked');
 });
 
-test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result flow', () => {
+test('Dungeon UI contains the Ranked checkpoint identity, enemy color, and result flow', () => {
   const html = fs.readFileSync(path.join(ROOT, 'public', 'app', 'dungeon.html'), 'utf8');
   const styles = fs.readFileSync(path.join(ROOT, 'public', 'app', 'css', 'battle.css'), 'utf8');
   const rankedUi = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'dungeon', 'ranked.js'), 'utf8');
@@ -491,7 +491,7 @@ test('Dungeon UI contains the Ranked checkpoint identity, glimmer, and result fl
   assert.match(styles, /dungeon-ranked-choice-modal/);
   assert.match(styles, /dungeon-ranked-choice-escape-btn small/);
   assert.match(styles, /is-ranked-encounter-planning #enemyGrid \.battle-formation-grid::before/);
-  assert.match(styles, /rgba\(226, 80, 65, 0\.42\)/);
+  assert.match(styles, /#75423e/);
   assert.match(rankedUi, /dungeon-ranked-opponent-name/);
   assert.match(rankedUi, /opponent\.liveDivision \|\| opponent\.division/);
   assert.match(rankedUi, /rank-division-text--/);
