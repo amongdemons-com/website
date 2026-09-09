@@ -289,7 +289,7 @@ function renderTeamSideTitle(teamCount = null, teamLimit = null) {
 
   const buffs = getFriendlyTeamBuffs();
   elements.teamSideTitle.innerHTML = `
-    <span>Your Team</span>
+    <span class="outline">Your Team</span>
     ${countHtml ? ` ${countHtml}` : ''}
     ${renderBattleBuffSummaryChip(buffs, { side: 'player' })}
   `;
@@ -448,7 +448,7 @@ function renderEnemySideTitle(pressure = null, buffs = [], teamBuffs = []) {
   const rankedIdentity = renderDungeonRankedEnemyIdentity(getVisibleDungeonRankedEncounter(state.run));
   const label = state.run?.enemyLabel || 'Enemies';
   elements.enemySideTitle.innerHTML = `
-    ${rankedIdentity || `<span>${escapeHtml(label)}</span>`}
+    ${rankedIdentity || `<span class="outline">${escapeHtml(label)}</span>`}
     ${renderEnemyPressureChip(pressure)}
     ${renderEnemyBuffChips(buffs)}
     ${renderBattleBuffSummaryChip(teamBuffs, { side: 'enemy' })}
@@ -615,13 +615,9 @@ function updateDungeonJoiner() {
   elements.dungeonJoiner.innerHTML = `
     <div class="dungeon-center-panel" aria-label="Dungeon floor and actions">
       ${floor ? `
-        <div class="dungeon-floor-marker" aria-label="Current floor ${floor}">
+        <div class="dungeon-floor-marker outline" aria-label="Current floor ${floor}">
           <span class="dungeon-floor-kicker">Floor</span>
           <strong>${floor}</strong>
-        </div>
-        <div class="dungeon-center-sigil" aria-hidden="true">
-          <span class="dungeon-center-sigil-ring"></span>
-          <span class="dungeon-center-sigil-core">${renderButtonMeleeIcon()}</span>
         </div>
       ` : ''}
       <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
@@ -897,7 +893,7 @@ function renderDungeonCenterActions(options = {}) {
   if (canStart) {
     const startChanged = setElementHtml(elements.dungeonCenterActions, `
       <div class="dungeon-center-action-stack">
-        <button class="btn btn-primary dungeon-fight-btn dungeon-center-start-btn" id="dungeonCenterStartBtn" type="button" title="${isDefeated ? 'Start a new dungeon' : 'Start the dungeon'}">
+        <button class="btn btn-primary outline dungeon-fight-btn dungeon-center-start-btn" id="dungeonCenterStartBtn" type="button" title="${isDefeated ? 'Start a new dungeon' : 'Start the dungeon'}">
           ${renderIcon('play')}
           <span>${isDefeated ? 'New Dungeon' : 'Start Dungeon'}</span>
         </button>
@@ -921,7 +917,7 @@ function renderDungeonCenterActions(options = {}) {
   const changed = setElementHtml(elements.dungeonCenterActions, canFight ? `
     <div class="dungeon-center-action-stack">
       <button
-        class="btn btn-primary dungeon-fight-btn ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
+        class="btn btn-primary outline dungeon-fight-btn ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
         id="dungeonFightBtn"
         type="button"
         title="${title}"
