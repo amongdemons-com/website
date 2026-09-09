@@ -21,12 +21,29 @@
     ['b', '/bag']
   ]);
   const DEFAULT_MUSIC_ROUTE = /^\/(?:demons|bosses|events|leaderboard|hunter)(?:\/|$)/;
+  const OUTLINE_CLASS_TARGET_SELECTOR = [
+    '.game-shell-nav',
+    '.game-shell-brand-name',
+    '.game-nav-link',
+    '.game-nav-dropdown-item',
+    '.nav-balance',
+    '.nav-player',
+    '.nav-player-copy',
+    '.nav-player-copy span',
+    '.nav-player-copy small',
+    '.nav-settings-link',
+    '.nav-logout-btn',
+    '.game-shell-auth-actions .btn',
+    '.btn-primary',
+    '.game-primary-action'
+  ].join(',');
 
   onReady(init);
 
   function init() {
     initDefaultMusic();
     createHunterNavigation();
+    initOutlineClasses();
     markCurrentGameNav();
     bindDisabledLinks();
     bindGlobalPageShortcuts();
@@ -62,6 +79,35 @@
     bagLink?.closest('.nav-item')?.remove();
     collectionLink?.closest('.nav-item')?.remove();
     window.AmongDemons?.ui?.replaceStaticIcons?.();
+  }
+
+  function initOutlineClasses() {
+    applyOutlineClasses(document);
+    if (!document.body || typeof MutationObserver !== 'function') return;
+
+    const observer = new MutationObserver((records) => {
+      records.forEach((record) => {
+        record.addedNodes.forEach((node) => applyOutlineClasses(node));
+      });
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  function applyOutlineClasses(root) {
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+
+    const elements = [];
+    if (typeof Element !== 'undefined'
+      && root instanceof Element
+      && root.matches(OUTLINE_CLASS_TARGET_SELECTOR)) {
+      elements.push(root);
+    }
+    elements.push(...root.querySelectorAll(OUTLINE_CLASS_TARGET_SELECTOR));
+    elements.forEach((element) => element.classList.add('outline'));
   }
 
   function initDefaultMusic() {

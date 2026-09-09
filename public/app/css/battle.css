@@ -1152,11 +1152,14 @@ body:not(.dungeon-page) {
     justify-content: center;
     gap: 0.48rem;
     min-height: 2.75rem;
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 0.88rem;
-    font-weight: 650;
     letter-spacing: 0;
     line-height: 1.2;
+}
+
+.dungeon-result-actions .btn:not(.btn-primary):not(.game-primary-action) {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 650;
 }
 
 .dungeon-result-actions .btn > span:last-child {
@@ -1175,7 +1178,6 @@ body:not(.dungeon-page) {
 .dungeon-result-primary {
     min-height: 3rem !important;
     font-size: 0.84rem !important;
-    font-weight: 800 !important;
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
@@ -2617,7 +2619,6 @@ body:not(.dungeon-page) {
     min-height: 0;
     padding: 0.18rem 0.22rem;
     font-size: 0.78rem;
-    font-weight: 900;
     text-transform: uppercase;
 }
 
@@ -3298,7 +3299,6 @@ body:not(.dungeon-page) {
     min-height: 2.35rem;
     padding: 0.52rem 0.82rem;
     font-size: 0.86rem;
-    font-weight: 800;
 }
 
 .cashout-selected-reward .dungeon-demon-card,
@@ -4147,8 +4147,8 @@ body.dungeon-page main .btn:not(.btn-primary):not(.btn-warning):not(.btn-success
 body.dungeon-page .dungeon-modal .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger),
 body.dungeon-page .demon-detail-modal .btn:not(.btn-primary):not(.btn-warning):not(.btn-success):not(.btn-danger):not(.btn-secondary):not(.btn-outline-light):not(.btn-glass-muted):not(.btn-glass-danger),
 body.dungeon-page .demonic-pact-reroll-btn,
-body.dungeon-page .battle-playback-btn,
-body.dungeon-page .battle-speed-option,
+body.dungeon-page .battle-playback-btn:not(.game-primary-action),
+body.dungeon-page .battle-speed-option:not(.game-primary-action),
 body.dungeon-page .dungeon-hand-scroll-btn {
     box-sizing: border-box;
     border: 1px solid var(--dungeon-btn-border);
@@ -4213,7 +4213,6 @@ body.dungeon-page .demonic-pact-overlay .btn-primary {
     background: var(--dungeon-btn-action-bg);
     color: var(--dungeon-btn-action-text);
     box-shadow: none;
-    text-shadow: none;
 }
 
 body.dungeon-page main .btn-primary:not(:disabled):hover,
@@ -4292,7 +4291,6 @@ body .battle-speed-option.active.game-primary-action {
     background: var(--primary-gradient);
     color: var(--primary-label);
     box-shadow: none;
-    text-shadow: none;
 }
 
 body .battle-playback-btn.game-primary-action:not(:disabled):hover,
@@ -6485,11 +6483,8 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn {
     border-color: #c28e39;
     background: linear-gradient(180deg, #c99745 0%, #9b6929 100%);
     color: #21180e;
-    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
     font-size: clamp(0.9rem, 1.15vw, 1.12rem);
-    font-weight: 900;
     letter-spacing: 0.04em;
-    text-shadow: 0 1px 0 rgba(255, 224, 143, 0.45);
     box-shadow:
         inset 0 1px 0 rgba(255, 230, 156, 0.42),
         inset 0 -3px 0 rgba(52, 31, 11, 0.2),

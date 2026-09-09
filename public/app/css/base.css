@@ -1,3 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+
+/* Shared display type for the navbar, primary actions, and any future outlined copy. */
+.outline {
+    font-family: "Lilita One", sans-serif;
+    font-weight: normal;
+    -webkit-text-stroke: 2px #11181b;
+    paint-order: stroke fill;
+    text-shadow: 2px 2px 0 #11181b;
+}
+
 /* base.css - split from main.css by scripts/split-main-css.js.
    Shared shell: variables, nav, buttons, landing, auth, settings, rankings, notifications. Loaded by every page, first.
    Edit these files directly; main.css no longer exists. */
@@ -484,7 +495,6 @@ main {
     width: 100%;
     min-height: 3rem;
     border-radius: 8px;
-    font-weight: 800;
 }
 
 .auth-switch-link {
@@ -3449,7 +3459,6 @@ a:hover {
 
 .nav-balance .soul-amount-value {
     color: #f5ffff;
-    font-weight: 900;
 }
 
 .nav-balance .soul-amount-label {
@@ -3463,7 +3472,6 @@ a:hover {
     padding: 0.38rem 0.62rem;
     color: var(--ad-muted);
     font-size: 0.86rem;
-    font-weight: 700;
     text-decoration: none;
 }
 
@@ -3589,7 +3597,7 @@ a:hover {
 
 .btn {
     border-radius: var(--ad-radius);
-    font-weight: 700;
+    font-weight: normal;
 }
 
 .btn-warning {
@@ -3764,9 +3772,7 @@ a:hover {
 }
 
 .btn-primary,
-.game-primary-action,
-.level-points-save,
-.skill-tree-save {
+.game-primary-action {
     --primary-current-frame-gradient: var(--primary-frame-gradient);
     --bs-btn-color: var(--primary-label);
     --bs-btn-bg: #47341c;
@@ -3787,9 +3793,9 @@ a:hover {
     border-image: none !important;
     border-radius: var(--primary-radius) !important;
     background: var(--primary-gradient);
-    color: var(--primary-label);
     box-shadow: none;
-    text-shadow: none;
+    color: #fff !important;
+    text-transform: uppercase;
     transition:
         background 140ms ease,
         border-color 140ms ease,
@@ -3799,9 +3805,7 @@ a:hover {
 }
 
 .btn-primary::before,
-.game-primary-action::before,
-.level-points-save::before,
-.skill-tree-save::before {
+.game-primary-action::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -3814,9 +3818,7 @@ a:hover {
 }
 
 .btn-primary:not(:disabled, .disabled):hover,
-.game-primary-action:not(:disabled, [aria-disabled="true"]):hover,
-.level-points-save:not(:disabled):hover,
-.skill-tree-save:not(:disabled):hover {
+.game-primary-action:not(:disabled, [aria-disabled="true"]):hover {
     --primary-current-frame-gradient: var(--primary-hover-frame-gradient);
     border-color: var(--primary-hover-border);
     background: var(--primary-hover-gradient);
@@ -3825,9 +3827,7 @@ a:hover {
 }
 
 .btn-primary:focus-visible,
-.game-primary-action:focus-visible,
-.level-points-save:focus-visible,
-.skill-tree-save:focus-visible {
+.game-primary-action:focus-visible {
     --primary-current-frame-gradient: var(--primary-hover-frame-gradient);
     border-color: var(--primary-focus-border);
     background: var(--primary-hover-gradient);
@@ -3840,9 +3840,7 @@ a:hover {
 .btn-primary:not(:disabled, .disabled):active,
 .btn-primary.active:not(.disabled),
 .btn-primary.show,
-.game-primary-action:not(:disabled, [aria-disabled="true"]):active,
-.level-points-save:not(:disabled):active,
-.skill-tree-save:not(:disabled):active {
+.game-primary-action:not(:disabled, [aria-disabled="true"]):active {
     --primary-current-frame-gradient: var(--primary-active-frame-gradient);
     border-color: var(--primary-active-border);
     background: var(--primary-active-gradient);
@@ -3853,9 +3851,7 @@ a:hover {
 .btn-primary:disabled,
 .btn-primary.disabled,
 .game-primary-action:disabled,
-.game-primary-action[aria-disabled="true"],
-.level-points-save:disabled,
-.skill-tree-save:disabled {
+.game-primary-action[aria-disabled="true"] {
     --primary-current-frame-gradient: var(--primary-disabled-frame-gradient);
     border-color: var(--primary-disabled-border);
     background: var(--primary-disabled-gradient);
@@ -6057,13 +6053,11 @@ body.rankings-page {
 .nav-player-copy span {
     color: #f3dc93;
     font-size: 0.84rem;
-    font-weight: 900;
 }
 
 .nav-player-copy small {
     color: #98a3a2;
     font-size: 0.68rem;
-    font-weight: 800;
 }
 
 .play-status-chip {
@@ -7799,13 +7793,11 @@ body .game-shell-nav {
     top: 0;
     z-index: 1040;
     min-height: var(--game-nav-height);
-    font-family: Arial, Helvetica, sans-serif;
     border-bottom-color: #202f30 !important;
-    background:
-        #060d10 !important;
-    box-shadow:
-        none;
+    background: #060d10 !important;
+    box-shadow: none;
     backdrop-filter: none;
+    filter: none;
     padding-block: 0;
 }
 
@@ -7845,9 +7837,8 @@ body .game-shell-nav .container-fluid {
 
 .game-shell-brand-name {
     color: #fff6d7;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 0.94rem;
-    font-weight: 900;
+    font-size: 1.12rem;
+    text-transform: uppercase;
     white-space: nowrap;
 }
 
@@ -7875,7 +7866,6 @@ body .game-shell-nav .navbar-collapse {
 
 body .game-shell-nav .game-nav-link {
     position: relative;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.3rem;
@@ -7884,9 +7874,7 @@ body .game-shell-nav .game-nav-link {
     border-radius: 0;
     background: transparent;
     color: #a0acaa !important;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 0.68rem;
-    font-weight: 900;
+    font-size: 1em;
     line-height: 1;
     padding: 0.4rem 0.55rem;
     text-transform: uppercase;
@@ -8000,8 +7988,7 @@ body .game-shell-nav .game-nav-dropdown-menu {
     margin: 0;
     border: 1px solid #263737;
     border-radius: 0 0 7px 7px;
-    background:
-        #050d10;
+    background: #050d10;
     box-shadow: none;
     padding: 0.38rem;
 }
@@ -8013,9 +8000,7 @@ body .game-shell-nav .game-nav-dropdown-item {
     min-height: 2.35rem;
     border-radius: 4px;
     color: #adb8b7;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 0.7rem;
-    font-weight: 900;
+    font-size: 1em;
     text-transform: uppercase;
 }
 
@@ -8060,8 +8045,6 @@ body .game-shell-nav .game-shell-auth-actions .btn {
 }
 
 body .game-shell-nav .nav-balance {
-    height: 2.42rem;
-    min-height: 2.42rem;
     align-self: center;
     justify-self: start;
     width: max-content;
@@ -8203,21 +8186,21 @@ body .game-shell-nav .nav-account .nav-guest-save-btn .game-icon {
 
 body .game-shell-nav .game-shell-auth-actions .btn-primary {
     border-color: var(--primary-frame);
-    background: var(--primary-gradient);
+    background: #5b4120;
     color: var(--primary-label);
     box-shadow: none;
 }
 
 body .game-shell-nav .game-shell-auth-actions .btn-primary:not(:disabled, .disabled):hover {
     border-color: var(--primary-hover-border);
-    background: var(--primary-hover-gradient);
+    background: #684d27;
     color: var(--primary-label-hover);
     box-shadow: none;
 }
 
 body .game-shell-nav .game-shell-auth-actions .btn-primary:focus-visible {
     border-color: var(--primary-focus-border);
-    background: var(--primary-hover-gradient);
+    background: #684d27;
     color: var(--primary-label-hover);
     box-shadow: none;
     outline: 2px solid var(--primary-focus-outline);
@@ -8226,7 +8209,7 @@ body .game-shell-nav .game-shell-auth-actions .btn-primary:focus-visible {
 
 body .game-shell-nav .game-shell-auth-actions .btn-primary:not(:disabled, .disabled):active {
     border-color: var(--primary-active-border);
-    background: var(--primary-active-gradient);
+    background: #493419;
     color: var(--primary-label);
     box-shadow: none;
 }
@@ -8234,7 +8217,7 @@ body .game-shell-nav .game-shell-auth-actions .btn-primary:not(:disabled, .disab
 body .game-shell-nav .game-shell-auth-actions .btn-primary:disabled,
 body .game-shell-nav .game-shell-auth-actions .btn-primary.disabled {
     border-color: var(--primary-disabled-border);
-    background: var(--primary-disabled-gradient);
+    background: #372e1e;
     color: var(--primary-disabled-text);
     box-shadow: none;
     opacity: 1;
@@ -8764,13 +8747,13 @@ body .game-shell-nav .game-shell-auth-actions .btn-primary.disabled {
     }
 
 .game-shell-brand-name {
-        font-size: 0.84rem;
+        font-size: 0.98rem;
     }
 
 body .game-shell-nav .game-nav-link {
         gap: 0.22rem;
         padding-inline: 0.36rem;
-        font-size: 0.61rem;
+        font-size: 1em;
     }
 
 body .game-shell-nav .nav-player {
@@ -10101,21 +10084,21 @@ body.account-merge-open {
     text-transform: uppercase;
 }
 
-.level-points-actions button:not(.level-points-save) {
+.level-points-actions button {
     border: 1px solid var(--secondary-border);
     background: var(--secondary-bg);
     color: var(--secondary-text);
 }
 
-.level-points-actions button:not(.level-points-save, :disabled):hover,
-.level-points-actions button:not(.level-points-save, :disabled):focus-visible {
+.level-points-actions button:not(:disabled):hover,
+.level-points-actions button:not(:disabled):focus-visible {
     border-color: var(--secondary-hover-border);
     background: var(--secondary-hover-bg);
     color: var(--secondary-hover-text);
     outline: 0;
 }
 
-.level-points-actions button:not(.level-points-save):disabled {
+.level-points-actions button:disabled {
     cursor: not-allowed;
     opacity: 1;
 }
@@ -10744,21 +10727,21 @@ body.skill-tree-page {
     text-transform: uppercase;
 }
 
-.skill-tree-actions button:not(.skill-tree-save) {
+.skill-tree-actions button {
     border: 1px solid var(--secondary-border);
     background: var(--secondary-bg);
     color: var(--secondary-text);
 }
 
-.skill-tree-actions button:not(.skill-tree-save, :disabled):hover,
-.skill-tree-actions button:not(.skill-tree-save, :disabled):focus-visible {
+.skill-tree-actions button:not(:disabled):hover,
+.skill-tree-actions button:not(:disabled):focus-visible {
     border-color: var(--secondary-hover-border);
     background: var(--secondary-hover-bg);
     color: var(--secondary-hover-text);
     outline: 0;
 }
 
-.skill-tree-actions button:not(.skill-tree-save):disabled {
+.skill-tree-actions button:disabled {
     cursor: not-allowed;
     opacity: 1;
 }
@@ -11828,7 +11811,6 @@ body.hunter-page {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    font-weight: 800;
     white-space: nowrap;
 }
 
@@ -12248,7 +12230,6 @@ body.hunter-page {
     background: #d8ad55;
     box-shadow: none;
     color: #241708;
-    text-shadow: none;
 }
 
 .tutorial-coachmark-actions .btn-primary::before {
