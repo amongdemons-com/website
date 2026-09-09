@@ -28,6 +28,7 @@ const PLAYER_TUTORIAL_GUIDES_SCHEMA_MIGRATION = '20260811_player_tutorial_guides
 const PLAYER_TUTORIAL_TRAINING_GRANT_SCHEMA_MIGRATION = '20260811_player_tutorial_training_grant_v1';
 const STARTER_TYPE_3_COMMON_ECHO_BACKFILL_MIGRATION = '20260811_starter_type_3_common_echo_v1';
 const PLAY_GAMES_SCHEMA_MIGRATION = '20260815_play_games_schema_v1';
+const LEADERBOARD_EXCLUSION_SCHEMA_MIGRATION = '20260909_leaderboard_exclusion_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -225,6 +226,18 @@ async function backfillStarterType3CommonEcho() {
   `);
 }
 
+async function addLeaderboardExclusionSchema() {
+  await addColumnIfMissing(
+    'players',
+    'leaderboard_excluded',
+    '`leaderboard_excluded` TINYINT(1) NOT NULL DEFAULT 0'
+  );
+  await db.query(
+    'UPDATE players SET leaderboard_excluded = 1 WHERE LOWER(username) = ? AND leaderboard_excluded = 0',
+    ['morvanor']
+  );
+}
+
 async function applyBaselineSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -246,6 +259,7 @@ async function applyBaselineSchema() {
       highest_floor INT UNSIGNED NOT NULL DEFAULT 0,
       pvp_wins INT UNSIGNED NOT NULL DEFAULT 0,
       pvp_losses INT UNSIGNED NOT NULL DEFAULT 0,
+      leaderboard_excluded TINYINT(1) NOT NULL DEFAULT 0,
       profile_demon_id INT UNSIGNED NULL,
       unlocks LONGTEXT NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -259,6 +273,7 @@ async function applyBaselineSchema() {
   await addColumnIfMissing('players', 'highest_floor', '`highest_floor` INT UNSIGNED NOT NULL DEFAULT 0');
   await addColumnIfMissing('players', 'pvp_wins', '`pvp_wins` INT UNSIGNED NOT NULL DEFAULT 0');
   await addColumnIfMissing('players', 'pvp_losses', '`pvp_losses` INT UNSIGNED NOT NULL DEFAULT 0');
+  await addColumnIfMissing('players', 'leaderboard_excluded', '`leaderboard_excluded` TINYINT(1) NOT NULL DEFAULT 0');
   await addColumnIfMissing('players', 'profile_demon_id', '`profile_demon_id` INT UNSIGNED NULL');
   await addColumnIfMissing('players', 'is_guest', '`is_guest` TINYINT(1) NOT NULL DEFAULT 0');
   await normalizeUtf8Column('players', 'id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
@@ -1208,6 +1223,7 @@ async function initializeSchema() {
   await runMigrationOnce(PLAYER_TUTORIAL_TRAINING_GRANT_SCHEMA_MIGRATION, addPlayerTutorialTrainingGrantSchema);
   await runMigrationOnce(STARTER_TYPE_3_COMMON_ECHO_BACKFILL_MIGRATION, backfillStarterType3CommonEcho);
   await runMigrationOnce(PLAY_GAMES_SCHEMA_MIGRATION, addPlayGamesSchema);
+  await runMigrationOnce(LEADERBOARD_EXCLUSION_SCHEMA_MIGRATION, addLeaderboardExclusionSchema);
 }
 
 function ensureSchemaReady() {

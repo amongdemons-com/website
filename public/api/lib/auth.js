@@ -32,8 +32,8 @@ function normalizeSessionAuthProvider(value) {
   return ['steam', 'play_games', 'google', 'discord'].includes(provider) ? provider : 'web';
 }
 
-function cleanPlayer(row) {
-  return {
+function cleanPlayer(row, options = {}) {
+  const player = {
     id: row.id,
     username: row.username,
     level: normalizeAccountLevel(row.level),
@@ -50,6 +50,12 @@ function cleanPlayer(row) {
     deletionScheduledFor: row.deletion_scheduled_for || null,
     unlocks: JSON.parse(row.unlocks || '[]')
   };
+
+  if (options.includeModeration) {
+    player.leaderboardExcluded = Boolean(Number(row.leaderboard_excluded) || 0);
+  }
+
+  return player;
 }
 
 // Guest accounts are real player rows flagged with `is_guest = 1`. They may play
@@ -97,7 +103,7 @@ async function requireAuth(req, res, next) {
     return res.status(410).json({ error: 'This account has been deleted.' });
   }
 
-  req.player = cleanPlayer(rows[0]);
+  req.player = cleanPlayer(rows[0], { includeModeration: true });
   req.token = token;
   req.authProvider = normalizeSessionAuthProvider(rows[0].session_auth_provider);
   next();

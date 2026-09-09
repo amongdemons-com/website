@@ -9,15 +9,19 @@ function read(...segments) {
   return fs.readFileSync(path.join(ROOT, ...segments), 'utf8');
 }
 
-test('Morvanor is excluded from public leaderboards by default', () => {
+test('leaderboard exclusion is driven by the player database flag', () => {
   const review = require(path.join(ROOT, 'public', 'api', 'lib', 'leaderboard-review'));
   const leaderboard = require(path.join(ROOT, 'public', 'api', 'leaderboard'));
   const filter = leaderboard._test.getLeaderboardVisibilityFilter();
 
-  assert.equal(review.isLeaderboardReviewPlayer({ username: 'Morvanor' }), true);
-  assert.equal(review.isLeaderboardReviewPlayer({ username: 'other-player' }), false);
-  assert.match(filter.sql, /LOWER\(p\.username\) NOT IN/);
-  assert.deepEqual(filter.params, ['ranked-bot:%', 'morvanor']);
+  assert.equal(review.isLeaderboardReviewPlayer({ leaderboardExcluded: true }), true);
+  assert.equal(review.isLeaderboardReviewPlayer({ leaderboardExcluded: 1 }), true);
+  assert.equal(review.isLeaderboardReviewPlayer({ leaderboardExcluded: false }), false);
+  assert.equal(review.isLeaderboardReviewPlayer({ username: 'Morvanor' }), false);
+  assert.match(filter.sql, /p\.leaderboard_excluded = 0/);
+  assert.deepEqual(filter.params, ['ranked-bot:%']);
+  assert.match(read('public', 'api', 'lib', 'schema.js'), /leaderboard_excluded TINYINT\(1\) NOT NULL DEFAULT 0/);
+  assert.match(read('public', 'api', 'lib', 'schema.js'), /\['morvanor'\]/);
 });
 
 test('Camp privately notifies reviewed players once per browser', () => {

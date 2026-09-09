@@ -5,7 +5,6 @@ const { getDivision } = require('./lib/ranked-rules');
 const { getPlayerBadgesByPlayerIds } = require('./lib/player-badges');
 const { RANKED_BOT_ID_PATTERN } = require('./lib/system-players');
 const { normalizeAccountLevel } = require('./lib/progression');
-const { getLeaderboardReviewUsernames } = require('./lib/leaderboard-review');
 
 const router = express.Router();
 const STATS_CACHE_MS = 15000;
@@ -101,14 +100,9 @@ async function getLeaderboardStats() {
 }
 
 function getLeaderboardVisibilityFilter() {
-  const reviewUsernames = getLeaderboardReviewUsernames();
-  const reviewClause = reviewUsernames.length
-    ? ` AND LOWER(p.username) NOT IN (${reviewUsernames.map(() => '?').join(', ')})`
-    : '';
-
   return {
-    sql: `p.id NOT LIKE ?${reviewClause}`,
-    params: [RANKED_BOT_ID_PATTERN, ...reviewUsernames]
+    sql: 'p.id NOT LIKE ? AND p.leaderboard_excluded = 0',
+    params: [RANKED_BOT_ID_PATTERN]
   };
 }
 

@@ -41,8 +41,8 @@ test('leaderboards and public totals exclude RankedBot players', async () => {
   const totalsQuery = queries.find(({ sql }) => sql.includes('COUNT(*) AS players'));
   assert.match(playerQuery.sql, /WHERE p\.id NOT LIKE \?/);
   assert.ok(playerQuery.params.includes(leaderboard._test.RANKED_BOT_ID_PATTERN));
-  assert.ok(playerQuery.params.includes('morvanor'));
+  assert.match(playerQuery.sql, /p\.leaderboard_excluded = 0/);
   assert.match(totalsQuery.sql, /WHERE p\.id NOT LIKE \?/);
   assert.ok(totalsQuery.params.includes(leaderboard._test.RANKED_BOT_ID_PATTERN));
-  assert.ok(totalsQuery.params.includes('morvanor'));
+  assert.match(totalsQuery.sql, /p\.leaderboard_excluded = 0/);
 });
