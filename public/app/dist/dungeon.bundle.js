@@ -201,8 +201,19 @@ ${e}`:e}function bt(e){let t=new Map;return e.querySelectorAll(".dungeon-demon-c
       <span>${p(t)}</span>
     </span>
   `}function nt(e){return`+${Math.max(0,Math.round(Number(e)||0))}%`}function Wu(e){return p(e).replace(/\n/g,"&#10;")}function ar(){if(!u.dungeonJoiner)return;let e=a.run?Math.max(1,Number(a.run.currentFloor)||1):null;u.dungeonJoiner.classList.remove("is-recruiting"),u.dungeonJoiner.innerHTML=`
-    <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
-    ${e?`<span class="dungeon-floor-marker" aria-label="Current floor ${e}"><span>Floor</span><strong>${e}</strong></span>`:""}
+    <div class="dungeon-center-panel" aria-label="Dungeon floor and actions">
+      ${e?`
+        <div class="dungeon-floor-marker" aria-label="Current floor ${e}">
+          <span class="dungeon-floor-kicker">Floor</span>
+          <strong>${e}</strong>
+        </div>
+        <div class="dungeon-center-sigil" aria-hidden="true">
+          <span class="dungeon-center-sigil-ring"></span>
+          <span class="dungeon-center-sigil-core">${Bo()}</span>
+        </div>
+      `:""}
+      <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
+    </div>
   `,u.dungeonCenterActions=document.getElementById("dungeonCenterActions")}function _o(){dr("combat")}function ur(){let e=document.getElementById("battleLogPanel")?.classList.contains("show");dr(e?"combat":"log")}function dr(e){let t=e==="log";document.getElementById("combatPanel")?.classList.toggle("show",!t),document.getElementById("combatPanel")?.classList.toggle("active",!t),document.getElementById("battleLogPanel")?.classList.toggle("show",t),document.getElementById("battleLogPanel")?.classList.toggle("active",t)}function Oo(){Se&&Se.disconnect();let e=Array.from(document.querySelectorAll(".battle-side .formation-lane-cards")),t=Array.from(document.querySelectorAll(".battle-side > #teamGrid, .battle-side > #enemyGrid"));if(!e.length&&!t.length)return;let n=new ResizeObserver(()=>Xt());no(n),e.forEach(r=>n.observe(r)),t.forEach(r=>n.observe(r)),document.querySelectorAll(".battle-side .dungeon-demon-card-image img").forEach(r=>{r.complete||r.addEventListener("load",Xt,{once:!0})}),mr(),Xt()}function Xt(){mr(),requestAnimationFrame(()=>{let e=[],t=Array.from(document.querySelectorAll(".battle-side .formation-lane-cards"));if(t.forEach(r=>{let o=Array.from(r.querySelectorAll(".dungeon-demon-card"));if(r.classList.remove("is-compressed"),r.style.removeProperty("--dungeon-demon-card-width"),r.style.removeProperty("--dungeon-demon-card-height"),fr()||!o.length)return;let i=r.getBoundingClientRect();if(!(o[o.length-1].getBoundingClientRect().bottom>i.bottom+1||r.scrollHeight>r.clientHeight+1))return;let d=parseFloat(getComputedStyle(r).rowGap||getComputedStyle(r).gap)||0,m=getComputedStyle(r).flexDirection.startsWith("row"),f=m?i.height:(i.height-d*(o.length-1))/o.length,g=m?(i.width-d*(o.length-1))/o.length:f,h=Math.max(46,Math.min(148,f,g));e.push(h)}),!e.length)return;let n=Math.min(...e);t.forEach(r=>{r.style.setProperty("--dungeon-demon-card-width",`${n}px`),r.style.setProperty("--dungeon-demon-card-height",`${n}px`),r.classList.add("is-compressed")})})}function mr(){Array.from(document.querySelectorAll(".battle-side .battle-formation-grid")).forEach(t=>{if(fr()){Ju(t);return}let n=t.parentElement;if(!n)return;let r=n.getBoundingClientRect();if(r.width<=0||r.height<=0)return;let o=getComputedStyle(t),i=3,s=3,c=1,d=vt(o.gap||o.rowGap||o.columnGap),m=vt(o.paddingLeft)+vt(o.paddingRight),f=vt(o.paddingTop)+vt(o.paddingBottom),g=(r.width-m-d*(i-1))/i,h=(r.height-f-d*(s-1))/(s*c),b=Math.max(42,Math.min(260,g,h));Number.isFinite(b)&&Zu(t,b,b*c)})}function ko(e){if(fr())return"";let t=e?.querySelector?.(".battle-formation-grid"),n=t?.style.getPropertyValue("--dungeon-demon-card-width"),r=t?.style.getPropertyValue("--dungeon-demon-card-height");return!n||!r?"":`--dungeon-demon-card-width: ${n}; --dungeon-demon-card-height: ${r};`}function Zu(e,t,n){let r=`${t}px`,o=`${n}px`;e.style.getPropertyValue("--dungeon-demon-card-width")!==r&&e.style.setProperty("--dungeon-demon-card-width",r),e.style.getPropertyValue("--dungeon-demon-card-height")!==o&&e.style.setProperty("--dungeon-demon-card-height",o)}function Ju(e){e?.style.removeProperty("--dungeon-demon-card-width"),e?.style.removeProperty("--dungeon-demon-card-height")}function fr(){return window.matchMedia("(min-width: 992px)").matches}function vt(e){let t=parseFloat(e);return Number.isFinite(t)?t:0}function Ho(){u.dungeonRewardStrip&&(u.dungeonRewardStrip.innerHTML="")}function Go(){return a.endNotice?`<div class="${a.endNotice.type==="warning"?"fight-log-notice fight-log-end-notice text-warning":"fight-log-notice fight-log-end-notice text-success"}">${a.endNotice.html||p(a.endNotice.text)}</div>`:""}function Ao(e){return u.dungeonBottomControls?Y(u.dungeonBottomControls,e):!1}function Ko(e,t){return`
     <button class="btn btn-glass-muted btn-sm btn-icon-only dungeon-replaylog-btn" id="fightLogReplayBtn" type="button" title="Replay Fight" aria-label="Replay Fight" ${e?"":"disabled"}>
       ${y("list-restart")}
@@ -219,7 +230,6 @@ ${e}`:e}function bt(e){let t=new Map;return e.querySelectorAll(".dungeon-demon-c
       </div>
     `)&&x(document.getElementById("dungeonCenterStartBtn"),s?Fu:Lo);return}let c=r?"fighting":n?"preparing":"ready",d=c!=="ready",m=c==="fighting"?"Fighting":c==="preparing"?"Preparing":o?"Continue":"Fight",f=c==="fighting"?"Fight in progress":c==="preparing"?"Preparing the next fight":o?"Choose your response to the rival hunter":"Start the next fight";Y(u.dungeonCenterActions,t?`
     <div class="dungeon-center-action-stack">
-      <span class="dungeon-fight-mark" aria-hidden="true">${o?y("arrow-right"):Bo()}</span>
       <button
         class="btn btn-primary dungeon-fight-btn ${c==="preparing"?"is-loading":""} ${c==="fighting"?"is-fighting":""}"
         id="dungeonFightBtn"

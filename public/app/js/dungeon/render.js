@@ -613,8 +613,19 @@ function updateDungeonJoiner() {
   const floor = state.run ? Math.max(1, Number(state.run.currentFloor) || 1) : null;
   elements.dungeonJoiner.classList.remove('is-recruiting');
   elements.dungeonJoiner.innerHTML = `
-    <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
-    ${floor ? `<span class="dungeon-floor-marker" aria-label="Current floor ${floor}"><span>Floor</span><strong>${floor}</strong></span>` : ''}
+    <div class="dungeon-center-panel" aria-label="Dungeon floor and actions">
+      ${floor ? `
+        <div class="dungeon-floor-marker" aria-label="Current floor ${floor}">
+          <span class="dungeon-floor-kicker">Floor</span>
+          <strong>${floor}</strong>
+        </div>
+        <div class="dungeon-center-sigil" aria-hidden="true">
+          <span class="dungeon-center-sigil-ring"></span>
+          <span class="dungeon-center-sigil-core">${renderButtonMeleeIcon()}</span>
+        </div>
+      ` : ''}
+      <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
+    </div>
   `;
   elements.dungeonCenterActions = document.getElementById('dungeonCenterActions');
 }
@@ -909,7 +920,6 @@ function renderDungeonCenterActions(options = {}) {
 
   const changed = setElementHtml(elements.dungeonCenterActions, canFight ? `
     <div class="dungeon-center-action-stack">
-      <span class="dungeon-fight-mark" aria-hidden="true">${isRankedChoice ? renderIcon('arrow-right') : renderButtonMeleeIcon()}</span>
       <button
         class="btn btn-primary dungeon-fight-btn ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"
         id="dungeonFightBtn"
