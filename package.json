@@ -31,7 +31,7 @@
     "lucide": "^1.16.0",
     "mysql2": "^3.24.3",
     "pixi.js": "^8.20.1",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "esbuild": "^0.28.1",
