@@ -7,6 +7,7 @@
   const updateNavAccount = window.AmongDemons.ui.updateNavAccount || (() => {});
   const session = window.AmongDemons.getSession();
   const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-570e7495b84f';
+  const LEADERBOARD_REVIEW_NOTICE_SEEN_KEY = 'amongdemons-leaderboard-review-notice-v1';
   const PROFILE_DEMON_RARITY_ORDER = {
     common: 1,
     uncommon: 2,
@@ -24,6 +25,7 @@
     worldBuffs: [],
     collection: [],
     collectionLoaded: false,
+    leaderboardReview: false,
     profilePickerOpen: false,
     questClaimPending: false,
     dailyRewardPending: false
@@ -80,7 +82,8 @@
       'profileDemonGrid',
       'campSkillTreeLink',
       'campSkillTreeStats',
-      'campWorldBuffs'
+      'campWorldBuffs',
+      'leaderboardReviewModal'
     ].forEach((id) => {
       elements[id] = document.getElementById(id);
     });
@@ -342,6 +345,7 @@
       const payload = await api('/api/camp/bootstrap');
 
       state.player = payload.player;
+      state.leaderboardReview = payload.player?.leaderboardReview === true;
       state.progression = payload.progression;
       state.ranked = payload.ranked || null;
       state.questData = payload.questData;
@@ -355,10 +359,32 @@
       renderDailyReward();
       renderSkillTreeLink();
       renderWorldBuffs();
+      showLeaderboardReviewNotice();
       if (state.profilePickerOpen) renderProfilePicker();
     } catch (error) {
       handleAuthError(error);
     }
+  }
+
+  function showLeaderboardReviewNotice() {
+    if (!state.leaderboardReview || !elements.leaderboardReviewModal) return;
+
+    try {
+      if (localStorage.getItem(LEADERBOARD_REVIEW_NOTICE_SEEN_KEY) === '1') return;
+    } catch (error) {
+      // If storage is unavailable, the notice can safely appear again.
+    }
+
+    const modal = window.bootstrap?.Modal;
+    if (!modal) return;
+
+    try {
+      localStorage.setItem(LEADERBOARD_REVIEW_NOTICE_SEEN_KEY, '1');
+    } catch (error) {
+      // A repeated notice is preferable to blocking the player's game.
+    }
+
+    modal.getOrCreateInstance(elements.leaderboardReviewModal).show();
   }
 
   function renderPlayer() {

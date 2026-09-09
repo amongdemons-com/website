@@ -11,6 +11,15 @@ body.camp-page {
         var(--ad-bg);
 }
 
+.camp-leaderboard-review-modal .modal-title {
+    color: #f8fbf9;
+}
+
+.camp-leaderboard-review-modal .modal-body {
+    color: var(--ad-text);
+    line-height: 1.6;
+}
+
 .camp-page main,
 .play-hub {
     min-height: calc(100vh - 170px);

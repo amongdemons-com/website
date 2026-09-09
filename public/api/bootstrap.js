@@ -8,6 +8,7 @@ const { getAccountProgressionPayload } = require('./lib/progression');
 const { getOrCreateCurrentSeason, getRankedRating } = require('./lib/ranked-runs');
 const { getActiveWorldBossRewardBuffs } = require('./lib/world-bosses');
 const { getActiveSoulFontBuffs } = require('./lib/world-soul-font');
+const { isLeaderboardReviewPlayer } = require('./lib/leaderboard-review');
 
 const router = express.Router();
 
@@ -24,7 +25,10 @@ router.get('/camp/bootstrap', requireAuth, async (req, res) => {
   const worldBuffs = [...bossBuffs, ...soulFontBuffs];
 
   res.json({
-    player: req.player,
+    player: {
+      ...req.player,
+      leaderboardReview: isLeaderboardReviewPlayer(req.player)
+    },
     progression: getAccountProgressionPayload(req.player),
     ranked,
     questData,
