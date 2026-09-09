@@ -10,7 +10,7 @@ body.dungeon-page {
     overflow: hidden;
     display: grid;
     grid-template-rows: minmax(0, 1fr);
-    background: linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
+    background: var(--page-bg-fade),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
         url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat,
         #071013;
@@ -369,9 +369,9 @@ body:not(.dungeon-page) {
     align-items: center;
     gap: 0.15rem;
     padding: 0.16rem;
-    border: 1px solid #2f3639;
+    border: 1px solid var(--secondary-border);
     border-radius: 6px;
-    background: #060d10;
+    background: var(--secondary-bg);
 }
 
 .battle-playback-control {
@@ -379,9 +379,9 @@ body:not(.dungeon-page) {
     align-items: center;
     gap: 0.12rem;
     padding: 0.16rem;
-    border: 1px solid #2f3639;
+    border: 1px solid var(--secondary-border);
     border-radius: 6px;
-    background: #060d10;
+    background: var(--secondary-bg);
 }
 
 .battle-playback-btn {
@@ -390,11 +390,10 @@ body:not(.dungeon-page) {
     min-width: 2rem;
     width: 2rem;
     height: 1.75rem;
-    border: 1px solid #244743;
+    border: 1px solid var(--secondary-border);
     border-radius: 4px;
-    background:
-        #142026;
-    color: #bed4cf;
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
     line-height: 1;
     box-shadow:
         none;
@@ -402,29 +401,26 @@ body:not(.dungeon-page) {
 
 .battle-playback-btn:hover,
 .battle-playback-btn:focus-visible {
-    border-color: #438376;
-    background:
-        #172a30;
-    color: #effffc;
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
     box-shadow:
         none;
     outline: 0;
 }
 
 .battle-playback-btn.is-active {
-    border-color: #529f8d;
-    background:
-        var(--ad-teal, #6fd6bd);
-    color: #06110f;
+    border-color: var(--secondary-active-border);
+    background: var(--secondary-active-bg);
+    color: var(--secondary-active-text);
     box-shadow:
         none;
 }
 
 .battle-playback-btn:disabled {
-    border-color: #20282b;
-    background:
-        #10171b;
-    color: #4f595d;
+    border-color: var(--secondary-disabled-border);
+    background: var(--secondary-disabled-bg);
+    color: var(--secondary-disabled-text);
     opacity: 1;
 }
 
@@ -435,11 +431,11 @@ body:not(.dungeon-page) {
 
 .battle-speed-option {
     min-width: 2.15rem;
-    border: 0;
+    border: 1px solid var(--secondary-border);
     border-radius: 4px;
     padding: 0.2rem 0.38rem;
-    background: transparent;
-    color: #dce6ee;
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
     font-size: 0.72rem;
     font-weight: 800;
     line-height: 1.1;
@@ -447,15 +443,16 @@ body:not(.dungeon-page) {
 
 .battle-speed-option:hover,
 .battle-speed-option:focus-visible {
-    background: #252d2f;
-    color: #fff;
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
+    outline: 0;
 }
 
 .battle-speed-option.active {
-    border: 1px solid #529f8d;
-    background:
-        var(--ad-teal, #6fd6bd);
-    color: #06110f;
+    border-color: var(--secondary-active-border);
+    background: var(--secondary-active-bg);
+    color: var(--secondary-active-text);
     box-shadow:
         none;
 }
@@ -1184,33 +1181,33 @@ body:not(.dungeon-page) {
 }
 
 .dungeon-result-secondary {
-    border-color: #273738;
-    background: #060f12;
-    color: #c3cecb;
+    border-color: var(--secondary-border);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
 }
 
 .dungeon-result-secondary:hover,
 .dungeon-result-secondary:focus-visible {
-    border-color: #4c6865;
-    background: #101f21;
-    color: #f2f7f5;
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
 }
 
 .dungeon-result-replay {
     min-height: 2.15rem !important;
-    border-color: transparent;
-    background: transparent;
+    border-color: var(--secondary-border);
+    background: var(--secondary-bg);
     box-shadow: none;
-    color: #a0b4b0;
+    color: var(--secondary-text);
     font-size: 0.84rem !important;
 }
 
 .dungeon-result-replay:hover,
 .dungeon-result-replay:focus-visible {
-    border-color: transparent;
-    background: transparent;
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
     box-shadow: none;
-    color: #dceae6;
+    color: var(--secondary-hover-text);
     transform: none;
 }
 
@@ -2170,7 +2167,7 @@ body:not(.dungeon-page) {
     min-height: 0;
     overflow: hidden;
     padding: 0;
-    background: linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
+    background: var(--page-bg-fade),
         url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat;
     background-attachment: scroll;
 }
@@ -2431,11 +2428,10 @@ body:not(.dungeon-page) {
     min-width: 0;
     height: 100%;
     min-height: 0;
-    border: 1px solid #1e3c38;
+    border: 1px solid var(--secondary-border);
     border-radius: 6px;
-    background:
-        #050c0f;
-    color: #bad0cb;
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
     padding: 0;
     box-shadow: none;
 }
@@ -2446,10 +2442,9 @@ body:not(.dungeon-page) {
 
 .dungeon-hand-scroll-btn:active,
 .dungeon-hand-scroll-btn:focus-visible {
-    border-color: #417f72;
-    background:
-        #081617;
-    color: #effffc;
+    border-color: var(--secondary-active-border);
+    background: var(--secondary-active-bg);
+    color: var(--secondary-active-text);
     box-shadow: none;
     outline: 0;
 }
@@ -2874,7 +2869,7 @@ body:not(.dungeon-page) {
 .dungeon-reward-strip {
         display: block;
         border-bottom: 1px solid #1b292b;
-        background: linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
+        background: var(--page-bg-fade),
             url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover fixed no-repeat;
         background-attachment: fixed;
     }
@@ -3613,7 +3608,7 @@ body:not(.dungeon-page) > .navbar {
 }
 
 .dungeon-battle-body {
-    background: linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
+    background: var(--page-bg-fade),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
         url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat;
     background-attachment: scroll;
@@ -4131,14 +4126,12 @@ body:not(.dungeon-page) > .navbar {
 
 body.dungeon-page {
     --dungeon-btn-radius: 6px;
-    --dungeon-btn-border: #20403c;
-    --dungeon-btn-border-strong: #417f72;
-    --dungeon-btn-text: #b6cbc7;
-    --dungeon-btn-text-strong: #effffc;
-    --dungeon-btn-dark-bg:
-        #050c0f;
-    --dungeon-btn-dark-bg-active:
-        #081617;
+    --dungeon-btn-border: var(--secondary-border);
+    --dungeon-btn-border-strong: var(--secondary-hover-border);
+    --dungeon-btn-text: var(--secondary-text);
+    --dungeon-btn-text-strong: var(--secondary-hover-text);
+    --dungeon-btn-dark-bg: var(--secondary-bg);
+    --dungeon-btn-dark-bg-active: var(--secondary-active-bg);
     --dungeon-btn-action-bg: var(--primary-gradient);
     --dungeon-btn-action-bg-hover: var(--primary-hover-gradient);
     --dungeon-btn-action-bg-active: var(--primary-active-gradient);
@@ -4271,10 +4264,9 @@ body.dungeon-page .demonic-pact-reroll-btn:disabled,
 body.dungeon-page .battle-playback-btn:disabled,
 body.dungeon-page .battle-speed-option:disabled,
 body.dungeon-page .dungeon-hand-scroll-btn:disabled {
-    border-color: #252d2f;
-    background:
-        #060e11;
-    color: #656f6f;
+    border-color: var(--secondary-disabled-border);
+    background: var(--secondary-disabled-bg);
+    color: var(--secondary-disabled-text);
     box-shadow: none;
     opacity: 1;
 }
@@ -5294,11 +5286,10 @@ body.dungeon-page:not(.ranked-page) .dungeon-hand-cards .combat-stat-footer {
         height: 100%;
         min-width: 0;
         min-height: 0;
-        border: 1px solid #20403c;
+        border: 1px solid var(--secondary-border);
         border-radius: 6px;
-        background:
-            #050c0f;
-        color: #b6cbc7;
+        background: var(--secondary-bg);
+        color: var(--secondary-text);
         line-height: 1;
         margin: 0;
         padding: 0;
@@ -5308,10 +5299,9 @@ body.dungeon-page:not(.ranked-page) .dungeon-hand-cards .combat-stat-footer {
 .dungeon-mobile-nav-btn.active,
     .dungeon-mobile-nav-btn:not(:disabled):active,
 .dungeon-mobile-nav-btn:focus-visible {
-        border-color: #417f72;
-        background:
-            #081617;
-        color: #effffc;
+        border-color: var(--secondary-active-border);
+        background: var(--secondary-active-bg);
+        color: var(--secondary-active-text);
         box-shadow:
             none;
         outline: 0;
@@ -5883,7 +5873,7 @@ body.is-world-battle-result-animating .battle-result-burst.is-defeat {
  * backdrops while keeping their neutral, rarity-independent framing.
  */
 body.dungeon-page {
-    background: linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
+    background: var(--page-bg-fade),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
         url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat,
         #071013;
@@ -5894,13 +5884,13 @@ body.dungeon-page .dungeon-battle-card {
 }
 
 body.dungeon-page .dungeon-battle-body {
-    background: linear-gradient(rgba(6,13,16,0.42), rgba(6,13,16,0.58)),
+    background: var(--page-bg-fade),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
         url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat;
 }
 
 body.dungeon-page .dungeon-reward-strip {
-    background-image: linear-gradient(rgba(8,12,15,0.58), rgba(8,12,15,0.68)),
+    background-image: var(--page-bg-fade),
         url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2");
 }
 
@@ -5912,21 +5902,20 @@ body.dungeon-page .battle-side-heading {
 }
 
 body.dungeon-page .battle-side-player .battle-formation-grid {
-    border-color: #3e7168;
-    background: #132c2d;
+    border-color: #284E4A;
+    background: #0D1A20;
     box-shadow: none;
 }
 
 body.dungeon-page .battle-side-enemy .battle-formation-grid {
-    border-color: #75423e;
-    background: #2c1a1d;
+    border-color: #542827;
+    background: #0E1015;
     box-shadow: none;
 }
 
 body.dungeon-page .battle-side-player .formation-slot,
 body.dungeon-page .battle-side-player .formation-slot.has-demon,
 body.dungeon-page .battle-side-player .formation-slot.is-empty {
-    border-color: #2c534d;
     background: #0d2022;
     box-shadow: none;
 }
@@ -5934,7 +5923,6 @@ body.dungeon-page .battle-side-player .formation-slot.is-empty {
 body.dungeon-page .battle-side-enemy .formation-slot,
 body.dungeon-page .battle-side-enemy .formation-slot.has-demon,
 body.dungeon-page .battle-side-enemy .formation-slot.is-empty {
-    border-color: #59312f;
     background: #211316;
     box-shadow: none;
 }
@@ -5944,14 +5932,14 @@ body.dungeon-page .battle-side .formation-slot-front {
 }
 
 body.dungeon-page .battle-side-player .formation-empty {
-    background: #0d2022;
+    background: #081518;
     color: #617a75;
     box-shadow: none;
 }
 
 body.dungeon-page .battle-side-enemy .formation-empty {
-    background: #211316;
-    color: #8a5a56;
+    background: #0A0B0F;
+    color: #332020;
     box-shadow: none;
 }
 

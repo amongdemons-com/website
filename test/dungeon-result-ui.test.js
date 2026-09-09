@@ -18,7 +18,7 @@ test('Dungeon result screens compact at laptop heights without visible scrollbar
   assert.match(styles, /@media \(max-height:\s*860px\)[\s\S]*?\.dungeon-extraction-prize \.dungeon-end-demon\s*{[^}]*width:\s*min\(7\.5rem, 19vh\);/s);
 });
 
-test('Dungeon result action labels stay vertically centered and left-aligned while Replay hover remains text-only', () => {
+test('Dungeon result action labels stay vertically centered and Replay uses the shared secondary style', () => {
   const source = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'app', 'js', 'dungeon', 'render.js'),
     'utf8'
@@ -28,5 +28,5 @@ test('Dungeon result action labels stay vertically centered and left-aligned whi
   assert.match(source, /<span>Return to Camp<\/span>/);
   assert.match(source, /<span>Replay Last Fight<\/span>/);
   assert.match(styles, /\.dungeon-result-actions \.btn > span:last-child\s*{[^}]*align-content:\s*center;[^}]*text-align:\s*left;/s);
-  assert.match(styles, /\.dungeon-result-replay:hover,[\s\S]*?background:\s*transparent;[\s\S]*?box-shadow:\s*none;[\s\S]*?color:\s*#dceae6;/);
+  assert.match(styles, /\.dungeon-result-replay:hover,[\s\S]*?background:\s*var\(--secondary-hover-bg\);[\s\S]*?box-shadow:\s*none;[\s\S]*?color:\s*var\(--secondary-hover-text\);/);
 });

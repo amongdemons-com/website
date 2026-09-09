@@ -765,6 +765,7 @@ main {
 
 .legal-page {
     background:
+        var(--page-bg-fade),
         #071013;
 }
 
@@ -3284,7 +3285,7 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     --ad-ember-soft: #2b241e;
     --ad-gold: #e8c76a;
     --secondary-border: #263737;
-    --secondary-bg: #081114;
+    --secondary-bg: #0C1719;
     --secondary-text: #c4ccca;
     --secondary-hover-border: #3b7368;
     --secondary-hover-bg: #112424;
@@ -3348,11 +3349,13 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     --ad-soul: #55FFFF;
     --ad-danger: #e4685e;
     --ad-radius: 6px;
+    --page-bg-fade: linear-gradient(rgba(4,9,12,0.62), rgba(4,9,12,0.78));
 }
 
 html,
 body {
     background:
+        var(--page-bg-fade),
         radial-gradient(circle at 16% 0%, rgba(111,214,189,0.1), transparent 28rem),
         radial-gradient(circle at 86% 8%, rgba(156,122,200,0.08), transparent 24rem),
         var(--ad-bg);
@@ -3416,10 +3419,9 @@ a:hover {
 .nav-balance,
 .nav-player,
 .nav-logout-btn {
-    border: 1px solid var(--ad-border-strong);
+    border: 1px solid var(--secondary-border);
     border-radius: var(--ad-radius);
-    background:
-        #071013;
+    background: var(--secondary-bg);
     box-shadow: none;
 }
 
@@ -3907,7 +3909,7 @@ a:hover {
 
 body.seo-page {
     min-height: 100vh;
-    background: linear-gradient(rgba(5,10,12,0.68), rgba(5,10,12,0.86)),
+    background: var(--page-bg-fade),
         image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-570e7495b84f") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-570e7495b84f") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-570e7495b84f") type("image/png")) center top / cover fixed no-repeat,
         #071013;
     color: var(--ad-text, #f5f7f8);
@@ -4950,7 +4952,7 @@ body.seo-page {
 
 body.rankings-page {
     min-height: 100%;
-    background: linear-gradient(rgba(6,13,16,0.48), rgba(6,13,16,0.78)),
+    background: var(--page-bg-fade),
         radial-gradient(circle at 18% 10%, rgba(111,214,189,0.14), transparent 22rem),
         radial-gradient(circle at 78% 16%, rgba(232,199,106,0.11), transparent 24rem),
         image-set(url("/app/images/assets/background/amongdemons_rankings.avif?v=art-570e7495b84f") type("image/avif"), url("/app/images/assets/background/amongdemons_rankings.webp?v=art-570e7495b84f") type("image/webp"), url("/app/images/assets/background/amongdemons_rankings.png?v=art-570e7495b84f") type("image/png")) center top / cover fixed no-repeat,
@@ -6488,10 +6490,9 @@ body.rankings-page {
     gap: 0.48rem;
     min-width: 10.5rem;
     min-height: 2.85rem;
-    border-color: #857644;
-    background:
-        #040a0c;
-    color: #fff5c7;
+    border-color: var(--secondary-border);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
     box-shadow:
         none;
     font-size: 0.78rem;
@@ -6503,10 +6504,9 @@ body.rankings-page {
 
 .demonic-pact-view-toggle:hover,
 .demonic-pact-view-toggle:focus-visible {
-    border-color: #bfa65a;
-    background:
-        #0b1b1d;
-    color: #fff;
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
     box-shadow:
         none;
 }
@@ -8052,10 +8052,9 @@ body .game-shell-nav .nav-logout-btn,
 body .game-shell-nav .game-shell-auth-actions .btn {
     height: 2.42rem;
     min-height: 2.42rem;
-    border: 1px solid #233334;
+    border: 1px solid var(--secondary-border);
     border-radius: 6px;
-    background:
-        #060e11;
+    background: var(--secondary-bg);
     box-shadow:
         none;
 }
@@ -8122,13 +8121,14 @@ body .game-shell-nav .nav-logout-btn {
 }
 
 body .game-shell-nav .nav-settings-link {
-    color: #a9b4b3;
+    color: var(--secondary-text);
 }
 
 body .game-shell-nav .nav-settings-link:hover,
 body .game-shell-nav .nav-settings-link:focus-visible {
-    border-color: #315f57;
-    color: #f8fbf9;
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
 }
 
 body .game-shell-nav .nav-settings-link .game-icon,
@@ -8151,6 +8151,35 @@ body .game-shell-nav .game-shell-auth-actions .btn {
     align-items: center;
     padding: 0.3rem 0.65rem;
     font-size: 0.72rem;
+}
+
+body .game-shell-nav .game-shell-auth-actions .btn:not(.btn-primary) {
+    border-color: var(--secondary-border);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
+}
+
+body .game-shell-nav .game-shell-auth-actions .btn:not(.btn-primary):not(:disabled, .disabled, [aria-disabled="true"]):hover,
+body .game-shell-nav .game-shell-auth-actions .btn:not(.btn-primary):not(:disabled, .disabled, [aria-disabled="true"]):focus-visible {
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
+    outline: 0;
+}
+
+body .game-shell-nav .game-shell-auth-actions .btn:not(.btn-primary):not(:disabled, .disabled, [aria-disabled="true"]):active,
+body .game-shell-nav .game-shell-auth-actions .btn:not(.btn-primary).active:not(.disabled) {
+    border-color: var(--secondary-active-border);
+    background: var(--secondary-active-bg);
+    color: var(--secondary-active-text);
+}
+
+body .game-shell-nav .game-shell-auth-actions .btn:not(.btn-primary):disabled,
+body .game-shell-nav .game-shell-auth-actions .btn:not(.btn-primary).disabled,
+body .game-shell-nav .game-shell-auth-actions .btn:not(.btn-primary)[aria-disabled="true"] {
+    border-color: var(--secondary-disabled-border);
+    background: var(--secondary-disabled-bg);
+    color: var(--secondary-disabled-text);
 }
 
 body .game-shell-nav .nav-account .nav-guest-save-btn {
@@ -8216,10 +8245,21 @@ body .game-shell-nav .game-shell-auth-actions .btn-primary.disabled {
     place-items: center;
     width: 2.42rem;
     height: 2.42rem;
-    border-color: #263737;
+    border-color: var(--secondary-border);
     border-radius: 6px;
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
     padding: 0;
     line-height: 1;
+}
+
+.game-shell-toggle:hover,
+.game-shell-toggle:focus-visible {
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
+    box-shadow: none;
+    outline: 0;
 }
 
 .game-shell-toggle .navbar-toggler-icon {
@@ -9084,17 +9124,17 @@ body .game-shell-nav .game-nav-link {
 /* Settings: compact account controls outside the playfield. */
 body.settings-page {
     min-height: 100vh;
-    background: radial-gradient(circle at 18% 12%, rgba(111,214,189,0.14), transparent 25rem),
+    background: var(--page-bg-fade),
+        radial-gradient(circle at 18% 12%, rgba(111,214,189,0.14), transparent 25rem),
         radial-gradient(circle at 82% 8%, rgba(156,122,200,0.1), transparent 22rem),
-        linear-gradient(180deg, rgba(4,10,13,0.16), rgba(4,10,13,0.62)),
         var(--ad-bg);
 }
 
 body .game-shell-nav .nav-settings-link.active,
 body.settings-page .game-shell-nav .nav-settings-link {
-    border-color: #396f65;
-    background: #132827;
-    color: var(--ad-text);
+    border-color: var(--secondary-active-border);
+    background: var(--secondary-active-bg);
+    color: var(--secondary-active-text);
 }
 
 .settings-shell {
@@ -10062,16 +10102,16 @@ body.account-merge-open {
 }
 
 .level-points-actions button:not(.level-points-save) {
-    border: 1px solid #293b3b;
-    background: #050c0f;
-    color: #adb8b7;
+    border: 1px solid var(--secondary-border);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
 }
 
 .level-points-actions button:not(.level-points-save, :disabled):hover,
 .level-points-actions button:not(.level-points-save, :disabled):focus-visible {
-    border-color: #417f72;
-    background: #112424;
-    color: #effffc;
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
     outline: 0;
 }
 
@@ -10133,10 +10173,10 @@ body.account-merge-open {
 
 body.skill-tree-page {
     min-height: 100vh;
-    background: radial-gradient(circle at 50% 12%, rgba(232,199,106,0.1), transparent 24rem),
+    background: var(--page-bg-fade),
+        radial-gradient(circle at 50% 12%, rgba(232,199,106,0.1), transparent 24rem),
         radial-gradient(circle at 18% 30%, rgba(111,214,189,0.09), transparent 28rem),
         radial-gradient(circle at 82% 28%, rgba(231,138,85,0.08), transparent 25rem),
-        linear-gradient(180deg, rgba(3,8,10,0.74), rgba(4,10,13,0.96)),
         image-set(url("/app/images/assets/background/amongdemons_summon.avif?v=art-570e7495b84f") type("image/avif"), url("/app/images/assets/background/amongdemons_summon.webp?v=art-570e7495b84f") type("image/webp"), url("/app/images/assets/background/amongdemons_summon.png?v=art-570e7495b84f") type("image/png")) center / cover fixed no-repeat,
         var(--ad-bg, #071013);
 }
@@ -10705,16 +10745,16 @@ body.skill-tree-page {
 }
 
 .skill-tree-actions button:not(.skill-tree-save) {
-    border: 1px solid #2c3f3f;
-    background: #050c0f;
-    color: #adb8b7;
+    border: 1px solid var(--secondary-border);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
 }
 
 .skill-tree-actions button:not(.skill-tree-save, :disabled):hover,
 .skill-tree-actions button:not(.skill-tree-save, :disabled):focus-visible {
-    border-color: #417f72;
-    background: #112424;
-    color: #effffc;
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
     outline: 0;
 }
 
@@ -11276,18 +11316,18 @@ body.has-browser-compatibility-gate {
 .browser-compatibility-continue {
     grid-column: 1 / -1;
     min-height: 2.45rem !important;
-    border-color: #192829;
-    background: transparent;
-    color: #93a29f;
+    border-color: var(--secondary-border);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
     font-size: 0.78rem !important;
     font-weight: 700 !important;
 }
 
 .browser-compatibility-continue:hover,
 .browser-compatibility-continue:focus-visible {
-    border-color: #384f4d;
-    background: #0c191b;
-    color: #e7f0ed;
+    border-color: var(--secondary-hover-border);
+    background: var(--secondary-hover-bg);
+    color: var(--secondary-hover-text);
 }
 
 .browser-compatibility-status {
@@ -11334,7 +11374,7 @@ body.has-browser-compatibility-gate {
 
 body.hunter-page {
     min-height: 100vh;
-    background: linear-gradient(180deg, rgba(4, 11, 14, 0.82), rgba(10, 19, 24, 0.94) 42%, rgba(4, 9, 12, 0.98)),
+    background: var(--page-bg-fade),
         image-set(url("/images/assets/background/amongdemons_home.avif?v=art-570e7495b84f") type("image/avif"), url("/images/assets/background/amongdemons_home.webp?v=art-570e7495b84f") type("image/webp"), url("/images/assets/background/amongdemons_home.png?v=art-570e7495b84f") type("image/png")) center top / cover fixed,
         #05090c;
     color: #edf5f2;
@@ -12238,9 +12278,9 @@ body.hunter-page {
 }
 
 .tutorial-coachmark-actions .btn-glass-muted {
-    border-color: #544e31;
-    background: #171814;
-    color: #dbceb0;
+    border-color: var(--secondary-border);
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
     box-shadow: none;
     text-shadow: none;
 }
