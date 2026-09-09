@@ -13,6 +13,22 @@ body.camp-page {
 
 .camp-leaderboard-review-modal .modal-title {
     color: #f8fbf9;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.camp-leaderboard-review-modal .modal-content {
+    background: #071013;
+    border-color: #1a3432;
+    opacity: 1;
+}
+
+.camp-leaderboard-review-title-icon {
+    color: #e8c76a;
+    flex: 0 0 auto;
+    width: 1.25rem;
+    height: 1.25rem;
 }
 
 .camp-leaderboard-review-modal .modal-body {

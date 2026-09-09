@@ -27,14 +27,21 @@ test('leaderboard exclusion is driven by the player database flag', () => {
 test('Camp privately notifies reviewed players once per browser', () => {
   const bootstrap = read('public', 'api', 'bootstrap.js');
   const campHtml = read('public', 'app', 'camp.html');
+  const campCss = read('public', 'app', 'css', 'camp.css');
   const campSource = read('public', 'app', 'js', 'camp-ui.js');
 
   assert.match(bootstrap, /leaderboardReview: isLeaderboardReviewPlayer\(req\.player\)/);
   assert.match(campHtml, /id="leaderboardReviewModal"/);
+  assert.match(campHtml, /data-lucide="book-alert"/);
+  assert.match(campHtml, />I Understand<\/button>/);
+  assert.doesNotMatch(campHtml, /leaderboardReviewModalTitle[\s\S]*?btn-close/);
   assert.match(campHtml, /Your leaderboard eligibility is temporarily under review due to unusual activity patterns\./);
   assert.match(campHtml, /You can continue using the game normally, but your account may not appear in public leaderboards during the review\./);
+  assert.match(campCss, /\.camp-leaderboard-review-modal \.modal-content[\s\S]*?background:\s*#071013;/);
   assert.match(campSource, /LEADERBOARD_REVIEW_NOTICE_SEEN_KEY/);
   assert.match(campSource, /showLeaderboardReviewNotice\(\);/);
   assert.match(campSource, /localStorage\.getItem\(LEADERBOARD_REVIEW_NOTICE_SEEN_KEY\)/);
-  assert.match(campSource, /modal\.getOrCreateInstance\(elements\.leaderboardReviewModal\)\.show\(\)/);
+  assert.match(campSource, /backdrop:\s*'static'/);
+  assert.match(campSource, /keyboard:\s*false/);
+  assert.match(campSource, /modal\.getOrCreateInstance\(elements\.leaderboardReviewModal,[\s\S]*?\.show\(\)/);
 });

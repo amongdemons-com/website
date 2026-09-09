@@ -384,7 +384,10 @@
       // A repeated notice is preferable to blocking the player's game.
     }
 
-    modal.getOrCreateInstance(elements.leaderboardReviewModal).show();
+    modal.getOrCreateInstance(elements.leaderboardReviewModal, {
+      backdrop: 'static',
+      keyboard: false
+    }).show();
   }
 
   function renderPlayer() {
