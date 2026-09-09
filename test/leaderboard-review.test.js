@@ -32,12 +32,14 @@ test('Camp privately notifies reviewed players once per browser', () => {
 
   assert.match(bootstrap, /leaderboardReview: isLeaderboardReviewPlayer\(req\.player\)/);
   assert.match(campHtml, /id="leaderboardReviewModal"/);
-  assert.match(campHtml, /data-lucide="book-alert"/);
+  assert.match(campHtml, /camp-leaderboard-review-icon[\s\S]*?data-lucide="book-alert"/);
   assert.match(campHtml, />I Understand<\/button>/);
   assert.doesNotMatch(campHtml, /leaderboardReviewModalTitle[\s\S]*?btn-close/);
-  assert.match(campHtml, /Your leaderboard eligibility is temporarily under review due to unusual activity patterns\./);
-  assert.match(campHtml, /You can continue using the game normally, but your account may not appear in public leaderboards during the review\./);
+  assert.match(campHtml, /Your leaderboard eligibility is temporarily under review due to unusual activity patterns\.<\/p>/);
+  assert.match(campHtml, /id="leaderboardReviewModalContinuation"[\s\S]*?You can continue using the game normally, but your account may not appear in public leaderboards during the review\./);
   assert.match(campCss, /\.camp-leaderboard-review-modal \.modal-content[\s\S]*?background:\s*#071013;/);
+  assert.match(campCss, /grid-template-columns:\s*3\.5rem minmax\(0, 1fr\)/);
+  assert.match(campCss, /\.camp-leaderboard-review-modal \.modal-footer[\s\S]*?justify-content:\s*center/);
   assert.match(campSource, /LEADERBOARD_REVIEW_NOTICE_SEEN_KEY/);
   assert.match(campSource, /showLeaderboardReviewNotice\(\);/);
   assert.match(campSource, /localStorage\.getItem\(LEADERBOARD_REVIEW_NOTICE_SEEN_KEY\)/);

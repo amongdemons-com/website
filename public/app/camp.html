@@ -25,7 +25,7 @@
     <meta name="twitter:image:alt" content="Among Demons campfire artwork">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
     <link href="/app/css/base.css?v=ae68c3358b4c" rel="stylesheet">
-    <link href="/app/css/camp.css?v=6b7dfce23c8c" rel="stylesheet">
+    <link href="/app/css/camp.css?v=bcf9dac0100c" rel="stylesheet">
     <link href="/app/css/rank-divisions.css?v=991ff6145fd8" rel="stylesheet">
   </head>
   <body class="camp-page">
@@ -238,20 +238,21 @@
         <div class="profile-demon-grid" id="profileDemonGrid"></div>
       </section>
     </div>
-    <div class="modal fade camp-leaderboard-review-modal" id="leaderboardReviewModal" tabindex="-1" aria-labelledby="leaderboardReviewModalTitle" aria-describedby="leaderboardReviewModalDescription" aria-hidden="true">
+    <div class="modal fade camp-leaderboard-review-modal" id="leaderboardReviewModal" tabindex="-1" aria-labelledby="leaderboardReviewModalTitle" aria-describedby="leaderboardReviewModalDescription leaderboardReviewModalContinuation" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <div>
+            <div class="camp-leaderboard-review-icon" aria-hidden="true">
+              <i data-lucide="book-alert"></i>
+            </div>
+            <div class="camp-leaderboard-review-heading">
               <span class="camp-panel-kicker">Leaderboard notice</span>
-              <h2 class="modal-title h4" id="leaderboardReviewModalTitle">
-                <i class="camp-leaderboard-review-title-icon" data-lucide="book-alert" aria-hidden="true"></i>
-                <span>Leaderboard review</span>
-              </h2>
+              <h2 class="modal-title" id="leaderboardReviewModalTitle">Leaderboard review</h2>
             </div>
           </div>
           <div class="modal-body">
-            <p class="mb-0" id="leaderboardReviewModalDescription">Your leaderboard eligibility is temporarily under review due to unusual activity patterns. You can continue using the game normally, but your account may not appear in public leaderboards during the review.</p>
+            <p id="leaderboardReviewModalDescription">Your leaderboard eligibility is temporarily under review due to unusual activity patterns.</p>
+            <p class="mb-0" id="leaderboardReviewModalContinuation">You can continue using the game normally, but your account may not appear in public leaderboards during the review.</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>

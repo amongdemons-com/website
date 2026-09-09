@@ -11,29 +11,85 @@ body.camp-page {
         var(--ad-bg);
 }
 
-.camp-leaderboard-review-modal .modal-title {
-    color: #f8fbf9;
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-}
-
 .camp-leaderboard-review-modal .modal-content {
     background: #071013;
     border-color: #1a3432;
+    border-radius: 0.55rem;
+    box-shadow: none;
     opacity: 1;
 }
 
-.camp-leaderboard-review-title-icon {
+.camp-leaderboard-review-modal .modal-header {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    gap: 1rem;
+    align-items: center;
+    padding: 1.35rem 1.5rem 1.2rem;
+    background: #071013;
+    border-bottom-color: #1a3432;
+}
+
+.camp-leaderboard-review-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #e8c76a;
-    flex: 0 0 auto;
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 3.5rem;
+    height: 3.5rem;
+}
+
+.camp-leaderboard-review-icon .lucide {
+    width: 3.5rem;
+    height: 3.5rem;
+    stroke-width: 1.7;
+}
+
+.camp-leaderboard-review-modal .modal-title {
+    margin: 0;
+    color: #f8fbf9;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.15;
+}
+
+.camp-leaderboard-review-heading .camp-panel-kicker {
+    display: block;
+    margin-bottom: 0.35rem;
 }
 
 .camp-leaderboard-review-modal .modal-body {
+    padding: 1.15rem 1.1rem 1.3rem;
+    background: #071013;
     color: var(--ad-text);
-    line-height: 1.6;
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.62;
+}
+
+.camp-leaderboard-review-modal .modal-body p {
+    margin: 0;
+}
+
+.camp-leaderboard-review-modal .modal-body p + p {
+    margin-top: 1.15rem;
+}
+
+.camp-leaderboard-review-modal .modal-footer {
+    justify-content: center;
+    padding: 1.1rem 1rem 1.2rem;
+    background: #071013;
+    border-top-color: #1a3432;
+}
+
+.camp-leaderboard-review-modal .modal-footer .btn {
+    min-width: 8.5rem;
+    padding: 0.55rem 1rem;
+    color: #f0d38a;
+    background: #6a481e;
+    border-color: #d5ae5d;
+    border-radius: 0;
+    font-size: 1.02rem;
+    font-weight: 600;
 }
 
 .camp-page main,
