@@ -289,7 +289,7 @@
             <div class="bag-progress-track" aria-label="${escapeHtml(`${progress}% of Echoes gathered`)}"><div class="bag-progress-fill" style="width: ${progress}%"></div></div>
             ${item.summonReady ? `
               <button class="btn btn-sm btn-primary bag-summon-action" type="button" data-bag-action="summon" ${state.pending ? 'disabled' : ''}>
-                ${state.pendingAction === 'summon' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
+                ${state.pendingAction === 'summon' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : ''}
                 <span>${state.pendingAction === 'summon' ? 'Summoning...' : 'Summon Demon'}</span>
               </button>
             ` : ''}
@@ -366,7 +366,7 @@
         <p class="small text-muted">${escapeHtml(lockedCopy)}</p>
         ${state.detailError ? `<div class="bag-action-error mb-3" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
         <button class="btn btn-sm btn-primary bag-refine-action" type="button" data-bag-action="refine" ${item.canRefine && !state.pending ? '' : 'disabled'}>
-          ${state.pendingAction === 'refine' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
+          ${state.pendingAction === 'refine' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : ''}
           <span>${state.pendingAction === 'refine' ? 'Refining...' : 'Refine All'}</span>
         </button>
       </section>

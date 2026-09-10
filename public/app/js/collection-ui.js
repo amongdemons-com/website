@@ -458,13 +458,11 @@
       return [
         ...(echo ? [{
           label: echo.summonReady ? 'Summon in Bag' : 'View Echoes',
-          icon: 'amphora',
           variant: echo.summonReady ? 'primary' : 'outline-info',
           href: '/bag'
         }] : []),
         {
           label: 'Enter Dungeon',
-          icon: 'play',
           variant: echo ? 'outline-light' : 'primary',
           href: '/dungeon'
         }
@@ -492,16 +490,10 @@
     const chanceLabel = formatChance(training.successChance);
     const unavailableTitle = `Need ${formatNumber(deficit)} more Souls`;
     const attemptTitle = `Costs ${formatNumber(cost)} Souls${chanceLabel ? `. ${chanceLabel} success chance` : ''}`;
-    const iconOptions = {
-      size: 19,
-      className: 'collection-train-action-icon'
-    };
 
     return [
       {
         label: 'Auto Train',
-        icon: 'stars',
-        iconOptions,
         className: 'collection-train-action collection-train-max-action',
         variant: 'secondary',
         disabled,
@@ -512,8 +504,6 @@
       },
       {
         label: 'Train',
-        icon: 'book-plus',
-        iconOptions,
         className: 'collection-train-action collection-train-once-action',
         variant: canAfford ? 'primary' : 'outline-danger',
         disabled,
@@ -1009,7 +999,7 @@
       button.disabled = Boolean(action.disabled);
       button.className = getTrainingButtonClass(action);
       button.title = action.title || '';
-      button.innerHTML = renderTrainingButtonContent(action.label, action.icon, action.iconOptions, action.helper);
+      button.innerHTML = renderTrainingButtonContent(action.label, action.helper);
     });
   }
 
@@ -1024,12 +1014,8 @@
     return ['btn', `btn-${variant}`, glassClass, action.className || 'collection-train-action'].filter(Boolean).join(' ');
   }
 
-  function renderTrainingButtonContent(label, icon = 'book-plus', iconOptions = {}, helper = '') {
+  function renderTrainingButtonContent(label, helper = '') {
     return `
-      ${renderIcon(icon, {
-        size: iconOptions.size || 19,
-        className: iconOptions.className || 'collection-train-action-icon'
-      })}
       <span>${escapeHtml(label)}</span>
       ${helper ? `<small>${escapeHtml(helper)}</small>` : ''}
     `;

@@ -413,7 +413,6 @@ function getDungeonDetailActions(extractionCandidate = null) {
   if (extractionCandidate) {
     actions.push({
       label: 'Extract',
-      icon: 'flag',
       variant: 'primary',
       onClick: () => {
         setRewardSelection(extractionCandidate);

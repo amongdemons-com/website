@@ -26,7 +26,7 @@ const SKIP_DIRS = new Set(['node_modules', 'steam', 'android', 'map']);
 
 // Icons referenced dynamically (e.g. rankings-ui.js topRankIcons array) that
 // the literal-pattern scan below cannot discover.
-const EXTRA_ICONS = ['crown', 'trophy', 'medal'];
+const EXTRA_ICONS = ['crown', 'trophy', 'medal', 'hourglass'];
 
 function collectFiles(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

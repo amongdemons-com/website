@@ -886,15 +886,21 @@ body.is-world-side-collapsed .world-map-controls {
     gap: 0.34rem;
     min-height: 2rem;
     border-radius: 5px;
-    font-size: 0.66rem;
-    font-weight: 900;
+    font-size: 1em;
     line-height: 1;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
 
 .world-side-panel .btn .game-icon {
     width: 0.82rem;
     height: 0.82rem;
     margin: 0;
+}
+
+.world-side-panel .btn-primary {
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 .world-side-panel[data-world-status="hunting"] #worldTeamHeading {
@@ -1724,7 +1730,6 @@ body.is-world-side-collapsed .world-map-controls {
     width: 100%;
     min-height: 2.15rem;
     font-size: 0.72rem;
-    font-weight: 900;
 }
 
 .world-merchant-foot {
@@ -3022,6 +3027,17 @@ body.is-world-side-collapsed .world-map-controls {
     width: auto;
 }
 
+.world-sidebar-card.world-spot-card:not(.is-unfought) .world-card-action {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: auto;
+}
+
+.world-sidebar-card.world-spot-card .world-card-meta-inline {
+    justify-content: center;
+    text-align: center;
+}
+
 .world-boss-card .world-card-action {
     align-self: center;
     justify-self: center;
@@ -3247,6 +3263,11 @@ body.is-world-side-collapsed .world-map-controls {
     min-width: 2rem;
     height: 1.95rem;
     padding: 0;
+}
+
+.world-side-panel .world-scout-action {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .world-scout-action .game-icon {

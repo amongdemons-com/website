@@ -35,7 +35,11 @@
     '.nav-logout-btn',
     '.game-shell-auth-actions .btn',
     '.btn-primary',
-    '.game-primary-action'
+    '.game-primary-action',
+    '.btn-secondary',
+    '.btn-outline-light',
+    '.btn-outline-info',
+    '.btn-glass-muted'
   ].join(',');
 
   onReady(init);

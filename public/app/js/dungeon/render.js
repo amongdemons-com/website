@@ -904,7 +904,6 @@ function renderDungeonCenterActions(options = {}) {
     const startChanged = setElementHtml(elements.dungeonCenterActions, `
       <div class="dungeon-center-action-stack">
         <button class="btn btn-primary outline dungeon-fight-btn dungeon-center-start-btn" id="dungeonCenterStartBtn" type="button" title="${isDefeated ? 'Start a new dungeon' : 'Start the dungeon'}">
-          ${renderIcon('play')}
           <span>${isDefeated ? 'New Dungeon' : 'Start Dungeon'}</span>
         </button>
       </div>
@@ -1001,8 +1000,7 @@ function renderDungeonMobileFightBox(options = {}) {
       aria-pressed="${rewardOpen ? 'true' : 'false'}"
       ${canExtract ? '' : 'disabled'}
     >
-      ${renderIcon('flag')}
-      <span class="visually-hidden">Extract</span>
+      <span>Extract</span>
     </button>
     <button
       class="dungeon-mobile-nav-btn dungeon-fight-btn dungeon-mobile-fight-btn game-primary-action ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"

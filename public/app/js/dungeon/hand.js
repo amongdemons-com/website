@@ -319,7 +319,6 @@ function renderRewardPayout(earned, canExtract = false) {
         <span>Souls</span>
       </div>
       <button class="btn btn-primary dungeon-reward-extract-btn" id="getRewardBtn" type="button" title="${extractTitle}" ${canExtract ? '' : 'disabled'}>
-        ${renderIcon('flag')}
         Extract
       </button>
     </div>

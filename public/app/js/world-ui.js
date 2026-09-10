@@ -5900,6 +5900,7 @@ import './bag-item-visuals.js';
     const cooldownUntil = state.challengeCooldowns.get(player.id) || 0;
     const isCoolingDown = cooldownUntil > Date.now();
     const label = isCoolingDown ? 'Cooldown' : 'Challenge';
+    const actionIcon = renderIcon(isCoolingDown ? 'hourglass' : 'swords', { size: 15 });
     const pvpWins = Math.max(0, Number(player.pvpWins) || 0);
     const pvpLosses = Math.max(0, Number(player.pvpLosses) || 0);
     const username = player.username || 'Unknown Hunter';
@@ -5923,7 +5924,7 @@ import './bag-item-visuals.js';
         </span>
         <span class="world-pvp-actions">
           ${scoutAction}
-          <button class="btn btn-primary btn-sm world-card-action" type="button" data-challenge-player="${escapeAttribute(player.id)}" ${isCoolingDown ? 'disabled' : ''}>${label}</button>
+          <button class="btn btn-primary btn-sm world-card-action" type="button" data-challenge-player="${escapeAttribute(player.id)}" title="${label}" aria-label="${label}" ${isCoolingDown ? 'disabled' : ''}>${actionIcon}<span class="visually-hidden">${label}</span></button>
         </span>
       </article>
     `;
