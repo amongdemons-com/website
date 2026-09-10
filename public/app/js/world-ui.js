@@ -1388,10 +1388,12 @@ import './bag-item-visuals.js';
     centerOnHunter();
     drawEncounterMarkers();
     drawBossMarkers();
-    setMessage(
-      options.message || recovery.message || 'You were defeated and dragged back to your Anchored Shrine.',
-      'danger'
-    );
+    if (!options.suppressMessage) {
+      setMessage(
+        options.message || recovery.message || 'You were defeated and dragged back to your Anchored Shrine.',
+        'danger'
+      );
+    }
     renderPanels();
   }
 
@@ -1567,16 +1569,11 @@ import './bag-item-visuals.js';
       }
       if (isLostPvpChallenge(battle, battleMeta)) {
         await resolveAmbushDefeat({
-          message: 'You lost the challenge and returned to your Anchored Shrine.'
+          suppressMessage: true
         });
         if (state.ambushDefeatBlackoutActive) {
           await fadeWorldAmbushDefeatFromBlack();
         }
-      } else {
-        setMessage(
-          payload.message || getWorldBattleFallbackMessage(battle, battleMeta),
-          battle?.winner === 'enemy' ? 'warning' : 'success'
-        );
       }
       await showWorldDuelRankedResult(battle?.rankedResult, targetPlayer);
     } catch (error) {
@@ -6498,6 +6495,7 @@ import './bag-item-visuals.js';
       if (state.worldBattleReplayToken === token) {
         renderWorldDungeonBattleResultDock(battle);
         renderWorldDungeonBattleCenterIcon();
+        renderWorldDungeonBattleCenterResult(battle);
       }
     } catch (error) {
       console.error('Anomaly floor replay failed', error);
@@ -8394,6 +8392,7 @@ import './bag-item-visuals.js';
       if (state.worldBattleReplayToken === token) {
         renderWorldDungeonBattleResultDock(battle);
         renderWorldDungeonBattleCenterIcon();
+        renderWorldDungeonBattleCenterResult(battle);
       }
     } catch (error) {
       console.error('World battle replay failed', error);
@@ -8874,6 +8873,7 @@ import './bag-item-visuals.js';
       }
       renderWorldDungeonBattleResultDock(battle);
       renderWorldDungeonBattleCenterIcon();
+      renderWorldDungeonBattleCenterResult(battle);
     } catch (error) {
       console.error('World battle replay failed', error);
       setMessage(getWorldBattleFallbackMessage(battle, state.activeWorldBattleMeta || {}), battle.winner === 'player' ? 'success' : 'warning');
@@ -8962,11 +8962,41 @@ import './bag-item-visuals.js';
 
   function renderWorldDungeonBattleCenterIcon() {
     const centerActions = elements.worldBattleModal?.querySelector('#dungeonCenterActions');
+    const centerPanel = centerActions?.closest('.dungeon-center-panel');
+    if (!centerActions || !centerPanel) return;
+
+    let centerMark = centerPanel.querySelector('.world-dungeon-center-mark');
+    if (!centerMark) {
+      centerMark = document.createElement('span');
+      centerMark.className = 'dungeon-fight-mark world-dungeon-center-mark';
+      centerMark.setAttribute('aria-hidden', 'true');
+      centerPanel.insertBefore(centerMark, centerActions);
+    }
+
+    const swordsOutline = renderIcon('swords', {
+      className: 'world-dungeon-center-swords world-dungeon-center-swords-outline',
+      size: 48,
+      strokeWidth: 4.2
+    });
+    const swordsForeground = renderIcon('swords', {
+      className: 'world-dungeon-center-swords world-dungeon-center-swords-foreground',
+      size: 48,
+      strokeWidth: 2.25
+    });
+    centerMark.innerHTML = `${swordsOutline}${swordsForeground}`;
+  }
+
+  function renderWorldDungeonBattleCenterResult(battle = {}) {
+    const centerActions = elements.worldBattleModal?.querySelector('#dungeonCenterActions');
     if (!centerActions || dungeonState.isBattleAnimating) return;
+
+    const label = battle.winner === 'player' ? 'Victory' : battle.winner === 'enemy' ? 'Defeat' : 'Complete';
     centerActions.innerHTML = `
-      <span class="dungeon-fight-mark world-dungeon-center-mark" aria-hidden="true">
-        ${dungeonCards.renderButtonMeleeIcon()}
-      </span>
+      <div class="dungeon-center-action-stack">
+        <button class="btn btn-primary outline dungeon-fight-btn world-dungeon-center-result" type="button" disabled aria-label="${label}">
+          <span>${label}</span>
+        </button>
+      </div>
     `;
   }
 

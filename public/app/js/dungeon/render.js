@@ -621,6 +621,7 @@ function escapeTooltipAttribute(value) {
 function updateDungeonJoiner() {
   if (!elements.dungeonJoiner) return;
   const floor = state.run ? Math.max(1, Number(state.run.currentFloor) || 1) : null;
+  const preservedWorldBattleMarker = elements.dungeonJoiner.querySelector('.world-dungeon-center-mark')?.outerHTML || '';
   elements.dungeonJoiner.classList.remove('is-recruiting');
   elements.dungeonJoiner.innerHTML = `
     <div class="dungeon-center-panel" aria-label="Dungeon floor and actions">
@@ -631,6 +632,7 @@ function updateDungeonJoiner() {
         </div>
       ` : ''}
       <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
+      ${preservedWorldBattleMarker}
     </div>
   `;
   elements.dungeonCenterActions = document.getElementById('dungeonCenterActions');

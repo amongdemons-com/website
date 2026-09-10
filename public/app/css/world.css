@@ -3711,6 +3711,55 @@ body.is-world-side-collapsed .world-map-controls {
     grid-template-columns: minmax(0, 1fr) !important;
 }
 
+/* World battles have no dungeon floor number; keep the swords in that
+   center-stage slot while the shared action plaque remains below it. */
+.world-battle-modal .dungeon-center-actions {
+    display: grid;
+}
+
+body.dungeon-page .world-battle-modal .world-dungeon-center-mark {
+    position: absolute;
+    top: 18%;
+    left: 14%;
+    z-index: 1;
+    display: inline-grid;
+    place-items: center;
+    width: 72%;
+    height: 39%;
+    color: #d8c992;
+}
+
+.world-battle-modal .world-dungeon-center-swords {
+    grid-area: 1 / 1;
+    display: block;
+    width: clamp(2.8rem, 5vw, 4.2rem);
+    height: clamp(2.8rem, 5vw, 4.2rem);
+    margin: 0;
+}
+
+.world-battle-modal .world-dungeon-center-swords-outline {
+    color: #11181b;
+}
+
+.world-battle-modal .world-dungeon-center-swords-foreground {
+    color: inherit;
+}
+
+.world-battle-modal .world-dungeon-center-result {
+    cursor: default;
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+    body.dungeon-page .world-battle-modal .world-dungeon-center-mark {
+        position: static;
+        top: auto;
+        left: auto;
+        width: 100%;
+        height: auto;
+        min-height: 3.1rem;
+    }
+}
+
 .world-battle-modal.is-world-battle-result-mode .dungeon-bottom-panel {
     visibility: hidden;
     pointer-events: none;
