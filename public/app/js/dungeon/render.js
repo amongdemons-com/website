@@ -81,6 +81,7 @@ function renderRun() {
   if (state.isLoading) {
     if (laneResizeObserver) laneResizeObserver.disconnect();
     state.isMobileRewardBoxOpen = false;
+    elements.runPanel?.querySelector('.dungeon-arena')?.classList.remove('is-battle-focused');
     elements.dungeonBottomPanel?.classList.remove('is-battle-active', 'is-mobile-reward-open');
     elements.fightLog.innerHTML = 'Opening the latest dungeon state...';
     elements.fightLog.classList.add('text-muted');
@@ -92,7 +93,7 @@ function renderRun() {
 
   if (!run) {
     if (laneResizeObserver) laneResizeObserver.disconnect();
-    elements.runPanel?.querySelector('.dungeon-arena')?.classList.remove('is-hand-strategy');
+    elements.runPanel?.querySelector('.dungeon-arena')?.classList.remove('is-hand-strategy', 'is-battle-focused');
     elements.enemyGrid?.closest('.battle-side-enemy')?.classList.remove('is-ranked-encounter', 'is-ranked-encounter-planning');
     elements.dungeonBottomPanel?.classList.add('d-none');
     state.isMobileRewardBoxOpen = false;
@@ -151,6 +152,7 @@ function renderRun() {
   elements.dungeonBottomPanel?.classList.toggle('is-battle-active', isBattleLayoutActive || isPactTeamPreview);
   elements.dungeonBottomPanel?.classList.toggle('is-mobile-reward-open', Boolean(state.isMobileRewardBoxOpen && canExtract && !state.isBattleAnimating));
   arena?.classList.toggle('is-hand-strategy', isHandStrategy);
+  arena?.classList.toggle('is-battle-focused', isBattleLayoutActive);
   elements.enemyGrid?.closest('.battle-side-enemy')?.classList.toggle('is-ranked-encounter', rankedEncounter);
   elements.enemyGrid?.closest('.battle-side-enemy')?.classList.toggle(
     'is-ranked-encounter-planning',
@@ -288,10 +290,13 @@ function renderTeamSideTitle(teamCount = null, teamLimit = null) {
     : '';
 
   const buffs = getFriendlyTeamBuffs();
+  const buffsHtml = renderBattleBuffSummaryChip(buffs, { side: 'player' });
   elements.teamSideTitle.innerHTML = `
-    <span class="outline">Your Team</span>
-    ${countHtml ? ` ${countHtml}` : ''}
-    ${renderBattleBuffSummaryChip(buffs, { side: 'player' })}
+    <span class="battle-side-nameplate">
+      <span class="outline">Your Team</span>
+      ${countHtml ? ` ${countHtml}` : ''}
+    </span>
+    ${buffsHtml ? `<span class="battle-side-status" aria-label="Team modifiers">${buffsHtml}</span>` : ''}
   `;
 }
 
@@ -447,11 +452,16 @@ function renderEnemySideTitle(pressure = null, buffs = [], teamBuffs = []) {
 
   const rankedIdentity = renderDungeonRankedEnemyIdentity(getVisibleDungeonRankedEncounter(state.run));
   const label = state.run?.enemyLabel || 'Enemies';
+  const statusHtml = [
+    renderEnemyPressureChip(pressure),
+    renderEnemyBuffChips(buffs),
+    renderBattleBuffSummaryChip(teamBuffs, { side: 'enemy' })
+  ].filter(Boolean).join('');
   elements.enemySideTitle.innerHTML = `
-    ${rankedIdentity || `<span class="outline">${escapeHtml(label)}</span>`}
-    ${renderEnemyPressureChip(pressure)}
-    ${renderEnemyBuffChips(buffs)}
-    ${renderBattleBuffSummaryChip(teamBuffs, { side: 'enemy' })}
+    <span class="battle-side-nameplate">
+      ${rankedIdentity || `<span class="outline">${escapeHtml(label)}</span>`}
+    </span>
+    ${statusHtml ? `<span class="battle-side-status" aria-label="Enemy modifiers">${statusHtml}</span>` : ''}
   `;
 }
 

@@ -5,6 +5,7 @@ const { renderBackdropCss, spriteSelectors } = require('../scripts/generate-demo
 const backdrops = require('../docs/art/card-backdrops.json');
 const fs = require('node:fs');
 const path = require('node:path');
+const sharp = require('sharp');
 const vm = require('node:vm');
 const { createEssenceMask } = require('../scripts/generate-echo-variants');
 
@@ -87,4 +88,60 @@ test('Echo motion mask keeps broad essence but excludes transparency, glyphs and
   assert.equal(alpha(12, 12), 0);
   assert.equal(alpha(16, 16), 0);
   assert.equal(alpha(5, 5), 0, 'motion stays inset from the liquid edge');
+});
+
+test('Dungeon ornament masters retain their production geometry and real transparency', async () => {
+  const assets = [
+    ['grid-heading-chain-rig.png', 1664, 353],
+    ['grid-heading-status-rig.png', 640, 353],
+    ['center-pole-rig.png', 793, 1983],
+    ['floor-backdrop.png', 1122, 1402]
+  ];
+
+  for (const [name, width, height] of assets) {
+    const file = path.join(__dirname, '../public/app/images/assets/dungeon', name);
+    const metadata = await sharp(file).metadata();
+    assert.equal(metadata.width, width, name);
+    assert.equal(metadata.height, height, name);
+    assert.equal(metadata.hasAlpha, true, `${name}: actual alpha is required`);
+
+    const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    let transparent = 0;
+    let opaque = 0;
+    let partial = 0;
+    for (let p = 3; p < data.length; p += 4) {
+      if (data[p] === 0) transparent++;
+      if (data[p] >= 250) opaque++;
+      if (data[p] > 0 && data[p] < 250) partial++;
+    }
+    assert.ok(transparent > info.width * info.height * 0.1, `${name}: transparent field is missing`);
+    assert.ok(opaque > info.width * info.height * 0.03, `${name}: ornament is missing`);
+    assert.ok(opaque > partial * 12, `${name}: painted surfaces must remain solid rather than ghosted`);
+    assert.equal(data[3], 0, `${name}: top-left matte remains`);
+    assert.equal(data[data.length - 1], 0, `${name}: bottom-right matte remains`);
+  }
+});
+
+test('Dungeon ornament treatment yields visual focus to the battle', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../public/app/css/battle.css'), 'utf8');
+  const render = fs.readFileSync(path.join(__dirname, '../public/app/js/dungeon/render.js'), 'utf8');
+
+  const nameplateBlock = css.match(/body\.dungeon-page \.battle-side-nameplate\s*{([^}]*)}/)?.[1] || '';
+  const statusBlock = css.match(/body\.dungeon-page \.battle-side-status\s*{([^}]*)}/)?.[1] || '';
+  const centerArtworkBlock = css.match(/body\.dungeon-page \.dungeon-center-panel::before\s*{([^}]*)}/)?.[1] || '';
+
+  assert.match(nameplateBlock, /grid-heading-chain-rig\.png\?v=art-dungeon-grid-chain-v6/);
+  assert.match(nameplateBlock, /aspect-ratio:\s*1664\s*\/\s*353/);
+  assert.doesNotMatch(nameplateBlock, /(?:^|;)\s*(?:opacity|filter):/);
+  assert.match(statusBlock, /grid-heading-status-rig\.png\?v=art-dungeon-grid-status-v1/);
+  assert.match(statusBlock, /aspect-ratio:\s*640\s*\/\s*353/);
+  assert.doesNotMatch(statusBlock, /(?:^|;)\s*(?:opacity|filter):/);
+  assert.match(css, /body\.dungeon-page \.dungeon-center-panel\s*{[\s\S]*?transform: scale\(0\.84\);/);
+  assert.match(centerArtworkBlock, /center-pole-rig\.png\?v=art-dungeon-center-pole-v4/);
+  assert.doesNotMatch(centerArtworkBlock, /(?:^|;)\s*(?:opacity|filter):/);
+  assert.match(css, /\.dungeon-center-action-stack \.dungeon-fight-btn:not\(:disabled\):active\s*{[\s\S]*?background: #563a22;/);
+  assert.match(render, /class="battle-side-nameplate"/);
+  assert.match(render, /class="battle-side-status" aria-label="Team modifiers"/);
+  assert.match(render, /class="battle-side-status" aria-label="Enemy modifiers"/);
+  assert.match(render, /arena\?\.classList\.toggle\('is-battle-focused', isBattleLayoutActive\);/);
 });

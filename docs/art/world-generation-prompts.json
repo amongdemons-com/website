@@ -25,6 +25,126 @@
     "rejectedGeneration": "exec-9a1ff157-9c14-4b96-b024-b8df16d43649.png"
   },
   {
+    "id": "dungeon-grid-heading-chain-rig",
+    "mode": "built-in imagegen style transfer",
+    "output": "public/app/images/assets/dungeon/grid-heading-chain-rig.png",
+    "requiredSize": [
+      1664,
+      353
+    ],
+    "transparent": true,
+    "status": "integrated-compact-identity-plate",
+    "referenceRoles": [
+      "Existing heading ornament: edit target and exact geometry/layout source",
+      "Approved Boof Nitza common: primary flat cartoon rendering reference only",
+      "Active wide dungeon environment: palette and integration context only"
+    ],
+    "references": [
+      "git:2b1ca6f:public/app/images/assets/dungeon/grid-heading-chain-rig.png",
+      "public/app/images/demons/1.png",
+      "public/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png"
+    ],
+    "prompt": "Use case: style-transfer.\nAsset type: transparent 2D game UI heading ornament for Among Demons.\nInput images: Image 1 is the EDIT TARGET and exact geometry/layout source. Image 2 is an approved production demon and the primary rendering-style reference only. Image 3 is the active dungeon environment and palette/context reference only.\nPrimary request: redraw ONLY the rendering style of Image 1 so it belongs with the approved flat cartoon game art and the expressive clarity associated with How Many Dudes?. Keep Image 1's object design, silhouette, footprint, proportions, chain-loop positions, stone-frame segmentation, central blank burgundy banner, tiny amber end ornaments, transparent gaps, and very wide 2074:353 aspect ratio unchanged. This must drop into the existing CSS at exactly the same scale and alignment.\nStyle/medium: hand-inked 2D cartoon game art; confident thick near-black organic outer contour; sparse thinner interior marks; chunky simplified stone and metal shapes; broad clean matte color blocks; at most one hard-edged shadow block per material.\nColor palette: deep navy/slate stone, muted burgundy cloth, tiny restrained amber-gold accents, near-black outlines. Preserve the original palette family but flatten it.\nLighting/mood: graphic and matte, no simulated light source.\nText: none; leave the long banner interior blank for live HTML labels.\nConstraints: one complete horizontal ornament centered on a genuinely transparent background; preserve all outer edges and empty transparent areas; preserve symmetry and the two hanging chain loops; no added or missing pieces; no cast shadow; no halo; no checkerboard baked into the pixels; no watermark.\nAvoid: cyan or orange rim lighting, glow, bloom, gradients, glossy bevels, polished 3D stone, metallic reflections, mottled texture, painterly brush texture, fine cracks, micro-details, photorealism, text, labels, UI mockup, scenery.",
+    "selectedGeneration": "exec-34a65eb6-534e-4746-b1d1-d47a48ce8eac.png",
+    "latestPrompt": "Use case: precise-object-edit.\nAsset type: compact transparent 2D game UI identity nameplate for Among Demons.\nInput images: Image 1 is the EDIT TARGET and exact material/style source. Image 2 is the in-game screenshot and layout context only; do not copy its text or surrounding UI.\nPrimary request: rebuild Image 1 as the same hanging identity nameplate but with a substantially shorter width, about 80% of its current width. Preserve the existing height, stone thickness, cloth height, near-black contour weight, baked dark colors, matte shading, burgundy center, two chain loops, and tiny amber end diamonds. Bring the end caps inward and reposition the two loops symmetrically to suit the shorter span; do not merely squash or distort the existing drawing. Leave enough blank central cloth for live HTML such as YOUR TEAM 6/6 or an opponent identity.\nComposition/framing: one centered complete ornament with production target aspect ratio 1664:353 (about 4.71:1); both chain loops and every outer edge fully visible.\nStyle/medium: confident near-black cartoon ink; chunky simplified navy stone; broad fully opaque matte color blocks; sparse hard shadow shapes; match Image 1 exactly.\nText: none. The burgundy field must be blank.\nConstraints: every painted surface is fully opaque. Genuine alpha transparency only outside the silhouette and inside the chain-loop holes. No partial-opacity wash, no glow, no halo, no cast shadow, no checkerboard, no extra props, no cropped edges, no text, no logo, no watermark.\nAvoid: gradients, glossy bevels, rim lighting, bloom, painterly texture, micro-detail, photorealism, scenery, UI mockup.",
+    "postProcess": "The selected generation returned at 2161x728 with a painted checkerboard. A deterministic connected-component mask isolated the complete ornament, restored genuine alpha outside the silhouette and inside the chain-loop holes, cropped x=244, y=109, width=1672, height=472, resized to 1664x353, and baked 0.78 brightness / 0.7 saturation into the RGB. Painted surfaces remain opaque; no runtime opacity is used.",
+    "review": "The rebuilt two-loop identity banner is substantially shorter without being horizontally squashed. It retains a blank live-label zone and the established quiet navy, burgundy and amber treatment on fully opaque painted surfaces.",
+    "attempts": [
+      {
+        "prompt": "Use case: background-extraction.\nAsset type: transparent 2D game UI heading ornament.\nInput images: Image 1 is the exact object to preserve.\nPrimary request: remove ONLY the gray-and-white checkerboard background from Image 1 and replace it with genuine alpha transparency.\nConstraints: preserve the illustrated hanging header object pixel-for-pixel in appearance—same silhouette, proportions, colors, linework, shading, chain-loop positions, frame segments, amber ornaments, and blank burgundy banner. Keep the entire object fully visible and centered. Do not redraw, restyle, crop, warp, resize, add, remove, or reposition any object part. No text, shadow, halo, matte fringe, added background, or watermark. The surrounding area and the holes inside both chain loops must be truly transparent, with clean antialiased edges.",
+        "generatedFile": "exec-37c16c77-4f9b-408a-a106-84847c6303a7.png",
+        "review": "The artwork was preserved, but the checkerboard remained painted and the output still had no alpha; used only as the selected RGB source before deterministic alpha restoration."
+      }
+    ]
+  },
+  {
+    "id": "dungeon-grid-heading-status-rig",
+    "mode": "built-in imagegen stylized concept",
+    "output": "public/app/images/assets/dungeon/grid-heading-status-rig.png",
+    "requiredSize": [
+      640,
+      353
+    ],
+    "transparent": true,
+    "status": "integrated-grid-modifier-plate",
+    "referenceRoles": [
+      "Compact identity heading: exact style, palette, construction and height-scale reference",
+      "Current dungeon grid screenshot: layout context for the separate Buffs element only"
+    ],
+    "references": [
+      "public/app/images/assets/dungeon/grid-heading-chain-rig.png",
+      "C:/Users/aluro/AppData/Local/Temp/codex-clipboard-174c9fd1-5c04-46ab-a2d4-2f85a1912078.png"
+    ],
+    "prompt": "Use case: stylized-concept.\nAsset type: compact transparent 2D game UI modifier plaque for Among Demons.\nInput images: Image 1 is the exact style, palette, stone construction, ink weight, and height-scale reference. Image 2 is the in-game layout context showing where the separate Buffs element sits; do not copy its text or surrounding UI.\nPrimary request: create one new small hanging modifier plaque that visually belongs beside Image 1 but is clearly a separate object. Use one centered chunky navy stone chain loop at the top, a compact navy/slate stone frame, a blank deep neutral blue-black inset, and two very small restrained amber end diamonds. Match Image 1's baked dark color intensity, fully opaque matte surfaces, near-black contour weight, stone thickness, and simple hard shadow shapes. The blank inset must comfortably hold one live icon plus BUFFS 6, TERROR 15, or a short PvP modifier.\nComposition/framing: one centered complete ornament with production target aspect ratio 640:353 (about 1.81:1); same overall canvas height and hardware scale as Image 1; all edges and the single loop fully visible.\nStyle/medium: confident near-black cartoon ink; chunky simplified stone; broad fully opaque matte color blocks; sparse hard shadows.\nText: none. Keep the inset completely blank.\nConstraints: every painted surface is fully opaque. Genuine alpha transparency only outside the silhouette and inside the chain-loop hole. Exactly one plaque and one centered loop; no long banner, no cloth, no extra props, no partial-opacity wash, no glow, no halo, no cast shadow, no checkerboard, no cropped edges, no text, no logo, no watermark.\nAvoid: gradients, glossy bevels, rim lighting, bloom, painterly texture, micro-detail, photorealism, scenery, UI mockup.",
+    "selectedGeneration": "exec-6f116b73-e679-41b3-b351-dc6985bc29da.png",
+    "postProcess": "The selected generation returned at 1689x931 with a painted checkerboard. A deterministic connected-component mask isolated the complete plaque, restored genuine alpha outside the silhouette and inside the chain-loop hole, cropped x=76, y=120, width=1538, height=653, resized to 640x353, and baked 0.78 brightness / 0.7 saturation into the RGB. Painted surfaces remain opaque; no runtime opacity is used.",
+    "review": "The compact one-loop modifier plaque is visually related to the identity banner but remains a distinct neutral surface that supports live Buffs, Terror, or PvP content without competing with the demon cards."
+  },
+  {
+    "id": "dungeon-center-pole-rig",
+    "mode": "built-in imagegen style transfer",
+    "output": "public/app/images/assets/dungeon/center-pole-rig.png",
+    "requiredSize": [
+      793,
+      1983
+    ],
+    "transparent": true,
+    "status": "integrated-opaque-surface-refresh",
+    "referenceRoles": [
+      "Existing floor standard: edit target and exact geometry/layout source",
+      "Approved Boof Nitza common: primary flat cartoon rendering reference only",
+      "Active wide dungeon environment: palette and integration context only"
+    ],
+    "references": [
+      "git:2b1ca6f:public/app/images/assets/dungeon/center-pole-rig.png",
+      "public/app/images/demons/1.png",
+      "public/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png"
+    ],
+    "prompt": "Use case: style-transfer.\nAsset type: transparent 2D game UI floor-standard ornament for Among Demons.\nInput images: Image 1 is the EDIT TARGET and exact geometry/layout source. Image 2 is an approved production demon and the primary rendering-style reference only. Image 3 is the active dungeon environment and palette/context reference only.\nPrimary request: redraw ONLY the rendering style of Image 1 so it belongs with the approved flat cartoon game art and the expressive clarity associated with How Many Dudes?. Keep Image 1's complete object design, silhouette, footprint and proportions unchanged: pointed cap; vertical navy stone post; chunky upper crossbar; centered diamond emblem; long blank burgundy hanging flag with exactly the same ragged bottom contour; blank wide amber action plaque at the same height; continuing post; broad stepped stone base. Preserve the blank live-text zones on the flag and plaque. This must drop into the existing CSS at exactly the same scale and alignment.\nStyle/medium: hand-inked 2D cartoon game art; confident thick near-black organic outer contour; sparse thinner interior marks; simplified chunky stone, cloth, and plaque shapes; broad clean matte color blocks; at most one hard-edged shadow block per material.\nColor palette: deep navy/slate stone, muted burgundy cloth, subdued ochre/amber plaque and jewel, a few simple matte moss-green shapes, near-black outlines. Preserve the original palette family but flatten it.\nLighting/mood: graphic and matte, no simulated light source.\nText: none; flag and action plaque must remain blank for live HTML labels.\nConstraints: one complete tall floor standard centered on a genuinely transparent background; preserve every outer edge and transparent gap; keep all parts fully visible; no added or missing props; no cast shadow; no halo; no checkerboard baked into pixels; no watermark.\nAvoid: cyan or orange rim lighting, glow, bloom, gradients, glossy bevels, polished 3D stone, metallic reflections, mottled/grungy texture, painterly texture, fine cracks, micro-details, photorealism, text, labels, UI mockup, scenery.",
+    "selectedGeneration": "exec-70fe5f31-d61d-475b-8fcc-49e2bcd7cb8a.png",
+    "latestPrompt": "Use case: precise-object-edit.\nAsset type: production 2D game UI floor-standard ornament for Among Demons.\nInput images: Image 1 is the EDIT TARGET and exact geometry/layout source. Image 2 is the approved production demon and primary rendering-style reference only. Image 3 is the active dungeon background and palette/context reference only.\nPrimary request: bake the currently desired quiet, dark visual hierarchy directly into Image 1's painted colors. Redraw only the surface color treatment: make the burgundy cloth, navy stone, moss, and amber accents roughly as dark and restrained as an on-screen treatment of about 50% saturation and 70% brightness, while keeping every painted material fully solid and opaque. Replace only the wide gold action-plaque interior with a clearly recessed, fully opaque near-black navy socket. Keep the thick outer plaque frame, side diamonds, and post intact. The socket is a blank cut-out-looking space for a live HTML Fight button to supply its own color; it must contain no gold fill, text, symbol, shine, or transparency.\nStyle/medium: confident near-black cartoon contours; sparse interior marks; broad matte color blocks; one hard-edged shadow shape per material; same expressive flat rendering language as Image 2.\nComposition/framing: preserve Image 1's exact 793:1983 footprint, silhouette, proportions, cap, post, crossbar, central diamond, long blank ragged flag, action-plaque frame location and size, continuing post, moss, and broad stepped base.\nText: none; keep the flag and action socket blank for live HTML.\nConstraints: every visible standard surface and the recessed action socket must be fully opaque. Preserve genuine alpha transparency only outside the object silhouette and in existing negative gaps. No partial-opacity wash, no see-through cloth/stone/socket, no halo, no cast shadow, no checkerboard baked into pixels, no added or missing pieces, no crop, no resize, no repositioning, no text, no watermark.\nAvoid: glow, bloom, rim light, gradients, glossy bevels, luminous gold plaque, painterly texture, micro-detail, photorealism, scenery.",
+    "postProcess": "The selected generation returned at the exact 793x1983 production size on a black matte. Its RGB was joined to the previous production asset's exact alpha channel, then given a deterministic 0.78 brightness / 0.7 saturation bake to match the approved on-page hierarchy without CSS opacity. All painted surfaces and the new dark action socket remain opaque while the established outside silhouette stays transparent.",
+    "review": "Dark matte colors are baked into fully opaque painted surfaces. The gold action fill is replaced by a blank recessed navy socket while the surrounding frame, side diamonds, flag, post and base retain their production layout.",
+    "attempts": [
+      {
+        "prompt": "Use case: style-transfer.\nAsset type: transparent 2D game UI floor-standard ornament.\nInput images: Image 1 is the exact current asset to edit. Image 2 is the approved flat rendering reference only.\nPrimary request: change ONLY the surface shading/finish of Image 1. Remove every smooth gradient, center-light vignette, ambient glow, rim light, and soft modeled lighting. Convert every material into broad matte cel-color regions: one uniform base color plus at most one large hard-edged darker shadow shape per material. The burgundy flag must be a clearly flat cloth color with a few existing hard graphic fold shapes, never softly illuminated. The amber action plaque must be one flat ochre base with one restrained hard shadow band, never a luminous or metallic gold plate. The navy stone must read as chunky graphic blocks, not beveled or lit 3D.\nConstraints: preserve Image 1 exactly in silhouette, proportions, canvas size, part positions, line art, pointed cap, post, crossbar, central diamond, ragged flag contour, blank text zones, action plaque, moss shapes, and base. Keep true alpha transparency and all existing transparent gaps. No text, labels, scenery, added details, cast shadow, halo, checkerboard, or watermark. Do not redesign, crop, zoom, warp, resize, add, remove, or reposition anything.",
+        "generatedFile": "exec-e05ca571-36fd-48ac-aef6-1f8847cba974.png",
+        "review": "Not selected: returned a painted checkerboard without alpha and did not materially improve the already restrained first-pass shading."
+      }
+    ]
+  },
+  {
+    "id": "dungeon-floor-backdrop",
+    "mode": "built-in imagegen style transfer",
+    "output": "public/app/images/assets/dungeon/floor-backdrop.png",
+    "requiredSize": [
+      1122,
+      1402
+    ],
+    "transparent": true,
+    "status": "integrated-style-refresh",
+    "referenceRoles": [
+      "Existing mobile floor banner: edit target and exact geometry/layout source",
+      "Selected desktop floor standard: palette and material consistency reference only",
+      "Approved Boof Nitza common: supporting flat cartoon rendering reference only"
+    ],
+    "references": [
+      "git:2b1ca6f:public/app/images/assets/dungeon/floor-backdrop.png",
+      "selected dungeon-center-pole-rig generation exec-d7e7e498-dcb1-4c45-9e58-acec665ed6b5.png",
+      "public/app/images/demons/1.png"
+    ],
+    "prompt": "Use case: style-transfer.\nAsset type: transparent 2D game UI floor-banner ornament for the mobile Among Demons layout.\nInput images: Image 1 is the EDIT TARGET and exact geometry/layout source. Image 2 is the newly restyled desktop floor-standard; match its flat materials, palette, line weight, and shape simplification exactly, but do not copy its post, plaque, or base. Image 3 is an approved production demon and supporting rendering-style reference only.\nPrimary request: redraw ONLY the rendering style of Image 1. Keep Image 1's complete object design, silhouette, footprint, proportions, top crossbar, centered diamond emblem, long blank burgundy cloth field, border, and exactly the same ragged pointed bottom contour. This responsive asset must still fit its unchanged 4:5 CSS box and visually match Image 2.\nStyle/medium: hand-inked 2D cartoon game art; confident thick near-black organic outer contour; sparse thinner interior marks; simplified chunky stone and cloth shapes; broad clean matte color blocks; at most one hard-edged shadow block per material.\nColor palette: deep navy/slate stone, muted burgundy cloth, subdued amber-gold jewel, near-black outlines. Preserve the original palette family but flatten it.\nLighting/mood: graphic and matte, no simulated light source.\nText: none; leave the banner interior blank for live HTML floor labels.\nConstraints: one complete banner centered on a genuinely transparent background; preserve every outer edge and transparent gap; all parts fully visible; no post below the flag, no action plaque, no base, no extra props; no cast shadow; no halo; no checkerboard baked into pixels; no watermark.\nAvoid: cyan or orange rim lighting, glow, bloom, gradients, glossy bevels, polished 3D stone, metallic reflections, mottled/grungy texture, painterly texture, fine cracks, micro-details, photorealism, text, labels, UI mockup, scenery.",
+    "selectedGeneration": "exec-36d0e76a-9227-44c1-9a5a-acc5dbff51a0.png",
+    "review": "True alpha and exact production dimensions. The mobile banner retains its original responsive footprint and blank label zone while matching the desktop standard's matte navy, burgundy and amber treatment.",
+    "attempts": [
+      {
+        "prompt": "Use case: style-transfer.\nAsset type: transparent 2D game UI floor-banner ornament.\nInput images: Image 1 is the exact current mobile banner asset to edit. Image 2 is the newly flattened matching desktop standard; use it only for identical palette, line weight, and matte material treatment.\nPrimary request: change ONLY the surface shading/finish of Image 1. Remove every smooth gradient, center-light vignette, ambient glow, rim light, and soft modeled lighting. Convert every material into broad matte cel-color regions: one uniform base color plus at most one large hard-edged darker shadow shape per material. The burgundy flag must be a clearly flat cloth color with a few existing hard graphic fold shapes, never softly illuminated. The navy stone must read as chunky graphic blocks, not beveled or lit 3D.\nConstraints: preserve Image 1 exactly in silhouette, proportions, canvas size, part positions, line art, crossbar, diamond emblem, blank cloth field, border, and ragged bottom contour. Match Image 2's colors. Keep true alpha transparency and all existing transparent gaps. No post, action plaque, base, text, labels, scenery, added details, cast shadow, halo, checkerboard, or watermark. Do not redesign, crop, zoom, warp, resize, add, remove, or reposition anything.",
+        "generatedFile": "exec-34812cb5-4542-456a-894b-29890adc1910.png",
+        "review": "Not selected: returned a painted checkerboard without alpha and exaggerated a central cloth light gradient."
+      }
+    ]
+  },
+  {
     "id": "home",
     "mode": "built-in imagegen",
     "output": "public/app/images/assets/background/amongdemons_home.png",
