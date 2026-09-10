@@ -5899,7 +5899,9 @@ body.dungeon-page .battle-side-heading {
     width: min(96%, 25.5rem);
     aspect-ratio: auto;
     min-height: 0;
-    margin: -1px auto 0;
+    /* Pull the transparent cap of the hanging rigs beneath the navbar so the
+     * painted chain starts flush with it at every desktop scale. */
+    margin: -3px auto 0;
     padding: 0;
     background: none;
     text-shadow: none;
@@ -5924,7 +5926,9 @@ body.dungeon-page .battle-side-nameplate {
     min-width: 0;
     aspect-ratio: 1664 / 353;
     overflow: hidden;
-    padding: clamp(0.68rem, 1.12vw, 0.92rem) clamp(0.9rem, 1.45vw, 1.35rem) 0;
+    /* Centre the copy on the illustrated red field rather than the transparent
+     * bounds of the full PNG. */
+    padding: clamp(0.85rem, 1.5vw, 1.11rem) clamp(0.9rem, 1.45vw, 1.35rem) 0;
     background: url("/app/images/assets/dungeon/grid-heading-chain-rig.png?v=art-dungeon-grid-chain-v6") center / 100% 100% no-repeat;
     transition: filter 180ms ease;
 }
@@ -5952,7 +5956,9 @@ body.dungeon-page .battle-side-status {
     min-width: 0;
     min-height: 0;
     aspect-ratio: 640 / 353;
-    padding: clamp(0.5rem, 0.82vw, 0.68rem) clamp(0.58rem, 0.8vw, 0.76rem) 0;
+    /* The compact rig has a taller hanger, so its painted field needs a
+     * proportionally larger optical offset than the main nameplate. */
+    padding: clamp(0.85rem, 1.25vw, 0.96rem) clamp(0.58rem, 0.8vw, 0.76rem) 0;
     border: 0;
     border-radius: 0;
     outline: 0;
@@ -5971,8 +5977,30 @@ body.dungeon-page .battle-side-status .enemy-pressure-chip {
 }
 
 body.dungeon-page .battle-side-nameplate .battle-side-count {
-    color: #d7eee5;
+    color: #f3ead2;
     font-size: 0.72rem;
+    font-weight: 800;
+}
+
+body.dungeon-page .battle-side-player .battle-side-nameplate > .outline {
+    color: #8ff0bc;
+}
+
+body.dungeon-page .battle-side-enemy .battle-side-nameplate > .outline,
+body.dungeon-page .battle-side-enemy .battle-side-nameplate > .dungeon-ranked-opponent-identity {
+    color: #ff8c82;
+}
+
+body.dungeon-page .battle-side-player .battle-side-status .enemy-pressure-chip {
+    color: #bff4e7;
+}
+
+body.dungeon-page .battle-side-enemy .battle-side-status .enemy-pressure-chip {
+    color: #f2d5b3;
+}
+
+body.dungeon-page .battle-side-status .enemy-pressure-chip > strong {
+    color: #fff0c2;
 }
 
 body.dungeon-page .battle-side-status .enemy-pressure-chip {

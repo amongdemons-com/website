@@ -137,7 +137,9 @@ test('Dungeon ornament treatment yields visual focus to the battle', () => {
   assert.match(statusBlock, /grid-heading-status-rig\.png\?v=art-dungeon-grid-status-v1/);
   assert.match(statusBlock, /aspect-ratio:\s*640\s*\/\s*353/);
   assert.doesNotMatch(statusBlock, /(?:^|;)\s*(?:opacity|filter):/);
-  assert.match(headingBlock, /margin:\s*-1px auto 0/);
+  assert.match(headingBlock, /margin:\s*-3px auto 0/);
+  assert.match(nameplateBlock, /padding:\s*clamp\(0\.85rem,\s*1\.5vw,\s*1\.11rem\)\s+clamp\([^;]+\)\s+0/);
+  assert.match(statusBlock, /padding:\s*clamp\(0\.85rem,\s*1\.25vw,\s*0\.96rem\)\s+clamp\([^;]+\)\s+0/);
   assert.match(css, /body\.dungeon-page \.battle-side-enemy \.battle-side-heading\s*{[^}]*flex-direction:\s*row-reverse;/s);
   assert.match(css, /body\.dungeon-page \.battle-side-nameplate > \.outline,[\s\S]*?text-align:\s*center;[\s\S]*?text-overflow:\s*ellipsis;/);
   assert.match(css, /body\.dungeon-page \.battle-side-status \.enemy-pressure-chip\s*{[^}]*justify-content:\s*center;/s);
