@@ -875,7 +875,7 @@ function drawAttackZap(attackerId, targetId, options = {}) {
         const x = ((1 - t) * (1 - t) * x1) + (2 * (1 - t) * t * controlX) + (t * t * x2);
         const y = ((1 - t) * (1 - t) * y1) + (2 * (1 - t) * t * controlY) + (t * t * y2);
         const drift = ((index % 2) ? -1 : 1) * (4 + (index % 4));
-        const radius = 2.2 + ((index % 4) * 0.8);
+        const radius = (2.2 + ((index % 4) * 0.8)) * 2;
         return `<circle class="poison-bubble" cx="${(x + normalX * drift).toFixed(1)}" cy="${(y + normalY * drift).toFixed(1)}" r="${radius.toFixed(1)}" style="animation-delay: ${scaleCombatDuration(index * 18).toFixed(0)}ms" />`;
       }).join('')
     : '';
@@ -946,8 +946,8 @@ function drawFireball(attackerId, targetId, options = {}) {
   fireball.innerHTML = renderViewportSvg(`
       ${emberHtml}
       <g class="fireball-projectile" style="--fireball-start-x: ${x1.toFixed(1)}px; --fireball-start-y: ${y1.toFixed(1)}px; --fireball-end-x: ${x2.toFixed(1)}px; --fireball-end-y: ${y2.toFixed(1)}px;">
-        <circle class="fireball-core" cx="0" cy="0" r="8.5" />
-        <circle class="fireball-hot" cx="3.6" cy="-2.2" r="4.2" />
+        <circle class="fireball-core" cx="0" cy="0" r="17" />
+        <circle class="fireball-hot" cx="7.2" cy="-4.4" r="8.4" />
       </g>
       <circle class="fireball-impact" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="${impactRadius.toFixed(1)}" />
   `);
@@ -1011,7 +1011,7 @@ function drawGroupFireball(attackerId, targetIds, options = {}) {
   fireball.innerHTML = renderViewportSvg(`
       ${emberHtml}
       <g class="fireball-projectile" style="--fireball-start-x: ${x1.toFixed(1)}px; --fireball-start-y: ${y1.toFixed(1)}px; --fireball-end-x: ${x2.toFixed(1)}px; --fireball-end-y: ${y2.toFixed(1)}px;">
-        <circle class="fireball-core" cx="0" cy="0" r="11" />
+        <circle class="fireball-core" cx="0" cy="0" r="22" />
       </g>
   `);
   appendTemporaryElement(fireball, 620);

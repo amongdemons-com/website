@@ -6452,6 +6452,7 @@ body.dungeon-page .dungeon-vs::after {
 body.dungeon-page .dungeon-center-panel {
     position: relative;
     isolation: isolate;
+    container-type: size;
     width: 100%;
     height: 100%;
     background: none;
@@ -6462,14 +6463,31 @@ body.dungeon-page .dungeon-center-panel {
 body.dungeon-page .dungeon-center-panel::before {
     content: "";
     position: absolute;
-    inset: 0;
+    top: auto;
+    bottom: 0;
+    left: 50%;
+    width: min(100cqw, 39.99cqh);
+    height: auto;
+    aspect-ratio: 793 / 1983;
     z-index: 0;
     background: url("/app/images/assets/dungeon/center-pole-rig.png?v=art-dungeon-center-pole-v4") center bottom / 100% 100% no-repeat;
+    transform: translateX(-50%);
     pointer-events: none;
     transition: filter 180ms ease;
 }
 
-body.dungeon-page .dungeon-center-panel > * {
+body.dungeon-page .dungeon-center-art-content {
+    position: absolute;
+    top: auto;
+    bottom: 0;
+    left: 50%;
+    width: min(100cqw, 39.99cqh);
+    height: auto;
+    aspect-ratio: 793 / 1983;
+    transform: translateX(-50%);
+}
+
+body.dungeon-page .dungeon-center-art-content > * {
     z-index: 1;
 }
 
@@ -6646,6 +6664,19 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn.is-fighting:di
 
     body.dungeon-page .dungeon-center-panel::before {
         display: none;
+    }
+
+    body.dungeon-page .dungeon-center-art-content {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: auto;
+        aspect-ratio: auto;
+        transform: none;
+        gap: 0.5rem;
     }
 
     body.dungeon-page .dungeon-floor-marker {

@@ -7,6 +7,7 @@ const root = path.join(__dirname, '..');
 const sharedStyles = fs.readFileSync(path.join(root, 'public', 'app', 'css', 'base.css'), 'utf8');
 const campStyles = fs.readFileSync(path.join(root, 'public', 'app', 'css', 'camp.css'), 'utf8');
 const styles = fs.readFileSync(path.join(root, 'public', 'app', 'css', 'battle.css'), 'utf8');
+const combatSource = fs.readFileSync(path.join(root, 'public', 'app', 'js', 'dungeon', 'combat.js'), 'utf8');
 const handSource = fs.readFileSync(path.join(root, 'public', 'app', 'js', 'dungeon', 'hand.js'), 'utf8');
 const cardsSource = fs.readFileSync(path.join(root, 'public', 'app', 'js', 'dungeon', 'cards.js'), 'utf8');
 const renderSource = fs.readFileSync(path.join(root, 'public', 'app', 'js', 'dungeon', 'render.js'), 'utf8');
@@ -65,8 +66,9 @@ test('demon reactions stay on the artwork and preserve enemy mirroring', () => {
   assert.match(sharedStyles, /@keyframes demon-target-shake[\s\S]*?scaleX\(var\(--demon-image-scale-x, 1\)\)/s);
 });
 
-test('battle and level-up effects retain main-branch transparency', () => {
-  assert.match(sharedStyles, /\.dark-spike::before\s*\{[^}]*background:\s*linear-gradient\([^;]*rgba\(4,8,10,0\)/s);
+test('battle and level-up effects retain intended transparency', () => {
+  assert.match(sharedStyles, /\.dark-spike::before\s*\{[^}]*background:\s*#000;/s);
+  assert.match(sharedStyles, /\.dark-spike::after\s*\{[^}]*background:\s*linear-gradient\([^;]*rgba\(143,164,183,0\)/s);
   assert.match(sharedStyles, /\.combat-impact-core\s*\{[^}]*background:\s*radial-gradient\([^;]*transparent 72%\)/s);
   assert.match(sharedStyles, /\.combat-impact-particle\s*\{[^}]*background:\s*linear-gradient\([^;]*transparent\)/s);
 
@@ -88,6 +90,13 @@ test('battle and level-up effects retain main-branch transparency', () => {
   assert.match(sharedStyles, /\.level-up-celebration-vignette\s*\{[\s\S]*?conic-gradient\([^;]*transparent/s);
   assert.match(sharedStyles, /\.level-up-beams\s*\{[\s\S]*?repeating-conic-gradient\([^;]*transparent/s);
   assert.match(campStyles, /\.nav-xp-progress\.is-level-up-anchored::after[\s\S]*?linear-gradient\(90deg, transparent/s);
+});
+
+test('battle projectile sizing matches the type-specific VFX brief', () => {
+  assert.match(combatSource, /const radius = \(2\.2 \+ \(\(index % 4\) \* 0\.8\)\) \* 2;/);
+  assert.match(combatSource, /<circle class="fireball-core" cx="0" cy="0" r="17" \/>/);
+  assert.match(combatSource, /<circle class="fireball-hot" cx="7\.2" cy="-4\.4" r="8\.4" \/>/);
+  assert.match(combatSource, /<circle class="fireball-core" cx="0" cy="0" r="22" \/>/);
 });
 
 test('upgrade-highlighted hand cards paint above the hand frame', () => {

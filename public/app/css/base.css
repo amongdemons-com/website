@@ -1436,7 +1436,7 @@ main {
     z-index: 1;
     width: calc(100% - 2px);
     height: 0.64rem;
-    background: linear-gradient(90deg, rgba(4,8,10,0), color-mix(in srgb, var(--combat-color, #171d24) 72%, #05080d) 42%, var(--combat-color, #171d24) 76%, #020305);
+    background: #000;
     clip-path: polygon(0 50%, 82% 0, 100% 50%, 82% 100%);
 }
 

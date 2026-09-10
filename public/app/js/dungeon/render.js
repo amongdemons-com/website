@@ -625,14 +625,16 @@ function updateDungeonJoiner() {
   elements.dungeonJoiner.classList.remove('is-recruiting');
   elements.dungeonJoiner.innerHTML = `
     <div class="dungeon-center-panel" aria-label="Dungeon floor and actions">
-      ${floor ? `
-        <div class="dungeon-floor-marker outline" aria-label="Current floor ${floor}">
-          <span class="dungeon-floor-kicker">Floor</span>
-          <strong>${floor}</strong>
-        </div>
-      ` : ''}
-      <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
-      ${preservedWorldBattleMarker}
+      <div class="dungeon-center-art-content">
+        ${floor ? `
+          <div class="dungeon-floor-marker outline" aria-label="Current floor ${floor}">
+            <span class="dungeon-floor-kicker">Floor</span>
+            <strong>${floor}</strong>
+          </div>
+        ` : ''}
+        <div class="dungeon-center-actions" id="dungeonCenterActions"></div>
+        ${preservedWorldBattleMarker}
+      </div>
     </div>
   `;
   elements.dungeonCenterActions = document.getElementById('dungeonCenterActions');
