@@ -1432,12 +1432,24 @@ main {
     content: "";
     position: absolute;
     top: -0.32rem;
-    right: 0;
-    width: 100%;
+    right: 1px;
+    z-index: 1;
+    width: calc(100% - 2px);
     height: 0.64rem;
     background: linear-gradient(90deg, rgba(4,8,10,0), color-mix(in srgb, var(--combat-color, #171d24) 72%, #05080d) 42%, var(--combat-color, #171d24) 76%, #020305);
     clip-path: polygon(0 50%, 82% 0, 100% 50%, 82% 100%);
-    filter: none;
+}
+
+.dark-spike::after {
+    content: "";
+    position: absolute;
+    top: -0.4rem;
+    right: 0;
+    z-index: 0;
+    width: 100%;
+    height: 0.8rem;
+    background: linear-gradient(90deg, rgba(143,164,183,0), rgba(143,164,183,0.88) 42%, #b9c7d1 76%, #72899a);
+    clip-path: polygon(0 50%, 82% 0, 100% 50%, 82% 100%);
 }
 
 .chaos-lightning {
