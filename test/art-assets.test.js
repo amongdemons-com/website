@@ -128,6 +128,7 @@ test('Dungeon ornament treatment yields visual focus to the battle', () => {
 
   const nameplateBlock = css.match(/body\.dungeon-page \.battle-side-nameplate\s*{([^}]*)}/)?.[1] || '';
   const statusBlock = css.match(/body\.dungeon-page \.battle-side-status\s*{([^}]*)}/)?.[1] || '';
+  const headingBlock = css.match(/body\.dungeon-page \.battle-side-heading\s*{([^}]*)}/)?.[1] || '';
   const centerArtworkBlock = css.match(/body\.dungeon-page \.dungeon-center-panel::before\s*{([^}]*)}/)?.[1] || '';
 
   assert.match(nameplateBlock, /grid-heading-chain-rig\.png\?v=art-dungeon-grid-chain-v6/);
@@ -136,6 +137,10 @@ test('Dungeon ornament treatment yields visual focus to the battle', () => {
   assert.match(statusBlock, /grid-heading-status-rig\.png\?v=art-dungeon-grid-status-v1/);
   assert.match(statusBlock, /aspect-ratio:\s*640\s*\/\s*353/);
   assert.doesNotMatch(statusBlock, /(?:^|;)\s*(?:opacity|filter):/);
+  assert.match(headingBlock, /margin:\s*-1px auto 0/);
+  assert.match(css, /body\.dungeon-page \.battle-side-enemy \.battle-side-heading\s*{[^}]*flex-direction:\s*row-reverse;/s);
+  assert.match(css, /body\.dungeon-page \.battle-side-nameplate > \.outline,[\s\S]*?text-align:\s*center;[\s\S]*?text-overflow:\s*ellipsis;/);
+  assert.match(css, /body\.dungeon-page \.battle-side-status \.enemy-pressure-chip\s*{[^}]*justify-content:\s*center;/s);
   assert.match(css, /body\.dungeon-page \.dungeon-center-panel\s*{[\s\S]*?transform: scale\(0\.84\);/);
   assert.match(centerArtworkBlock, /center-pole-rig\.png\?v=art-dungeon-center-pole-v4/);
   assert.doesNotMatch(centerArtworkBlock, /(?:^|;)\s*(?:opacity|filter):/);

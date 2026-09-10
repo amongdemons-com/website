@@ -5899,13 +5899,20 @@ body.dungeon-page .battle-side-heading {
     width: min(96%, 25.5rem);
     aspect-ratio: auto;
     min-height: 0;
-    margin-inline: auto;
+    margin: -1px auto 0;
     padding: 0;
     background: none;
     text-shadow: none;
 }
 
+/* Keep modifiers nearest the centre divider on both sides while preserving a
+ * name-first DOM order for screen readers. */
+body.dungeon-page .battle-side-enemy .battle-side-heading {
+    flex-direction: row-reverse;
+}
+
 body.dungeon-page .battle-side-nameplate {
+    position: relative;
     box-sizing: border-box;
     display: flex;
     flex: 1 1 14rem;
@@ -5916,9 +5923,21 @@ body.dungeon-page .battle-side-nameplate {
     max-width: 18.5rem;
     min-width: 0;
     aspect-ratio: 1664 / 353;
-    padding: clamp(0.68rem, 1.12vw, 0.92rem) clamp(1.05rem, 1.8vw, 1.55rem) 0;
+    overflow: hidden;
+    padding: clamp(0.68rem, 1.12vw, 0.92rem) clamp(0.9rem, 1.45vw, 1.35rem) 0;
     background: url("/app/images/assets/dungeon/grid-heading-chain-rig.png?v=art-dungeon-grid-chain-v6") center / 100% 100% no-repeat;
     transition: filter 180ms ease;
+}
+
+body.dungeon-page .battle-side-nameplate > .outline,
+body.dungeon-page .battle-side-nameplate > .dungeon-ranked-opponent-identity {
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    line-height: 1;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 body.dungeon-page .battle-side-status {
@@ -5957,8 +5976,17 @@ body.dungeon-page .battle-side-nameplate .battle-side-count {
 }
 
 body.dungeon-page .battle-side-status .enemy-pressure-chip {
+    flex: 1 1 auto;
     max-width: 100%;
-    font-size: clamp(0.56rem, 0.66vw, 0.7rem);
+    min-width: 0;
+    justify-content: center;
+    font-size: clamp(0.52rem, 0.62vw, 0.66rem);
+}
+
+body.dungeon-page .battle-side-status > .enemy-pressure-chip > span:not(.battle-buff-summary-tooltip, .terror-pressure-tooltip) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 body.dungeon-page .dungeon-arena {
@@ -6643,7 +6671,7 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn.is-fighting:di
         width: auto;
         aspect-ratio: auto;
         min-height: 1.35rem;
-        margin-inline: 0;
+        margin: 0;
         padding: 0;
         background: none;
     }
