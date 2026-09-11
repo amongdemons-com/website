@@ -48,3 +48,8 @@ test('Dungeon result action buttons are text-only while result effects retain fl
   assert.match(victoryText, /background:\s*none;/);
   assert.doesNotMatch(victoryText, /linear-gradient/);
 });
+
+test('Dungeon extraction drop target uses a faded team-slot placeholder above its prompt', () => {
+  assert.match(styles, /\.dungeon-reward-dropzone \.dungeon-reward-empty\s*\{[\s\S]*?flex-direction:\s*column;[\s\S]*?gap:\s*0\.28rem;/);
+  assert.match(styles, /\.dungeon-reward-dropzone \.dungeon-reward-empty::before\s*\{[\s\S]*?amongdemons_team_slot_placeholder\.png[\s\S]*?opacity:\s*0\.16;/);
+});

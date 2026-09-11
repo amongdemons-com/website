@@ -331,13 +331,12 @@ ${e}`:e}function bt(e){let t=new Map;return e.querySelectorAll(".dungeon-demon-c
   `}function zo(){return`
     <div class="battle-speed-control demonic-pact-return-control" role="group" aria-label="Demonic Pact controls">
       <button
-        class="battle-speed-option active game-primary-action demonic-pact-return-option"
+        class="battle-speed-option active game-primary-action demonic-pact-return-option outline"
         id="demonicPactReturnBtn"
         type="button"
         title="Show Demonic Pacts"
         aria-label="Show Demonic Pacts"
       >
-        ${w("sparkles")}
         <span>Show Pacts</span>
       </button>
     </div>
@@ -515,7 +514,6 @@ ${e}`:e}function bt(e){let t=new Map;return e.querySelectorAll(".dungeon-demon-c
         title="${p(r)}"
         aria-label="${p(r)}"
       >
-        ${w("replay",{size:18,className:"demonic-pact-reroll-icon"})}
         <span>Recast</span>
       </button>
       ${ge(`-${e}`,{className:"soul-chip demonic-pact-reroll-cost",ariaLabel:`Costs ${e} Souls`,showLabel:!1})}

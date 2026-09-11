@@ -353,7 +353,6 @@ function renderDemonicPactActions() {
         title="${escapeHtml(title)}"
         aria-label="${escapeHtml(title)}"
       >
-        ${renderIcon('replay', { size: 18, className: 'demonic-pact-reroll-icon' })}
         <span>Recast</span>
       </button>
       ${renderSoulAmount(`-${cost}`, {

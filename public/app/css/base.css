@@ -6498,7 +6498,7 @@ body.rankings-page {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.48rem;
+    gap: 0;
     min-width: 10.5rem;
     min-height: 2.85rem;
     border-color: var(--secondary-border);
@@ -6507,7 +6507,7 @@ body.rankings-page {
     box-shadow:
         none;
     font-size: 0.78rem;
-    font-weight: 900;
+    font-weight: normal;
     letter-spacing: 0.025em;
     pointer-events: auto;
     text-transform: uppercase;
@@ -6929,7 +6929,7 @@ body.rankings-page {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.72rem;
+    gap: 0;
     width: 100%;
     min-width: 0;
     min-height: 2.85rem;
@@ -6939,7 +6939,7 @@ body.rankings-page {
         #040c0e;
     color: #c2d9d4;
     font-size: 1.05rem;
-    font-weight: 900;
+    font-weight: normal;
     letter-spacing: 0;
     text-transform: uppercase;
     box-shadow:
@@ -6959,10 +6959,6 @@ body.rankings-page {
     border-color: #252d2f;
     color: #656f6f;
     opacity: 1;
-}
-
-.demonic-pact-reroll-btn .game-icon {
-    margin-right: 0;
 }
 
 .demonic-pact-reroll-cost {
@@ -7534,7 +7530,7 @@ body.dungeon-page:not(.ranked-page) .demonic-pact-reroll-cost {
 
 body.dungeon-page:not(.ranked-page) .demonic-pact-reroll-btn {
         width: 100%;
-        gap: 0.4rem;
+        gap: 0;
         font-size: 0.7rem;
     }
 

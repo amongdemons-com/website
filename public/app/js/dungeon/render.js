@@ -1141,13 +1141,12 @@ function renderDemonicPactReturnControl() {
   return `
     <div class="battle-speed-control demonic-pact-return-control" role="group" aria-label="Demonic Pact controls">
       <button
-        class="battle-speed-option active game-primary-action demonic-pact-return-option"
+        class="battle-speed-option active game-primary-action demonic-pact-return-option outline"
         id="demonicPactReturnBtn"
         type="button"
         title="Show Demonic Pacts"
         aria-label="Show Demonic Pacts"
       >
-        ${renderIcon('sparkles')}
         <span>Show Pacts</span>
       </button>
     </div>

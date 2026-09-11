@@ -4546,11 +4546,6 @@ body .battle-speed-option.game-primary-action:disabled {
     white-space: nowrap;
 }
 
-.demonic-pact-return-option .game-icon {
-    width: 0.9rem;
-    height: 0.9rem;
-}
-
 /*
  * Replay / fight-log box, sitting between the hand bar and the reward box.
  * Replay on top, log on the bottom; the buttons are always present (disabled
@@ -4697,6 +4692,27 @@ body.dungeon-page .dungeon-mobile-nav-btn#dungeonMobileLogBtn .game-icon {
 .dungeon-reward-dropzone.is-drag-over .dungeon-reward-empty {
     border-color: #665d38;
     color: #a79b6a;
+}
+
+/* Give the extraction drop target a quiet team-slot silhouette without
+ * competing with the Drop Demon prompt. */
+.dungeon-reward-dropzone .dungeon-reward-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+}
+
+.dungeon-reward-dropzone .dungeon-reward-empty::before {
+    content: "";
+    display: block;
+    width: min(62%, 5.4rem);
+    aspect-ratio: 1;
+    flex: 0 0 auto;
+    background: url("/app/images/assets/amongdemons_team_slot_placeholder.png") center / contain no-repeat;
+    opacity: 0.16;
+    pointer-events: none;
 }
 
 #cashoutModalBody .cashout-selected-reward .dungeon-demon-card,
@@ -6826,4 +6842,16 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn:disabled {
         padding: clamp(0.52rem, 1.25vw, 0.68rem) clamp(0.58rem, 0.8vw, 0.76rem) 0;
         background: url("/app/images/assets/dungeon/grid-heading-status-rig.png?v=art-dungeon-grid-status-v1") center / 100% 100% no-repeat;
     }
+}
+
+/* The shared dungeon button reset is intentionally heavy; keep Recast at the
+ * requested normal weight after that reset has been applied. */
+body.dungeon-page .demonic-pact-reroll-btn {
+    font-weight: normal;
+}
+
+body.dungeon-page .demonic-pact-view-toggle,
+body.dungeon-page .demonic-pact-return-option {
+    gap: 0;
+    font-weight: normal;
 }

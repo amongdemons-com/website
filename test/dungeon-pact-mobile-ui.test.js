@@ -15,6 +15,10 @@ const pactSource = fs.readFileSync(
   path.join(__dirname, '..', 'public', 'app', 'js', 'dungeon', 'pacts.js'),
   'utf8'
 );
+const renderSource = fs.readFileSync(
+  path.join(__dirname, '..', 'public', 'app', 'js', 'dungeon', 'render.js'),
+  'utf8'
+);
 
 test('mobile portrait Pact selection stays within the dynamic viewport', () => {
   assert.match(styles, /@media \(max-width:\s*575\.98px\) and \(orientation:\s*portrait\)[\s\S]*?body\.dungeon-page:not\(\.ranked-page\) \.demonic-pact-overlay\s*{[^}]*height:\s*100vh;[^}]*height:\s*100dvh;[^}]*max-height:\s*100dvh;[^}]*overflow:\s*hidden;/s);
@@ -58,6 +62,18 @@ test('Pact recasts retain the animated card and seal feedback', () => {
   assert.match(battleStyles, /\.dungeon-hand-bar\s*{[\s\S]*?background: #081316;/);
 });
 
+test('The Demonic Pacts Recast control is text-only with normal weight', () => {
+  const recastBlock = styles.match(/\.demonic-pact-reroll-btn\s*{([^}]*)}/s)?.[1] || '';
+  const actionStart = pactSource.indexOf('function renderDemonicPactActions()');
+  const actionEnd = pactSource.indexOf('function getPactRerollCost()', actionStart);
+  const actionMarkup = pactSource.slice(actionStart, actionEnd);
+
+  assert.match(recastBlock, /font-weight:\s*normal;/);
+  assert.match(recastBlock, /gap:\s*0;/);
+  assert.match(battleStyles, /body\.dungeon-page \.demonic-pact-reroll-btn\s*{[^}]*font-weight:\s*normal;/s);
+  assert.doesNotMatch(actionMarkup, /renderIcon\(/);
+});
+
 test('View Team is grouped beside the centered Recast action on desktop', () => {
   const dungeonHtml = fs.readFileSync(
     path.join(__dirname, '..', 'public', 'app', 'dungeon.html'),
@@ -65,11 +81,18 @@ test('View Team is grouped beside the centered Recast action on desktop', () => 
   );
   const actionStack = dungeonHtml.match(/<div class="demonic-pact-action-stack">([\s\S]*?)<\/div>\s*<\/div>/)?.[1] || '';
   const toggleStyles = styles.match(/\.demonic-pact-view-toggle\s*{([^}]*)}/s)?.[1] || '';
+  const showPactsStart = renderSource.indexOf('function renderDemonicPactReturnControl()');
+  const showPactsEnd = renderSource.indexOf('function renderBattleSkipControl()', showPactsStart);
+  const showPactsMarkup = renderSource.slice(showPactsStart, showPactsEnd);
 
   assert.match(actionStack, /id="demonicPactViewToggle"[\s\S]*id="dungeonPactActions"/);
-  assert.match(actionStack, /data-lucide="users"[\s\S]*View Team/);
+  assert.match(actionStack, /View Team/);
+  assert.doesNotMatch(actionStack, /data-lucide="users"/);
+  assert.match(showPactsMarkup, /demonic-pact-return-option[^\"]*\boutline\b/);
+  assert.doesNotMatch(showPactsMarkup, /renderIcon\(/);
   assert.match(toggleStyles, /min-height:\s*2\.85rem;/);
   assert.doesNotMatch(toggleStyles, /position:\s*fixed/);
   assert.match(styles, /\.demonic-pact-action-stack\s*{[^}]*display:\s*flex;[^}]*align-items:\s*stretch;[^}]*justify-content:\s*center;/s);
+  assert.match(battleStyles, /body\.dungeon-page \.demonic-pact-view-toggle,[\s\S]*body\.dungeon-page \.demonic-pact-return-option\s*{[^}]*font-weight:\s*normal;/s);
   assert.match(styles, /@media \(max-width:\s*575\.98px\) and \(orientation:\s*portrait\)[\s\S]*?body\.dungeon-page:not\(\.ranked-page\) \.demonic-pact-actions\s*{[^}]*order:\s*1;[\s\S]*?body\.dungeon-page:not\(\.ranked-page\) \.demonic-pact-view-toggle\s*{[^}]*order:\s*2;/s);
 });
