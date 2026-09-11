@@ -452,17 +452,55 @@ function renderEnemySideTitle(pressure = null, buffs = [], teamBuffs = []) {
 
   const rankedIdentity = renderDungeonRankedEnemyIdentity(getVisibleDungeonRankedEncounter(state.run));
   const label = state.run?.enemyLabel || 'Enemies';
-  const statusHtml = [
-    renderEnemyPressureChip(pressure),
-    renderEnemyBuffChips(buffs),
-    renderBattleBuffSummaryChip(teamBuffs, { side: 'enemy' })
-  ].filter(Boolean).join('');
+  const statusHtml = isBossBattle(state.run)
+    ? renderBossBuffSummaryChip(pressure, buffs, teamBuffs)
+    : [
+        renderEnemyPressureChip(pressure),
+        renderEnemyBuffChips(buffs),
+        renderBattleBuffSummaryChip(teamBuffs, { side: 'enemy' })
+      ].filter(Boolean).join('');
   elements.enemySideTitle.innerHTML = `
     <span class="battle-side-nameplate">
       ${rankedIdentity || `<span class="outline">${escapeHtml(label)}</span>`}
     </span>
     ${statusHtml ? `<span class="battle-side-status" aria-label="Enemy modifiers">${statusHtml}</span>` : ''}
   `;
+}
+
+function isBossBattle(run = state.run) {
+  return Boolean(
+    run?.combatType === 'world_boss' ||
+    run?.lastBattle?.combatType === 'world_boss' ||
+    run?.boss ||
+    run?.lastBattle?.boss
+  );
+}
+
+function renderBossBuffSummaryChip(pressure = null, buffs = [], teamBuffs = []) {
+  const terrorBuff = createTerrorSummaryBuff(pressure);
+  return renderBattleBuffSummaryChip([
+    terrorBuff,
+    ...(Array.isArray(buffs) ? buffs : []),
+    ...(Array.isArray(teamBuffs) ? teamBuffs : [])
+  ].filter(Boolean), { side: 'enemy', label: 'Buffs' });
+}
+
+function createTerrorSummaryBuff(pressure = null) {
+  if (!pressure?.active) return null;
+
+  const level = Math.max(0, Math.round(Number(pressure.level) || 0));
+  if (level <= 0) return null;
+
+  return {
+    id: `terror-${level}`,
+    name: `Terror ${level}`,
+    description: [
+      `Enemy HP ${formatBonusPercent(pressure.hpBonusPct)}`,
+      `Enemy Attack ${formatBonusPercent(pressure.atkBonusPct)}`,
+      `Enemy Speed ${formatBonusPercent(pressure.speedBonusPct)}`
+    ].join('\n'),
+    icon: 'flame'
+  };
 }
 
 function getFriendlyTeamBuffs(run = state.run) {
@@ -551,6 +589,7 @@ function renderEnemyPressureChip(pressure = null) {
   const level = Math.max(0, Math.round(Number(pressure.level) || 0));
   if (level <= 0) return '';
   const tooltipId = 'battle-enemy-terror-tooltip';
+  const terrorLabel = level < 100 ? '<span>Terror</span>' : '';
 
   return `
     <span
@@ -559,7 +598,7 @@ function renderEnemyPressureChip(pressure = null) {
       aria-label="${escapeHtml(`Terror ${level}. Enemy HP ${hpBonus}. Enemy Attack ${atkBonus}. Enemy Speed ${speedBonus}.`)}"
       aria-describedby="${tooltipId}"
     >
-      <span>Terror</span>
+      ${terrorLabel}
       <strong>${escapeHtml(String(level))}</strong>
       <span class="terror-pressure-tooltip" id="${tooltipId}" role="tooltip">
         <strong class="terror-pressure-title">Terror ${escapeHtml(String(level))}</strong>
@@ -722,6 +761,7 @@ function syncFormationGridSizing() {
   grids.forEach((grid) => {
     if (usesDesktopFormationCss()) {
       clearFormationGridCardSize(grid);
+      grid.closest('.battle-side')?.style.removeProperty('--dungeon-mobile-grid-width');
       return;
     }
 
@@ -744,6 +784,10 @@ function syncFormationGridSizing() {
 
     if (!Number.isFinite(nextWidth)) return;
     setFormationGridCardSize(grid, nextWidth, nextWidth * cardHeightRatio);
+    grid.closest('.battle-side')?.style.setProperty(
+      '--dungeon-mobile-grid-width',
+      `${grid.getBoundingClientRect().width}px`,
+    );
   });
 }
 
@@ -1004,7 +1048,8 @@ function renderDungeonMobileFightBox(options = {}) {
       aria-pressed="${rewardOpen ? 'true' : 'false'}"
       ${canExtract ? '' : 'disabled'}
     >
-      <span>Extract</span>
+      ${renderIcon('door-stairwell')}
+      <span class="visually-hidden">Extract</span>
     </button>
     <button
       class="dungeon-mobile-nav-btn dungeon-fight-btn dungeon-mobile-fight-btn game-primary-action ${mode === 'preparing' ? 'is-loading' : ''} ${mode === 'fighting' ? 'is-fighting' : ''}"

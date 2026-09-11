@@ -28,6 +28,19 @@ const SKIP_DIRS = new Set(['node_modules', 'steam', 'android', 'map']);
 // the literal-pattern scan below cannot discover.
 const EXTRA_ICONS = ['crown', 'trophy', 'medal', 'hourglass'];
 
+// A small number of UI glyphs are part of the game's visual language rather
+// than the Lucide set. Keep these in the same generated subset so renderIcon()
+// can use them without loading a second icon library.
+const CUSTOM_ICONS = {
+  DoorStairwell: [
+    ['path', { d: 'M12 17v-3a1 1 0 0 1 1-1h6' }],
+    ['path', { d: 'M19 17h-9a1 1 0 0 0-1 1v3' }],
+    ['path', { d: 'M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16' }],
+    ['path', { d: 'M19 9h-3a1 1 0 0 0-1 1v3' }],
+    ['path', { d: 'M22 21H2' }]
+  ]
+};
+
 function collectFiles(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {
@@ -76,7 +89,10 @@ function toPascalCase(value) {
 function main() {
   const { kebabNames, pascalNames } = collectRequestedNames();
   const realKeys = new Map(Object.keys(lucide.icons).map((key) => [key.toLowerCase(), key]));
-  const resolveKey = (name) => realKeys.get(String(name).replace(/-/g, '').toLowerCase()) || null;
+  const customKeys = new Map(Object.keys(CUSTOM_ICONS).map((key) => [key.toLowerCase(), key]));
+  const resolveKey = (name) => realKeys.get(String(name).replace(/-/g, '').toLowerCase())
+    || customKeys.get(String(name).replace(/-/g, '').toLowerCase())
+    || null;
 
   const icons = {}; // every key form icons.js may look up (Pascal + aliases)
   const kebabIcons = {}; // data-lucide names for createIcons
@@ -89,9 +105,10 @@ function main() {
       // such as potion) resolve through ICON_ALIASES or renderImageIcon instead.
       continue;
     }
-    icons[key] = lucide.icons[key];
-    icons[toPascalCase(kebab)] = lucide.icons[key];
-    kebabIcons[kebab] = lucide.icons[key];
+    const iconNode = lucide.icons[key] || CUSTOM_ICONS[key];
+    icons[key] = iconNode;
+    icons[toPascalCase(kebab)] = iconNode;
+    kebabIcons[kebab] = iconNode;
   }
 
   for (const pascal of pascalNames) {
@@ -100,8 +117,9 @@ function main() {
       missing.push(pascal);
       continue;
     }
-    icons[key] = lucide.icons[key];
-    icons[pascal] = lucide.icons[key];
+    const iconNode = lucide.icons[key] || CUSTOM_ICONS[key];
+    icons[key] = iconNode;
+    icons[pascal] = iconNode;
   }
 
   if (missing.length) {

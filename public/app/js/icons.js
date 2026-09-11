@@ -20,6 +20,7 @@
     'last-attack': 'SkipBack',
     melee: 'Swords',
     'next-attack': 'SkipForward',
+    'door-stairwell': 'DoorStairwell',
     pause: 'Pause',
     play: 'Play',
     poison: 'FlaskConical',

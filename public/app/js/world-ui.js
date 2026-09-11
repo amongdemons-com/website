@@ -5715,7 +5715,6 @@ import './bag-item-visuals.js';
       ? ''
       : `
         <button class="btn btn-primary btn-sm world-card-action" type="button" data-anchor-soul ${state.bindingShrine ? 'disabled' : ''}>
-          ${renderIcon('hand-heart')}
           <span>Pray</span>
         </button>
       `;
@@ -9947,6 +9946,7 @@ import './bag-item-visuals.js';
       'enemy-pressure-chip',
       options.inline ? 'world-terror-meta-chip' : ''
     ].filter(Boolean).join(' ');
+    const terrorLabel = level < 100 ? '<span>Terror</span>' : '';
     const chip = `
       <span
         class="${className}"
@@ -9954,7 +9954,7 @@ import './bag-item-visuals.js';
         data-tooltip="${escapeAttribute(tooltip)}"
         aria-label="${escapeAttribute(tooltip)}"
       >
-        <span>Terror</span>
+        ${terrorLabel}
         <strong>${escapeHtml(String(level))}</strong>
       </span>
     `;

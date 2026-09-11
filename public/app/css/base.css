@@ -4275,6 +4275,11 @@ body.seo-page {
     transform: translateX(-50%);
 }
 
+.seo-bosses-page .boss-key-demon-art::before,
+.seo-boss-page .boss-key-demon-art::before {
+    background: var(--rarity-color, #e25041);
+}
+
 .boss-key-demon-art .boss-key-demon-gem {
     top: auto;
     left: 50%;

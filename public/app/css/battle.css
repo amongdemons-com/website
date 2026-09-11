@@ -5080,6 +5080,17 @@ body.dungeon-page:not(.ranked-page) .dungeon-hand-cards .combat-hp-bar {
         display: none;
     }
 
+body.dungeon-page:not(.ranked-page) #dungeonHandBar .dungeon-hand-cards .combat-hp-meta .game-icon {
+        display: none;
+    }
+
+body.dungeon-page:not(.ranked-page) #dungeonHandBar .dungeon-hand-cards .combat-stat-strip,
+body.dungeon-page:not(.ranked-page) #dungeonHandBar .dungeon-hand-cards .combat-stat-strip span,
+body.dungeon-page:not(.ranked-page) #dungeonHandBar .dungeon-hand-cards .combat-hp-meta {
+        align-items: center;
+        line-height: 1;
+    }
+
 body.dungeon-page:not(.ranked-page) .dungeon-hand-cards .combat-stat-footer {
         margin-top: 0.1rem;
         padding-top: 0.1rem;
@@ -6311,6 +6322,36 @@ body.dungeon-page .battle-side .combat-hp-bar {
         padding-top: 0.1rem;
         border-top: 1px solid #263737;
     }
+
+    /* Hand cards use the legacy stat markup (the attack strip and HP meta are
+     * siblings). Put both stat groups on the same grid row so their text and
+     * remaining attack/speed icons share one vertical centerline. */
+    body.dungeon-page:not(.ranked-page) #dungeonHandBar .dungeon-hand-cards .dungeon-demon-card-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        align-content: end;
+        column-gap: 0.22rem;
+    }
+
+    body.dungeon-page:not(.ranked-page) #dungeonHandBar .dungeon-hand-cards .dungeon-demon-card-title {
+        grid-column: 1 / -1;
+    }
+
+    body.dungeon-page:not(.ranked-page) #dungeonHandBar .dungeon-hand-cards .combat-stat-strip {
+        grid-column: 1;
+        grid-row: 2;
+        align-self: center;
+    }
+
+    body.dungeon-page:not(.ranked-page) #dungeonHandBar .dungeon-hand-cards .combat-hp-meta {
+        grid-column: 2;
+        grid-row: 2;
+        align-self: center;
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+    }
 }
 
 /* Keep every valid dungeon drop target visible with the same flat gold focus.
@@ -6493,7 +6534,7 @@ body.dungeon-page .dungeon-center-art-content > * {
 
 body.dungeon-page .dungeon-floor-marker {
     position: absolute;
-    top: 18%;
+    top: 16%;
     left: 14%;
     display: flex;
     flex-direction: column;
@@ -6643,9 +6684,11 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn.is-fighting:di
     }
 
     body.dungeon-page .dungeon-vs {
+        box-sizing: border-box;
         width: 100%;
         height: auto;
         min-height: 0;
+        padding: 0;
     }
 
     body.dungeon-page .dungeon-center-panel {
@@ -6656,9 +6699,9 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn.is-fighting:di
         justify-content: center;
         height: auto;
         min-height: 0;
-        padding: 0.5rem 0.75rem;
+        padding: 0.12rem 0.75rem;
         background: none;
-        gap: 0.5rem;
+        gap: 0.18rem;
         transform: none;
     }
 
@@ -6672,40 +6715,53 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn.is-fighting:di
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 100%;
+        width: auto;
         height: auto;
         aspect-ratio: auto;
         transform: none;
-        gap: 0.5rem;
+        gap: 0.18rem;
     }
 
     body.dungeon-page .dungeon-floor-marker {
         position: static;
-        flex-direction: column;
-        gap: 0.26rem;
-        width: 9rem;
+        top: 16%;
+        flex-direction: row;
+        gap: 0.3rem;
+        width: auto;
         height: auto;
-        aspect-ratio: 4 / 5;
-        padding: 1.3rem 0.45rem 1.5rem;
-        background:
-            linear-gradient(rgba(7, 16, 19, 0.2), rgba(7, 16, 19, 0.2)),
-            url("/app/images/assets/dungeon/floor-backdrop.png?v=art-dungeon-floor-banner-v7") center / 100% 100% no-repeat;
+        aspect-ratio: auto;
+        padding: 0;
+        background: none;
     }
 
     body.dungeon-page .dungeon-floor-marker .dungeon-floor-kicker {
-        padding: 0 0 0 0.18em;
-        font-size: 0.56rem;
-        letter-spacing: 0.18em;
+        padding: 0 0 0 0.1em;
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        line-height: 1;
     }
 
     body.dungeon-page .dungeon-floor-marker strong {
-        font-size: 2.45rem;
-        line-height: 0.82;
+        font-size: 1.18rem;
+        line-height: 1;
+    }
+
+    body.dungeon-page .dungeon-mobile-nav-btn#dungeonMobileReplayBtn .game-icon,
+    body.dungeon-page .dungeon-mobile-nav-btn#dungeonMobileLogBtn .game-icon {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    body.dungeon-page .soul-amount,
+    body.dungeon-page .soul-inline-label,
+    body.dungeon-page .soul-heading,
+    body.dungeon-page .soul-cost {
+        font-weight: normal;
     }
 
     body.dungeon-page .dungeon-center-actions {
         position: static;
-        width: 100%;
+        width: auto;
         height: auto;
         min-height: 0;
         margin-top: 0;
@@ -6726,28 +6782,41 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn.is-fighting:di
         clip-path: none;
     }
 
+    /* Keep the opposing formation edges facing the compact centre band rather
+     * than centring each grid inside its half of the portrait arena. */
+    body.dungeon-page .battle-side-enemy > #enemyGrid {
+        align-content: end;
+    }
+
+    body.dungeon-page .battle-side-player > #teamGrid {
+        align-content: start;
+    }
+
     body.dungeon-page .battle-side-heading {
-        width: auto;
+        width: min(100%, var(--dungeon-mobile-grid-width, 100%));
+        max-width: var(--dungeon-mobile-grid-width, 100%);
         aspect-ratio: auto;
-        min-height: 1.35rem;
-        margin: 0;
+        min-height: 0;
+        /* Let the hanger overlap the side's edge so the chain meets the
+         * navbar above or the formation grid below. */
+        margin: -0.65rem auto 0;
         padding: 0;
         background: none;
     }
 
     body.dungeon-page .battle-side-nameplate {
-        flex: 0 1 auto;
-        width: auto;
-        max-width: none;
-        aspect-ratio: auto;
-        padding: 0;
-        background: none;
+        flex: 1 1 14rem;
+        width: 100%;
+        max-width: 18.5rem;
+        aspect-ratio: 1664 / 353;
+        padding: clamp(0.52rem, 1.35vw, 0.72rem) clamp(1rem, 2.2vw, 1.45rem) 0;
+        background: url("/app/images/assets/dungeon/grid-heading-chain-rig.png?v=art-dungeon-grid-chain-v6") center / 100% 100% no-repeat;
     }
 
     body.dungeon-page .battle-side-status {
-        width: auto;
-        aspect-ratio: auto;
-        padding: 0;
-        background: none;
+        width: clamp(4.8rem, 5.4vw, 5.4rem);
+        aspect-ratio: 640 / 353;
+        padding: clamp(0.52rem, 1.25vw, 0.68rem) clamp(0.58rem, 0.8vw, 0.76rem) 0;
+        background: url("/app/images/assets/dungeon/grid-heading-status-rig.png?v=art-dungeon-grid-status-v1") center / 100% 100% no-repeat;
     }
 }
