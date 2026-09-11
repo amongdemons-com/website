@@ -1249,7 +1249,7 @@ import './bag-item-visuals.js';
           shouldAutoShowAmbushBattle(stepEvent.battle)
           || (stepEvent.type === 'ambush' && shouldShowWorldBattleReplay(stepEvent.battle) && isCoreTutorialActive())
         ) {
-          await showWorldBattleReplay(stepEvent.battle, getWorldBattleMeta('ambush', stepEvent.battle));
+          await showWorldBattleOutcome(stepEvent.battle, getWorldBattleMeta('ambush', stepEvent.battle));
         } else if (stepEvent.type === 'ambush' && stepEvent.battle?.error) {
           setMessage(stepEvent.battle.error, 'warning');
         }
@@ -1564,9 +1564,7 @@ import './bag-item-visuals.js';
       }
       applyPvpChallengeRecords(payload);
       const battleMeta = getWorldBattleMeta('pvp_challenge', battle, { targetPlayer });
-      if (shouldShowWorldBattleReplay(battle)) {
-        await showWorldBattleReplay(battle, battleMeta);
-      }
+      if (battle) await showWorldBattleOutcome(battle, battleMeta);
       if (isLostPvpChallenge(battle, battleMeta)) {
         await resolveAmbushDefeat({
           suppressMessage: true
@@ -1653,9 +1651,7 @@ import './bag-item-visuals.js';
         boss,
         rewardBuff
       });
-      if (shouldShowWorldBattleReplay(battle)) {
-        await showWorldBattleReplay(battle, battleMeta);
-      }
+      if (battle) await showWorldBattleOutcome(battle, battleMeta);
       const won = battle?.winner === 'player';
       if (won && rewardBuff && isHuntActive()) {
         await refreshHuntStatus({ force: true }).catch(() => {});
@@ -1701,8 +1697,8 @@ import './bag-item-visuals.js';
       setHuntState(payload.hunt);
       const won = payload.battle?.winner === 'player';
       fightResult = { won, lost: !won, encounterId };
-      if (shouldShowWorldBattleReplay(payload.battle)) {
-        await showWorldBattleReplay(payload.battle, getWorldBattleMeta('try_hunt', payload.battle));
+      if (payload.battle) {
+        await showWorldBattleOutcome(payload.battle, getWorldBattleMeta('try_hunt', payload.battle));
       }
       if (!won && payload.respawn) {
         await resolveAmbushDefeat({ recovery: payload.respawn });
@@ -6383,9 +6379,7 @@ import './bag-item-visuals.js';
 
       const battle = payload.battle || null;
       const battleMeta = getAnomalyBattleMeta(battle, payload);
-      if (shouldShowWorldBattleReplay(battle)) {
-        await showWorldBattleReplay(battle, battleMeta);
-      }
+      if (battle) await showWorldBattleOutcome(battle, battleMeta);
 
       const pendingRespawn = state.anomalyPendingRespawn;
       const finalMessage = state.anomalyFinalMessage;
@@ -7360,7 +7354,7 @@ import './bag-item-visuals.js';
   }
 
   function shouldAutoShowAmbushBattle(battle) {
-    if (!canReplayAmbushBattle(battle)) return false;
+    if (!battle || battle.error) return false;
     if (battle.winner === 'enemy') return true;
     return battle.winner === 'player' && !areWinningAmbushesHidden();
   }
@@ -8335,6 +8329,17 @@ import './bag-item-visuals.js';
     return Boolean(battle && Array.isArray(battle.combatLog) && battle.combatLog.length);
   }
 
+  async function showWorldBattleOutcome(battle, meta = {}) {
+    if (!battle) return false;
+
+    if (shouldShowWorldBattleReplay(battle)) {
+      await showWorldBattleReplay(battle, meta);
+      return true;
+    }
+
+    return showWorldDungeonBattleResultAnimation(battle);
+  }
+
   async function showWorldBattleReplay(battle, meta = {}) {
     if (!battle) return Promise.resolve();
 
@@ -8346,6 +8351,7 @@ import './bag-item-visuals.js';
     const modalElement = elements.worldBattleModal;
     const modalApi = window.bootstrap?.Modal;
     if (!modalElement || !modalApi) {
+      await showWorldDungeonBattleResultAnimation(battle);
       setMessage(getWorldBattleFallbackMessage(battle, meta), battle.winner === 'player' ? 'success' : 'warning');
       return Promise.resolve();
     }
@@ -8393,6 +8399,7 @@ import './bag-item-visuals.js';
       }
     } catch (error) {
       console.error('World battle replay failed', error);
+      await showWorldDungeonBattleResultAnimation(battle);
       setMessage(getWorldBattleFallbackMessage(battle, meta), battle.winner === 'player' ? 'success' : 'warning');
     }
 
@@ -8881,10 +8888,18 @@ import './bag-item-visuals.js';
   async function showWorldDungeonBattleResultOverlay(resultType) {
     setWorldDungeonBattleResultAnimation(true);
     try {
-      await dungeonRender.showBattleResultOverlay(resultType);
+      await dungeonRender.showBattleResultOverlay(resultType, { syncActions: false });
     } finally {
       setWorldDungeonBattleResultAnimation(false);
     }
+  }
+
+  async function showWorldDungeonBattleResultAnimation(battle) {
+    const resultType = getWorldDungeonBattleResultType(battle);
+    if (!resultType) return false;
+
+    await showWorldDungeonBattleResultOverlay(resultType);
+    return true;
   }
 
   function toggleWorldDungeonBattleLogFromResult(button) {

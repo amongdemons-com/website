@@ -26,7 +26,7 @@ const SKIP_DIRS = new Set(['node_modules', 'steam', 'android', 'map']);
 
 // Icons referenced dynamically (e.g. rankings-ui.js topRankIcons array) that
 // the literal-pattern scan below cannot discover.
-const EXTRA_ICONS = ['crown', 'trophy', 'medal', 'hourglass'];
+const EXTRA_ICONS = ['arrow-up', 'arrow-down', 'crown', 'trophy', 'medal', 'hourglass'];
 
 // A small number of UI glyphs are part of the game's visual language rather
 // than the Lucide set. Keep these in the same generated subset so renderIcon()

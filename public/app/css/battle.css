@@ -5514,16 +5514,6 @@ body.dungeon-page #runPanel {
     }
 }
 
-body.is-world-battle-result-animating .battle-result-burst {
-    background:
-        #060f11;
-}
-
-body.is-world-battle-result-animating .battle-result-burst.is-defeat {
-    background:
-        #030708;
-}
-
 #dungeonHandBar:has(.dungeon-demon-card.is-team-upgrade) {
     overflow: visible;
 }
@@ -5915,7 +5905,7 @@ body.dungeon-page .dungeon-reward-strip {
  * old glass, gradient, glow and shadow treatment. */
 body.dungeon-page .battle-side-heading {
     position: relative;
-    z-index: 1;
+    z-index: 20;
     box-sizing: border-box;
     display: flex;
     flex-wrap: nowrap;
@@ -5929,6 +5919,7 @@ body.dungeon-page .battle-side-heading {
     margin: 0 auto;
     padding: 0;
     background: none;
+    overflow: visible;
     text-shadow: none;
 }
 
@@ -5972,6 +5963,7 @@ body.dungeon-page .battle-side-nameplate > .dungeon-ranked-opponent-identity {
 
 body.dungeon-page .battle-side-status {
     position: relative;
+    z-index: 21;
     box-sizing: border-box;
     display: flex;
     flex: 0 0 auto;
@@ -5990,6 +5982,11 @@ body.dungeon-page .battle-side-status {
     outline: 0;
     background: url("/app/images/assets/dungeon/grid-heading-status-rig.png?v=art-dungeon-grid-status-v1") center / 100% 106% no-repeat;
     transition: filter 180ms ease;
+}
+
+body.dungeon-page .battle-side-status .battle-buff-summary-tooltip,
+body.dungeon-page .battle-side-status .terror-pressure-tooltip {
+    z-index: 100;
 }
 
 body.dungeon-page .battle-side-nameplate .battle-side-count,

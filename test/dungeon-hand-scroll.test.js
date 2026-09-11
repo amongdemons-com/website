@@ -139,5 +139,22 @@ test('team swap targets use the same flat gold border and downward arrows', () =
   assert.match(cardsSource, /renderTeamUpgradeArrow\('arrow-down'\)/);
   assert.match(cardsSource, /dungeon-team-upgrade-arrow-outline/);
   assert.match(cardsSource, /aria-label="Swap out for an upgrade"/);
-  assert.match(fs.readFileSync(path.join(root, 'public', 'app', 'js', 'lucide-subset.js'), 'utf8'), /"arrow-down"/);
+  const lucideSubset = fs.readFileSync(path.join(root, 'public', 'app', 'js', 'lucide-subset.js'), 'utf8');
+  assert.match(lucideSubset, /"arrow-up"/);
+  assert.match(lucideSubset, /"arrow-down"/);
+});
+
+test('team buff tooltips stack above the Dungeon formation cards', () => {
+  assert.match(
+    styles,
+    /body\.dungeon-page \.battle-side-heading\s*\{[^}]*z-index:\s*20;[^}]*overflow:\s*visible;/s
+  );
+  assert.match(
+    styles,
+    /body\.dungeon-page \.battle-side-status\s*\{[^}]*z-index:\s*21;/s
+  );
+  assert.match(
+    styles,
+    /body\.dungeon-page \.battle-side-status \.battle-buff-summary-tooltip,[\s\S]*?z-index:\s*100;/s
+  );
 });

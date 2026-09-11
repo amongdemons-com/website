@@ -84,6 +84,23 @@ test('world battle center marker is inserted beside its nested action node', () 
   assert.doesNotMatch(centerIconRenderer, /centerPanel\.insertBefore/);
 });
 
+test('world battle outcomes use the Dungeon result animation with or without a replay log', () => {
+  const worldUi = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'world-ui.js'), 'utf8');
+  const battleCss = fs.readFileSync(path.join(ROOT, 'public', 'app', 'css', 'battle.css'), 'utf8');
+  assert.match(worldUi, /async function showWorldBattleOutcome\(battle, meta = \{\}\)/);
+  assert.match(worldUi, /if \(shouldShowWorldBattleReplay\(battle\)\) \{[\s\S]*?showWorldBattleReplay\(battle, meta\);[\s\S]*?showWorldDungeonBattleResultAnimation\(battle\)/);
+  assert.match(worldUi, /dungeonRender\.showBattleResultOverlay\(resultType, \{ syncActions: false \}\)/);
+  assert.doesNotMatch(battleCss, /body\.is-world-battle-result-animating \.battle-result-burst/);
+
+  for (const handler of ['travelSelectedPath', 'challengePlayer', 'challengeBoss', 'tryHunt', 'summonWorldAnomaly']) {
+    const start = worldUi.indexOf(`async function ${handler}(`);
+    assert.ok(start >= 0, `${handler} should exist`);
+    const nextFunction = worldUi.indexOf('\n  async function ', start + 1);
+    const block = worldUi.slice(start, nextFunction < 0 ? undefined : nextFunction);
+    assert.match(block, /showWorldBattleOutcome\(/, `${handler} should use the shared outcome flow`);
+  }
+});
+
 test('world duel records and challenger RP commit in one transaction', async () => {
   const calls = [];
   let committed = false;
