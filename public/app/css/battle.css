@@ -3836,7 +3836,7 @@ body:not(.dungeon-page) > .navbar {
 }
 
 .battle-side-player .battle-side-heading {
-    color: #86e8b2;
+    color: #d8c992;
 }
 
 .battle-side-enemy .battle-side-heading {
@@ -5983,7 +5983,7 @@ body.dungeon-page .battle-side-nameplate .battle-side-count {
 }
 
 body.dungeon-page .battle-side-player .battle-side-nameplate > .outline {
-    color: #8ff0bc;
+    color: #d8c992;
 }
 
 body.dungeon-page .battle-side-enemy .battle-side-nameplate > .outline,

@@ -73,6 +73,17 @@ test('world duel Ranked results do not execute map-tile altar handling', () => {
   assert.match(rankedResultFlow, /dungeonRanked\.showRankedResultModal/);
 });
 
+test('world battle center marker is inserted beside its nested action node', () => {
+  const worldUi = fs.readFileSync(path.join(ROOT, 'public', 'app', 'js', 'world-ui.js'), 'utf8');
+  const centerIconRenderer = worldUi.slice(
+    worldUi.indexOf('function renderWorldDungeonBattleCenterIcon()'),
+    worldUi.indexOf('function renderWorldDungeonBattleCenterResult(')
+  );
+
+  assert.match(centerIconRenderer, /centerActions\.before\(centerMark\)/);
+  assert.doesNotMatch(centerIconRenderer, /centerPanel\.insertBefore/);
+});
+
 test('world duel records and challenger RP commit in one transaction', async () => {
   const calls = [];
   let committed = false;

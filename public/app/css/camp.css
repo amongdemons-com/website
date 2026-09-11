@@ -1808,8 +1808,7 @@ body.camp-page::before {
 
 .camp-page .play-objective.is-claimable {
     border-color: #73683d;
-    background:
-        #050d10;
+    background: #26281e;
     box-shadow:
         none;
 }
@@ -2812,4 +2811,35 @@ body.camp-page {
 .camp-action-body small {
         display: none;
     }
+}
+
+/* Keep outlined labels on the display face even where component selectors
+ * otherwise give their copy a heavier weight or a different typeface. */
+.camp-page .camp-daily-reward .outline,
+.camp-page .camp-action-card .outline {
+    font-family: "Lilita One", sans-serif;
+    font-weight: normal;
+}
+
+.camp-page .camp-action-card .outline {
+    text-transform: uppercase;
+}
+
+.camp-page #questsHeading .outline {
+    font-family: "Lilita One", sans-serif;
+    font-weight: normal;
+    text-transform: uppercase;
+}
+
+.camp-page .camp-chest-button.btn-primary:not(:disabled) {
+    border-color: var(--primary-frame);
+    background: var(--primary-gradient);
+    color: var(--primary-label);
+}
+
+.camp-page .camp-chest-button.btn-primary:not(:disabled):hover,
+.camp-page .camp-chest-button.btn-primary:not(:disabled):focus-visible {
+    border-color: var(--primary-hover-border);
+    background: var(--primary-hover-gradient);
+    color: var(--primary-label-hover);
 }

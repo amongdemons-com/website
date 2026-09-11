@@ -1392,6 +1392,7 @@ function syncBattleSpeedButtons() {
     const active = Number(button.dataset.battleSpeed) === state.battleSpeed;
     button.classList.toggle('active', active);
     button.classList.toggle('game-primary-action', active);
+    button.classList.remove('outline');
     button.setAttribute('aria-pressed', active ? 'true' : 'false');
   });
 }

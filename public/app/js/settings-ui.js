@@ -217,7 +217,7 @@
     elements.currentPassword.disabled = !hasPassword;
     elements.newPassword.disabled = false;
     elements.confirmPassword.disabled = false;
-    elements.passwordSubmitLabel.textContent = hasPassword ? 'Change password' : 'Set password';
+    elements.passwordSubmitLabel.textContent = hasPassword ? 'Save' : 'Set password';
     elements.passwordDescription.textContent = hasPassword
       ? 'Change the password used for username sign-in.'
       : 'Add a password so you can also sign in with your username.';
@@ -488,7 +488,7 @@
     elements.passwordSubmitLabel.textContent = busy
       ? 'Saving…'
       : securityState.hasPassword
-        ? 'Change password'
+        ? 'Save'
         : 'Set password';
     updatePasswordSubmitState();
   }
@@ -715,7 +715,7 @@
   function setUsernameBusy(busy) {
     elements.username.disabled = busy;
     elements.usernameForm.setAttribute('aria-busy', String(busy));
-    elements.usernameSubmitLabel.textContent = busy ? 'Saving…' : 'Change username';
+    elements.usernameSubmitLabel.textContent = busy ? 'Saving…' : 'Save';
     updateUsernameSaveState();
   }
 

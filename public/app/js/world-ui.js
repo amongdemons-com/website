@@ -4855,7 +4855,7 @@ import './bag-item-visuals.js';
       elements.worldTeamSaveButton.title = tutorialLocked ? 'Complete the highlighted team steps first.' : '';
       elements.worldTeamSaveButton.innerHTML = editor.saving
         ? '<span class="dungeon-action-spinner" aria-hidden="true"></span><span>Saving</span>'
-        : `${renderIcon('save')}<span>Save</span>`;
+        : '<span>Save</span>';
     }
 
     if (elements.worldTeamEditorGrid) {
@@ -5681,7 +5681,6 @@ import './bag-item-visuals.js';
           <small class="world-card-meta world-merchant-move-meta">${escapeHtml(formatMerchantMoveMeta(merchant))}</small>
         </span>
         <button class="btn btn-primary btn-sm world-card-action" type="button" data-open-merchant>
-          ${renderIcon('amphora')}
           <span>Shop</span>
         </button>
       </article>
@@ -5888,7 +5887,7 @@ import './bag-item-visuals.js';
           ${state.huntBusy || !canClaimRewards ? 'disabled' : ''}
           ${state.huntBusy ? 'aria-busy="true"' : ''}
           ${!canClaimRewards ? 'title="Rewards become claimable after the first hunt victory." aria-label="Claim rewards after the first hunt victory"' : 'aria-label="Claim hunt rewards"'}
-        >${state.huntBusyAction === 'claim' ? 'Claiming…' : 'Claim Rewards'}</button>
+        >${state.huntBusyAction === 'claim' ? 'Claiming…' : 'Claim'}</button>
       </article>
     `;
   }
@@ -6262,7 +6261,6 @@ import './bag-item-visuals.js';
           <span class="world-card-meta world-merchant-description">The stone asks for an irreversible offering.</span>
         </span>
         <button class="btn btn-primary btn-sm world-card-action" type="button" data-open-anomaly>
-          ${renderIcon('audio-lines')}
           <span>Approach</span>
         </button>
       </article>
@@ -8970,7 +8968,7 @@ import './bag-item-visuals.js';
       centerMark = document.createElement('span');
       centerMark.className = 'dungeon-fight-mark world-dungeon-center-mark';
       centerMark.setAttribute('aria-hidden', 'true');
-      centerPanel.insertBefore(centerMark, centerActions);
+      centerActions.before(centerMark);
     }
 
     const swordsOutline = renderIcon('swords', {
@@ -9519,7 +9517,6 @@ import './bag-item-visuals.js';
           <span class="world-card-meta world-merchant-description">An unseen blessing lasting 4 hours.</span>
         </span>
         <button class="btn btn-primary btn-sm world-card-action" type="button" data-open-soul-font>
-          ${renderIcon('flame')}
           <span>Offer Souls</span>
         </button>
       </article>
@@ -10342,7 +10339,6 @@ import './bag-item-visuals.js';
       <button class="btn btn-primary btn-sm world-target-summon-button" type="button"
         data-summon-portal data-summon-portal-x="${escapeAttribute(event.x)}" data-summon-portal-y="${escapeAttribute(event.y)}"
         title="${escapeAttribute(title)}" ${disabled ? 'disabled' : ''}>
-        ${renderIcon('sparkles')}
         <span>Summon</span>
       </button>
     `;

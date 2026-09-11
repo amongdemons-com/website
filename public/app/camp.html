@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="5e889d61187b">
+    <meta name="among-demons-client-version" content="76b733be2d5f">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Camp | Among Demons</title>
@@ -24,8 +24,8 @@
     <meta name="twitter:image" content="https://amongdemons.com/app/images/assets/background/amongdemons_campfire.png?v=art-570e7495b84f">
     <meta name="twitter:image:alt" content="Among Demons campfire artwork">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
-    <link href="/app/css/base.css?v=ebbac16cb8b9" rel="stylesheet">
-    <link href="/app/css/camp.css?v=0688c5d03786" rel="stylesheet">
+    <link href="/app/css/base.css?v=ab3ef2156017" rel="stylesheet">
+    <link href="/app/css/camp.css?v=b1ab000f89ac" rel="stylesheet">
     <link href="/app/css/rank-divisions.css?v=991ff6145fd8" rel="stylesheet">
   </head>
   <body class="camp-page">
@@ -178,8 +178,8 @@
                 <i data-lucide="swords"></i>
               </span>
               <span class="camp-action-body">
-                <span class="camp-action-kicker" id="dungeonActionEyebrow">Portal to</span>
-                <strong id="runActionLabel">Dungeon</strong>
+                <span class="camp-action-kicker outline" id="dungeonActionEyebrow">Portal to</span>
+                <strong class="outline" id="runActionLabel">Dungeon</strong>
                 <small id="primaryDungeonMeta">Descend into the depths and face the unknown.</small>
               </span>
             </a>
@@ -188,8 +188,8 @@
                 <i data-lucide="map"></i>
               </span>
               <span class="camp-action-body">
-                <span class="camp-action-kicker">Explore</span>
-                <strong>World</strong>
+                <span class="camp-action-kicker outline">Explore</span>
+                <strong class="outline">World</strong>
                 <small>Chart the wilds and face what waits beyond.</small>
               </span>
             </a>
@@ -200,7 +200,7 @@
           <header class="camp-panel-header">
             <span class="camp-panel-kicker" id="questsHeading">
               <i data-lucide="scroll-text"></i>
-              <span>Quests</span>
+              <span class="outline">Quests</span>
             </span>
             <span class="camp-reset-chip" id="questResetChip">Daily</span>
           </header>
@@ -210,12 +210,12 @@
               <canvas id="dailySoulCanvas"></canvas>
             </div>
             <div class="camp-chest-copy">
-              <span class="camp-hero-stat-label">Daily Reward</span>
-              <strong id="dailyRewardTitle">Lost Souls</strong>
+              <span class="camp-hero-stat-label outline">Daily Reward</span>
+              <strong class="outline" id="dailyRewardTitle">Lost Souls</strong>
               <span class="camp-daily-value" id="dailyRewardValue"></span>
               <small id="dailyRewardStatus">Loading reward...</small>
             </div>
-            <button class="camp-chest-button" id="dailyRewardButton" type="button" disabled>Claim</button>
+            <button class="camp-chest-button btn btn-primary outline" id="dailyRewardButton" type="button" disabled>Claim</button>
           </section>
         </aside>
       </section>
@@ -260,7 +260,7 @@
         </div>
       </div>
     </div>
-    <script src="/app/dist/runtime.bundle.js?v=a23ca5769d32"></script>
+    <script src="/app/dist/runtime.bundle.js?v=06a547ff8f64"></script>
     <script src="/app/js/camp-ui.js?v=bee09f559c5a"></script>
   </body>
 </html>

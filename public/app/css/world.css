@@ -2174,12 +2174,6 @@ body.is-world-side-collapsed .world-map-controls {
     line-height: 1;
 }
 
-.world-team-editor-save .game-icon {
-    width: 0.9rem;
-    height: 0.9rem;
-    margin: 0;
-}
-
 .world-team-editor-count {
     display: inline-flex;
     align-items: center;
@@ -2896,13 +2890,17 @@ body.is-world-side-collapsed .world-map-controls {
 
 .world-card-title,
 .world-card-copy .world-encounter-title {
-    overflow: hidden;
+    overflow: visible;
     color: #f8fbf9;
     font-size: 0.8rem;
     font-weight: 900;
     line-height: 1.12;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.world-card-title {
+    overflow: hidden;
 }
 
 .world-card-copy .world-encounter-title-link {
@@ -3044,6 +3042,11 @@ body.is-world-side-collapsed .world-map-controls {
     width: auto;
     min-width: 6.25rem;
     margin-top: 0.16rem;
+}
+
+.world-boss-card .world-card-kicker {
+    display: block;
+    text-align: center;
 }
 
 .world-boss-title .world-encounter-rarity {
@@ -3263,6 +3266,20 @@ body.is-world-side-collapsed .world-map-controls {
     min-width: 2rem;
     height: 1.95rem;
     padding: 0;
+}
+
+.world-sidebar-card.world-pvp-card .world-pvp-actions .world-card-action {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    min-width: 2rem;
+    height: 1.95rem;
+    padding: 0;
+}
+
+.world-side-panel .world-merchant-card .world-card-action,
+.world-side-panel .world-active-hunt-card .world-end-hunt-action {
+    font-size: 0.78rem;
 }
 
 .world-side-panel .world-scout-action {
@@ -3564,11 +3581,39 @@ body.is-world-side-collapsed .world-map-controls {
 }
 
 .world-encounter-title {
+    position: relative;
     display: flex;
     align-items: baseline;
     justify-content: center;
     gap: 0.24rem;
     min-width: 0;
+    padding-bottom: 0.68rem;
+    margin-bottom: 0.16rem;
+}
+
+.world-encounter-title::before,
+.world-encounter-title::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+}
+
+.world-encounter-title::after {
+    right: 14%;
+    bottom: 0.12rem;
+    left: 14%;
+    border-top: 1px solid #77653a;
+}
+
+.world-encounter-title::before {
+    z-index: 1;
+    bottom: calc(0.12rem - 3px);
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    border: 1px solid #d8c992;
+    background: #182524;
+    transform: translateX(-50%) rotate(45deg);
 }
 
 .world-encounter-title .world-encounter-rarity {
@@ -4765,6 +4810,10 @@ body.is-world-side-collapsed .world-map-controls {
     }
 
 .world-scout-action {
+        flex: 0 0 2.1rem;
+    }
+
+.world-sidebar-card.world-pvp-card .world-pvp-actions .world-card-action {
         flex: 0 0 2.1rem;
     }
 
