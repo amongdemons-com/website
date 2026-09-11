@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const {
   STEAM_APP_ID,
@@ -46,6 +48,19 @@ test('press kit exposes copy-ready facts and official assets', () => {
   assert.match(html, /66 demons/);
   assert.match(html, /Steam page &amp; trailer/);
   assert.match(html, /amongdemons_home_logo\.png/);
+});
+
+test('press kit local media links resolve to existing image files', () => {
+  const html = renderPressPage();
+  const imagePaths = [...html.matchAll(/(?:src|href)="(\/app\/images\/[^"?]+)/g)]
+    .map((match) => match[1])
+    .filter((imagePath) => !imagePath.endsWith('amongdemons.ico'));
+
+  assert.ok(imagePaths.length > 0);
+  for (const imagePath of imagePaths) {
+    const filePath = path.join(__dirname, '..', 'public', imagePath.slice(1));
+    assert.equal(fs.existsSync(filePath), true, `Missing press-kit asset: ${imagePath}`);
+  }
 });
 
 test('patch notes become an indexable updates page', () => {

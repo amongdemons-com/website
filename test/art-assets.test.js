@@ -146,7 +146,10 @@ test('Dungeon ornament treatment yields visual focus to the battle', () => {
   assert.match(css, /body\.dungeon-page \.dungeon-center-panel\s*{[\s\S]*?transform: scale\(0\.84\);/);
   assert.match(centerArtworkBlock, /center-pole-rig\.png\?v=art-dungeon-center-pole-v4/);
   assert.doesNotMatch(centerArtworkBlock, /(?:^|;)\s*(?:opacity|filter):/);
-  assert.match(css, /\.dungeon-center-action-stack \.dungeon-fight-btn:not\(:disabled\):active\s*{[\s\S]*?background: #563a22;/);
+  assert.match(css, /\.dungeon-center-action-stack \.dungeon-fight-btn:not\(:disabled\):active\s*{[\s\S]*?background: var\(--primary-active-gradient\);/);
+  assert.match(css, /body\.dungeon-page \.battle-side-player \.collection-reinforcement-team-slot\s*{[\s\S]*?border-style: dashed;[\s\S]*?box-shadow: none;/);
+  assert.match(css, /body\.dungeon-page #dungeonHandBar \.dungeon-hand-cards \.collection-reinforcement-placeholder\s*{[\s\S]*?border-style: dashed;[\s\S]*?box-shadow: none;[\s\S]*?animation: none;/);
+  assert.match(css, /body\.dungeon-page #dungeonHandBar \.dungeon-hand-cards \.collection-reinforcement-placeholder:hover,[\s\S]*?box-shadow: none;/);
   assert.match(render, /class="battle-side-nameplate"/);
   assert.match(render, /class="battle-side-status" aria-label="Team modifiers"/);
   assert.match(render, /class="battle-side-status" aria-label="Enemy modifiers"/);

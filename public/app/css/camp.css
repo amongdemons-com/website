@@ -2579,8 +2579,7 @@ body.camp-page {
         min-height: 0;
     }
 
-.camp-player-panel,
-.camp-world-buffs {
+.camp-player-panel {
         overflow: visible;
     }
 
@@ -2609,9 +2608,6 @@ body.camp-page {
         background: #665d38;
     }
 
-.camp-world-buffs {
-        overflow: visible;
-    }
 }
 
 .camp-world-buffs[hidden] {

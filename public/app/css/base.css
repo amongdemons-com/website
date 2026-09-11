@@ -105,7 +105,7 @@ main {
     justify-content: center;
     gap: 0.34em;
     color: var(--ad-soul, #55FFFF);
-    font-weight: 800;
+    font-weight: normal;
     line-height: 1;
     white-space: nowrap;
 }
@@ -7810,6 +7810,8 @@ body .game-shell-nav {
     top: 0;
     z-index: 1040;
     min-height: var(--game-nav-height);
+    font-family: "Lilita One", sans-serif;
+    font-weight: normal;
     border-bottom-color: #202f30 !important;
     background: #060d10 !important;
     box-shadow: none;

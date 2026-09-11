@@ -30,3 +30,21 @@ test('Dungeon result action labels stay vertically centered and Replay uses the 
   assert.match(styles, /\.dungeon-result-actions \.btn > span:last-child\s*{[^}]*align-content:\s*center;[^}]*text-align:\s*left;/s);
   assert.match(styles, /\.dungeon-result-replay:hover,[\s\S]*?background:\s*var\(--secondary-hover-bg\);[\s\S]*?box-shadow:\s*none;[\s\S]*?color:\s*var\(--secondary-hover-text\);/);
 });
+
+test('Dungeon result action buttons are text-only while result effects retain flat victory text', () => {
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', 'public', 'app', 'js', 'dungeon', 'render.js'),
+    'utf8'
+  );
+  const actionBlocks = [...source.matchAll(/<div class="dungeon-end-actions dungeon-result-actions">([\s\S]*?)<\/div>/g)]
+    .map(([, block]) => block);
+
+  assert.equal(actionBlocks.length, 2);
+  for (const block of actionBlocks) assert.doesNotMatch(block, /renderIcon\(/);
+  assert.match(styles, /\.battle-result-burst\.is-victory\s*\{[\s\S]*?radial-gradient\(/);
+  assert.match(styles, /\.battle-result-burst\.is-defeat\s*\{[\s\S]*?radial-gradient\([\s\S]*?linear-gradient\(/);
+  assert.match(styles, /\.battle-result-burst::before\s*\{[\s\S]*?background:\s*none;[\s\S]*?filter:\s*none;/);
+  const victoryText = styles.match(/\.battle-result-burst\.is-victory \.battle-result-burst-text\s*\{([^}]*)}/)?.[1] || '';
+  assert.match(victoryText, /background:\s*none;/);
+  assert.doesNotMatch(victoryText, /linear-gradient/);
+});

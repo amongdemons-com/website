@@ -34,6 +34,7 @@ test('Camp renders world buffs directly beneath the skill tree stats', () => {
   assert.match(campCss, /\.camp-world-buff time \{[\s\S]*?align-items: center;[\s\S]*?color: #f8fbf9;/);
   assert.match(campCss, /\.camp-world-buff::after/);
   assert.match(campCss, /\.quest-progress \{[\s\S]*?border: 1px solid #192829;/);
-  assert.match(campCss, /\.camp-player-panel,\s*\.camp-world-buffs \{[\s\S]*?overflow: visible;/);
+  assert.doesNotMatch(campCss, /\.camp-player-panel,\s*\.camp-world-buffs \{[\s\S]*?overflow: visible;/);
+  assert.doesNotMatch(campCss, /\.camp-world-buffs \{\s*overflow: visible;/);
   assert.match(campCss, /@media \(min-width: 1200px\) \{[\s\S]*?\.camp-world-buffs \{[\s\S]*?max-block-size: clamp\(4\.6rem, 18dvh, 10rem\);[\s\S]*?overflow-y: auto;[\s\S]*?overscroll-behavior-y: contain;/);
 });

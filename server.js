@@ -72,6 +72,7 @@ app.use('/api', (req, res) => {
 // stamps and image art is content-stable; HTML must always revalidate.
 // Disabled outside production so local iteration never fights the cache.
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const LILITA_FONT_STYLESHEET = 'https://fonts.googleapis.com/css2?family=Lilita+One&display=swap';
 const staticOptions = {
   maxAge: IS_PRODUCTION ? '365d' : 0,
   immutable: IS_PRODUCTION,
@@ -81,6 +82,18 @@ const staticOptions = {
     }
   }
 };
+
+// Start the display font before the base stylesheet's @import is parsed. This
+// keeps the shared navbar from painting in the fallback font during reloads.
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.accepts('html')) {
+    res.set(
+      'Link',
+      `<${LILITA_FONT_STYLESHEET}>; rel="preload"; as="style", <https://fonts.googleapis.com>; rel="preconnect", <https://fonts.gstatic.com>; rel="preconnect"; crossorigin`
+    );
+  }
+  next();
+});
 
 function sendAppPage(res, fileName) {
   res.sendFile(path.join(appDir, fileName), { headers: { 'Cache-Control': 'no-cache' } });

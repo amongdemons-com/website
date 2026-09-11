@@ -366,20 +366,16 @@ function renderDungeonExtractionScreen(summary = {}) {
         </div>
         <div class="dungeon-end-actions dungeon-result-actions">
           <a class="btn btn-primary dungeon-result-primary" href="/dungeon">
-            ${renderIcon('play')}
             <span>Begin Another Descent</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/bag">
-            ${renderIcon('amphora')}
             <span>View Bag</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/camp">
-            ${renderIcon('tent')}
             <span>Return to Camp</span>
           </a>
           ${canReplay ? `
             <button class="btn btn-glass-muted dungeon-result-replay" id="replayEndedDungeonBtn" type="button">
-              ${renderIcon('list-restart')}
               <span>Replay Last Fight</span>
             </button>
           ` : ''}
@@ -424,20 +420,16 @@ function renderDungeonDefeatScreen(summary = {}) {
         </div>
         <div class="dungeon-end-actions dungeon-result-actions">
           <a class="btn btn-primary dungeon-result-primary" href="/dungeon">
-            ${renderIcon('play')}
             <span>Begin a New Descent</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" id="trainDemonsBtn" href="/collection">
-            ${renderIcon('swords')}
             <span>Train Demons</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/camp">
-            ${renderIcon('tent')}
             <span>Return to Camp</span>
           </a>
           ${canReplay ? `
             <button class="btn btn-glass-muted dungeon-result-replay" id="replayEndedDungeonBtn" type="button">
-              ${renderIcon('list-restart')}
               <span>Replay Last Fight</span>
             </button>
           ` : ''}
