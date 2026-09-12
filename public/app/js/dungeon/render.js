@@ -476,7 +476,7 @@ function renderEnemySideTitle(pressure = null, buffs = [], teamBuffs = []) {
 
   const rankedIdentity = renderDungeonRankedEnemyIdentity(getVisibleDungeonRankedEncounter(state.run));
   const label = state.run?.enemyLabel || 'Enemies';
-  const statusHtml = isBossBattle(state.run)
+  const statusHtml = isBossBattle(state.run) || hasRarityConvergenceBuff(buffs)
     ? renderBossBuffSummaryChip(pressure, buffs, teamBuffs)
     : [
         renderEnemyPressureChip(pressure),
@@ -498,6 +498,10 @@ function isBossBattle(run = state.run) {
     run?.boss ||
     run?.lastBattle?.boss
   );
+}
+
+function hasRarityConvergenceBuff(buffs = []) {
+  return Array.isArray(buffs) && buffs.some((buff) => buff?.id === 'rarity-convergence');
 }
 
 function renderBossBuffSummaryChip(pressure = null, buffs = [], teamBuffs = []) {

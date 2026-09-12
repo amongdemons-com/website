@@ -312,8 +312,16 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(worldCss, /\.tutorial-role-slot/);
   assert.match(worldCss, /tutorial-role-front-guide/);
   assert.match(worldCss, /tutorial-role-back-guide/);
-  assert.match(worldCss, /\.world-tutorial-spot-anchor\s*\{[\s\S]*?border:\s*0;/);
+  assert.match(worldCss, /\.world-tutorial-spot-anchor\s*\{[\s\S]*?border:\s*3px solid #e9bc5b;/);
   assert.match(worldCss, /\.world-tutorial-spot-anchor\s*\{[\s\S]*?animation:\s*worldTutorialSpotGlow/);
+  const tutorialSpotRule = /\.world-tutorial-spot-anchor\s*\{([^}]*)\}/.exec(worldCss)?.[1] || '';
+  const tutorialSpotPulse = /@keyframes worldTutorialSpotGlow\s*\{([\s\S]*?)\n\}/.exec(worldCss)?.[1] || '';
+  assert.match(tutorialSpotRule, /background:\s*transparent/);
+  assert.match(tutorialSpotRule, /box-shadow:\s*none/);
+  assert.match(tutorialSpotRule, /filter:\s*none/);
+  assert.match(tutorialSpotPulse, /scale\(0\.9\)/);
+  assert.match(tutorialSpotPulse, /scale\(1\.12\)/);
+  assert.doesNotMatch(tutorialSpotPulse, /box-shadow|opacity|filter/);
   assert.match(client, /title: 'Travel to Area 0, -3'[\s\S]*?placementGap:\s*36,[\s\S]*?suppressFocusRing:\s*true/);
   assert.match(dungeon, /tutorial\?\.emit\?\.\('dungeon-state'/);
   assert.match(rewards, /tutorial\?\.emit\?\.\('dungeon-extracted'/);

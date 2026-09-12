@@ -128,11 +128,24 @@ function isDemonInCollection(demon) {
   return (state.collectionDemons || []).some((collectionDemon) => getCollectionSlotKey(collectionDemon) === key);
 }
 
+function hasSummonReadyEcho(demon) {
+  const key = getCollectionSlotKey(demon);
+  if (!key) return false;
+  const itemKey = `echo:${key}`;
+  return (state.collectionEchoes || []).some((echo) => {
+    if (echo.itemKey !== itemKey) return false;
+    if (echo.summonReady) return true;
+    const progress = Number(echo.summonProgress ?? echo.quantity);
+    const requirement = Number(echo.summonRequirement);
+    return requirement > 0 && progress >= requirement;
+  });
+}
+
 function shouldShowCollectionMissingTag(demon, options = {}) {
   if (options.suppressCollectionMissingTag) return false;
   if (state.isBattleAnimating) return false;
   if (!Array.isArray(state.collectionDemons)) return false;
-  return Boolean(!isDemonInCollection(demon));
+  return Boolean(!isDemonInCollection(demon) && !hasSummonReadyEcho(demon));
 }
 
 function getFullHpDemon(demon) {
@@ -736,6 +749,7 @@ export {
   getCollectionReinforcementLimit,
   getCollectionSlotKey,
   isDemonInCollection,
+  hasSummonReadyEcho,
   shouldShowCollectionMissingTag,
   getFullHpDemon,
   getRecruitTeamLimit,

@@ -1520,6 +1520,14 @@ body.camp-page::before {
     text-align: center;
 }
 
+.camp-page .camp-hero-stat * {
+    font-weight: normal;
+}
+
+.camp-page .camp-stat-grid .camp-hero-stat-label.outline {
+    font-family: "Lilita One", sans-serif;
+}
+
 .camp-page .camp-hero-stat .camp-hero-stat-value {
     justify-content: center;
     min-height: 1.8rem;
@@ -2435,10 +2443,15 @@ body.camp-page {
 
 .camp-profile-shortcuts {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     align-items: stretch;
     gap: 0.52rem;
     margin-top: 0.72rem;
+}
+
+/* Temporarily hide the Bag shortcut without removing the underlying route. */
+.camp-profile-shortcuts .camp-bag-link {
+    display: none;
 }
 
 .camp-skill-tree-link,

@@ -5094,6 +5094,14 @@ body.dungeon-page .dungeon-mobile-nav-btn#dungeonMobileLogBtn .game-icon {
         text-align: center;
     }
 
+.dungeon-reward-dropzone .dungeon-reward-empty {
+        gap: 0.1rem;
+    }
+
+.dungeon-reward-dropzone .dungeon-reward-empty::before {
+        width: min(50%, 4rem);
+    }
+
 .dungeon-reward-payout {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-rows: minmax(0, 1fr) minmax(0, 0.82fr);
@@ -5980,7 +5988,7 @@ body.dungeon-page .battle-side-heading {
     aspect-ratio: auto;
     min-height: 0;
     margin: 0 auto;
-    padding: 0;
+    padding: 0 0 10px;
     background: none;
     overflow: visible;
     text-shadow: none;
@@ -6060,6 +6068,15 @@ body.dungeon-page .battle-side-status .enemy-pressure-chip {
     border: 0;
     background: transparent;
     box-shadow: none;
+}
+
+body.dungeon-page .battle-side-status .battle-buff-summary-chip {
+    margin-top: 0.4rem;
+}
+
+body.dungeon-page .battle-side-status > .enemy-pressure-chip {
+    align-items: center;
+    margin-top: 0.4rem;
 }
 
 body.dungeon-page .battle-side-nameplate .battle-side-count {
@@ -6905,6 +6922,14 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn:disabled {
         margin: 0 auto;
         padding: 0;
         background: none;
+    }
+
+    body.dungeon-page .battle-side-enemy .battle-side-heading {
+        padding-bottom: 5px;
+    }
+
+    body.dungeon-page .battle-side-player .battle-side-heading {
+        padding-bottom: 0;
     }
 
     /* The top heading starts at the navbar and the bottom heading starts at the

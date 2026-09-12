@@ -1596,6 +1596,24 @@ body.is-world-side-collapsed .world-map-controls {
     min-height: calc((2 * 10.4rem) + 0.72rem);
 }
 
+.world-merchant-stock:has(.world-merchant-empty) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-content: stretch;
+}
+
+.world-merchant-empty {
+    display: grid;
+    grid-column: 1 / -1;
+    place-items: center;
+    min-width: 0;
+    margin: 0;
+    padding: 1rem;
+    font-size: 1.1rem;
+    line-height: 1.35;
+    text-align: center;
+}
+
 .world-merchant-loading {
     display: flex;
     grid-column: 1 / -1;
@@ -2505,11 +2523,10 @@ body.is-world-side-collapsed .world-map-controls {
     width: 5.4rem;
     height: 5.4rem;
     transform: translate(-50%, -50%);
-    border: 0;
+    border: 3px solid #e9bc5b;
     border-radius: 50%;
-    background: #6f705d;
-    box-shadow:
-        none;
+    background: transparent;
+    box-shadow: none;
     filter: none;
     pointer-events: none;
     animation: worldTutorialSpotGlow 1.45s ease-in-out infinite;
@@ -2518,15 +2535,9 @@ body.is-world-side-collapsed .world-map-controls {
 @keyframes worldTutorialSpotGlow {
     0%, 100% {
         transform: translate(-50%, -50%) scale(0.9);
-        opacity: 1;
-        box-shadow:
-            none;
     }
     50% {
         transform: translate(-50%, -50%) scale(1.12);
-        opacity: 1;
-        box-shadow:
-            none;
     }
 }
 
@@ -3046,6 +3057,11 @@ body.is-world-side-collapsed .world-map-controls {
 }
 
 .world-sidebar-card.world-spot-card .world-card-meta-inline {
+    justify-content: center;
+    text-align: center;
+}
+
+.world-active-hunt-card .world-card-meta-inline {
     justify-content: center;
     text-align: center;
 }
@@ -3809,6 +3825,29 @@ body.dungeon-page .world-battle-modal .world-dungeon-center-mark {
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
+    body.dungeon-page .world-battle-modal .battle-side-heading {
+        padding-top: 0;
+    }
+
+    body.dungeon-page .world-battle-modal .battle-side-player .battle-side-nameplate,
+    body.dungeon-page .world-battle-modal .battle-side-enemy .battle-side-nameplate {
+        align-items: center;
+        justify-content: center;
+        padding-top: clamp(0.7rem, 3vw, 0.875rem);
+        text-align: center;
+    }
+
+    body.dungeon-page .world-battle-modal .battle-side-enemy .battle-side-nameplate > .outline,
+    body.dungeon-page .world-battle-modal .battle-side-enemy .battle-side-nameplate > .dungeon-ranked-opponent-identity {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .world-battle-modal .dungeon-fight-btn.is-fighting {
+        display: none !important;
+    }
+
     body.dungeon-page .world-battle-modal .world-dungeon-center-mark {
         position: static;
         top: auto;
@@ -3821,6 +3860,35 @@ body.dungeon-page .world-battle-modal .world-dungeon-center-mark {
     .world-battle-modal .world-dungeon-center-swords {
         width: 1.65rem;
         height: 1.65rem;
+    }
+
+    .world-battle-modal .world-dungeon-center-result {
+        display: none;
+    }
+
+    .world-battle-modal .world-dungeon-result-layer:not(.is-anomaly-result) {
+        padding: 0.25rem 0.35rem;
+    }
+}
+
+/* Mobile dungeon modals sit at z-index 5000. World combat effects are appended
+   to the body, so lift them above that modal while its replay is open. */
+@media (max-width: 575.98px) {
+    body.is-world-battle-open > .attack-zap,
+    body.is-world-battle-open > .fireball-shot,
+    body.is-world-battle-open > .fire-nova,
+    body.is-world-battle-open > .dark-spike,
+    body.is-world-battle-open > .chaos-lightning,
+    body.is-world-battle-open > .sword-swing,
+    body.is-world-battle-open > .thorn-burst,
+    body.is-world-battle-open > .heal-effect,
+    body.is-world-battle-open > .floating-combat-number,
+    body.is-world-battle-open > .combat-impact-burst {
+        z-index: 5010;
+    }
+
+    body.is-world-battle-open > .battle-result-burst {
+        z-index: 5020;
     }
 }
 
@@ -4917,6 +4985,18 @@ body.is-world-side-collapsed .world-map-controls {
         font-size: 0.7rem;
     }
 
+}
+
+@media (max-width: 575.98px) and (orientation: portrait) {
+    .world-sidebar-card.world-pvp-card {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .world-sidebar-card.world-pvp-card .world-pvp-actions {
+        justify-self: end;
+        justify-content: flex-end;
+        width: auto;
+    }
 }
 
 @media (max-width: 575.98px) and (orientation: landscape) {

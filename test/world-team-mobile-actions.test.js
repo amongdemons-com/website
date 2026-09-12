@@ -31,3 +31,15 @@ test('World demon details can add collection cards or remove exact team slots', 
   assert.match(worldSource, /getWorldTeamEditorSlotPosition\(slot\) === preferredPosition/);
   assert.match(worldSource, /data-world-team-position/);
 });
+
+test('mobile portrait PvP cards keep both actions to the right of the player identity', () => {
+  assert.match(
+    worldCss,
+    /@media \(max-width: 575\.98px\) and \(orientation: portrait\)\s*\{[\s\S]*?\.world-sidebar-card\.world-pvp-card\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto;/s
+  );
+  assert.match(
+    worldCss,
+    /\.world-sidebar-card\.world-pvp-card \.world-pvp-actions\s*\{[^}]*justify-self:\s*end;[^}]*justify-content:\s*flex-end;[^}]*width:\s*auto;/s
+  );
+  assert.match(worldSource, /<span class="world-card-copy">[\s\S]*?<span class="world-pvp-actions">/);
+});

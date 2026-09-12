@@ -53,3 +53,14 @@ test('Dungeon extraction drop target uses a faded team-slot placeholder above it
   assert.match(styles, /\.dungeon-reward-dropzone \.dungeon-reward-empty\s*\{[\s\S]*?flex-direction:\s*column;[\s\S]*?gap:\s*0\.28rem;/);
   assert.match(styles, /\.dungeon-reward-dropzone \.dungeon-reward-empty::before\s*\{[\s\S]*?amongdemons_team_slot_placeholder\.png[\s\S]*?opacity:\s*0\.16;/);
 });
+
+test('Mobile portrait extraction drop targets keep the placeholder and prompt compact', () => {
+  assert.match(
+    styles,
+    /@media \(max-width:\s*575\.98px\) and \(orientation:\s*portrait\)[\s\S]*?\.dungeon-reward-dropzone \.dungeon-reward-empty\s*\{[\s\S]*?gap:\s*0\.1rem;/
+  );
+  assert.match(
+    styles,
+    /@media \(max-width:\s*575\.98px\) and \(orientation:\s*portrait\)[\s\S]*?\.dungeon-reward-dropzone \.dungeon-reward-empty::before\s*\{[\s\S]*?width:\s*min\(50%,\s*4rem\);/
+  );
+});

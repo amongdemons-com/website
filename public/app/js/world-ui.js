@@ -7181,7 +7181,7 @@ import './bag-item-visuals.js';
     const stock = (merchant?.itemSlots || []).filter((item) => !item.complete);
     elements.worldMerchantStock.innerHTML = stock.length
       ? stock.map(renderWorldMerchantItem).join('')
-      : '<p class="world-empty-text">No wares survived this road.</p>';
+      : '<p class="world-empty-text world-merchant-empty">No wares survived this road.</p>';
     replaceStaticIcons(elements.worldMerchantModal);
   }
 
@@ -9034,12 +9034,19 @@ import './bag-item-visuals.js';
     ].filter(Boolean);
     if (!formationGrids.length || hostRect.height <= 0) return;
 
-    const gridBottom = Math.max(...formationGrids.map((grid) => grid.getBoundingClientRect().bottom));
+    const isMobilePortrait = Boolean(
+      window.matchMedia?.('(max-width: 600px) and (orientation: portrait)').matches
+    );
+    const playerNameplate = isMobilePortrait
+      ? modal.querySelector('#teamSideTitle')
+      : null;
+    const formationBottom = Math.max(...formationGrids.map((grid) => grid.getBoundingClientRect().bottom));
+    const contentBottom = playerNameplate?.getBoundingClientRect().bottom || formationBottom;
     const resultHeight = layer.firstElementChild?.getBoundingClientRect().height || 0;
-    const gridTop = Math.ceil(gridBottom - hostRect.top + 8);
+    const contentTop = Math.ceil(contentBottom - hostRect.top + 8);
     const fullyVisibleTop = Math.max(8, Math.floor(hostRect.height - resultHeight - 8));
     const mobileResultLayout = window.matchMedia?.('(max-width: 899.98px)').matches;
-    const top = clamp(mobileResultLayout ? gridTop : Math.min(gridTop, fullyVisibleTop), 0, hostRect.height);
+    const top = clamp(mobileResultLayout ? contentTop : Math.min(contentTop, fullyVisibleTop), 0, hostRect.height);
     layer.style.setProperty('--world-dungeon-result-top', `${top}px`);
   }
 

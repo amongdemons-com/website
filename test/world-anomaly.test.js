@@ -225,7 +225,7 @@ test('Anomaly floor results handle zero or multiple Echoes in a one-line reward 
   assert.match(worldUi, /rolls succeeded/);
   assert.match(worldUi, /hostRect\.height - resultHeight - 8/);
   assert.match(worldUi, /layer\.classList\.contains\('is-anomaly-result'\)[\s\S]*?removeProperty\('--world-dungeon-result-top'\)/);
-  assert.match(worldUi, /mobileResultLayout \? gridTop : Math\.min\(gridTop, fullyVisibleTop\)/);
+  assert.match(worldUi, /mobileResultLayout \? contentTop : Math\.min\(contentTop, fullyVisibleTop\)/);
   assert.match(worldUi, /const hasSlider = echoes\.length > 4/);
   assert.match(worldUi, /world-anomaly-level-reward/);
   assert.match(worldUi, /Hunter level cap reached/);

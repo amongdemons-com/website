@@ -1151,7 +1151,7 @@
       : normalized.startsWith('outline-') || normalized.includes('secondary') || normalized.includes('light')
         ? 'btn-glass-muted'
         : '';
-    return ['btn', `btn-${variant}`, glassClass, action.className || 'collection-train-action'].filter(Boolean).join(' ');
+    return ['btn', `btn-${variant}`, glassClass, action.className || 'collection-train-action', 'outline'].filter(Boolean).join(' ');
   }
 
   function renderTrainingButtonContent(label, helper = '') {

@@ -2138,6 +2138,16 @@ body:has(#demonDetailModal.show) .modal-backdrop {
     font-weight: 800;
 }
 
+.enemy-pressure-chip > .game-icon,
+.enemy-pressure-chip > span:not(.battle-buff-summary-tooltip, .terror-pressure-tooltip),
+.enemy-pressure-chip > strong {
+    display: inline-flex;
+    align-self: center;
+    align-items: center;
+    line-height: 1;
+    vertical-align: middle;
+}
+
 .enemy-buff-chip {
     max-width: min(11rem, 48vw);
     border-color: #786637;
@@ -7816,6 +7826,12 @@ body .game-shell-nav {
     padding-block: 0;
 }
 
+/* Temporary Bag launch gate. Keep the route operational while hiding its
+   entry from both the static navbar and the generated Hunter dropdown. */
+.game-shell-nav [data-game-route="bag"] {
+    display: none !important;
+}
+
 body .game-shell-nav .container-fluid {
     min-height: var(--game-nav-height);
     gap: 0.65rem;
@@ -8853,7 +8869,21 @@ body .game-shell-nav .nav-account,
 }
 
 .battle-buff-summary-chip {
+    display: inline-flex;
     max-width: min(9rem, 48vw);
+    align-items: center;
+    margin-top: 0.4rem;
+    line-height: 1;
+}
+
+.battle-buff-summary-chip > .game-icon,
+.battle-buff-summary-chip > span:not(.battle-buff-summary-tooltip),
+.battle-buff-summary-chip > strong {
+    display: inline-flex;
+    align-self: center;
+    align-items: center;
+    line-height: 1;
+    vertical-align: middle;
 }
 
 .battle-buff-summary-chip::after {
