@@ -1224,6 +1224,7 @@ async function initializeSchema() {
   await runMigrationOnce(STARTER_TYPE_3_COMMON_ECHO_BACKFILL_MIGRATION, backfillStarterType3CommonEcho);
   await runMigrationOnce(PLAY_GAMES_SCHEMA_MIGRATION, addPlayGamesSchema);
   await runMigrationOnce(LEADERBOARD_EXCLUSION_SCHEMA_MIGRATION, addLeaderboardExclusionSchema);
+  await runMigrationOnce('20260912_collection_echoes_v1', () => require('./echo-conversion').convertLegacyEchoes());
 }
 
 function ensureSchemaReady() {

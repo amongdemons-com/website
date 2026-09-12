@@ -24,9 +24,67 @@
 }
 
 .collection-missing-echo-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
     color: #8de7ff;
     border-color: #2a4850;
     background: #0b2b33;
+}
+
+.collection-missing-echo-label strong {
+    display: block;
+    color: #b3ffce;
+    font-size: 0.7rem;
+}
+
+.collection-missing-echo-label.is-ready {
+    border-color: #55b67f;
+    background: #113429;
+}
+
+.collection-echo-visual {
+    display: inline-flex;
+    flex: 0 0 2.6rem;
+    width: 2.6rem;
+    height: 2.6rem;
+    position: relative;
+}
+
+.collection-echo-progress-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: #8de7ff;
+}
+
+.collection-echo-progress progress {
+    display: block;
+    width: 100%;
+    height: 0.65rem;
+    margin: 0.5rem 0;
+    accent-color: #55b67f;
+}
+
+.collection-echo-progress p {
+    margin: 0.5rem 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.demon-detail-actions:has(.collection-summon-action) .demon-detail-action-lead {
+    display: block;
+    flex-basis: 100%;
+    width: 100%;
+}
+
+.demon-detail-art.is-summoning {
+    animation: collection-reinforcement-pulse 0.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .demon-detail-art.is-summoning { animation: none; }
 }
 
 .collection-reinforcement-placeholder-icon {
@@ -599,6 +657,24 @@ body.collection-page {
 .collection-missing-card img {
     opacity: 0.7;
     filter: grayscale(1) contrast(0.78) brightness(0.78);
+}
+
+.collection-missing-card.has-echoes {
+    opacity: 1;
+    filter: none;
+}
+
+.collection-missing-card.has-echoes .collection-echo-visual img {
+    opacity: 1;
+    filter: none;
+}
+
+.collection-missing-card.has-echoes .collection-missing-echo-label {
+    color: #8de7ff;
+}
+
+.collection-missing-card:has(.collection-missing-echo-label.is-ready) {
+    border-color: #55b67f;
 }
 
 .collection-missing-label {

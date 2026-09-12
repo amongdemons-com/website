@@ -10,7 +10,7 @@ const bagSource = fs.readFileSync(
 
 test('Bag restores and persists each player sort preference', () => {
   assert.match(bagSource, /const BAG_SORT_STORAGE_PREFIX = 'amongdemons-bag-sort';/);
-  assert.match(bagSource, /const BAG_SORT_OPTIONS = new Set\(\['type', 'ready', 'rarity', 'name', 'quantity'\]\);/);
+  assert.match(bagSource, /const BAG_SORT_OPTIONS = new Set\(\['type', 'rarity', 'name', 'quantity'\]\);/);
   assert.match(bagSource, /await window\.AmongDemons\.ensurePlayableSession\(\)[\s\S]*?restoreSortPreference\(\);[\s\S]*?await refreshBag\(\);/);
   assert.match(bagSource, /localStorage\.getItem\(getSortStorageKey\(\)\)/);
   assert.match(bagSource, /localStorage\.setItem\(getSortStorageKey\(\), state\.sort\)/);

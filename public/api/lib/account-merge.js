@@ -194,6 +194,7 @@ async function mergePlayerAccounts(token, targetPlayerId, queryable = db) {
       ]
     );
 
+    await require('./echo-conversion').convertPlayerExcessEchoes(target.id, connection);
     await purgePlayerAccount(source.id, connection);
     await connection.query(
       'UPDATE pending_account_merges SET completed_at = CURRENT_TIMESTAMP WHERE token = ?',

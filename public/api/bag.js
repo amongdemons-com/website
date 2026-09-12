@@ -3,16 +3,15 @@ const db = require('./lib/db');
 const { requireAuth } = require('./lib/auth');
 const { saveCollectionDemon } = require('./lib/collection-demons');
 const {
-  REFINEMENT_COSTS,
   SUMMON_REQUIREMENTS,
-  getEchoRefinementBatch,
-  getNextEchoRarity,
   normalizeEchoRarity
 } = require('./lib/echo-config');
 const {
   createHttpError,
   getEchoDefinition,
-  getPlayerBag
+  getPlayerBag,
+  getCollectionEchoes,
+  lockEchoPlayer
 } = require('./lib/echo-bag');
 const achievements = require('./lib/achievements');
 const {
@@ -31,90 +30,7 @@ router.get('/bag', requireAuth, async (req, res) => {
   });
 });
 
-router.post('/bag/echoes/refine', requireAuth, async (req, res) => {
-  const typeId = Math.max(0, Math.floor(Number(req.body?.typeId) || 0));
-  const rarity = normalizeEchoRarity(req.body?.rarity);
-  const targetRarity = getNextEchoRarity(rarity);
-  const cost = REFINEMENT_COSTS[rarity];
-  if (!typeId || !rarity || !targetRarity || !cost) {
-    throw createHttpError('Choose an Echo that can be refined.', 400);
-  }
-
-  if (
-    Object.hasOwn(req.body || {}, 'targetTypeId') &&
-    Number(req.body.targetTypeId) !== typeId
-  ) {
-    throw createHttpError('Echoes can only be refined within the same demon species.', 400);
-  }
-  if (
-    Object.hasOwn(req.body || {}, 'targetRarity') &&
-    normalizeEchoRarity(req.body.targetRarity) !== targetRarity
-  ) {
-    throw createHttpError('Echoes can only be refined by one adjacent rarity tier.', 400);
-  }
-
-  const [source, target] = await Promise.all([
-    getEchoDefinition(typeId, rarity),
-    getEchoDefinition(typeId, targetRarity)
-  ]);
-  const connection = await db.getConnection();
-  let refinementQuantity = 0;
-  let consumedQuantity = 0;
-
-  try {
-    await connection.beginTransaction();
-    const [sourceRows] = await connection.query(
-      `SELECT quantity
-       FROM player_bag
-       WHERE player_id = ? AND item_key = ?
-       LIMIT 1
-       FOR UPDATE`,
-      [req.player.id, source.itemKey]
-    );
-    const batch = getEchoRefinementBatch(sourceRows[0]?.quantity, rarity);
-    refinementQuantity = batch.refinedQuantity;
-    if (!refinementQuantity) {
-      throw createHttpError(`You need ${cost} ${capitalize(rarity)} Echoes to refine.`, 409);
-    }
-    consumedQuantity = batch.consumedQuantity;
-
-    await connection.query(
-      `UPDATE player_bag
-       SET quantity = quantity - ?, updated_at = CURRENT_TIMESTAMP
-       WHERE player_id = ? AND item_key = ?`,
-      [consumedQuantity, req.player.id, source.itemKey]
-    );
-
-    await connection.query(
-      `INSERT INTO player_bag (player_id, item_key, item_type, quantity)
-       VALUES (?, ?, 'echo', ?)
-       ON DUPLICATE KEY UPDATE
-         quantity = quantity + VALUES(quantity),
-         updated_at = CURRENT_TIMESTAMP`,
-      [req.player.id, target.itemKey, refinementQuantity]
-    );
-    await connection.commit();
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
-
-  res.json({
-    refinement: {
-      typeId,
-      sourceRarity: rarity,
-      targetRarity,
-      recipeCost: cost,
-      cost: consumedQuantity,
-      quantity: refinementQuantity
-    },
-    ...(await getPlayerBag(req.player.id))
-  });
-});
-
-router.post('/bag/echoes/unravel', requireAuth, async (req, res) => {
+router.post('/collection/echoes/unravel', requireAuth, async (req, res) => {
   const typeId = Math.max(0, Math.floor(Number(req.body?.typeId) || 0));
   const rarity = normalizeEchoRarity(req.body?.rarity);
   if (!typeId || rarity !== 'mythic') {
@@ -145,7 +61,7 @@ router.post('/bag/echoes/unravel', requireAuth, async (req, res) => {
        WHERE player_id = ? AND item_key = ? AND quantity >= 1`,
       [req.player.id, definition.itemKey]
     );
-    if (!result.affectedRows) throw createHttpError('That Mythic Echo is no longer in your Bag.', 409);
+    if (!result.affectedRows) throw createHttpError('That Mythic Echo is no longer in your Collection.', 409);
 
     await connection.query(
       'UPDATE players SET xp = ?, level = ? WHERE id = ?',
@@ -184,11 +100,11 @@ router.post('/bag/echoes/unravel', requireAuth, async (req, res) => {
       souls: updatedPlayer.souls,
       highestFloor: updatedPlayer.highestFloor
     },
-    ...(await getPlayerBag(req.player.id))
+    echoes: await getCollectionEchoes(req.player.id)
   });
 });
 
-router.post('/bag/echoes/summon', requireAuth, async (req, res) => {
+router.post('/collection/echoes/summon', requireAuth, async (req, res) => {
   const typeId = Math.max(0, Math.floor(Number(req.body?.typeId) || 0));
   const rarity = normalizeEchoRarity(req.body?.rarity);
   if (!typeId || !rarity) throw createHttpError('Choose an Echo to summon.', 400);
@@ -200,6 +116,7 @@ router.post('/bag/echoes/summon', requireAuth, async (req, res) => {
 
   try {
     await connection.beginTransaction();
+    await lockEchoPlayer(req.player.id, connection);
     const [ownedRows] = await connection.query(
       `SELECT id
        FROM player_demons
@@ -243,13 +160,8 @@ router.post('/bag/echoes/summon', requireAuth, async (req, res) => {
   await achievements.checkCollection(req.player.id);
   res.status(201).json({
     demon: saved.demon,
-    ...(await getPlayerBag(req.player.id))
+    echoes: await getCollectionEchoes(req.player.id)
   });
 });
-
-function capitalize(value) {
-  const text = String(value || '');
-  return text ? text.charAt(0).toUpperCase() + text.slice(1) : '';
-}
 
 module.exports = router;

@@ -164,7 +164,6 @@ test('tutorial is account-backed for all accounts and wired across the real game
   const world = read('public', 'app', 'js', 'world-ui.js');
   const dungeon = read('public', 'app', 'js', 'dungeon', 'lifecycle.js');
   const rewards = read('public', 'app', 'js', 'dungeon', 'rewards.js');
-  const bag = read('public', 'app', 'js', 'bag-ui.js');
   const collection = read('public', 'app', 'js', 'collection-ui.js');
   const skillTree = read('public', 'app', 'js', 'skill-tree-ui.js');
   const dungeonPage = read('public', 'app', 'dungeon.html');
@@ -251,19 +250,14 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /Open the flag, then choose one demon to extract/);
   assert.match(client, /isCurrentCheckpoint\('dungeon-extract'\)\) model\.localSteps\.dungeonExtract = 1/);
   assert.match(client, /target\?\.closest\?\.\('#dungeonMobileExtractBtn'\)[\s\S]*?model\.localSteps\.dungeonExtract = 1/);
-  const dungeonExtractView = /function getDungeonExtractView\(progress\)([\s\S]*?)function getBagEchoView/.exec(client)?.[1] || '';
+  const dungeonExtractView = /function getDungeonExtractView\(progress\)([\s\S]*?)function getRouteHandoffView/.exec(client)?.[1] || '';
   assert.ok(
     dungeonExtractView.indexOf('if (compact && mobileExtractButton && !mobileRewardOpen)')
       < dungeonExtractView.indexOf('if (selectedReward && rewardExtractButton)'),
     'closed mobile extraction state must be handled before its transitioning contents'
   );
   assert.doesNotMatch(dungeonExtractView, /Your Echo is selected/);
-  assert.match(client, /Watch the summon meter/);
-  assert.match(client, /Refine surplus Echoes/);
-  assert.match(client, /Train permanent demons/);
-  assert.match(client, /Continue to Collection/);
   assert.match(client, /Summon a permanent demon/);
-  assert.match(client, /#bagSummonModal\.show a\[href="\/collection"\]/);
   assert.match(client, /Your permanent demon is ready/);
   assert.match(client, /getCollectionTrainingView/);
   assert.match(client, /Train once with Souls/);
@@ -323,12 +317,12 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(client, /title: 'Travel to Area 0, -3'[\s\S]*?placementGap:\s*36,[\s\S]*?suppressFocusRing:\s*true/);
   assert.match(dungeon, /tutorial\?\.emit\?\.\('dungeon-state'/);
   assert.match(rewards, /tutorial\?\.emit\?\.\('dungeon-extracted'/);
-  assert.match(bag, /tutorial\?\.emit\?\.\('bag-ready'/);
-  assert.match(bag, /readyUnownedKey/);
-  assert.match(bag, /tutorial\?\.emit\?\.\('demon-summoned'/);
-  assert.match(bag, /bagSummonModal\.addEventListener\('shown\.bs\.modal'[\s\S]*?'demon-summoned'/);
   assert.match(collection, /tutorial\?\.emit\?\.\('collection-ready'/);
   assert.match(collection, /trainingDemonId/);
+  assert.match(collection, /readyUnownedKey/);
+  assert.match(collection, /'demon-summoned'/);
+  assert.match(client, /Your Echo is in Collection/);
+  assert.doesNotMatch(client, /Refine surplus Echoes|#bagSummonModal/);
   assert.match(collection, /trainingCost/);
   assert.match(collection, /tutorial\?\.emit\?\.\('demon-trained'/);
   assert.match(collection, /function revealTrainingOutcome[\s\S]*?showTrainingResult[\s\S]*?tutorial\?\.emit\?\.\('demon-trained'/);
@@ -339,9 +333,6 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.doesNotMatch(trainingCompleteView, /target:/);
   assert.match(client, /if \(trainOnce\.classList\.contains\('is-training'\)\) return \{ hidden: true \}/);
   assert.doesNotMatch(client, /Echoes lead to permanent demons/);
-  assert.match(client, /if \(summonInProgress\) return \{ hidden: true \}/);
-  assert.match(client, /if \(summonResultPrepared && !bag\.summoned\) return \{ hidden: true \}/);
-  assert.match(client, /Your Echo is now permanent\.[\s\S]*?primaryLabel: 'Next'/);
   assert.match(skillTree, /tutorial\?\.emit\?\.\('skill-tree-ready'/);
   assert.match(skillTree, /tutorial\?\.emit\?\.\('skill-tree-saved'/);
   assert.match(dungeonPage, /id="shortTeamCount"/);
@@ -354,7 +345,7 @@ test('tutorial is account-backed for all accounts and wired across the real game
   assert.match(starterEcho, /STARTER_ECHO_RARITY = 'common'/);
   assert.match(register, /grantStarterEcho\(playerId\)/);
   assert.match(guest, /grantStarterEcho\(playerId\)/);
-  assert.match(client, /\.dungeon-result-actions a\[href="\/bag"\]/);
+  assert.match(client, /\.dungeon-result-actions a\[href="\/collection"\]/);
   assert.doesNotMatch(client, /title: 'Fight in progress'/);
   assert.doesNotMatch(client, /title: 'The next fight is underway'/);
   assert.match(client, /if \(dungeon\.battleActive\) \{\s*return \{ hidden: true \};\s*\}/);

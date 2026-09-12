@@ -9,12 +9,13 @@ const SUMMON_REQUIREMENTS = Object.freeze({
   mythic: 12
 });
 
-const REFINEMENT_COSTS = Object.freeze({
-  common: 3,
-  uncommon: 3,
-  rare: 4,
-  epic: 5,
-  legendary: 6
+const ECHO_SOUL_PRICES = Object.freeze({
+  common: 10,
+  uncommon: 30,
+  rare: 100,
+  epic: 300,
+  legendary: 1000,
+  mythic: 5000
 });
 
 const MYTHIC_ECHO_UNRAVEL_LEVELS = 5;
@@ -24,31 +25,11 @@ function normalizeEchoRarity(value) {
   return RARITIES.includes(rarity) ? rarity : null;
 }
 
-function getNextEchoRarity(value) {
-  const rarity = normalizeEchoRarity(value);
-  const index = RARITIES.indexOf(rarity);
-  return index >= 0 && index < RARITIES.length - 1 ? RARITIES[index + 1] : null;
-}
-
 function getEchoItemKey(typeId, rarity) {
   const normalizedTypeId = Math.max(0, Math.floor(Number(typeId) || 0));
   const normalizedRarity = normalizeEchoRarity(rarity);
   if (!normalizedTypeId || !normalizedRarity) return null;
   return `echo:${normalizedTypeId}:${normalizedRarity}`;
-}
-
-function getEchoRefinementBatch(quantity, rarity) {
-  const sourceQuantity = Math.max(0, Math.floor(Number(quantity) || 0));
-  const recipeCost = REFINEMENT_COSTS[normalizeEchoRarity(rarity)] || 0;
-  const refinedQuantity = recipeCost ? Math.floor(sourceQuantity / recipeCost) : 0;
-  const consumedQuantity = refinedQuantity * recipeCost;
-
-  return {
-    recipeCost,
-    refinedQuantity,
-    consumedQuantity,
-    remainingQuantity: sourceQuantity - consumedQuantity
-  };
 }
 
 function parseEchoItemKey(value) {
@@ -61,20 +42,17 @@ function getEchoConfig() {
   return {
     rarities: [...RARITIES],
     summonRequirements: { ...SUMMON_REQUIREMENTS },
-    refinementCosts: { ...REFINEMENT_COSTS },
     mythicUnravelLevels: MYTHIC_ECHO_UNRAVEL_LEVELS
   };
 }
 
 module.exports = {
   RARITIES,
-  REFINEMENT_COSTS,
+  ECHO_SOUL_PRICES,
   SUMMON_REQUIREMENTS,
   MYTHIC_ECHO_UNRAVEL_LEVELS,
   getEchoConfig,
   getEchoItemKey,
-  getEchoRefinementBatch,
-  getNextEchoRarity,
   normalizeEchoRarity,
   parseEchoItemKey
 };

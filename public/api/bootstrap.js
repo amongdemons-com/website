@@ -3,7 +3,7 @@ const { requireAuth } = require('./lib/auth');
 const { getPlayerStatPointSummary } = require('./lib/account-stat-points');
 const { getPlayerCollection } = require('./lib/collection-demons');
 const { getDailyQuestStateForPlayer } = require('./lib/daily-quests');
-const { getPlayerBag } = require('./lib/echo-bag');
+const { getCollectionEchoes } = require('./lib/echo-bag');
 const { getAccountProgressionPayload } = require('./lib/progression');
 const { getOrCreateCurrentSeason, getRankedRating } = require('./lib/ranked-runs');
 const { getActiveWorldBossRewardBuffs } = require('./lib/world-bosses');
@@ -39,16 +39,16 @@ router.get('/camp/bootstrap', requireAuth, async (req, res) => {
 });
 
 router.get('/collection/bootstrap', requireAuth, async (req, res) => {
-  const [demons, bag] = await Promise.all([
+  const [demons, echoes] = await Promise.all([
     getPlayerCollection(req.player.id),
-    getPlayerBag(req.player.id)
+    getCollectionEchoes(req.player.id)
   ]);
 
   res.json({
     player: req.player,
     progression: getAccountProgressionPayload(req.player),
     demons,
-    bag
+    echoes
   });
 });
 

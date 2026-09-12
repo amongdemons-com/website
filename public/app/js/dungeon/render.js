@@ -368,8 +368,8 @@ function renderDungeonExtractionScreen(summary = {}) {
           <a class="btn btn-primary dungeon-result-primary" href="/dungeon">
             <span>Begin Another Descent</span>
           </a>
-          <a class="btn btn-glass-muted dungeon-result-secondary" href="/bag">
-            <span>View Bag</span>
+          <a class="btn btn-glass-muted dungeon-result-secondary" href="/collection">
+            <span>View Collection</span>
           </a>
           <a class="btn btn-glass-muted dungeon-result-secondary" href="/camp">
             <span>Return to Camp</span>

@@ -32,6 +32,10 @@
     player: window.AmongDemons.getSession().player || null,
     collection: [],
     echoItems: new Map(),
+    echoConfig: {},
+    pendingEchoKey: null,
+    pendingEchoAction: null,
+    confirmingUnravelKey: null,
     catalog: [],
     visibleSlots: [],
     types: {},
@@ -154,6 +158,7 @@
       const demon = state.visibleSlots.find((item) => String(item.id) === card.dataset.demonId);
       if (!demon) return;
 
+      state.confirmingUnravelKey = null;
       openCollectionDemonDetails(demon);
     });
 
@@ -181,10 +186,13 @@
 
         state.player = bootstrap.player;
         state.collection = bootstrap.demons || [];
-        state.echoItems = new Map((bootstrap.bag?.items || []).map((item) => [item.itemKey, item]));
+        state.echoItems = new Map((bootstrap.echoes?.items || []).map((item) => [item.itemKey, item]));
+        state.echoConfig = bootstrap.echoes?.config || {};
       } else {
         state.player = null;
         state.collection = [];
+        state.echoItems = new Map();
+        state.echoConfig = {};
         await Promise.all([
           loadDemonTypes(),
           loadDemonCatalog()
@@ -240,7 +248,8 @@
       trainingDemonId: trainingDemon?.id || null,
       trainingCost,
       canAffordTraining,
-      trainableDemonId: trainable?.id || null
+      trainableDemonId: trainable?.id || null,
+      readyUnownedKey: [...state.echoItems.values()].find(item => item.summonReady)?.itemKey || ''
     });
   }
 
@@ -276,18 +285,19 @@
     const rarity = capitalize(demon.rarity);
     const echo = getEchoItemForDemon(demon);
     const footer = echo
-      ? `<div class="collection-missing-label collection-missing-echo-label">${escapeHtml(`${echo.summonProgress}/${echo.summonRequirement} Echoes`)}</div>`
+      ? `<div class="collection-missing-label collection-missing-echo-label ${echo.summonReady ? 'is-ready' : ''}">${renderEchoVisual(echo)}<span>${escapeHtml(`${echo.summonProgress}/${echo.summonRequirement} Echoes`)}${echo.summonReady ? '<strong>Summon</strong>' : ''}</span></div>`
       : '<div class="collection-missing-label">Missing</div>';
 
     return `
       <div class="collection-grid-item collection-grid-item-missing">
         ${renderSharedDemonCard(withTypeName(demon), {
-          className: 'collection-demon-card collection-missing-card',
+          className: `collection-demon-card collection-missing-card ${echo?.quantity > 0 ? 'has-echoes' : ''}`,
           ...getCollectionCardImageOptions(demon, index),
           showStats: false,
           footerHtml: footer,
           attributes: {
             'data-demon-id': demon.id,
+            'data-echo-key': echo?.itemKey || '',
             role: 'button',
             tabindex: '0',
             'aria-label': `View details for missing ${rarity} ${typeName}`,
@@ -457,10 +467,21 @@
       const echo = getEchoItemForDemon(demon);
       return [
         ...(echo ? [{
-          label: echo.summonReady ? 'Summon in Bag' : 'View Echoes',
+          label: state.pendingEchoKey === echo.itemKey && state.pendingEchoAction === 'summon' ? 'Summoning...' : 'Summon Demon',
+          className: 'collection-summon-action',
           variant: echo.summonReady ? 'primary' : 'outline-info',
-          href: '/bag'
-        }] : []),
+          disabled: !echo.summonReady || Boolean(state.pendingEchoKey),
+          onClick: () => performEchoAction(demon, 'summon')
+        }, ...(echo.canUnravel ? [{
+          label: state.pendingEchoAction === 'unravel' ? 'Unraveling...' : state.confirmingUnravelKey === echo.itemKey ? 'Confirm Unravel' : 'Unravel Echo',
+          variant: 'outline-danger',
+          disabled: Boolean(state.pendingEchoKey) || Number(state.player?.level) >= 666,
+          onClick: () => {
+            if (state.confirmingUnravelKey === echo.itemKey) return performEchoAction(demon, 'unravel');
+            state.confirmingUnravelKey = echo.itemKey;
+            openCollectionDemonDetails(demon);
+          }
+        }] : [])] : []),
         {
           label: 'Enter Dungeon',
           variant: echo ? 'outline-light' : 'primary',
@@ -476,7 +497,70 @@
     const typeId = Number(demon?.typeId || demon?.type);
     const rarity = String(demon?.rarity || '').toLowerCase();
     if (!typeId || !rarity) return null;
-    return state.echoItems.get(`echo:${typeId}:${rarity}`) || null;
+    const itemKey = `echo:${typeId}:${rarity}`;
+    const requirement = state.echoConfig.summonRequirements?.[rarity];
+    return state.echoItems.get(itemKey) || (requirement ? {
+      itemKey, itemType: 'echo', typeId, rarity, quantity: 0,
+      summonProgress: 0, summonRequirement: requirement, summonReady: false
+    } : null);
+  }
+
+  function renderEchoVisual(echo) {
+    return `<span class="collection-echo-visual">${window.AmongDemons.bagVisuals?.renderItemVisual?.(echo, { context: 'slot' }) || ''}</span>`;
+  }
+
+  function renderEchoProgress(demon) {
+    const echo = getEchoItemForDemon(demon);
+    if (!echo) return '<p>Extract Echoes of this species and rarity to summon this demon.</p>';
+    const percent = Math.round(echo.summonProgress / echo.summonRequirement * 100);
+    return `<div class="collection-echo-progress" role="status">
+      <div class="collection-echo-progress-heading">${renderEchoVisual(echo)}<strong>${echo.summonProgress} / ${echo.summonRequirement} Echoes</strong></div>
+      <progress max="${echo.summonRequirement}" value="${echo.summonProgress}" aria-label="Echo progress: ${percent}%"></progress>
+      <p>${echo.summonReady ? 'Ready to summon permanently.' : `Gather ${echo.summonRequirement} Echoes of this exact species and rarity to summon permanently.`}</p>
+      ${state.confirmingUnravelKey === echo.itemKey ? '<p class="text-warning">This permanently consumes one Mythic Echo to gain up to 5 hunter levels and reduces your summon progress. Choose Confirm Unravel to continue.</p>' : ''}
+    </div>`;
+  }
+
+  async function performEchoAction(demon, action) {
+    const echo = getEchoItemForDemon(demon);
+    if (!echo || state.pendingEchoKey) return;
+    state.pendingEchoKey = echo.itemKey;
+    state.pendingEchoAction = action;
+    openCollectionDemonDetails(demon);
+    const art = document.querySelector('#demonDetailModal .demon-detail-art');
+    if (action === 'summon') {
+      art?.classList.add('is-summoning');
+      audio?.play('sfx.progression.summonAttempt', { volume: 0.86 });
+    }
+    try {
+      const result = await api(`/api/collection/echoes/${action}`, {
+        method: 'POST', body: { typeId: echo.typeId, rarity: echo.rarity }
+      });
+      state.echoItems = new Map((result.echoes?.items || []).map(item => [item.itemKey, item]));
+      syncPlayer(result.player);
+      if (result.demon) replaceCollectionDemon(result.demon);
+      state.pendingEchoKey = null;
+      state.pendingEchoAction = null;
+      state.confirmingUnravelKey = null;
+      renderCollection();
+      openCollectionDemonDetails(result.demon || demon);
+      if (action === 'summon') {
+        audio?.play('sfx.progression.summonSuccess', { volume: 0.92 });
+        window.AmongDemons?.tutorial?.emit?.('demon-summoned', { demonId: result.demon.id });
+      } else {
+        window.AmongDemons.showGameAlert(`${result.unravel.levelsGranted} hunter levels gained.`, { type: 'success', context: 'collection' });
+      }
+    } catch (error) {
+      state.pendingEchoKey = null;
+      state.pendingEchoAction = null;
+      if (error.status === 409) await refreshCollection();
+      openCollectionDemonDetails(state.collection.find(item => getSlotKeyForDemon(item) === getSlotKeyForDemon(demon)) || demon);
+      await handleCollectionError(error);
+    } finally {
+      state.pendingEchoKey = null;
+      state.pendingEchoAction = null;
+      art?.classList.remove('is-summoning');
+    }
   }
 
   function getTrainingActions(demon) {
@@ -515,7 +599,7 @@
 
   function openCollectionDemonDetails(demon) {
     openDemonDetailsModal(withTypeName(demon), {
-      actionsLeadHtml: renderTrainingActionCost(demon),
+      actionsLeadHtml: demon.isMissing ? renderEchoProgress(demon) : renderTrainingActionCost(demon),
       actions: getDemonDetailsActions(demon)
     });
     applyModalTrainingStats(demon);
@@ -1219,6 +1303,8 @@
       state.isAuthenticated = false;
       state.player = null;
       state.collection = [];
+      state.echoItems = new Map();
+      state.echoConfig = {};
       syncAuthenticatedUi();
 
       try {

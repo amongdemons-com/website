@@ -7198,13 +7198,13 @@ import './bag-item-visuals.js';
     const souls = getPlayerSoulBalance();
     const canAfford = souls === null || souls >= item.price;
     const busy = state.merchantBusySlot === item.slot;
-    const disabled = item.purchased || busy || !canAfford || state.merchantBusySlot !== null || state.merchantBribing;
+    const disabled = item.complete || item.purchased || busy || !canAfford || state.merchantBusySlot !== null || state.merchantBribing;
     const visual = window.AmongDemons.bagVisuals?.renderItemVisual?.(item, {
       context: 'slot',
       title: `${capitalize(rarity)} item`
     })
       || `<img class="world-merchant-fallback-item" src="${escapeAttribute(item.imageUrl || DEFAULT_PROFILE_IMAGE_URL)}" alt="">`;
-    const buyLabel = item.purchased
+    const buyLabel = item.complete ? 'Echoes complete' : item.purchased
       ? 'Purchased'
       : busy
         ? 'Buying...'
@@ -8812,8 +8812,8 @@ import './bag-item-visuals.js';
                   const bagTotal = Math.max(0, Number(echo.quantity) || 0);
                   const detailText = [
                     `Mythic ${species} Echo`,
-                    'Added to your Bag',
-                    bagTotal ? `Bag total: ${formatNumber(bagTotal)}` : ''
+                    'Added to your Collection',
+                    bagTotal ? `Echo progress: ${formatNumber(bagTotal)}` : ''
                   ].filter(Boolean).join(' · ');
                   return `
                     <button
@@ -8822,8 +8822,8 @@ import './bag-item-visuals.js';
                       style="--item-rarity: ${rarityCss('mythic')}"
                       data-tooltip="${escapeAttribute(detailText)}"
                       data-tooltip-title="${escapeAttribute(`Mythic ${species} Echo`)}"
-                      data-tooltip-status="Added to your Bag"
-                      data-tooltip-total="${escapeAttribute(bagTotal ? `Bag total: ${formatNumber(bagTotal)}` : '')}"
+                      data-tooltip-status="Added to your Collection"
+                      data-tooltip-total="${escapeAttribute(bagTotal ? `Echo progress: ${formatNumber(bagTotal)}` : '')}"
                       aria-label="${escapeAttribute(detailText)}"
                     >
                       <img src="${escapeAttribute(toDemonImageUrl(echo, 'portrait') || echo.imageUrl || '')}" alt="" width="96" height="96">

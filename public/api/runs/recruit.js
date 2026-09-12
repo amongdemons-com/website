@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../lib/db');
+const { assertEchoNeeded } = require('../lib/echo-bag');
 const { requireAuth } = require('../lib/auth');
 const { normalizeCollectionDemonStats } = require('../lib/collection-demons');
 const { getRunForPlayer, saveRun } = require('../lib/runs');
@@ -52,6 +53,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     }
     if (hasExtractChoice) {
       stageExtractChoice(run, extractChoice);
+      if (run.state.extractChoice?.demon) await assertEchoNeeded(req.player.id, run.state.extractChoice.demon);
     }
     run.state.awaitingCollectionReinforcement = false;
     await advanceAfterRecruit(run, req.player);
@@ -67,6 +69,7 @@ router.post('/runs/:id/recruit', requireAuth, async (req, res) => {
     const team = await buildStagedTeam(run, stagedTeam);
     if (hasExtractChoice) {
       stageExtractChoice(run, extractChoice);
+      if (run.state.extractChoice?.demon) await assertEchoNeeded(req.player.id, run.state.extractChoice.demon);
     }
     run.state.team = team;
 

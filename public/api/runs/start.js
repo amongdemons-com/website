@@ -4,6 +4,7 @@ const db = require('../lib/db');
 const { requireAuth } = require('../lib/auth');
 const { getPlayerStatPointSummary } = require('../lib/account-stat-points');
 const { getPlayerCollection } = require('../lib/collection-demons');
+const { getCollectionEchoes } = require('../lib/echo-bag');
 const { createRng } = require('../lib/rng');
 const { createTeam } = require('../lib/demon-factory');
 const { STARTER_TYPE_IDS } = require('../lib/dungeon-enemies');
@@ -17,10 +18,11 @@ const draftTokenSecret = crypto.randomBytes(32);
 const DRAFT_STARTER_COUNT = 2;
 
 router.get('/runs/bootstrap', requireAuth, async (req, res) => {
-  const [run, statPoints, collection] = await Promise.all([
+  const [run, statPoints, collection, echoes] = await Promise.all([
     getCurrentRunForPlayer(req.player.id),
     getPlayerStatPointSummary(req.player),
-    getPlayerCollection(req.player.id)
+    getPlayerCollection(req.player.id),
+    getCollectionEchoes(req.player.id)
   ]);
 
   res.json({
@@ -28,6 +30,7 @@ router.get('/runs/bootstrap', requireAuth, async (req, res) => {
     progression: getAccountProgressionPayload(req.player),
     statPoints,
     collection,
+    echoes,
     run: run ? await serializeRun(run, { playerLevel: req.player.level }) : null,
     startOptions: run ? null : await createStartOptions(req.player.id, collection, { includeCollection: false })
   });
@@ -53,7 +56,7 @@ async function createStartOptions(playerId, existingCollection = null, options =
       draftSeed,
       expiresAt: Date.now() + 15 * 60 * 1000
     }),
-    ...(options.includeCollection === false ? {} : { collection })
+    ...(options.includeCollection === false ? {} : { collection, echoes: await getCollectionEchoes(playerId) })
   };
 }
 

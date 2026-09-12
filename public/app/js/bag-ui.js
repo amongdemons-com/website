@@ -3,7 +3,6 @@
 
   const api = window.AmongDemons.api;
   const audio = window.AmongDemons.audio;
-  const renderIcon = window.AmongDemons.ui.renderIcon || (() => '');
   const RARITY_COLORS = {
     common: '#D1D5D8',
     uncommon: '#41A85F',
@@ -16,28 +15,19 @@
     || ((rarity) => RARITY_COLORS[String(rarity || '').toLowerCase()] || RARITY_COLORS.common);
   const renderItemVisual = window.AmongDemons.bagVisuals?.renderItemVisual
     || (() => '<span class="bag-item-renderer bag-unknown-visual" aria-hidden="true"></span>');
-  const getDemonRoleLabel = window.AmongDemons.ui.getDemonRoleLabel
-    || ((demon) => capitalize(demon?.role || 'Demon'));
   const RARITY_RANK = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5, mythic: 6 };
   const BAG_SORT_STORAGE_PREFIX = 'amongdemons-bag-sort';
-  const BAG_SORT_OPTIONS = new Set(['type', 'ready', 'rarity', 'name', 'quantity']);
+  const BAG_SORT_OPTIONS = new Set(['type', 'rarity', 'name', 'quantity']);
   const DEFAULT_BAG_SORT = 'type';
-  const SUMMON_REVEAL_DELAY_MS = 3000;
   const state = {
     items: [],
-    config: {},
     selectedKey: null,
-    pending: false,
-    pendingAction: null,
     filter: 'all',
     sort: DEFAULT_BAG_SORT,
     inspectedKey: null,
     lastPointerType: 'mouse',
     slotCapacity: 24,
-    slotColumns: 4,
-    detailError: '',
-    progression: null,
-    confirmingUnravelKey: null
+    slotColumns: 4
   };
   const elements = {};
   let resizeFrame = 0;
@@ -64,7 +54,7 @@
   }
 
   function cacheElements() {
-    ['bagBackLink', 'bagCount', 'bagFilter', 'bagSort', 'bagLoading', 'bagGridViewport', 'bagGrid', 'bagItemTooltip', 'bagDetailModal', 'bagDetailContent', 'bagSummonModal', 'bagSummonContent', 'bagRefineModal', 'bagRefineContent']
+    ['bagBackLink', 'bagCount', 'bagFilter', 'bagSort', 'bagLoading', 'bagGridViewport', 'bagGrid', 'bagItemTooltip', 'bagDetailModal', 'bagDetailContent', 'bagDetailTitle']
       .forEach((id) => { elements[id] = document.getElementById(id); });
   }
 
@@ -154,7 +144,6 @@
       const item = elements.bagGrid.querySelector(`[data-bag-key="${cssEscape(state.inspectedKey)}"]`);
       showItemTooltip(state.inspectedKey, item);
     }, { passive: true });
-    elements.bagDetailContent.addEventListener('click', handleDetailAction);
 
     const resizeObserver = new ResizeObserver(scheduleSlotMeasurement);
     resizeObserver.observe(elements.bagGridViewport);
@@ -179,15 +168,8 @@
   }
 
   function applyPayload(payload = {}) {
-    state.items = Array.isArray(payload.items) ? payload.items : [];
-    state.config = payload.config || state.config || {};
-    state.progression = payload.progression || state.progression;
+    state.items = Array.isArray(payload.items) ? payload.items.filter(item => item.itemType !== 'echo') : [];
     renderBag();
-    window.AmongDemons?.tutorial?.emit?.('bag-ready', {
-      itemKeys: state.items.map((item) => item.itemKey).filter(Boolean),
-      itemCount: state.items.length,
-      readyUnownedKey: state.items.find((item) => item.summonReady && !item.owned)?.itemKey || ''
-    });
     if (state.selectedKey) {
       const item = getSelectedItem();
       if (item) renderItemDetail(item);
@@ -223,11 +205,10 @@
   function renderItem(item) {
     const rarity = normalizeRarity(item.rarity);
     const color = getRarityColor(rarity);
-    const status = getItemStatus(item);
-    const aria = `${capitalize(rarity)} ${item.species} Echo, quantity ${item.quantity}. ${status}.`;
+    const aria = `${item.name || item.itemKey}, quantity ${item.quantity}.`;
 
     return `
-      <button class="bag-slot bag-item bag-item-kind-${escapeHtml(normalizeItemType(item.itemType))} ${item.summonReady ? 'is-ready' : ''} ${state.inspectedKey === item.itemKey ? 'is-inspecting' : ''}" type="button" data-bag-key="${escapeHtml(item.itemKey)}" style="--item-rarity: ${escapeHtml(color)}" aria-label="${escapeHtml(aria)}">
+      <button class="bag-slot bag-item bag-item-kind-${escapeHtml(normalizeItemType(item.itemType))} ${state.inspectedKey === item.itemKey ? 'is-inspecting' : ''}" type="button" data-bag-key="${escapeHtml(item.itemKey)}" style="--item-rarity: ${escapeHtml(color)}" aria-label="${escapeHtml(aria)}">
         <span class="bag-rarity-diamond" aria-hidden="true"></span>
         <span class="bag-item-visual">
           ${renderItemVisual(item, { context: 'slot' })}
@@ -245,389 +226,17 @@
     const item = state.items.find((candidate) => candidate.itemKey === itemKey);
     if (!item) return;
     state.inspectedKey = null;
-    state.detailError = '';
-    state.confirmingUnravelKey = null;
     hideItemTooltip();
     state.selectedKey = itemKey;
     renderItemDetail(item);
     bootstrap.Modal.getOrCreateInstance(elements.bagDetailModal).show();
-    window.AmongDemons?.tutorial?.emit?.('bag-item-opened', { itemKey, summonReady: Boolean(item.summonReady), owned: Boolean(item.owned) });
   }
 
   function renderItemDetail(item) {
-    const rarity = normalizeRarity(item.rarity);
-    const color = getRarityColor(rarity);
-    const progress = Math.min(100, Math.round((Number(item.summonProgress) / Math.max(1, Number(item.summonRequirement))) * 100));
-    const summonCopy = `Gather ${item.summonRequirement} exact ${Number(item.summonRequirement) === 1 ? 'Echo' : 'Echoes'} to manifest this demon permanently.`;
-    const discoveryCopy = item.naturallyDiscovered
-      ? 'Naturally extracted'
-      : item.owned
-        ? 'Known through Collection'
-        : 'Refined Echo';
-
-    elements.bagDetailContent.style.setProperty('--item-rarity', color);
     elements.bagDetailContent.innerHTML = `
-      <div class="bag-detail-head">
-        <div class="bag-detail-visual">${renderItemVisual(item, { context: 'detail' })}</div>
-        <div>
-          <span class="bag-detail-rarity">${escapeHtml(capitalize(rarity))} Demon Echo</span>
-          <h2 class="h4 mb-1" id="bagDetailTitle">${escapeHtml(item.species)}</h2>
-          <span class="text-muted">${escapeHtml(getDemonRoleLabel(item) || 'Demon')} - ${escapeHtml(item.preferredPosition || 'front')} line</span>
-          <span class="bag-detail-discovery">${renderIcon(item.naturallyDiscovered ? 'check' : 'info')}<span>Source: ${escapeHtml(discoveryCopy)}</span></span>
-        </div>
-        <button type="button" class="btn-close bag-detail-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="bag-detail-body">
-        ${item.owned ? '' : `
-          <section class="bag-detail-panel">
-            <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
-              <h3 class="mb-0">Permanent summoning</h3>
-              <strong>x${escapeHtml(formatNumber(item.quantity))}</strong>
-            </div>
-            <p class="small text-muted">${escapeHtml(summonCopy)}</p>
-            <div class="d-flex justify-content-between small mb-1"><span>Echo progress</span><strong>${escapeHtml(`${item.summonProgress}/${item.summonRequirement}`)}</strong></div>
-            <div class="bag-progress-track" aria-label="${escapeHtml(`${progress}% of Echoes gathered`)}"><div class="bag-progress-fill" style="width: ${progress}%"></div></div>
-            ${item.summonReady ? `
-              <button class="btn btn-sm btn-primary bag-summon-action" type="button" data-bag-action="summon" ${state.pending ? 'disabled' : ''}>
-                ${state.pendingAction === 'summon' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : ''}
-                <span>${state.pendingAction === 'summon' ? 'Summoning...' : 'Summon Demon'}</span>
-              </button>
-            ` : ''}
-          </section>
-        `}
-        ${renderRefinementPanel(item)}
-      </div>
-      <div class="bag-detail-actions">
-        <button class="btn btn-glass-muted" type="button" data-bs-dismiss="modal">Close</button>
-        ${item.owned ? '<a class="btn btn-glass-muted" href="/collection">View Collection</a>' : ''}
-      </div>
+      <div class="modal-header"><h2 class="modal-title h5" id="bagDetailTitle">${escapeHtml(item.name || item.itemKey)}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <div class="modal-body"><p>Quantity: ${escapeHtml(formatNumber(item.quantity))}</p></div>
     `;
-  }
-
-  function renderRefinementPanel(item) {
-    if (!item.nextRarity) {
-      const currentLevel = Math.max(1, Number(state.progression?.level) || 1);
-      const maximumLevel = 666;
-      const levelsAvailable = Math.max(0, Math.min(
-        Number(state.config?.mythicUnravelLevels) || 5,
-        maximumLevel - currentLevel
-      ));
-      const confirming = state.confirmingUnravelKey === item.itemKey;
-      const canUnravel = Boolean(item.canUnravel && levelsAvailable > 0 && !state.pending);
-      return `
-        <section class="bag-detail-panel">
-          <h3>Refinement</h3>
-          <p class="small text-muted">Mythic is the highest Echo rarity. ${levelsAvailable > 0
-            ? `Unravel one Mythic Echo to release its power as ${escapeHtml(levelsAvailable)} hunter ${levelsAvailable === 1 ? 'level' : 'levels'}.`
-            : 'Level 666 is the maximum hunter level, so Mythic Echoes can no longer be unraveled.'}</p>
-          ${levelsAvailable > 0 ? `
-            ${confirming ? `
-              <div class="bag-unravel-confirm" role="alert">
-                <strong>Unravel this Echo?</strong>
-                <span>This permanently consumes one Mythic ${escapeHtml(item.species)} Echo and cannot be undone.</span>
-                ${state.detailError ? `<div class="bag-action-error" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
-                <div class="bag-unravel-confirm-actions">
-                  <button class="btn btn-sm btn-glass-muted" type="button" data-bag-action="cancel-unravel">Cancel</button>
-                  <button class="btn btn-sm btn-primary bag-unravel-action" type="button" data-bag-action="unravel" ${canUnravel ? '' : 'disabled'}>
-                    ${state.pendingAction === 'unravel' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : renderIcon('sparkles')}
-                    <span>${state.pendingAction === 'unravel' ? 'Unraveling...' : 'Confirm Unravel'}</span>
-                  </button>
-                </div>
-              </div>
-            ` : `
-              ${state.detailError ? `<div class="bag-action-error mb-3" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
-              <button class="btn btn-sm btn-primary bag-unravel-action" type="button" data-bag-action="prepare-unravel" ${canUnravel ? '' : 'disabled'}>
-                ${renderIcon('sparkles')}
-                <span>Unravel Echo</span>
-              </button>
-            `}
-          ` : ''}
-        </section>
-      `;
-    }
-
-    const sourceLabel = `${capitalize(item.rarity)} ${item.species}`;
-    const targetLabel = `${capitalize(item.nextRarity)} ${item.species}`;
-    const lacking = Math.max(0, Number(item.refinementCost) - Number(item.quantity));
-    const refinementCount = Math.floor(Number(item.quantity) / Number(item.refinementCost));
-    const consumedQuantity = refinementCount * Number(item.refinementCost);
-    const lockedCopy = lacking > 0
-      ? `Gather ${lacking} more ${sourceLabel} ${lacking === 1 ? 'Echo' : 'Echoes'} to refine.`
-      : `Consume ${consumedQuantity} ${sourceLabel} Echoes to create ${refinementCount} ${targetLabel} ${refinementCount === 1 ? 'Echo' : 'Echoes'}.`;
-
-    return `
-      <section class="bag-detail-panel">
-        <h3>Refinement</h3>
-        <div class="bag-recipe" aria-label="${escapeHtml(`${consumedQuantity || item.refinementCost} ${sourceLabel} Echoes become ${refinementCount || 1} ${targetLabel} ${refinementCount === 1 ? 'Echo' : 'Echoes'}`)}">
-          <div class="bag-recipe-item"><strong>x${escapeHtml(consumedQuantity || item.refinementCost)}</strong><small class="d-block bag-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.rarity))}">${escapeHtml(capitalize(item.rarity))}</small></div>
-          <span aria-hidden="true">${renderIcon('arrow-right')}</span>
-          <div class="bag-recipe-item"><strong>x${escapeHtml(refinementCount || 1)}</strong><small class="d-block bag-recipe-rarity" style="--recipe-rarity:${escapeHtml(getRarityColor(item.nextRarity))}">${escapeHtml(capitalize(item.nextRarity))}</small></div>
-        </div>
-        <p class="small text-muted">${escapeHtml(lockedCopy)}</p>
-        ${state.detailError ? `<div class="bag-action-error mb-3" role="alert">${escapeHtml(state.detailError)}</div>` : ''}
-        <button class="btn btn-sm btn-primary bag-refine-action" type="button" data-bag-action="refine" ${item.canRefine && !state.pending ? '' : 'disabled'}>
-          ${state.pendingAction === 'refine' ? '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>' : ''}
-          <span>${state.pendingAction === 'refine' ? 'Refining...' : 'Refine All'}</span>
-        </button>
-      </section>
-    `;
-  }
-
-  async function handleDetailAction(event) {
-    const button = event.target.closest('[data-bag-action]');
-    if (!button || state.pending) return;
-    const item = getSelectedItem();
-    if (!item) return;
-    const action = button.dataset.bagAction;
-
-    if (action === 'prepare-unravel') {
-      state.confirmingUnravelKey = item.itemKey;
-      renderItemDetail(item);
-      return;
-    }
-    if (action === 'cancel-unravel') {
-      state.confirmingUnravelKey = null;
-      renderItemDetail(item);
-      return;
-    }
-    if (action === 'unravel') {
-      await performAction('/api/bag/echoes/unravel', item, 'unravel');
-      return;
-    }
-    if (action === 'refine') {
-      await performAction('/api/bag/echoes/refine', item, 'refine');
-      return;
-    }
-    if (action === 'summon') {
-      await performAction('/api/bag/echoes/summon', item, 'summon');
-    }
-  }
-
-  async function performAction(endpoint, item, action) {
-    state.pending = true;
-    state.pendingAction = action;
-    state.detailError = '';
-    renderItemDetail(item);
-    const summonDelay = action === 'summon' ? startSummonRitual() : 0;
-    try {
-      const request = api(endpoint, {
-        method: 'POST',
-        body: { typeId: item.typeId, rarity: item.rarity }
-      });
-      const payload = action === 'summon'
-        ? (await Promise.all([request, wait(summonDelay)]))[0]
-        : await request;
-      if (action === 'summon') {
-        stopSummonRitual();
-        applyPayload(payload);
-        showSummonResult(payload.demon || item, payload.demon?.id || null);
-      } else if (action === 'refine') {
-        audio?.play('sfx.progression.refineSuccess', { volume: 0.72 });
-        const sourceStillExists = (payload.items || []).some((candidate) => candidate.itemKey === item.itemKey);
-        if (!sourceStillExists && payload.refinement?.targetRarity) {
-          state.selectedKey = `echo:${item.typeId}:${payload.refinement.targetRarity}`;
-        }
-        applyPayload(payload);
-        showRefineResult(item, payload);
-      } else {
-        audio?.play('sfx.progression.refineSuccess', { volume: 0.82 });
-        state.confirmingUnravelKey = null;
-        applyPayload(payload);
-        window.AmongDemons.ui?.updateNavProgression?.(payload.progression, {
-          animate: true,
-          forceLevelUpAnimation: true
-        });
-      }
-    } catch (error) {
-      stopSummonRitual();
-      if (action === 'refine' || action === 'unravel') {
-        state.detailError = error?.message || `${action === 'unravel' ? 'Unraveling' : 'Refinement'} failed. Please try again.`;
-      } else {
-        showError(error);
-      }
-    } finally {
-      state.pending = false;
-      state.pendingAction = null;
-      const selected = getSelectedItem();
-      if (selected && elements.bagDetailModal.classList.contains('show')) {
-        renderItemDetail(selected);
-      } else if (!selected) {
-        bootstrap.Modal.getOrCreateInstance(elements.bagDetailModal).hide();
-      }
-    }
-  }
-
-  function showRefineResult(sourceItem, payload = {}) {
-    const targetItem = getRefinementTargetItem(sourceItem, payload);
-    const targetRarity = normalizeRarity(targetItem.rarity);
-    const targetSpecies = targetItem.species || sourceItem.species;
-    const refinedQuantity = Math.max(1, Number(payload.refinement?.quantity) || 1);
-    elements.bagRefineContent.style.setProperty('--item-rarity', getRarityColor(targetRarity));
-    elements.bagRefineContent.innerHTML = `
-      <div class="modal-header">
-        <div>
-          <p class="bag-action-kicker mb-1">Refinement complete</p>
-          <h2 class="modal-title h4" id="bagRefineTitle"><span class="bag-action-title-rarity">${escapeHtml(capitalize(targetRarity))}</span> ${escapeHtml(targetSpecies)} Echo</h2>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body bag-action-result-body">
-        <div class="bag-action-echo-result">
-          ${renderItemVisual(targetItem, { context: 'detail' })}
-          ${refinedQuantity > 1 ? `<span class="bag-item-count">x${escapeHtml(formatNumber(refinedQuantity))}</span>` : ''}
-        </div>
-        <p class="bag-action-description" id="bagRefineDescription">${escapeHtml(refinedQuantity === 1
-          ? 'Your refined Echo has been added to Bag.'
-          : `${refinedQuantity} refined Echoes have been added to Bag.`)}</p>
-      </div>
-      <div class="modal-footer bag-action-footer-centered">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
-      </div>
-    `;
-    transitionBetweenModals(elements.bagDetailModal, elements.bagRefineModal);
-  }
-
-  function showUnravelResult(payload = {}) {
-    const levelsGranted = Math.max(1, Number(payload.unravel?.levelsGranted) || 1);
-    const targetLevel = Math.max(1, Number(payload.unravel?.targetLevel) || Number(payload.progression?.level) || 1);
-    elements.bagRefineContent.style.setProperty('--item-rarity', getRarityColor('mythic'));
-    elements.bagRefineContent.innerHTML = `
-      <div class="modal-header">
-        <div>
-          <p class="bag-action-kicker mb-1">Echo unraveled</p>
-          <h2 class="modal-title h4" id="bagRefineTitle">Power Released</h2>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body bag-action-result-body">
-        <p class="bag-action-description bag-unravel-description" id="bagRefineDescription">
-          <strong>${escapeHtml(formatNumber(levelsGranted))} hunter ${levelsGranted === 1 ? 'level' : 'levels'} gained</strong>
-          <span>You reached level ${escapeHtml(formatNumber(targetLevel))}.</span>
-        </p>
-      </div>
-      <div class="modal-footer bag-action-footer-centered">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirm</button>
-      </div>
-    `;
-    transitionBetweenModals(elements.bagDetailModal, elements.bagRefineModal);
-  }
-
-  function getRefinementTargetItem(sourceItem, payload = {}) {
-    const targetRarity = normalizeRarity(payload.refinement?.targetRarity || sourceItem.nextRarity);
-    const itemKey = `echo:${sourceItem.typeId}:${targetRarity}`;
-    return (payload.items || []).find((item) => item.itemKey === itemKey) || {
-      ...sourceItem,
-      itemKey,
-      rarity: targetRarity,
-      quantity: Math.max(1, Number(payload.refinement?.quantity) || 1)
-    };
-  }
-
-  function transitionBetweenModals(fromElement, toElement, beforeShow) {
-    const reveal = () => {
-      beforeShow?.();
-      bootstrap.Modal.getOrCreateInstance(toElement).show();
-    };
-    if (fromElement.classList.contains('show')) {
-      fromElement.addEventListener('hidden.bs.modal', reveal, { once: true });
-      const fromModal = bootstrap.Modal.getOrCreateInstance(fromElement);
-      if (fromModal._isTransitioning) {
-        fromElement.addEventListener('shown.bs.modal', () => fromModal.hide(), { once: true });
-      } else {
-        fromModal.hide();
-      }
-    } else {
-      reveal();
-    }
-  }
-
-  function startSummonRitual() {
-    stopSummonRitual();
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return 0;
-
-    const target = elements.bagDetailContent;
-    const action = target?.querySelector('.bag-summon-action');
-    if (!target || !action) return 0;
-
-    const actionRect = action.getBoundingClientRect();
-    const viewportRect = { width: window.innerWidth, height: window.innerHeight };
-    const coreX = actionRect.left + (actionRect.width / 2);
-    const coreY = actionRect.top + (actionRect.height / 2);
-    const ritual = document.createElement('div');
-    ritual.className = 'bag-summon-ritual';
-    ritual.setAttribute('aria-hidden', 'true');
-    ritual.style.setProperty('--item-rarity', target.style.getPropertyValue('--item-rarity'));
-    ritual.style.setProperty('--summon-core-x', `${coreX.toFixed(1)}px`);
-    ritual.style.setProperty('--summon-core-y', `${coreY.toFixed(1)}px`);
-    ritual.innerHTML = `
-      <div class="bag-summon-vortex">${renderSummonParticles(viewportRect)}</div>
-      <div class="bag-summon-core"></div>
-    `;
-
-    action.classList.add('is-summoning');
-    document.body.appendChild(ritual);
-    audio?.play('sfx.progression.summonAttempt', { volume: 0.86 });
-    return SUMMON_REVEAL_DELAY_MS;
-  }
-
-  function stopSummonRitual() {
-    elements.bagDetailContent?.querySelector('.bag-summon-action.is-summoning')?.classList.remove('is-summoning');
-    document.querySelectorAll('body > .bag-summon-ritual').forEach((ritual) => ritual.remove());
-  }
-
-  function renderSummonParticles(rect) {
-    const width = Math.max(360, Number(rect?.width) || 480);
-    const height = Math.max(440, Number(rect?.height) || 620);
-    const count = 78;
-
-    return Array.from({ length: count }, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = randomBetween(0.52, 0.82);
-      const sx = Math.cos(angle) * width * radius;
-      const sy = Math.sin(angle) * height * radius;
-      const delay = randomBetween(0, 560);
-      const duration = (SUMMON_REVEAL_DELAY_MS - delay) / 0.68;
-      const size = randomBetween(0.55, 1.18);
-      const spin = randomBetween(-260, 260);
-      return `<span class="bag-summon-particle" style="--sx:${sx.toFixed(1)}px;--sy:${sy.toFixed(1)}px;--delay:${delay.toFixed(0)}ms;--duration:${duration.toFixed(0)}ms;--size:${size.toFixed(2)};--spin:${spin.toFixed(0)}deg"></span>`;
-    }).join('');
-  }
-
-  function wait(milliseconds) {
-    const delay = Math.max(0, Number(milliseconds) || 0);
-    return delay ? new Promise((resolve) => window.setTimeout(resolve, delay)) : Promise.resolve();
-  }
-
-  function randomBetween(minimum, maximum) {
-    return minimum + (Math.random() * (maximum - minimum));
-  }
-
-  function showSummonResult(demon, demonId = null) {
-    const rarity = normalizeRarity(demon.rarity);
-    const imageUrl = window.AmongDemons.ui?.toDemonImageUrl?.(demon, 'portrait') || demon.portraitImageUrl || demon.imageUrl || demon.image_url || '';
-    elements.bagSummonContent.style.setProperty('--item-rarity', getRarityColor(rarity));
-    elements.bagSummonContent.innerHTML = `
-      <div class="modal-header">
-        <div>
-          <p class="bag-action-kicker mb-1">Summoning complete</p>
-          <h2 class="modal-title h4" id="bagSummonTitle">${escapeHtml(`${capitalize(rarity)} ${demon.species || 'Demon'}`)}</h2>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body bag-action-result-body">
-        <img class="bag-summon-portrait" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(`${capitalize(rarity)} ${demon.species || 'demon'}`)}">
-        <p class="bag-action-description" id="bagSummonDescription">Your summon has joined your permanent Collection.</p>
-      </div>
-      <div class="modal-footer bag-action-footer-centered">
-        <a class="btn btn-primary" href="/collection">View Collection</a>
-      </div>
-    `;
-
-    elements.bagSummonModal.addEventListener('shown.bs.modal', () => {
-      window.AmongDemons?.tutorial?.emit?.('demon-summoned', { demonId });
-    }, { once: true });
-    transitionBetweenModals(elements.bagDetailModal, elements.bagSummonModal);
-    audio?.play('sfx.progression.summonSuccess', { volume: 0.92 });
   }
 
   function getSelectedItem() {
@@ -636,9 +245,6 @@
 
   function compareItems(a, b) {
     if (state.sort === 'type') return compareType(a, b) || compareRarity(a, b) || compareName(a, b);
-    if (state.sort === 'ready') {
-      return Number(Boolean(b.summonReady)) - Number(Boolean(a.summonReady)) || compareRarity(b, a) || compareName(a, b);
-    }
     if (state.sort === 'rarity') return compareRarity(b, a) || compareName(a, b);
     if (state.sort === 'quantity') return Number(b.quantity) - Number(a.quantity) || compareRarity(b, a) || compareName(a, b);
     return compareName(a, b) || compareRarity(a, b);
@@ -649,11 +255,11 @@
   }
 
   function compareType(a, b) {
-    return Number(a.typeId || 0) - Number(b.typeId || 0);
+    return String(a.itemType || '').localeCompare(String(b.itemType || ''));
   }
 
   function compareName(a, b) {
-    return String(a.species || '').localeCompare(String(b.species || ''));
+    return String(a.name || a.itemKey || '').localeCompare(String(b.name || b.itemKey || ''));
   }
 
   function restoreSortPreference() {
@@ -684,9 +290,7 @@
   }
 
   function getItemStatus(item) {
-    if (item.owned) return 'Summoned - surplus Echoes';
-    if (item.summonReady) return 'Ready to summon';
-    return `${item.summonProgress}/${item.summonRequirement} to summon`;
+    return item.description || '';
   }
 
   function showItemTooltip(itemKey, anchor) {
@@ -702,9 +306,9 @@
     tooltip.dataset.bagKey = itemKey;
     tooltip.style.setProperty('--item-rarity', getRarityColor(rarity));
     tooltip.innerHTML = `
-      <span class="bag-tooltip-rarity">${escapeHtml(capitalize(rarity))} Echo</span>
-      <strong class="bag-tooltip-title">${escapeHtml(item.species)}</strong>
-      <span class="bag-tooltip-meta">${escapeHtml(getDemonRoleLabel(item) || 'Demon')} - x${escapeHtml(formatNumber(item.quantity))}</span>
+      <span class="bag-tooltip-rarity">${escapeHtml(capitalize(item.itemType))}</span>
+      <strong class="bag-tooltip-title">${escapeHtml(item.name || item.itemKey)}</strong>
+      <span class="bag-tooltip-meta">x${escapeHtml(formatNumber(item.quantity))}</span>
       <span class="bag-tooltip-meta">${escapeHtml(getItemStatus(item))}</span>
       <button class="bag-tooltip-action" type="button" data-bag-tooltip-open="${escapeHtml(itemKey)}">View details</button>
     `;

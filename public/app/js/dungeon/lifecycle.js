@@ -61,6 +61,7 @@ async function refreshAll() {
     state.player = bootstrap.player;
     state.statPoints = bootstrap.statPoints;
     state.collectionDemons = bootstrap.collection || [];
+    state.collectionEchoes = bootstrap.echoes?.items || [];
     state.startOptions = bootstrap.startOptions || null;
     renderPlayer();
 
@@ -122,6 +123,7 @@ async function loadCurrentRun() {
 async function loadStartOptions() {
   state.startOptions = await api('/api/runs/start-options');
   state.collectionDemons = state.startOptions.collection || [];
+  state.collectionEchoes = state.startOptions.echoes?.items || [];
 }
 
 async function startRun() {

@@ -1,12 +1,9 @@
 const db = require('./db');
 const {
-  REFINEMENT_COSTS,
   SUMMON_REQUIREMENTS,
   getEchoConfig,
   getEchoItemKey,
-  getNextEchoRarity,
-  normalizeEchoRarity,
-  parseEchoItemKey
+  normalizeEchoRarity
 } = require('./echo-config');
 const { getDemonAssets, getDemonTypes } = require('./game-data');
 
@@ -31,9 +28,7 @@ async function getEchoCatalog() {
       preferredPosition: type.preferredPosition || asset.preferredPosition || '',
       sourceDemonId: Number(asset.id),
       imageUrl: asset.image_url || asset.imageUrl || '',
-      summonRequirement: SUMMON_REQUIREMENTS[rarity],
-      nextRarity: getNextEchoRarity(rarity),
-      refinementCost: REFINEMENT_COSTS[rarity] || null
+      summonRequirement: SUMMON_REQUIREMENTS[rarity]
     });
   });
 
@@ -48,6 +43,17 @@ async function getEchoDefinition(typeId, rarity) {
 }
 
 async function getPlayerBag(playerId, queryable = db) {
+  const [items] = await queryable.query(
+    `SELECT item_key AS itemKey, item_type AS itemType, quantity, updated_at AS updatedAt
+     FROM player_bag WHERE player_id = ? AND item_type <> 'echo' AND quantity > 0
+     ORDER BY updated_at DESC, item_key`,
+    [playerId]
+  );
+  return { items };
+}
+
+// Existing Echo rows remain the backing store for Collection progress.
+async function getCollectionEchoes(playerId, queryable = db) {
   const catalogPromise = getEchoCatalog();
   const [rows] = await queryable.query(
     `SELECT 'bag' AS rowType,
@@ -60,7 +66,7 @@ async function getPlayerBag(playerId, queryable = db) {
             NULL AS discoveredAt,
             NULL AS demonId
      FROM player_bag
-     WHERE player_id = ? AND quantity > 0
+     WHERE player_id = ? AND item_type = 'echo' AND quantity > 0
      UNION ALL
      SELECT 'discovery', NULL, NULL, NULL, NULL,
             type_id,
@@ -90,14 +96,12 @@ async function getPlayerBag(playerId, queryable = db) {
   const catalog = await catalogPromise;
   const discovered = new Map(discoveryRows.map((row) => [getEchoItemKey(row.typeId, row.rarity), row.discoveredAt]));
   const owned = new Map(demonRows.map((row) => [getEchoItemKey(row.typeId, row.rarity), Number(row.demonId)]));
-  const quantities = new Map(bagRows.map((row) => [row.itemKey, Math.max(0, Number(row.quantity) || 0)]));
 
   const items = bagRows
     .map((row) => serializeEchoItem(catalog.get(row.itemKey), {
       quantity: row.quantity,
       discoveredAt: discovered.get(row.itemKey),
-      ownedDemonId: owned.get(row.itemKey),
-      targetQuantity: getTargetQuantity(catalog.get(row.itemKey), quantities)
+      ownedDemonId: owned.get(row.itemKey)
     }))
     .filter(Boolean);
 
@@ -113,7 +117,51 @@ async function getPlayerBag(playerId, queryable = db) {
 }
 
 async function addEcho(playerId, demon, options = {}) {
-  const queryable = options.queryable || db;
+  const ownsConnection = !options.queryable;
+  const queryable = options.queryable || await db.getConnection();
+  try {
+    if (ownsConnection) await queryable.beginTransaction();
+    const echo = await addEchoInTransaction(playerId, demon, { ...options, queryable });
+    if (ownsConnection) await queryable.commit();
+    return echo;
+  } catch (error) {
+    if (ownsConnection) await queryable.rollback();
+    throw error;
+  } finally {
+    if (ownsConnection) queryable.release();
+  }
+}
+
+async function lockEchoPlayer(playerId, queryable) {
+  const [rows] = await queryable.query('SELECT id FROM players WHERE id = ? LIMIT 1 FOR UPDATE', [playerId]);
+  if (!rows.length) throw createHttpError('Hunter not found.', 404);
+}
+
+async function assertEchoNeeded(playerId, demon, queryable = db, options = {}) {
+  const definition = await getEchoDefinition(demon?.typeId ?? demon?.type_id ?? demon?.type, demon?.rarity);
+  const lock = options.forUpdate ? ' FOR UPDATE' : '';
+  const [owned] = await queryable.query(
+    `SELECT id FROM player_demons WHERE player_id = ? AND type_id = ? AND rarity = ? LIMIT 1${lock}`,
+    [playerId, definition.typeId, definition.rarity]
+  );
+  const [rows] = await queryable.query(
+    `SELECT quantity FROM player_bag WHERE player_id = ? AND item_key = ? LIMIT 1${lock}`,
+    [playerId, definition.itemKey]
+  );
+  if (owned.length || Number(rows[0]?.quantity) >= definition.summonRequirement) {
+    if (options.skipComplete) return false;
+    throw createHttpError(owned.length
+      ? 'This demon has already been summoned. Choose another species or rarity.'
+      : 'You already have enough Echoes to summon this demon in Collection.', 409);
+  }
+  return true;
+}
+
+async function addEchoInTransaction(playerId, demon, options) {
+  const queryable = options.queryable;
+  // All Echo grants and spends share this lock, including merchant purchases.
+  await lockEchoPlayer(playerId, queryable);
+  if (!await assertEchoNeeded(playerId, demon, queryable, { ...options, forUpdate: true })) return null;
   const definition = await getEchoDefinition(
     demon?.typeId ?? demon?.type_id ?? demon?.type,
     demon?.rarity
@@ -136,8 +184,8 @@ async function addEcho(playerId, demon, options = {}) {
     );
   }
 
-  const bag = await getPlayerBag(playerId, queryable);
-  return bag.items.find((item) => item.itemKey === definition.itemKey) || null;
+  const echoes = await getCollectionEchoes(playerId, queryable);
+  return echoes.items.find((item) => item.itemKey === definition.itemKey) || null;
 }
 
 function serializeEchoItem(definition, state = {}) {
@@ -156,19 +204,8 @@ function serializeEchoItem(definition, state = {}) {
     ownedDemonId,
     summonReady: !ownedDemonId && quantity >= summonRequirement,
     summonProgress: Math.min(quantity, summonRequirement),
-    targetQuantity: Math.max(0, Number(state.targetQuantity) || 0),
-    canRefine: Boolean(
-      definition.nextRarity &&
-      definition.refinementCost &&
-      quantity >= definition.refinementCost
-    ),
     canUnravel: definition.rarity === 'mythic' && quantity > 0
   };
-}
-
-function getTargetQuantity(definition, quantities) {
-  if (!definition?.nextRarity) return 0;
-  return quantities.get(getEchoItemKey(definition.typeId, definition.nextRarity)) || 0;
 }
 
 function createHttpError(message, status = 400) {
@@ -179,9 +216,12 @@ function createHttpError(message, status = 400) {
 
 module.exports = {
   addEcho,
+  assertEchoNeeded,
   createHttpError,
   getEchoCatalog,
   getEchoDefinition,
+  getCollectionEchoes,
   getPlayerBag,
+  lockEchoPlayer,
   serializeEchoItem
 };

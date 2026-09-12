@@ -1,6 +1,7 @@
 const db = require('./db');
 const { cleanPlayer } = require('./auth');
-const { getEchoCatalog } = require('./echo-bag');
+const { getEchoCatalog, getCollectionEchoes, addEcho } = require('./echo-bag');
+const { ECHO_SOUL_PRICES } = require('./echo-config');
 const worldMap = require('../data/map.json');
 
 const MERCHANT_ID = 'wandering-echo-merchant';
@@ -30,14 +31,7 @@ const MERCHANT_RARITY_WEIGHTS = Object.freeze({
 });
 
 // Prices remain strongly rarity-scaled without requiring an inflated economy.
-const MERCHANT_RARITY_PRICES = Object.freeze({
-  common: 10,
-  uncommon: 30,
-  rare: 100,
-  epic: 300,
-  legendary: 1000,
-  mythic: 5000
-});
+const MERCHANT_RARITY_PRICES = ECHO_SOUL_PRICES;
 
 const STATIC_OCCUPIED_TILES = new Set([
   ...(Array.isArray(worldMap.blocks) ? worldMap.blocks : []),
@@ -95,18 +89,25 @@ async function getWorldMerchantForPlayer(playerId, options = {}) {
   const merchant = getActiveWorldMerchant(options.now);
   const queryable = options.queryable || db;
   const playerLevel = normalizePlayerLevel(options.playerLevel);
-  const [catalog, purchasedSlots, rerollCount] = await Promise.all([
+  const [catalog, purchasedSlots, rerollCount, echoes] = await Promise.all([
     getEchoCatalog(),
     getPurchasedMerchantSlots(playerId, merchant.spawnId, queryable),
-    getMerchantRerollCount(playerId, merchant.spawnId, queryable)
+    getMerchantRerollCount(playerId, merchant.spawnId, queryable),
+    getCollectionEchoes(playerId, queryable)
   ]);
 
+  const completed = new Set([
+    ...echoes.items.filter(item => item.owned || item.summonReady).map(item => item.itemKey)
+  ]);
+  const [owned] = await queryable.query('SELECT type_id AS typeId, rarity FROM player_demons WHERE player_id = ?', [playerId]);
+  owned.forEach(item => completed.add(`echo:${item.typeId}:${item.rarity}`));
   return {
     ...merchant,
     stockId: getMerchantStockId(merchant.spawnId, rerollCount, playerLevel),
     rerollCount,
     bribeCost: getMerchantBribeCost(playerLevel),
     itemSlots: buildMerchantStock(playerId, merchant.spawnId, catalog, purchasedSlots, rerollCount, playerLevel)
+      .map(item => ({ ...item, complete: completed.has(item.itemKey) }))
   };
 }
 
@@ -347,19 +348,7 @@ async function purchaseWorldMerchantItem(
       'UPDATE players SET souls = souls - ? WHERE id = ?',
       [item.price, playerId]
     );
-    await connection.query(
-      `INSERT INTO player_bag (player_id, item_key, item_type, quantity)
-       VALUES (?, ?, 'echo', 1)
-       ON DUPLICATE KEY UPDATE
-         quantity = quantity + 1,
-         updated_at = CURRENT_TIMESTAMP`,
-      [playerId, item.itemKey]
-    );
-    await connection.query(
-      `INSERT IGNORE INTO player_echo_discoveries (player_id, type_id, rarity)
-       VALUES (?, ?, ?)`,
-      [playerId, item.typeId, item.rarity]
-    );
+    await addEcho(playerId, item, { queryable: connection, natural: true });
 
     await connection.commit();
     committed = true;

@@ -212,7 +212,7 @@ router.post('/world/merchant/purchase', requireAuth, async (req, res) => {
     purchasedItem: purchase.item,
     player: getWorldPlayer(purchase.player),
     merchant: serializeWorldMerchantForClient(merchant, position),
-    message: `${capitalize(purchase.item.rarity)} ${purchase.item.species} Echo added to your bag.`
+    message: `${capitalize(purchase.item.rarity)} ${purchase.item.species} Echo added to your Collection.`
   });
 });
 
@@ -1614,9 +1614,9 @@ function getAnomalyResultMessage(result = {}) {
     : reward.echo ? [reward.echo] : [];
   const rolls = Math.max(1, Number(reward.rolls) || floor);
   const rewardMessage = echoes.length === 1
-    ? `A Mythic ${echoes[0].species || 'Demon'} Echo was added to your Bag.`
+    ? `A Mythic ${echoes[0].species || 'Demon'} Echo was added to your Collection.`
     : echoes.length > 1
-      ? `${echoes.length.toLocaleString('en-US')} Mythic Echoes were added to your Bag.`
+      ? `${echoes.length.toLocaleString('en-US')} Mythic Echoes were added to your Collection.`
       : `None of your ${rolls.toLocaleString('en-US')} Echo rolls succeeded.`;
   return floor >= 9
     ? `You cleared Anomaly Floor 9. ${rewardMessage} The run is complete.`

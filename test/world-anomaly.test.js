@@ -268,8 +268,16 @@ test('uncollected Mythics exclude species already owned at Mythic rarity', async
   const typeIds = await getUncollectedMythicTypeIds('hunter-one', queryable);
 
   assert.deepEqual(typeIds, [2, 3, 4, 5, 7, 8, 9, 10]);
-  assert.deepEqual(queries[0].params, ['hunter-one']);
+  assert.deepEqual(queries[0].params, ['hunter-one', 'hunter-one', 12]);
   assert.match(queries[0].sql, /LOWER\(rarity\) = 'mythic'/);
+  assert.match(queries[0].sql, /quantity >= \?/);
+});
+
+test('Anomaly collection rewards stay within needed variants and stop when all are complete', () => {
+  const rewards = resolveAnomalyRewardRolls(3, { randomInt: () => 0, candidateTypeIds: [7], restrictToCandidates: true });
+  assert.deepEqual(rewards.map(reward => reward.typeId), [7, 7, 7]);
+  const completed = resolveAnomalyRewardRolls(3, { randomInt: () => 0, candidateTypeIds: [], restrictToCandidates: true });
+  assert.ok(completed.every(reward => !reward.echoAwarded && reward.typeId === null));
 });
 
 test('Anomaly Floor 1 locks the team, restores health, and can award a Mythic Echo', async () => {

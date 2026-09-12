@@ -2,11 +2,11 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="d901fd3fbe8e">
+    <meta name="among-demons-client-version" content="9afa113ff947">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Bag | Among Demons</title>
-    <meta name="description" content="Manage extracted Demon Echoes, refine rarities, unravel Mythic Echoes, and summon permanent demons.">
+    <meta name="description" content="Manage your items. Find Demon Echoes and permanent summoning in Collection.">
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
     <link href="/app/css/base.css?v=2fa3ea8f6e99" rel="stylesheet">
@@ -74,12 +74,10 @@
             <label class="visually-hidden" for="bagFilter">Item type</label>
             <select class="form-select form-select-sm" id="bagFilter" aria-label="Item type">
               <option value="all">All items</option>
-              <option value="echo">Echoes</option>
             </select>
             <label class="visually-hidden" for="bagSort">Sort bag</label>
             <select class="form-select form-select-sm" id="bagSort" aria-label="Sort bag">
-              <option value="type">Demon type</option>
-              <option value="ready">Ready first</option>
+              <option value="type">Item type</option>
               <option value="rarity">Rarity</option>
               <option value="name">Name</option>
               <option value="quantity">Quantity</option>
@@ -87,6 +85,7 @@
           </div>
         </div>
         <div class="card-body">
+          <p class="small text-muted">Demon Echoes and summoning are in <a href="/collection">Collection</a>.</p>
           <div class="bag-loading" id="bagLoading" role="status">
             <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
             <span>Opening the vault...</span>
@@ -105,20 +104,8 @@
         <div class="modal-content" id="bagDetailContent"></div>
       </div>
     </div>
-
-    <div class="modal fade bag-action-modal bag-summon-modal" id="bagSummonModal" tabindex="-1" aria-labelledby="bagSummonTitle" aria-describedby="bagSummonDescription" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" id="bagSummonContent"></div>
-      </div>
-    </div>
-
-    <div class="modal fade bag-action-modal bag-refine-modal" id="bagRefineModal" tabindex="-1" aria-labelledby="bagRefineTitle" aria-describedby="bagRefineDescription" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" id="bagRefineContent"></div>
-      </div>
-    </div>
-    <script src="/app/dist/runtime.bundle.js?v=495520ecad56"></script>
+    <script src="/app/dist/runtime.bundle.js?v=3d38bfe7731b"></script>
     <script src="/app/js/bag-item-visuals.js?v=b49e5be8f8a3"></script>
-    <script src="/app/js/bag-ui.js?v=71b6baf7dcb8"></script>
+    <script src="/app/js/bag-ui.js?v=b1b20a77f106"></script>
   </body>
 </html>

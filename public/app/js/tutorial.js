@@ -231,7 +231,7 @@
           // Storage is only a visual-target hint; tutorial progress remains server-backed.
         }
       }
-      if (isCurrentCheckpoint('dungeon-extract') && detail.echo) {
+      if (isCurrentCheckpoint('dungeon-extract')) {
         void advance('bag-echo');
         return;
       }
@@ -242,6 +242,7 @@
     } else if (name === 'demon-summoned') {
       model.eventState.bag = { ...(model.eventState.bag || {}), summoned: true, ready: true };
       void completeContextualGuide('summon');
+      scheduleRender();
       return;
     } else if (name === 'collection-ready') {
       model.eventState.collection = { ...detail, ready: true };
@@ -934,95 +935,15 @@
     };
   }
 
-  function getBagEchoView(progress) {
-    const bag = model.eventState.bag;
-    if (!bag?.ready) return { hidden: true };
-    let storedKey = '';
-    try {
-      storedKey = sessionStorage.getItem(TUTORIAL_ECHO_KEY) || '';
-    } catch (error) {
-      storedKey = '';
-    }
-    const escapedKey = cssEscape(storedKey);
-    const echoTarget = (escapedKey && document.querySelector(`[data-bag-key="${escapedKey}"]`))
-      || document.querySelector('#bagGrid [data-bag-key]')
-      || document.getElementById('bagGrid');
-
-    const modalOpen = Boolean(document.getElementById('bagDetailModal')?.classList.contains('show'));
-    if (!modalOpen) {
-      return {
-        title: 'Open your Echo',
-        body: 'This is the exact Echo you carried out. Open it to see what it can become.',
-        progress,
-        icon: 'amphora',
-        target: echoTarget,
-        primaryLabel: echoTarget?.matches?.('[data-bag-key]') ? 'Inspect Echo' : 'Finish Tutorial',
-        onPrimary: echoTarget?.matches?.('[data-bag-key]')
-          ? () => {
-            model.localSteps.bag = 1;
-            echoTarget.click();
-            scheduleRender();
-          }
-          : completeTutorial
-      };
-    }
-
-    const progressTrack = findVisibleElement(['#bagDetailModal.show .bag-progress-track']);
-    const effectiveStep = progressTrack ? Math.max(1, model.localSteps.bag) : Math.max(2, model.localSteps.bag);
-
-    if (effectiveStep === 1) {
-      return {
-        title: 'Watch the summon meter',
-        body: 'Matching Echoes fill this bar. Reach the requirement, then Summon to make that demon permanent.',
-        progress,
-        icon: 'sparkles',
-        target: progressTrack,
-        primaryLabel: 'Show Refinement',
-        onPrimary: () => setLocalStep('bag', 2, '#bagDetailModal.show .bag-recipe')
-      };
-    }
-
-    if (effectiveStep === 2) {
-      return {
-        title: 'Refine surplus Echoes',
-        body: 'This recipe shows how lower-rarity Echoes combine into the next rarity.',
-        progress,
-        icon: 'combine',
-        target: [
-          '#bagDetailModal.show .bag-recipe',
-          '#bagDetailModal.show [data-bag-action="refine"]',
-          '#bagDetailModal.show .bag-detail-panel:last-of-type'
-        ],
-        primaryLabel: 'One Last Tip',
-        onPrimary: () => setLocalStep('bag', 3, '#bagDetailModal.show .bag-detail-visual')
-      };
-    }
-
-    return {
-      title: 'Train permanent demons',
-      body: 'After Summon, open that demon in Collection. Train and Auto Train spend Souls for chances to raise its combat stats.',
-      progress,
-      icon: 'book-plus',
-      target: [
-        '#bagDetailModal.show a[href="/collection"]',
-        '#bagDetailModal.show [data-bag-action="summon"]',
-        '#bagDetailModal.show .bag-detail-visual',
-        '#bagDetailModal.show .modal-content'
-      ],
-      primaryLabel: 'Finish Tutorial',
-      onPrimary: completeTutorial
-    };
-  }
-
   function getRouteHandoffView(checkpoint, route) {
     if (checkpoint === 'bag-echo' && isRoute('/dungeon')) {
       const viewBag = findVisibleElement([
-        '.dungeon-result-actions a[href="/bag"]',
-        '.dungeon-end-actions a[href="/bag"]'
+        '.dungeon-result-actions a[href="/collection"]',
+        '.dungeon-end-actions a[href="/collection"]'
       ]);
       return {
         title: 'Echo secured',
-        body: 'Choose View Bag to open the Echo you extracted.',
+        body: 'Choose View Collection to summon with the Echo you extracted.',
         progress: `${CHECKPOINTS.indexOf(checkpoint) + 2} of ${TOTAL_MOMENTS}`,
         icon: 'amphora',
         target: viewBag
@@ -1048,74 +969,23 @@
   }
 
   function getActionDrivenBagEchoView(progress) {
-    const bag = model.eventState.bag;
-    if (!bag?.ready) return { hidden: true };
-    const summonResult = findVisibleElement(['#bagSummonModal.show .modal-content']);
-    if (summonResult) {
-      const viewCollection = findVisibleElement(['#bagSummonModal.show a[href="/collection"]']);
+    const collection = model.eventState.collection;
+    if (!collection?.ready) return { hidden: true };
+    if (model.eventState.bag?.summoned || !collection.readyUnownedKey) {
       return {
-        title: 'Your permanent demon is ready',
-        body: 'Your Echo is now permanent. Continue to Collection for Training.',
-        progress,
-        icon: 'sparkles',
-        target: viewCollection || summonResult,
-        mobilePlacement: 'top',
-        primaryLabel: 'Next',
-        onPrimary: () => advance('collection-training', { navigate: '/collection' })
+        title: model.eventState.bag?.summoned ? 'Your permanent demon is ready' : 'Your Echo progress is saved',
+        body: model.eventState.bag?.summoned ? 'Your demon can now train with Souls.' : 'Gather the remaining Echoes to summon this variant. You can continue with your existing demons.',
+        progress, icon: 'sparkles', target: '#collectionGrid', primaryLabel: 'Continue',
+        onPrimary: () => advance('collection-training')
       };
     }
-    const summonResultPrepared = Boolean(document.querySelector('#bagSummonModal #bagSummonTitle'));
-    if (summonResultPrepared && !bag.summoned) return { hidden: true };
-    if (bag.summoned) {
-      return {
-        title: 'Your permanent demon is ready',
-        body: 'Your Echo is now permanent. Continue to Collection for Training.',
-        progress,
-        icon: 'sparkles',
-        target: '#bagGrid',
-        mobilePlacement: 'top',
-        primaryLabel: 'Continue to Collection',
-        onPrimary: () => advance('collection-training', { navigate: '/collection' })
-      };
-    }
-    let storedKey = '';
-    try {
-      storedKey = sessionStorage.getItem(TUTORIAL_ECHO_KEY) || '';
-    } catch (error) {
-      storedKey = '';
-    }
-    const readyUnownedKey = cssEscape(bag.readyUnownedKey || '');
-    const escapedKey = cssEscape(storedKey);
-    const echoTarget = (readyUnownedKey && document.querySelector(`[data-bag-key="${readyUnownedKey}"]`))
-      || (escapedKey && document.querySelector(`[data-bag-key="${escapedKey}"]`))
-      || document.querySelector('#bagGrid [data-bag-key]')
-      || document.getElementById('bagGrid');
-    const modalOpen = Boolean(document.getElementById('bagDetailModal')?.classList.contains('show'));
-    if (modalOpen) {
-      const summonButton = findVisibleElement(['#bagDetailModal.show [data-bag-action="summon"]:not(:disabled)']);
-      if (summonButton) {
-        return {
-          title: 'Summon a permanent demon',
-          body: 'Choose Summon Demon. This Common Echo needs one copy.',
-          progress,
-          icon: 'sparkles',
-          target: summonButton,
-          mobilePlacement: 'top'
-        };
-      }
-      const summonInProgress = Boolean(findVisibleElement([
-        'body > .bag-summon-ritual',
-        '#bagDetailModal.show [data-bag-action="summon"]:disabled'
-      ]));
-      if (summonInProgress) return { hidden: true };
-    }
+    const summonButton = findVisibleElement(['#demonDetailModal.show .collection-summon-action:not(:disabled)']);
+    if (findVisibleElement(['#demonDetailModal.show .demon-detail-art.is-summoning'])) return { hidden: true };
+    const key = cssEscape(collection.readyUnownedKey);
     return {
-      title: 'Your Echo is in the Bag',
-      body: 'Open the highlighted Echo, then Summon it.',
-      progress,
-      icon: 'amphora',
-      target: echoTarget,
-      mobilePlacement: 'top'
+      title: summonButton ? 'Summon a permanent demon' : 'Your Echo is in Collection',
+      body: summonButton ? 'Choose Summon Demon to unlock this species and rarity permanently.' : 'Open the highlighted demon to summon it with Echoes.',
+      progress, icon: 'sparkles', target: summonButton || `[data-echo-key="${key}"]`, mobilePlacement: 'top'
     };
   }
 
@@ -1199,7 +1069,7 @@
   function getContextualView() {
     const guides = model.tutorial?.guides || {};
     if (guides.skillTree?.pending && !guides.skillTree?.completed) return getSkillTreeGuideView();
-    if (!guides.summon?.completed && isRoute('/bag') && model.eventState.bag?.readyUnownedKey) {
+    if (!guides.summon?.completed && isRoute('/collection') && model.eventState.collection?.readyUnownedKey) {
       return getSummonGuideView();
     }
     if (!guides.training?.completed && isRoute('/collection') && model.eventState.collection?.trainableDemonId) {
@@ -1209,17 +1079,17 @@
   }
 
   function getSummonGuideView() {
-    const key = cssEscape(model.eventState.bag?.readyUnownedKey || '');
-    const summonAction = findVisibleElement(['#bagDetailModal.show [data-bag-action="summon"]']);
+    const key = cssEscape(model.eventState.collection?.readyUnownedKey || '');
+    const summonAction = findVisibleElement(['#demonDetailModal.show .collection-summon-action']);
     return {
       contextGuide: 'summon',
       title: summonAction ? 'Summon this demon permanently' : 'A new demon is ready to Summon',
       body: summonAction
         ? 'The meter is full. Summon consumes these Echoes and unlocks the demon.'
-        : 'Open the glowing stack to view its full Summon meter.',
+        : 'Open the highlighted demon to view its Echo progress.',
       progress: 'Summon tip',
       icon: 'sparkles',
-      target: summonAction || (key ? `[data-bag-key="${key}"]` : '#bagGrid'),
+      target: summonAction || (key ? `[data-echo-key="${key}"]` : '#collectionGrid'),
       mobilePlacement: 'top'
     };
   }
@@ -1852,13 +1722,6 @@
       model.localSteps.dungeonExtract = 1;
       scheduleRender();
     }
-    const summonedCollectionLink = target?.closest?.('#bagSummonModal a[href="/collection"]');
-    if (summonedCollectionLink && isCurrentCheckpoint('bag-echo')) {
-      event.preventDefault();
-      event.stopPropagation();
-      void advance('collection-training', { navigate: '/collection' });
-      return;
-    }
     const dungeonLink = target?.closest?.('[data-game-route="dungeon"], a[href="/dungeon"]');
     if (
       dungeonLink
@@ -1907,7 +1770,7 @@
   function getCheckpointRoute(checkpoint) {
     if (checkpoint.startsWith('world-')) return '/world';
     if (checkpoint.startsWith('dungeon-')) return '/dungeon';
-    if (checkpoint === 'bag-echo') return '/bag';
+    if (checkpoint === 'bag-echo') return '/collection';
     if (checkpoint === 'collection-training') return '/collection';
     return '';
   }

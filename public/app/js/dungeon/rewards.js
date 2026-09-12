@@ -67,7 +67,7 @@ function renderCashoutModal() {
             <span>${demonName}</span>
           ` : 'Run rewards only'}</h3>
           <p>${demon
-            ? 'One exact Echo will be secured in your Bag.'
+            ? 'One exact Echo will be secured in your Collection.'
             : 'You will leave with run rewards only.'}</p>
         </div>
         <div class="cashout-section-title">
@@ -146,7 +146,7 @@ function getRewardCandidateByKey(key) {
 }
 
 function getSelectedRewardCandidate() {
-  if (state.rewardDraftCandidate) return cloneRewardCandidate(state.rewardDraftCandidate);
+  if (state.rewardDraftCandidate && canRewardCandidate(state.rewardDraftCandidate)) return cloneRewardCandidate(state.rewardDraftCandidate);
 
   const candidate = getRewardCandidateByKey(state.selectedRewardDemonKey);
   if (!candidate && state.selectedRewardDemonKey) state.selectedRewardDemonKey = null;
@@ -167,7 +167,10 @@ function cloneRewardCandidate(candidate) {
 }
 
 function canRewardCandidate(candidate) {
-  if (candidate.demon?.collectionDemonId) return false;
+  if (dungeonActions.isDemonInCollection(candidate.demon)) return false;
+  const demon = candidate.demon;
+  const key = `echo:${Number(demon?.typeId || demon?.type_id || demon?.type)}:${String(demon?.rarity || '').toLowerCase()}`;
+  if ((state.collectionEchoes || []).some(echo => echo.itemKey === key && echo.summonReady)) return false;
   return candidate.source === 'reward' || candidate.source === 'team' || candidate.source === 'reserved';
 }
 
@@ -697,7 +700,7 @@ function getCashoutEchoMessage(result) {
   const rarity = capitalize(echo.rarity || 'common');
   const quantity = Math.max(1, Number(echo.quantity) || 1);
   const requirement = Math.max(1, Number(echo.summonRequirement) || 1);
-  return `${rarity} ${species} Echo secured in Bag (${Math.min(quantity, requirement)}/${requirement}).`;
+  return `${rarity} ${species} Echo secured in Collection (${Math.min(quantity, requirement)}/${requirement}).`;
 }
 
 export {

@@ -4,6 +4,7 @@ const { cleanPlayer } = require('./auth');
 const { simulateFight } = require('./combat');
 const { normalizeCombatBuffState, serializeCombatBuffState } = require('./combat-buffs');
 const { addEcho } = require('./echo-bag');
+const { SUMMON_REQUIREMENTS } = require('./echo-config');
 const { getDemonTypes } = require('./game-data');
 const { resolvePlayerCombatBuffState } = require('./player-combat-buffs');
 const { createRng } = require('./rng');
@@ -160,12 +161,16 @@ function resolveAnomalyRewardRolls(anomalyCount = 1, options = {}) {
     Math.floor(Number(anomalyCount) || 1)
   ));
   const preferredTypeIds = normalizePreferredAnomalyRewardTypeIds(options.candidateTypeIds);
+  const fallbackTypeIds = options.restrictToCandidates ? preferredTypeIds : [...ANOMALY_ABILITY_TYPE_IDS];
   let candidateTypeIds = preferredTypeIds.length
     ? [...preferredTypeIds]
-    : [...ANOMALY_ABILITY_TYPE_IDS];
+    : [...fallbackTypeIds];
   let prioritizingMissingSpecies = preferredTypeIds.length > 0;
 
   return Array.from({ length: rollCount }, (item, index) => {
+    if (!candidateTypeIds.length) {
+      return { roll: index + 1, echoAwarded: false, typeId: null, source: 'complete', chancePercent: ANOMALY_ECHO_CHANCE_PERCENT };
+    }
     const reward = resolveAnomalyReward({
       randomInt: options.randomInt,
       candidateTypeIds
@@ -174,7 +179,7 @@ function resolveAnomalyRewardRolls(anomalyCount = 1, options = {}) {
     if (reward.echoAwarded && prioritizingMissingSpecies) {
       candidateTypeIds = candidateTypeIds.filter((typeId) => typeId !== reward.typeId);
       if (!candidateTypeIds.length) {
-        candidateTypeIds = [...ANOMALY_ABILITY_TYPE_IDS];
+        candidateTypeIds = [...fallbackTypeIds];
         prioritizingMissingSpecies = false;
       }
     }
@@ -202,8 +207,12 @@ async function getUncollectedMythicTypeIds(playerId, queryable = db) {
   const [rows] = await queryable.query(
     `SELECT DISTINCT type_id AS typeId
      FROM player_demons
-     WHERE player_id = ? AND LOWER(rarity) = 'mythic'`,
-    [playerId]
+     WHERE player_id = ? AND LOWER(rarity) = 'mythic'
+     UNION
+     SELECT CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(item_key, ':', 2), ':', -1) AS UNSIGNED) AS typeId
+     FROM player_bag
+     WHERE player_id = ? AND item_type = 'echo' AND item_key LIKE 'echo:%:mythic' AND quantity >= ?`,
+    [playerId, playerId, SUMMON_REQUIREMENTS.mythic]
   );
   const collectedTypeIds = new Set(rows.map((row) => Number(row.typeId)));
 
@@ -507,7 +516,8 @@ async function resolveAnomalyFloor({
     const uncollectedMythicTypeIds = await getUncollectedMythicTypeIds(playerId, connection);
     const rewardRolls = resolveAnomalyRewardRolls(floor, {
       randomInt: options.randomInt || crypto.randomInt,
-      candidateTypeIds: uncollectedMythicTypeIds
+      candidateTypeIds: uncollectedMythicTypeIds,
+      restrictToCandidates: true
     });
     const echoes = [];
     for (const rewardRoll of rewardRolls) {
@@ -517,9 +527,16 @@ async function resolveAnomalyFloor({
         rarity: 'mythic'
       }, {
         queryable: connection,
-        natural: true
+        natural: true,
+        skipComplete: true
       });
-      echoes.push(echo);
+      if (echo) {
+        echoes.push(echo);
+      } else {
+        rewardRoll.echoAwarded = false;
+        rewardRoll.typeId = null;
+        rewardRoll.source = 'complete';
+      }
     }
     reward = {
       floor,
