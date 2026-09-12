@@ -65,7 +65,7 @@ import './bag-item-visuals.js';
   const WORLD_AMBUSH_DEFEAT_HOLD_MS = 140;
   const WORLD_TEAM_LIMIT = 6;
   const DEFAULT_DARKNESS_PORTAL_SUMMON_SOUL_COST_PER_DISTANCE = 2;
-  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-570e7495b84f';
+  const DEFAULT_PROFILE_IMAGE_URL = '/app/images/demons/map/1.webp?v=art-0c863f1a880b';
   const MERCHANT_FALLBACK_MOVE_SECONDS = 30 * 60;
   const MERCHANT_FALLBACK_BRIBE_COST = 50;
   const MERCHANT_OFFER_LIMIT = 4;
@@ -5685,7 +5685,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/assets/world/crowley.webp?v=art-570e7495b84f" alt="" width="512" height="512" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/crowley.webp?v=art-0c863f1a880b" alt="" width="512" height="512" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Traveling Merchant</span>
@@ -9607,7 +9607,7 @@ import './bag-item-visuals.js';
     return `
       <article class="world-sidebar-card world-merchant-card world-soul-font-card">
         <span class="world-merchant-card-portrait" aria-hidden="true">
-          <img src="/app/images/assets/world/soul-font.webp?v=art-570e7495b84f" alt="" width="768" height="768" loading="lazy" decoding="async">
+          <img src="/app/images/assets/world/soul-font.webp?v=art-0c863f1a880b" alt="" width="768" height="768" loading="lazy" decoding="async">
         </span>
         <span class="world-card-copy">
           <span class="world-card-kicker">Soul Offering</span>
@@ -10306,7 +10306,7 @@ import './bag-item-visuals.js';
             DEMON_MAP_ATLAS_FRAME_SIZE
           );
           textures.set(
-            `/app/images/demons/map/${id}.webp?v=art-570e7495b84f`,
+            `/app/images/demons/map/${id}.webp?v=art-0c863f1a880b`,
             new Pixi.Texture({ source: atlas.source, frame })
           );
         });

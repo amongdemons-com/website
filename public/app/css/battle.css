@@ -12,7 +12,7 @@ body.dungeon-page {
     grid-template-rows: minmax(0, 1fr);
     background: var(--page-bg-fade),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat,
+        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-0c863f1a880b") center / cover no-repeat,
         #071013;
     overscroll-behavior: none;
 }
@@ -2231,7 +2231,7 @@ body:not(.dungeon-page) {
     overflow: hidden;
     padding: 0;
     background: var(--page-bg-fade),
-        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat;
+        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-0c863f1a880b") center / cover no-repeat;
     background-attachment: scroll;
 }
 
@@ -2932,7 +2932,7 @@ body:not(.dungeon-page) {
         display: block;
         border-bottom: 1px solid #1b292b;
         background: var(--page-bg-fade),
-            url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover fixed no-repeat;
+            url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-0c863f1a880b") center / cover fixed no-repeat;
         background-attachment: fixed;
     }
 
@@ -3671,7 +3671,7 @@ body:not(.dungeon-page) > .navbar {
 .dungeon-battle-body {
     background: var(--page-bg-fade),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat;
+        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-0c863f1a880b") center / cover no-repeat;
     background-attachment: scroll;
 }
 
@@ -5952,7 +5952,7 @@ body.dungeon-page #runPanel {
 body.dungeon-page {
     background: var(--page-bg-fade),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat,
+        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-0c863f1a880b") center / cover no-repeat,
         #071013;
 }
 
@@ -5963,12 +5963,12 @@ body.dungeon-page .dungeon-battle-card {
 body.dungeon-page .dungeon-battle-body {
     background: var(--page-bg-fade),
         radial-gradient(circle at 50% 15%, rgba(111,214,189,0.08), transparent 22rem),
-        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2") center / cover no-repeat;
+        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-0c863f1a880b") center / cover no-repeat;
 }
 
 body.dungeon-page .dungeon-reward-strip {
     background-image: var(--page-bg-fade),
-        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-dungeon-cartoon-v2");
+        url("/app/images/assets/background/amongdemons_dungeon_cartoon_v2.png?v=art-0c863f1a880b");
 }
 
 /* Flat cartoon formation grid. Keep the live site's 3x3 structure and card

@@ -93,7 +93,10 @@
     "partialPixels": 5692,
     "unchangedOpaquePixels": 466557,
     "sourceSha256": "ad4e56330036d44e3314961025663d3968d9feba8e22e85f428a1eacfde2c0f5",
-    "outputSha256": "60a6bbb9b2acac92b99c08a5a926fb9e3af2e73823db2c9d7d68d6b7cac620af"
+    "outputSha256": "796f477eceff8bce828bf1ac46bee31f8b714498039d04818a1a8c6ffddac49d",
+    "extractedSha256": "60a6bbb9b2acac92b99c08a5a926fb9e3af2e73823db2c9d7d68d6b7cac620af",
+    "pixelRepair": "demon-detail-repairs.json",
+    "pixelRepairChangedPixels": 6686
   },
   {
     "id": 5,
@@ -1512,7 +1515,10 @@
     "partialPixels": 5930,
     "unchangedOpaquePixels": 680765,
     "sourceSha256": "3860e848db48979137b33afac776f81f5cfa7f8afb01d19999e5cd47b07ecb77",
-    "outputSha256": "43e3825f087570077a71164c0843d67c7583addbeb71071c37b7d3064970fb6f"
+    "outputSha256": "3cf3a0cd1725a35c7f3419f77a3b3107ce11401093f0ca0ff0109934849bf324",
+    "extractedSha256": "43e3825f087570077a71164c0843d67c7583addbeb71071c37b7d3064970fb6f",
+    "pixelRepair": "demon-detail-repairs.json",
+    "pixelRepairChangedPixels": 2823
   },
   {
     "id": 66,

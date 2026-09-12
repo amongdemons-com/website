@@ -31,7 +31,7 @@ const ANOMALY_COMPLETE_REWARD_LEVELS = 5;
 const ANOMALY_STATS = Object.freeze({ hp: 5_000, atk: 150, speed: 20 });
 const ANOMALY_ABILITY_TYPE_IDS = Object.freeze(Array.from({ length: 11 }, (_, index) => index + 1));
 const ANOMALY_FORMATION_SLOTS = Object.freeze([3, 0, 6, 4, 1, 7, 5, 2, 8]);
-const ANOMALY_IMAGE_URL = '/app/images/demons/anomaly.webp?v=art-570e7495b84f';
+const ANOMALY_IMAGE_URL = '/app/images/demons/anomaly.webp?v=art-0c863f1a880b';
 const ANOMALY_ACCENT_COLOR = '#a74fe0';
 const ANOMALY_RITUAL_ID_PATTERN = /^ritual:[0-9a-f-]{36}$/i;
 

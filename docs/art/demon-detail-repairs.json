@@ -1,0 +1,38 @@
+{
+  "repairs": [
+    {
+      "id": 4,
+      "species": "Boof Nitza",
+      "rarity": "epic",
+      "operation": "Recolor only the existing dark tooth interiors to warm ivory while retaining their silhouettes and mouth outlines.",
+      "changedPixelBounds": [
+        550,
+        440,
+        754,
+        532
+      ],
+      "changedPixels": 6686,
+      "alphaUnchanged": true,
+      "pixelsOutsideBoundsUnchanged": true,
+      "inputSha256": "60a6bbb9b2acac92b99c08a5a926fb9e3af2e73823db2c9d7d68d6b7cac620af",
+      "outputSha256": "796f477eceff8bce828bf1ac46bee31f8b714498039d04818a1a8c6ffddac49d"
+    },
+    {
+      "id": 65,
+      "species": "Vee Scol",
+      "rarity": "legendary",
+      "operation": "Recolor only the existing chest crystal from red-pink to legendary gold while retaining its shape, facets, outline, and highlights.",
+      "changedPixelBounds": [
+        640,
+        528,
+        707,
+        608
+      ],
+      "changedPixels": 2823,
+      "alphaUnchanged": true,
+      "pixelsOutsideBoundsUnchanged": true,
+      "inputSha256": "43e3825f087570077a71164c0843d67c7583addbeb71071c37b7d3064970fb6f",
+      "outputSha256": "3cf3a0cd1725a35c7f3419f77a3b3107ce11401093f0ca0ff0109934849bf324"
+    }
+  ]
+}

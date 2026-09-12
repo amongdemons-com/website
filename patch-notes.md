@@ -9,7 +9,8 @@
 - Replaced all 66 demon variants with their approved cartoon artwork. Every
   silhouette is now transparent, centered without stretching or cropping, and
   keeps its complete wings, horns, claws, flames, and puddles visible. Vi'Zel
-  now carries its approved yellow and gold accents.
+  now carries its approved yellow and gold accents, Legendary Vee Scol's chest
+  crystal is properly golden, and Epic Boof Nitza's teeth are clearly defined.
 - Refreshed the Home, Bag, Camp, Collection, Dungeon, Rankings, and Summoning
   environments, together with new artwork for Crowley, the Whispering Well,
   and The Anomaly.
