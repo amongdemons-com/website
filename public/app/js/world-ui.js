@@ -7152,7 +7152,7 @@ import './bag-item-visuals.js';
       return;
     }
 
-    const stock = merchant?.itemSlots || [];
+    const stock = (merchant?.itemSlots || []).filter((item) => !item.complete);
     elements.worldMerchantStock.innerHTML = stock.length
       ? stock.map(renderWorldMerchantItem).join('')
       : '<p class="world-empty-text">No wares survived this road.</p>';

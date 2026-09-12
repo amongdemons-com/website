@@ -107,7 +107,7 @@ async function getWorldMerchantForPlayer(playerId, options = {}) {
     rerollCount,
     bribeCost: getMerchantBribeCost(playerLevel),
     itemSlots: buildMerchantStock(playerId, merchant.spawnId, catalog, purchasedSlots, rerollCount, playerLevel)
-      .map(item => ({ ...item, complete: completed.has(item.itemKey) }))
+      .filter(item => !completed.has(item.itemKey))
   };
 }
 

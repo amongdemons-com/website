@@ -23,68 +23,253 @@
     cursor: pointer;
 }
 
-.collection-missing-echo-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    color: #8de7ff;
-    border-color: #2a4850;
-    background: #0b2b33;
-}
-
-.collection-missing-echo-label strong {
-    display: block;
-    color: #b3ffce;
-    font-size: 0.7rem;
-}
-
-.collection-missing-echo-label.is-ready {
-    border-color: #55b67f;
-    background: #113429;
-}
-
-.collection-echo-visual {
-    display: inline-flex;
-    flex: 0 0 2.6rem;
-    width: 2.6rem;
-    height: 2.6rem;
-    position: relative;
-}
-
 .collection-echo-progress-heading {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.65rem;
     color: #8de7ff;
+    text-align: center;
 }
 
 .collection-echo-progress progress {
+    appearance: none;
     display: block;
+    box-sizing: border-box;
     width: 100%;
-    height: 0.65rem;
+    height: 1.9rem;
     margin: 0.5rem 0;
-    accent-color: #55b67f;
+    border: 1px solid color-mix(in srgb, var(--rarity-color, #55b67f) 64%, #263438);
+    border-radius: 999px;
+    background: #101a1d;
+    overflow: hidden;
+    accent-color: var(--rarity-color, #55b67f);
+}
+
+.collection-echo-progress progress::-webkit-progress-bar {
+    border-radius: inherit;
+    background: #101a1d;
+}
+
+.collection-echo-progress progress::-webkit-progress-value {
+    border-radius: 999px 0 0 999px;
+    background: var(--rarity-color, #55b67f);
+}
+
+.collection-echo-progress progress::-moz-progress-bar {
+    border-radius: 999px 0 0 999px;
+    background: var(--rarity-color, #55b67f);
 }
 
 .collection-echo-progress p {
     margin: 0.5rem 0;
     font-size: 0.8rem;
     line-height: 1.4;
+    text-align: center;
+}
+
+.demon-detail-modal:has(.collection-echo-progress) .demon-detail-panel {
+    text-align: center;
+}
+
+.demon-detail-modal:has(.collection-echo-progress) .demon-detail-heading {
+    position: relative;
+    justify-content: space-between;
+    text-align: left;
+}
+
+.demon-detail-modal:has(.collection-echo-progress) .demon-detail-heading > div {
+    flex: 1 1 auto;
+    text-align: left;
+}
+
+.demon-detail-modal:has(.collection-echo-progress) .demon-detail-close {
+    position: absolute;
+    top: 1.15rem;
+    right: 1.25rem;
+}
+
+.demon-detail-modal:has(.collection-echo-progress) .demon-detail-stats {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.demon-detail-modal:has(.collection-echo-progress) .demon-detail-meta {
+    text-align: center;
 }
 
 .demon-detail-actions:has(.collection-summon-action) .demon-detail-action-lead {
     display: block;
     flex-basis: 100%;
     width: 100%;
+    text-align: center;
 }
 
-.demon-detail-art.is-summoning {
-    animation: collection-reinforcement-pulse 0.8s ease-in-out infinite;
+.demon-detail-actions:has(.collection-summon-action) {
+    justify-content: center;
+    text-align: center;
+}
+
+.demon-detail-modal:has(.collection-echo-progress) .demon-detail-art img {
+    object-position: center center;
+}
+
+.collection-summon-ritual {
+    position: fixed;
+    z-index: 1130;
+    inset: 0;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.collection-summon-ritual::before,
+.collection-summon-ritual::after {
+    position: absolute;
+    left: var(--summon-core-x, 50%);
+    top: var(--summon-core-y, 50%);
+    content: '';
+    pointer-events: none;
+}
+
+.collection-summon-ritual::before {
+    width: min(35rem, 115%);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, color-mix(in srgb, var(--summon-rarity, #8de7ff) 36%, white) 0 3%, transparent 16%),
+        radial-gradient(circle, color-mix(in srgb, var(--summon-rarity, #8de7ff) 26%, transparent) 0 22%, transparent 58%);
+    mix-blend-mode: screen;
+    transform: translate(-50%, -50%);
+    animation: collection-summon-vortex-pulse 3000ms ease-out both;
+}
+
+.collection-summon-ritual::after {
+    width: min(16rem, 58%);
+    aspect-ratio: 1;
+    border: 2px solid color-mix(in srgb, var(--summon-rarity, #8de7ff) 68%, white);
+    border-radius: 50%;
+    box-shadow:
+        0 0 28px color-mix(in srgb, var(--summon-rarity, #8de7ff) 55%, transparent),
+        inset 0 0 26px color-mix(in srgb, var(--summon-rarity, #8de7ff) 34%, transparent);
+    transform: translate(-50%, -50%) scale(1.45);
+    animation: collection-summon-ring-collapse 3000ms cubic-bezier(0.16, 0.84, 0.18, 1) both;
+}
+
+.collection-summon-vortex,
+.collection-summon-core {
+    position: absolute;
+    inset: 0;
+}
+
+.collection-summon-particle {
+    position: absolute;
+    left: var(--summon-core-x, 50%);
+    top: var(--summon-core-y, 50%);
+    width: calc(0.82rem * var(--size, 1));
+    height: calc(0.82rem * var(--size, 1));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--summon-rarity, #8de7ff) 62%, #55ffff);
+    box-shadow:
+        0 0 calc(13px * var(--size, 1)) color-mix(in srgb, var(--summon-rarity, #8de7ff) 70%, #55ffff),
+        0 0 calc(25px * var(--size, 1)) color-mix(in srgb, var(--summon-rarity, #8de7ff) 38%, transparent);
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(var(--sx), var(--sy)) scale(calc(var(--size, 1) * 0.55));
+    animation: collection-summon-particle-converge var(--duration, 3600ms) cubic-bezier(0.14, 0.92, 0.16, 1) both;
+    animation-delay: var(--delay, 0ms);
+}
+
+.collection-summon-core {
+    inset: auto;
+    left: var(--summon-core-x, 50%);
+    top: var(--summon-core-y, 50%);
+    width: min(14rem, 52%);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, white 0 5%, color-mix(in srgb, var(--summon-rarity, #8de7ff) 58%, #55ffff) 8% 27%, transparent 64%);
+    box-shadow:
+        0 0 50px color-mix(in srgb, var(--summon-rarity, #8de7ff) 76%, #55ffff),
+        0 0 92px color-mix(in srgb, var(--summon-rarity, #8de7ff) 42%, transparent);
+    mix-blend-mode: screen;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.08);
+    animation: collection-summon-core-impact 3000ms ease-out both;
+}
+
+.demon-detail-art.is-summoning img {
+    animation: collection-summon-vessel-feed 3000ms ease-out both;
+}
+
+@keyframes collection-summon-particle-converge {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(var(--sx), var(--sy)) scale(calc(var(--size, 1) * 0.55)) rotate(0deg);
+    }
+    12% {
+        opacity: 1;
+    }
+    68% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translate(0, 0) scale(calc(var(--size, 1) * 1.22)) rotate(var(--spin, 0deg));
+    }
+    84% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translate(0, 0) scale(calc(var(--size, 1) * 0.34)) rotate(var(--spin, 0deg));
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translate(0, 0) scale(0) rotate(var(--spin, 0deg));
+    }
+}
+
+@keyframes collection-summon-vortex-pulse {
+    0% { opacity: 0.16; transform: translate(-50%, -50%) scale(1.15); }
+    58% { opacity: 0.82; transform: translate(-50%, -50%) scale(0.94); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+}
+
+@keyframes collection-summon-ring-collapse {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(1.5) rotate(0deg); }
+    16% { opacity: 0.72; }
+    72% { opacity: 1; transform: translate(-50%, -50%) scale(0.5) rotate(150deg); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.08) rotate(210deg); }
+}
+
+@keyframes collection-summon-core-impact {
+    0%, 70% { opacity: 0; transform: translate(-50%, -50%) scale(0.08); }
+    82% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+}
+
+@keyframes collection-summon-vessel-feed {
+    0%, 100% {
+        transform: scale(1);
+        filter: none;
+    }
+    18%, 68% {
+        transform: scale(1.08);
+        filter: brightness(1.24) saturate(1.3);
+    }
+    82% {
+        transform: scale(0.94);
+        filter: brightness(1.7) saturate(0.72);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .demon-detail-art.is-summoning { animation: none; }
+    .collection-summon-ritual {
+        display: none;
+    }
+
+    .demon-detail-art.is-summoning img {
+        animation: none;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .demon-detail-modal:has(.collection-echo-progress) .demon-detail-close {
+        top: 1rem;
+        right: 0.75rem;
+    }
 }
 
 .collection-reinforcement-placeholder-icon {
@@ -641,49 +826,8 @@ body.collection-page {
     background: transparent;
 }
 
-.collection-missing-card {
-    --rarity-color: rgba(161,212,201,0.45) !important;
-    border-color: rgba(161,212,201,0.14);
-    border-style: dashed;
-    opacity: 0.62;
-    filter: grayscale(0.95);
+.collection-page .collection-missing-card {
     cursor: pointer;
-}
-
-.collection-missing-card .dungeon-demon-rarity-gem {
-    opacity: 0.35;
-}
-
-.collection-missing-card img {
-    opacity: 0.7;
-    filter: grayscale(1) contrast(0.78) brightness(0.78);
-}
-
-.collection-missing-card.has-echoes {
-    opacity: 1;
-    filter: none;
-}
-
-.collection-missing-card.has-echoes .collection-echo-visual img {
-    opacity: 1;
-    filter: none;
-}
-
-.collection-missing-card.has-echoes .collection-missing-echo-label {
-    color: #8de7ff;
-}
-
-.collection-missing-card:has(.collection-missing-echo-label.is-ready) {
-    border-color: #55b67f;
-}
-
-.collection-missing-label {
-    margin-top: 0.45rem;
-    color: #98a2a2;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-align: center;
 }
 
 .collection-training-badge {

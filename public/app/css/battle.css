@@ -614,6 +614,106 @@ body:not(.dungeon-page) {
     white-space: nowrap;
 }
 
+.collection-missing-label.outline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(70%, 6.25rem);
+    min-width: 4.6rem;
+    min-height: 1.65rem;
+    margin: 0.45rem auto 0;
+    padding: 0.18rem 0.5rem;
+    border: 1px solid rgba(190, 207, 219, 0.72);
+    border-radius: 0.55rem;
+    background: #0a151f;
+    color: #e1e8ec;
+    font-size: 0.82rem;
+    font-weight: normal;
+    line-height: 1;
+    text-align: center;
+    box-shadow: inset 0 0 0 1px rgba(80, 105, 122, 0.28);
+}
+
+.collection-missing-card {
+    --rarity-color: rgba(161, 212, 201, 0.45) !important;
+    border-color: rgba(126, 157, 178, 0.46);
+    border-style: solid;
+    border-radius: 0;
+    background: #071019;
+    box-shadow: inset 0 0 0 1px rgba(154, 181, 199, 0.12);
+    opacity: 1;
+    filter: none;
+}
+
+.collection-missing-card .dungeon-demon-rarity-gem {
+    display: none;
+}
+
+.collection-missing-card .dungeon-demon-card-image {
+    background:
+        linear-gradient(180deg, rgba(5, 14, 25, 0.68), rgba(5, 14, 25, 0.76) 54%, rgba(3, 9, 15, 0.96)),
+        var(--demon-card-backdrop) center / cover no-repeat;
+}
+
+.collection-missing-card img {
+    opacity: 0.92;
+    filter: saturate(0.28) contrast(1.08) brightness(0.88);
+}
+
+.collection-missing-label {
+    margin-top: 0.45rem;
+    color: #d5dde1;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-align: center;
+}
+
+.collection-missing-card .dungeon-demon-card-body {
+    background: linear-gradient(to top, rgba(3, 9, 15, 0.98), rgba(4, 12, 21, 0.82) 58%, transparent);
+}
+
+.collection-missing-card .dungeon-demon-card-title {
+    display: flex;
+}
+
+.collection-missing-card .dungeon-demon-card-title .text-white {
+    color: #d9e0e4 !important;
+    text-shadow: 0 1px 0 #05090d;
+}
+
+.collection-lock-indicator {
+    position: absolute;
+    top: 0.34rem;
+    left: 0.34rem;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid rgba(142, 171, 193, 0.5);
+    border-radius: 4px;
+    background: #0b1722;
+    color: #d8e2e8;
+    box-shadow: inset 0 0 0 1px rgba(57, 79, 95, 0.48);
+    pointer-events: none;
+}
+
+.collection-lock-indicator svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.collection-lock-indicator circle {
+    fill: currentColor;
+    stroke: none;
+}
+
 .dungeon-demon-card.is-attacking {
     border-color: var(--combat-color, #b69219);
     box-shadow: none;
@@ -742,43 +842,6 @@ body:not(.dungeon-page) {
     aspect-ratio: 1 / 1;
     flex: none;
     overflow: hidden;
-}
-
-.dungeon-end-echo {
-    position: relative;
-    display: grid;
-    aspect-ratio: 1 / 1;
-    place-items: center;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--item-rarity) 68%, #9cb9be);
-    border-radius: 6px;
-    background:
-        #040d10;
-    box-shadow:
-        none;
-}
-
-.dungeon-end-echo-visual {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    background: color-mix(in srgb, var(--item-rarity) 20%, var(--ad-bg, #071013));
-}
-
-.dungeon-end-echo-visual .bag-item-renderer {
-    display: grid;
-    width: 75%;
-    height: 75%;
-    place-items: center;
-    pointer-events: none;
-}
-
-.empty-state .dungeon-end-echo-visual .echo-item-shell {
-    width: 100%;
-    max-width: none;
-    opacity: 1;
 }
 
 .dungeon-end-rewards {

@@ -6,8 +6,15 @@ import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, 
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, setElementHtml, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const audio = window.AmongDemons.audio;
-const renderBagItemVisual = window.AmongDemons.bagVisuals?.renderItemVisual
-  || (() => '<span class="bag-item-renderer bag-unknown-visual" aria-hidden="true"></span>');
+const DUNGEON_LOCK_ICON = `
+  <span class="collection-lock-indicator" aria-hidden="true">
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+      <rect x="5" y="10" width="14" height="10" rx="1.5"></rect>
+      <circle cx="12" cy="15" r="1.1"></circle>
+      <path d="M12 16.2v1.8"></path>
+    </svg>
+  </span>`;
 
 const battle = (...args) => dungeonActions.battle(...args);
 const bindCollectionReinforcementPlaceholders = (...args) => dungeonActions.bindCollectionReinforcementPlaceholders(...args);
@@ -338,14 +345,8 @@ function renderDungeonExtractionScreen(summary = {}) {
         ` : ''}
         ${echo ? `
           <div class="dungeon-extraction-prize">
-            <div
-              class="dungeon-end-demon dungeon-end-echo"
-              style="--item-rarity: ${escapeHtml(getRarityColor(echo.rarity || 'common'))}"
-              aria-label="Extracted ${escapeHtml(echoName)}"
-            >
-              <span class="dungeon-end-echo-visual">
-                ${renderBagItemVisual(echo, { context: 'slot' })}
-              </span>
+            <div class="dungeon-end-demon" aria-label="Extracted ${escapeHtml(echoName)}">
+              ${renderExtractionEchoCard(echo)}
             </div>
             <span class="dungeon-extraction-prize-label">${renderIcon('sparkles')} ${escapeHtml(echoName)} secured</span>
           </div>
@@ -383,6 +384,37 @@ function renderDungeonExtractionScreen(summary = {}) {
       </section>
     </div>
   `;
+}
+
+function renderExtractionEchoCard(echo = {}) {
+  const rarity = String(echo.rarity || 'common').toLowerCase();
+  const species = echo.species || 'Demon';
+  const requirement = Math.max(1, Number(echo.summonRequirement) || 1);
+  const progress = Math.min(
+    requirement,
+    Math.max(0, Number(echo.summonProgress ?? echo.quantity) || 0)
+  );
+  const demon = {
+    ...echo,
+    typeId: Number(echo.typeId || echo.type_id) || 0,
+    rarity,
+    species,
+    name: species
+  };
+
+  return renderDungeonDemonCard(demon, {
+    className: 'dungeon-end-demon-card collection-missing-card',
+    hideRarity: true,
+    showStats: false,
+    imageLoading: 'eager',
+    imageAlt: `${capitalize(rarity)} ${species}`,
+    overlayHtml: DUNGEON_LOCK_ICON,
+    footerHtml: `<div class="collection-missing-label outline">${escapeHtml(`${progress} / ${requirement}`)}</div>`,
+    suppressCollectionMissingTag: true,
+    attributes: {
+      'data-echo-key': echo.itemKey || ''
+    }
+  });
 }
 
 function renderDungeonDefeatScreen(summary = {}) {

@@ -15,10 +15,20 @@
     ['atk', 'Attack', 'attack'],
     ['speed', 'Speed', 'speed']
   ];
+  const SUMMON_REVEAL_DELAY_MS = 3000;
   const TRAINING_REVEAL_DELAY_MS = 2850;
   const TRAINING_BURST_CLEANUP_MS = 5200;
   const EAGER_CARD_IMAGE_COUNT = 24;
   const HIGH_PRIORITY_CARD_IMAGE_COUNT = 6;
+  const COLLECTION_LOCK_ICON = `
+    <span class="collection-lock-indicator" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+        <rect x="5" y="10" width="14" height="10" rx="1.5"></rect>
+        <circle cx="12" cy="15" r="1.1"></circle>
+        <path d="M12 16.2v1.8"></path>
+      </svg>
+    </span>`;
   const RARITY_ORDER = {
     common: 1,
     uncommon: 2,
@@ -28,6 +38,14 @@
     mythic: 6
   };
   const RARITIES = Object.keys(RARITY_ORDER);
+  const DEFAULT_ECHO_REQUIREMENTS = {
+    common: 1,
+    uncommon: 2,
+    rare: 3,
+    epic: 5,
+    legendary: 8,
+    mythic: 12
+  };
   const state = {
     player: window.AmongDemons.getSession().player || null,
     collection: [],
@@ -284,17 +302,18 @@
     const typeName = getTypeName(demon.typeId);
     const rarity = capitalize(demon.rarity);
     const echo = getEchoItemForDemon(demon);
-    const footer = echo
-      ? `<div class="collection-missing-label collection-missing-echo-label ${echo.summonReady ? 'is-ready' : ''}">${renderEchoVisual(echo)}<span>${escapeHtml(`${echo.summonProgress}/${echo.summonRequirement} Echoes`)}${echo.summonReady ? '<strong>Summon</strong>' : ''}</span></div>`
-      : '<div class="collection-missing-label">Missing</div>';
+    const requirement = echo?.summonRequirement || DEFAULT_ECHO_REQUIREMENTS[String(demon.rarity || '').toLowerCase()] || '—';
+    const progress = echo ? echo.summonProgress : 0;
+    const footer = `<div class="collection-missing-label outline">${escapeHtml(`${progress} / ${requirement}`)}</div>`;
 
     return `
       <div class="collection-grid-item collection-grid-item-missing">
         ${renderSharedDemonCard(withTypeName(demon), {
-          className: `collection-demon-card collection-missing-card ${echo?.quantity > 0 ? 'has-echoes' : ''}`,
+          className: 'collection-demon-card collection-missing-card',
           ...getCollectionCardImageOptions(demon, index),
           showStats: false,
           footerHtml: footer,
+          overlayHtml: COLLECTION_LOCK_ICON,
           attributes: {
             'data-demon-id': demon.id,
             'data-echo-key': echo?.itemKey || '',
@@ -466,27 +485,30 @@
     if (demon.isMissing) {
       const echo = getEchoItemForDemon(demon);
       return [
-        ...(echo ? [{
-          label: state.pendingEchoKey === echo.itemKey && state.pendingEchoAction === 'summon' ? 'Summoning...' : 'Summon Demon',
-          className: 'collection-summon-action',
-          variant: echo.summonReady ? 'primary' : 'outline-info',
-          disabled: !echo.summonReady || Boolean(state.pendingEchoKey),
-          onClick: () => performEchoAction(demon, 'summon')
-        }, ...(echo.canUnravel ? [{
-          label: state.pendingEchoAction === 'unravel' ? 'Unraveling...' : state.confirmingUnravelKey === echo.itemKey ? 'Confirm Unravel' : 'Unravel Echo',
-          variant: 'outline-danger',
-          disabled: Boolean(state.pendingEchoKey) || Number(state.player?.level) >= 666,
-          onClick: () => {
-            if (state.confirmingUnravelKey === echo.itemKey) return performEchoAction(demon, 'unravel');
-            state.confirmingUnravelKey = echo.itemKey;
-            openCollectionDemonDetails(demon);
-          }
-        }] : [])] : []),
         {
-          label: 'Enter Dungeon',
+          label: 'Get Echoes',
           variant: echo ? 'outline-light' : 'primary',
           href: '/dungeon'
-        }
+        },
+        ...(echo ? [
+          {
+            label: state.pendingEchoKey === echo.itemKey && state.pendingEchoAction === 'summon' ? 'Summoning...' : 'Summon',
+            className: 'collection-summon-action',
+            variant: 'primary',
+            disabled: !echo.summonReady || Boolean(state.pendingEchoKey),
+            onClick: () => performEchoAction(demon, 'summon')
+          },
+          ...(echo.canUnravel ? [{
+            label: state.pendingEchoAction === 'unravel' ? 'Unraveling...' : state.confirmingUnravelKey === echo.itemKey ? 'Confirm Unravel' : 'Unravel Echo',
+            variant: 'outline-danger',
+            disabled: Boolean(state.pendingEchoKey) || Number(state.player?.level) >= 666,
+            onClick: () => {
+              if (state.confirmingUnravelKey === echo.itemKey) return performEchoAction(demon, 'unravel');
+              state.confirmingUnravelKey = echo.itemKey;
+              openCollectionDemonDetails(demon);
+            }
+          }] : [])
+        ] : [])
       ];
     }
 
@@ -498,15 +520,11 @@
     const rarity = String(demon?.rarity || '').toLowerCase();
     if (!typeId || !rarity) return null;
     const itemKey = `echo:${typeId}:${rarity}`;
-    const requirement = state.echoConfig.summonRequirements?.[rarity];
+    const requirement = state.echoConfig.summonRequirements?.[rarity] || DEFAULT_ECHO_REQUIREMENTS[rarity];
     return state.echoItems.get(itemKey) || (requirement ? {
       itemKey, itemType: 'echo', typeId, rarity, quantity: 0,
       summonProgress: 0, summonRequirement: requirement, summonReady: false
     } : null);
-  }
-
-  function renderEchoVisual(echo) {
-    return `<span class="collection-echo-visual">${window.AmongDemons.bagVisuals?.renderItemVisual?.(echo, { context: 'slot' }) || ''}</span>`;
   }
 
   function renderEchoProgress(demon) {
@@ -514,7 +532,7 @@
     if (!echo) return '<p>Extract Echoes of this species and rarity to summon this demon.</p>';
     const percent = Math.round(echo.summonProgress / echo.summonRequirement * 100);
     return `<div class="collection-echo-progress" role="status">
-      <div class="collection-echo-progress-heading">${renderEchoVisual(echo)}<strong>${echo.summonProgress} / ${echo.summonRequirement} Echoes</strong></div>
+      <div class="collection-echo-progress-heading"><strong>${echo.summonProgress} / ${echo.summonRequirement} Echoes</strong></div>
       <progress max="${echo.summonRequirement}" value="${echo.summonProgress}" aria-label="Echo progress: ${percent}%"></progress>
       <p>${echo.summonReady ? 'Ready to summon permanently.' : `Gather ${echo.summonRequirement} Echoes of this exact species and rarity to summon permanently.`}</p>
       ${state.confirmingUnravelKey === echo.itemKey ? '<p class="text-warning">This permanently consumes one Mythic Echo to gain up to 5 hunter levels and reduces your summon progress. Choose Confirm Unravel to continue.</p>' : ''}
@@ -527,15 +545,18 @@
     state.pendingEchoKey = echo.itemKey;
     state.pendingEchoAction = action;
     openCollectionDemonDetails(demon);
-    const art = document.querySelector('#demonDetailModal .demon-detail-art');
+    const summonDelay = action === 'summon' ? startSummonRitual(demon) : 0;
     if (action === 'summon') {
-      art?.classList.add('is-summoning');
       audio?.play('sfx.progression.summonAttempt', { volume: 0.86 });
     }
     try {
-      const result = await api(`/api/collection/echoes/${action}`, {
+      const request = api(`/api/collection/echoes/${action}`, {
         method: 'POST', body: { typeId: echo.typeId, rarity: echo.rarity }
       });
+      const result = action === 'summon'
+        ? (await Promise.all([request, wait(summonDelay)]))[0]
+        : await request;
+      if (action === 'summon') stopSummonRitual();
       state.echoItems = new Map((result.echoes?.items || []).map(item => [item.itemKey, item]));
       syncPlayer(result.player);
       if (result.demon) replaceCollectionDemon(result.demon);
@@ -559,8 +580,59 @@
     } finally {
       state.pendingEchoKey = null;
       state.pendingEchoAction = null;
-      art?.classList.remove('is-summoning');
+      stopSummonRitual();
     }
+  }
+
+  function startSummonRitual(demon = {}) {
+    stopSummonRitual();
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return 0;
+
+    const target = document.querySelector('#demonDetailModal.show .demon-detail-art');
+    if (!target) return 0;
+
+    const targetRect = target.getBoundingClientRect();
+    const viewportRect = { width: window.innerWidth, height: window.innerHeight };
+    const coreX = targetRect.left + (targetRect.width / 2);
+    const coreY = targetRect.top + (targetRect.height / 2);
+    const ritual = document.createElement('div');
+    ritual.className = 'collection-summon-ritual';
+    ritual.setAttribute('aria-hidden', 'true');
+    ritual.style.setProperty('--summon-rarity', getRarityColor(demon.rarity));
+    ritual.style.setProperty('--summon-core-x', `${coreX.toFixed(1)}px`);
+    ritual.style.setProperty('--summon-core-y', `${coreY.toFixed(1)}px`);
+    ritual.innerHTML = `
+      <div class="collection-summon-vortex">${renderSummonParticles(viewportRect)}</div>
+      <div class="collection-summon-core"></div>
+    `;
+
+    target.classList.add('is-summoning');
+    document.body.appendChild(ritual);
+    return SUMMON_REVEAL_DELAY_MS;
+  }
+
+  function stopSummonRitual() {
+    document.querySelectorAll('#demonDetailModal .demon-detail-art.is-summoning')
+      .forEach((art) => art.classList.remove('is-summoning'));
+    document.querySelectorAll('body > .collection-summon-ritual').forEach((ritual) => ritual.remove());
+  }
+
+  function renderSummonParticles(rect) {
+    const width = Math.max(360, Number(rect?.width) || 480);
+    const height = Math.max(440, Number(rect?.height) || 620);
+    const count = 78;
+
+    return Array.from({ length: count }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = randomBetween(0.52, 0.82);
+      const sx = Math.cos(angle) * width * radius;
+      const sy = Math.sin(angle) * height * radius;
+      const delay = randomBetween(0, 560);
+      const duration = (SUMMON_REVEAL_DELAY_MS - delay) / 0.68;
+      const size = randomBetween(0.55, 1.18);
+      const spin = randomBetween(-260, 260);
+      return `<span class="collection-summon-particle" style="--sx:${sx.toFixed(1)}px;--sy:${sy.toFixed(1)}px;--delay:${delay.toFixed(0)}ms;--duration:${duration.toFixed(0)}ms;--size:${size.toFixed(2)};--spin:${spin.toFixed(0)}deg"></span>`;
+    }).join('');
   }
 
   function getTrainingActions(demon) {
@@ -1269,6 +1341,11 @@
   function formatNumber(value) {
     const number = Number(value);
     return Number.isFinite(number) ? number.toLocaleString() : String(value || '');
+  }
+
+  function wait(milliseconds) {
+    const delay = Math.max(0, Number(milliseconds) || 0);
+    return delay ? new Promise((resolve) => window.setTimeout(resolve, delay)) : Promise.resolve();
   }
 
   function randomBetween(min, max) {
