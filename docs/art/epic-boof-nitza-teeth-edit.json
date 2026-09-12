@@ -1,0 +1,78 @@
+{
+  "date": "2026-09-12",
+  "tool": "built-in image_gen edit",
+  "input": "public/app/images/demons/4.png",
+  "prompt": "Use case: precise-object-edit.\nImage 1 is the EDIT TARGET: the existing transparent Among Demons Epic Boof Nitza game sprite, 1254 x 1254 pixels.\nMake a strictly local recolor of ONLY the existing dark blue triangular teeth inside the mouth to warm pale ivory (#F4E5BC). Keep every existing tooth's shape, size, position and number exactly as drawn; keep the black gaps between the teeth and dark mouth interior. The dark blue triangular tooth interiors are the only requested correction. Preserve the mouth outline, grin and jaw.\nDo not recreate, redraw, redesign or reinterpret this demon. Preserve everything else EXACTLY: blue skin and fur, gold eyes and black pupils, eyebrows, horns, purple pointed bib, face and body outlines, stance, arms, legs, hands and claws, color shading, original position and scale on the 1254 x 1254 canvas. Keep the original genuinely transparent alpha background with no backdrop, checkerboard, shadow or new objects. No lettering. Output one edited image, same framing and dimensions. Change only the teeth.",
+  "integration": "Only ivory teeth from the output were composited onto the original sprite; original alpha and every pixel outside the tooth edit were retained.",
+  "validation": {
+    "changedPixels": 5542,
+    "alphaUnchanged": true,
+    "pixelsOutsideTeethBoundsUnchanged": true,
+    "checks": [
+      {
+        "file": "demons/4.png",
+        "width": 1254,
+        "height": 1254,
+        "alpha": true,
+        "transparentPixels": 1100374,
+        "bytes": 852912,
+        "sha256": "9fe6fece3311dca25b0629ea8b21ffa4cd7a9e9cbfa88c2462f356dd791afc82"
+      },
+      {
+        "file": "demons/portrait/4.webp",
+        "width": 512,
+        "height": 512,
+        "alpha": true,
+        "transparentPixels": 178602,
+        "contentBounds": {
+          "left": 66,
+          "top": 27,
+          "right": 445,
+          "bottom": 484,
+          "width": 380,
+          "height": 458,
+          "components": 1,
+          "ignoredPixels": 0
+        },
+        "bytes": 30968,
+        "sha256": "2bb208731eefb18ad207bae95d678e8c9edb781fd35574722141df5ba3dfe02e"
+      },
+      {
+        "file": "demons/map/4.webp",
+        "width": 256,
+        "height": 256,
+        "alpha": true,
+        "transparentPixels": 43449,
+        "contentBounds": {
+          "left": 33,
+          "top": 13,
+          "right": 222,
+          "bottom": 242,
+          "width": 190,
+          "height": 230,
+          "components": 1,
+          "ignoredPixels": 0
+        },
+        "bytes": 14120,
+        "sha256": "b4f738058fcb3d99f5456f330a9ccde1358a96cb72c63f8175b248eb5e3d2b83"
+      },
+      {
+        "file": "demons/map-atlas.webp",
+        "width": 1152,
+        "height": 1152,
+        "alpha": true,
+        "transparentPixels": 710014,
+        "bytes": 308090,
+        "sha256": "6dc3d587eccf19139917a5c965419880fa9c5dd2072bcad6093cf0e1f829c952"
+      }
+    ],
+    "updatesPage": "HTTP 200; all 21 Patch 7 points match Markdown and contain one sentence; Patches 1-6 unchanged.",
+    "browserBuild": "passed",
+    "testSuite": {
+      "passed": 349,
+      "failed": 6,
+      "note": "The six Dungeon styling failures also reproduce using the original HEAD source files."
+    },
+    "fullAssetVerification": "Demon assets passed; full check stopped at the pre-existing missing assets/background/amongdemons_dungeon.png reference."
+  }
+}

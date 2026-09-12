@@ -1,87 +1,31 @@
 # Patch Notes
 
-<!-- Keep notes short, simple, and player-friendly. Skip tests and technical details. -->
+<!-- Keep each point to one short, player-focused sentence; skip technical details and UI fixes caused by the redesign. -->
 
 ## Patch 7 (Current)
 
 <!-- Add future player-facing changes for Patch 7 below this line. -->
 
-- Replaced all 66 demon variants with their approved cartoon artwork. Every
-  silhouette is now transparent, centered without stretching or cropping, and
-  keeps its complete wings, horns, claws, flames, and puddles visible. Vi'Zel
-  now carries its approved yellow and gold accents, Legendary Vee Scol's chest
-  crystal is properly golden, and Epic Boof Nitza's teeth are clearly defined.
-- Refreshed the Home, Bag, Camp, Collection, Dungeon, Rankings, and Summoning
-  environments, together with new artwork for Crowley, the Whispering Well,
-  and The Anomaly.
-- Demon cards, portraits, boss formations, and World markers now use colorful
-  type-specific swirl backdrops. Rarity is shown with outlined triangle,
-  square, diamond, pentagon, hexagon, and star emblems instead of a colored
-  card frame or glow.
-- Added distinct illustrated Echo vessels for all eleven demon types, with
-  restrained animated essence that leaves their symbols and frames clear.
-  Goh Loomb now uses amber and Baobaw violet across Echo and attack effects.
-- Reworked the shared interface with flatter, more readable panels and
-  controls, refreshed page colors and backgrounds, clearer keyboard focus,
-  and a new outlined display font for navigation and primary actions. The
-  Skill Tree keeps its existing magical glow treatment, while common actions
-  use cleaner text labels and shorter Save controls in Settings.
-- Redesigned demon cards around full-height artwork and compact overlaid stats.
-  Cards now show damage or healing per tick, abbreviate large values, place HP
-  on the right below the health bar, and retain role-specific attack icons.
-- Rebuilt battle feedback with cleaner type-colored attacks, artwork-only hit
-  and death reactions, larger projectiles, sharper impact effects, and flatter
-  Victory and Defeat presentations.
-- Reworked the Dungeon arena with a wide illustrated environment, new stone,
-  chain, and status ornaments, solid cartoon formation slots, clearer floor
-  and fight controls, and more consistent team and enemy headings.
-- The Dungeon hand now stays focused on demons while active Pacts and buffs
-  appear in formation summaries. Upgrade cards point to the weaker team demons
-  they can replace, buff tooltips stay above cards, and drag targets remain
-  highlighted while moving across their contents.
-- Improved Dungeon choices and results with compact Pact cards and Recast
-  controls, a clearer empty extraction slot, larger replay and upgrade cues,
-  simplified result actions, and a direct View Collection link for secured
-  Echoes.
-- Improved Dungeon layouts on phones so cards remain fully contained, arena
-  ornaments and chains stay inside their tracks, extraction controls remain
-  compact, and formation rows keep their intended alignment.
-- Echo progress, missing slots, and Summoning now live directly in Collection.
-  Missing demon cards show their exact requirement and a lock, and a completed
-  meter can summon the permanent demon with a new ritual animation.
-- Echo Refinement and Mythic Echo Unraveling have been retired. The Bag now
-  contains non-Echo items only and is temporarily hidden from navigation while
-  its route remains available.
-- Existing Echoes have been reconciled with the new Collection limits. Each
-  unowned variant keeps up to one full Summon requirement; every excess Echo,
-  and every Echo for an already owned variant, is converted into Souls at
-  Crowley's prices from 10 Souls for Common to 5,000 for Mythic.
-- Echo rewards and purchases now stop for a variant once its Summon requirement
-  is full or that demon is owned. Dungeon extraction choices and New tags stay
-  in sync with this rule, without blocking other species or rarities.
-- Crowley's shop now presents Echoes as demon cards with their Summon
-  requirements, replaces completed variants with other useful offers, and
-  keeps purchased offers visibly sold until the next stock refresh.
-- The Anomaly now awards only Mythic variants still needed by Collection. Once
-  every Mythic variant is full at 12 / 12 Echoes or summoned, each successful
-  reward roll grants five hunter levels instead, up to level 666; its result
-  screen shows Echo progress and level rewards together.
-- Arriving at an already unlocked demon spot now starts hunting automatically.
-  World routes, event auras, encounter circles, boss markers, and the hunter
-  token have also been refreshed, while Low Power mode keeps essential route
-  indicators without ambient lighting.
-- World fights now use the same Victory and Defeat presentation even when no
-  replay log is available. Portrait-phone battles center both nameplates, keep
-  effects above the battle window, simplify temporary controls, and place PvP
-  actions more reliably.
-- Demon, boss, and World event catalog pages now open directly at their guide
-  content, boss pages use a clearer Challenge action, and the press kit uses
-  the latest approved artwork.
-- Collection training actions now keep their outlined display treatment after
-  an attempt, and Camp stat cards use the same outlined style with consistent
-  text weight.
-- Active-hunt Terror is centered in the World sidebar, and an empty traveling
-  merchant shop now presents its message larger and centered in the stock box.
+- All 66 demon variants have new cartoon artwork.
+- Explore refreshed environments with new art for Crowley, the Whispering Well, and The Anomaly.
+- The interface has a new look with clearer text and controls.
+- Demon cards now have backgrounds for each type and distinct symbols for each rarity.
+- Demon cards show larger artwork and clearer stats, including damage or healing per tick.
+- Battles have new attack effects, hit reactions, and Victory and Defeat screens.
+- Dungeon team summaries now show your active Pacts and buffs.
+- Dungeon upgrade cards highlight the weaker team demons they can replace.
+- View your secured Echoes in Collection directly from Dungeon results.
+- Track Echo progress and summon permanent demons directly from Collection.
+- Missing demons show exactly how many Echoes you need to summon them.
+- Echo Refinement and Mythic Echo Unraveling have been removed.
+- The Bag is temporarily hidden from navigation.
+- Excess Echoes and Echoes for owned demons have been converted into Souls at Crowley's prices, from 10 for Common to 5,000 for Mythic.
+- Echo rewards and purchases stop for each variant once you have enough to summon it or already own it.
+- Crowley's shop shows your Echo progress and replaces completed variants with Echoes you still need.
+- The Anomaly now rewards only Mythic Echoes your Collection still needs.
+- Once every Mythic variant is summon-ready or owned, each successful Anomaly reward roll grants five hunter levels up to level 666.
+- Hunting starts automatically when you arrive at an unlocked demon spot.
+- Demon, boss, and World event guides now open straight to their content.
 
 ## Patch 6
 

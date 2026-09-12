@@ -599,7 +599,7 @@ function normalizePlayerLevel(playerLevel) {
 
 function toWorldMapImageUrl(url) {
   const match = /^\/app\/images\/demons\/(?:thumbnails\/)?(\d+)\.png(?:[?#].*)?$/.exec(String(url || ''));
-  return match ? `/app/images/demons/map/${match[1]}.webp?v=art-0c863f1a880b` : url;
+  return match ? `/app/images/demons/map/${match[1]}.webp?v=art-102485fdb26d` : url;
 }
 
 function shuffleDeterministically(values, seed) {

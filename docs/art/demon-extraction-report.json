@@ -93,10 +93,10 @@
     "partialPixels": 5692,
     "unchangedOpaquePixels": 466557,
     "sourceSha256": "ad4e56330036d44e3314961025663d3968d9feba8e22e85f428a1eacfde2c0f5",
-    "outputSha256": "796f477eceff8bce828bf1ac46bee31f8b714498039d04818a1a8c6ffddac49d",
+    "outputSha256": "9fe6fece3311dca25b0629ea8b21ffa4cd7a9e9cbfa88c2462f356dd791afc82",
     "extractedSha256": "60a6bbb9b2acac92b99c08a5a926fb9e3af2e73823db2c9d7d68d6b7cac620af",
     "pixelRepair": "demon-detail-repairs.json",
-    "pixelRepairChangedPixels": 6686
+    "pixelRepairChangedPixels": 5542
   },
   {
     "id": 5,

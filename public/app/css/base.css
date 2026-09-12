@@ -3928,7 +3928,7 @@ a:hover {
 body.seo-page {
     min-height: 100vh;
     background: var(--page-bg-fade),
-        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-0c863f1a880b") type("image/png")) center top / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-102485fdb26d") type("image/png")) center top / cover fixed no-repeat,
         #071013;
     color: var(--ad-text, #f5f7f8);
 }
@@ -4690,7 +4690,7 @@ body.seo-page {
 .demon-type-page {
     min-height: 100%;
     background:
-        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-0c863f1a880b") type("image/png")) center top / cover fixed no-repeat;
+        image-set(url("/app/images/assets/background/amongdemons_home.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/amongdemons_home.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/amongdemons_home.png?v=art-102485fdb26d") type("image/png")) center top / cover fixed no-repeat;
     background-attachment: fixed;
 }
 
@@ -4978,7 +4978,7 @@ body.rankings-page {
     background: var(--page-bg-fade),
         radial-gradient(circle at 18% 10%, rgba(111,214,189,0.14), transparent 22rem),
         radial-gradient(circle at 78% 16%, rgba(232,199,106,0.11), transparent 24rem),
-        image-set(url("/app/images/assets/background/amongdemons_rankings.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/amongdemons_rankings.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/amongdemons_rankings.png?v=art-0c863f1a880b") type("image/png")) center top / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_rankings.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/amongdemons_rankings.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/amongdemons_rankings.png?v=art-102485fdb26d") type("image/png")) center top / cover fixed no-repeat,
         var(--ad-bg);
 }
 
@@ -10205,7 +10205,7 @@ body.skill-tree-page {
         radial-gradient(circle at 50% 12%, rgba(232,199,106,0.1), transparent 24rem),
         radial-gradient(circle at 18% 30%, rgba(111,214,189,0.09), transparent 28rem),
         radial-gradient(circle at 82% 28%, rgba(231,138,85,0.08), transparent 25rem),
-        image-set(url("/app/images/assets/background/amongdemons_summon.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/amongdemons_summon.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/amongdemons_summon.png?v=art-0c863f1a880b") type("image/png")) center / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_summon.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/amongdemons_summon.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/amongdemons_summon.png?v=art-102485fdb26d") type("image/png")) center / cover fixed no-repeat,
         var(--ad-bg, #071013);
 }
 
@@ -11402,7 +11402,7 @@ body.has-browser-compatibility-gate {
 body.hunter-page {
     min-height: 100vh;
     background: var(--page-bg-fade),
-        image-set(url("/images/assets/background/amongdemons_home.avif?v=art-0c863f1a880b") type("image/avif"), url("/images/assets/background/amongdemons_home.webp?v=art-0c863f1a880b") type("image/webp"), url("/images/assets/background/amongdemons_home.png?v=art-0c863f1a880b") type("image/png")) center top / cover fixed,
+        image-set(url("/images/assets/background/amongdemons_home.avif?v=art-102485fdb26d") type("image/avif"), url("/images/assets/background/amongdemons_home.webp?v=art-102485fdb26d") type("image/webp"), url("/images/assets/background/amongdemons_home.png?v=art-102485fdb26d") type("image/png")) center top / cover fixed,
         #05090c;
     color: #edf5f2;
 }
@@ -12625,16 +12625,16 @@ body.hunter-page {
 
 /* BEGIN GENERATED DEMON TYPE BACKDROPS */
 :root {
-    --demon-backdrop-type-1: image-set(url("/app/images/assets/background/demon-card-type-1.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/demon-card-type-1.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/demon-card-type-1.png?v=art-0c863f1a880b") type("image/png"));
-    --demon-backdrop-type-2: image-set(url("/app/images/assets/background/demon-card-type-2.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/demon-card-type-2.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/demon-card-type-2.png?v=art-0c863f1a880b") type("image/png"));
-    --demon-backdrop-type-3: image-set(url("/app/images/assets/background/demon-card-type-3.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/demon-card-type-3.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/demon-card-type-3.png?v=art-0c863f1a880b") type("image/png"));
+    --demon-backdrop-type-1: image-set(url("/app/images/assets/background/demon-card-type-1.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/demon-card-type-1.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/demon-card-type-1.png?v=art-102485fdb26d") type("image/png"));
+    --demon-backdrop-type-2: image-set(url("/app/images/assets/background/demon-card-type-2.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/demon-card-type-2.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/demon-card-type-2.png?v=art-102485fdb26d") type("image/png"));
+    --demon-backdrop-type-3: image-set(url("/app/images/assets/background/demon-card-type-3.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/demon-card-type-3.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/demon-card-type-3.png?v=art-102485fdb26d") type("image/png"));
     --demon-backdrop-type-4: var(--demon-backdrop-type-2);
     --demon-backdrop-type-5: var(--demon-backdrop-type-1);
     --demon-backdrop-type-6: var(--demon-backdrop-type-2);
     --demon-backdrop-type-7: var(--demon-backdrop-type-1);
-    --demon-backdrop-type-8: image-set(url("/app/images/assets/background/demon-card-type-8.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/demon-card-type-8.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/demon-card-type-8.png?v=art-0c863f1a880b") type("image/png"));
+    --demon-backdrop-type-8: image-set(url("/app/images/assets/background/demon-card-type-8.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/demon-card-type-8.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/demon-card-type-8.png?v=art-102485fdb26d") type("image/png"));
     --demon-backdrop-type-9: var(--demon-backdrop-type-1);
-    --demon-backdrop-type-10: image-set(url("/app/images/assets/background/demon-card-type-10.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/demon-card-type-10.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/demon-card-type-10.png?v=art-0c863f1a880b") type("image/png"));
+    --demon-backdrop-type-10: image-set(url("/app/images/assets/background/demon-card-type-10.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/demon-card-type-10.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/demon-card-type-10.png?v=art-102485fdb26d") type("image/png"));
     --demon-backdrop-type-11: var(--demon-backdrop-type-2);
 }
 

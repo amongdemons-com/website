@@ -151,8 +151,8 @@
       "height": 1254,
       "alpha": true,
       "transparentPixels": 1100374,
-      "bytes": 848457,
-      "sha256": "60a6bbb9b2acac92b99c08a5a926fb9e3af2e73823db2c9d7d68d6b7cac620af"
+      "bytes": 852912,
+      "sha256": "9fe6fece3311dca25b0629ea8b21ffa4cd7a9e9cbfa88c2462f356dd791afc82"
     },
     {
       "file": "demons/portrait/4.webp",
@@ -170,8 +170,8 @@
         "components": 1,
         "ignoredPixels": 0
       },
-      "bytes": 30110,
-      "sha256": "8b954d521eac28ea8f745ba494ee5f0f711e24635edcf49b0a1dbb13fa5939c5"
+      "bytes": 30968,
+      "sha256": "2bb208731eefb18ad207bae95d678e8c9edb781fd35574722141df5ba3dfe02e"
     },
     {
       "file": "demons/map/4.webp",
@@ -189,8 +189,8 @@
         "components": 1,
         "ignoredPixels": 0
       },
-      "bytes": 13660,
-      "sha256": "27a54efd87fb76c15fdfb0550511587c12d613feff90a663f0498fd09b8f2e95"
+      "bytes": 14120,
+      "sha256": "b4f738058fcb3d99f5456f330a9ccde1358a96cb72c63f8175b248eb5e3d2b83"
     },
     {
       "file": "demons/5.png",
@@ -3112,8 +3112,8 @@
       "height": 1152,
       "alpha": true,
       "transparentPixels": 710014,
-      "bytes": 307994,
-      "sha256": "898f5ba5f73519f18f1c41ba1e48b5c7a650b6d880b1f422f3dd6f548d6756a9"
+      "bytes": 308090,
+      "sha256": "6dc3d587eccf19139917a5c965419880fa9c5dd2072bcad6093cf0e1f829c952"
     },
     {
       "file": "assets/background/amongdemons_bag.png",
@@ -4006,5 +4006,15 @@
       "bytes": 9717,
       "sha256": "24dfd38155eafbbe39a5d86dcd7535a631b28d1e771a6fc999c1790667990ce9"
     }
-  ]
+  ],
+  "latestScopedVerification": {
+    "date": "2026-09-12",
+    "files": [
+      "demons/4.png",
+      "demons/portrait/4.webp",
+      "demons/map/4.webp",
+      "demons/map-atlas.webp"
+    ],
+    "fullVerification": "Demon assets passed; full check stopped at the pre-existing missing assets/background/amongdemons_dungeon.png reference."
+  }
 }

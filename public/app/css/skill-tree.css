@@ -16,7 +16,7 @@ body.skill-tree-page {
     overflow: hidden;
     background: var(--page-bg-fade),
         radial-gradient(circle at 50% 28%, rgba(91, 112, 102, 0.16), transparent 34rem),
-        image-set(url("/app/images/assets/background/amongdemons_summon.avif?v=art-0c863f1a880b") type("image/avif"), url("/app/images/assets/background/amongdemons_summon.webp?v=art-0c863f1a880b") type("image/webp"), url("/app/images/assets/background/amongdemons_summon.png?v=art-0c863f1a880b") type("image/png")) center / cover fixed no-repeat,
+        image-set(url("/app/images/assets/background/amongdemons_summon.avif?v=art-102485fdb26d") type("image/avif"), url("/app/images/assets/background/amongdemons_summon.webp?v=art-102485fdb26d") type("image/webp"), url("/app/images/assets/background/amongdemons_summon.png?v=art-102485fdb26d") type("image/png")) center / cover fixed no-repeat,
         #030809;
 }
 
