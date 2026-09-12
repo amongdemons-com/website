@@ -203,8 +203,7 @@ function serializeEchoItem(definition, state = {}) {
     owned: Boolean(ownedDemonId),
     ownedDemonId,
     summonReady: !ownedDemonId && quantity >= summonRequirement,
-    summonProgress: Math.min(quantity, summonRequirement),
-    canUnravel: definition.rarity === 'mythic' && quantity > 0
+    summonProgress: Math.min(quantity, summonRequirement)
   };
 }
 

@@ -695,6 +695,7 @@ router.post('/world/anomaly/summon', requireAuth, async (req, res) => {
       ok: true,
       status: result.anomalyRun?.status || 'resolved',
       player: getWorldPlayer(result.player),
+      progression: result.progression,
       anomaly: result.anomaly,
       anomalyRun: result.anomalyRun,
       reward: result.reward,
@@ -726,6 +727,7 @@ router.post('/world/anomaly/continue', requireAuth, async (req, res) => {
       ok: true,
       status: result.anomalyRun?.status || 'resolved',
       player: getWorldPlayer(result.player),
+      progression: result.progression,
       anomaly: result.anomaly,
       anomalyRun: result.anomalyRun,
       reward: result.reward,
@@ -1615,14 +1617,24 @@ function getAnomalyResultMessage(result = {}) {
     ? reward.echoes
     : reward.echo ? [reward.echo] : [];
   const rolls = Math.max(1, Number(reward.rolls) || floor);
+  const levelRolls = Math.max(0, Number(reward.levelRolls) || 0);
+  const levelsGranted = Math.max(0, Number(reward.levelsGranted) || 0);
+  const levelMessage = levelsGranted
+    ? `${levelsGranted.toLocaleString('en-US')} hunter level${levelsGranted === 1 ? '' : 's'} gained.`
+    : levelRolls
+      ? 'Your hunter is already at the maximum level.'
+      : '';
   const rewardMessage = echoes.length === 1
     ? `A Mythic ${echoes[0].species || 'Demon'} Echo was added to your Collection.`
     : echoes.length > 1
       ? `${echoes.length.toLocaleString('en-US')} Mythic Echoes were added to your Collection.`
-      : `None of your ${rolls.toLocaleString('en-US')} Echo rolls succeeded.`;
+      : levelMessage || `None of your ${rolls.toLocaleString('en-US')} Echo rolls succeeded.`;
+  const combinedRewardMessage = levelMessage && echoes.length
+    ? `${rewardMessage} ${levelMessage}`
+    : rewardMessage;
   return floor >= 9
-    ? `You cleared Anomaly Floor 9. ${rewardMessage} The run is complete.`
-    : `You cleared Anomaly Floor ${floor}. ${rewardMessage}`;
+    ? `You cleared Anomaly Floor 9. ${combinedRewardMessage} The run is complete.`
+    : `You cleared Anomaly Floor ${floor}. ${combinedRewardMessage}`;
 }
 
 function isTutorialAmbushProtectionActive(tutorial = {}) {

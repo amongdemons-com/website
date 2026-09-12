@@ -6591,10 +6591,18 @@ import './bag-item-visuals.js';
       ? reward.echoes
       : reward?.echo ? [reward.echo] : [];
     const rolls = Math.max(1, Number(reward?.rolls) || Number(floor) || 1);
+    const levelRolls = Math.max(0, Number(reward?.levelRolls) || 0);
+    const levelsGranted = Math.max(0, Number(reward?.levelsGranted) || 0);
+    const levelText = levelsGranted
+      ? `${formatNumber(levelsGranted)} hunter level${levelsGranted === 1 ? '' : 's'} gained`
+      : levelRolls ? 'Hunter level cap reached' : '';
     if (echoes.length === 1) {
-      return `${floorLabel} · Mythic ${echoes[0].species || 'Demon'} Echo recovered`;
+      return `${floorLabel} · Mythic ${echoes[0].species || 'Demon'} Echo recovered${levelText ? ` + ${levelText}` : ''}`;
     }
-    if (echoes.length > 1) return `${floorLabel} · ${formatNumber(echoes.length)} Mythic Echoes recovered`;
+    if (echoes.length > 1) {
+      return `${floorLabel} · ${formatNumber(echoes.length)} Mythic Echoes recovered${levelText ? ` + ${levelText}` : ''}`;
+    }
+    if (levelText) return `${floorLabel} · ${levelText}`;
     if (reward) return `${floorLabel} · 0/${formatNumber(rolls)} Echo rolls succeeded`;
     return floorLabel;
   }
@@ -8815,17 +8823,77 @@ import './bag-item-visuals.js';
     });
   }
 
+  function renderAnomalyRewardCard(echo = {}) {
+    const species = echo.species || 'Demon';
+    const requirement = Math.max(1, Number(echo.summonRequirement) || MERCHANT_ECHO_REQUIREMENTS.mythic);
+    const bagTotal = Math.max(0, Number(echo.quantity) || 0);
+    const detailText = [
+      `Mythic ${species} Echo`,
+      'Added to your Collection',
+      bagTotal ? `Echo progress: ${formatNumber(bagTotal)} / ${formatNumber(requirement)}` : ''
+    ].filter(Boolean).join(' · ');
+    const demonCard = renderDemonCard({
+      ...echo,
+      id: echo.sourceDemonId || echo.demonId || echo.typeId,
+      species,
+      name: species,
+      rarity: 'mythic',
+      imageUrl: echo.imageUrl || echo.image_url || ''
+    }, {
+      className: 'world-anomaly-reward-demon-card',
+      imageUrl: echo.imageUrl || echo.image_url || undefined,
+      imageAlt: `Mythic ${species} Echo`,
+      imageLoading: 'eager',
+      showStats: false,
+      style: `--rarity-color: ${rarityCss('mythic')}`,
+      footerHtml: `<div class="collection-missing-label outline">${formatNumber(Math.min(bagTotal, requirement))} / ${formatNumber(requirement)}</div>`
+    });
+
+    return `
+      <article
+        class="world-anomaly-reward-echo"
+        style="--item-rarity: ${escapeAttribute(rarityCss('mythic'))}"
+        data-tooltip="${escapeAttribute(detailText)}"
+        data-tooltip-title="${escapeAttribute(`Mythic ${species} Echo`)}"
+        data-tooltip-status="Added to your Collection"
+        data-tooltip-total="${escapeAttribute(bagTotal ? `Echo progress: ${formatNumber(bagTotal)} / ${formatNumber(requirement)}` : '')}"
+        aria-label="${escapeAttribute(detailText)}"
+        role="group"
+        tabindex="0"
+      >
+        ${demonCard}
+      </article>
+    `;
+  }
+
   function renderAnomalyBattleReward(reward = null, floor = 1) {
     if (!reward) return '';
     const echoes = Array.isArray(reward.echoes)
       ? reward.echoes
       : reward.echo ? [reward.echo] : [];
     const rolls = Math.max(1, Number(reward.rolls) || Number(floor) || 1);
-    const rollSummary = `${formatNumber(echoes.length)} of ${formatNumber(rolls)} rolls succeeded`;
+    const levelRolls = Math.max(0, Number(reward.levelRolls) || 0);
+    const successfulRolls = Math.max(
+      0,
+      Number(reward.successfulRolls) || echoes.length + levelRolls
+    );
+    const levelsGranted = Math.max(0, Number(reward.levelsGranted) || 0);
+    const rollSummary = `${formatNumber(successfulRolls)} of ${formatNumber(rolls)} rolls succeeded`;
+    const levelReward = levelRolls > 0 ? `
+      <article class="world-anomaly-reward world-anomaly-level-reward">
+        <span class="world-anomaly-reward-victory world-anomaly-level-reward-mark" aria-hidden="true">+</span>
+        <span class="world-anomaly-reward-copy">
+          <small>${formatNumber(levelRolls)} successful roll${levelRolls === 1 ? '' : 's'}</small>
+          <b>${levelsGranted ? `+${formatNumber(levelsGranted)} Hunter Levels` : 'Hunter Level Cap Reached'}</b>
+          <span>${levelsGranted ? 'Granted because your Mythic collection is complete.' : 'No further hunter levels can be gained.'}</span>
+        </span>
+      </article>
+    ` : '';
 
     if (echoes.length) {
       const hasSlider = echoes.length > 4;
       return `
+        ${levelReward}
         <div class="world-anomaly-reward-list">
           <small class="world-anomaly-roll-summary">${rollSummary}</small>
           <div class="world-anomaly-reward-slider ${hasSlider ? 'has-slider' : ''}">
@@ -8836,29 +8904,7 @@ import './bag-item-visuals.js';
             ` : ''}
             <div class="world-anomaly-reward-viewport" data-world-anomaly-reward-viewport>
               <div class="world-anomaly-reward-track ${hasSlider ? '' : 'is-centered'}">
-                ${echoes.map((echo) => {
-                  const species = echo.species || 'Demon';
-                  const bagTotal = Math.max(0, Number(echo.quantity) || 0);
-                  const detailText = [
-                    `Mythic ${species} Echo`,
-                    'Added to your Collection',
-                    bagTotal ? `Echo progress: ${formatNumber(bagTotal)}` : ''
-                  ].filter(Boolean).join(' · ');
-                  return `
-                    <button
-                      class="world-anomaly-reward-echo"
-                      type="button"
-                      style="--item-rarity: ${rarityCss('mythic')}"
-                      data-tooltip="${escapeAttribute(detailText)}"
-                      data-tooltip-title="${escapeAttribute(`Mythic ${species} Echo`)}"
-                      data-tooltip-status="Added to your Collection"
-                      data-tooltip-total="${escapeAttribute(bagTotal ? `Echo progress: ${formatNumber(bagTotal)}` : '')}"
-                      aria-label="${escapeAttribute(detailText)}"
-                    >
-                      <img src="${escapeAttribute(toDemonImageUrl(echo, 'portrait') || echo.imageUrl || '')}" alt="" width="96" height="96">
-                    </button>
-                  `;
-                }).join('')}
+                ${echoes.map(renderAnomalyRewardCard).join('')}
               </div>
             </div>
             ${hasSlider ? `
@@ -8875,6 +8921,8 @@ import './bag-item-visuals.js';
         </div>
       `;
     }
+
+    if (levelReward) return levelReward;
 
     return `
       <article class="world-anomaly-reward is-empty">

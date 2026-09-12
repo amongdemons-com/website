@@ -290,6 +290,7 @@ Crowley, the traveling merchant, moves to a deterministic open road tile every 3
 - World Terror rises one level per map ring beyond the safe center (starting ~10 tiles out, capped at level 40), scaling encounter stats and XP with distance.
 - **Forsaken Shrines** - bind your soul at a shrine to respawn there after combat defeats instead of at world spawn.
 - **Darkness Portals** - paid teleports; the Soul cost scales with distance.
+- **Altar of Many Voices** - the nine-floor Anomaly run makes one 25% Mythic reward roll per defeated Anomaly. Once every Mythic variant is full at `12 / 12` Echoes or summoned, successful rolls grant five hunter levels instead, up to level 666.
 - **Passive hunting** - after defeating a tile's encounter you may leave your world team hunting there. Souls accumulate while away but are capped by your Soul Vessel (base 50, expanded through skill-tree nodes), so AFK income is bounded by investment, not time.
 - **PvP** - hunters on the same tile can challenge each other (server-simulated battle, with a five-minute delay before rematching the same hunter); wins and losses feed the `pvp` leaderboard and hunter profiles. A duel also changes the challenger's seasonal RP with the same 32-K Elo rules and rank-result modal as Dungeon Ranked checkpoints. The asynchronous defender's RP does not change, and a win awards no RP when the defender began at least 200 RP below the challenger.
 
@@ -309,7 +310,7 @@ Defined in `public/api/lib/daily-quests.js` with a UTC daily reset: win 3 dungeo
 
 - Dungeon extraction adds one exact `type + rarity` Echo to Collection progress. Extraction and merchant purchases stop when that variant is summoned or its Echo requirement is full. Other species and rarities remain eligible.
 - Summoning requirements are Common `1`, Uncommon `2`, Rare `3`, Epic `5`, Legendary `8`, and Mythic `12`. Summoning atomically consumes the requirement and creates the normal minimum-stat permanent demon.
-- Refinement has been removed. Mythic Echoes can still be unraveled from Collection, with confirmation, for up to five hunter levels instead of saving them for a summon.
+- The Anomaly gives five hunter levels per successful 25% reward roll once every Mythic variant is either full at `12 / 12` Echoes or summoned; level rewards stop at the account cap.
 - The permanent collection has one slot per demon type and rarity - 11 types × 6 rarities = 66 slots. Missing slots show Echo art and exact progress, with a Summon Demon action in their details.
 - Training (`POST /api/demons/:id/train`) is transactional and server-authoritative: it locks the player and demon rows, checks cost, spends Souls, and raises one stat by +1, picked with weighted randomness from stats below their caps.
 - Stat caps come from the matching type's `baseStats` maxima in `demon-types.json`. Cost starts at 2 Souls and grows with overall progress toward the caps, multiplied by rarity.

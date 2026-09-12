@@ -4063,6 +4063,18 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
     box-shadow: none;
 }
 
+.world-anomaly-level-reward {
+    border-color: #8e6f1e;
+    background: #382c0d;
+}
+
+.world-anomaly-level-reward-mark {
+    color: #fac51c;
+    font-size: 2.1rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
 .world-anomaly-reward-list {
     position: relative;
     display: grid;
@@ -4117,29 +4129,73 @@ body.is-world-ambush-defeat-blackout .world-ambush-defeat-fade {
 }
 
 .world-anomaly-reward-echo {
+    display: block;
     flex: 0 0 calc((100% - 1.14rem) / 4);
     min-width: 0;
     aspect-ratio: 1;
-    overflow: hidden;
-    border: 1px solid var(--item-rarity, #e25041);
+    overflow: visible;
+    border: 0;
     border-radius: 8px;
-    background: #0b0b08;
+    background: transparent;
     padding: 0;
-    box-shadow:
-        none;
+    text-align: left;
 }
 
-.world-anomaly-reward-echo img {
-    display: block;
+.world-anomaly-reward-demon-card {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    flex: none;
+    border-color: var(--item-rarity, #e25041);
+    border-radius: 8px;
+    background: #0b0b08;
+    box-shadow: none;
 }
 
-.world-anomaly-reward-echo:hover,
+.world-anomaly-reward-demon-card .dungeon-demon-card-image {
+    border-radius: 7px;
+}
+
+.world-anomaly-reward-demon-card .dungeon-demon-card-body {
+    padding: 0.92rem 0.22rem 0.24rem;
+}
+
+.world-anomaly-reward-demon-card .dungeon-demon-card-title {
+    display: flex;
+    margin-bottom: 0.08rem;
+    font-size: 0.52rem;
+}
+
+.world-anomaly-reward-demon-card .dungeon-demon-card-title .text-white {
+    color: #fff1c2 !important;
+}
+
+.world-anomaly-reward-demon-card .collection-missing-label.outline {
+    width: 100%;
+    min-width: 0;
+    min-height: 1rem;
+    margin-top: 0.2rem;
+    padding: 0.12rem 0.2rem;
+    border-color: rgba(255, 241, 194, 0.55);
+    background: rgba(3, 9, 15, 0.78);
+    color: #fff1c2;
+    font-size: 0.56rem;
+}
+
+.world-anomaly-reward-demon-card .dungeon-demon-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.world-anomaly-reward-echo:hover .world-anomaly-reward-demon-card,
 .world-anomaly-reward-echo:focus-visible {
     border-color: #fff1c2;
     outline: 0;
+}
+
+.world-anomaly-reward-echo:focus-visible .world-anomaly-reward-demon-card {
+    outline: 2px solid #fff1c2;
+    outline-offset: 3px;
 }
 
 .world-anomaly-reward-scroll {

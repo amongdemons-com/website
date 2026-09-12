@@ -21,6 +21,9 @@
   and tutorial ambushes are scaled for a new hunter's starting team.
 - World travel now keeps position and ambush rewards in sync, and automatically
   recovers if a previous travel request left the map on an outdated position.
+- Mythic Echo Unraveling has been retired. Once every Mythic variant is full at
+  12 / 12 Echoes or summoned, each successful Anomaly reward roll grants five
+  hunter levels instead, up to the account level cap.
 
 ## Patch 5
 

@@ -53,7 +53,6 @@
     echoConfig: {},
     pendingEchoKey: null,
     pendingEchoAction: null,
-    confirmingUnravelKey: null,
     catalog: [],
     visibleSlots: [],
     types: {},
@@ -176,7 +175,6 @@
       const demon = state.visibleSlots.find((item) => String(item.id) === card.dataset.demonId);
       if (!demon) return;
 
-      state.confirmingUnravelKey = null;
       openCollectionDemonDetails(demon);
     });
 
@@ -497,17 +495,7 @@
             variant: 'primary',
             disabled: !echo.summonReady || Boolean(state.pendingEchoKey),
             onClick: () => performEchoAction(demon, 'summon')
-          },
-          ...(echo.canUnravel ? [{
-            label: state.pendingEchoAction === 'unravel' ? 'Unraveling...' : state.confirmingUnravelKey === echo.itemKey ? 'Confirm Unravel' : 'Unravel Echo',
-            variant: 'outline-danger',
-            disabled: Boolean(state.pendingEchoKey) || Number(state.player?.level) >= 666,
-            onClick: () => {
-              if (state.confirmingUnravelKey === echo.itemKey) return performEchoAction(demon, 'unravel');
-              state.confirmingUnravelKey = echo.itemKey;
-              openCollectionDemonDetails(demon);
-            }
-          }] : [])
+          }
         ] : [])
       ];
     }
@@ -535,7 +523,6 @@
       <div class="collection-echo-progress-heading"><strong>${echo.summonProgress} / ${echo.summonRequirement} Echoes</strong></div>
       <progress max="${echo.summonRequirement}" value="${echo.summonProgress}" aria-label="Echo progress: ${percent}%"></progress>
       <p>${echo.summonReady ? 'Ready to summon permanently.' : `Gather ${echo.summonRequirement} Echoes of this exact species and rarity to summon permanently.`}</p>
-      ${state.confirmingUnravelKey === echo.itemKey ? '<p class="text-warning">This permanently consumes one Mythic Echo to gain up to 5 hunter levels and reduces your summon progress. Choose Confirm Unravel to continue.</p>' : ''}
     </div>`;
   }
 
@@ -562,14 +549,11 @@
       if (result.demon) replaceCollectionDemon(result.demon);
       state.pendingEchoKey = null;
       state.pendingEchoAction = null;
-      state.confirmingUnravelKey = null;
       renderCollection();
       openCollectionDemonDetails(result.demon || demon);
       if (action === 'summon') {
         audio?.play('sfx.progression.summonSuccess', { volume: 0.92 });
         window.AmongDemons?.tutorial?.emit?.('demon-summoned', { demonId: result.demon.id });
-      } else {
-        window.AmongDemons.showGameAlert(`${result.unravel.levelsGranted} hunter levels gained.`, { type: 'success', context: 'collection' });
       }
     } catch (error) {
       state.pendingEchoKey = null;

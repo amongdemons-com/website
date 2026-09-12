@@ -34,6 +34,7 @@ const {
   resolveAnomalyRewardRolls,
   summonWorldAnomaly
 } = require('../public/api/lib/world-anomaly');
+const achievements = require('../public/api/lib/achievements');
 
 test('the Altar of Many Voices occupies Area 4, 0', () => {
   const event = map.events.find((candidate) => candidate.type === 'altar-many-voices');
@@ -226,9 +227,16 @@ test('Anomaly floor results handle zero or multiple Echoes in a one-line reward 
   assert.match(worldUi, /layer\.classList\.contains\('is-anomaly-result'\)[\s\S]*?removeProperty\('--world-dungeon-result-top'\)/);
   assert.match(worldUi, /mobileResultLayout \? gridTop : Math\.min\(gridTop, fullyVisibleTop\)/);
   assert.match(worldUi, /const hasSlider = echoes\.length > 4/);
+  assert.match(worldUi, /world-anomaly-level-reward/);
+  assert.match(worldUi, /Hunter level cap reached/);
+  assert.match(worldUi, /reward\.levelRolls/);
   assert.match(worldUi, /data-world-anomaly-reward-scroll="-1"/);
   assert.match(worldUi, /data-world-anomaly-reward-scroll="1"/);
   assert.match(worldUi, /class="world-anomaly-reward-echo"[\s\S]*?data-tooltip=/);
+  assert.match(worldUi, /function renderAnomalyRewardCard\(echo = \{\}\)/);
+  assert.match(worldUi, /className: 'world-anomaly-reward-demon-card'/);
+  assert.match(worldUi, /echoes\.map\(renderAnomalyRewardCard\)/);
+  assert.doesNotMatch(worldUi, /<img src="\$\{escapeAttribute\(toDemonImageUrl\(echo, 'portrait'\)/);
   assert.match(worldUi, /data-tooltip-title="\$\{escapeAttribute\(`Mythic \$\{species\} Echo`\)\}"/);
   assert.match(worldUi, /data-world-anomaly-tooltip-title/);
   assert.match(worldUi, /data-world-anomaly-tooltip-status/);
@@ -237,6 +245,8 @@ test('Anomaly floor results handle zero or multiple Echoes in a one-line reward 
   assert.match(worldCss, /\.world-anomaly-reward-list/);
   assert.match(worldCss, /\.world-anomaly-reward-track \{[\s\S]*?display: flex;/);
   assert.match(worldCss, /\.world-anomaly-reward-echo \{[\s\S]*?flex: 0 0 calc\(\(100% - 1\.14rem\) \/ 4\);/);
+  assert.match(worldCss, /\.world-anomaly-reward-demon-card \{[\s\S]*?width: 100%;[\s\S]*?border-color: var\(--item-rarity/);
+  assert.match(worldCss, /\.world-anomaly-reward-demon-card \.dungeon-demon-card-title \{[\s\S]*?display: flex;/);
   assert.match(worldCss, /\.world-anomaly-reward-tooltip \{[\s\S]*?background: #03090b;/);
   assert.match(worldCss, /\.world-dungeon-result \.world-anomaly-reward-tooltip \.world-anomaly-reward-tooltip-title \{[\s\S]*?color: #e25041;[\s\S]*?font-size: 0\.78rem;/);
   assert.match(worldCss, /\.world-anomaly-reward-tooltip-status \{[\s\S]*?color: #8ed6a6;/);
@@ -397,6 +407,39 @@ test('clearing Floor 3 makes three rolls and can award multiple Mythic Echoes', 
   assert.equal(JSON.parse(update.params[4])[0].hp, 10);
 });
 
+test('complete Mythic collection converts every successful Anomaly roll into five levels', async (t) => {
+  t.mock.method(achievements, 'checkAccountLevel', async () => []);
+  const updates = [];
+  const runId = 'ritual:00000000-0000-4000-8000-000000000010';
+  const connection = createAnomalyConnection(updates, {
+    activeRunId: runId,
+    activeFloor: 2,
+    collectedMythicTypeIds: Array.from({ length: 11 }, (_, index) => index + 1),
+    activeTeam: JSON.stringify([{ instanceId: 'player', typeId: 1, hp: 2, maxHp: 10, atk: 1, speed: 1 }])
+  });
+  const result = await continueWorldAnomaly(
+    { id: 'hunter-one', level: 50 },
+    runId,
+    {
+      connection,
+      playerBuffs: {},
+      demonTypes,
+      simulateFight: () => createFightResult('player', { playerHp: 3 }),
+      randomInt: () => 0
+    }
+  );
+
+  assert.equal(result.reward.rolls, 3);
+  assert.equal(result.reward.successfulRolls, 3);
+  assert.equal(result.reward.levelRolls, 3);
+  assert.equal(result.reward.levelsGranted, 15);
+  assert.equal(result.reward.echoes.length, 0);
+  assert.equal(result.player.level, 65);
+  assert.equal(result.progression.previousLevel, 50);
+  assert.equal(result.progression.leveledUp, true);
+  assert.equal(updates.some((entry) => /UPDATE players SET xp = \?, level = \?/.test(entry.sql)), true);
+});
+
 test('clearing Floor 9 awards its Echo and completes the Anomaly run', async () => {
   const updates = [];
   const runId = 'ritual:00000000-0000-4000-8000-000000000009';
@@ -540,6 +583,7 @@ function createAnomalyConnection(updates, ritual = {}) {
       }
       if (/INSERT IGNORE INTO player_anomaly_rituals/.test(sql)) return [{ affectedRows: 1 }];
       if (/UPDATE players SET souls/.test(sql)) return [{ affectedRows: 1 }];
+      if (/UPDATE players SET xp = \?, level = \?/.test(sql)) return [{ affectedRows: 1 }];
       if (/UPDATE player_anomaly_rituals/.test(sql)) return [{ affectedRows: 1 }];
       throw new Error(`Unexpected query: ${sql}`);
     }

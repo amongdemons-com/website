@@ -10,6 +10,14 @@ const { resolvePlayerCombatBuffState } = require('./player-combat-buffs');
 const { createRng } = require('./rng');
 const { mergeBattleTeamForRun } = require('./run-demons');
 const { getActiveWorldTeam } = require('./world-combat');
+const achievements = require('./achievements');
+const {
+  MAX_ACCOUNT_LEVEL,
+  getAccountProgressionSummary,
+  getNextAccountLevel,
+  getXpForAccountLevel,
+  normalizeAccountLevel
+} = require('./progression');
 
 const ANOMALY_EVENT_ID = 'altar-of-many-voices';
 const ANOMALY_EVENT_NAME = 'Altar of Many Voices';
@@ -19,6 +27,7 @@ const ANOMALY_Y = 0;
 const ANOMALY_SOUL_COST = 5_000;
 const ANOMALY_MAX_FLOOR = 9;
 const ANOMALY_ECHO_CHANCE_PERCENT = 25;
+const ANOMALY_COMPLETE_REWARD_LEVELS = 5;
 const ANOMALY_STATS = Object.freeze({ hp: 5_000, atk: 150, speed: 20 });
 const ANOMALY_ABILITY_TYPE_IDS = Object.freeze(Array.from({ length: 11 }, (_, index) => index + 1));
 const ANOMALY_FORMATION_SLOTS = Object.freeze([3, 0, 6, 4, 1, 7, 5, 2, 8]);
@@ -259,6 +268,7 @@ async function summonWorldAnomaly(player, requestedRitualId, options = {}) {
 
     const floorResult = await resolveAnomalyFloor({
       playerId: player.id,
+      player: storedPlayer,
       floor: 1,
       playerTeam,
       playerBuffs,
@@ -294,6 +304,9 @@ async function summonWorldAnomaly(player, requestedRitualId, options = {}) {
 
     await connection.commit();
     committed = true;
+    if (floorResult.progression) {
+      await achievements.checkAccountLevel(player.id, floorResult.progression.level);
+    }
     const attempts = Math.max(0, Number(ritual.attempts) || 0) + 1;
     const victories = Math.max(0, Number(ritual.victories) || 0) + (floorResult.won ? 1 : 0);
     const losses = Math.max(0, Number(ritual.losses) || 0) + (floorResult.won ? 0 : 1);
@@ -353,6 +366,7 @@ async function continueWorldAnomaly(player, requestedRunId, options = {}) {
 
     const floorResult = await resolveAnomalyFloor({
       playerId: player.id,
+      player: storedPlayer,
       floor: clearedFloor + 1,
       playerTeam,
       playerBuffs,
@@ -385,6 +399,9 @@ async function continueWorldAnomaly(player, requestedRunId, options = {}) {
 
     await connection.commit();
     committed = true;
+    if (floorResult.progression) {
+      await achievements.checkAccountLevel(player.id, floorResult.progression.level);
+    }
     const attempts = Math.max(0, Number(ritual.attempts) || 0);
     const victories = Math.max(0, Number(ritual.victories) || 0) + (floorResult.won ? 1 : 0);
     const losses = Math.max(0, Number(ritual.losses) || 0) + (floorResult.won ? 0 : 1);
@@ -488,6 +505,7 @@ async function endActiveAnomalyRun(playerId, requestedRunId, options = {}) {
 
 async function resolveAnomalyFloor({
   playerId,
+  player,
   floor,
   playerTeam,
   playerBuffs,
@@ -511,17 +529,31 @@ async function resolveAnomalyFloor({
   );
   const won = fight.winner === 'player';
   let reward = null;
+  let progression = null;
 
   if (won) {
     const uncollectedMythicTypeIds = await getUncollectedMythicTypeIds(playerId, connection);
+    const collectionComplete = uncollectedMythicTypeIds.length === 0;
     const rewardRolls = resolveAnomalyRewardRolls(floor, {
       randomInt: options.randomInt || crypto.randomInt,
-      candidateTypeIds: uncollectedMythicTypeIds,
+      candidateTypeIds: collectionComplete ? ANOMALY_ABILITY_TYPE_IDS : uncollectedMythicTypeIds,
       restrictToCandidates: true
     });
     const echoes = [];
+    let levelRewardRolls = 0;
+    const remainingUncollectedTypeIds = new Set(uncollectedMythicTypeIds);
     for (const rewardRoll of rewardRolls) {
       if (!rewardRoll.echoAwarded) continue;
+
+      if (!remainingUncollectedTypeIds.size) {
+        rewardRoll.echoAwarded = false;
+        rewardRoll.levelAwarded = true;
+        rewardRoll.typeId = null;
+        rewardRoll.source = 'levels';
+        levelRewardRolls += 1;
+        continue;
+      }
+
       const echo = await (options.addEcho || addEcho)(playerId, {
         typeId: rewardRoll.typeId,
         rarity: 'mythic'
@@ -532,17 +564,25 @@ async function resolveAnomalyFloor({
       });
       if (echo) {
         echoes.push(echo);
+        if (echo.owned || Number(echo.quantity) >= Number(echo.summonRequirement)) {
+          remainingUncollectedTypeIds.delete(Number(echo.typeId));
+        }
       } else {
         rewardRoll.echoAwarded = false;
         rewardRoll.typeId = null;
         rewardRoll.source = 'complete';
       }
     }
+    if (levelRewardRolls > 0) {
+      progression = await grantAnomalyLevels(player, levelRewardRolls, connection);
+    }
     reward = {
       floor,
       chancePercent: ANOMALY_ECHO_CHANCE_PERCENT,
       rolls: rewardRolls.length,
-      successfulRolls: echoes.length,
+      successfulRolls: echoes.length + levelRewardRolls,
+      levelRolls: levelRewardRolls,
+      levelsGranted: progression?.levelsGranted || 0,
       echoes,
       results: rewardRolls
     };
@@ -552,6 +592,7 @@ async function resolveAnomalyFloor({
     floor,
     won,
     reward,
+    progression,
     nextTeam: carryAnomalyTeamForward(floorTeam, fight.playerTeam),
     battle: {
       combatType: 'world_anomaly',
@@ -570,6 +611,57 @@ async function resolveAnomalyFloor({
       enemyBuffs: serializeCombatBuffState(enemyBuffs).activeBuffs,
       anomalyReward: reward
     }
+  };
+}
+
+async function grantAnomalyLevels(player, successfulRolls, connection) {
+  const progression = getAnomalyLevelRewardProgression(
+    player?.level,
+    player?.xp,
+    successfulRolls
+  );
+  if (!progression) return null;
+
+  if (progression.levelsGranted > 0) {
+    await connection.query(
+      'UPDATE players SET xp = ?, level = ? WHERE id = ?',
+      [progression.nextXp, progression.targetLevel, player.id]
+    );
+  }
+
+  if (player) {
+    player.xp = progression.nextXp;
+    player.level = progression.targetLevel;
+  }
+
+  return progression;
+}
+
+function getAnomalyLevelRewardProgression(level, xp, successfulRolls) {
+  const rollCount = Math.max(0, Math.floor(Number(successfulRolls) || 0));
+  if (!rollCount) return null;
+
+  const currentXp = Math.max(0, Math.floor(Number(xp) || 0));
+  const currentLevel = getNextAccountLevel(level, currentXp);
+  const targetLevel = normalizeAccountLevel(
+    currentLevel + rollCount * ANOMALY_COMPLETE_REWARD_LEVELS
+  );
+  const levelsGranted = Math.max(0, targetLevel - currentLevel);
+  const xpGranted = levelsGranted > 0
+    ? getXpForAccountLevel(targetLevel) - getXpForAccountLevel(currentLevel)
+    : 0;
+  const nextXp = currentXp + xpGranted;
+
+  return {
+    ...getAccountProgressionSummary(targetLevel, nextXp, { previousLevel: currentLevel }),
+    currentLevel,
+    targetLevel,
+    nextXp,
+    levelsGranted,
+    xpGranted,
+    rolls: rollCount,
+    levelsPerRoll: ANOMALY_COMPLETE_REWARD_LEVELS,
+    isMaxLevel: targetLevel >= MAX_ACCOUNT_LEVEL
   };
 }
 
@@ -619,6 +711,13 @@ function createAnomalyFloorResponse({
 
   return {
     player,
+    ...(floorResult.progression ? {
+      progression: {
+        ...floorResult.progression,
+        souls: Math.max(0, Number(player?.souls) || 0),
+        highestFloor: Math.max(0, Number(player?.highestFloor ?? player?.highest_floor) || 0)
+      }
+    } : {}),
     anomaly: serializeAnomalyState({
       attempts,
       victories,
@@ -701,6 +800,7 @@ function createHttpError(message, status = 400) {
 
 module.exports = {
   ANOMALY_ABILITY_TYPE_IDS,
+  ANOMALY_COMPLETE_REWARD_LEVELS,
   ANOMALY_ECHO_CHANCE_PERCENT,
   ANOMALY_EVENT_ID,
   ANOMALY_EVENT_NAME,
@@ -715,6 +815,7 @@ module.exports = {
   createAnomalyEnemy,
   createAnomalyFloorEnemies,
   createAnomalyRitualId,
+  getAnomalyLevelRewardProgression,
   getUncollectedMythicTypeIds,
   getWorldAnomalyForPlayer,
   isAtAnomalyAltar,

@@ -18,8 +18,6 @@ const ECHO_SOUL_PRICES = Object.freeze({
   mythic: 5000
 });
 
-const MYTHIC_ECHO_UNRAVEL_LEVELS = 5;
-
 function normalizeEchoRarity(value) {
   const rarity = String(value || '').trim().toLowerCase();
   return RARITIES.includes(rarity) ? rarity : null;
@@ -41,8 +39,7 @@ function parseEchoItemKey(value) {
 function getEchoConfig() {
   return {
     rarities: [...RARITIES],
-    summonRequirements: { ...SUMMON_REQUIREMENTS },
-    mythicUnravelLevels: MYTHIC_ECHO_UNRAVEL_LEVELS
+    summonRequirements: { ...SUMMON_REQUIREMENTS }
   };
 }
 
@@ -50,7 +47,6 @@ module.exports = {
   RARITIES,
   ECHO_SOUL_PRICES,
   SUMMON_REQUIREMENTS,
-  MYTHIC_ECHO_UNRAVEL_LEVELS,
   getEchoConfig,
   getEchoItemKey,
   normalizeEchoRarity,
