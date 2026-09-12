@@ -69,6 +69,23 @@ import './bag-item-visuals.js';
   const MERCHANT_FALLBACK_MOVE_SECONDS = 30 * 60;
   const MERCHANT_FALLBACK_BRIBE_COST = 50;
   const MERCHANT_OFFER_LIMIT = 4;
+  const MERCHANT_ECHO_REQUIREMENTS = {
+    common: 1,
+    uncommon: 2,
+    rare: 3,
+    epic: 5,
+    legendary: 8,
+    mythic: 12
+  };
+  const MERCHANT_LOCK_ICON = `
+    <span class="collection-lock-indicator" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+        <rect x="5" y="10" width="14" height="10" rx="1.5"></rect>
+        <circle cx="12" cy="15" r="1.1"></circle>
+        <path d="M12 16.2v1.8"></path>
+      </svg>
+    </span>`;
   const MERCHANT_ARROW_EDGE_INSET = 30;
   const MERCHANT_ARROW_FLOAT_DISTANCE = 4;
   const SOUL_FONT_FALLBACK_DURATION_HOURS = 4;
@@ -7044,7 +7061,8 @@ import './bag-item-visuals.js';
         body: {
           spawnId: merchant.spawnId,
           stockId: merchant.stockId,
-          slot
+          slot,
+          itemKey: item.itemKey
         }
       });
       if (payload.player) {
@@ -7199,11 +7217,22 @@ import './bag-item-visuals.js';
     const canAfford = souls === null || souls >= item.price;
     const busy = state.merchantBusySlot === item.slot;
     const disabled = item.complete || item.purchased || busy || !canAfford || state.merchantBusySlot !== null || state.merchantBribing;
-    const visual = window.AmongDemons.bagVisuals?.renderItemVisual?.(item, {
-      context: 'slot',
-      title: `${capitalize(rarity)} item`
-    })
-      || `<img class="world-merchant-fallback-item" src="${escapeAttribute(item.imageUrl || DEFAULT_PROFILE_IMAGE_URL)}" alt="">`;
+    const requirement = Math.max(
+      1,
+      Number(item.summonRequirement) || MERCHANT_ECHO_REQUIREMENTS[rarity] || 1
+    );
+    const demonCard = renderDemonCard({
+      ...item,
+      species: `${item.species || 'Unknown Demon'} Echo`,
+      imageUrl: item.imageUrl || DEFAULT_PROFILE_IMAGE_URL
+    }, {
+      className: 'world-merchant-demon-card collection-missing-card',
+      imageUrl: item.imageUrl || DEFAULT_PROFILE_IMAGE_URL,
+      imageAlt: `${capitalize(rarity)} ${item.species || 'demon'} Echo`,
+      showStats: false,
+      overlayHtml: MERCHANT_LOCK_ICON,
+      footerHtml: `<div class="collection-missing-label outline">1 / ${requirement}</div>`
+    });
     const buyLabel = item.complete ? 'Echoes complete' : item.purchased
       ? 'Purchased'
       : busy
@@ -7215,12 +7244,12 @@ import './bag-item-visuals.js';
     return `
       <article class="world-merchant-item ${item.purchased ? 'is-purchased' : ''}" style="--item-rarity:${escapeAttribute(rarityColor)}">
         <div class="world-merchant-item-visual">
-          ${visual}
+          ${demonCard}
           ${item.purchased ? `<span class="world-merchant-sold-mark">${renderIcon('check')}<span>Bought</span></span>` : ''}
         </div>
         <div class="world-merchant-item-copy">
           <span class="world-merchant-item-rarity">${escapeHtml(capitalize(rarity))} Item</span>
-          <strong>${escapeHtml(item.species || 'Unknown Demon')}</strong>
+          <strong>${escapeHtml(`${item.species || 'Unknown Demon'} Echo`)}</strong>
           <small>${escapeHtml(formatMerchantRole(item.role))}</small>
         </div>
         <div class="world-merchant-item-buy">

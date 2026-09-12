@@ -89,25 +89,29 @@ async function getWorldMerchantForPlayer(playerId, options = {}) {
   const merchant = getActiveWorldMerchant(options.now);
   const queryable = options.queryable || db;
   const playerLevel = normalizePlayerLevel(options.playerLevel);
-  const [catalog, purchasedSlots, rerollCount, echoes] = await Promise.all([
+  const [catalog, purchasedSlots, rerollCount, echoes, ownedRows] = await Promise.all([
     getEchoCatalog(),
     getPurchasedMerchantSlots(playerId, merchant.spawnId, queryable),
     getMerchantRerollCount(playerId, merchant.spawnId, queryable),
-    getCollectionEchoes(playerId, queryable)
+    getCollectionEchoes(playerId, queryable),
+    queryable.query('SELECT type_id AS typeId, rarity FROM player_demons WHERE player_id = ?', [playerId])
   ]);
 
-  const completed = new Set([
-    ...echoes.items.filter(item => item.owned || item.summonReady).map(item => item.itemKey)
-  ]);
-  const [owned] = await queryable.query('SELECT type_id AS typeId, rarity FROM player_demons WHERE player_id = ?', [playerId]);
-  owned.forEach(item => completed.add(`echo:${item.typeId}:${item.rarity}`));
+  const completed = getCompletedMerchantItemKeys(echoes, ownedRows[0]);
   return {
     ...merchant,
     stockId: getMerchantStockId(merchant.spawnId, rerollCount, playerLevel),
     rerollCount,
     bribeCost: getMerchantBribeCost(playerLevel),
-    itemSlots: buildMerchantStock(playerId, merchant.spawnId, catalog, purchasedSlots, rerollCount, playerLevel)
-      .filter(item => !completed.has(item.itemKey))
+    itemSlots: buildMerchantStock(
+      playerId,
+      merchant.spawnId,
+      catalog,
+      purchasedSlots,
+      rerollCount,
+      playerLevel,
+      completed
+    )
   };
 }
 
@@ -124,12 +128,15 @@ async function getMerchantRerollCount(playerId, spawnId, queryable = db) {
 
 async function getPurchasedMerchantSlots(playerId, spawnId, queryable = db) {
   const [rows] = await queryable.query(
-    `SELECT slot
+    `SELECT slot, item_key AS itemKey
      FROM player_world_merchant_purchases
      WHERE player_id = ? AND spawn_id = ?`,
     [playerId, spawnId]
   );
-  return new Set(rows.map((row) => Math.max(0, Math.floor(Number(row.slot) || 0))));
+  return new Map(rows.map((row) => [
+    Math.max(0, Math.floor(Number(row.slot) || 0)),
+    String(row.itemKey || '')
+  ]));
 }
 
 function buildMerchantStock(
@@ -138,11 +145,22 @@ function buildMerchantStock(
   catalog,
   purchasedSlots = new Set(),
   rerollCount = 0,
-  playerLevel = 1
+  playerLevel = 1,
+  excludedItemKeys = new Set()
 ) {
-  const definitions = [...(catalog instanceof Map ? catalog.values() : [])]
-    .filter((definition) => definition?.itemKey && MERCHANT_RARITY_PRICES[definition.rarity])
+  const excluded = excludedItemKeys instanceof Set
+    ? excludedItemKeys
+    : new Set(excludedItemKeys || []);
+  const allDefinitions = [...(catalog instanceof Map ? catalog.values() : [])]
+    .filter((definition) => (
+      definition?.itemKey
+      && MERCHANT_RARITY_PRICES[definition.rarity]
+    ))
     .sort((left, right) => String(left.itemKey).localeCompare(String(right.itemKey)));
+  if (!allDefinitions.length) return [];
+
+  const definitionByKey = new Map(allDefinitions.map((definition) => [definition.itemKey, definition]));
+  const definitions = allDefinitions.filter((definition) => !excluded.has(definition.itemKey));
   const byRarity = new Map();
 
   definitions.forEach((definition) => {
@@ -162,8 +180,27 @@ function buildMerchantStock(
   const levelLuckRerollChance = getMerchantLevelLuckRerollChance(playerLevel);
   const usedKeys = new Set();
   const usedTypeIds = new Set();
+  const purchasedBySlot = normalizePurchasedMerchantSlots(purchasedSlots);
+  const purchasedDefinitions = new Map();
 
-  return Array.from({ length: MERCHANT_STOCK_SIZE }, (unused, slot) => {
+  purchasedBySlot.forEach((itemKey, slot) => {
+    const definition = definitionByKey.get(itemKey);
+    if (definition && slot >= 0 && slot < MERCHANT_STOCK_SIZE) {
+      purchasedDefinitions.set(slot, definition);
+      usedKeys.add(definition.itemKey);
+      usedTypeIds.add(Number(definition.typeId));
+    }
+  });
+
+  const purchasedKeys = new Set([...purchasedDefinitions.values()].map((definition) => definition.itemKey));
+  const selectableDefinitionCount = definitions.filter((definition) => !purchasedKeys.has(definition.itemKey)).length;
+  const targetStockSize = Math.min(
+    MERCHANT_STOCK_SIZE,
+    selectableDefinitionCount + purchasedDefinitions.size
+  );
+  const stock = [];
+
+  for (let slot = 0; slot < MERCHANT_STOCK_SIZE; slot += 1) {
     const rarity = rollMerchantRarity(
       rng,
       luckRerollChance,
@@ -171,6 +208,19 @@ function buildMerchantStock(
       levelLuckRerollChance,
       levelLuckRng
     );
+    const purchasedDefinition = purchasedDefinitions.get(slot);
+    if (purchasedDefinition) {
+      // Consume the selection roll so untouched slots keep the same
+      // deterministic stream as the original four-offer stock.
+      rng();
+      stock.push(serializeMerchantDefinition(purchasedDefinition, slot, true));
+      continue;
+    }
+    if (stock.length >= targetStockSize) {
+      rng();
+      continue;
+    }
+
     const rarityPool = byRarity.get(rarity) || definitions;
     let candidates = rarityPool.filter((definition) => (
       !usedKeys.has(definition.itemKey) && !usedTypeIds.has(Number(definition.typeId))
@@ -179,27 +229,56 @@ function buildMerchantStock(
       candidates = rarityPool.filter((definition) => !usedKeys.has(definition.itemKey));
     }
     if (!candidates.length) {
-      throw new Error(`The wandering merchant cannot fill stock slot ${slot + 1}.`);
+      candidates = definitions.filter((definition) => !usedKeys.has(definition.itemKey));
     }
+    if (!candidates.length) continue;
 
     const definition = candidates[Math.floor(rng() * candidates.length)];
     usedKeys.add(definition.itemKey);
     usedTypeIds.add(Number(definition.typeId));
-
-    return {
+    stock.push(serializeMerchantDefinition(
+      definition,
       slot,
-      itemKey: definition.itemKey,
-      itemType: 'echo',
-      typeId: Number(definition.typeId),
-      rarity: definition.rarity,
-      species: definition.species,
-      role: definition.role,
-      preferredPosition: definition.preferredPosition,
-      imageUrl: toWorldMapImageUrl(definition.imageUrl),
-      price: MERCHANT_RARITY_PRICES[definition.rarity],
-      purchased: purchasedSlots.has(slot)
-    };
-  });
+      purchasedBySlot.get(slot) === definition.itemKey
+    ));
+  }
+
+  return stock;
+}
+
+function normalizePurchasedMerchantSlots(purchasedSlots) {
+  if (purchasedSlots instanceof Map) return purchasedSlots;
+  if (purchasedSlots instanceof Set) {
+    return new Map([...purchasedSlots].map((slot) => [slot, '']));
+  }
+  return new Map();
+}
+
+function serializeMerchantDefinition(definition, slot, purchased = false) {
+  return {
+    slot,
+    itemKey: definition.itemKey,
+    itemType: 'echo',
+    typeId: Number(definition.typeId),
+    rarity: definition.rarity,
+    species: definition.species,
+    role: definition.role,
+    preferredPosition: definition.preferredPosition,
+    imageUrl: toWorldMapImageUrl(definition.imageUrl),
+    summonRequirement: Math.max(1, Number(definition.summonRequirement) || 1),
+    price: MERCHANT_RARITY_PRICES[definition.rarity],
+    purchased
+  };
+}
+
+function getCompletedMerchantItemKeys(echoes = {}, ownedRows = []) {
+  const completed = new Set(
+    (echoes.items || [])
+      .filter((item) => item.owned || item.summonReady)
+      .map((item) => item.itemKey)
+  );
+  (ownedRows || []).forEach((item) => completed.add(`echo:${item.typeId}:${item.rarity}`));
+  return completed;
 }
 
 function rollMerchantRarity(
@@ -285,6 +364,7 @@ async function purchaseWorldMerchantItem(
   const merchant = getActiveWorldMerchant(now);
   const spawnId = String(requestedSpawnId || '');
   const slot = Number(requestedSlot);
+  const requestedItemKey = String(options.itemKey || '');
 
   if (spawnId !== merchant.spawnId) {
     throw createHttpError('The merchant has moved and laid out new stock.', 409);
@@ -317,8 +397,31 @@ async function purchaseWorldMerchantItem(
     if (String(requestedStockId || '') !== stockId) {
       throw createHttpError('Crowley has already replaced these offers.', 409);
     }
-    const stock = buildMerchantStock(playerId, merchant.spawnId, catalog, new Set(), rerollCount, playerLevel);
-    const item = stock[slot];
+    const purchasedSlots = await getPurchasedMerchantSlots(playerId, merchant.spawnId, connection);
+    const echoes = await getCollectionEchoes(playerId, connection);
+    const [ownedRows] = await connection.query(
+      'SELECT type_id AS typeId, rarity FROM player_demons WHERE player_id = ?',
+      [playerId]
+    );
+    const completed = getCompletedMerchantItemKeys(echoes, ownedRows);
+    const stock = buildMerchantStock(
+      playerId,
+      merchant.spawnId,
+      catalog,
+      purchasedSlots,
+      rerollCount,
+      playerLevel,
+      completed
+    );
+    const item = stock.find((candidate) => candidate.slot === slot);
+    if (!item) throw createHttpError('Choose an available merchant item.', 400);
+    if (!requestedItemKey || requestedItemKey !== item.itemKey) {
+      throw createHttpError('Crowley has refreshed these offers. Choose an available merchant item.', 409);
+    }
+    const purchasedItemKey = purchasedSlots.get(slot);
+    if (purchasedItemKey === item.itemKey) {
+      throw createHttpError('That item has already been bought from this stock.', 409);
+    }
 
     const [positionRows] = await connection.query(
       'SELECT x, y FROM player_world_positions WHERE player_id = ? LIMIT 1 FOR UPDATE',
@@ -327,6 +430,14 @@ async function purchaseWorldMerchantItem(
     const position = positionRows[0];
     if (!position || Number(position.x) !== merchant.x || Number(position.y) !== merchant.y) {
       throw createHttpError('Stand beside the merchant before buying from his shop.', 409);
+    }
+
+    if (purchasedItemKey && purchasedItemKey !== item.itemKey) {
+      await connection.query(
+        `DELETE FROM player_world_merchant_purchases
+         WHERE player_id = ? AND spawn_id = ? AND slot = ?`,
+        [playerId, merchant.spawnId, slot]
+      );
     }
 
     const [purchaseResult] = await connection.query(

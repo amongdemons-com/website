@@ -200,7 +200,8 @@ router.post('/world/merchant/purchase', requireAuth, async (req, res) => {
     req.player.id,
     req.body?.spawnId,
     req.body?.stockId,
-    req.body?.slot
+    req.body?.slot,
+    { itemKey: req.body?.itemKey }
   );
   const [merchant, position] = await Promise.all([
     getWorldMerchantForPlayer(req.player.id, { playerLevel: purchase.player.level }),
@@ -1531,6 +1532,7 @@ function serializeWorldMerchantForClient(merchant, playerPosition, options = {})
       role: item.role,
       preferredPosition: item.preferredPosition,
       imageUrl: item.imageUrl,
+      summonRequirement: Math.max(1, Number(item.summonRequirement) || 1),
       price: Math.max(0, Number(item.price) || 0),
       purchased: Boolean(item.purchased)
     }))

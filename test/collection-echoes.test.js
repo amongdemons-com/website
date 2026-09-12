@@ -3,7 +3,14 @@ const assert = require('node:assert/strict');
 const db = require('../public/api/lib/db');
 const { addEcho, getPlayerBag, getCollectionEchoes } = require('../public/api/lib/echo-bag');
 const { SUMMON_REQUIREMENTS } = require('../public/api/lib/echo-config');
-const { MERCHANT_RARITY_PRICES, getActiveWorldMerchant, getMerchantStockId, buildMerchantStock, purchaseWorldMerchantItem } = require('../public/api/lib/world-merchant');
+const {
+  MERCHANT_RARITY_PRICES,
+  getActiveWorldMerchant,
+  getMerchantStockId,
+  buildMerchantStock,
+  getWorldMerchantForPlayer,
+  purchaseWorldMerchantItem
+} = require('../public/api/lib/world-merchant');
 const { getEchoCatalog } = require('../public/api/lib/echo-bag');
 const { planEchoConversion, convertLegacyEchoes } = require('../public/api/lib/echo-conversion');
 const achievements = require('../public/api/lib/achievements');
@@ -110,10 +117,56 @@ test('completed merchant Echoes cannot consume Souls or mark an offer purchased'
     bag: { [item.itemKey]: SUMMON_REQUIREMENTS[item.rarity] },
     souls: 10000, merchant, purchases: 0
   });
-  await assert.rejects(purchaseWorldMerchantItem('p', merchant.spawnId, getMerchantStockId(merchant.spawnId), 0, { now }), { status: 409 });
+  await assert.rejects(
+    purchaseWorldMerchantItem(
+      'p',
+      merchant.spawnId,
+      getMerchantStockId(merchant.spawnId),
+      0,
+      { now, itemKey: item.itemKey }
+    ),
+    { status: 409 }
+  );
   assert.equal(memory.data.souls, 10000);
   assert.equal(memory.data.purchases, 0);
   assert.equal(memory.data.bag[item.itemKey], SUMMON_REQUIREMENTS[item.rarity]);
+});
+
+test('merchant fills four offers with other Echo variants when some stock is completed', async t => {
+  const now = new Date('2026-09-12T12:00:00Z');
+  const merchant = getActiveWorldMerchant(now);
+  const catalog = await getEchoCatalog();
+  const initialStock = buildMerchantStock('p', merchant.spawnId, catalog);
+  const completedItem = initialStock[0];
+  installMemoryDb(t, {
+    merchant,
+    bag: { [completedItem.itemKey]: SUMMON_REQUIREMENTS[completedItem.rarity] }
+  });
+
+  const refreshed = await getWorldMerchantForPlayer('p', { now, playerLevel: 1 });
+
+  assert.equal(refreshed.itemSlots.length, 4);
+  assert.equal(refreshed.itemSlots.some((item) => item.itemKey === completedItem.itemKey), false);
+  assert.equal(new Set(refreshed.itemSlots.map((item) => item.itemKey)).size, 4);
+});
+
+test('merchant keeps a purchased offer in its slot until the next refresh', async t => {
+  const now = new Date('2026-09-12T12:00:00Z');
+  const merchant = getActiveWorldMerchant(now);
+  const catalog = await getEchoCatalog();
+  const purchasedItem = buildMerchantStock('p', merchant.spawnId, catalog)[0];
+  installMemoryDb(t, {
+    merchant,
+    merchantPurchases: [{ slot: purchasedItem.slot, itemKey: purchasedItem.itemKey }],
+    bag: { [purchasedItem.itemKey]: SUMMON_REQUIREMENTS[purchasedItem.rarity] }
+  });
+
+  const current = await getWorldMerchantForPlayer('p', { now, playerLevel: 1 });
+  const purchasedSlot = current.itemSlots.find((item) => item.slot === purchasedItem.slot);
+
+  assert.equal(current.itemSlots.length, 4);
+  assert.equal(purchasedSlot?.itemKey, purchasedItem.itemKey);
+  assert.equal(purchasedSlot?.purchased, true);
 });
 
 test('cashout rejects owned variants from team, reward, and saved extraction choices without ending the run', async t => {
@@ -134,7 +187,11 @@ test('cashout rejects owned variants from team, reward, and saved extraction cho
 });
 
 function installMemoryDb(t, initial = {}) {
-  const memory = { data: { bag: {}, owned: [], souls: 0, ...initial }, tail: Promise.resolve(), failCredit: false };
+  const memory = {
+    data: { bag: {}, owned: [], souls: 0, merchantPurchases: [], ...initial },
+    tail: Promise.resolve(),
+    failCredit: false
+  };
   function connection() {
     let unlock;
     let snapshot;
@@ -157,7 +214,9 @@ function installMemoryDb(t, initial = {}) {
         const data = memory.data;
         if (sql.startsWith('SELECT * FROM runs')) return [[data.run]];
         if (sql.startsWith('INSERT IGNORE INTO player_world_merchant_stock')) return [{ affectedRows: 0 }];
+        if (sql.startsWith('SELECT reroll_count')) return [[]];
         if (sql.startsWith('SELECT spawn_id, reroll_count')) return [[{ spawn_id: data.merchant.spawnId, reroll_count: 0 }]];
+        if (sql.startsWith('SELECT slot, item_key AS itemKey')) return [data.merchantPurchases];
         if (sql.startsWith('SELECT p.*, pd.image_url')) {
           await this.query('SELECT id FROM players WHERE id = ? LIMIT 1 FOR UPDATE', ['p']);
           return [[{ id: 'p', souls: data.souls, level: 1 }]];
