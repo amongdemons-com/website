@@ -21,6 +21,7 @@ const {
 const { allocateRunRewardIds, createDiscardSoulRewardFields, ensureRunEarned, getBattleXpReward } = require('../lib/run-rewards');
 const { qualifiesForTrialOfTheFew, recordDailyQuestProgress } = require('../lib/daily-quests');
 const achievements = require('../lib/achievements');
+const { getPlayerEquipment } = require('../lib/hunter-equipment');
 
 const router = express.Router();
 
@@ -60,8 +61,11 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   });
   const rng = createRng(run.seed + run.floor);
   const encounterProfile = getDungeonEncounterProfile(createRng(run.seed + run.floor), run.floor);
-  const demonTypes = await getDemonTypes();
-  const skillBuffs = await resolvePlayerCombatBuffState(req.player);
+  const [demonTypes, skillBuffs, playerEquipment] = await Promise.all([
+    getDemonTypes(),
+    resolvePlayerCombatBuffState(req.player),
+    getPlayerEquipment(req.player.id)
+  ]);
   const playerBuffs = getDungeonPlayerCombatBuffs(run.state.buffs, skillBuffs);
   applyRunBuffStatModifiers(run);
   run.state.team = assignFormationSlots(run.state.team || [], 'player');
@@ -69,7 +73,8 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
   const result = simulateFight(rng, run.state.team, run.state.enemies, {
     demonTypes,
     combatType: 'dungeon',
-    playerBuffs
+    playerBuffs,
+    playerEquipment: playerEquipment.items
   });
   run.state.team = mergeBattleTeamForRun(run.state.team, result.playerTeam);
   run.state.enemies = result.enemyTeam;
@@ -85,6 +90,7 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
     enemyTeamBefore: cloneForBattleReplay(result.enemyTeamBefore),
     playerTeamAfter: cloneForBattleReplay(result.playerTeam),
     enemyTeamAfter: cloneForBattleReplay(result.enemyTeam),
+    playerEquipment: playerEquipment.items,
     playerBuffs: serializeCombatBuffState(playerBuffs).activeBuffs,
     enemyBuffs: encounterProfile.convergence ? [{ ...encounterProfile.convergence }] : []
   };
@@ -150,7 +156,10 @@ router.post('/runs/:id/battle', requireAuth, async (req, res) => {
 });
 
 async function resolveDungeonRankedBattle(req, res) {
-  const skillBuffs = await resolvePlayerCombatBuffState(req.player);
+  const [skillBuffs, playerEquipment] = await Promise.all([
+    resolvePlayerCombatBuffState(req.player),
+    getPlayerEquipment(req.player.id)
+  ]);
   const connection = await db.getConnection();
   let committed = false;
 
@@ -178,7 +187,9 @@ async function resolveDungeonRankedBattle(req, res) {
         demonTypes,
         combatType: 'ranked',
         playerBuffs,
-        enemyBuffs
+        enemyBuffs,
+        playerEquipment: playerEquipment.items,
+        enemyEquipment: run.state.rankedEncounter.enemyEquipment || []
       }
     );
 
@@ -199,6 +210,8 @@ async function resolveDungeonRankedBattle(req, res) {
       enemyTeamBefore: cloneForBattleReplay(result.enemyTeamBefore),
       playerTeamAfter: cloneForBattleReplay(result.playerTeam),
       enemyTeamAfter: cloneForBattleReplay(result.enemyTeam),
+      playerEquipment: playerEquipment.items,
+      enemyEquipment: run.state.rankedEncounter.enemyEquipment || [],
       playerBuffs: serializeCombatBuffState(playerBuffs).activeBuffs,
       enemyBuffs: serializeCombatBuffState(enemyBuffs).activeBuffs
     };

@@ -111,9 +111,17 @@ async function mergePlayerAccounts(token, targetPlayerId, queryable = db) {
     await assertMergeIdentities(intent, connection);
     const preferred = choosePreferredAccount(target, source);
     const teamRows = await loadWorldTeams([target.id, source.id], connection);
+    const equipmentRows = await loadEquipment([target.id, source.id], connection);
     const demonMerge = await mergeDemons(target.id, source.id, connection);
 
     await mergeBag(target.id, source.id, connection);
+    await mergeEquipment({
+      targetPlayerId: target.id,
+      sourcePlayerId: source.id,
+      preferredPlayerId: preferred.id,
+      rows: equipmentRows,
+      connection
+    });
     await mergeWorldBuffs(target.id, source.id, connection);
     await mergeAnomalyProgress(target.id, source.id, connection);
     await mergeAchievements(target.id, source.id, connection);
@@ -359,6 +367,30 @@ async function mergeBag(targetPlayerId, sourcePlayerId, connection) {
         row.created_at,
         row.updated_at
       ]
+    );
+  }
+}
+
+async function loadEquipment(playerIds, connection) {
+  const [rows] = await connection.query(
+    'SELECT player_id, slot_key, item_key FROM player_equipment WHERE player_id IN (?, ?) FOR UPDATE',
+    playerIds
+  );
+  return rows;
+}
+
+async function mergeEquipment(options) {
+  const { targetPlayerId, sourcePlayerId, preferredPlayerId, rows, connection } = options;
+  const preferredRows = rows.filter((row) => row.player_id === preferredPlayerId);
+  const selectedRows = preferredRows.length
+    ? preferredRows
+    : rows.filter((row) => row.player_id !== preferredPlayerId);
+
+  await connection.query('DELETE FROM player_equipment WHERE player_id IN (?, ?)', [targetPlayerId, sourcePlayerId]);
+  for (const row of selectedRows) {
+    await connection.query(
+      'INSERT INTO player_equipment (player_id, slot_key, item_key) VALUES (?, ?, ?)',
+      [targetPlayerId, row.slot_key, row.item_key]
     );
   }
 }

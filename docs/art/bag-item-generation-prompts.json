@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "key": "basic-sword",
+      "name": "Basic Sword",
+      "assetType": "bag inventory item",
+      "prompt": "Use case: stylized-concept\nAsset type: Among Demons game Bag inventory item icon\nInput images: Image 1 and Image 2 are approved demon style references; Image 3 is the approved Bag item rendering reference; Image 4 is the Bag environment color-and-contrast reference. Use all images only to match the project's graphic language and readability. Do not copy a creature, bottle, room, or emblem.\nPrimary request: create one simple basic one-handed sword as a production-ready standalone inventory asset.\nSubject: a plain practical short sword with one broad straight steel blade, a simple slightly curved blue-slate crossguard, a short brown leather-wrapped grip reduced to two or three broad bands, and a small ochre/brass pommel. Sturdy and charming, ordinary starter equipment, unmistakably a sword at 64px.\nStyle/medium: expressive hand-inked 2D cartoon matching the approved Among Demons art: confident near-black organic contour, sparse interior lines, broad matte color blocks, and at most one simple hard-edged shadow per material. Chunky simplified proportions; no realistic metal rendering.\nComposition/framing: one complete sword centered on a square canvas, rotated gently from lower-left toward upper-right, occupying about 82% of the canvas while keeping every tip inside generous transparent padding. Straight-on icon presentation, no perspective scene.\nColor palette: pale cool steel-gray blade with one blue-gray shadow plane; dark desaturated navy/blue-slate guard; warm medium-brown grip; one restrained ochre/brass pommel accent. Strong readable contrast against the Bag's dark teal crypt.\nMaterials/textures: matte simplified steel, matte guard, simple leather; only large flat shapes.\nConstraints: genuinely transparent background with clean alpha; no floor, no cast shadow, no border, no tile, no badge, no bottle, no scenery, no text, no logo, no watermark. The blade and all parts must form one coherent object. Readable at 64px.\nAvoid: ornate fantasy design, runes, gems, spikes, skulls, faces, demon features, flames, blood, rust, scratches, chips, glow, bloom, particles, gradients, glossy reflections, thin white highlights, bevel noise, photorealism, 3D rendering, tiny details, rarity effects.",
+      "references": [
+        "public/app/images/demons/6.png",
+        "public/app/images/demons/30.png",
+        "public/app/images/items/echo/01-melee.png",
+        "public/app/images/assets/background/amongdemons_bag.png"
+      ],
+      "refinements": [
+        {
+          "reason": "The first generation painted a checkerboard instead of returning alpha.",
+          "prompt": "Use case: background-extraction\nAsset type: production Among Demons Bag inventory item\nInput images: Image 1 is the EDIT TARGET.\nPrimary request: remove the entire gray-and-white checkerboard backdrop and replace it with genuinely transparent alpha.\nConstraints: change ONLY the background. Preserve the sword exactly: identical silhouette, scale, position, rotation, blade geometry, near-black contour, steel-gray color blocks, blue-slate guard, brown grip bands, ochre pommel, and every hard shadow. Keep all outer edges clean and antialiased. No halo.\nOutput: one complete sword cutout on a genuinely transparent square canvas.\nAvoid: painted checkerboard, solid or colored background, floor, cast shadow, border, badge, glow, particles, text, watermark, redesign, recolor, crop."
+        }
+      ],
+      "selectedGeneration": "C:/Users/aluro/.codex/generated_images/01a09a90-6dd1-7ad0-bb4b-287d1397a494/exec-480f5100-4ea8-46af-845b-21569c300799.png",
+      "master": "public/app/images/items/basic-sword.png",
+      "webp": "public/app/images/items/basic-sword.webp",
+      "masterSha256": "262b3d50734bd0e3650a3363bb893c3cf823bad244317a545115a67d5213a572",
+      "webpSha256": "386c37fd3800d61ce9c41132bf39f1c7a9d7e5c0e73f4a50473445f0d21bccbe",
+      "masterDimensions": "1254x1254",
+      "webpDimensions": "512x512",
+      "alphaVerified": true
+    }
+  ]
+}

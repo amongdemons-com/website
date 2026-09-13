@@ -8,7 +8,7 @@ const RARITIES = Object.freeze([
 ]);
 
 const RANKED_RULES_VERSION = 'ranked-v5';
-const COMBAT_DATA_VERSION = 'combat-v4';
+const COMBAT_DATA_VERSION = 'combat-v5';
 const ACTIVE_CAPACITY = 6;
 const FORMATION_CAPACITY = 9;
 const RESERVE_CAPACITY = 6;

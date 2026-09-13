@@ -6,6 +6,7 @@
   const RARITIES = new Set(['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']);
   const ASSET_BASE = '/app/images/items/echo';
   const ECHO_ART_VERSION = 'echo-d4f6b5038dc1';
+  const EQUIPMENT_GLYPHS = Object.freeze({ weapon: '⚔', armor: '⬟', helm: '◉', ring: '○', offhand: '◆' });
   const ECHO_TYPES = Object.freeze({
     1: { key: 'melee', label: 'Melee', asset: '01-melee', motion: 'strike', essence: '#D1D5D8' },
     2: { key: 'ranged', label: 'Ranged sniper', asset: '02-ranged', motion: 'focus', essence: '#171D24' },
@@ -71,6 +72,22 @@
       </span>`;
   }
 
+  function EquipmentItemVisual(item, options = {}) {
+    const context = options.context === 'detail' ? 'detail' : 'slot';
+    const slot = String(item?.slot || 'offhand').toLowerCase();
+    const rarity = normalizeRarity(item?.rarity);
+    if (item?.imageUrl) {
+      return `
+        <span class="bag-item-renderer equipment-item-visual equipment-context-${context}" data-equipment-slot="${escapeHtml(slot)}" data-rarity="${rarity}" aria-hidden="true">
+          <img class="bag-item-image" src="${escapeHtml(item.imageUrl)}" alt="" width="512" height="512" loading="${context === 'detail' ? 'eager' : 'lazy'}" decoding="async" draggable="false">
+        </span>`;
+    }
+    return `
+      <span class="bag-item-renderer equipment-item-visual equipment-context-${context}" data-equipment-slot="${escapeHtml(slot)}" data-rarity="${rarity}" aria-hidden="true">
+        <span class="equipment-item-glyph">${escapeHtml(EQUIPMENT_GLYPHS[slot] || '◇')}</span>
+      </span>`;
+  }
+
   function normalizeRarity(value) {
     const rarity = String(value || 'common').toLowerCase();
     return RARITIES.has(rarity) ? rarity : 'common';
@@ -87,10 +104,12 @@
   }
 
   registerItemVisual('echo', EchoItemVisual);
+  registerItemVisual('equipment', EquipmentItemVisual);
 
   window.AmongDemons.bagVisuals = Object.assign(bagVisuals, {
     ECHO_TYPES,
     EchoItemVisual,
+    EquipmentItemVisual,
     registerItemVisual,
     renderItemVisual
   });

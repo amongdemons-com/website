@@ -567,6 +567,7 @@ function createAnomalyConnection(updates, ritual = {}) {
         }]];
       }
       if (/FROM player_world_positions/.test(sql)) return [[{ x: ANOMALY_X, y: ANOMALY_Y }]];
+      if (/FROM player_equipment/.test(sql)) return [[]];
       if (/SELECT attempts,/.test(sql)) {
         return [[{
           attempts: ritual.attempts || 0,

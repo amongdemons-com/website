@@ -19,8 +19,12 @@
   const BAG_SORT_STORAGE_PREFIX = 'amongdemons-bag-sort';
   const BAG_SORT_OPTIONS = new Set(['type', 'rarity', 'name', 'quantity']);
   const DEFAULT_BAG_SORT = 'type';
+  const EQUIPMENT_SLOT_GLYPHS = Object.freeze({
+    weapon: '⚔', armor: '⬟', helm: '◉', ring: '○', offhand: '◆'
+  });
   const state = {
     items: [],
+    equipment: { slots: [] },
     selectedKey: null,
     filter: 'all',
     sort: DEFAULT_BAG_SORT,
@@ -54,8 +58,9 @@
   }
 
   function cacheElements() {
-    ['bagBackLink', 'bagCount', 'bagFilter', 'bagSort', 'bagLoading', 'bagGridViewport', 'bagGrid', 'bagItemTooltip', 'bagDetailModal', 'bagDetailContent', 'bagDetailTitle']
+    ['bagBackLink', 'bagCount', 'bagFilter', 'bagSort', 'bagLoading', 'bagGridViewport', 'bagGrid', 'bagItemTooltip', 'bagDetailModal', 'bagDetailContent', 'bagDetailTitle', 'equipmentGrid']
       .forEach((id) => { elements[id] = document.getElementById(id); });
+    elements.equipmentGrid = document.getElementById('bagEquipmentGrid');
   }
 
   function bindActions() {
@@ -114,6 +119,16 @@
       }
       openItem(itemKey);
     });
+    elements.equipmentGrid?.addEventListener('click', (event) => {
+      const slot = event.target.closest('[data-equipment-item-key]');
+      if (slot?.dataset.equipmentItemKey) openItem(slot.dataset.equipmentItemKey);
+    });
+    elements.bagDetailContent?.addEventListener('click', (event) => {
+      const equipButton = event.target.closest('[data-equipment-equip]');
+      const unequipButton = event.target.closest('[data-equipment-unequip]');
+      if (equipButton) equipItem(equipButton.dataset.equipmentEquip, equipButton.dataset.equipmentSlot);
+      if (unequipButton) unequipItem(unequipButton.dataset.equipmentUnequip);
+    });
     document.addEventListener('pointerdown', (event) => {
       if (event.target.closest('[data-bag-key], #bagItemTooltip')) return;
       state.inspectedKey = null;
@@ -169,6 +184,10 @@
 
   function applyPayload(payload = {}) {
     state.items = Array.isArray(payload.items) ? payload.items.filter(item => item.itemType !== 'echo') : [];
+    state.equipment = payload.equipment && Array.isArray(payload.equipment.slots)
+      ? payload.equipment
+      : { slots: [] };
+    renderEquipment();
     renderBag();
     if (state.selectedKey) {
       const item = getSelectedItem();
@@ -205,10 +224,11 @@
   function renderItem(item) {
     const rarity = normalizeRarity(item.rarity);
     const color = getRarityColor(rarity);
-    const aria = `${item.name || item.itemKey}, quantity ${item.quantity}.`;
+    const equipped = Number(item.equippedCount) > 0;
+    const aria = `${item.name || item.itemKey}, quantity ${item.quantity}.${equipped ? ' Equipped.' : ''}`;
 
     return `
-      <button class="bag-slot bag-item bag-item-kind-${escapeHtml(normalizeItemType(item.itemType))} ${state.inspectedKey === item.itemKey ? 'is-inspecting' : ''}" type="button" data-bag-key="${escapeHtml(item.itemKey)}" style="--item-rarity: ${escapeHtml(color)}" aria-label="${escapeHtml(aria)}">
+      <button class="bag-slot bag-item bag-item-kind-${escapeHtml(normalizeItemType(item.itemType))} ${state.inspectedKey === item.itemKey ? 'is-inspecting' : ''} ${equipped ? 'is-equipped' : ''}" type="button" data-bag-key="${escapeHtml(item.itemKey)}" style="--item-rarity: ${escapeHtml(color)}" aria-label="${escapeHtml(aria)}">
         <span class="bag-rarity-diamond" aria-hidden="true"></span>
         <span class="bag-item-visual">
           ${renderItemVisual(item, { context: 'slot' })}
@@ -233,10 +253,128 @@
   }
 
   function renderItemDetail(item) {
+    if (item.itemType === 'equipment') {
+      renderEquipmentDetail(item);
+      return;
+    }
     elements.bagDetailContent.innerHTML = `
       <div class="modal-header"><h2 class="modal-title h5" id="bagDetailTitle">${escapeHtml(item.name || item.itemKey)}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
       <div class="modal-body"><p>Quantity: ${escapeHtml(formatNumber(item.quantity))}</p></div>
     `;
+  }
+
+  function renderEquipment() {
+    if (!elements.equipmentGrid) return;
+    const defaultSlots = [
+      ['weapon', 'Weapon'], ['armor', 'Armor'], ['helm', 'Helm'],
+      ['ring1', 'Ring I'], ['ring2', 'Ring II'], ['offhand', 'Offhand']
+    ].map(([slotKey, label]) => ({ slotKey, slot: slotKey.replace(/[12]$/, ''), label, item: null }));
+    const slots = state.equipment.slots.length ? state.equipment.slots : defaultSlots;
+    elements.equipmentGrid.innerHTML = slots.map((entry) => {
+      const item = entry.item;
+      const color = getRarityColor(item?.rarity || 'common');
+      const visual = item
+        ? renderEquipmentSlotVisual(item)
+        : `<span aria-hidden="true">${escapeHtml(EQUIPMENT_SLOT_GLYPHS[entry.slot] || '◇')}</span>`;
+      const tag = item ? 'button' : 'div';
+      return `
+        <${tag} class="bag-equipment-slot ${item ? 'is-filled' : 'is-empty'}" ${item ? 'type="button"' : ''} style="--item-rarity: ${escapeHtml(item ? color : '#526269')}" ${item ? `data-equipment-item-key="${escapeHtml(item.itemKey)}" aria-label="View equipped ${escapeHtml(item.name)}"` : ''}>
+          <span class="bag-equipment-slot-label">${escapeHtml(entry.label)}</span>
+          <span class="bag-equipment-slot-icon">${visual}</span>
+          <span class="bag-equipment-slot-name">${escapeHtml(item?.name || 'Empty')}</span>
+        </${tag}>`;
+    }).join('');
+  }
+
+  function renderEquipmentSlotVisual(item) {
+    if (item.imageUrl) {
+      return `<img src="${escapeHtml(item.imageUrl)}" alt="" width="48" height="48" loading="lazy">`;
+    }
+    return `<span aria-hidden="true">${escapeHtml(EQUIPMENT_SLOT_GLYPHS[item.slot] || '◇')}</span>`;
+  }
+
+  function renderEquipmentDetail(item) {
+    const rarity = normalizeRarity(item.rarity);
+    const color = getRarityColor(rarity);
+    const equippedSlots = Array.isArray(item.equippedSlots) ? item.equippedSlots : [];
+    const values = renderEquipmentValues(item.scaledValues);
+    const actions = renderEquipmentActions(item, equippedSlots);
+    elements.bagDetailContent.style.setProperty('--item-rarity', color);
+    elements.bagDetailContent.innerHTML = `
+      <div class="modal-header">
+        <div><span class="bag-detail-rarity">${escapeHtml(capitalize(rarity))} ${escapeHtml(capitalize(item.slot))}</span><h2 class="modal-title h5" id="bagDetailTitle">${escapeHtml(item.name)}</h2></div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="bag-equipment-detail">
+        <div class="bag-equipment-detail-visual">${renderItemVisual(item, { context: 'detail' })}</div>
+        <div class="bag-equipment-detail-copy">
+          <p>${escapeHtml(item.description || '')}</p>
+          <div class="bag-equipment-values">${values}</div>
+          <p class="small">Owned: ${escapeHtml(formatNumber(item.quantity))}${equippedSlots.length ? ` · Equipped: ${escapeHtml(equippedSlots.map(formatSlotLabel).join(', '))}` : ''}</p>
+        </div>
+      </div>
+      <div class="bag-equipment-actions">${actions}<button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Close</button></div>
+    `;
+  }
+
+  function renderEquipmentValues(values) {
+    return (Array.isArray(values) ? values : []).map((entry) => `
+      <span class="bag-equipment-value"><span>${escapeHtml(entry.label)}</span><strong>${escapeHtml(entry.value)}</strong></span>
+    `).join('') || '<span class="bag-equipment-value"><span>Effect</span><strong>See description</strong></span>';
+  }
+
+  function renderEquipmentActions(item, equippedSlots) {
+    const actions = equippedSlots.map((slot) => `
+      <button class="btn btn-outline-warning" type="button" data-equipment-unequip="${escapeHtml(slot)}">Unequip ${escapeHtml(formatSlotLabel(slot))}</button>
+    `);
+    if (item.slot === 'ring') {
+      ['ring1', 'ring2'].forEach((slot) => {
+        if (equippedSlots.includes(slot)) return;
+        actions.push(`<button class="btn btn-primary" type="button" data-equipment-equip="${escapeHtml(item.itemKey)}" data-equipment-slot="${slot}">Equip ${escapeHtml(formatSlotLabel(slot))}</button>`);
+      });
+    } else if (!equippedSlots.includes(item.slot)) {
+      actions.push(`<button class="btn btn-primary" type="button" data-equipment-equip="${escapeHtml(item.itemKey)}" data-equipment-slot="${escapeHtml(item.slot)}">Equip</button>`);
+    }
+    return actions.join('');
+  }
+
+  async function equipItem(itemKey, slot) {
+    setEquipmentActionsBusy(true);
+    try {
+      applyPayload(await api('/api/equipment/equip', {
+        method: 'POST',
+        body: { itemKey, slot }
+      }));
+      const item = state.items.find((candidate) => candidate.itemKey === itemKey);
+      if (item) renderEquipmentDetail(item);
+      audio?.play('sfx.progression.skillUnlock', { volume: 0.75 });
+    } catch (error) {
+      showError(error);
+    } finally {
+      setEquipmentActionsBusy(false);
+    }
+  }
+
+  async function unequipItem(slot) {
+    const selectedKey = state.selectedKey;
+    setEquipmentActionsBusy(true);
+    try {
+      applyPayload(await api('/api/equipment/unequip', {
+        method: 'POST',
+        body: { slot }
+      }));
+      const item = state.items.find((candidate) => candidate.itemKey === selectedKey);
+      if (item) renderEquipmentDetail(item);
+    } catch (error) {
+      showError(error);
+    } finally {
+      setEquipmentActionsBusy(false);
+    }
+  }
+
+  function setEquipmentActionsBusy(busy) {
+    elements.bagDetailContent?.querySelectorAll('[data-equipment-equip], [data-equipment-unequip]')
+      .forEach((button) => { button.disabled = Boolean(busy); });
   }
 
   function getSelectedItem() {
@@ -306,10 +444,11 @@
     tooltip.dataset.bagKey = itemKey;
     tooltip.style.setProperty('--item-rarity', getRarityColor(rarity));
     tooltip.innerHTML = `
-      <span class="bag-tooltip-rarity">${escapeHtml(capitalize(item.itemType))}</span>
+      <span class="bag-tooltip-rarity">${escapeHtml(item.itemType === 'equipment' ? `${capitalize(rarity)} ${capitalize(item.slot)}` : capitalize(item.itemType))}</span>
       <strong class="bag-tooltip-title">${escapeHtml(item.name || item.itemKey)}</strong>
       <span class="bag-tooltip-meta">x${escapeHtml(formatNumber(item.quantity))}</span>
-      <span class="bag-tooltip-meta">${escapeHtml(getItemStatus(item))}</span>
+      <span class="bag-tooltip-meta bag-tooltip-description">${escapeHtml(getItemStatus(item))}</span>
+      ${item.itemType === 'equipment' ? `<span class="bag-tooltip-meta bag-tooltip-effect">${escapeHtml((item.scaledValues || []).map((entry) => `${entry.label} ${entry.value}`).join(' · '))}</span>` : ''}
       <button class="bag-tooltip-action" type="button" data-bag-tooltip-open="${escapeHtml(itemKey)}">View details</button>
     `;
     tooltip.hidden = false;
@@ -407,6 +546,10 @@
 
   function formatNumber(value) {
     return Math.max(0, Number(value) || 0).toLocaleString();
+  }
+
+  function formatSlotLabel(slot) {
+    return ({ weapon: 'Weapon', armor: 'Armor', helm: 'Helm', ring1: 'Ring I', ring2: 'Ring II', offhand: 'Offhand' })[slot] || capitalize(slot);
   }
 
   function escapeHtml(value) {

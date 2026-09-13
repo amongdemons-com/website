@@ -15,14 +15,44 @@ const {
 } = require('./lib/echo-bag');
 const achievements = require('./lib/achievements');
 const { getAccountProgressionPayload } = require('./lib/progression');
+const {
+  enrichEquipmentBagItems,
+  equipPlayerItem,
+  getPlayerEquipment,
+  unequipPlayerItem
+} = require('./lib/hunter-equipment');
 
 const router = express.Router();
 
 router.get('/bag', requireAuth, async (req, res) => {
+  const [bag, equipment] = await Promise.all([
+    getPlayerBag(req.player.id),
+    getPlayerEquipment(req.player.id)
+  ]);
   res.json({
-    ...(await getPlayerBag(req.player.id)),
+    ...bag,
+    items: enrichEquipmentBagItems(bag.items, equipment),
+    equipment,
     player: req.player,
     progression: getAccountProgressionPayload(req.player)
+  });
+});
+
+router.post('/equipment/equip', requireAuth, async (req, res) => {
+  const equipment = await equipPlayerItem(req.player.id, req.body?.itemKey, req.body?.slot);
+  const bag = await getPlayerBag(req.player.id);
+  res.json({
+    equipment,
+    items: enrichEquipmentBagItems(bag.items, equipment)
+  });
+});
+
+router.post('/equipment/unequip', requireAuth, async (req, res) => {
+  const equipment = await unequipPlayerItem(req.player.id, req.body?.slot);
+  const bag = await getPlayerBag(req.player.id);
+  res.json({
+    equipment,
+    items: enrichEquipmentBagItems(bag.items, equipment)
   });
 });
 

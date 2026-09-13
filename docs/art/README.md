@@ -29,6 +29,7 @@ Seven environments have been regenerated, and the eighth home/social background 
 - [Exact jade and amber texture prompts](card-backdrop-texture-prompts.json)
 - [Earlier minimal backdrop prompt (superseded)](minimal-card-backdrop-prompt.txt)
 - [World generation prompts and review history](world-generation-prompts.json)
+- [Bag item generation prompts and asset hashes](bag-item-generation-prompts.json)
 - [Asset verification](asset-verification.json)
 - [Browser card layout checks](card-verification.json)
 
@@ -47,6 +48,7 @@ World artwork was made with **built-in imagegen**. The selected Anomaly was gene
 | Crowley | `public/app/images/assets/world/crowley.png` | `crowley.webp` at 512px |
 | Whispering Well | `public/app/images/assets/world/soul-font.png` | `soul-font.webp` at 768px |
 | Anomaly | `public/app/images/demons/anomaly.png` | `anomaly.webp` at 1024px, alpha preserved |
+| Basic Sword | `public/app/images/items/basic-sword.png` | `basic-sword.webp` at 512px, alpha preserved |
 
 ## Rebuild and verify
 

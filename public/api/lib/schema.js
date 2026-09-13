@@ -29,6 +29,8 @@ const PLAYER_TUTORIAL_TRAINING_GRANT_SCHEMA_MIGRATION = '20260811_player_tutoria
 const STARTER_TYPE_3_COMMON_ECHO_BACKFILL_MIGRATION = '20260811_starter_type_3_common_echo_v1';
 const PLAY_GAMES_SCHEMA_MIGRATION = '20260815_play_games_schema_v1';
 const LEADERBOARD_EXCLUSION_SCHEMA_MIGRATION = '20260909_leaderboard_exclusion_v1';
+const HUNTER_EQUIPMENT_SCHEMA_MIGRATION = '20260913_hunter_equipment_v1';
+const HUNTER_EQUIPMENT_INVENTORY_CLEANUP_MIGRATION = '20260913_hunter_equipment_inventory_cleanup_v1';
 let schemaReadyPromise;
 
 async function getColumns(tableName) {
@@ -735,6 +737,29 @@ async function addWorldMerchantSchema() {
   );
 }
 
+async function addHunterEquipmentSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS player_equipment (
+      player_id VARCHAR(255) NOT NULL,
+      slot_key VARCHAR(16) NOT NULL,
+      item_key VARCHAR(96) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (player_id, slot_key),
+      INDEX idx_player_equipment_item (player_id, item_key)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+  await normalizeUtf8Column('player_equipment', 'player_id', 'VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_equipment', 'slot_key', 'VARCHAR(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await normalizeUtf8Column('player_equipment', 'item_key', 'VARCHAR(96) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL');
+  await addIndexIfMissing('player_equipment', 'idx_player_equipment_item', 'INDEX idx_player_equipment_item (player_id, item_key)');
+}
+
+async function clearUnearnedHunterEquipment() {
+  await db.query('DELETE FROM player_equipment');
+  await db.query("DELETE FROM player_bag WHERE item_type = 'equipment'");
+}
+
 async function addWorldMerchantBribeSchema() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS player_world_merchant_stock (
@@ -1201,6 +1226,8 @@ async function initializeSchema() {
   `);
 
   await runMigrationOnce(BASELINE_SCHEMA_MIGRATION, applyBaselineSchema);
+  await runMigrationOnce(HUNTER_EQUIPMENT_SCHEMA_MIGRATION, addHunterEquipmentSchema);
+  await runMigrationOnce(HUNTER_EQUIPMENT_INVENTORY_CLEANUP_MIGRATION, clearUnearnedHunterEquipment);
   await runMigrationOnce(PERFORMANCE_INDEXES_MIGRATION, addPerformanceIndexes);
   await runMigrationOnce(WORLD_MERCHANT_SCHEMA_MIGRATION, addWorldMerchantSchema);
   await runMigrationOnce(WORLD_MERCHANT_BRIBE_SCHEMA_MIGRATION, addWorldMerchantBribeSchema);

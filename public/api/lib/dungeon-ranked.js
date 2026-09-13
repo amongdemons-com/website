@@ -6,6 +6,8 @@ const {
 } = require('./combat-buffs');
 const { assignFormationSlots, getFormationSlotPosition, resetRunDemon } = require('./run-demons');
 const { resolvePlayerCombatBuffState } = require('./player-combat-buffs');
+const { getPlayerEquipment } = require('./hunter-equipment');
+const { normalizeEquipmentCombatItems } = require('./equipment-effects');
 const {
   getOrCreateCurrentSeason,
   getOrCreateRankedRating,
@@ -25,7 +27,7 @@ const DUNGEON_RANKED_LEVEL_RANGE = 5;
 const DUNGEON_RANKED_RATING_RANGE = 200;
 const DUNGEON_RANKED_ELO_K = RANKED_ELO_K;
 const DUNGEON_RANKED_ESCAPE_CHANCE = 0.7;
-const DUNGEON_RANKED_SNAPSHOT_VERSION = 'dungeon-ranked-v2';
+const DUNGEON_RANKED_SNAPSHOT_VERSION = 'dungeon-ranked-v3';
 const DEFAULT_RATING = RANKED_DEFAULT_RATING;
 
 function isDungeonRankedFloor(floor) {
@@ -59,6 +61,7 @@ function createDungeonRankedSnapshotPayload(run, options = {}) {
     division: rating === null ? 'Unranked' : getDivision(rating).name,
     team: cloneJson(run?.state?.team || []),
     buffs: serializeCombatBuffState(stripTerrorCombatBuffs(options.buffs || {})),
+    equipment: normalizeEquipmentCombatItems(options.equipment || []),
     deterministic: {
       runSeed: Number(run?.seed) || 0,
       sourceRunId: run?.id || null
@@ -178,12 +181,14 @@ async function getDungeonRankedMatchContext(run, player, floor, queryable = db) 
 
 async function saveDungeonRankedSnapshot(run, player, context, queryable = db, options = {}) {
   const playerBuffs = options.playerCombatBuffs || await resolvePlayerCombatBuffState(player);
+  const playerEquipment = options.playerEquipment || await getPlayerEquipment(player?.id || run.playerId, queryable);
   const combatBuffs = getDungeonPlayerCombatBuffs(run.state.buffs, playerBuffs);
   const snapshotId = crypto.randomUUID();
   const snapshot = createDungeonRankedSnapshotPayload(run, {
     playerLevel: context.playerLevel,
     rating: context.playerRating,
-    buffs: combatBuffs
+    buffs: combatBuffs,
+    equipment: Array.isArray(playerEquipment) ? playerEquipment : playerEquipment.items
   });
 
   await queryable.query(
@@ -231,6 +236,7 @@ function createDungeonRankedEncounter(opponent, context) {
       playerLevel: opponent.playerLevel
     },
     enemyBuffs: opponent.buffs,
+    enemyEquipment: opponent.equipment,
     enemyTeam: namespaceDungeonRankedOpponentTeam(opponent.team, opponent.snapshotId)
   };
 }
@@ -328,7 +334,8 @@ async function selectDungeonRankedOpponent(criteria, queryable = db, options = {
     rating,
     division: getDivision(rating).name,
     team: snapshot.team,
-    buffs: normalizeDungeonRankedEnemyBuffs(snapshot.buffs || {})
+    buffs: normalizeDungeonRankedEnemyBuffs(snapshot.buffs || {}),
+    equipment: normalizeEquipmentCombatItems(snapshot.equipment || [])
   };
 }
 

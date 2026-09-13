@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8">
-    <meta name="among-demons-client-version" content="8f7d6ce9de9f">
+    <meta name="among-demons-client-version" content="dc1c7f1a74f7">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Bag | Among Demons</title>
@@ -10,8 +10,8 @@
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
     <link href="/app/css/base.css?v=d9fe401e7aa7" rel="stylesheet">
-    <link href="/app/css/bag.css?v=e2b91b81ae0d" rel="stylesheet">
-    <link href="/app/css/bag-item-visuals.css?v=e77f76b5e96f" rel="stylesheet">
+    <link href="/app/css/bag.css?v=26ac101e2417" rel="stylesheet">
+    <link href="/app/css/bag-item-visuals.css?v=2234a421f532" rel="stylesheet">
   </head>
   <body class="bag-page">
     <nav class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom game-shell-nav" aria-label="Game navigation">
@@ -74,6 +74,7 @@
             <label class="visually-hidden" for="bagFilter">Item type</label>
             <select class="form-select form-select-sm" id="bagFilter" aria-label="Item type">
               <option value="all">All items</option>
+              <option value="equipment">Equipment</option>
             </select>
             <label class="visually-hidden" for="bagSort">Sort bag</label>
             <select class="form-select form-select-sm" id="bagSort" aria-label="Sort bag">
@@ -85,13 +86,25 @@
           </div>
         </div>
         <div class="card-body">
-          <p class="small text-muted">Demon Echoes and summoning are in <a href="/collection">Collection</a>.</p>
           <div class="bag-loading" id="bagLoading" role="status">
             <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
             <span>Opening the vault...</span>
           </div>
-          <div class="bag-grid-viewport" id="bagGridViewport">
-            <div class="bag-grid" id="bagGrid" aria-live="polite"></div>
+          <div class="bag-workspace">
+            <aside class="bag-equipment-panel" aria-labelledby="bagEquipmentTitle">
+              <div class="bag-equipment-heading">
+                <span class="bag-kicker">Hunter loadout</span>
+                <h2 class="h6 mb-0" id="bagEquipmentTitle">Equipment</h2>
+                <p>Equipped items empower your demon team in every battle.</p>
+              </div>
+              <div class="bag-equipment-grid" id="bagEquipmentGrid" aria-live="polite"></div>
+            </aside>
+            <section class="bag-inventory-panel" aria-label="Bag inventory">
+              <p class="small text-muted">Demon Echoes and summoning are in <a href="/collection">Collection</a>.</p>
+              <div class="bag-grid-viewport" id="bagGridViewport">
+                <div class="bag-grid" id="bagGrid" aria-live="polite"></div>
+              </div>
+            </section>
           </div>
         </div>
       </section>
@@ -105,7 +118,7 @@
       </div>
     </div>
     <script src="/app/dist/runtime.bundle.js?v=661cd8e9293f"></script>
-    <script src="/app/js/bag-item-visuals.js?v=b49e5be8f8a3"></script>
-    <script src="/app/js/bag-ui.js?v=b1b20a77f106"></script>
+    <script src="/app/js/bag-item-visuals.js?v=2732d1b8108d"></script>
+    <script src="/app/js/bag-ui.js?v=39f34c1ab998"></script>
   </body>
 </html>

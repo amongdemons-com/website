@@ -309,3 +309,19 @@
         animation: none;
     }
 }
+
+.equipment-item-visual {
+    position: relative;
+    color: var(--item-rarity, #d1d5d8);
+}
+
+.equipment-item-glyph {
+    display: grid;
+    width: 70%;
+    height: 70%;
+    place-items: center;
+    border: 2px solid color-mix(in srgb, var(--item-rarity, #d1d5d8) 65%, #132127);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--item-rarity, #d1d5d8) 12%, #071013);
+    font-size: clamp(2rem, 5vw, 4.5rem);
+}

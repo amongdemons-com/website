@@ -6,6 +6,7 @@ const { normalizeCombatBuffState, serializeCombatBuffState } = require('./combat
 const { addEcho } = require('./echo-bag');
 const { SUMMON_REQUIREMENTS } = require('./echo-config');
 const { getDemonTypes } = require('./game-data');
+const { getPlayerEquipment } = require('./hunter-equipment');
 const { resolvePlayerCombatBuffState } = require('./player-combat-buffs');
 const { createRng } = require('./rng');
 const { mergeBattleTeamForRun } = require('./run-demons');
@@ -247,6 +248,7 @@ async function summonWorldAnomaly(player, requestedRitualId, options = {}) {
 
   try {
     await connection.beginTransaction();
+    const playerEquipment = await resolveAnomalyEquipment(player.id, options, connection);
     const storedPlayer = await getStoredAnomalyPlayer(connection, player.id);
     await assertPlayerAtAnomalyAltar(connection, player.id);
     const ritual = await getLockedAnomalyRitual(connection, player.id);
@@ -272,6 +274,7 @@ async function summonWorldAnomaly(player, requestedRitualId, options = {}) {
       floor: 1,
       playerTeam,
       playerBuffs,
+      playerEquipment,
       demonTypes,
       connection,
       options
@@ -348,6 +351,7 @@ async function continueWorldAnomaly(player, requestedRunId, options = {}) {
 
   try {
     await connection.beginTransaction();
+    const playerEquipment = await resolveAnomalyEquipment(player.id, options, connection);
     const storedPlayer = await getStoredAnomalyPlayer(connection, player.id);
     await assertPlayerAtAnomalyAltar(connection, player.id);
     const ritual = await getLockedAnomalyRitual(connection, player.id);
@@ -370,6 +374,7 @@ async function continueWorldAnomaly(player, requestedRunId, options = {}) {
       floor: clearedFloor + 1,
       playerTeam,
       playerBuffs,
+      playerEquipment,
       demonTypes,
       connection,
       options
@@ -509,6 +514,7 @@ async function resolveAnomalyFloor({
   floor,
   playerTeam,
   playerBuffs,
+  playerEquipment,
   demonTypes,
   connection,
   options
@@ -524,6 +530,7 @@ async function resolveAnomalyFloor({
       demonTypes,
       combatType: 'world_anomaly',
       playerBuffs,
+      playerEquipment,
       enemyBuffs
     }
   );
@@ -607,11 +614,19 @@ async function resolveAnomalyFloor({
       enemyTeamBefore: fight.enemyTeamBefore,
       playerTeamAfter: fight.playerTeam,
       enemyTeamAfter: fight.enemyTeam,
+      playerEquipment,
       playerBuffs: serializeCombatBuffState(playerBuffs).activeBuffs,
       enemyBuffs: serializeCombatBuffState(enemyBuffs).activeBuffs,
       anomalyReward: reward
     }
   };
+}
+
+async function resolveAnomalyEquipment(playerId, options, queryable) {
+  const source = Object.prototype.hasOwnProperty.call(options, 'playerEquipment')
+    ? options.playerEquipment
+    : await getPlayerEquipment(playerId, queryable);
+  return Array.isArray(source) ? source : (source?.items || []);
 }
 
 async function grantAnomalyLevels(player, successfulRolls, connection) {

@@ -7,6 +7,21 @@ const {
   handleDeathBuffTriggers,
   normalizeCombatBuffState
 } = require('./combat-buffs');
+const {
+  applyEquipmentDamageModifiers,
+  applyEquipmentHealingModifiers,
+  applyEquipmentPoisonModifiers,
+  getEquipmentReflection,
+  getEquipmentTargeting,
+  handleEquipmentAfterAction,
+  handleEquipmentAfterHealing,
+  handleEquipmentFinalDeath,
+  handleEquipmentTick,
+  initializeEquipmentCombat,
+  modifyEquipmentReflectionDamage,
+  recordEquipmentShieldDamage,
+  tryEquipmentResurrection
+} = require('./equipment-effects');
 
 const MAX_COMBAT_TICKS = 1000;
 const STALEMATE_STATE_REPEAT_LIMIT = 6;
@@ -151,7 +166,7 @@ function selectActionAbilityType(rng, demon, demonTypes = {}) {
 
 function getTargeting(demon, demonTypes = {}) {
   const typeTargeting = getTypeData(demon, demonTypes).targeting;
-  return typeTargeting || demon.targeting || 'front';
+  return getEquipmentTargeting(demon, typeTargeting || demon.targeting || 'front');
 }
 
 function getAbility(demon, demonTypes = {}) {
@@ -292,6 +307,11 @@ function chooseTargets(rng, attacker, enemies, demonTypes, targetSide = 'enemy')
   const ability = getAbility(attacker, demonTypes);
   const living = alive(enemies);
 
+  if (attacker?.battleBuffs?.equipmentTargeting) {
+    const target = chooseTarget(rng, attacker, enemies, demonTypes, targetSide);
+    return target ? [target] : [];
+  }
+
   if (ability.kind === 'cleave_attack') {
     return frontmostLine(living, targetSide);
   }
@@ -414,9 +434,24 @@ function applyPoisonTick(team, tick, context, targetSide) {
 
       if (poison.nextTickIn > 0) return;
 
-      const damage = Math.max(1, Number(poison.damage) || 1);
+      const attackerSide = poison.sourceSide || getOpposingSide(targetSide);
+      const attackerTeam = attackerSide === 'enemy' ? context.enemies : context.players;
+      const attacker = attackerTeam.find((demon) => demon.instanceId === poison.source) || {
+        instanceId: poison.source
+      };
+      const damage = applyEquipmentDamageModifiers({
+        ...context,
+        tick,
+        attacker,
+        attackerSide,
+        target,
+        targetSide,
+        damage: Math.max(1, Number(poison.damage) || 1),
+        damageKind: 'poison'
+      });
       poison.nextTickIn = Math.max(1, Number(poison.tickInterval) || 1);
       const damageResult = dealDamage(target, damage);
+      recordEquipmentShieldDamage(target, damageResult.shieldDamage);
 
       context.combatLog.push({
         tick,
@@ -433,11 +468,13 @@ function applyPoisonTick(team, tick, context, targetSide) {
         poisonStacks: poisonStacks.length
       });
 
-      handleDeathBuffTriggers({
+      handleCombatDeathTriggers({
         ...context,
         tick,
         target,
-        attackerSide: poison.sourceSide || getOpposingSide(targetSide),
+        attacker,
+        attackerId: poison.source,
+        attackerSide,
         targetSide,
         cause: 'poison'
       });
@@ -463,7 +500,7 @@ function applyDamage({
   context,
   damageKind = 'direct'
 }) {
-  const modifiedDamage = applyDamageModifiers({
+  const buffedDamage = applyDamageModifiers({
     attacker,
     attackerSide,
     target,
@@ -476,7 +513,18 @@ function applyDamage({
     playerBuffs: context.playerBuffs,
     enemyBuffs: context.enemyBuffs
   });
+  const modifiedDamage = applyEquipmentDamageModifiers({
+    ...context,
+    tick,
+    attacker,
+    attackerSide,
+    target,
+    targetSide,
+    damage: buffedDamage,
+    damageKind
+  });
   const damageResult = dealDamage(target, modifiedDamage);
+  recordEquipmentShieldDamage(target, damageResult.shieldDamage);
 
   const logEntry = {
     tick,
@@ -506,19 +554,87 @@ function applyDamage({
 
   combatLog.push(logEntry);
 
-  handleDeathBuffTriggers({
+  handleCombatDeathTriggers({
     ...context,
     tick,
+    attacker,
+    attackerId: attacker.instanceId,
     target,
     attackerSide,
     targetSide,
     cause: damageKind
   });
 
+  const equipmentReflection = getEquipmentReflection({
+    ...context,
+    tick,
+    attacker,
+    attackerSide,
+    target,
+    targetSide,
+    hpDamage: damageResult.hpDamage,
+    damageKind
+  });
+  if (equipmentReflection && attacker.hp > 0) {
+    const reflectedDamage = applyEquipmentDamageModifiers({
+      ...context,
+      tick,
+      attacker: target,
+      attackerSide: targetSide,
+      target: attacker,
+      targetSide: attackerSide,
+      damage: equipmentReflection.damage,
+      damageKind: 'reflection'
+    });
+    const reflectionResult = dealDamage(attacker, reflectedDamage);
+    recordEquipmentShieldDamage(attacker, reflectionResult.shieldDamage);
+    combatLog.push({
+      tick,
+      attacker: target.instanceId,
+      attackerPosition: normalizePosition(target.position),
+      target: attacker.instanceId,
+      targetPosition: normalizePosition(attacker.position),
+      targeting: 'reflect',
+      effect: 'equipment_reflect',
+      critical: equipmentReflection.critical,
+      dmg: reflectionResult.damage,
+      shieldDamage: reflectionResult.shieldDamage,
+      targetShield: attacker.shield || 0,
+      targetHp: attacker.hp
+    });
+    handleCombatDeathTriggers({
+      ...context,
+      tick,
+      attacker: target,
+      attackerId: target.instanceId,
+      target: attacker,
+      attackerSide: targetSide,
+      targetSide: attackerSide,
+      cause: 'reflection'
+    });
+  }
+
   const retaliation = getRetaliationAbility(target, demonTypes);
   if (target.hp > 0 && retaliation && attacker.hp > 0) {
-    const retaliationDamage = getRetaliationDamage(target, retaliation.ability);
+    const reflectionModifier = modifyEquipmentReflectionDamage({
+      ...context,
+      tick,
+      ownerSide: targetSide,
+      reflector: target,
+      damage: getRetaliationDamage(target, retaliation.ability)
+    });
+    const retaliationDamage = applyEquipmentDamageModifiers({
+      ...context,
+      tick,
+      attacker: target,
+      attackerSide: targetSide,
+      target: attacker,
+      targetSide: attackerSide,
+      damage: reflectionModifier.damage,
+      damageKind: 'retaliation'
+    });
     const retaliationResult = dealDamage(attacker, retaliationDamage);
+    recordEquipmentShieldDamage(attacker, retaliationResult.shieldDamage);
 
     combatLog.push({
       tick,
@@ -529,15 +645,18 @@ function applyDamage({
       targetPosition: normalizePosition(attacker.position),
       targeting: 'retaliate',
       effect: 'retaliate',
+      critical: reflectionModifier.critical,
       dmg: retaliationResult.damage,
       shieldDamage: retaliationResult.shieldDamage,
       targetShield: attacker.shield || 0,
       targetHp: attacker.hp
     });
 
-    handleDeathBuffTriggers({
+    handleCombatDeathTriggers({
       ...context,
       tick,
+      attacker: target,
+      attackerId: target.instanceId,
       target: attacker,
       attackerSide: targetSide,
       targetSide: attackerSide,
@@ -559,10 +678,18 @@ function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {
     playerBuffs: context.playerBuffs,
     enemyBuffs: context.enemyBuffs
   });
+  const equipmentHealing = applyEquipmentHealingModifiers({
+    ...context,
+    tick,
+    healer,
+    healerSide,
+    target,
+    healing: healingResult.healing
+  });
   const missingHp = Math.max(0, (Number(target.maxHp) || 1) - (Number(target.hp) || 0));
-  const appliedHealing = Math.min(missingHp, healingResult.healing);
+  const appliedHealing = Math.min(missingHp, equipmentHealing);
   const shieldGain = healingResult.overhealToShield
-    ? Math.max(0, healingResult.healing - appliedHealing)
+    ? Math.max(0, equipmentHealing - appliedHealing)
     : 0;
 
   target.hp = Math.min(target.maxHp, target.hp + appliedHealing);
@@ -582,6 +709,15 @@ function applyHeal({ tick, healer, healerSide, allies, combatLog, context }) {
     shield: shieldGain,
     targetShield: target.shield || 0,
     targetHp: target.hp
+  });
+  handleEquipmentAfterHealing({
+    ...context,
+    tick,
+    healer,
+    healerSide,
+    target,
+    appliedHealing,
+    shieldGain
   });
 
   return true;
@@ -611,6 +747,17 @@ function applyPoison({ tick, attacker, attackerSide, enemies, demonTypes, combat
     playerBuffs: context.playerBuffs,
     enemyBuffs: context.enemyBuffs
   });
+  const equipmentPoisonModifiers = applyEquipmentPoisonModifiers({
+    ...context,
+    tick,
+    attacker,
+    attackerSide,
+    target,
+    targetSide: attackerSide === 'enemy' ? 'player' : 'enemy',
+    damage: poisonModifiers.damage,
+    durationTicks: poisonModifiers.durationTicks,
+    damageKind: 'poison'
+  });
   target.statusEffects = target.statusEffects || {};
   target.statusEffects.poison = [...(target.statusEffects.poison || [])];
 
@@ -618,8 +765,9 @@ function applyPoison({ tick, attacker, attackerSide, enemies, demonTypes, combat
     source: attacker.instanceId,
     sourceSide: attackerSide,
     ...(getActiveAbilityTypeId(attacker) ? { abilityTypeId: getActiveAbilityTypeId(attacker) } : {}),
-    damage: poisonModifiers.damage,
-    remainingTicks: poisonModifiers.durationTicks,
+    damage: equipmentPoisonModifiers.damage,
+    remainingTicks: equipmentPoisonModifiers.durationTicks,
+    healingReductionPercent: equipmentPoisonModifiers.healingReductionPercent,
     tickInterval,
     nextTickIn: getSyncedPoisonNextTick(target.statusEffects.poison, tickInterval)
   };
@@ -665,14 +813,18 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
   const context = {
     players,
     enemies,
+    demonTypes,
     buffs: playerBuffs,
     playerBuffs,
     enemyBuffs,
+    playerEquipment: options.playerEquipment || [],
+    enemyEquipment: options.enemyEquipment || [],
     battleState,
     combatLog,
     dealDamage,
     rng
   };
+  initializeEquipmentCombat(context);
   const playerTeamBefore = cloneBattleTeamForReplay(players);
   const enemyTeamBefore = cloneBattleTeamForReplay(enemies);
   const seenBattleStates = new Map([[getBattleStateKey(players, enemies, battleState), 1]]);
@@ -681,6 +833,7 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
 
   while (alive(players).length && alive(enemies).length && tick < MAX_COMBAT_TICKS) {
     tick += 1;
+    handleEquipmentTick({ ...context, tick });
     applyPoisonTick(players, tick, context, 'player');
     applyPoisonTick(enemies, tick, context, 'enemy');
 
@@ -743,6 +896,27 @@ function simulateFight(rng, playerTeam, enemyTeam, options = {}) {
           context
         });
       });
+
+      const equipmentDeaths = handleEquipmentAfterAction({
+        ...context,
+        tick,
+        actor,
+        actorSide: actorIsPlayer ? 'player' : 'enemy',
+        actionKind: ability.kind,
+        dealDamage,
+        combatLog
+      });
+      equipmentDeaths.forEach((target) => {
+        handleCombatDeathTriggers({
+          ...context,
+          tick,
+          target,
+          targetSide: actorIsPlayer ? 'player' : 'enemy',
+          attackerSide: actorIsPlayer ? 'player' : 'enemy',
+          cause: 'equipment_scorch',
+          skipOnKill: true
+        });
+      });
     }
 
     if (alive(players).length && alive(enemies).length) {
@@ -795,6 +969,8 @@ function getBattleStateKey(players, enemies, battleState = {}) {
   return JSON.stringify({
     playerLastBreathUsed: Boolean(battleState.playerLastBreathUsed),
     enemyLastBreathUsed: Boolean(battleState.enemyLastBreathUsed),
+    playerEquipmentResurrectionUsed: Boolean(battleState.playerEquipmentResurrectionUsed),
+    enemyEquipmentResurrectionUsed: Boolean(battleState.enemyEquipmentResurrectionUsed),
     players: getTeamStateKey(players),
     enemies: getTeamStateKey(enemies)
   });
@@ -807,6 +983,7 @@ function getTeamStateKey(team) {
     formationSlot: normalizeFormationSlot(demon.formationSlot ?? demon.formationRow),
     hp: Math.max(0, Number(demon.hp) || 0),
     shield: Math.max(0, Number(demon.shield) || 0),
+    speed: Math.max(0, Number(demon.speed) || 0),
     attackMeter: Number(demon.attackMeter) || 0,
     poison: (demon.statusEffects?.poison || []).map((poison) => ({
       source: poison.source,
@@ -816,6 +993,22 @@ function getTeamStateKey(team) {
       tickInterval: Number(poison.tickInterval) || 0
     }))
   }));
+}
+
+function handleCombatDeathTriggers(context) {
+  const target = context.target;
+  if (!target || target.hp > 0) return { preventedDeath: false };
+
+  if (!target.deathBuffsHandled && tryEquipmentResurrection(context)) {
+    return { preventedDeath: true };
+  }
+
+  const wasHandled = Boolean(target.deathBuffsHandled);
+  const result = handleDeathBuffTriggers(context);
+  if (!result.preventedDeath && !wasHandled && target.deathBuffsHandled) {
+    handleEquipmentFinalDeath(context);
+  }
+  return result;
 }
 
 function dealDamage(target, damage) {
