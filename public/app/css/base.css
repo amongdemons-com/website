@@ -9,6 +9,22 @@
     text-shadow: 1px 1px 0 #11181b;
 }
 
+/* Samsung Internet has trouble rendering the decorative display face clearly
+ * on small screens. The runtime marks that browser before the page is ready,
+ * so other browsers retain the normal game typography. */
+html[data-browser="samsung-internet"],
+html[data-browser="samsung-internet"] body,
+html[data-browser="samsung-internet"] body * {
+    font-family: Arial, Helvetica, sans-serif !important;
+}
+
+html[data-browser="samsung-internet"] .outline {
+    font-weight: 700 !important;
+    -webkit-text-stroke: 0 !important;
+    paint-order: normal !important;
+    text-shadow: none !important;
+}
+
 /* base.css - split from main.css by scripts/split-main-css.js.
    Shared shell: variables, nav, buttons, landing, auth, settings, rankings, notifications. Loaded by every page, first.
    Edit these files directly; main.css no longer exists. */

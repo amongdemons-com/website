@@ -5,6 +5,10 @@ const NOTICE_ID = 'iosSafariCompatibilityNotice';
 const SAFARI_OVERRIDE_KEY = 'amongDemons.iosSafariCompatibilityOverride';
 let safariOverrideEnabled = false;
 
+if (compatibility.isSamsungInternet(window.navigator)) {
+  document.documentElement.dataset.browser = 'samsung-internet';
+}
+
 onReady(initIosSafariCompatibilityNotice);
 
 function initIosSafariCompatibilityNotice() {

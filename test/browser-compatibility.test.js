@@ -6,6 +6,7 @@ const path = require('node:path');
 const {
   isGamePath,
   isIosSafari,
+  isSamsungInternet,
   requiresIosSafariNotice
 } = require('../lib/browser-compatibility');
 
@@ -13,6 +14,10 @@ const IPHONE_SAFARI = {
   userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
   platform: 'iPhone',
   maxTouchPoints: 5
+};
+
+const SAMSUNG_INTERNET = {
+  userAgent: 'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/27.0 Chrome/125.0.0.0 Mobile Safari/537.36'
 };
 
 test('iPhone and desktop-mode iPad Safari are detected', () => {
@@ -35,6 +40,13 @@ test('Chrome and other iOS browsers do not receive the Safari notice', () => {
   }), false);
 });
 
+test('Samsung Internet is detected without matching regular Chromium browsers', () => {
+  assert.equal(isSamsungInternet(SAMSUNG_INTERNET), true);
+  assert.equal(isSamsungInternet({
+    userAgent: SAMSUNG_INTERNET.userAgent.replace('SamsungBrowser/27.0 ', '')
+  }), false);
+});
+
 test('the compatibility notice is limited to gameplay routes', () => {
   ['/camp', '/world', '/dungeon/run', '/bag', '/collection', '/skill-tree']
     .forEach((path) => assert.equal(isGamePath(path), true, path));
@@ -53,6 +65,14 @@ test('Safari compatibility interception loads before Play Instantly navigation',
   assert.ok(runtime.indexOf('browser-compatibility.js') < runtime.indexOf('navigation.js'));
   assert.match(compatibilityUi, /closest\('\[data-play-instantly\]'\)/);
   assert.match(compatibilityUi, /stopImmediatePropagation\(\)/);
+  assert.match(compatibilityUi, /dataset\.browser = 'samsung-internet'/);
+});
+
+test('Samsung Internet receives the readable Arial fallback only', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'app', 'css', 'base.css'), 'utf8');
+
+  assert.match(css, /html\[data-browser="samsung-internet"\][\s\S]*font-family: Arial, Helvetica, sans-serif !important;/);
+  assert.match(css, /html\[data-browser="samsung-internet"\] \.outline[\s\S]*-webkit-text-stroke: 0 !important;/);
 });
 
 test('Safari compatibility notice offers an explicit session-scoped override', () => {
