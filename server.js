@@ -19,6 +19,7 @@ const {
   renderDemonsPage,
   renderEventsPage,
   renderHomePage,
+  renderItemsPage,
   renderPressPage,
   renderRobotsTxt,
   renderSitemap,
@@ -159,6 +160,10 @@ app.get(['/bosses', '/bosses/'], async (req, res) => {
 
 app.get(['/events', '/events/'], (req, res) => {
   res.send(renderEventsPage());
+});
+
+app.get(['/items', '/items/'], (req, res) => {
+  res.send(renderItemsPage());
 });
 
 app.get(['/updates', '/updates/'], (req, res) => {

@@ -3,34 +3,19 @@
     "id": "hunters_blade",
     "name": "Hunter's Blade",
     "slot": "weapon",
-    "tags": [
-      "damage",
-      "starter"
-    ],
+    "tags": ["damage", "starter"],
     "icon": "sword",
     "imageUrl": "/app/images/items/basic-sword.webp",
     "description": "Your demons deal more damage.",
     "effect": {
       "type": "stat_modifier",
       "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
+        "common": { "damagePercent": 6 },
+        "uncommon": { "damagePercent": 9 },
+        "rare": { "damagePercent": 13 },
+        "epic": { "damagePercent": 18 },
+        "legendary": { "damagePercent": 24 },
+        "mythic": { "damagePercent": 32 }
       }
     }
   },
@@ -38,41 +23,18 @@
     "id": "executioner",
     "name": "Executioner",
     "slot": "weapon",
-    "tags": [
-      "damage",
-      "execute"
-    ],
+    "tags": ["damage", "execute"],
     "icon": "axe",
     "description": "Your demons deal bonus damage to enemies below 30% HP.",
     "effect": {
       "type": "bonus_below_hp",
       "values": {
-        "common": {
-          "thresholdPercent": 30,
-          "damagePercent": 12
-        },
-        "uncommon": {
-          "thresholdPercent": 30,
-          "damagePercent": 18
-        },
-        "rare": {
-          "thresholdPercent": 30,
-          "damagePercent": 26
-        },
-        "epic": {
-          "thresholdPercent": 30,
-          "damagePercent": 36
-        },
-        "legendary": {
-          "thresholdPercent": 30,
-          "damagePercent": 48,
-          "onKillDamagePercent": 8
-        },
-        "mythic": {
-          "thresholdPercent": 35,
-          "damagePercent": 65,
-          "onKillDamagePercent": 12
-        }
+        "common": { "thresholdPercent": 30, "damagePercent": 12 },
+        "uncommon": { "thresholdPercent": 30, "damagePercent": 18 },
+        "rare": { "thresholdPercent": 30, "damagePercent": 26 },
+        "epic": { "thresholdPercent": 30, "damagePercent": 36 },
+        "legendary": { "thresholdPercent": 30, "damagePercent": 48, "onKillDamagePercent": 8 },
+        "mythic": { "thresholdPercent": 35, "damagePercent": 65, "onKillDamagePercent": 12 }
       }
     }
   },
@@ -80,39 +42,18 @@
     "id": "glass_fang",
     "name": "Glass Fang",
     "slot": "weapon",
-    "tags": [
-      "damage",
-      "risk"
-    ],
+    "tags": ["damage", "risk"],
     "icon": "sword",
     "description": "Your demons deal more damage but have less health.",
     "effect": {
       "type": "stat_modifier",
       "values": {
-        "common": {
-          "damagePercent": 8,
-          "maxHpPercent": -5
-        },
-        "uncommon": {
-          "damagePercent": 12,
-          "maxHpPercent": -7
-        },
-        "rare": {
-          "damagePercent": 17,
-          "maxHpPercent": -9
-        },
-        "epic": {
-          "damagePercent": 23,
-          "maxHpPercent": -11
-        },
-        "legendary": {
-          "damagePercent": 30,
-          "maxHpPercent": -13
-        },
-        "mythic": {
-          "damagePercent": 40,
-          "maxHpPercent": -15
-        }
+        "common": { "damagePercent": 8, "maxHpPercent": -5 },
+        "uncommon": { "damagePercent": 12, "maxHpPercent": -7 },
+        "rare": { "damagePercent": 17, "maxHpPercent": -9 },
+        "epic": { "damagePercent": 23, "maxHpPercent": -11 },
+        "legendary": { "damagePercent": 30, "maxHpPercent": -13 },
+        "mythic": { "damagePercent": 40, "maxHpPercent": -15 }
       }
     }
   },
@@ -120,35 +61,18 @@
     "id": "hunger",
     "name": "Hunger",
     "slot": "weapon",
-    "tags": [
-      "speed",
-      "death"
-    ],
+    "tags": ["speed", "death"],
     "icon": "sword",
     "description": "When an ally dies, surviving demons gain attack speed for the battle.",
     "effect": {
       "type": "on_ally_death",
       "values": {
-        "common": {
-          "speedPercent": 4
-        },
-        "uncommon": {
-          "speedPercent": 6
-        },
-        "rare": {
-          "speedPercent": 9
-        },
-        "epic": {
-          "speedPercent": 12
-        },
-        "legendary": {
-          "speedPercent": 16,
-          "damagePercent": 4
-        },
-        "mythic": {
-          "speedPercent": 22,
-          "damagePercent": 7
-        }
+        "common": { "speedPercent": 4 },
+        "uncommon": { "speedPercent": 6 },
+        "rare": { "speedPercent": 9 },
+        "epic": { "speedPercent": 12 },
+        "legendary": { "speedPercent": 16, "damagePercent": 4 },
+        "mythic": { "speedPercent": 22, "damagePercent": 7 }
       }
     }
   },
@@ -156,33 +80,18 @@
     "id": "boneplate",
     "name": "Boneplate",
     "slot": "armor",
-    "tags": [
-      "health",
-      "defense"
-    ],
+    "tags": ["health", "defense"],
     "icon": "armor",
     "description": "Your demons gain Max HP.",
     "effect": {
       "type": "stat_modifier",
       "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
+        "common": { "maxHpPercent": 7 },
+        "uncommon": { "maxHpPercent": 11 },
+        "rare": { "maxHpPercent": 16 },
+        "epic": { "maxHpPercent": 22 },
+        "legendary": { "maxHpPercent": 29 },
+        "mythic": { "maxHpPercent": 38 }
       }
     }
   },
@@ -190,41 +99,18 @@
     "id": "living_carapace",
     "name": "Living Carapace",
     "slot": "armor",
-    "tags": [
-      "health",
-      "regeneration"
-    ],
+    "tags": ["health", "regeneration"],
     "icon": "armor",
     "description": "Your demons gradually regenerate health during battle.",
     "effect": {
       "type": "battle_start_buff",
       "values": {
-        "common": {
-          "regenMaxHpPercent": 0.35,
-          "intervalTicks": 10
-        },
-        "uncommon": {
-          "regenMaxHpPercent": 0.5,
-          "intervalTicks": 10
-        },
-        "rare": {
-          "regenMaxHpPercent": 0.7,
-          "intervalTicks": 10
-        },
-        "epic": {
-          "regenMaxHpPercent": 0.95,
-          "intervalTicks": 10
-        },
-        "legendary": {
-          "regenMaxHpPercent": 1.25,
-          "intervalTicks": 10,
-          "regenBelowHpBonusPercent": 25
-        },
-        "mythic": {
-          "regenMaxHpPercent": 1.7,
-          "intervalTicks": 10,
-          "regenBelowHpBonusPercent": 50
-        }
+        "common": { "regenMaxHpPercent": 0.35, "intervalTicks": 10 },
+        "uncommon": { "regenMaxHpPercent": 0.5, "intervalTicks": 10 },
+        "rare": { "regenMaxHpPercent": 0.7, "intervalTicks": 10 },
+        "epic": { "regenMaxHpPercent": 0.95, "intervalTicks": 10 },
+        "legendary": { "regenMaxHpPercent": 1.25, "intervalTicks": 10, "regenBelowHpBonusPercent": 25 },
+        "mythic": { "regenMaxHpPercent": 1.7, "intervalTicks": 10, "regenBelowHpBonusPercent": 50 }
       }
     }
   },
@@ -232,33 +118,18 @@
     "id": "spite_armor",
     "name": "Spite Armor",
     "slot": "armor",
-    "tags": [
-      "defense",
-      "reflection"
-    ],
+    "tags": ["defense", "reflection"],
     "icon": "armor",
     "description": "Enemies that directly damage your demons take reflected damage.",
     "effect": {
       "type": "stat_modifier",
       "values": {
-        "common": {
-          "reflectDamagePercent": 8
-        },
-        "uncommon": {
-          "reflectDamagePercent": 12
-        },
-        "rare": {
-          "reflectDamagePercent": 17
-        },
-        "epic": {
-          "reflectDamagePercent": 23
-        },
-        "legendary": {
-          "reflectDamagePercent": 30
-        },
-        "mythic": {
-          "reflectDamagePercent": 40
-        }
+        "common": { "reflectDamagePercent": 8 },
+        "uncommon": { "reflectDamagePercent": 12 },
+        "rare": { "reflectDamagePercent": 17 },
+        "epic": { "reflectDamagePercent": 23 },
+        "legendary": { "reflectDamagePercent": 30 },
+        "mythic": { "reflectDamagePercent": 40 }
       }
     }
   },
@@ -266,35 +137,18 @@
     "id": "martyr_skin",
     "name": "Martyr Skin",
     "slot": "armor",
-    "tags": [
-      "death",
-      "healing"
-    ],
+    "tags": ["death", "healing"],
     "icon": "armor",
     "description": "When a demon dies, surviving allies heal.",
     "effect": {
       "type": "on_ally_death",
       "values": {
-        "common": {
-          "healMaxHpPercent": 4
-        },
-        "uncommon": {
-          "healMaxHpPercent": 6
-        },
-        "rare": {
-          "healMaxHpPercent": 9
-        },
-        "epic": {
-          "healMaxHpPercent": 12
-        },
-        "legendary": {
-          "healMaxHpPercent": 16,
-          "shieldMaxHpPercent": 3
-        },
-        "mythic": {
-          "healMaxHpPercent": 22,
-          "shieldMaxHpPercent": 6
-        }
+        "common": { "healMaxHpPercent": 4 },
+        "uncommon": { "healMaxHpPercent": 6 },
+        "rare": { "healMaxHpPercent": 9 },
+        "epic": { "healMaxHpPercent": 12 },
+        "legendary": { "healMaxHpPercent": 16, "shieldMaxHpPercent": 3 },
+        "mythic": { "healMaxHpPercent": 22, "shieldMaxHpPercent": 6 }
       }
     }
   },
@@ -302,39 +156,18 @@
     "id": "hunters_eye",
     "name": "Hunter's Eye",
     "slot": "helm",
-    "tags": [
-      "targeting",
-      "damage"
-    ],
+    "tags": ["targeting", "damage"],
     "icon": "eye",
     "description": "Your demons hunt the lowest-HP enemy and deal extra damage to it.",
     "effect": {
       "type": "modify_targeting",
       "values": {
-        "common": {
-          "targeting": "lowest_hp",
-          "damagePercent": 5
-        },
-        "uncommon": {
-          "targeting": "lowest_hp",
-          "damagePercent": 8
-        },
-        "rare": {
-          "targeting": "lowest_hp",
-          "damagePercent": 12
-        },
-        "epic": {
-          "targeting": "lowest_hp",
-          "damagePercent": 17
-        },
-        "legendary": {
-          "targeting": "lowest_hp",
-          "damagePercent": 23
-        },
-        "mythic": {
-          "targeting": "lowest_hp",
-          "damagePercent": 31
-        }
+        "common": { "targeting": "lowest_hp", "damagePercent": 5 },
+        "uncommon": { "targeting": "lowest_hp", "damagePercent": 8 },
+        "rare": { "targeting": "lowest_hp", "damagePercent": 12 },
+        "epic": { "targeting": "lowest_hp", "damagePercent": 17 },
+        "legendary": { "targeting": "lowest_hp", "damagePercent": 23 },
+        "mythic": { "targeting": "lowest_hp", "damagePercent": 31 }
       }
     }
   },
@@ -342,41 +175,18 @@
     "id": "crown_of_rage",
     "name": "Crown of Rage",
     "slot": "helm",
-    "tags": [
-      "speed",
-      "carry"
-    ],
+    "tags": ["speed", "carry"],
     "icon": "crown",
     "description": "Your highest-damage demon gains attack speed.",
     "effect": {
       "type": "battle_start_buff",
       "values": {
-        "common": {
-          "selector": "highest_damage",
-          "speedPercent": 10
-        },
-        "uncommon": {
-          "selector": "highest_damage",
-          "speedPercent": 15
-        },
-        "rare": {
-          "selector": "highest_damage",
-          "speedPercent": 21
-        },
-        "epic": {
-          "selector": "highest_damage",
-          "speedPercent": 28
-        },
-        "legendary": {
-          "selector": "highest_damage",
-          "speedPercent": 36,
-          "damagePercent": 6
-        },
-        "mythic": {
-          "selector": "highest_damage",
-          "speedPercent": 48,
-          "damagePercent": 10
-        }
+        "common": { "selector": "highest_damage", "speedPercent": 10 },
+        "uncommon": { "selector": "highest_damage", "speedPercent": 15 },
+        "rare": { "selector": "highest_damage", "speedPercent": 21 },
+        "epic": { "selector": "highest_damage", "speedPercent": 28 },
+        "legendary": { "selector": "highest_damage", "speedPercent": 36, "damagePercent": 6 },
+        "mythic": { "selector": "highest_damage", "speedPercent": 48, "damagePercent": 10 }
       }
     }
   },
@@ -384,40 +194,18 @@
     "id": "blindfold",
     "name": "Blindfold",
     "slot": "helm",
-    "tags": [
-      "targeting",
-      "risk",
-      "damage"
-    ],
+    "tags": ["targeting", "risk", "damage"],
     "icon": "eye-off",
     "description": "Your demons choose random enemy targets but deal significantly more damage.",
     "effect": {
       "type": "modify_targeting",
       "values": {
-        "common": {
-          "targeting": "random",
-          "damagePercent": 15
-        },
-        "uncommon": {
-          "targeting": "random",
-          "damagePercent": 22
-        },
-        "rare": {
-          "targeting": "random",
-          "damagePercent": 31
-        },
-        "epic": {
-          "targeting": "random",
-          "damagePercent": 42
-        },
-        "legendary": {
-          "targeting": "random",
-          "damagePercent": 56
-        },
-        "mythic": {
-          "targeting": "random",
-          "damagePercent": 75
-        }
+        "common": { "targeting": "random", "damagePercent": 15 },
+        "uncommon": { "targeting": "random", "damagePercent": 22 },
+        "rare": { "targeting": "random", "damagePercent": 31 },
+        "epic": { "targeting": "random", "damagePercent": 42 },
+        "legendary": { "targeting": "random", "damagePercent": 56 },
+        "mythic": { "targeting": "random", "damagePercent": 75 }
       }
     }
   },
@@ -425,40 +213,20 @@
     "id": "shepherds_skull",
     "name": "Shepherd's Skull",
     "slot": "helm",
-    "tags": [
-      "tank",
-      "defense"
-    ],
+    "tags": ["tank", "defense"],
     "icon": "skull",
     "description": "Tank demons take less damage while another ally remains alive.",
     "effect": {
       "type": "stat_modifier",
-      "targetRoles": [
-        "counter_tank",
-        "juggernaut"
-      ],
-      "condition": {
-        "livingAlliesAtLeast": 1
-      },
+      "targetRoles": ["counter_tank", "juggernaut"],
+      "condition": { "livingAlliesAtLeast": 1 },
       "values": {
-        "common": {
-          "damageTakenPercent": -7
-        },
-        "uncommon": {
-          "damageTakenPercent": -10
-        },
-        "rare": {
-          "damageTakenPercent": -14
-        },
-        "epic": {
-          "damageTakenPercent": -19
-        },
-        "legendary": {
-          "damageTakenPercent": -25
-        },
-        "mythic": {
-          "damageTakenPercent": -33
-        }
+        "common": { "damageTakenPercent": -7 },
+        "uncommon": { "damageTakenPercent": -10 },
+        "rare": { "damageTakenPercent": -14 },
+        "epic": { "damageTakenPercent": -19 },
+        "legendary": { "damageTakenPercent": -25 },
+        "mythic": { "damageTakenPercent": -33 }
       }
     }
   },
@@ -466,33 +234,18 @@
     "id": "ring_of_the_pack",
     "name": "Ring of the Pack",
     "slot": "ring",
-    "tags": [
-      "roles",
-      "damage"
-    ],
+    "tags": ["roles", "damage"],
     "icon": "ring",
     "description": "Your team gains damage for each different demon role represented.",
     "effect": {
       "type": "bonus_per_role",
       "values": {
-        "common": {
-          "damagePercentPerRole": 1.5
-        },
-        "uncommon": {
-          "damagePercentPerRole": 2
-        },
-        "rare": {
-          "damagePercentPerRole": 2.8
-        },
-        "epic": {
-          "damagePercentPerRole": 3.7
-        },
-        "legendary": {
-          "damagePercentPerRole": 4.8
-        },
-        "mythic": {
-          "damagePercentPerRole": 6.2
-        }
+        "common": { "damagePercentPerRole": 1.5 },
+        "uncommon": { "damagePercentPerRole": 2 },
+        "rare": { "damagePercentPerRole": 2.8 },
+        "epic": { "damagePercentPerRole": 3.7 },
+        "legendary": { "damagePercentPerRole": 4.8 },
+        "mythic": { "damagePercentPerRole": 6.2 }
       }
     }
   },
@@ -500,49 +253,19 @@
     "id": "last_one",
     "name": "Last One",
     "slot": "ring",
-    "tags": [
-      "last-stand",
-      "damage",
-      "speed"
-    ],
+    "tags": ["last-stand", "damage", "speed"],
     "icon": "ring",
     "description": "The final surviving demon becomes significantly stronger.",
     "effect": {
       "type": "bonus_per_dead_ally",
-      "condition": {
-        "livingTeamCount": 1
-      },
+      "condition": { "livingTeamCount": 1 },
       "values": {
-        "common": {
-          "damagePercentPerDeadAlly": 3,
-          "speedPercentPerDeadAlly": 2,
-          "damageTakenPercentPerDeadAlly": -1
-        },
-        "uncommon": {
-          "damagePercentPerDeadAlly": 4,
-          "speedPercentPerDeadAlly": 2.8,
-          "damageTakenPercentPerDeadAlly": -1.4
-        },
-        "rare": {
-          "damagePercentPerDeadAlly": 5.5,
-          "speedPercentPerDeadAlly": 3.7,
-          "damageTakenPercentPerDeadAlly": -1.8
-        },
-        "epic": {
-          "damagePercentPerDeadAlly": 7,
-          "speedPercentPerDeadAlly": 4.8,
-          "damageTakenPercentPerDeadAlly": -2.4
-        },
-        "legendary": {
-          "damagePercentPerDeadAlly": 9,
-          "speedPercentPerDeadAlly": 6,
-          "damageTakenPercentPerDeadAlly": -3
-        },
-        "mythic": {
-          "damagePercentPerDeadAlly": 12,
-          "speedPercentPerDeadAlly": 8,
-          "damageTakenPercentPerDeadAlly": -4
-        }
+        "common": { "damagePercentPerDeadAlly": 3, "speedPercentPerDeadAlly": 2, "damageTakenPercentPerDeadAlly": -1 },
+        "uncommon": { "damagePercentPerDeadAlly": 4, "speedPercentPerDeadAlly": 2.8, "damageTakenPercentPerDeadAlly": -1.4 },
+        "rare": { "damagePercentPerDeadAlly": 5.5, "speedPercentPerDeadAlly": 3.7, "damageTakenPercentPerDeadAlly": -1.8 },
+        "epic": { "damagePercentPerDeadAlly": 7, "speedPercentPerDeadAlly": 4.8, "damageTakenPercentPerDeadAlly": -2.4 },
+        "legendary": { "damagePercentPerDeadAlly": 9, "speedPercentPerDeadAlly": 6, "damageTakenPercentPerDeadAlly": -3 },
+        "mythic": { "damagePercentPerDeadAlly": 12, "speedPercentPerDeadAlly": 8, "damageTakenPercentPerDeadAlly": -4 }
       }
     }
   },
@@ -550,41 +273,18 @@
     "id": "blood_circle",
     "name": "Blood Circle",
     "slot": "ring",
-    "tags": [
-      "healing",
-      "damage"
-    ],
+    "tags": ["healing", "damage"],
     "icon": "ring",
     "description": "Healing also grants the healed demon a temporary damage increase.",
     "effect": {
       "type": "modify_healing",
       "values": {
-        "common": {
-          "damageBuffPercent": 5,
-          "durationTicks": 45
-        },
-        "uncommon": {
-          "damageBuffPercent": 8,
-          "durationTicks": 50
-        },
-        "rare": {
-          "damageBuffPercent": 12,
-          "durationTicks": 55
-        },
-        "epic": {
-          "damageBuffPercent": 17,
-          "durationTicks": 60
-        },
-        "legendary": {
-          "damageBuffPercent": 23,
-          "durationTicks": 70,
-          "healingPercent": 5
-        },
-        "mythic": {
-          "damageBuffPercent": 31,
-          "durationTicks": 80,
-          "healingPercent": 10
-        }
+        "common": { "damageBuffPercent": 5, "durationTicks": 45 },
+        "uncommon": { "damageBuffPercent": 8, "durationTicks": 50 },
+        "rare": { "damageBuffPercent": 12, "durationTicks": 55 },
+        "epic": { "damageBuffPercent": 17, "durationTicks": 60 },
+        "legendary": { "damageBuffPercent": 23, "durationTicks": 70, "healingPercent": 5 },
+        "mythic": { "damageBuffPercent": 31, "durationTicks": 80, "healingPercent": 10 }
       }
     }
   },
@@ -592,39 +292,18 @@
     "id": "rot_ring",
     "name": "Rot Ring",
     "slot": "ring",
-    "tags": [
-      "poison",
-      "duration"
-    ],
+    "tags": ["poison", "duration"],
     "icon": "ring",
     "description": "Your poison lasts longer but deals less damage per tick.",
     "effect": {
       "type": "modify_poison",
       "values": {
-        "common": {
-          "durationPercent": 25,
-          "tickDamagePercent": -12
-        },
-        "uncommon": {
-          "durationPercent": 38,
-          "tickDamagePercent": -12
-        },
-        "rare": {
-          "durationPercent": 55,
-          "tickDamagePercent": -11
-        },
-        "epic": {
-          "durationPercent": 75,
-          "tickDamagePercent": -10
-        },
-        "legendary": {
-          "durationPercent": 100,
-          "tickDamagePercent": -8
-        },
-        "mythic": {
-          "durationPercent": 140,
-          "tickDamagePercent": -5
-        }
+        "common": { "durationPercent": 25, "tickDamagePercent": -12 },
+        "uncommon": { "durationPercent": 38, "tickDamagePercent": -12 },
+        "rare": { "durationPercent": 55, "tickDamagePercent": -11 },
+        "epic": { "durationPercent": 75, "tickDamagePercent": -10 },
+        "legendary": { "durationPercent": 100, "tickDamagePercent": -8 },
+        "mythic": { "durationPercent": 140, "tickDamagePercent": -5 }
       }
     }
   },
@@ -632,39 +311,18 @@
     "id": "empty_ring",
     "name": "Empty Ring",
     "slot": "ring",
-    "tags": [
-      "undermanned",
-      "damage"
-    ],
+    "tags": ["undermanned", "damage"],
     "icon": "ring",
     "description": "Your team gains damage for each unused formation slot.",
     "effect": {
       "type": "bonus_per_empty_team_slot",
       "values": {
-        "common": {
-          "teamCapacity": 9,
-          "damagePercentPerSlot": 1.5
-        },
-        "uncommon": {
-          "teamCapacity": 9,
-          "damagePercentPerSlot": 2
-        },
-        "rare": {
-          "teamCapacity": 9,
-          "damagePercentPerSlot": 2.8
-        },
-        "epic": {
-          "teamCapacity": 9,
-          "damagePercentPerSlot": 3.8
-        },
-        "legendary": {
-          "teamCapacity": 9,
-          "damagePercentPerSlot": 5
-        },
-        "mythic": {
-          "teamCapacity": 9,
-          "damagePercentPerSlot": 6.5
-        }
+        "common": { "teamCapacity": 9, "damagePercentPerSlot": 1.5 },
+        "uncommon": { "teamCapacity": 9, "damagePercentPerSlot": 2 },
+        "rare": { "teamCapacity": 9, "damagePercentPerSlot": 2.8 },
+        "epic": { "teamCapacity": 9, "damagePercentPerSlot": 3.8 },
+        "legendary": { "teamCapacity": 9, "damagePercentPerSlot": 5 },
+        "mythic": { "teamCapacity": 9, "damagePercentPerSlot": 6.5 }
       }
     }
   },
@@ -672,39 +330,18 @@
     "id": "mirror_ring",
     "name": "Mirror Ring",
     "slot": "ring",
-    "tags": [
-      "stats",
-      "team"
-    ],
+    "tags": ["stats", "team"],
     "icon": "ring",
     "description": "Your strongest demon shares part of its stats with your weakest demon.",
     "effect": {
       "type": "battle_start_buff",
       "values": {
-        "common": {
-          "selector": "share_strongest_with_weakest",
-          "sharePercent": 8
-        },
-        "uncommon": {
-          "selector": "share_strongest_with_weakest",
-          "sharePercent": 12
-        },
-        "rare": {
-          "selector": "share_strongest_with_weakest",
-          "sharePercent": 17
-        },
-        "epic": {
-          "selector": "share_strongest_with_weakest",
-          "sharePercent": 23
-        },
-        "legendary": {
-          "selector": "share_strongest_with_weakest",
-          "sharePercent": 30
-        },
-        "mythic": {
-          "selector": "share_strongest_with_weakest",
-          "sharePercent": 40
-        }
+        "common": { "selector": "share_strongest_with_weakest", "sharePercent": 8 },
+        "uncommon": { "selector": "share_strongest_with_weakest", "sharePercent": 12 },
+        "rare": { "selector": "share_strongest_with_weakest", "sharePercent": 17 },
+        "epic": { "selector": "share_strongest_with_weakest", "sharePercent": 23 },
+        "legendary": { "selector": "share_strongest_with_weakest", "sharePercent": 30 },
+        "mythic": { "selector": "share_strongest_with_weakest", "sharePercent": 40 }
       }
     }
   },
@@ -712,48 +349,19 @@
     "id": "ring_of_nine",
     "name": "Ring of Nine",
     "slot": "ring",
-    "tags": [
-      "full-team",
-      "stats"
-    ],
+    "tags": ["full-team", "stats"],
     "icon": "ring",
     "description": "A full nine-demon team gains damage, health, and speed.",
     "effect": {
       "type": "battle_start_buff",
-      "condition": {
-        "teamSize": 9
-      },
+      "condition": { "teamSize": 9 },
       "values": {
-        "common": {
-          "damagePercent": 4,
-          "maxHpPercent": 3,
-          "speedPercent": 2
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "maxHpPercent": 5,
-          "speedPercent": 3
-        },
-        "rare": {
-          "damagePercent": 9,
-          "maxHpPercent": 7,
-          "speedPercent": 4
-        },
-        "epic": {
-          "damagePercent": 13,
-          "maxHpPercent": 10,
-          "speedPercent": 6
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "maxHpPercent": 14,
-          "speedPercent": 8
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "maxHpPercent": 19,
-          "speedPercent": 11
-        }
+        "common": { "damagePercent": 4, "maxHpPercent": 3, "speedPercent": 2 },
+        "uncommon": { "damagePercent": 6, "maxHpPercent": 5, "speedPercent": 3 },
+        "rare": { "damagePercent": 9, "maxHpPercent": 7, "speedPercent": 4 },
+        "epic": { "damagePercent": 13, "maxHpPercent": 10, "speedPercent": 6 },
+        "legendary": { "damagePercent": 18, "maxHpPercent": 14, "speedPercent": 8 },
+        "mythic": { "damagePercent": 25, "maxHpPercent": 19, "speedPercent": 11 }
       }
     }
   },
@@ -761,39 +369,18 @@
     "id": "black_shield",
     "name": "Black Shield",
     "slot": "offhand",
-    "tags": [
-      "shield",
-      "battle-start"
-    ],
+    "tags": ["shield", "battle-start"],
     "icon": "shield",
     "description": "Your demons begin combat with a temporary shield.",
     "effect": {
       "type": "battle_start_buff",
       "values": {
-        "common": {
-          "shieldMaxHpPercent": 5,
-          "durationTicks": 80
-        },
-        "uncommon": {
-          "shieldMaxHpPercent": 8,
-          "durationTicks": 90
-        },
-        "rare": {
-          "shieldMaxHpPercent": 12,
-          "durationTicks": 100
-        },
-        "epic": {
-          "shieldMaxHpPercent": 17,
-          "durationTicks": 115
-        },
-        "legendary": {
-          "shieldMaxHpPercent": 23,
-          "durationTicks": 130
-        },
-        "mythic": {
-          "shieldMaxHpPercent": 31,
-          "durationTicks": 150
-        }
+        "common": { "shieldMaxHpPercent": 5, "durationTicks": 80 },
+        "uncommon": { "shieldMaxHpPercent": 8, "durationTicks": 90 },
+        "rare": { "shieldMaxHpPercent": 12, "durationTicks": 100 },
+        "epic": { "shieldMaxHpPercent": 17, "durationTicks": 115 },
+        "legendary": { "shieldMaxHpPercent": 23, "durationTicks": 130 },
+        "mythic": { "shieldMaxHpPercent": 31, "durationTicks": 150 }
       }
     }
   },
@@ -801,36 +388,18 @@
     "id": "soul_jar",
     "name": "Soul Jar",
     "slot": "offhand",
-    "tags": [
-      "resurrection",
-      "death"
-    ],
+    "tags": ["resurrection", "death"],
     "icon": "jar",
     "description": "The first demon to die resurrects once.",
     "effect": {
       "type": "resurrect_first_dead",
       "values": {
-        "common": {
-          "resurrectHpPercent": 12
-        },
-        "uncommon": {
-          "resurrectHpPercent": 18
-        },
-        "rare": {
-          "resurrectHpPercent": 27
-        },
-        "epic": {
-          "resurrectHpPercent": 38
-        },
-        "legendary": {
-          "resurrectHpPercent": 52,
-          "speedPercent": 20
-        },
-        "mythic": {
-          "resurrectHpPercent": 70,
-          "speedPercent": 30,
-          "invulnerableTicks": 18
-        }
+        "common": { "resurrectHpPercent": 12 },
+        "uncommon": { "resurrectHpPercent": 18 },
+        "rare": { "resurrectHpPercent": 27 },
+        "epic": { "resurrectHpPercent": 38 },
+        "legendary": { "resurrectHpPercent": 52, "speedPercent": 20 },
+        "mythic": { "resurrectHpPercent": 70, "speedPercent": 30, "invulnerableTicks": 18 }
       }
     }
   },
@@ -838,45 +407,18 @@
     "id": "demon_bell",
     "name": "Demon Bell",
     "slot": "offhand",
-    "tags": [
-      "slow",
-      "battle-start"
-    ],
+    "tags": ["slow", "battle-start"],
     "icon": "bell",
     "description": "Enemies start combat slowed for a short time.",
     "effect": {
       "type": "battle_start_buff",
       "values": {
-        "common": {
-          "target": "enemies",
-          "speedPercent": -8,
-          "durationTicks": 45
-        },
-        "uncommon": {
-          "target": "enemies",
-          "speedPercent": -11,
-          "durationTicks": 50
-        },
-        "rare": {
-          "target": "enemies",
-          "speedPercent": -15,
-          "durationTicks": 55
-        },
-        "epic": {
-          "target": "enemies",
-          "speedPercent": -20,
-          "durationTicks": 60
-        },
-        "legendary": {
-          "target": "enemies",
-          "speedPercent": -26,
-          "durationTicks": 70
-        },
-        "mythic": {
-          "target": "enemies",
-          "speedPercent": -34,
-          "durationTicks": 80
-        }
+        "common": { "target": "enemies", "speedPercent": -8, "durationTicks": 45 },
+        "uncommon": { "target": "enemies", "speedPercent": -11, "durationTicks": 50 },
+        "rare": { "target": "enemies", "speedPercent": -15, "durationTicks": 55 },
+        "epic": { "target": "enemies", "speedPercent": -20, "durationTicks": 60 },
+        "legendary": { "target": "enemies", "speedPercent": -26, "durationTicks": 70 },
+        "mythic": { "target": "enemies", "speedPercent": -34, "durationTicks": 80 }
       }
     }
   },
@@ -884,43 +426,19 @@
     "id": "ash_idol",
     "name": "Ash Idol",
     "slot": "offhand",
-    "tags": [
-      "fire",
-      "damage",
-      "risk"
-    ],
+    "tags": ["fire", "damage", "risk"],
     "icon": "flame",
     "description": "Fire demons deal much more damage, but their attacks scorch allies.",
     "effect": {
       "type": "stat_modifier",
-      "targetTypeIds": [
-        4
-      ],
+      "targetTypeIds": [4],
       "values": {
-        "common": {
-          "damagePercent": 18,
-          "allyDamageMaxHpPercent": 1.5
-        },
-        "uncommon": {
-          "damagePercent": 27,
-          "allyDamageMaxHpPercent": 1.5
-        },
-        "rare": {
-          "damagePercent": 38,
-          "allyDamageMaxHpPercent": 1.4
-        },
-        "epic": {
-          "damagePercent": 52,
-          "allyDamageMaxHpPercent": 1.3
-        },
-        "legendary": {
-          "damagePercent": 70,
-          "allyDamageMaxHpPercent": 1.1
-        },
-        "mythic": {
-          "damagePercent": 95,
-          "allyDamageMaxHpPercent": 0.9
-        }
+        "common": { "damagePercent": 18, "allyDamageMaxHpPercent": 1.5 },
+        "uncommon": { "damagePercent": 27, "allyDamageMaxHpPercent": 1.5 },
+        "rare": { "damagePercent": 38, "allyDamageMaxHpPercent": 1.4 },
+        "epic": { "damagePercent": 52, "allyDamageMaxHpPercent": 1.3 },
+        "legendary": { "damagePercent": 70, "allyDamageMaxHpPercent": 1.1 },
+        "mythic": { "damagePercent": 95, "allyDamageMaxHpPercent": 0.9 }
       }
     }
   },
@@ -928,39 +446,18 @@
     "id": "thorn_totem",
     "name": "Thorn Totem",
     "slot": "offhand",
-    "tags": [
-      "reflection",
-      "critical"
-    ],
+    "tags": ["reflection", "critical"],
     "icon": "sprout",
     "description": "Reflected damage can critically strike.",
     "effect": {
       "type": "stat_modifier",
       "values": {
-        "common": {
-          "reflectionCritChancePercent": 10,
-          "reflectionCritDamagePercent": 150
-        },
-        "uncommon": {
-          "reflectionCritChancePercent": 15,
-          "reflectionCritDamagePercent": 155
-        },
-        "rare": {
-          "reflectionCritChancePercent": 22,
-          "reflectionCritDamagePercent": 160
-        },
-        "epic": {
-          "reflectionCritChancePercent": 30,
-          "reflectionCritDamagePercent": 170
-        },
-        "legendary": {
-          "reflectionCritChancePercent": 40,
-          "reflectionCritDamagePercent": 185
-        },
-        "mythic": {
-          "reflectionCritChancePercent": 55,
-          "reflectionCritDamagePercent": 200
-        }
+        "common": { "reflectionCritChancePercent": 10, "reflectionCritDamagePercent": 150 },
+        "uncommon": { "reflectionCritChancePercent": 15, "reflectionCritDamagePercent": 155 },
+        "rare": { "reflectionCritChancePercent": 22, "reflectionCritDamagePercent": 160 },
+        "epic": { "reflectionCritChancePercent": 30, "reflectionCritDamagePercent": 170 },
+        "legendary": { "reflectionCritChancePercent": 40, "reflectionCritDamagePercent": 185 },
+        "mythic": { "reflectionCritChancePercent": 55, "reflectionCritDamagePercent": 200 }
       }
     }
   },
@@ -968,33 +465,18 @@
     "id": "rotten_heart",
     "name": "Rotten Heart",
     "slot": "offhand",
-    "tags": [
-      "poison",
-      "healing-reduction"
-    ],
+    "tags": ["poison", "healing-reduction"],
     "icon": "heart-crack",
     "description": "Poison applied by your demons reduces healing received by the victim.",
     "effect": {
       "type": "modify_poison",
       "values": {
-        "common": {
-          "healingReductionPercent": 10
-        },
-        "uncommon": {
-          "healingReductionPercent": 15
-        },
-        "rare": {
-          "healingReductionPercent": 22
-        },
-        "epic": {
-          "healingReductionPercent": 30
-        },
-        "legendary": {
-          "healingReductionPercent": 40
-        },
-        "mythic": {
-          "healingReductionPercent": 55
-        }
+        "common": { "healingReductionPercent": 10 },
+        "uncommon": { "healingReductionPercent": 15 },
+        "rare": { "healingReductionPercent": 22 },
+        "epic": { "healingReductionPercent": 30 },
+        "legendary": { "healingReductionPercent": 40 },
+        "mythic": { "healingReductionPercent": 55 }
       }
     }
   },
@@ -1002,39 +484,18 @@
     "id": "broken_hourglass",
     "name": "Broken Hourglass",
     "slot": "offhand",
-    "tags": [
-      "speed",
-      "battle-start"
-    ],
+    "tags": ["speed", "battle-start"],
     "icon": "hourglass",
     "description": "Your demons gain a strong temporary speed bonus at battle start.",
     "effect": {
       "type": "battle_start_buff",
       "values": {
-        "common": {
-          "speedPercent": 18,
-          "durationTicks": 35
-        },
-        "uncommon": {
-          "speedPercent": 27,
-          "durationTicks": 40
-        },
-        "rare": {
-          "speedPercent": 38,
-          "durationTicks": 45
-        },
-        "epic": {
-          "speedPercent": 52,
-          "durationTicks": 50
-        },
-        "legendary": {
-          "speedPercent": 70,
-          "durationTicks": 60
-        },
-        "mythic": {
-          "speedPercent": 95,
-          "durationTicks": 70
-        }
+        "common": { "speedPercent": 18, "durationTicks": 35 },
+        "uncommon": { "speedPercent": 27, "durationTicks": 40 },
+        "rare": { "speedPercent": 38, "durationTicks": 45 },
+        "epic": { "speedPercent": 52, "durationTicks": 50 },
+        "legendary": { "speedPercent": 70, "durationTicks": 60 },
+        "mythic": { "speedPercent": 95, "durationTicks": 70 }
       }
     }
   },
@@ -1042,2215 +503,18 @@
     "id": "sacrificial_idol",
     "name": "Sacrificial Idol",
     "slot": "offhand",
-    "tags": [
-      "damage",
-      "sacrifice",
-      "battle-start"
-    ],
+    "tags": ["damage", "sacrifice", "battle-start"],
     "icon": "skull",
     "description": "Your weakest demon starts at 50% HP and every other demon gains damage.",
     "effect": {
       "type": "battle_start_buff",
       "values": {
-        "common": {
-          "selector": "sacrifice_weakest",
-          "initialHpPercent": 50,
-          "otherAlliesDamagePercent": 9
-        },
-        "uncommon": {
-          "selector": "sacrifice_weakest",
-          "initialHpPercent": 50,
-          "otherAlliesDamagePercent": 13
-        },
-        "rare": {
-          "selector": "sacrifice_weakest",
-          "initialHpPercent": 50,
-          "otherAlliesDamagePercent": 19
-        },
-        "epic": {
-          "selector": "sacrifice_weakest",
-          "initialHpPercent": 50,
-          "otherAlliesDamagePercent": 26
-        },
-        "legendary": {
-          "selector": "sacrifice_weakest",
-          "initialHpPercent": 50,
-          "otherAlliesDamagePercent": 35,
-          "sacrificeShieldPercent": 8
-        },
-        "mythic": {
-          "selector": "sacrifice_weakest",
-          "initialHpPercent": 50,
-          "otherAlliesDamagePercent": 48,
-          "sacrificeShieldPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "war_weapon",
-    "name": "War Blade",
-    "slot": "weapon",
-    "tags": [
-      "war",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 1 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        1
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "war_armor",
-    "name": "War Plate",
-    "slot": "armor",
-    "tags": [
-      "war",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 1 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        1
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "war_helm",
-    "name": "War Crown",
-    "slot": "helm",
-    "tags": [
-      "war",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 1 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        1
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "war_ring_type_1",
-    "name": "War Ring",
-    "slot": "ring",
-    "tags": [
-      "war",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 1 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        1
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "war_relic",
-    "name": "War Relic",
-    "slot": "offhand",
-    "tags": [
-      "war",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 1 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        1
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "void_weapon",
-    "name": "Void Blade",
-    "slot": "weapon",
-    "tags": [
-      "void",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 2 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        2
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "void_armor",
-    "name": "Void Plate",
-    "slot": "armor",
-    "tags": [
-      "void",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 2 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        2
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "void_helm",
-    "name": "Void Crown",
-    "slot": "helm",
-    "tags": [
-      "void",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 2 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        2
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "void_ring_type_2",
-    "name": "Void Ring",
-    "slot": "ring",
-    "tags": [
-      "void",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 2 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        2
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "void_relic",
-    "name": "Void Relic",
-    "slot": "offhand",
-    "tags": [
-      "void",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 2 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        2
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "rot_weapon",
-    "name": "Rot Blade",
-    "slot": "weapon",
-    "tags": [
-      "rot",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 3 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        3
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "rot_armor",
-    "name": "Rot Plate",
-    "slot": "armor",
-    "tags": [
-      "rot",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 3 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        3
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "rot_helm",
-    "name": "Rot Crown",
-    "slot": "helm",
-    "tags": [
-      "rot",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 3 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        3
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "rot_ring_type_3",
-    "name": "Rot Ring",
-    "slot": "ring",
-    "tags": [
-      "rot",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 3 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        3
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "rot_relic",
-    "name": "Rot Relic",
-    "slot": "offhand",
-    "tags": [
-      "rot",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 3 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        3
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "fire_weapon",
-    "name": "Fire Blade",
-    "slot": "weapon",
-    "tags": [
-      "fire",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 4 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        4
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "fire_armor",
-    "name": "Fire Plate",
-    "slot": "armor",
-    "tags": [
-      "fire",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 4 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        4
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "fire_helm",
-    "name": "Fire Crown",
-    "slot": "helm",
-    "tags": [
-      "fire",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 4 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        4
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "fire_ring_type_4",
-    "name": "Fire Ring",
-    "slot": "ring",
-    "tags": [
-      "fire",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 4 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        4
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "fire_relic",
-    "name": "Fire Relic",
-    "slot": "offhand",
-    "tags": [
-      "fire",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 4 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        4
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "thorn_weapon",
-    "name": "Thorn Blade",
-    "slot": "weapon",
-    "tags": [
-      "thorn",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 5 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        5
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "thorn_armor",
-    "name": "Thorn Plate",
-    "slot": "armor",
-    "tags": [
-      "thorn",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 5 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        5
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "thorn_helm",
-    "name": "Thorn Crown",
-    "slot": "helm",
-    "tags": [
-      "thorn",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 5 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        5
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "thorn_ring_type_5",
-    "name": "Thorn Ring",
-    "slot": "ring",
-    "tags": [
-      "thorn",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 5 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        5
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "thorn_relic",
-    "name": "Thorn Relic",
-    "slot": "offhand",
-    "tags": [
-      "thorn",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 5 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        5
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "mercy_weapon",
-    "name": "Mercy Blade",
-    "slot": "weapon",
-    "tags": [
-      "mercy",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 6 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        6
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "mercy_armor",
-    "name": "Mercy Plate",
-    "slot": "armor",
-    "tags": [
-      "mercy",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 6 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        6
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "mercy_helm",
-    "name": "Mercy Crown",
-    "slot": "helm",
-    "tags": [
-      "mercy",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 6 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        6
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "mercy_ring_type_6",
-    "name": "Mercy Ring",
-    "slot": "ring",
-    "tags": [
-      "mercy",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 6 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        6
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "mercy_relic",
-    "name": "Mercy Relic",
-    "slot": "offhand",
-    "tags": [
-      "mercy",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 6 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        6
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "shadow_weapon",
-    "name": "Shadow Blade",
-    "slot": "weapon",
-    "tags": [
-      "shadow",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 7 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        7
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "shadow_armor",
-    "name": "Shadow Plate",
-    "slot": "armor",
-    "tags": [
-      "shadow",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 7 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        7
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "shadow_helm",
-    "name": "Shadow Crown",
-    "slot": "helm",
-    "tags": [
-      "shadow",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 7 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        7
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "shadow_ring_type_7",
-    "name": "Shadow Ring",
-    "slot": "ring",
-    "tags": [
-      "shadow",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 7 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        7
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "shadow_relic",
-    "name": "Shadow Relic",
-    "slot": "offhand",
-    "tags": [
-      "shadow",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 7 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        7
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "bone_weapon",
-    "name": "Bone Blade",
-    "slot": "weapon",
-    "tags": [
-      "bone",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 8 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        8
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "bone_armor",
-    "name": "Bone Plate",
-    "slot": "armor",
-    "tags": [
-      "bone",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 8 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        8
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "bone_helm",
-    "name": "Bone Crown",
-    "slot": "helm",
-    "tags": [
-      "bone",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 8 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        8
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "bone_ring_type_8",
-    "name": "Bone Ring",
-    "slot": "ring",
-    "tags": [
-      "bone",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 8 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        8
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "bone_relic",
-    "name": "Bone Relic",
-    "slot": "offhand",
-    "tags": [
-      "bone",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 8 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        8
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "titan_weapon",
-    "name": "Titan Blade",
-    "slot": "weapon",
-    "tags": [
-      "titan",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 9 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        9
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "titan_armor",
-    "name": "Titan Plate",
-    "slot": "armor",
-    "tags": [
-      "titan",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 9 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        9
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "titan_helm",
-    "name": "Titan Crown",
-    "slot": "helm",
-    "tags": [
-      "titan",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 9 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        9
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "titan_ring_type_9",
-    "name": "Titan Ring",
-    "slot": "ring",
-    "tags": [
-      "titan",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 9 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        9
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "titan_relic",
-    "name": "Titan Relic",
-    "slot": "offhand",
-    "tags": [
-      "titan",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 9 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        9
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "rift_weapon",
-    "name": "Rift Blade",
-    "slot": "weapon",
-    "tags": [
-      "rift",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 10 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        10
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "rift_armor",
-    "name": "Rift Plate",
-    "slot": "armor",
-    "tags": [
-      "rift",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 10 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        10
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "rift_helm",
-    "name": "Rift Crown",
-    "slot": "helm",
-    "tags": [
-      "rift",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 10 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        10
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "rift_ring_type_10",
-    "name": "Rift Ring",
-    "slot": "ring",
-    "tags": [
-      "rift",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 10 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        10
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "rift_relic",
-    "name": "Rift Relic",
-    "slot": "offhand",
-    "tags": [
-      "rift",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 10 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        10
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
-      }
-    }
-  },
-  {
-    "id": "storm_weapon",
-    "name": "Storm Blade",
-    "slot": "weapon",
-    "tags": [
-      "storm",
-      "damage",
-      "type-specific"
-    ],
-    "icon": "sword",
-    "description": "Type 11 demons gain damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        11
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 6
-        },
-        "uncommon": {
-          "damagePercent": 9
-        },
-        "rare": {
-          "damagePercent": 13
-        },
-        "epic": {
-          "damagePercent": 18
-        },
-        "legendary": {
-          "damagePercent": 24
-        },
-        "mythic": {
-          "damagePercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "storm_armor",
-    "name": "Storm Plate",
-    "slot": "armor",
-    "tags": [
-      "storm",
-      "health",
-      "type-specific"
-    ],
-    "icon": "armor",
-    "description": "Type 11 demons gain health.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        11
-      ],
-      "values": {
-        "common": {
-          "maxHpPercent": 7
-        },
-        "uncommon": {
-          "maxHpPercent": 11
-        },
-        "rare": {
-          "maxHpPercent": 16
-        },
-        "epic": {
-          "maxHpPercent": 22
-        },
-        "legendary": {
-          "maxHpPercent": 29
-        },
-        "mythic": {
-          "maxHpPercent": 38
-        }
-      }
-    }
-  },
-  {
-    "id": "storm_helm",
-    "name": "Storm Crown",
-    "slot": "helm",
-    "tags": [
-      "storm",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "crown",
-    "description": "Type 11 demons gain speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        11
-      ],
-      "values": {
-        "common": {
-          "speedPercent": 6
-        },
-        "uncommon": {
-          "speedPercent": 9
-        },
-        "rare": {
-          "speedPercent": 13
-        },
-        "epic": {
-          "speedPercent": 18
-        },
-        "legendary": {
-          "speedPercent": 24
-        },
-        "mythic": {
-          "speedPercent": 32
-        }
-      }
-    }
-  },
-  {
-    "id": "storm_ring_type_11",
-    "name": "Storm Ring",
-    "slot": "ring",
-    "tags": [
-      "storm",
-      "damage",
-      "speed",
-      "type-specific"
-    ],
-    "icon": "ring",
-    "description": "Type 11 demons gain damage and attack speed.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        11
-      ],
-      "values": {
-        "common": {
-          "damagePercent": 4,
-          "speedPercent": 3
-        },
-        "uncommon": {
-          "damagePercent": 6,
-          "speedPercent": 4
-        },
-        "rare": {
-          "damagePercent": 9,
-          "speedPercent": 6
-        },
-        "epic": {
-          "damagePercent": 13,
-          "speedPercent": 8
-        },
-        "legendary": {
-          "damagePercent": 18,
-          "speedPercent": 11
-        },
-        "mythic": {
-          "damagePercent": 25,
-          "speedPercent": 15
-        }
-      }
-    }
-  },
-  {
-    "id": "storm_relic",
-    "name": "Storm Relic",
-    "slot": "offhand",
-    "tags": [
-      "storm",
-      "defense",
-      "type-specific"
-    ],
-    "icon": "gem",
-    "description": "Type 11 demons take less damage.",
-    "effect": {
-      "type": "stat_modifier",
-      "targetTypeIds": [
-        11
-      ],
-      "values": {
-        "common": {
-          "damageTakenPercent": -4
-        },
-        "uncommon": {
-          "damageTakenPercent": -6
-        },
-        "rare": {
-          "damageTakenPercent": -8
-        },
-        "epic": {
-          "damageTakenPercent": -11
-        },
-        "legendary": {
-          "damageTakenPercent": -15
-        },
-        "mythic": {
-          "damageTakenPercent": -20
-        }
+        "common": { "selector": "sacrifice_weakest", "initialHpPercent": 50, "otherAlliesDamagePercent": 9 },
+        "uncommon": { "selector": "sacrifice_weakest", "initialHpPercent": 50, "otherAlliesDamagePercent": 13 },
+        "rare": { "selector": "sacrifice_weakest", "initialHpPercent": 50, "otherAlliesDamagePercent": 19 },
+        "epic": { "selector": "sacrifice_weakest", "initialHpPercent": 50, "otherAlliesDamagePercent": 26 },
+        "legendary": { "selector": "sacrifice_weakest", "initialHpPercent": 50, "otherAlliesDamagePercent": 35, "sacrificeShieldPercent": 8 },
+        "mythic": { "selector": "sacrifice_weakest", "initialHpPercent": 50, "otherAlliesDamagePercent": 48, "sacrificeShieldPercent": 15 }
       }
     }
   }

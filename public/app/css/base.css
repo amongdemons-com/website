@@ -4147,6 +4147,222 @@ body.seo-page {
     margin-top: 1.75rem;
 }
 
+.seo-items-hero {
+    background: radial-gradient(circle at 78% 24%, rgba(111,214,189,0.14), transparent 22rem),
+        radial-gradient(circle at 62% 72%, rgba(232,199,106,0.11), transparent 18rem),
+        radial-gradient(circle at 90% 68%, rgba(147,101,184,0.1), transparent 16rem),
+        linear-gradient(90deg, rgba(5,10,12,0.8), rgba(5,10,12,0.52), rgba(5,10,12,0.74));
+}
+
+.seo-items-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0 0 0.8rem;
+}
+
+.seo-items-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    border: 1px solid #273638;
+    border-radius: 999px;
+    background: #091517;
+    color: var(--rarity-color, #d8dbdd);
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 0.22rem 0.48rem;
+}
+
+.seo-items-rarity--common { --rarity-color: #d1d5d8; }
+.seo-items-rarity--uncommon { --rarity-color: #73d18a; }
+.seo-items-rarity--rare { --rarity-color: #64b5ee; }
+.seo-items-rarity--epic { --rarity-color: #c295e0; }
+.seo-items-rarity--legendary { --rarity-color: #f7d859; }
+.seo-items-rarity--mythic { --rarity-color: #ef786a; }
+
+.seo-items-list {
+    display: grid;
+    gap: 0;
+    border: 1px solid #252d2f;
+    border-radius: 8px;
+    background: #071215;
+}
+
+.seo-item-row {
+    display: grid;
+    grid-template-columns: clamp(3.75rem, 6vw, 5.5rem) minmax(11rem, 1.05fr) minmax(16rem, 1.25fr) minmax(0, 2.25fr);
+    gap: 0.8rem;
+    align-items: center;
+    border-bottom: 1px solid #202a2c;
+    padding: 0.6rem 0.7rem;
+}
+
+.seo-item-row:last-child {
+    border-bottom: 0;
+}
+
+.seo-item-row:hover {
+    background: rgba(111,214,189,0.045);
+}
+
+.seo-items-primary {
+    min-width: 0;
+}
+
+.seo-items-art {
+    align-self: stretch;
+    display: grid;
+    min-height: 3.6rem;
+    place-items: center;
+    border-right: 1px solid #1e2a2c;
+    color: #e4c76a;
+}
+
+.seo-items-art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.seo-items-art .game-icon {
+    width: 1.55rem;
+    height: 1.55rem;
+}
+
+.seo-items-name-content {
+    color: #fff;
+    font-weight: 800;
+}
+
+.seo-items-name-content {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 2rem;
+}
+
+.seo-items-slot {
+    display: inline-flex;
+    border: 1px solid #304244;
+    border-radius: 999px;
+    background: #0b181a;
+    color: #d8dbdd;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.seo-items-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.seo-items-tags span {
+    border: 1px solid #263739;
+    border-radius: 4px;
+    background: #0a1618;
+    color: #a9c8c3;
+    font-size: 0.66rem;
+    font-weight: 800;
+    padding: 0.14rem 0.28rem;
+}
+
+.seo-items-primary-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.42rem;
+}
+
+.seo-items-effect {
+    min-width: 0;
+    font-size: 0.74rem;
+}
+
+.seo-items-effect strong,
+.seo-items-effect-type,
+.seo-items-effect-details {
+    display: block;
+}
+
+.seo-items-effect strong {
+    color: #e5e9e8;
+    font-weight: 700;
+}
+
+.seo-items-effect-type {
+    margin-top: 0.22rem;
+    color: #6fd6bd;
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.seo-items-effect-details {
+    margin-top: 0.16rem;
+    color: #879799;
+    font-size: 0.67rem;
+}
+
+.seo-items-rarity-scale {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.28rem;
+    min-width: 0;
+}
+
+.seo-items-rarity-chip {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    border: 1px solid #263537;
+    border-radius: 5px;
+    background: rgba(4,10,12,0.35);
+    color: #dce3e1;
+    font-size: 0.67rem;
+    line-height: 1.2;
+    padding: 0.26rem 0.35rem;
+}
+
+.seo-items-rarity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    min-width: 0;
+    position: relative;
+}
+
+.seo-items-rarity-badge .dungeon-demon-rarity-gem {
+    position: relative;
+    top: 0;
+    left: 0;
+    flex: 0 0 0.8rem;
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+.seo-items-rarity-name {
+    color: var(--rarity-color, #d8dbdd);
+    font-size: 0.62rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.seo-items-rarity-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: #dce3e1;
+    font-size: 0.67rem;
+    line-height: 1.2;
+}
+
 .seo-demon-grid {
     grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
 }
@@ -4633,14 +4849,36 @@ body.seo-page {
     }
 }
 
+@media (max-width: 700px) {
+    .seo-item-row {
+        grid-template-columns: 3.75rem minmax(0, 1fr);
+        gap: 0.55rem;
+    }
+
+    .seo-items-effect {
+        grid-column: 1 / -1;
+        border-top: 1px solid #1e2a2c;
+        padding-top: 0.5rem;
+    }
+
+    .seo-items-rarity-scale {
+        grid-column: 1 / -1;
+    }
+}
+
 @media (max-width: 560px) {
 .seo-hero {
         min-height: 64vh;
     }
 
-.seo-demon-grid,
+    .seo-demon-grid,
     .seo-stat-list {
         grid-template-columns: 1fr;
+    }
+
+    .seo-items-rarity-chip {
+        grid-template-columns: 1fr;
+        gap: 0.12rem;
     }
 
 .seo-boss-priority-heading {

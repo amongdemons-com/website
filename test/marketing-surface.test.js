@@ -2,11 +2,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const equipmentCatalog = require('../public/api/data/equipment-items.json');
 
 const {
   STEAM_APP_ID,
   STEAM_STORE_URL,
   renderHomePage,
+  renderItemsPage,
   renderPressPage,
   renderSitemap,
   renderUpdatesPage,
@@ -83,9 +85,26 @@ test('patch notes become an indexable updates page', () => {
   assert.match(html, /updates_page/);
 });
 
+test('items page renders the complete equipment catalog without nav exposure', () => {
+  const html = renderItemsPage();
+
+  assert.match(html, /<h1>Items<\/h1>/);
+  assert.match(html, /class="seo-items-legend"/);
+  assert.match(html, /class="seo-items-rarity-name">Common<\/span>/);
+  assert.match(html, /class="seo-items-rarity-name">Mythic<\/span>/);
+  assert.equal((html.match(/class="seo-item-row"/g) || []).length, equipmentCatalog.length);
+  assert.match(html, /Hunter&#39;s Blade/);
+  assert.match(html, new RegExp(equipmentCatalog[equipmentCatalog.length - 1].name));
+  assert.match(html, /dungeon-demon-rarity-gem--common/);
+  assert.equal((html.match(/class="seo-items-rarity-name"/g) || []).length, 6);
+  assert.doesNotMatch(html, /seo-items-table/);
+  assert.doesNotMatch(html, /data-game-route="items"/);
+});
+
 test('sitemap includes marketing discovery pages', () => {
   const xml = renderSitemap([], []);
 
+  assert.match(xml, /https:\/\/amongdemons\.com\/items/);
   assert.match(xml, /https:\/\/amongdemons\.com\/updates/);
   assert.match(xml, /https:\/\/amongdemons\.com\/press/);
 });
