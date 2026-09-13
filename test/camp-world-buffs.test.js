@@ -27,12 +27,16 @@ test('Camp renders world buffs directly beneath the skill tree stats', () => {
   assert.doesNotMatch(campSource, /renderWorldBuffHeading/);
   assert.match(campSource, /elements\.campWorldBuffs\.hidden = !buffs\.length/);
   assert.match(campSource, /data-tooltip="\$\{formatTooltipAttribute\(tooltip\)\}"/);
+  assert.match(campSource, /bindWorldBuffTooltips\(\);/);
+  assert.match(campSource, /document\.body\.appendChild\(tooltip\)/);
+  assert.match(campSource, /updateWorldBuffTooltipPosition\(\)/);
   assert.match(campCss, /\.camp-world-buff \{/);
   assert.match(campCss, /\.camp-world-buffs \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.doesNotMatch(campCss, /\.camp-world-buff--legendary/);
   assert.match(campCss, /\.camp-world-buff \{[\s\S]*?align-items: center;[\s\S]*?align-content: center;[\s\S]*?border: 1px solid #162425;/);
   assert.match(campCss, /\.camp-world-buff time \{[\s\S]*?align-items: center;[\s\S]*?color: #f8fbf9;/);
   assert.match(campCss, /\.camp-world-buff::after/);
+  assert.match(campCss, /\.camp-world-buff-tooltip \{[\s\S]*?position: fixed;[\s\S]*?max-width: min\(16rem, calc\(100vw - 1rem\)\);/);
   assert.match(campCss, /\.quest-progress \{[\s\S]*?border: 1px solid #192829;/);
   assert.doesNotMatch(campCss, /\.camp-player-panel,\s*\.camp-world-buffs \{[\s\S]*?overflow: visible;/);
   assert.doesNotMatch(campCss, /\.camp-world-buffs \{\s*overflow: visible;/);

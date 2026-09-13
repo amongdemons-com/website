@@ -2682,14 +2682,14 @@ body.camp-page {
 }
 
 .camp-world-buff::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    z-index: 40;
-    right: auto;
-    bottom: calc(100% + 0.42rem);
-    left: 0;
+    content: none;
+}
+
+.camp-world-buff-tooltip {
+    position: fixed;
+    z-index: 1200;
     width: max-content;
-    max-width: min(16rem, 70vw);
+    max-width: min(16rem, calc(100vw - 1rem));
     border: 1px solid #293b3b;
     border-radius: 6px;
     background: #03090b;
@@ -2703,27 +2703,23 @@ body.camp-page {
     text-align: left;
     text-transform: none;
     white-space: pre-line;
+    visibility: hidden;
     opacity: 0;
     transform: translateY(0.2rem);
-    transition: opacity 140ms ease, transform 140ms ease;
+    transition: opacity 140ms ease, transform 140ms ease, visibility 0s linear 140ms;
 }
 
-.camp-world-buff:nth-child(even)::after {
-    right: 0;
-    left: auto;
+.camp-world-buff-tooltip.is-visible {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0s;
 }
 
 .camp-world-buff:hover,
 .camp-world-buff:focus,
 .camp-world-buff:focus-visible {
     z-index: 41;
-}
-
-.camp-world-buff:hover::after,
-.camp-world-buff:focus::after,
-.camp-world-buff:focus-visible::after {
-    opacity: 1;
-    transform: translateY(0);
 }
 
 .camp-world-buff:focus-visible {

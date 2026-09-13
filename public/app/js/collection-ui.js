@@ -302,7 +302,8 @@
     const echo = getEchoItemForDemon(demon);
     const requirement = echo?.summonRequirement || DEFAULT_ECHO_REQUIREMENTS[String(demon.rarity || '').toLowerCase()] || '—';
     const progress = echo ? echo.summonProgress : 0;
-    const footer = `<div class="collection-missing-label outline">${escapeHtml(`${progress} / ${requirement}`)}</div>`;
+    const summonReadyClass = echo?.summonReady ? ' is-summon-ready' : '';
+    const footer = `<div class="collection-missing-label outline${summonReadyClass}">${escapeHtml(`${progress} / ${requirement}`)}</div>`;
 
     return `
       <div class="collection-grid-item collection-grid-item-missing">

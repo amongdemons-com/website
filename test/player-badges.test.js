@@ -122,6 +122,7 @@ test('hunter badge group stays centered while the new badge alone uses spectral 
   assert.match(css, /\.player-badges \{[\s\S]*?justify-content: center;[\s\S]*?flex-wrap: nowrap;/);
   assert.match(css, /\.player-badge:focus-within \.player-badge-tooltip/);
   assert.match(css, /\.player-badge--has-action:focus-within \.player-badge-tooltip--action \{\s*pointer-events: auto;/);
+  assert.match(css, /\.player-badge--has-action::after\s*\{[\s\S]*?top:\s*100%;[\s\S]*?bottom:\s*-0\.52rem;/);
   assert.match(css, /\.player-badge-tooltip-action \{[\s\S]*?justify-self: end;[\s\S]*?color: #fff;[\s\S]*?text-align: right;/);
   assert.match(css, /\.player-badge-tooltip-action:visited,[\s\S]*?color: #fff;/);
   const actionRule = css.match(/\.player-badge-tooltip-action \{[\s\S]*?\n\}/)?.[0] || '';

@@ -49,6 +49,7 @@
     bindDisabledLinks();
     bindProfilePicker();
     bindQuestControls();
+    bindWorldBuffTooltips();
     await loadCamp();
   }
 
@@ -133,6 +134,112 @@
       claimCampfireCache(elements.dailyRewardButton);
     });
   }
+
+  function bindWorldBuffTooltips() {
+    const container = elements.campWorldBuffs;
+    if (!container || container.dataset.worldBuffTooltipsBound === 'true') return;
+
+    container.addEventListener('pointerover', handleWorldBuffPointerOver);
+    container.addEventListener('pointerout', handleWorldBuffPointerOut);
+    container.addEventListener('focusin', handleWorldBuffFocusIn);
+    container.addEventListener('focusout', handleWorldBuffFocusOut);
+    container.addEventListener('scroll', updateWorldBuffTooltipPosition, { passive: true });
+    window.addEventListener('resize', updateWorldBuffTooltipPosition, { passive: true });
+    window.addEventListener('scroll', updateWorldBuffTooltipPosition, { passive: true, capture: true });
+    container.dataset.worldBuffTooltipsBound = 'true';
+  }
+
+  function handleWorldBuffPointerOver(event) {
+    const buff = getWorldBuffTarget(event.target);
+    if (!buff || buff.contains(event.relatedTarget)) return;
+    showWorldBuffTooltip(buff);
+  }
+
+  function handleWorldBuffPointerOut(event) {
+    const buff = getWorldBuffTarget(event.target);
+    if (!buff || buff.contains(event.relatedTarget) || buff.matches(':focus')) return;
+    hideWorldBuffTooltip(buff);
+  }
+
+  function handleWorldBuffFocusIn(event) {
+    const buff = getWorldBuffTarget(event.target);
+    if (buff) showWorldBuffTooltip(buff);
+  }
+
+  function handleWorldBuffFocusOut(event) {
+    const buff = getWorldBuffTarget(event.target);
+    if (!buff || buff.contains(event.relatedTarget) || buff.matches(':hover')) return;
+    hideWorldBuffTooltip(buff);
+  }
+
+  function getWorldBuffTarget(target) {
+    const element = target instanceof Element ? target : target?.parentElement;
+    return element?.closest('.camp-world-buff') || null;
+  }
+
+  function getWorldBuffTooltip() {
+    let tooltip = document.getElementById('campWorldBuffTooltip');
+    if (tooltip) return tooltip;
+
+    tooltip = document.createElement('div');
+    tooltip.id = 'campWorldBuffTooltip';
+    tooltip.className = 'camp-world-buff-tooltip';
+    tooltip.setAttribute('role', 'tooltip');
+    tooltip.hidden = true;
+    document.body.appendChild(tooltip);
+    return tooltip;
+  }
+
+  function showWorldBuffTooltip(buff) {
+    const text = buff.dataset.tooltip || buff.getAttribute('aria-label') || '';
+    if (!text) return;
+
+    const tooltip = getWorldBuffTooltip();
+    const currentTarget = document.querySelector('[aria-describedby="campWorldBuffTooltip"]');
+    if (currentTarget && currentTarget !== buff) currentTarget.removeAttribute('aria-describedby');
+
+    tooltip.textContent = text;
+    tooltip.hidden = false;
+    tooltip.classList.add('is-visible');
+    buff.setAttribute('aria-describedby', tooltip.id);
+    updateWorldBuffTooltipPosition();
+  }
+
+  function hideWorldBuffTooltip(buff) {
+    if (buff?.getAttribute('aria-describedby') !== 'campWorldBuffTooltip') return;
+
+    buff.removeAttribute('aria-describedby');
+    const tooltip = document.getElementById('campWorldBuffTooltip');
+    if (!tooltip) return;
+
+    tooltip.classList.remove('is-visible');
+    tooltip.hidden = true;
+  }
+
+  function updateWorldBuffTooltipPosition() {
+    const tooltip = document.getElementById('campWorldBuffTooltip');
+    const target = document.querySelector('[aria-describedby="campWorldBuffTooltip"]');
+    if (!tooltip || !target || tooltip.hidden) return;
+
+    const targetRect = target.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const viewportPadding = 8;
+    const gap = 7;
+    const maxLeft = Math.max(viewportPadding, window.innerWidth - tooltipRect.width - viewportPadding);
+    const left = Math.min(Math.max(targetRect.left, viewportPadding), maxLeft);
+    const maxTop = Math.max(viewportPadding, window.innerHeight - tooltipRect.height - viewportPadding);
+    const aboveTop = targetRect.top - tooltipRect.height - gap;
+    const belowTop = targetRect.bottom + gap;
+    const top = aboveTop >= viewportPadding
+      ? aboveTop
+      : belowTop <= maxTop
+        ? belowTop
+        : Math.min(Math.max(targetRect.top, viewportPadding), maxTop);
+
+    tooltip.style.left = `${Math.round(left)}px`;
+    tooltip.style.top = `${Math.round(top)}px`;
+  }
+
   function startDailySoulAnimation() {
     const canvas = document.getElementById('dailySoulCanvas');
     if (!canvas || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
@@ -544,6 +651,7 @@
   }
 
   function renderWorldBuffs() {
+    hideWorldBuffTooltip(document.querySelector('[aria-describedby="campWorldBuffTooltip"]'));
     const buffs = state.worldBuffs.filter((buff) => {
       const expiresAt = Date.parse(buff?.expiresAt || '');
       return !Number.isFinite(expiresAt) || expiresAt > Date.now();

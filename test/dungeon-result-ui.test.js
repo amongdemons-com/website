@@ -64,3 +64,10 @@ test('Mobile portrait extraction drop targets keep the placeholder and prompt co
     /@media \(max-width:\s*575\.98px\) and \(orientation:\s*portrait\)[\s\S]*?\.dungeon-reward-dropzone \.dungeon-reward-empty::before\s*\{[\s\S]*?width:\s*min\(50%,\s*4rem\);/
   );
 });
+
+test('Cashout demon previews fill their selected reward card', () => {
+  assert.match(
+    styles,
+    /\/\* Cashout previews use a direct image instead of the shared image wrapper\. \*\/[\s\S]*?#cashoutModalBody \.cashout-selected-reward \.cashout-demon-preview-img\s*\{[\s\S]*?inset:\s*0;[\s\S]*?width:\s*100%;[\s\S]*?height:\s*100%;/
+  );
+});

@@ -37,3 +37,14 @@ test('dungeon status resets preserve the shared buff-summary top spacing', () =>
     /body\.dungeon-page \.battle-side-status > \.enemy-pressure-chip\s*\{[^}]*align-items:\s*center;[^}]*margin-top:\s*0\.4rem;/s
   );
 });
+
+test('portrait enemy modifier tooltips stay inside the battle viewport', () => {
+  assert.match(
+    baseCss,
+    /@media \(max-width: 600px\) and \(orientation: portrait\) \{[\s\S]*?\.battle-side-enemy > \.battle-side-heading \.battle-buff-summary-tooltip,[\s\S]*?right:\s*0;[\s\S]*?left:\s*auto;[\s\S]*?transform:\s*translateY\(-0\.16rem\);[\s\S]*?body\.dungeon-page \.battle-side-enemy > \.battle-side-heading \.battle-buff-summary-tooltip,[\s\S]*?right:\s*auto;[\s\S]*?left:\s*0;/s
+  );
+  assert.match(
+    baseCss,
+    /\.battle-side-enemy > \.battle-side-heading \.terror-pressure-chip:hover \.terror-pressure-tooltip,[\s\S]*?transform:\s*translateY\(0\);/s
+  );
+});

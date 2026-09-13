@@ -7764,6 +7764,17 @@ body.dungeon-page:not(.ranked-page) .demonic-pact-view-toggle {
     pointer-events: auto;
 }
 
+/* Keep the actionable tooltip reachable while the pointer crosses the small
+   visual gap between the badge and its panel. */
+.player-badge--has-action::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: -0.35rem;
+    bottom: -0.52rem;
+    left: -0.35rem;
+}
+
 @media (max-width: 575.98px) and (max-height: 540px) and (orientation: portrait) {
 body.dungeon-page:not(.ranked-page) .demonic-pact-overlay {
         overflow-y: auto;
@@ -9012,6 +9023,34 @@ body .game-shell-nav .nav-account,
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
+    /* Enemy modifiers sit beside the top heading on portrait battles. Anchor
+       their popovers to the inside edge of that status chip so the fixed
+       battle viewport does not crop the wide tooltip off-screen. */
+    .battle-side-enemy > .battle-side-heading .battle-buff-summary-tooltip,
+    .battle-side-enemy > .battle-side-heading .terror-pressure-tooltip {
+        right: 0;
+        left: auto;
+        max-width: calc(100vw - 1rem);
+        transform: translateY(-0.16rem);
+    }
+
+    .battle-side-enemy > .battle-side-heading .battle-buff-summary-chip:hover .battle-buff-summary-tooltip,
+    .battle-side-enemy > .battle-side-heading .battle-buff-summary-chip:focus .battle-buff-summary-tooltip,
+    .battle-side-enemy > .battle-side-heading .battle-buff-summary-chip:focus-visible .battle-buff-summary-tooltip,
+    .battle-side-enemy > .battle-side-heading .terror-pressure-chip:hover .terror-pressure-tooltip,
+    .battle-side-enemy > .battle-side-heading .terror-pressure-chip:focus .terror-pressure-tooltip,
+    .battle-side-enemy > .battle-side-heading .terror-pressure-chip:focus-visible .terror-pressure-tooltip {
+        transform: translateY(0);
+    }
+
+    /* The dungeon skin reverses the enemy heading so its status plate is on
+       the left, which needs the opposite horizontal anchor. */
+    body.dungeon-page .battle-side-enemy > .battle-side-heading .battle-buff-summary-tooltip,
+    body.dungeon-page .battle-side-enemy > .battle-side-heading .terror-pressure-tooltip {
+        right: auto;
+        left: 0;
+    }
+
     .battle-side-player > #teamSideTitle .battle-buff-summary-tooltip {
         top: auto;
         bottom: calc(100% + 0.42rem);

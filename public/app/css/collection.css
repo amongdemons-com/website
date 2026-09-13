@@ -23,6 +23,10 @@
     cursor: pointer;
 }
 
+.collection-page .collection-missing-label.is-summon-ready {
+    background: #C68440;
+}
+
 .collection-echo-progress-heading {
     display: flex;
     align-items: center;

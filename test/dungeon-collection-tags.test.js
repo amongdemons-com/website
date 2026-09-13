@@ -1,8 +1,18 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const fs = require('node:fs');
 const vm = require('node:vm');
 const esbuild = require('esbuild');
+
+const collectionUiSource = fs.readFileSync(
+  path.join(__dirname, '..', 'public', 'app', 'js', 'collection-ui.js'),
+  'utf8'
+);
+const collectionCss = fs.readFileSync(
+  path.join(__dirname, '..', 'public', 'app', 'css', 'collection.css'),
+  'utf8'
+);
 
 let modulePromise = null;
 
@@ -61,4 +71,10 @@ test('complete unsummoned Echo stacks do not mark dungeon demons as new', async 
     shouldShowCollectionMissingTag({ typeId: 7, rarity: 'common' }),
     true
   );
+});
+
+test('collection ready missing cards mark the summon label with the ready state', () => {
+  assert.match(collectionUiSource, /const summonReadyClass = echo\?\.summonReady \? ' is-summon-ready' : '';/);
+  assert.match(collectionUiSource, /collection-missing-label outline\$\{summonReadyClass\}/);
+  assert.match(collectionCss, /\.collection-page \.collection-missing-label\.is-summon-ready\s*\{[\s\S]*?background:\s*#C68440;/);
 });
