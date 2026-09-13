@@ -358,7 +358,12 @@
       ? isHealingDemon(demon) ? 'Healing per tick' : 'Damage per tick'
       : attackStat.label;
 
-    return { value, isPerTick, description: `${label}: ${isPerTick ? value : attackStat.value}` };
+    return {
+      value,
+      numericValue: amount,
+      isPerTick,
+      description: `${label}: ${isPerTick ? value : attackStat.value}`
+    };
   }
 
   function getDetailActionGlassClass(variant = '') {

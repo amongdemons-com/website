@@ -8,7 +8,7 @@ const handSource = fs.readFileSync(
   'utf8'
 );
 
-function loadFunction(name) {
+function loadFunction(name, dependencies = {}) {
   const start = handSource.indexOf(`function ${name}(`);
   assert.notEqual(start, -1, `${name} should exist`);
 
@@ -19,14 +19,28 @@ function loadFunction(name) {
     if (handSource[index] !== '}') continue;
     depth -= 1;
     if (depth === 0) {
-      return Function(`return (${handSource.slice(start, index + 1)});`)();
+      return Function(...Object.keys(dependencies), `return (${handSource.slice(start, index + 1)});`)(...Object.values(dependencies));
     }
   }
 
   throw new Error(`Could not parse ${name}`);
 }
 
-const isBetterDemon = loadFunction('isBetterDemon');
+const getDemonCardAttackStat = (demon = {}) => {
+  const hasNumber = (value) => value !== null && value !== undefined && value !== '' && !Number.isNaN(Number(value));
+  const isRetaliate = Number(demon.typeId || demon.type_id || demon.type) === 8 ||
+    String(demon.role || '').toLowerCase() === 'counter_tank' ||
+    String(demon.targeting || '').toLowerCase() === 'none';
+  const attack = Number(hasNumber(demon.effectiveAtk) ? demon.effectiveAtk : demon.atk);
+  const speed = Number(demon.speed);
+  const isPerTick = !isRetaliate && hasNumber(demon.speed) && Number.isFinite(speed);
+  return {
+    isPerTick,
+    numericValue: isPerTick ? attack * Math.max(0, Math.min(100, speed)) / 100 : attack
+  };
+};
+
+const isBetterDemon = loadFunction('isBetterDemon', { getDemonCardAttackStat });
 
 test('dungeon hand upgrade comparison ignores rarity', () => {
   const current = { typeId: 1, rarity: 'common', maxHp: 100, atk: 20, speed: 10 };
@@ -35,12 +49,13 @@ test('dungeon hand upgrade comparison ignores rarity', () => {
   assert.equal(isBetterDemon({ ...current, rarity: 'mythic', maxHp: 99 }, current), false);
 });
 
-test('dungeon hand highlights only when at least two visible stats are strictly greater', () => {
+test('dungeon hand highlights only when HP and combined attack-speed output are strictly greater', () => {
   const current = { typeId: 1, maxHp: 100, atk: 20, effectiveAtk: 30, speed: 10 };
 
   assert.equal(isBetterDemon({ typeId: 1, maxHp: 101, atk: 21, effectiveAtk: 31, speed: 10 }, current), true);
   assert.equal(isBetterDemon({ typeId: 1, maxHp: 101, atk: 21, effectiveAtk: null, speed: 10 }, current), false);
   assert.equal(isBetterDemon({ typeId: 1, maxHp: 120, atk: 19, effectiveAtk: 29, speed: 11 }, current), true);
+  assert.equal(isBetterDemon({ typeId: 1, maxHp: 120, atk: 21, effectiveAtk: 31, speed: 9 }, current), false);
   assert.equal(isBetterDemon({ typeId: 1, maxHp: 99, atk: 21, effectiveAtk: 31, speed: 10 }, current), false);
   assert.equal(isBetterDemon({ typeId: 1, maxHp: 99, atk: 40, effectiveAtk: 29, speed: 9 }, current), false);
   assert.equal(isBetterDemon({ ...current }, current), false);

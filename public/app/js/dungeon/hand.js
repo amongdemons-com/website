@@ -2,7 +2,7 @@ import { dungeonActions } from './registry.js';
 import { state, elements, laneResizeObserver, setLaneResizeObserver } from './state.js';
 import { api, runPath, activeRunPath, storeCurrentRun, clearCurrentRun } from './api.js';
 import { RUN_KEY, BATTLE_SPEED_KEY, MAX_DUNGEON_TEAM_SIZE, FORMATION_GRID_COLUMNS, FORMATION_GRID_SIZE, FORMATION_CELL_CAPACITY, BATTLE_SPEED_OPTIONS, FORMATION_DRAG_OVER_SELECTOR, REWARD_DRAG_OVER_SELECTOR, COMBAT_THEMES } from './config.js';
-import { renderSharedDemonCard, renderSharedCombatStats, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
+import { renderSharedDemonCard, renderSharedCombatStats, getDemonCardAttackStat, openDemonDetailsModal, renderIcon, renderSoulAmount } from './shared-ui.js';
 import { clearRecruitSelection, clearDragState, clearRecruitDrafts, resetCombatState, resetEndState, handleAuthError, showError, setMessage, withBusy, bindClick, bindClicks, setElementHtml, getModal, setTeamChoiceModalFullscreen, syncActionButtons, capitalize, escapeHtml, cssEscape, cloneDemons, sleep } from './utils.js';
 
 const getPayoutPreview = (...args) => dungeonActions.getPayoutPreview(...args);
@@ -242,13 +242,18 @@ function isBetterDemon(candidate, current) {
     String(demon?.role || '').toLowerCase() === 'counter_tank' ||
     String(demon?.targeting || '').toLowerCase() === 'none'
   );
+  const getCombinedAttack = (demon) => {
+    const attackStat = getDemonCardAttackStat(demon);
+    return attackStat.isPerTick ? attackStat.numericValue : null;
+  };
   const visibleStats = [
-    [candidate?.maxHp || candidate?.hp, current?.maxHp || current?.hp],
-    [getVisibleAttack(candidate), getVisibleAttack(current)]
+    [candidate?.maxHp || candidate?.hp, current?.maxHp || current?.hp]
   ];
-  if (!isRetaliate(candidate) && !isRetaliate(current)) {
-    visibleStats.push([candidate?.speed, current?.speed]);
-  }
+  visibleStats.push(
+    isRetaliate(candidate) || isRetaliate(current)
+      ? [getVisibleAttack(candidate), getVisibleAttack(current)]
+      : [getCombinedAttack(candidate), getCombinedAttack(current)]
+  );
 
   const comparisons = visibleStats
     .map(([next, previous]) => [Number(next), Number(previous)])
