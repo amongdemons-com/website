@@ -25,6 +25,7 @@
     "slot": "weapon",
     "tags": ["damage", "execute"],
     "icon": "axe",
+    "imageUrl": "/app/images/items/executioner.webp",
     "description": "Your demons deal bonus damage to enemies below 30% HP.",
     "effect": {
       "type": "bonus_below_hp",

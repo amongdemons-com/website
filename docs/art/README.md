@@ -49,6 +49,7 @@ World artwork was made with **built-in imagegen**. The selected Anomaly was gene
 | Whispering Well | `public/app/images/assets/world/soul-font.png` | `soul-font.webp` at 768px |
 | Anomaly | `public/app/images/demons/anomaly.png` | `anomaly.webp` at 1024px, alpha preserved |
 | Basic Sword | `public/app/images/items/basic-sword.png` | `basic-sword.webp` at 512px, alpha preserved |
+| Executioner | `public/app/images/items/executioner.png` | `executioner.webp` at 512px, alpha preserved |
 
 ## Rebuild and verify
 
