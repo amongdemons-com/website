@@ -6795,6 +6795,25 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn:disabled {
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
+    /* Give compact battle cards the full width for their stats and HP bar. */
+    body.dungeon-page .battle-side .dungeon-demon-card-body {
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    body.dungeon-page .battle-side .combat-hp-meta .game-icon {
+        display: none;
+    }
+
+    body.dungeon-page #dungeonHandBar .dungeon-hand-cards .dungeon-demon-card-body {
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    body.dungeon-page #dungeonHandBar .dungeon-hand-cards .combat-hp-meta .game-icon {
+        display: none;
+    }
+
     body.dungeon-page .dungeon-arena {
         grid-template-columns: minmax(0, 1fr);
         /* The headings and floor band are edge-attached in the stacked arena. */
@@ -6943,7 +6962,7 @@ body.dungeon-page .dungeon-center-action-stack .dungeon-fight-btn:disabled {
         width: 100%;
         max-width: 18.5rem;
         aspect-ratio: 1664 / 353;
-        padding: clamp(0.52rem, 1.35vw, 0.72rem) clamp(1rem, 2.2vw, 1.45rem) 0;
+        padding: clamp(0.92rem, 1.35vw, 0.72rem) clamp(1rem, 2.2vw, 1.45rem) 0;
         /* Overscan the artwork inside its box to crop its transparent PNG
          * gutters without moving the heading over the adjacent grid. */
         background: url("/app/images/assets/dungeon/grid-heading-chain-rig.png?v=art-dungeon-grid-chain-v6") center / 100% 106% no-repeat;

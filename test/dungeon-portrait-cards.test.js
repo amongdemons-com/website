@@ -65,3 +65,25 @@ test('mobile portrait hand replaces HP bars with a one-pixel separator', () => {
     /body\.dungeon-page:not\(\.ranked-page\) #dungeonHandBar \.dungeon-hand-cards \.combat-hp-meta\s*\{[\s\S]*?border-top: 1px solid/
   );
 });
+
+test('mobile portrait battle and hand cards give stats full width and hide the HP icon', () => {
+  const portraitStyles = battleCss.slice(
+    battleCss.lastIndexOf('@media (max-width: 600px) and (orientation: portrait)')
+  );
+  assert.match(
+    portraitStyles,
+    /body\.dungeon-page \.battle-side \.dungeon-demon-card-body\s*\{[\s\S]*?padding-right: 0;[\s\S]*?padding-left: 0;/
+  );
+  assert.match(
+    portraitStyles,
+    /body\.dungeon-page \.battle-side \.combat-hp-meta \.game-icon\s*\{\s*display: none;/
+  );
+  assert.match(
+    portraitStyles,
+    /body\.dungeon-page #dungeonHandBar \.dungeon-hand-cards \.dungeon-demon-card-body\s*\{[\s\S]*?padding-right: 0;[\s\S]*?padding-left: 0;/
+  );
+  assert.match(
+    portraitStyles,
+    /body\.dungeon-page #dungeonHandBar \.dungeon-hand-cards \.combat-hp-meta \.game-icon\s*\{\s*display: none;/
+  );
+});
