@@ -15,6 +15,14 @@
     padding-bottom: 1rem;
 }
 
+.bag-layout {
+    display: grid;
+    grid-template-columns: minmax(16rem, 21rem) minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    gap: 1rem;
+}
+
 .bag-kicker {
     color: #8de7ff;
     font-size: 0.72rem;
@@ -41,14 +49,6 @@
     flex: 1;
     min-height: 0;
     padding: 0.85rem;
-}
-
-.bag-workspace {
-    display: grid;
-    grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
-    width: 100%;
-    min-height: 0;
-    gap: 0.85rem;
 }
 
 .bag-equipment-panel,
@@ -151,6 +151,7 @@ button.bag-equipment-slot:focus-visible {
 
 .bag-inventory-panel {
     display: flex;
+    flex: 1;
     flex-direction: column;
     padding: 0.75rem;
 }
@@ -950,14 +951,21 @@ button.bag-equipment-slot:focus-visible {
         padding: 0.72rem;
     }
 
-    .bag-workspace {
+    .bag-layout {
         display: flex;
         flex-direction: column;
         overflow-y: auto;
+        gap: 0.75rem;
     }
 
     .bag-equipment-panel {
         flex: 0 0 auto;
+    }
+
+    .bag-vault-card {
+        height: auto;
+        flex: 1 0 auto;
+        min-height: min(32rem, 65vh);
     }
 
     .bag-equipment-grid {
@@ -966,10 +974,6 @@ button.bag-equipment-slot:focus-visible {
 
     .bag-equipment-slot {
         min-height: 5.25rem;
-    }
-
-    .bag-inventory-panel {
-        flex: 1 0 min(32rem, 65vh);
     }
 
     .bag-controls {

@@ -10,7 +10,7 @@
     <link rel="icon" href="/app/images/amongdemons.ico" type="image/x-icon">
     <link href="/vendor/bootstrap/css/bootstrap.min.css?v=5.3.2" rel="stylesheet">
     <link href="/app/css/base.css?v=d9fe401e7aa7" rel="stylesheet">
-    <link href="/app/css/bag.css?v=26ac101e2417" rel="stylesheet">
+    <link href="/app/css/bag.css?v=b5a044a26b4a" rel="stylesheet">
     <link href="/app/css/bag-item-visuals.css?v=2234a421f532" rel="stylesheet">
   </head>
   <body class="bag-page">
@@ -59,46 +59,46 @@
     </nav>
 
     <main class="container bag-main">
-      <section class="card bag-vault-card" aria-labelledby="bagVaultTitle">
-        <div class="card-header bag-toolbar">
-          <div class="bag-toolbar-title">
-            <a class="bag-back-link" id="bagBackLink" href="/" aria-label="Back to previous page" title="Back">
-              <i data-lucide="chevron-left"></i>
-            </a>
-            <div class="bag-toolbar-copy">
-              <h1 class="h4 mb-0" id="bagVaultTitle">Bag</h1>
-              <small id="bagCount">0 stacks</small>
+      <div class="bag-layout">
+        <aside class="bag-equipment-panel" aria-labelledby="bagEquipmentTitle">
+          <div class="bag-equipment-heading">
+            <span class="bag-kicker">Hunter loadout</span>
+            <h2 class="h6 mb-0" id="bagEquipmentTitle">Equipment</h2>
+            <p>Equipped items empower your demon team in every battle.</p>
+          </div>
+          <div class="bag-equipment-grid" id="bagEquipmentGrid" aria-live="polite"></div>
+        </aside>
+        <section class="card bag-vault-card" aria-labelledby="bagVaultTitle">
+          <div class="card-header bag-toolbar">
+            <div class="bag-toolbar-title">
+              <a class="bag-back-link" id="bagBackLink" href="/" aria-label="Back to previous page" title="Back">
+                <i data-lucide="chevron-left"></i>
+              </a>
+              <div class="bag-toolbar-copy">
+                <h1 class="h4 mb-0" id="bagVaultTitle">Bag</h1>
+                <small id="bagCount">0 stacks</small>
+              </div>
+            </div>
+            <div class="bag-controls">
+              <label class="visually-hidden" for="bagFilter">Item type</label>
+              <select class="form-select form-select-sm" id="bagFilter" aria-label="Item type">
+                <option value="all">All items</option>
+                <option value="equipment">Equipment</option>
+              </select>
+              <label class="visually-hidden" for="bagSort">Sort bag</label>
+              <select class="form-select form-select-sm" id="bagSort" aria-label="Sort bag">
+                <option value="type">Item type</option>
+                <option value="rarity">Rarity</option>
+                <option value="name">Name</option>
+                <option value="quantity">Quantity</option>
+              </select>
             </div>
           </div>
-          <div class="bag-controls">
-            <label class="visually-hidden" for="bagFilter">Item type</label>
-            <select class="form-select form-select-sm" id="bagFilter" aria-label="Item type">
-              <option value="all">All items</option>
-              <option value="equipment">Equipment</option>
-            </select>
-            <label class="visually-hidden" for="bagSort">Sort bag</label>
-            <select class="form-select form-select-sm" id="bagSort" aria-label="Sort bag">
-              <option value="type">Item type</option>
-              <option value="rarity">Rarity</option>
-              <option value="name">Name</option>
-              <option value="quantity">Quantity</option>
-            </select>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="bag-loading" id="bagLoading" role="status">
-            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-            <span>Opening the vault...</span>
-          </div>
-          <div class="bag-workspace">
-            <aside class="bag-equipment-panel" aria-labelledby="bagEquipmentTitle">
-              <div class="bag-equipment-heading">
-                <span class="bag-kicker">Hunter loadout</span>
-                <h2 class="h6 mb-0" id="bagEquipmentTitle">Equipment</h2>
-                <p>Equipped items empower your demon team in every battle.</p>
-              </div>
-              <div class="bag-equipment-grid" id="bagEquipmentGrid" aria-live="polite"></div>
-            </aside>
+          <div class="card-body">
+            <div class="bag-loading" id="bagLoading" role="status">
+              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+              <span>Opening the vault...</span>
+            </div>
             <section class="bag-inventory-panel" aria-label="Bag inventory">
               <p class="small text-muted">Demon Echoes and summoning are in <a href="/collection">Collection</a>.</p>
               <div class="bag-grid-viewport" id="bagGridViewport">
@@ -106,8 +106,8 @@
               </div>
             </section>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
 
     <div class="bag-item-tooltip" id="bagItemTooltip" role="tooltip" hidden></div>
